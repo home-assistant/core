@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FireServiceRota config entry."""
-    hass.data[DOMAIN][entry.entry_id].stop_listener()
+    hass.data[DOMAIN][entry.entry_id].stop_ws_listener()
 
     unload_ok = all(
         await asyncio.gather(
@@ -89,7 +89,7 @@ class FSRDataUpdateCoordinator:
 
         self.fsr_incidents = FireServiceRotaIncidents(on_incident=self.on_incident)
 
-        self.start_listener()
+        self.start_ws_listener()
 
     def construct_url(self) -> str:
         """Return url with latest config values."""
@@ -104,26 +104,32 @@ class FSRDataUpdateCoordinator:
 
         async_dispatcher_send(self._hass, f"{DOMAIN}_{self._entry.entry_id}_update")
 
-    def start_listener(self) -> None:
+    def start_ws_listener(self) -> None:
         """Start the websocket listener."""
         _LOGGER.debug("Starting incidents listener")
         self.fsr_incidents.start(self.construct_url())
 
-    def stop_listener(self) -> None:
+    def stop_ws_listener(self) -> None:
         """Stop the websocket listener."""
         _LOGGER.debug("Stopping incidents listener")
         self.fsr_incidents.stop()
 
+    async def update_call(self, func, *args):
+        """Perform update call and return data."""
+        try:
+            return await self._hass.async_add_executor_job(func, *args)
+        except (ExpiredTokenError, InvalidTokenError):
+            if await self.async_refresh_tokens():
+                return await self._hass.async_add_executor_job(func, *args)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest availability data."""
-        try:
-            self.availability_data = await self._hass.async_add_executor_job(
-                self.fsr_avail.get_availability, str(self._hass.config.time_zone)
-            )
-            _LOGGER.debug("Updating availability data")
-        except (ExpiredTokenError, InvalidTokenError):
-            await self.async_refresh_tokens()
+        _LOGGER.debug("Updating availability data")
+
+        self.availability_data = await self.update_call(
+            self.fsr_avail.get_availability, str(self._hass.config.time_zone)
+        )
 
     async def async_response_update(self) -> None:
         """Get the latest incident response data."""
@@ -131,28 +137,21 @@ class FSRDataUpdateCoordinator:
             return
 
         self.incident_id = self.incident_data.get("id")
-        _LOGGER.debug("Incident id: %s", self.incident_id)
-        try:
-            self.response_data = await self._hass.async_add_executor_job(
-                self.fsr_avail.get_incident_response, self.incident_id
-            )
-            _LOGGER.debug("Updating incident response data")
-        except (ExpiredTokenError, InvalidTokenError):
-            await self.async_refresh_tokens()
+        _LOGGER.debug("Updating incident response data for id: %s", self.incident_id)
+
+        self.response_data = await self.update_call(
+            self.fsr_avail.get_incident_response, self.incident_id
+        )
 
     async def async_set_response(self, incident_id, value) -> None:
         """Set incident response status."""
-        try:
-            await self._hass.async_add_executor_job(
-                self.fsr_avail.set_incident_response, incident_id, value
-            )
-            _LOGGER.debug("Setting incident response status")
-        except (ExpiredTokenError, InvalidTokenError):
-            await self.async_refresh_tokens()
+        _LOGGER.debug("Setting incident response status")
+
+        await self.update_call(self.fsr_avail.set_incident_response, incident_id, value)
 
     async def async_refresh_tokens(self) -> bool:
         """Refresh tokens and update config entry."""
-        self.stop_listener()
+        self.stop_ws_listener()
 
         _LOGGER.debug("Refreshing authentication tokens after expiration")
         try:
@@ -178,6 +177,6 @@ class FSRDataUpdateCoordinator:
                 CONF_TOKEN: token_info,
             },
         )
-        self.start_listener()
+        self.start_ws_listener()
 
         return True
