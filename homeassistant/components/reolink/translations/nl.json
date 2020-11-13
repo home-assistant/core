@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Deze camera is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan niet verbinden met de camera",
+            "invalid_auth": "Ongeldige gebruikersnaam of wachtwoord",
+            "unknown": "Onbekende fout opgetreden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream": "Stream",
+                    "protocol": "Protocol",
+                    "channel": "Kanaal"
+                }
+            }
+        }
+    }
+}
