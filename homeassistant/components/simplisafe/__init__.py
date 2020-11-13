@@ -534,8 +534,7 @@ class SimpliSafe:
                             )
                         )
 
-                    LOGGER.error("Update failed with stored refresh token")
-                    raise UpdateFailed from result
+                    raise UpdateFailed("Update failed with stored refresh token")
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
@@ -546,23 +545,18 @@ class SimpliSafe:
                     )
                     return
                 except SimplipyError as err:
-                    LOGGER.error("Error while using stored refresh token: %s", err)
-                    raise UpdateFailed from err
+                    raise UpdateFailed(  # pylint: disable=raise-missing-from
+                        f"Error while using stored refresh token: {err}"
+                    )
 
             if isinstance(result, EndpointUnavailable):
-                # In case the user attempt an action not allowed in their current plan,
+                # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
                 LOGGER.info(result)
-                raise UpdateFailed from result
 
             if isinstance(result, SimplipyError):
-                LOGGER.error("SimpliSafe error while updating: %s", result)
-                raise UpdateFailed from result
-
-            if isinstance(result, Exception):
-                LOGGER.error("Unknown error while updating: %s", result)
-                raise UpdateFailed from result
+                raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
         if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
             _async_save_refresh_token(
