@@ -151,7 +151,7 @@ class PwNotifySensor(PwBinarySensor, BinarySensorEntity):
             self._state = STATE_ON
             self._icon = NOTIFICATION_ICON
 
-            for notify_id, details in notify.items():
+            for dummy, details in notify.items():
                 for msg_type, msg in details.items():
                     self._attributes[msg_type.upper()] = msg
 
