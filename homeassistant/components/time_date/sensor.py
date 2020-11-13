@@ -96,8 +96,8 @@ class TimeDateSensor(Entity):
         now = dt_util.utcnow()
 
         if self.type == "date":
-            now = dt_util.start_of_local_day(dt_util.as_local(now))
-            return now + timedelta(seconds=86400)
+            tomorrow = dt_util.as_local(now) + timedelta(days=1)
+            return dt_util.start_of_local_day(tomorrow)
 
         if self.type == "beat":
             # Add 1 hour because @0 beats is at 23:00:00 UTC.

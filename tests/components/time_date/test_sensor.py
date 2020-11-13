@@ -137,6 +137,32 @@ async def test_timezone_intervals(hass):
         next_time = device.get_next_interval()
     assert next_time.timestamp() == dt_util.as_timestamp("2017-11-14 00:00:00-07:00")
 
+    # Entering DST
+    new_tz = dt_util.get_time_zone("Europe/Prague")
+    assert new_tz is not None
+    dt_util.set_default_time_zone(new_tz)
+
+    now = dt_util.parse_datetime("2020-03-29 00:00+01:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-03-30 00:00+02:00")
+
+    now = dt_util.parse_datetime("2020-03-29 03:00+02:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-03-30 00:00+02:00")
+
+    # Leaving DST
+    now = dt_util.parse_datetime("2020-10-25 00:00+02:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-10-26 00:00:00+01:00")
+
+    now = dt_util.parse_datetime("2020-10-25 23:59+01:00")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        next_time = device.get_next_interval()
+    assert next_time.timestamp() == dt_util.as_timestamp("2020-10-26 00:00:00+01:00")
+
 
 @patch(
     "homeassistant.util.dt.utcnow",
