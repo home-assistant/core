@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nPrzed konfiguracj\u0105, urz\u0105dzenia zasilane bateryjnie nale\u017cy wybudzi\u0107, naciskaj\u0105c przycisk na urz\u0105dzeniu."
+                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nPrzed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na urz\u0105dzeniu."
             },
             "credentials": {
                 "data": {
@@ -24,7 +24,7 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Przed konfiguracj\u0105, urz\u0105dzenia zasilane bateryjnie nale\u017cy wybudzi\u0107, naciskaj\u0105c przycisk na urz\u0105dzeniu."
+                "description": "Przed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na urz\u0105dzeniu."
             }
         }
     }
