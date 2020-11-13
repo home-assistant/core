@@ -8,7 +8,7 @@
             "docker_version": "Docker",
             "host_os": "Home Assistant OS",
             "installation_type": "Paigalduse t\u00fc\u00fcp",
-            "os_name": "Operatsioonis\u00fcsteemi nimi",
+            "os_name": "Operatsioonis\u00fcsteemi j\u00e4rk",
             "os_version": "Operatsioonis\u00fcsteemi versioon",
             "python_version": "Pythoni versioon",
             "supervisor": "Haldur",
