@@ -529,24 +529,40 @@ class HomeAssistant:
 
         # # ais dom
         if ais_command is not None:
-            if ais_command == "restart":
-                import subprocess
+            import homeassistant.components.ais_dom.ais_global as ais_global
 
-                subprocess.Popen(
-                    "sleep 7 && su -c reboot",
-                    shell=True,  # nosec
-                    stdout=None,
-                    stderr=None,
-                )
-            if ais_command == "stop":
-                import subprocess
+            if ais_global.has_root():
+                if ais_command == "restart":
+                    import subprocess
 
-                subprocess.Popen(
-                    "sleep 7 &&  su -c reboot -p'",
-                    shell=True,  # nosec
-                    stdout=None,
-                    stderr=None,
+                    subprocess.Popen(
+                        "sleep 7 && su -c reboot",
+                        shell=True,  # nosec
+                        stdout=None,
+                        stderr=None,
+                    )
+                if ais_command == "stop":
+                    import subprocess
+
+                    subprocess.Popen(
+                        "sleep 7 &&  su -c reboot -p'",
+                        shell=True,  # nosec
+                        stdout=None,
+                        stderr=None,
+                    )
+            else:
+                # restart only ais service
+                cmd_process = await asyncio.create_subprocess_shell(
+                    "sleep 7 && pm2 restart ais",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                stdout, stderr = await cmd_process.communicate()
+
+                if stdout:
+                    _LOGGER.info(f"[stdout]\n{stdout.decode()}")
+                if stderr:
+                    _LOGGER.warning(f"[stderr]\n{stderr.decode()}")
 
         # stage 1
         self.state = CoreState.stopping
