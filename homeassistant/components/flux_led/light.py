@@ -380,5 +380,8 @@ class FluxLight(LightEntity):
                     )
                     self._error_reported = True
                 return
-
+        elif not self._bulb.is_on and not self._bulb.query_state():
+            _LOGGER.warning("Bulb %s became unavailable", self._name)
+            self._disconnect()
+            return
         self._bulb.update_state(retry=2)
