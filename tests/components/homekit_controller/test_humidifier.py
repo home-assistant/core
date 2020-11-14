@@ -86,7 +86,7 @@ def create_dehumidifier_service(accessory):
     return service
 
 
-def create_diffuser_service(accessory):
+def create_vocolinc_flowerbud_service(accessory):
     """Define a diffuser accessory with VOCOLinc vendor specific characteristics."""
     service = accessory.add_service(ServicesTypes.HUMIDIFIER_DEHUMIDIFIER)
 
@@ -365,9 +365,9 @@ async def test_dehumidifier_target_humidity_modes(hass, utcnow):
     assert state.attributes["humidity"] == 73
 
 
-async def test_diffuser_read_state(hass, utcnow):
-    """Test that we can read the state of a HomeKit diffuser accessory."""
-    helper = await setup_test_component(hass, create_diffuser_service)
+async def test_vocolinc_flowerbud_read_state(hass, utcnow):
+    """Test that we can read the state of a HomeKit VOCOLinc Flowerbud accessory."""
+    helper = await setup_test_component(hass, create_vocolinc_flowerbud_service)
 
     helper.characteristics[VOCOLINC_HUMIDIFIER_SPRAY_LEVEL].value = 5
     state = await helper.poll_and_get_state()
@@ -386,9 +386,9 @@ async def test_diffuser_read_state(hass, utcnow):
     assert state.attributes["humidity"] == 0
 
 
-async def test_diffuser_set_state(hass, utcnow):
-    """Test that we can set the state of a HomeKit diffuser accessory."""
-    helper = await setup_test_component(hass, create_diffuser_service)
+async def test_vocolinc_flowerbud_set_state(hass, utcnow):
+    """Test that we can set the state of a HomeKit VOCOLinc Flowerbud accessory."""
+    helper = await setup_test_component(hass, create_vocolinc_flowerbud_service)
 
     await hass.services.async_call(
         DOMAIN,
