@@ -106,7 +106,11 @@ class Sensor(ZhaEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel: ChannelType = channels[0]
         if self.SENSOR_ATTR is not None:
-            self._state = self._channel.cluster.get(self.SENSOR_ATTR)
+            try:
+                self._state = self.formatter(self._channel.cluster[self.SENSOR_ATTR])
+            except KeyError:
+                # no cached value
+                pass
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
