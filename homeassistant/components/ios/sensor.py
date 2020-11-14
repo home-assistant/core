@@ -1,8 +1,12 @@
 """Support for Home Assistant iOS app sensors."""
 from homeassistant.components import ios
 from homeassistant.const import PERCENTAGE
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from .const import DOMAIN
 
 SENSOR_TYPES = {
     "level": ["Battery Level", PERCENTAGE],
@@ -74,6 +78,11 @@ class IOSSensor(Entity):
         return f"{self.type}_{device_id}"
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
@@ -114,7 +123,17 @@ class IOSSensor(Entity):
             return icon_state
         return icon_for_battery_level(battery_level=battery_level, charging=charging)
 
-    async def async_update(self):
+    @callback
+    def _update(self, device):
         """Get the latest state of the sensor."""
-        self._device = ios.devices(self.hass).get(self._device_name)
+        self._device = device
         self._state = self._device[ios.ATTR_BATTERY][self.type]
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Added to hass so need to register to dispatch."""
+        self._state = self._device[ios.ATTR_BATTERY][self.type]
+        device_id = self._device[ios.ATTR_DEVICE_ID]
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, f"{DOMAIN}.{device_id}", self._update)
+        )
