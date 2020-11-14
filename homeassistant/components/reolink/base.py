@@ -12,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 class ReolinkBase:
     """The implementation of the Reolink IP base class."""
 
-    def __init__(self, hass, host, port, username, password): #pylint: disable=too-many-arguments
+    def __init__(
+        self, hass, host, port, username, password
+    ):  # pylint: disable=too-many-arguments
         """Initialize a Reolink camera."""
         self._username = username
         self._password = password
@@ -71,15 +73,21 @@ class ReolinkBase:
         if not await self._sman.subscribe(self._webhook_url):
             return False
 
-        _LOGGER.info("Host %s subscribed successfully to webhook %s!",
-            self._api.host, webhook_url)
+        _LOGGER.info(
+            "Host %s subscribed successfully to webhook %s!", 
+            self._api.host, 
+            webhook_url
+        )
         return True
 
     async def renew(self):
         """Renew the subscription of the motion events (lease time is set to 15 minutes)."""
         if self._sman.renewtimer <= SESSION_RENEW_THRESHOLD:
             if not await self._sman.renew():
-                _LOGGER.error("Host %s error renewing the Reolink subscription", self._api.host)
+                _LOGGER.error(
+                    "Host %s error renewing the Reolink subscription", 
+                    self._api.host
+                )
                 await self._sman.subscribe(self._webhook_url)
 
     async def unsubscribe(self):

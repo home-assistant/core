@@ -28,7 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["camera", "switch", "binary_sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict): #pylint: disable=unused-argument
+async def async_setup(
+    hass: HomeAssistant, config: dict
+):  # pylint: disable=unused-argument
     """Set up the Reolink component."""
     hass.data.setdefault(DOMAIN, {})
 

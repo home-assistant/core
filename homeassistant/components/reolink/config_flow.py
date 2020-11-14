@@ -85,7 +85,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         self.options = dict(config_entry.options)
         self.base = None
 
-    async def async_step_init(self, user_input=None): #pylint: disable=unused-argument
+    async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
         """Manage the Reolink options."""
         self.base = self.hass.data[DOMAIN][self.config_entry.entry_id][BASE]
         return await self.async_step_configure_stream()
