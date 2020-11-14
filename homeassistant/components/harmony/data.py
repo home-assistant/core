@@ -285,7 +285,10 @@ class HarmonyData:
         for subscription in self._subscriptions:
             current_callback = subscription.config_updated
             if current_callback:
-                current_callback(self._client.hub_config)
+                if asyncio.iscoroutinefunction(current_callback):
+                    asyncio.create_task(current_callback(self._client.hub_config))
+                else:
+                    current_callback(self._client.hub_config)
 
     def _connected(self, _=None) -> None:
         _LOGGER.debug("connected")
@@ -314,11 +317,17 @@ class HarmonyData:
         for subscription in self._subscriptions:
             current_callback = subscription.activity_starting
             if current_callback:
-                current_callback(activity_info)
+                if asyncio.iscoroutinefunction(current_callback):
+                    asyncio.create_task(current_callback(activity_info))
+                else:
+                    current_callback(activity_info)
 
     def _activity_started(self, activity_info: tuple) -> None:
         _LOGGER.debug("activity %s started", activity_info)
         for subscription in self._subscriptions:
             current_callback = subscription.activity_started
             if current_callback:
-                current_callback(activity_info)
+                if asyncio.iscoroutinefunction(current_callback):
+                    asyncio.create_task(current_callback(activity_info))
+                else:
+                    current_callback(activity_info)

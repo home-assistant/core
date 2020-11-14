@@ -207,7 +207,7 @@ async def test_options_flow(hass, mock_harmonyclient):
     with patch(
         "aioharmony.harmonyapi.HarmonyClient",
         return_value=mock_harmonyclient,
-    ), patch("homeassistant.components.harmony.remote.HarmonyRemote.write_config_file"):
+    ):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
