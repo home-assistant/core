@@ -15,11 +15,11 @@ DEFAULT_DEVICE_CLASS = "motion"
 @asyncio.coroutine
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the Reolink IP Camera switches."""
-    sensor = motionSensor(hass, config_entry)
+    sensor = MotionSensor(hass, config_entry)
     async_add_devices([sensor], update_before_add=False)
 
 
-class motionSensor(ReolinkEntity, BinarySensorEntity):
+class MotionSensor(ReolinkEntity, BinarySensorEntity):
     """An implementation of a Reolink IP camera motion sensor."""
 
     def __init__(self, hass, config):
@@ -47,7 +47,7 @@ class motionSensor(ReolinkEntity, BinarySensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._base.sman.renewTimer > 0
+        return self._base.sman.renewtimer > 0
 
     @property
     def device_class(self):

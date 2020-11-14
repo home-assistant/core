@@ -3,7 +3,7 @@
     "name": "Reolink IP camera",
     "documentation": "https://github.com/fwestenberg/reolink",
     "issue_tracker": "https://github.com/fwestenberg/reolink/issues",
-    "requirements": ["reolink==0.0.5"],
+    "requirements": ["reolink==0.0.8"],
     "dependencies": ["ffmpeg"],
     "codeowners": ["@fwestenberg"],
     "config_flow": true,

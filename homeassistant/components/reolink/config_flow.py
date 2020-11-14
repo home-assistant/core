@@ -68,11 +68,11 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict):
         user_input[CONF_PASSWORD],
     )
 
-    if not await base.connectApi():
+    if not await base.connect_api():
         raise CannotConnect
 
     title = base.api.name
-    base.disconnectApi()
+    base.disconnect_api()
     return {"title": title}
 
 
@@ -85,7 +85,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         self.options = dict(config_entry.options)
         self.base = None
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None): #pylint: disable=unused-argument
         """Manage the Reolink options."""
         self.base = self.hass.data[DOMAIN][self.config_entry.entry_id][BASE]
         return await self.async_step_configure_stream()

@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     camera = ReolinkCamera(hass, config_entry)
 
-    if camera.hasPtz:
+    if camera.ptz_support:
         platform = entity_platform.current_platform.get()
 
         platform.async_register_entity_service(
@@ -50,7 +50,6 @@ class ReolinkCamera(ReolinkEntity, Camera):
         self._hass = hass
         self._manager = self._hass.data[DATA_FFMPEG]
         self._last_image = None
-        self._hasPtz = False
         self._ptz_commands = {
             "AUTO": "Auto",
             "DOWN": "Down",
@@ -80,9 +79,9 @@ class ReolinkCamera(ReolinkEntity, Camera):
         return self._base.api.name
 
     @property
-    def hasPtz(self):
-        """Return whether the camera has PTZ."""
-        return self._base.api._hasPtz
+    def ptz_support(self):
+        """Return whether the camera has PTZ support."""
+        return self._base.api.ptz_support
 
     @property
     def supported_features(self):
@@ -117,6 +116,10 @@ class ReolinkCamera(ReolinkEntity, Camera):
 
     async def ptz_control(self, command, **kwargs):
         """Pass PTZ command to the camera."""
+        if not self.ptz_support:
+            _LOGGER.error("PTZ is not supported on this device")
+            return
+
         await self._base.api.set_ptz_command(
             command=self._ptz_commands[command], **kwargs
         )

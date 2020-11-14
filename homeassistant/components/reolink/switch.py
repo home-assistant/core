@@ -17,28 +17,26 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     devices = []
     base = hass.data[DOMAIN][config_entry.entry_id][BASE]
 
-    for capability in await base.api.get_switchCapabilities():
+    for capability in await base.api.get_switch_capabilities():
         if capability == "ftp":
-            devices.append(ftpSwitch(hass, config_entry))
+            devices.append(FTPSwitch(hass, config_entry))
         elif capability == "email":
-            devices.append(emailSwitch(hass, config_entry))
+            devices.append(EmailSwitch(hass, config_entry))
         elif capability == "audio":
-            devices.append(audioSwitch(hass, config_entry))
+            devices.append(AudioSwitch(hass, config_entry))
         elif capability == "irLights":
-            devices.append(irLightsSwitch(hass, config_entry))
+            devices.append(IRLightsSwitch(hass, config_entry))
         elif capability == "recording":
-            devices.append(recordingSwitch(hass, config_entry))
+            devices.append(RecordingSwitch(hass, config_entry))
         elif capability == "motionDetection":
-            devices.append(motionDetectionSwitch(hass, config_entry))
+            devices.append(MotionDetectionSwitch(hass, config_entry))
         else:
             continue
-
-        _LOGGER.info(f"Instantiating device type: {capability}Switch")
 
     async_add_devices(devices, update_before_add=False)
 
 
-class ftpSwitch(ReolinkEntity, ToggleEntity):
+class FTPSwitch(ReolinkEntity, ToggleEntity):
     """An implementation of a Reolink IP camera FTP switch."""
 
     def __init__(self, hass, config):
@@ -85,7 +83,7 @@ class ftpSwitch(ReolinkEntity, ToggleEntity):
         await self.request_refresh()
 
 
-class emailSwitch(ReolinkEntity, ToggleEntity):
+class EmailSwitch(ReolinkEntity, ToggleEntity):
     """An implementation of a Reolink IP camera email switch."""
 
     def __init__(self, hass, config):
@@ -132,7 +130,7 @@ class emailSwitch(ReolinkEntity, ToggleEntity):
         await self.request_refresh()
 
 
-class irLightsSwitch(ReolinkEntity, ToggleEntity):
+class IRLightsSwitch(ReolinkEntity, ToggleEntity):
     """An implementation of a Reolink IP camera ir lights switch."""
 
     def __init__(self, hass, config):
@@ -179,7 +177,7 @@ class irLightsSwitch(ReolinkEntity, ToggleEntity):
         await self.request_refresh()
 
 
-class recordingSwitch(ReolinkEntity, ToggleEntity):
+class RecordingSwitch(ReolinkEntity, ToggleEntity):
     """An implementation of a Reolink IP camera recording switch."""
 
     def __init__(self, hass, config):
@@ -226,7 +224,7 @@ class recordingSwitch(ReolinkEntity, ToggleEntity):
         await self.request_refresh()
 
 
-class motionDetectionSwitch(ReolinkEntity, ToggleEntity):
+class MotionDetectionSwitch(ReolinkEntity, ToggleEntity):
     """An implementation of a Reolink IP camera motion detection switch."""
 
     def __init__(self, hass, config):
@@ -273,7 +271,7 @@ class motionDetectionSwitch(ReolinkEntity, ToggleEntity):
         await self.request_refresh()
 
 
-class audioSwitch(ReolinkEntity, ToggleEntity):
+class AudioSwitch(ReolinkEntity, ToggleEntity):
     """An implementation of a Reolink IP camera audio switch."""
 
     def __init__(self, hass, config):
