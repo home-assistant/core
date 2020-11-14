@@ -461,7 +461,10 @@ def async_template(
     if isinstance(value, bool):
         return value
 
-    return str(value).lower() == "true"
+    if isinstance(value, str):
+        return value.lower() == "true"
+
+    return False
 
 
 def async_template_from_config(

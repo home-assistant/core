@@ -34,7 +34,7 @@ EXPANDABLE_MEDIA_TYPES = [
 ]
 
 
-def build_item_response(coordinator, payload):
+def build_item_response(coordinator, payload, get_thumbnail_url=None):
     """Create response payload for the provided media query."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -75,13 +75,13 @@ def build_item_response(coordinator, payload):
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
-        children=[item_payload(item, coordinator) for item in media],
+        children=[item_payload(item, coordinator, get_thumbnail_url) for item in media],
         children_media_class=children_media_class,
         thumbnail=thumbnail,
     )
 
 
-def item_payload(item, coordinator):
+def item_payload(item, coordinator, get_thumbnail_url=None):
     """
     Create response payload for a single media item.
 
@@ -92,7 +92,8 @@ def item_payload(item, coordinator):
     if "app_id" in item:
         media_content_type = MEDIA_TYPE_APP
         media_content_id = item["app_id"]
-        thumbnail = coordinator.roku.app_icon_url(item["app_id"])
+        if get_thumbnail_url:
+            thumbnail = get_thumbnail_url(media_content_type, media_content_id)
     elif "channel_number" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = item["channel_number"]
@@ -115,7 +116,7 @@ def item_payload(item, coordinator):
     )
 
 
-def library_payload(coordinator):
+def library_payload(coordinator, get_thumbnail_url=None):
     """
     Create response payload to describe contents of a specific library.
 
@@ -147,6 +148,7 @@ def library_payload(coordinator):
             item_payload(
                 {"title": item["title"], "type": item["type"]},
                 coordinator,
+                get_thumbnail_url,
             )
         )
 

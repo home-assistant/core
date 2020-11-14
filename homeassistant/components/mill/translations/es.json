@@ -4,8 +4,7 @@
             "already_configured": "La cuenta ya ha sido configurada"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "user": {

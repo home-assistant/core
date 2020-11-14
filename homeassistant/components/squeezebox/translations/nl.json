@@ -1,18 +1,29 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
         "flow_title": "Logitech Squeezebox: {host}",
         "step": {
             "edit": {
                 "data": {
+                    "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "title": "Verbindingsgegevens bewerken"
             },
             "user": {
-                "title": "Configureer Logitech Media Server"
+                "data": {
+                    "host": "Host"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

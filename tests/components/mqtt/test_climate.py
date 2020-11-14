@@ -322,7 +322,9 @@ async def test_set_target_temperature(hass, mqtt_mock):
     await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") == 47
-    mqtt_mock.async_publish.assert_called_once_with("temperature-topic", 47, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "temperature-topic", "47.0", 0, False
+    )
 
     # also test directly supplying the operation mode to set_temperature
     mqtt_mock.async_publish.reset_mock()
@@ -333,7 +335,10 @@ async def test_set_target_temperature(hass, mqtt_mock):
     assert state.state == "cool"
     assert state.attributes.get("temperature") == 21
     mqtt_mock.async_publish.assert_has_calls(
-        [call("mode-topic", "cool", 0, False), call("temperature-topic", 21, 0, False)]
+        [
+            call("mode-topic", "cool", 0, False),
+            call("temperature-topic", "21.0", 0, False),
+        ]
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -372,8 +377,8 @@ async def test_set_target_temperature_low_high(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("target_temp_low") == 20
     assert state.attributes.get("target_temp_high") == 23
-    mqtt_mock.async_publish.assert_any_call("temperature-low-topic", 20, 0, False)
-    mqtt_mock.async_publish.assert_any_call("temperature-high-topic", 23, 0, False)
+    mqtt_mock.async_publish.assert_any_call("temperature-low-topic", "20.0", 0, False)
+    mqtt_mock.async_publish.assert_any_call("temperature-high-topic", "23.0", 0, False)
 
 
 async def test_set_target_temperature_low_highpessimistic(hass, mqtt_mock):

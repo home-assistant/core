@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import zigpy.zcl.clusters.closures
 
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -157,6 +158,7 @@ class Channels:
             {
                 const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
                 const.ATTR_UNIQUE_ID: self.unique_id,
+                ATTR_DEVICE_ID: self.zha_device.device_id,
                 **event_data,
             },
         )

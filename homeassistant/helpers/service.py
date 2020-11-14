@@ -38,7 +38,13 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, TemplateVarsType
-from homeassistant.loader import Integration, async_get_integration, bind_hass
+from homeassistant.loader import (
+    MAX_LOAD_CONCURRENTLY,
+    Integration,
+    async_get_integration,
+    bind_hass,
+)
+from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -307,8 +313,9 @@ async def async_get_all_descriptions(
     loaded = {}
 
     if missing:
-        integrations = await asyncio.gather(
-            *(async_get_integration(hass, domain) for domain in missing)
+        integrations = await gather_with_concurrency(
+            MAX_LOAD_CONCURRENTLY,
+            *(async_get_integration(hass, domain) for domain in missing),
         )
 
         contents = await hass.async_add_executor_job(

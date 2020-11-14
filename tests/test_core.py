@@ -885,108 +885,132 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass.block_till_done()
 
 
-class TestConfig(unittest.TestCase):
-    """Test configuration methods."""
+def test_config_defaults():
+    """Test config defaults."""
+    hass = Mock()
+    config = ha.Config(hass)
+    assert config.hass is hass
+    assert config.latitude == 0
+    assert config.longitude == 0
+    assert config.elevation == 0
+    assert config.location_name == "Home"
+    assert config.time_zone == dt_util.UTC
+    assert config.internal_url is None
+    assert config.external_url is None
+    assert config.config_source == "default"
+    assert config.skip_pip is False
+    assert config.components == set()
+    assert config.api is None
+    assert config.config_dir is None
+    assert config.allowlist_external_dirs == set()
+    assert config.allowlist_external_urls == set()
+    assert config.media_dirs == {}
+    assert config.safe_mode is False
+    assert config.legacy_templates is False
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.config = ha.Config(None)
-        assert self.config.config_dir is None
 
-    def test_path_with_file(self):
-        """Test get_config_path method."""
-        self.config.config_dir = "/test/ha-config"
-        assert self.config.path("test.conf") == "/test/ha-config/test.conf"
+def test_config_path_with_file():
+    """Test get_config_path method."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    assert config.path("test.conf") == "/test/ha-config/test.conf"
 
-    def test_path_with_dir_and_file(self):
-        """Test get_config_path method."""
-        self.config.config_dir = "/test/ha-config"
-        assert self.config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
-    def test_as_dict(self):
-        """Test as dict."""
-        self.config.config_dir = "/test/ha-config"
-        self.config.hass = MagicMock()
-        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
-        expected = {
-            "latitude": 0,
-            "longitude": 0,
-            "elevation": 0,
-            CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-            "location_name": "Home",
-            "time_zone": "UTC",
-            "components": set(),
-            "config_dir": "/test/ha-config",
-            "whitelist_external_dirs": set(),
-            "allowlist_external_dirs": set(),
-            "allowlist_external_urls": set(),
-            "version": __version__,
-            "config_source": "default",
-            "safe_mode": False,
-            "state": "RUNNING",
-            "external_url": None,
-            "internal_url": None,
-        }
+def test_config_path_with_dir_and_file():
+    """Test get_config_path method."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
-        assert expected == self.config.as_dict()
 
-    def test_is_allowed_path(self):
-        """Test is_allowed_path method."""
-        with TemporaryDirectory() as tmp_dir:
-            # The created dir is in /tmp. This is a symlink on OS X
-            # causing this test to fail unless we resolve path first.
-            self.config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
+def test_config_as_dict():
+    """Test as dict."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    config.hass = MagicMock()
+    type(config.hass.state).value = PropertyMock(return_value="RUNNING")
+    expected = {
+        "latitude": 0,
+        "longitude": 0,
+        "elevation": 0,
+        CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
+        "location_name": "Home",
+        "time_zone": "UTC",
+        "components": set(),
+        "config_dir": "/test/ha-config",
+        "whitelist_external_dirs": set(),
+        "allowlist_external_dirs": set(),
+        "allowlist_external_urls": set(),
+        "version": __version__,
+        "config_source": "default",
+        "safe_mode": False,
+        "state": "RUNNING",
+        "external_url": None,
+        "internal_url": None,
+    }
 
-            test_file = os.path.join(tmp_dir, "test.jpg")
-            with open(test_file, "w") as tmp_file:
-                tmp_file.write("test")
+    assert expected == config.as_dict()
 
-            valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
-            for path in valid:
-                assert self.config.is_allowed_path(path)
 
-            self.config.allowlist_external_dirs = {"/home", "/var"}
+def test_config_is_allowed_path():
+    """Test is_allowed_path method."""
+    config = ha.Config(None)
+    with TemporaryDirectory() as tmp_dir:
+        # The created dir is in /tmp. This is a symlink on OS X
+        # causing this test to fail unless we resolve path first.
+        config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
-            invalid = [
-                "/hass/config/secure",
-                "/etc/passwd",
-                "/root/secure_file",
-                "/var/../etc/passwd",
-                test_file,
-            ]
-            for path in invalid:
-                assert not self.config.is_allowed_path(path)
+        test_file = os.path.join(tmp_dir, "test.jpg")
+        with open(test_file, "w") as tmp_file:
+            tmp_file.write("test")
 
-            with pytest.raises(AssertionError):
-                self.config.is_allowed_path(None)
+        valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
+        for path in valid:
+            assert config.is_allowed_path(path)
 
-    def test_is_allowed_external_url(self):
-        """Test is_allowed_external_url method."""
-        self.config.allowlist_external_urls = [
-            "http://x.com/",
-            "https://y.com/bla/",
-            "https://z.com/images/1.jpg/",
-        ]
-
-        valid = [
-            "http://x.com/1.jpg",
-            "http://x.com",
-            "https://y.com/bla/",
-            "https://y.com/bla/2.png",
-            "https://z.com/images/1.jpg",
-        ]
-        for url in valid:
-            assert self.config.is_allowed_external_url(url)
+        config.allowlist_external_dirs = {"/home", "/var"}
 
         invalid = [
-            "https://a.co",
-            "https://y.com/bla_wrong",
-            "https://y.com/bla/../image.jpg",
-            "https://z.com/images",
+            "/hass/config/secure",
+            "/etc/passwd",
+            "/root/secure_file",
+            "/var/../etc/passwd",
+            test_file,
         ]
-        for url in invalid:
-            assert not self.config.is_allowed_external_url(url)
+        for path in invalid:
+            assert not config.is_allowed_path(path)
+
+        with pytest.raises(AssertionError):
+            config.is_allowed_path(None)
+
+
+def test_config_is_allowed_external_url():
+    """Test is_allowed_external_url method."""
+    config = ha.Config(None)
+    config.allowlist_external_urls = [
+        "http://x.com/",
+        "https://y.com/bla/",
+        "https://z.com/images/1.jpg/",
+    ]
+
+    valid = [
+        "http://x.com/1.jpg",
+        "http://x.com",
+        "https://y.com/bla/",
+        "https://y.com/bla/2.png",
+        "https://z.com/images/1.jpg",
+    ]
+    for url in valid:
+        assert config.is_allowed_external_url(url)
+
+    invalid = [
+        "https://a.co",
+        "https://y.com/bla_wrong",
+        "https://y.com/bla/../image.jpg",
+        "https://z.com/images",
+    ]
+    for url in invalid:
+        assert not config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
@@ -1560,3 +1584,21 @@ async def test_reserving_states(hass):
     assert hass.states.async_available("light.bedroom") is False
     hass.states.async_remove("light.bedroom")
     assert hass.states.async_available("light.bedroom") is True
+
+
+async def test_state_change_events_match_state_time(hass):
+    """Test last_updated and timed_fired only call utcnow once."""
+
+    events = []
+
+    @ha.callback
+    def _event_listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
+
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.bedroom")
+
+    assert state.last_updated == events[0].time_fired

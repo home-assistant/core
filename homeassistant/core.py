@@ -820,7 +820,7 @@ class EventBus:
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.warning("Unable to remove unknown job listener %s", hassjob)
+            _LOGGER.exception("Unable to remove unknown job listener %s", hassjob)
 
 
 class State:
@@ -1180,12 +1180,14 @@ class StateMachine:
         if context is None:
             context = Context()
 
+        now = dt_util.utcnow()
+
         state = State(
             entity_id,
             new_state,
             attributes,
             last_changed,
-            None,
+            now,
             context,
             old_state is None,
         )
@@ -1195,6 +1197,7 @@ class StateMachine:
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             EventOrigin.local,
             context,
+            time_fired=now,
         )
 
 

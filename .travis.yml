@@ -39,4 +39,4 @@ cache:
     - $HOME/.cache/pre-commit
 install: pip install -U tox tox-travis
 language: python
-script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop ${TOX_ARGS-}
+script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox -vv --develop ${TOX_ARGS-}

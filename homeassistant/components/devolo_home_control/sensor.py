@@ -29,7 +29,7 @@ async def async_setup_entry(
     """Get all sensor devices and setup them via config entry."""
     entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]:
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
         for device in gateway.multi_level_sensor_devices:
             for multi_level_sensor in device.multi_level_sensor_property:
                 entities.append(

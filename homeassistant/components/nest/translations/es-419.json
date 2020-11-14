@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Solo puedes configurar una sola cuenta Nest.",
             "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
-            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
-            "no_flows": "Debe configurar Nest antes de poder autenticarse con \u00e9l. [Lea las instrucciones] (https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n."
         },
         "error": {
             "internal_error": "C\u00f3digo de validaci\u00f3n de error interno",
-            "invalid_code": "Codigo invalido",
             "timeout": "Tiempo de espera agotado para validar el c\u00f3digo",
             "unknown": "Error desconocido al validar el c\u00f3digo"
         },

@@ -12,10 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conexi\u00f3n",
-                    "host": "Direcci\u00f3n IP de Smile",
-                    "password": "ID Smile",
-                    "port": "Puerto"
+                    "flow_type": "Tipo de conexi\u00f3n"
                 },
                 "description": "Detalles",
                 "title": "Conectarse a Smile"
@@ -24,7 +21,8 @@
                 "data": {
                     "host": "Direcci\u00f3n IP",
                     "password": "ID Smile",
-                    "port": "Puerto"
+                    "port": "Puerto",
+                    "username": "Nombre de usuario Smile"
                 },
                 "description": "Por favor introduce:",
                 "title": "Conectarse a Smile"

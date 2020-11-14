@@ -93,6 +93,38 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 2
 
 
+async def test_track_point_in_time_drift_rearm(hass):
+    """Test tasks with the time rolling backwards."""
+    specific_runs = []
+
+    now = dt_util.utcnow()
+
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
+    )
+
+    async_track_point_in_utc_time(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        time_that_will_not_match_right_away,
+    )
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 00, tzinfo=dt_util.UTC),
+        fire_all=True,
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC),
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+
 async def test_track_state_change_from_to_state_match(hass):
     """Test track_state_change with from and to state matchers."""
     from_and_to_state_runs = []
@@ -1771,7 +1803,7 @@ async def test_specifically_referenced_entity_is_not_rate_limited(hass):
 
 async def test_track_two_templates_with_different_rate_limits(hass):
     """Test two templates with different rate limits."""
-    template_one = Template("{{ states | count }} ", hass)
+    template_one = Template("{{ (states | count) + 0 }}", hass)
     template_five = Template("{{ states | count }}", hass)
 
     refresh_runs = {
@@ -2123,68 +2155,73 @@ async def test_track_template_with_time_default(hass):
 
 async def test_track_template_with_time_that_leaves_scope(hass):
     """Test tracking template with time."""
+    now = dt_util.utcnow()
+    test_time = datetime(now.year + 1, 5, 24, 11, 59, 1, 500000, tzinfo=dt_util.UTC)
 
-    hass.states.async_set("binary_sensor.washing_machine", "on")
-    specific_runs = []
-    template_complex = Template(
-        """
-        {% if states.binary_sensor.washing_machine.state == "on" %}
-            {{ now() }}
-        {% else %}
-            {{ states.binary_sensor.washing_machine.last_updated }}
-        {% endif %}
-    """,
-        hass,
-    )
+    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
+        hass.states.async_set("binary_sensor.washing_machine", "on")
+        specific_runs = []
+        template_complex = Template(
+            """
+            {% if states.binary_sensor.washing_machine.state == "on" %}
+                {{ now() }}
+            {% else %}
+                {{ states.binary_sensor.washing_machine.last_updated }}
+            {% endif %}
+        """,
+            hass,
+        )
 
-    def specific_run_callback(event, updates):
-        specific_runs.append(updates.pop().result)
+        def specific_run_callback(event, updates):
+            specific_runs.append(updates.pop().result)
 
-    info = async_track_template_result(
-        hass, [TrackTemplate(template_complex, None)], specific_run_callback
-    )
-    await hass.async_block_till_done()
+        info = async_track_template_result(
+            hass, [TrackTemplate(template_complex, None)], specific_run_callback
+        )
+        await hass.async_block_till_done()
 
-    assert info.listeners == {
-        "all": False,
-        "domains": set(),
-        "entities": {"binary_sensor.washing_machine"},
-        "time": True,
-    }
+        assert info.listeners == {
+            "all": False,
+            "domains": set(),
+            "entities": {"binary_sensor.washing_machine"},
+            "time": True,
+        }
 
-    hass.states.async_set("binary_sensor.washing_machine", "off")
-    await hass.async_block_till_done()
+        hass.states.async_set("binary_sensor.washing_machine", "off")
+        await hass.async_block_till_done()
 
-    assert info.listeners == {
-        "all": False,
-        "domains": set(),
-        "entities": {"binary_sensor.washing_machine"},
-        "time": False,
-    }
+        assert info.listeners == {
+            "all": False,
+            "domains": set(),
+            "entities": {"binary_sensor.washing_machine"},
+            "time": False,
+        }
 
-    hass.states.async_set("binary_sensor.washing_machine", "on")
-    await hass.async_block_till_done()
+        hass.states.async_set("binary_sensor.washing_machine", "on")
+        await hass.async_block_till_done()
 
-    assert info.listeners == {
-        "all": False,
-        "domains": set(),
-        "entities": {"binary_sensor.washing_machine"},
-        "time": True,
-    }
+        assert info.listeners == {
+            "all": False,
+            "domains": set(),
+            "entities": {"binary_sensor.washing_machine"},
+            "time": True,
+        }
 
-    # Verify we do not update before the minute rolls over
-    callback_count_before_time_change = len(specific_runs)
-    test_time = dt_util.utcnow().replace(second=1)
-    async_fire_time_changed(hass, test_time)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, test_time + timedelta(seconds=58))
-    await hass.async_block_till_done()
-    assert len(specific_runs) == callback_count_before_time_change
+        # Verify we do not update before the minute rolls over
+        callback_count_before_time_change = len(specific_runs)
+        async_fire_time_changed(hass, test_time)
+        await hass.async_block_till_done()
+        assert len(specific_runs) == callback_count_before_time_change
 
-    # Verify we do update on the next change of minute
-    async_fire_time_changed(hass, test_time + timedelta(seconds=59))
-    await hass.async_block_till_done()
-    assert len(specific_runs) == callback_count_before_time_change + 1
+        async_fire_time_changed(hass, test_time + timedelta(seconds=58))
+        await hass.async_block_till_done()
+        assert len(specific_runs) == callback_count_before_time_change
+
+        # Verify we do update on the next change of minute
+        async_fire_time_changed(hass, test_time + timedelta(seconds=59))
+
+        await hass.async_block_till_done()
+        assert len(specific_runs) == callback_count_before_time_change + 1
 
     info.async_remove()
 
@@ -2757,7 +2794,7 @@ async def test_periodic_task_clock_rollback(hass):
         fire_all=True,
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 2
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass,
@@ -2765,13 +2802,13 @@ async def test_periodic_task_clock_rollback(hass):
         fire_all=True,
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 3
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 4
+    assert len(specific_runs) == 2
 
     unsub()
 
@@ -2779,7 +2816,7 @@ async def test_periodic_task_clock_rollback(hass):
         hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 4
+    assert len(specific_runs) == 2
 
 
 async def test_periodic_task_duplicate_time(hass):

@@ -42,6 +42,7 @@ from .const import (
     ATTR_SPEED,
     DOMAIN,
     SERVICE_EFFECT,
+    SERVICE_PRESET,
 )
 
 PARALLEL_UPDATES = 1
@@ -71,6 +72,16 @@ async def async_setup_entry(
             ),
         },
         "async_effect",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PRESET,
+        {
+            vol.Required(ATTR_PRESET): vol.All(
+                vol.Coerce(int), vol.Range(min=-1, max=65535)
+            ),
+        },
+        "async_preset",
     )
 
     update_segments = partial(
@@ -371,6 +382,16 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
             data[ATTR_SPEED] = speed
 
         await self.coordinator.wled.segment(**data)
+
+    @wled_exception_handler
+    async def async_preset(
+        self,
+        preset: int,
+    ) -> None:
+        """Set a WLED light to a saved preset."""
+        data = {ATTR_PRESET: preset}
+
+        await self.coordinator.wled.preset(**data)
 
 
 @callback

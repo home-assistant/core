@@ -10,9 +10,7 @@
             "default": "Pomy\u015blnie uwierzytelniono"
         },
         "error": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane",
-            "already_configured_account": "Konto jest ju\u017c skonfigurowane",
-            "profile_exists": "Profil u\u017cytkownika jest ju\u017c skonfigurowany. Podaj unikaln\u0105 nazw\u0119 profilu."
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "flow_title": "Withings: {profile}",
         "step": {

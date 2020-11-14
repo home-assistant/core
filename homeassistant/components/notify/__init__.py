@@ -133,7 +133,7 @@ class BaseNotificationService:
 
         if title:
             title.hass = self.hass
-            kwargs[ATTR_TITLE] = title.async_render()
+            kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
 
         if self._registered_targets.get(service.service) is not None:
             kwargs[ATTR_TARGET] = [self._registered_targets[service.service]]
@@ -141,7 +141,7 @@ class BaseNotificationService:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
         message.hass = self.hass
-        kwargs[ATTR_MESSAGE] = message.async_render()
+        kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
         kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
 
         await self.async_send_message(**kwargs)
@@ -229,12 +229,12 @@ async def async_setup(hass, config):
         payload = {}
         message = service.data[ATTR_MESSAGE]
         message.hass = hass
-        payload[ATTR_MESSAGE] = message.async_render()
+        payload[ATTR_MESSAGE] = message.async_render(parse_result=False)
 
         title = service.data.get(ATTR_TITLE)
         if title:
             title.hass = hass
-            payload[ATTR_TITLE] = title.async_render()
+            payload[ATTR_TITLE] = title.async_render(parse_result=False)
 
         await hass.services.async_call(
             pn.DOMAIN, pn.SERVICE_CREATE, payload, blocking=True

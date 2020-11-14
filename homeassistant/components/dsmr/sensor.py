@@ -1,6 +1,7 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
 from asyncio import CancelledError
+from datetime import timedelta
 from functools import partial
 import logging
 from typing import Dict
@@ -22,6 +23,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -29,11 +31,13 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    CONF_TIME_BETWEEN_UPDATE,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
+    DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
@@ -71,10 +75,8 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
-    # Suppress logging
-    logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
-
     config = entry.data
+    options = entry.options
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -145,6 +147,11 @@ async def async_setup_entry(
 
     async_add_entities(devices)
 
+    min_time_between_updates = timedelta(
+        seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
+
+    @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
@@ -245,7 +252,7 @@ class DSMREntity(Entity):
     def update_data(self, telegram):
         """Update data."""
         self.telegram = telegram
-        if self.hass:
+        if self.hass and self._obis in self.telegram:
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute):
@@ -357,6 +364,16 @@ class DerivativeDSMREntity(DSMREntity):
     def state(self):
         """Return the calculated current hourly rate."""
         return self._state
+
+    @property
+    def force_update(self):
+        """Disable force update."""
+        return False
+
+    @property
+    def should_poll(self):
+        """Enable polling."""
+        return True
 
     async def async_update(self):
         """Recalculate hourly rate if timestamp has changed.
