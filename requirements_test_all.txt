@@ -845,7 +845,7 @@ pysmartthings==0.7.4
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.35
+pysonos==0.0.36
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -966,7 +966,7 @@ samsungtvws==1.4.0
 sense_energy==0.8.1
 
 # homeassistant.components.sentry
-sentry-sdk==0.19.2
+sentry-sdk==0.19.3
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1134,7 +1134,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.0
+zigpy-zigate==0.7.1
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2

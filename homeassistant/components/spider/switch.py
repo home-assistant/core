@@ -7,10 +7,12 @@ from .const import DOMAIN
 async def async_setup_entry(hass, config, async_add_entities):
     """Initialize a Spider thermostat."""
     api = hass.data[DOMAIN][config.entry_id]
-
-    entities = [SpiderPowerPlug(api, entity) for entity in api.get_power_plugs()]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            SpiderPowerPlug(api, entity)
+            for entity in await hass.async_add_executor_job(api.get_power_plugs)
+        ]
+    )
 
 
 class SpiderPowerPlug(SwitchEntity):

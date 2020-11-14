@@ -6,6 +6,7 @@
             "dev": "Development",
             "docker": "Docker",
             "docker_version": "Docker",
+            "hassio": "Supervisor",
             "host_os": "Home Assistant OS",
             "installation_type": "Installation Type",
             "os_name": "Operating System Family",
