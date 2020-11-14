@@ -132,6 +132,7 @@ class IOSSensor(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Added to hass so need to register to dispatch."""
+        self._state = self._device[ios.ATTR_BATTERY][self.type]
         device_id = self._device[ios.ATTR_DEVICE_ID]
         self.async_on_remove(
             async_dispatcher_connect(self.hass, f"{DOMAIN}.{device_id}", self._update)
