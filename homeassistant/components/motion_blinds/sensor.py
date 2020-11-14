@@ -27,17 +27,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for blind in motion_gateway.device_list.values():
         await hass.async_add_executor_job(blind.Update)
-        entities.append(MotionSignalStrengthSensor(blind, TYPE_BLIND, config_entry))
+        entities.append(MotionSignalStrengthSensor(blind, TYPE_BLIND))
         if blind.type == BlindType.TopDownBottomUp:
-            entities.append(MotionTDBUBatterySensor(blind, config_entry, "Bottom"))
-            entities.append(MotionTDBUBatterySensor(blind, config_entry, "Top"))
+            entities.append(MotionTDBUBatterySensor(blind, "Bottom"))
+            entities.append(MotionTDBUBatterySensor(blind, "Top"))
         elif blind.battery_voltage > 0:
             # Only add battery powered blinds
-            entities.append(MotionBatterySensor(blind, config_entry))
+            entities.append(MotionBatterySensor(blind))
 
-    entities.append(
-        MotionSignalStrengthSensor(motion_gateway, TYPE_GATEWAY, config_entry)
-    )
+    entities.append(MotionSignalStrengthSensor(motion_gateway, TYPE_GATEWAY))
 
     async_add_entities(entities)
 
@@ -49,10 +47,9 @@ class MotionBatterySensor(Entity):
     Updates are done by the cover platform.
     """
 
-    def __init__(self, blind, config_entry):
+    def __init__(self, blind):
         """Initialize the Motion Battery Sensor."""
         self._blind = blind
-        self._config_entry = config_entry
 
     @property
     def unique_id(self):
@@ -62,11 +59,7 @@ class MotionBatterySensor(Entity):
     @property
     def device_info(self):
         """Return the device info of the blind."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._blind.mac)},
-        }
-
-        return device_info
+        return {"identifiers": {(DOMAIN, self._blind.mac)}}
 
     @property
     def name(self):
@@ -103,9 +96,9 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
     Updates are done by the cover platform.
     """
 
-    def __init__(self, blind, config_entry, motor):
+    def __init__(self, blind, motor):
         """Initialize the Motion Battery Sensor."""
-        super().__init__(blind, config_entry)
+        super().__init__(blind)
         self._motor = motor
 
     @property
@@ -139,11 +132,10 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
 class MotionSignalStrengthSensor(Entity):
     """Representation of a Motion Signal Strength Sensor."""
 
-    def __init__(self, device, device_type, config_entry):
+    def __init__(self, device, device_type):
         """Initialize the Motion Signal Strength Sensor."""
         self._device = device
         self._device_type = device_type
-        self._config_entry = config_entry
 
     def update(self):
         """
@@ -162,9 +154,7 @@ class MotionSignalStrengthSensor(Entity):
     @property
     def device_info(self):
         """Return the device info of the blind."""
-        device_info = {"identifiers": {(DOMAIN, self._device.mac)}}
-
-        return device_info
+        return {"identifiers": {(DOMAIN, self._device.mac)}}
 
     @property
     def name(self):

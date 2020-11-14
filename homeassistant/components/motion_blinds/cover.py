@@ -21,6 +21,32 @@ from .const import DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 
+POSITION_DEVICE_MAP = {
+    BlindType.RollerBlind: DEVICE_CLASS_SHADE,
+    BlindType.RomanBlind: DEVICE_CLASS_SHADE,
+    BlindType.HoneycombBlind: DEVICE_CLASS_SHADE,
+    BlindType.DimmingBlind: DEVICE_CLASS_SHADE,
+    BlindType.DayNightBlind: DEVICE_CLASS_SHADE,
+    BlindType.RollerShutter: DEVICE_CLASS_SHUTTER,
+    BlindType.Switch: DEVICE_CLASS_SHUTTER,
+    BlindType.RollerGate: DEVICE_CLASS_GATE,
+    BlindType.Awning: DEVICE_CLASS_AWNING,
+    BlindType.Curtain: DEVICE_CLASS_CURTAIN,
+    BlindType.CurtainLeft: DEVICE_CLASS_CURTAIN,
+    BlindType.CurtainRight: DEVICE_CLASS_CURTAIN,
+}
+
+TILT_DEVICE_MAP = {
+    BlindType.VenetianBlind: DEVICE_CLASS_BLIND,
+    BlindType.ShangriLaBlind: DEVICE_CLASS_BLIND,
+    BlindType.DoubleRoller: DEVICE_CLASS_SHADE,
+}
+
+TDBU_DEVICE_MAP = {
+    BlindType.TopDownBottomUp: DEVICE_CLASS_SHADE,
+}
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Motion Blind from a config entry."""
     entities = []
@@ -28,59 +54,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for blind in motion_gateway.device_list.values():
         await hass.async_add_executor_job(blind.Update)
 
-        if blind.type in [
-            BlindType.RollerBlind,
-            BlindType.RomanBlind,
-            BlindType.HoneycombBlind,
-            BlindType.DimmingBlind,
-            BlindType.DayNightBlind,
-        ]:
+        if blind.type in POSITION_DEVICE_MAP:
             entities.append(
-                MotionPositionDevice(blind, DEVICE_CLASS_SHADE, config_entry)
+                MotionPositionDevice(
+                    blind, POSITION_DEVICE_MAP[blind.type], config_entry
+                )
             )
 
-        elif blind.type in [
-            BlindType.RollerShutter,
-            BlindType.Switch,
-        ]:
+        elif blind.type in TILT_DEVICE_MAP:
             entities.append(
-                MotionPositionDevice(blind, DEVICE_CLASS_SHUTTER, config_entry)
+                MotionTiltDevice(blind, TILT_DEVICE_MAP[blind.type], config_entry)
             )
 
-        elif blind.type in [BlindType.RollerGate]:
+        elif blind.type in TDBU_DEVICE_MAP:
             entities.append(
-                MotionPositionDevice(blind, DEVICE_CLASS_GATE, config_entry)
-            )
-
-        elif blind.type in [BlindType.Awning]:
-            entities.append(
-                MotionPositionDevice(blind, DEVICE_CLASS_AWNING, config_entry)
-            )
-
-        elif blind.type in [
-            BlindType.Curtain,
-            BlindType.CurtainLeft,
-            BlindType.CurtainRight,
-        ]:
-            entities.append(
-                MotionPositionDevice(blind, DEVICE_CLASS_CURTAIN, config_entry)
-            )
-
-        elif blind.type in [
-            BlindType.VenetianBlind,
-            BlindType.ShangriLaBlind,
-        ]:
-            entities.append(MotionTiltDevice(blind, DEVICE_CLASS_BLIND, config_entry))
-
-        elif blind.type in [BlindType.DoubleRoller]:
-            entities.append(MotionTiltDevice(blind, DEVICE_CLASS_SHADE, config_entry))
-
-        elif blind.type in [BlindType.TopDownBottomUp]:
-            entities.append(
-                MotionTDBUDevice(blind, DEVICE_CLASS_SHADE, config_entry, "Top")
+                MotionTDBUDevice(
+                    blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Top"
+                )
             )
             entities.append(
-                MotionTDBUDevice(blind, DEVICE_CLASS_SHADE, config_entry, "Bottom")
+                MotionTDBUDevice(
+                    blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Bottom"
+                )
             )
 
         else:
@@ -205,6 +200,10 @@ class MotionTDBUDevice(MotionPositionDevice):
         """Initialize the blind."""
         super().__init__(blind, device_class, config_entry)
         self._motor = motor
+        self._motor_key = motor[0]
+
+        if self._motor not in ["Bottom", "Top"]:
+            _LOGGER.error("Unknown motor '%s'", self._motor)
 
     def update(self):
         """
@@ -235,14 +234,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         if self._blind.position is None:
             return None
 
-        if self._motor == "Bottom":
-            return 100 - self._blind.position["B"]
-
-        if self._motor == "Top":
-            return 100 - self._blind.position["T"]
-
-        _LOGGER.error("Unknown motor '%s'", self._motor)
-        return None
+        return 100 - self._blind.position[self._motor_key]
 
     @property
     def is_closed(self):
@@ -250,29 +242,22 @@ class MotionTDBUDevice(MotionPositionDevice):
         if self._blind.position is None:
             return None
 
-        if self._motor == "Bottom":
-            return self._blind.position["B"] == 100
-
-        if self._motor == "Top":
-            return self._blind.position["T"] == 100
-
-        _LOGGER.error("Unknown motor '%s'", self._motor)
-        return None
+        return self._blind.position[self._motor_key] == 100
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._blind.Open(motor=self._motor[0])
+        self._blind.Open(motor=self._motor_key)
 
     def close_cover(self, **kwargs):
         """Close cover."""
-        self._blind.Close(motor=self._motor[0])
+        self._blind.Close(motor=self._motor_key)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            self._blind.Set_position(100 - position, motor=self._motor[0])
+            self._blind.Set_position(100 - position, motor=self._motor_key)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._blind.Stop(motor=self._motor[0])
+        self._blind.Stop(motor=self._motor_key)
