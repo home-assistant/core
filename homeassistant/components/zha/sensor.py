@@ -192,10 +192,10 @@ class Battery(Sensor):
     async def async_state_attr_provider(self) -> Dict[str, Any]:
         """Return device state attrs for battery sensors."""
         state_attrs = {}
-        battery_size = self._channel.get("battery_size")
+        battery_size = self._channel.cluster.get("battery_size")
         if battery_size is not None:
             state_attrs["battery_size"] = BATTERY_SIZES.get(battery_size, "Unknown")
-        battery_quantity = self._channel.get("battery_quantity")
+        battery_quantity = self._channel.cluster.get("battery_quantity")
         if battery_quantity is not None:
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
