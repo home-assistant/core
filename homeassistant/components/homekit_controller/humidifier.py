@@ -268,11 +268,6 @@ class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
         return DEVICE_CLASS_HUMIDIFIER
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self.service.value(CharacteristicsTypes.ACTIVE)
@@ -338,16 +333,6 @@ class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
                     / 20
                 }
             )
-
-    @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return 0
-
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return 100
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
