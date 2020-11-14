@@ -9,9 +9,11 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
+    CONF_ENTRY_ID,
     CONF_PRIORITY,
     DOMAIN,
     SOURCE_IMPORT,
+    SOURCE_REAUTH,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -25,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
+    TEST_AUTH_REQUIRED_RESP,
     TEST_CONFIG_ENTRY_ID,
     TEST_ENTITY_ID_1,
     TEST_HOST,
@@ -47,15 +50,6 @@ TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT: Dict[str, Any] = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
-}
-
-TEST_AUTH_REQUIRED_RESP = {
-    "command": "authorize-tokenRequired",
-    "info": {
-        "required": True,
-    },
-    "success": True,
-    "tan": 1,
 }
 
 TEST_AUTH_ID = "ABCDE"
@@ -694,3 +688,37 @@ async def test_options(hass: HomeAssistantType) -> None:
             blocking=True,
         )
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
+
+
+async def test_reauth_success(hass):
+    """Check an import flow that cannot connect."""
+
+    config_data = {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+    }
+
+    config_entry = add_test_config_entry(hass, data=config_data)
+    client = create_mock_client()
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch("homeassistant.components.hyperion.async_setup", return_value=True), patch(
+        "homeassistant.components.hyperion.async_setup_entry", return_value=True
+    ):
+        result = await _init_flow(
+            hass,
+            source=SOURCE_REAUTH,
+            data={**config_data, CONF_ENTRY_ID: config_entry.entry_id},
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
+        assert CONF_TOKEN in config_entry.data
