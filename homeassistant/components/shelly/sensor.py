@@ -14,7 +14,7 @@ from homeassistant.const import (
     VOLT,
 )
 
-from . import ShellyWrapper
+from . import ShellyDeviceWrapper, get_device_name
 from .const import DATA_CONFIG_ENTRY, DOMAIN, REST, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
@@ -24,7 +24,7 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
-from .utils import temperature_unit
+from .utils import async_remove_entity_by_domain, temperature_unit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ REST_SENSORS = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
 
-    wrapper: ShellyWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
     ][REST]
 
@@ -189,8 +189,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "external_power" in wrapper.device.settings
         and wrapper.device.settings["external_power"] == 1
     ):
-        _LOGGER.warning("Simone - Battery sensor needs to be removed!!!")
+        _LOGGER.debug(
+            "Removed battery sensor [externally powered] for %s",
+            get_device_name(wrapper.device),
+        )
         SENSORS.pop(("device", "battery"))
+        unique_id = f'{wrapper.device.shelly["mac"]}-battery'
+        await async_remove_entity_by_domain(
+            hass, "sensor", unique_id, config_entry.entry_id
+        )
 
     await async_setup_entry_attribute_entities(
         hass, config_entry, async_add_entities, SENSORS, ShellySensor
