@@ -1422,7 +1422,7 @@ pygti==0.9.2
 pyhaversion==3.4.2
 
 # homeassistant.components.heos
-pyheos==0.6.0
+pyheos==0.7.2
 
 # homeassistant.components.hikvision
 pyhik==0.2.8
