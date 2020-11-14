@@ -32,7 +32,6 @@ from homeassistant.helpers.script import (
     CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
     Script,
-    ScriptLoggerAdapter,
     make_script_schema,
 )
 from homeassistant.helpers.service import async_set_service_schema
@@ -265,7 +264,7 @@ class ScriptEntity(ToggleEntity):
             script_mode=cfg[CONF_MODE],
             max_runs=cfg[CONF_MAX],
             max_exceeded=cfg[CONF_MAX_EXCEEDED],
-            logger=ScriptLoggerAdapter(_LOGGER, {"name": object_id}),
+            logger=logging.getLogger(f"{__name__}.{object_id}"),
             variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()

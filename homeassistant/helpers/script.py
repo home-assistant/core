@@ -755,14 +755,6 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[Dict[str, Any], MappingProxyType]
 
 
-class ScriptLoggerAdapter(logging.LoggerAdapter):
-    """Add script name to script log messages."""
-
-    def process(self, msg, kwargs):
-        """Add script name to script log messages."""
-        return f'[{self.extra["name"]}] {msg}', kwargs
-
-
 class Script:
     """Representation of a script."""
 
@@ -779,7 +771,7 @@ class Script:
         script_mode: str = DEFAULT_SCRIPT_MODE,
         max_runs: int = DEFAULT_MAX,
         max_exceeded: str = DEFAULT_MAX_EXCEEDED,
-        logger: Optional[Union[ScriptLoggerAdapter, logging.Logger]] = None,
+        logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
         top_level: bool = True,
         variables: Optional[ScriptVariables] = None,
@@ -845,17 +837,13 @@ class Script:
         ):
             self._change_listener_job = HassJob(change_listener)
 
-    def _set_logger(
-        self, logger: Optional[Union[ScriptLoggerAdapter, logging.Logger]] = None
-    ) -> None:
+    def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
             self._logger = logger
         else:
-            self._logger = ScriptLoggerAdapter(_LOGGER, {"name": slugify(self.name)})
+            self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
 
-    def update_logger(
-        self, logger: Optional[Union[ScriptLoggerAdapter, logging.Logger]] = None
-    ) -> None:
+    def update_logger(self, logger: Optional[logging.Logger] = None) -> None:
         """Update logger."""
         self._set_logger(logger)
         for script in self._repeat_script.values():
