@@ -1,12 +1,14 @@
 """The motion_blinds component."""
+from datetime import timedelta
 import logging
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +35,29 @@ async def async_setup_entry(
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
 
-    hass.data[DOMAIN][entry.entry_id] = motion_gateway
+    async def async_update_data():
+        """Fetch data from the gateway and blinds."""
+        await hass.async_add_executor_job(motion_gateway.Update)
+        for blind in motion_gateway.device_list.values():
+            await hass.async_add_executor_job(blind.Update)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="cover",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=10),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_GATEWAY: motion_gateway,
+        KEY_COORDINATOR: coordinator,
+    }
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

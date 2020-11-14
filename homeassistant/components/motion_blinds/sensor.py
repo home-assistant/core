@@ -10,8 +10,9 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,32 +24,36 @@ TYPE_GATEWAY = "gateway"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Motion Blinds."""
     entities = []
-    motion_gateway = hass.data[DOMAIN][config_entry.entry_id]
+    motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     for blind in motion_gateway.device_list.values():
-        await hass.async_add_executor_job(blind.Update)
-        entities.append(MotionSignalStrengthSensor(blind, TYPE_BLIND))
+        entities.append(MotionSignalStrengthSensor(coordinator, blind, TYPE_BLIND))
         if blind.type == BlindType.TopDownBottomUp:
-            entities.append(MotionTDBUBatterySensor(blind, "Bottom"))
-            entities.append(MotionTDBUBatterySensor(blind, "Top"))
+            entities.append(MotionTDBUBatterySensor(coordinator, blind, "Bottom"))
+            entities.append(MotionTDBUBatterySensor(coordinator, blind, "Top"))
         elif blind.battery_voltage > 0:
             # Only add battery powered blinds
-            entities.append(MotionBatterySensor(blind))
+            entities.append(MotionBatterySensor(coordinator, blind))
 
-    entities.append(MotionSignalStrengthSensor(motion_gateway, TYPE_GATEWAY))
+    entities.append(
+        MotionSignalStrengthSensor(coordinator, motion_gateway, TYPE_GATEWAY)
+    )
 
     async_add_entities(entities)
 
 
-class MotionBatterySensor(Entity):
+class MotionBatterySensor(CoordinatorEntity, Entity):
     """
     Representation of a Motion Battery Sensor.
 
     Updates are done by the cover platform.
     """
 
-    def __init__(self, blind):
+    def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""
+        super().__init__(coordinator)
+
         self._blind = blind
 
     @property
@@ -96,9 +101,10 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
     Updates are done by the cover platform.
     """
 
-    def __init__(self, blind, motor):
+    def __init__(self, coordinator, blind, motor):
         """Initialize the Motion Battery Sensor."""
-        super().__init__(blind)
+        super().__init__(coordinator, blind)
+
         self._motor = motor
 
     @property
@@ -129,22 +135,15 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return attributes
 
 
-class MotionSignalStrengthSensor(Entity):
+class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
     """Representation of a Motion Signal Strength Sensor."""
 
-    def __init__(self, device, device_type):
+    def __init__(self, coordinator, device, device_type):
         """Initialize the Motion Signal Strength Sensor."""
+        super().__init__(coordinator)
+
         self._device = device
         self._device_type = device_type
-
-    def update(self):
-        """
-        Get the latest status information from gateway.
-
-        Blinds are updated by the cover platform
-        """
-        if self._device_type == TYPE_GATEWAY:
-            self._device.Update()
 
     @property
     def unique_id(self):

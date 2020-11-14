@@ -15,8 +15,9 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,31 +51,37 @@ TDBU_DEVICE_MAP = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Motion Blind from a config entry."""
     entities = []
-    motion_gateway = hass.data[DOMAIN][config_entry.entry_id]
-    for blind in motion_gateway.device_list.values():
-        await hass.async_add_executor_job(blind.Update)
+    motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
+    for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:
             entities.append(
                 MotionPositionDevice(
-                    blind, POSITION_DEVICE_MAP[blind.type], config_entry
+                    coordinator, blind, POSITION_DEVICE_MAP[blind.type], config_entry
                 )
             )
 
         elif blind.type in TILT_DEVICE_MAP:
             entities.append(
-                MotionTiltDevice(blind, TILT_DEVICE_MAP[blind.type], config_entry)
+                MotionTiltDevice(
+                    coordinator, blind, TILT_DEVICE_MAP[blind.type], config_entry
+                )
             )
 
         elif blind.type in TDBU_DEVICE_MAP:
             entities.append(
                 MotionTDBUDevice(
-                    blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Top"
+                    coordinator, blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Top"
                 )
             )
             entities.append(
                 MotionTDBUDevice(
-                    blind, TDBU_DEVICE_MAP[blind.type], config_entry, "Bottom"
+                    coordinator,
+                    blind,
+                    TDBU_DEVICE_MAP[blind.type],
+                    config_entry,
+                    "Bottom",
                 )
             )
 
@@ -84,18 +91,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MotionPositionDevice(CoverEntity):
+class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
-    def __init__(self, blind, device_class, config_entry):
+    def __init__(self, coordinator, blind, device_class, config_entry):
         """Initialize the blind."""
+        super().__init__(coordinator)
+
         self._blind = blind
         self._device_class = device_class
         self._config_entry = config_entry
-
-    def update(self):
-        """Get the latest status information from blind."""
-        self._blind.Update()
 
     @property
     def unique_id(self):
@@ -196,23 +201,14 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, blind, device_class, config_entry, motor):
+    def __init__(self, coordinator, blind, device_class, config_entry, motor):
         """Initialize the blind."""
-        super().__init__(blind, device_class, config_entry)
+        super().__init__(coordinator, blind, device_class, config_entry)
         self._motor = motor
         self._motor_key = motor[0]
 
         if self._motor not in ["Bottom", "Top"]:
             _LOGGER.error("Unknown motor '%s'", self._motor)
-
-    def update(self):
-        """
-        Get the latest status information from blind.
-
-        Top motor is being updated by the Bottom entity
-        """
-        if self._motor == "Bottom":
-            self._blind.Update()
 
     @property
     def unique_id(self):
