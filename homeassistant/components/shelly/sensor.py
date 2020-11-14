@@ -1,4 +1,6 @@
 """Sensor for Shelly."""
+import logging
+
 from homeassistant.components import sensor
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -12,7 +14,8 @@ from homeassistant.const import (
     VOLT,
 )
 
-from .const import SHAIR_MAX_WORK_HOURS
+from . import ShellyWrapper
+from .const import DATA_CONFIG_ENTRY, DOMAIN, REST, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -22,6 +25,8 @@ from .entity import (
     async_setup_entry_rest,
 )
 from .utils import temperature_unit
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     ("device", "battery"): BlockAttributeDescription(
@@ -175,6 +180,18 @@ REST_SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
+
+    wrapper: ShellyWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][REST]
+
+    if (
+        "external_power" in wrapper.device.settings
+        and wrapper.device.settings["external_power"] == 1
+    ):
+        _LOGGER.warning("Simone - Battery sensor needs to be removed!!!")
+        SENSORS.pop(("device", "battery"))
+
     await async_setup_entry_attribute_entities(
         hass, config_entry, async_add_entities, SENSORS, ShellySensor
     )
