@@ -6,6 +6,7 @@
             "dev": "Arendus",
             "docker": "Docker",
             "docker_version": "Docker",
+            "hassio": "Haldur",
             "host_os": "Home Assistant OS",
             "installation_type": "Paigalduse t\u00fc\u00fcp",
             "os_name": "Operatsioonis\u00fcsteemi j\u00e4rk",

@@ -6,6 +6,7 @@
             "dev": "V\u00fdvoj",
             "docker": "Docker",
             "docker_version": "Docker",
+            "hassio": "Supervisor",
             "host_os": "Home Assistant OS",
             "installation_type": "Typ instalace",
             "os_name": "Rodina opera\u010dn\u00edch syst\u00e9m\u016f",
