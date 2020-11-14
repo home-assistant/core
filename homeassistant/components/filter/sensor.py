@@ -330,7 +330,7 @@ class FilterState:
         self.timestamp = state.last_updated
         try:
             self.state = float(state.state)
-        except ValueError:
+        except (TypeError, ValueError):
             self.state = state.state
 
     def set_precision(self, precision):
