@@ -58,7 +58,7 @@ class ReolinkBase:
         await self._api.logout()
 
     async def subscribe(self, webhookUrl):
-        """subscribe to motion events and set the webhook as callback."""
+        """Subscribe to motion events and set the webhook as callback."""
         self._webhookUrl = webhookUrl
 
         if not self._api.session_active:

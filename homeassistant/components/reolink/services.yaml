@@ -11,7 +11,7 @@ ptz_control:
         RIGHT RIGHTDOWN RIGHTUP STOP TOPOS UP ZOOMDEC ZOOMINC
       example: LEFTUP
     preset:
-      description: In case of the command ToPos. The possible presets are listed as attribute on the camera.
+      description: In case of the command TOPOS. The available presets are listed as attribute on the camera.
       example:
     speed:
       description: Speed at which the movement takes place.
