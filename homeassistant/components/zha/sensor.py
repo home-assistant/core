@@ -1,6 +1,7 @@
 """Sensors on Zigbee Home Automation networks."""
 import functools
 import numbers
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
@@ -20,8 +22,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType, StateType
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
@@ -41,6 +44,7 @@ from .core.const import (
     SIGNAL_STATE_ATTR,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
@@ -65,7 +69,9 @@ CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
@@ -82,19 +88,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
-    SENSOR_ATTR = None
-    _decimals = 1
-    _device_class = None
-    _divisor = 1
-    _multiplier = 1
-    _unit = None
+    SENSOR_ATTR: Optional[Union[int, str]] = None
+    _decimals: int = 1
+    _device_class: Optional[str] = None
+    _divisor: int = 1
+    _multiplier: int = 1
+    _unit: Optional[str] = None
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel = channels[0]
+        self._channel: ChannelType = channels[0]
+        if self.SENSOR_ATTR is not None:
+            self._state = self._channel.cluster.get(self.SENSOR_ATTR)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self._device_state_attributes.update(await self.async_state_attr_provider())
@@ -112,19 +126,19 @@ class Sensor(ZhaEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement of this entity."""
         return self._unit
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return the state of the entity."""
         if self._state is None:
             return None
         return self._state
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Handle state update from channel."""
         if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
             return
@@ -134,15 +148,15 @@ class Sensor(ZhaEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         self._state = last_state.state
 
-    async def async_state_attr_provider(self):
+    async def async_state_attr_provider(self) -> Dict:
         """Initialize device state attributes."""
         return {}
 
-    def formatter(self, value):
+    def formatter(self, value: int) -> Union[int, float]:
         """Numeric pass-through formatter."""
         if self._decimals > 0:
             return round(
@@ -167,7 +181,7 @@ class Battery(Sensor):
     _unit = PERCENTAGE
 
     @staticmethod
-    def formatter(value):
+    def formatter(value: int) -> int:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -175,21 +189,19 @@ class Battery(Sensor):
         value = round(value / 2)
         return value
 
-    async def async_state_attr_provider(self):
+    async def async_state_attr_provider(self) -> Dict[str, Any]:
         """Return device state attrs for battery sensors."""
         state_attrs = {}
-        attributes = ["battery_size", "battery_quantity"]
-        results = await self._channel.get_attributes(attributes)
-        battery_size = results.get("battery_size")
+        battery_size = self._channel.get("battery_size")
         if battery_size is not None:
             state_attrs["battery_size"] = BATTERY_SIZES.get(battery_size, "Unknown")
-        battery_quantity = results.get("battery_quantity")
+        battery_quantity = self._channel.get("battery_quantity")
         if battery_quantity is not None:
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
 
     @callback
-    def async_update_state_attribute(self, key, value):
+    def async_update_state_attribute(self, key: str, value: int) -> None:
         """Update a single device state attribute."""
         if key == "battery_voltage":
             self._device_state_attributes[key] = round(value / 10, 1)
@@ -210,7 +222,7 @@ class ElectricalMeasurement(Sensor):
         """Return True if HA needs to poll for state changes."""
         return True
 
-    def formatter(self, value) -> int:
+    def formatter(self, value: int) -> Union[int, float]:
         """Return 'normalized' value."""
         value = value * self._channel.multiplier / self._channel.divisor
         if value < 100 and self._channel.divisor > 1:
@@ -244,7 +256,7 @@ class Illuminance(Sensor):
     _unit = LIGHT_LUX
 
     @staticmethod
-    def formatter(value):
+    def formatter(value: int) -> float:
         """Convert illumination data."""
         return round(pow(10, ((value - 1) / 10000)), 1)
 
@@ -256,12 +268,12 @@ class SmartEnergyMetering(Sensor):
     SENSOR_ATTR = "instantaneous_demand"
     _device_class = DEVICE_CLASS_POWER
 
-    def formatter(self, value):
+    def formatter(self, value: int) -> Union[int, float]:
         """Pass through channel formatter."""
         return self._channel.formatter_function(value)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return Unit of measurement."""
         return self._channel.unit_of_measurement
 
@@ -286,7 +298,7 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         if last_state.state == STATE_UNKNOWN:
             return

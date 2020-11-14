@@ -20,7 +20,7 @@ from ..const import (
     SIGNAL_STATE_ATTR,
     SIGNAL_UPDATE_DEVICE,
 )
-from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
+from .base import ChannelStatus, ClientChannel, ZigbeeChannel, parse_and_log_command
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
@@ -415,15 +415,6 @@ class PowerConfigurationChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.async_read_state(from_cache)
-        await super().async_initialize(from_cache)
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self.async_read_state(True)
-
-    async def async_read_state(self, from_cache):
-        """Read data from the cluster."""
         attributes = [
             "battery_size",
             "battery_percentage_remaining",
@@ -431,6 +422,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
             "battery_quantity",
         ]
         await self.get_attributes(attributes, from_cache=from_cache)
+        self._status = ChannelStatus.INITIALIZED
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)
