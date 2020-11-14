@@ -14,12 +14,12 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-# Interface name to track devices for. Most likely one will not need to
+# Interfaces names to track devices for. Most likely one will not need to
 # change it from default 'Home'. This is needed not to track Guest WI-FI-
 # clients and router itself
-CONF_INTERFACE = "interface"
+CONF_INTERFACES = "interfaces"
 
-DEFAULT_INTERFACE = "Home"
+DEFAULT_INTERFACES = ["Home"]
 DEFAULT_PORT = 23
 
 
@@ -29,7 +29,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
+        vol.Required(CONF_INTERFACES, default=DEFAULT_INTERFACES): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -49,7 +51,7 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
         self.last_results = []
 
-        self._interface = config[CONF_INTERFACE]
+        self._interfaces = config[CONF_INTERFACES]
 
         self._client = Client(
             TelnetConnection(
@@ -92,7 +94,7 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
             self.last_results = [
                 dev
                 for dev in self._client.get_devices()
-                if dev.interface == self._interface
+                if dev.interface in self._interfaces
             ]
             _LOGGER.debug("Successfully fetched data from router")
             return True
