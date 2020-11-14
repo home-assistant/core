@@ -260,7 +260,7 @@ class GreeClimateEntity(ClimateEntity):
 
         return HVAC_MODES.get(self._device.mode)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Invalid hvac_mode: {hvac_mode}")
@@ -280,6 +280,20 @@ class GreeClimateEntity(ClimateEntity):
             self._device.power = True
 
         self._device.mode = HVAC_MODES_REVERSE.get(hvac_mode)
+        await self._push_state_update()
+
+    async def async_turn_on(self) -> None:
+        """Turn on the device."""
+        _LOGGER.debug("Turning on HVAC for device %s", self._name)
+
+        self._device.power = True
+        await self._push_state_update()
+
+    async def async_turn_off(self) -> None:
+        """Turn off the device."""
+        _LOGGER.debug("Turning off HVAC for device %s", self._name)
+
+        self._device.power = False
         await self._push_state_update()
 
     @property
