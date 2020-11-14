@@ -36,6 +36,7 @@ from .const import (
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
+    QUARTER_HOURLY,
     QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
@@ -241,7 +242,16 @@ class UtilityMeterSensor(RestoreEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._period == HOURLY:
+        if self._period == QUARTER_HOURLY:
+            for quarter in range(4):
+                async_track_time_change(
+                    self.hass,
+                    self._async_reset_meter,
+                    minute=(quarter * 15)
+                    + self._period_offset.seconds % (15 * 60) // 60,
+                    second=self._period_offset.seconds % 60,
+                )
+        elif self._period == HOURLY:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
