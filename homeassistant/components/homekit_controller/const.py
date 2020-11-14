@@ -37,4 +37,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "occupancy": "binary_sensor",
     "television": "media_player",
     "valve": "switch",
+    "camera-rtp-stream-management": "camera",
 }
