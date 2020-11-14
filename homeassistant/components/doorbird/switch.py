@@ -98,7 +98,7 @@ class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
         raise NotImplementedError("DoorBird relays cannot be manually turned off.")
 
     @callback
-    def _async_turn_off(self):
+    def _async_turn_off(self, *_):
         """Wait for the correct amount of assumed time to pass."""
         self._state = False
         self._reset_sub = None
