@@ -1,7 +1,0 @@
-{
-  "domain": "yessssms",
-  "name": "yesss! SMS",
-  "documentation": "https://www.home-assistant.io/integrations/yessssms",
-  "requirements": ["YesssSMS==0.5.0"],
-  "codeowners": ["@flowolf"]
-}
