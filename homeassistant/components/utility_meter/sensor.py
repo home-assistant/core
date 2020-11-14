@@ -243,7 +243,7 @@ class UtilityMeterSensor(RestoreEntity):
         await super().async_added_to_hass()
 
         if self._period == QUARTER_HOURLY:
-            for quarter in [0, 1, 2, 3]:
+            for quarter in range(4):
                 async_track_time_change(
                     self.hass,
                     self._async_reset_meter,
