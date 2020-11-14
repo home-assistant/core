@@ -1930,7 +1930,7 @@ raspyrfm-client==1.2.8
 regenmaschine==3.0.0
 
 # homeassistant.components.reolink
-reolink==0.0.5
+reolink==0.0.8
 
 # homeassistant.components.python_script
 restrictedpython==5.0

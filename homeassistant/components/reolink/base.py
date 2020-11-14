@@ -71,7 +71,7 @@ class ReolinkBase:
         if not await self._sman.subscribe(self._webhook_url):
             return False
 
-        _LOGGER.info("Host %s subscribed succesfully to webhook %s!",
+        _LOGGER.info("Host %s subscribed successfully to webhook %s!",
             self._api.host, webhook_url)
         return True
 
