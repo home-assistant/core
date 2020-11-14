@@ -56,7 +56,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
     config_entry = MockConfigEntry(
         version=1,
         domain=HMIPC_DOMAIN,
-        title=HAPID,
+        title="Home Test SN",
         unique_id=HAPID,
         data=entry_data,
         source=SOURCE_IMPORT,

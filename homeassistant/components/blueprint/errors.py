@@ -78,3 +78,11 @@ class MissingPlaceholder(BlueprintWithNameException):
             blueprint_name,
             f"Missing placeholder {', '.join(sorted(placeholder_names))}",
         )
+
+
+class FileAlreadyExists(BlueprintWithNameException):
+    """Error when file already exists."""
+
+    def __init__(self, domain: str, blueprint_name: str) -> None:
+        """Initialize blueprint exception."""
+        super().__init__(domain, blueprint_name, "Blueprint already exists")

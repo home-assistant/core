@@ -76,6 +76,9 @@ class HKDevice:
 
         self.entity_map = Accessories()
 
+        # A list of callbacks that turn HK accessories into entities
+        self.accessory_factories = []
+
         # A list of callbacks that turn HK service metadata into entities
         self.listeners = []
 
@@ -289,14 +292,29 @@ class HKDevice:
 
         return True
 
+    def add_accessory_factory(self, add_entities_cb):
+        """Add a callback to run when discovering new entities for accessories."""
+        self.accessory_factories.append(add_entities_cb)
+        self._add_new_entities_for_accessory([add_entities_cb])
+
+    def _add_new_entities_for_accessory(self, handlers):
+        for accessory in self.entity_map.accessories:
+            for handler in handlers:
+                if (accessory.aid, None) in self.entities:
+                    continue
+                if handler(accessory):
+                    self.entities.append((accessory.aid, None))
+                    break
+
     def add_listener(self, add_entities_cb):
-        """Add a callback to run when discovering new entities."""
+        """Add a callback to run when discovering new entities for services."""
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])
 
     def add_entities(self):
         """Process the entity map and create HA entities."""
         self._add_new_entities(self.listeners)
+        self._add_new_entities_for_accessory(self.accessory_factories)
 
     def _add_new_entities(self, callbacks):
         for accessory in self.accessories:

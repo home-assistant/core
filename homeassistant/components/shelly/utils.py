@@ -1,9 +1,12 @@
 """Shelly helpers functions."""
+
+from datetime import datetime, timedelta
 import logging
 from typing import Optional
 
 import aioshelly
 
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import entity_registry
 
@@ -40,36 +43,56 @@ def get_entity_name(
     """Naming for switch and sensors."""
     entity_name = wrapper.name
 
-    channels = None
-    if block.type == "input":
-        channels = wrapper.device.shelly.get("num_inputs")
-    elif block.type == "emeter":
-        channels = wrapper.device.shelly.get("num_emeters")
-    elif block.type in ["relay", "light"]:
-        channels = wrapper.device.shelly.get("num_outputs")
-    elif block.type in ["roller", "device"]:
-        channels = 1
+    if block:
+        channels = None
+        if block.type == "input":
+            channels = wrapper.device.shelly.get("num_inputs")
+        elif block.type == "emeter":
+            channels = wrapper.device.shelly.get("num_emeters")
+        elif block.type in ["relay", "light"]:
+            channels = wrapper.device.shelly.get("num_outputs")
+        elif block.type in ["roller", "device"]:
+            channels = 1
 
-    channels = channels or 1
+        channels = channels or 1
 
-    if channels > 1 and block.type != "device":
-        entity_name = None
-        mode = block.type + "s"
-        if mode in wrapper.device.settings:
-            entity_name = wrapper.device.settings[mode][int(block.channel)].get("name")
+        if channels > 1 and block.type != "device":
+            entity_name = None
+            mode = block.type + "s"
+            if mode in wrapper.device.settings:
+                entity_name = wrapper.device.settings[mode][int(block.channel)].get(
+                    "name"
+                )
 
-        if not entity_name:
-            if wrapper.model == "SHEM-3":
-                base = ord("A")
-            else:
-                base = ord("1")
-            entity_name = f"{wrapper.name} channel {chr(int(block.channel)+base)}"
+            if not entity_name:
+                if wrapper.model == "SHEM-3":
+                    base = ord("A")
+                else:
+                    base = ord("1")
+                entity_name = f"{wrapper.name} channel {chr(int(block.channel)+base)}"
 
-    # Shelly Dimmer has two input channels and missing "num_inputs"
-    if wrapper.model in ["SHDM-1", "SHDM-2"] and block.type == "input":
-        entity_name = f"{entity_name} channel {int(block.channel)+1}"
+        # Shelly Dimmer has two input channels and missing "num_inputs"
+        if wrapper.model in ["SHDM-1", "SHDM-2"] and block.type == "input":
+            entity_name = f"{entity_name} channel {int(block.channel)+1}"
 
     if description:
         entity_name = f"{entity_name} {description}"
 
     return entity_name
+
+
+def get_rest_value_from_path(status, device_class, path: str):
+    """Parser for REST path from device status."""
+
+    if "/" not in path:
+        _attribute_value = status[path]
+    else:
+        _attribute_value = status[path.split("/")[0]][path.split("/")[1]]
+    if device_class == DEVICE_CLASS_TIMESTAMP:
+        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
+        _attribute_value = last_boot.replace(microsecond=0).isoformat()
+
+    if "new_version" in path:
+        _attribute_value = _attribute_value.split("/")[1].split("@")[0]
+
+    return _attribute_value

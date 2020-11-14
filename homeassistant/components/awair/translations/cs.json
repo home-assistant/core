@@ -20,7 +20,8 @@
                 "data": {
                     "access_token": "P\u0159\u00edstupov\u00fd token",
                     "email": "E-mail"
-                }
+                },
+                "description": "Pro p\u0159\u00edstupov\u00fd token v\u00fdvoj\u00e1\u0159e Awair se mus\u00edte zaregistrovat na: https://developer.getawair.com/onboard/login"
             }
         }
     }
