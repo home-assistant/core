@@ -1,10 +1,11 @@
 """Support for HomeKit Controller humidifier."""
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
+    ATTR_HUMIDITY,
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
     MODE_AUTO,
@@ -283,17 +284,6 @@ class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
-
-    @property
-    def capability_attributes(self) -> Dict[str, Any]:
-        """Return capability attributes."""
-        data = {
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
-            ATTR_AVAILABLE_MODES: self.available_modes,
-        }
-
-        return data
 
     @property
     def state_attributes(self) -> Dict[str, Any]:
