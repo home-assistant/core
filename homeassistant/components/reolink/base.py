@@ -74,9 +74,9 @@ class ReolinkBase:
             return False
 
         _LOGGER.info(
-            "Host %s subscribed successfully to webhook %s!", 
-            self._api.host, 
-            webhook_url
+            "Host %s subscribed successfully to webhook %s!",
+            self._api.host,
+            webhook_url,
         )
         return True
 
@@ -85,8 +85,8 @@ class ReolinkBase:
         if self._sman.renewtimer <= SESSION_RENEW_THRESHOLD:
             if not await self._sman.renew():
                 _LOGGER.error(
-                    "Host %s error renewing the Reolink subscription", 
-                    self._api.host
+                    "Host %s error renewing the Reolink subscription",
+                    self._api.host,
                 )
                 await self._sman.subscribe(self._webhook_url)
 
