@@ -317,19 +317,17 @@ class HKDevice:
         self._add_new_entities_for_accessory(self.accessory_factories)
 
     def _add_new_entities(self, callbacks):
-        for accessory in self.accessories:
-            aid = accessory["aid"]
-            for service in accessory["services"]:
-                iid = service["iid"]
-                stype = ServicesTypes.get_short(service["type"].upper())
-                service["stype"] = stype
+        for accessory in self.entity_map.accessories:
+            aid = accessory.aid
+            for service in accessory.services:
+                iid = service.iid
 
                 if (aid, iid) in self.entities:
                     # Don't add the same entity again
                     continue
 
                 for listener in callbacks:
-                    if listener(aid, service):
+                    if listener(service):
                         self.entities.append((aid, iid))
                         break
 
