@@ -249,7 +249,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         return f"homekit-{serial}-{self._iid}-{self.device_class}"
 
 
-class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
+class VocolincFlowerbud(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
 
     def get_characteristic_types(self):
@@ -381,7 +381,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             get_char(serv, CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL)
             is not None
         ):
-            async_add_entities([HomeKitDiffuser(conn, info)], True)
+            async_add_entities([VocolincFlowerbud(conn, info)], True)
         else:
             if (
                 get_char(
