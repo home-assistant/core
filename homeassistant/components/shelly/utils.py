@@ -96,6 +96,6 @@ def get_rest_value_from_path(status, device_class, path: str):
         if _attribute_value:
             _attribute_value = _attribute_value.split("/")[1].split("@")[0]
         else:
-            _attribute_value = "-"
+            _attribute_value = None
 
     return _attribute_value
