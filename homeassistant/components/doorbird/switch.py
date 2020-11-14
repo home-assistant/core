@@ -83,7 +83,7 @@ class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
         self._reset_sub = async_track_point_in_utc_time(
             self.hass, self._async_turn_off, dt_util.utcnow() + self._time
         )
-        await self.async_add_executor_job(self._turn_on)
+        await self.hass.async_add_executor_job(self._turn_on)
         self.async_write_ha_state()
 
     def _turn_on(self):
