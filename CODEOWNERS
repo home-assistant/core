@@ -363,6 +363,7 @@ homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/recollect_waste/* @bachya
 homeassistant/components/rejseplanen/* @DarkFox
+homeassistant/components/reolink/* @fwestenberg
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
 homeassistant/components/ring/* @balloob

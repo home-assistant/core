@@ -158,6 +158,7 @@ FLOWS = [
     "rachio",
     "rainmachine",
     "recollect_waste",
+    "reolink",
     "rfxtrx",
     "ring",
     "risco",

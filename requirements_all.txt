@@ -1929,6 +1929,9 @@ raspyrfm-client==1.2.8
 # homeassistant.components.rainmachine
 regenmaschine==3.0.0
 
+# homeassistant.components.reolink
+reolink==0.0.5
+
 # homeassistant.components.python_script
 restrictedpython==5.0
 
@@ -2366,6 +2369,3 @@ zigpy==0.27.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
-
-# homeassistant.components.reolink
-reolink==0.0.5
