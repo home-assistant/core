@@ -84,8 +84,6 @@ class ColorChannel(ZigbeeChannel):
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.fetch_color_capabilities(True)
-        attributes = ["color_temperature", "current_x", "current_y"]
-        await self.get_attributes(attributes, from_cache=from_cache)
         await super().async_initialize(from_cache)
 
     async def fetch_color_capabilities(self, from_cache: bool) -> None:
