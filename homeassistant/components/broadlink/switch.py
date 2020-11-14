@@ -400,10 +400,8 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        set_state = partial(self._device.api.set_state, **{f"pwr{self._slot}": packet})
         try:
-            set_state = partial(
-                self._device.api.set_state, **{f"pwr{self._slot}": packet}
-            )
             await self._device.async_request(set_state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
