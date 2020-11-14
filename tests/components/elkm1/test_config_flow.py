@@ -45,6 +45,7 @@ async def test_form_user_with_secure_elk(hass):
                 "prefix": "",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "ElkM1"
@@ -56,7 +57,6 @@ async def test_form_user_with_secure_elk(hass):
         "temperature_unit": "°F",
         "username": "test-username",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -90,6 +90,7 @@ async def test_form_user_with_non_secure_elk(hass):
                 "prefix": "guest_house",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "guest_house"
@@ -101,7 +102,6 @@ async def test_form_user_with_non_secure_elk(hass):
         "password": "",
         "temperature_unit": "°F",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -135,6 +135,7 @@ async def test_form_user_with_serial_elk(hass):
                 "prefix": "",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "ElkM1"
@@ -146,7 +147,6 @@ async def test_form_user_with_serial_elk(hass):
         "password": "",
         "temperature_unit": "°C",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -253,6 +253,7 @@ async def test_form_import(hass):
                 },
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "ohana"
@@ -274,6 +275,5 @@ async def test_form_import(hass):
         "username": "friend",
         "zone": {"enabled": True, "exclude": [[15, 15], [28, 208]], "include": []},
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

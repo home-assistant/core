@@ -9,7 +9,7 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_failed": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z us\u0142ug\u0105 ONVIF z podanymi po\u015bwiadczeniami"
+            "connection_failed": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z us\u0142ug\u0105 ONVIF z podanymi po\u015bwiadczeniami"
         },
         "step": {
             "auth": {

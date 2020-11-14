@@ -28,6 +28,7 @@ async def test_form(hass, mock_simple_nws_config):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": "test"}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "ABC"
@@ -37,7 +38,6 @@ async def test_form(hass, mock_simple_nws_config):
         "longitude": -90,
         "station": "ABC",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -94,9 +94,9 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
             result["flow_id"],
             {"api_key": "test"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
