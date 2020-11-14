@@ -1,15 +1,10 @@
 """Support for HomeKit Controller humidifier."""
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    ATTR_AVAILABLE_MODES,
-    ATTR_HUMIDITY,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
-    ATTR_MODE,
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
     MODE_AUTO,
@@ -71,27 +66,6 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
-
-    @property
-    def capability_attributes(self) -> Dict[str, Any]:
-        """Return capability attributes."""
-        data = {
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
-            ATTR_AVAILABLE_MODES: self.available_modes,
-        }
-
-        return data
-
-    @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
-        data = {
-            ATTR_MODE: self.mode,
-            ATTR_HUMIDITY: self.target_humidity,
-        }
-
-        return data
 
     @property
     def target_humidity(self) -> Optional[int]:
@@ -198,27 +172,6 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
-
-    @property
-    def capability_attributes(self) -> Dict[str, Any]:
-        """Return capability attributes."""
-        data = {
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
-            ATTR_AVAILABLE_MODES: self.available_modes,
-        }
-
-        return data
-
-    @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
-        data = {
-            ATTR_MODE: self.mode,
-            ATTR_HUMIDITY: self.target_humidity,
-        }
-
-        return data
 
     @property
     def target_humidity(self) -> Optional[int]:
