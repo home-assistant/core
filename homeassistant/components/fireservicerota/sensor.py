@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -21,7 +20,7 @@ async def async_setup_entry(
     async_add_entities([IncidentsSensor(coordinator)])
 
 
-class IncidentsSensor(RestoreEntity, Entity):
+class IncidentsSensor(RestoreEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     def __init__(self, coordinator):
@@ -112,9 +111,14 @@ class IncidentsSensor(RestoreEntity, Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
-                self.async_update,
+                self.coordinator_update,
             )
         )
+
+    async def coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        await self.async_update()
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update using FireServiceRota data."""
@@ -124,6 +128,5 @@ class IncidentsSensor(RestoreEntity, Entity):
         if "body" in self._coordinator.incident_data:
             self._state = self._coordinator.incident_data["body"]
             self._state_attributes = self._coordinator.incident_data
-            self.async_write_ha_state()
 
             _LOGGER.debug("Entity 'Incidents' state set to: %s", self._state)

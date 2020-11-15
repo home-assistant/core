@@ -15,7 +15,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, WSS_BWRURL
@@ -101,8 +101,7 @@ class FSRDataUpdateCoordinator:
         """Update the current data."""
         _LOGGER.debug("Got data from websocket listener: %s", data)
         self.incident_data = data
-
-        async_dispatcher_send(self._hass, f"{DOMAIN}_{self._entry.entry_id}_update")
+        dispatcher_send(self._hass, f"{DOMAIN}_{self._entry.entry_id}_update")
 
     def start_ws_listener(self) -> None:
         """Start the websocket listener."""
@@ -124,6 +123,7 @@ class FSRDataUpdateCoordinator:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
+
         """Get the latest availability data."""
         _LOGGER.debug("Updating availability data")
 
