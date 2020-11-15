@@ -10,5 +10,14 @@
                 "title": "T\u00f6ltsd ki az adataid"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Alap\u00e9rtelmezett z\u00f3nafut\u00e1si id\u0151 (m\u00e1sodpercben)"
+                }
+            }
+        }
     }
 }

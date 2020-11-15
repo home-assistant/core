@@ -20,6 +20,9 @@
     },
     "options": {
         "step": {
+            "client_control": {
+                "description": "Konfigur\u00e1lja a klienseket\n\n Hozzon l\u00e9tre kapcsol\u00f3kat azokhoz a sorsz\u00e1mokhoz, amelyeknek vez\u00e9relni k\u00edv\u00e1nja a h\u00e1l\u00f3zati hozz\u00e1f\u00e9r\u00e9st."
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "S\u00e1vsz\u00e9less\u00e9g-haszn\u00e1lati \u00e9rz\u00e9kel\u0151k l\u00e9trehoz\u00e1sa a h\u00e1l\u00f3zati \u00fcgyfelek sz\u00e1m\u00e1ra"

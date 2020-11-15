@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Csak egyetlen Abode konfigur\u00e1ci\u00f3 enged\u00e9lyezett."
         },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
             "user": {
                 "data": {
