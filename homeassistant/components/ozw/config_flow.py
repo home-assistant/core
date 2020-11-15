@@ -121,6 +121,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_install_failed(self, user_input=None):
         """Add-on installation failed."""
+        _LOGGER.warning("DEBUG: Aborting flow after install failed")
         return self.async_abort(reason="addon_install_failed")
 
     async def async_step_start_addon(self, user_input=None):
