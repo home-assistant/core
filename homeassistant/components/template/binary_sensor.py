@@ -155,10 +155,14 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self.add_template_attribute("_state", self._template, None, self._update_state)
 
         if self._delay_on_template is not None:
-            self.add_template_attribute("_delay_on", self._delay_on_template, cv.positive_time_period)
+            self.add_template_attribute(
+                "_delay_on", self._delay_on_template, cv.positive_time_period
+            )
 
         if self._delay_off_template is not None:
-            self.add_template_attribute("_delay_off", self._delay_off_template, cv.positive_time_period)
+            self.add_template_attribute(
+                "_delay_off", self._delay_off_template, cv.positive_time_period
+            )
 
         await super().async_added_to_hass()
 

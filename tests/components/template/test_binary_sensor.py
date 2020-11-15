@@ -393,7 +393,7 @@ async def test_template_with_templated_delay_on(hass):
                     "friendly_name": "virtual thingy",
                     "value_template": "{{ states.sensor.test_state.state == 'on' }}",
                     "device_class": "motion",
-                    "delay_on_template": "{{ ({ "seconds": 6 / 2 }) }}",
+                    "delay_on_template": '{{ ({ "seconds": 6 / 2 }) }}',
                 }
             },
         }
@@ -452,7 +452,7 @@ async def test_template_with_templated_delay_off(hass):
                     "friendly_name": "virtual thingy",
                     "value_template": "{{ states.sensor.test_state.state == 'on' }}",
                     "device_class": "motion",
-                    "delay_off_template": "{{ ({ "seconds": 6 / 2 }) }}",
+                    "delay_off_template": '{{ ({ "seconds": 6 / 2 }) }}',
                 }
             },
         }
