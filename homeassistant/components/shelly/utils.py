@@ -89,7 +89,7 @@ def get_rest_value_from_path(status, device_class, path: str):
     else:
         attribute_value = status[path.split("/")[0]][path.split("/")[1]]
     if device_class == DEVICE_CLASS_TIMESTAMP:
-        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
+        last_boot = datetime.utcnow() - timedelta(seconds=attribute_value)
         attribute_value = last_boot.replace(microsecond=0).isoformat()
 
     return attribute_value

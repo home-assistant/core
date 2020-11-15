@@ -1,5 +1,4 @@
 """Shelly entity helper."""
-from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, Union
 
@@ -304,7 +303,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         if self._attributes is None:
             return None
 
-        attributes = defaultdict(str)
+        attributes = dict()
         for attrib in self._attributes:
             description = attrib.get("description")
             attribute_value = get_rest_value_from_path(
