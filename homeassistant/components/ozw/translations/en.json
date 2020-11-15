@@ -10,17 +10,19 @@
         "error": {
             "addon_start_failed": "Failed to start the OpenZWave add-on. Check the configuration."
         },
+        "progress": {
+            "install_addon": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes."
+        },
         "step": {
+            "install_addon": {
+                "title": "The OpenZWave add-on installation has started"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Use the OpenZWave Supervisor add-on"
                 },
                 "description": "Do you want to use the OpenZWave Supervisor add-on?",
                 "title": "Select connection method"
-            },
-            "show_install_info": {
-                "description": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes.",
-                "title": "The OpenZWave add-on installation has started"
             },
             "start_addon": {
                 "data": {

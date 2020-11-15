@@ -99,7 +99,9 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
 
-            return self.async_show_progress(step_id="install_addon")
+            return self.async_show_progress(
+                step_id="install_addon", progress_action="install_addon"
+            )
 
         try:
             await self.install_task
