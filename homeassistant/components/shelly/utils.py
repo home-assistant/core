@@ -92,7 +92,4 @@ def get_rest_value_from_path(status, device_class, path: str):
         last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
         _attribute_value = last_boot.replace(microsecond=0).isoformat()
 
-    if "_version" in path and _attribute_value:
-        _attribute_value = _attribute_value.split("/")[1].split("@")[0].replace("v", "")
-
     return _attribute_value
