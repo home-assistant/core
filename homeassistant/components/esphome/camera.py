@@ -7,6 +7,7 @@ from aioesphomeapi import CameraInfo, CameraState
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, platform_async_setup_entry
@@ -44,9 +45,25 @@ class EsphomeCamera(Camera, EsphomeEntity):
     def _state(self) -> Optional[CameraState]:
         return super()._state
 
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        await super().async_added_to_hass()
+
+        self._remove_callbacks.append(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"esphome_{self._entry_id}"
+                    f"_update_{self._component_key}_{self._key}"
+                ),
+                self._on_state_update,
+            )
+        )
+
     async def _on_state_update(self) -> None:
         """Notify listeners of new image when update arrives."""
-        await super()._on_state_update()
+        self.async_write_ha_state()
         async with self._image_cond:
             self._image_cond.notify_all()
 
