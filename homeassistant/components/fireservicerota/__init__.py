@@ -77,7 +77,6 @@ class FSRDataUpdateCoordinator:
 
         self._url = entry.data[CONF_URL]
         self._tokens = entry.data[CONF_TOKEN]
-
         self.availability_data = None
         self.incident_data = None
         self.incident_id = None
@@ -123,7 +122,6 @@ class FSRDataUpdateCoordinator:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
-
         """Get the latest availability data."""
         _LOGGER.debug("Updating availability data")
 

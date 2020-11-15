@@ -117,8 +117,7 @@ class IncidentsSensor(RestoreEntity):
 
     async def coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        await self.async_update()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_update(self) -> None:
         """Update using FireServiceRota data."""
