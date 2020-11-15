@@ -13,6 +13,8 @@ from .common import (
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
+    CONF_RETRY_DELAY,
+    CONF_RETRY_MAX_ATTEMPTS,
     CONF_STRIP,
     CONF_SWITCH,
     SmartDevices,
@@ -23,6 +25,8 @@ from .common import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "tplink"
+MAX_ATTEMPTS = 300
+SLEEP_TIME = 2
 
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
@@ -44,6 +48,10 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+                vol.Optional(CONF_RETRY_DELAY, default=SLEEP_TIME): cv.positive_int,
+                vol.Optional(
+                    CONF_RETRY_MAX_ATTEMPTS, default=MAX_ATTEMPTS
+                ): cv.positive_int,
             }
         )
     },
@@ -83,6 +91,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
 
         lights.extend(static_devices.lights)
         switches.extend(static_devices.switches)
+
+        hass.data[DOMAIN][CONF_RETRY_DELAY] = config_data[CONF_RETRY_DELAY]
+        hass.data[DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = config_data[
+            CONF_RETRY_MAX_ATTEMPTS
+        ]
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:

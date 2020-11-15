@@ -21,8 +21,9 @@ from homeassistant.components.tplink.common import (
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
+    CONF_RETRY_DELAY,
+    CONF_RETRY_MAX_ATTEMPTS,
 )
-from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -551,11 +552,11 @@ async def test_update_failure(
     await hass.helpers.entity_component.async_update_entity("light.light1")
     assert caplog.text == ""
 
-    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 0):
-        caplog.clear()
-        caplog.set_level(logging.WARNING)
-        await hass.helpers.entity_component.async_update_entity("light.light1")
-        assert "Could not read state for 123.123.123.123|light1" in caplog.text
+    hass.data[tplink.DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = 0
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await hass.helpers.entity_component.async_update_entity("light.light1")
+    assert "Could not read state for 123.123.123.123|light1" in caplog.text
 
     get_state_call_count = 0
 
@@ -570,16 +571,14 @@ async def test_update_failure(
 
     light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
 
-    with patch("homeassistant.components.tplink.light", MAX_ATTEMPTS=2, SLEEP_TIME=0):
-        caplog.clear()
-        caplog.set_level(logging.DEBUG)
+    hass.data[tplink.DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = 2
+    hass.data[tplink.DOMAIN][CONF_RETRY_DELAY] = 0
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
 
-        await update_entity(hass, "light.light1")
-        assert (
-            f"Retrying in {SLEEP_TIME} seconds for 123.123.123.123|light1"
-            in caplog.text
-        )
-        assert "Device 123.123.123.123|light1 responded after " in caplog.text
+    await update_entity(hass, "light.light1")
+    assert f"Retrying in 0 seconds for 123.123.123.123|light1" in caplog.text
+    assert "Device 123.123.123.123|light1 responded after " in caplog.text
 
 
 async def test_async_setup_entry_unavailable(

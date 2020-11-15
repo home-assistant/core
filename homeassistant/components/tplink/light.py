@@ -25,7 +25,12 @@ from homeassistant.util.color import (
 )
 import homeassistant.util.dt as dt_util
 
-from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
+from . import (
+    CONF_LIGHT,
+    CONF_RETRY_DELAY,
+    CONF_RETRY_MAX_ATTEMPTS,
+    DOMAIN as TPLINK_DOMAIN,
+)
 from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
@@ -54,9 +59,6 @@ LIGHT_SYSINFO_MODEL = "model"
 LIGHT_SYSINFO_IS_DIMMABLE = "is_dimmable"
 LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP = "is_variable_color_temp"
 LIGHT_SYSINFO_IS_COLOR = "is_color"
-
-MAX_ATTEMPTS = 300
-SLEEP_TIME = 2
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
@@ -255,7 +257,7 @@ class TPLinkSmartBulb(LightEntity):
             if update_attempt == 0:
                 _LOGGER.debug(
                     "Retrying in %s seconds for %s|%s due to: %s",
-                    SLEEP_TIME,
+                    self.hass.data[TPLINK_DOMAIN][CONF_RETRY_DELAY],
                     self._host,
                     self._alias,
                     ex,
@@ -464,7 +466,9 @@ class TPLinkSmartBulb(LightEntity):
 
     async def async_update(self):
         """Update the TP-Link bulb's state."""
-        for update_attempt in range(MAX_ATTEMPTS):
+        for update_attempt in range(
+            self.hass.data[TPLINK_DOMAIN][CONF_RETRY_MAX_ATTEMPTS]
+        ):
             is_ready = await self.hass.async_add_executor_job(
                 self.attempt_update, update_attempt
             )
@@ -479,7 +483,7 @@ class TPLinkSmartBulb(LightEntity):
                         update_attempt,
                     )
                 break
-            await asyncio.sleep(SLEEP_TIME)
+            await asyncio.sleep(self.hass.data[TPLINK_DOMAIN][CONF_RETRY_DELAY])
         else:
             if self._is_available:
                 _LOGGER.warning(
