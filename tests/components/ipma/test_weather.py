@@ -1,6 +1,8 @@
 """The tests for the IPMA weather component."""
 from collections import namedtuple
 
+import pytest
+
 from homeassistant.components import weather
 from homeassistant.components.ipma import DOMAIN
 from homeassistant.components.weather import (
@@ -145,8 +147,9 @@ class MockLocation:
         return 0
 
 
-async def test_setup_configuration(hass):
-    """Test for successfully setting up the IPMA platform."""
+@pytest.fixture
+async def conf_entry_daily(hass):
+    """Create config entry for daily mode."""
     ipma_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
@@ -154,6 +157,21 @@ async def test_setup_configuration(hass):
     )
     ipma_entry.add_to_hass(hass)
 
+
+@pytest.fixture
+async def conf_entry_hourly(hass):
+    """Create config entry for hourly mode."""
+    ipma_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "hourly"},
+    )
+    ipma_entry.add_to_hass(hass)
+
+
+@pytest.fixture
+async def setup_ipma(hass):
+    """Load IPMA."""
     with patch(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
@@ -161,9 +179,13 @@ async def test_setup_configuration(hass):
         assert await async_setup_component(
             hass,
             weather.DOMAIN,
-            {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "hourly"}},
+            {"weather": {"platform": "ipma"}},
         )
         await hass.async_block_till_done()
+
+
+async def test_setup_configuration(hass, conf_entry_daily, setup_ipma):
+    """Test for successfully setting up the IPMA platform."""
 
     state = hass.states.get("weather.hometown")
     print(state)
@@ -178,15 +200,8 @@ async def test_setup_configuration(hass):
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
-async def test_setup_config_flow(hass):
+async def test_setup_config_flow(hass, conf_entry_daily):
     """Test for successfully setting up the IPMA platform."""
-    ipma_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
-    )
-    ipma_entry.add_to_hass(hass)
-
     with patch(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
@@ -207,26 +222,8 @@ async def test_setup_config_flow(hass):
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
-async def test_daily_forecast(hass):
+async def test_daily_forecast(hass, conf_entry_daily, setup_ipma):
     """Test for successfully getting daily forecast."""
-    ipma_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
-    )
-    ipma_entry.add_to_hass(hass)
-
-    with patch(
-        "pyipma.location.Location.get",
-        return_value=MockLocation(),
-    ):
-        assert await async_setup_component(
-            hass,
-            weather.DOMAIN,
-            {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "daily"}},
-        )
-        await hass.async_block_till_done()
-
     state = hass.states.get("weather.hometown")
     assert state.state == "rainy"
 
@@ -240,26 +237,8 @@ async def test_daily_forecast(hass):
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
 
 
-async def test_hourly_forecast(hass):
+async def test_hourly_forecast(hass, conf_entry_hourly, setup_ipma):
     """Test for successfully getting daily forecast."""
-    ipma_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "hourly"},
-    )
-    ipma_entry.add_to_hass(hass)
-
-    with patch(
-        "pyipma.location.Location.get",
-        return_value=MockLocation(),
-    ):
-        assert await async_setup_component(
-            hass,
-            weather.DOMAIN,
-            {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "hourly"}},
-        )
-        await hass.async_block_till_done()
-
     state = hass.states.get("weather.hometown")
     assert state.state == "rainy"
 
