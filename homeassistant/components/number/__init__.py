@@ -14,6 +14,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 from .const import (
     ATTR_MAX,
     ATTR_MIN,

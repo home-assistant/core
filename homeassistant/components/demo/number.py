@@ -11,22 +11,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the demo Number entity."""
     async_add_entities(
         [
+            DemoNumber("volume1", "volume", 42.0, "mdi:volume-high", False,),
             DemoNumber(
-                "volume1",
-                "volume",
-                42.0,
-                "mdi:volume-high",
-                False,
-            ),
-            DemoNumber(
-                "pwm1",
-                "PWM 1",
-                42.0,
-                "mdi:square-wave",
-                False,
-                0.0,
-                1.0,
-                0.01,
+                "pwm1", "PWM 1", 42.0, "mdi:square-wave", False, 0.0, 1.0, 0.01,
             ),
         ]
     )
@@ -40,7 +27,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
-    def __init__(self, unique_id, name, state, icon, assumed, min_value=None, max_value=None, step=None):
+    def __init__(
+        self,
+        unique_id,
+        name,
+        state,
+        icon,
+        assumed,
+        min_value=None,
+        max_value=None,
+        step=None,
+    ):
         """Initialize the Demo Number entity."""
         self._unique_id = unique_id
         self._name = name or DEVICE_DEFAULT_NAME
