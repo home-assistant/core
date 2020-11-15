@@ -67,12 +67,11 @@ class NumberEntity(Entity):
     @property
     def capability_attributes(self) -> Dict[str, Any]:
         """Return capability attributes."""
-        data = {
+        return {
             ATTR_MIN: self.min_value,
             ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
         }
-        return data
 
     @property
     def min_value(self) -> float:
@@ -100,4 +99,5 @@ class NumberEntity(Entity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
+        assert self.hass is not None
         await self.hass.async_add_executor_job(self.set_value, value)
