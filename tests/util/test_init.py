@@ -41,6 +41,8 @@ def test_slugify():
     assert util.slugify("影師嗎") == "ying_shi_ma"
     assert util.slugify("けいふぉんと") == "keihuonto"
     assert util.slugify("$") == "unknown"
+    assert util.slugify("Ⓐ") == "unknown"
+    assert util.slugify("ⓑ") == "unknown"
     assert util.slugify("$$$") == "unknown"
     assert util.slugify("$something") == "something"
     assert util.slugify("") == ""
