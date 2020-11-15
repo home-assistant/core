@@ -425,6 +425,10 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
             "power_consumption_power",
             "power_consumption_energy",
             "power_consumption_end",
+            "power_consumption_delta_energy",
+            "power_consumption_power_energy",
+            "power_consumption_energy_saved",
+            "power_consumption_persisted_energy",
         ]
         state_attributes = {}
         for attribute in attributes:
