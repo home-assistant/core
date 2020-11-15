@@ -306,12 +306,12 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
         attributes = defaultdict(str)
         for attrib in self._attributes:
-            _description = attrib.get("description")
-            _attribute_value = get_rest_value_from_path(
+            description = attrib.get("description")
+            attribute_value = get_rest_value_from_path(
                 self.wrapper.device.status,
                 self.description.device_class,
                 attrib.get("path"),
             )
-            attributes[_description] = _attribute_value
+            attributes[description] = attribute_value
 
         return attributes
