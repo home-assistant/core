@@ -489,8 +489,8 @@ def esphome_map_enum(func: Callable[[], Dict[int, str]]):
     return EsphomeEnumMapper(func)
 
 
-class EsphomeEntity(Entity):
-    """Define a generic esphome entity."""
+class EsphomeBaseEntity(Entity):
+    """Define a base esphome entity."""
 
     def __init__(self, entry_id: str, component_key: str, key: int):
         """Initialize."""
@@ -501,28 +501,12 @@ class EsphomeEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        kwargs = {
-            "entry_id": self._entry_id,
-            "component_key": self._component_key,
-            "key": self._key,
-        }
         self._remove_callbacks.append(
             async_dispatcher_connect(
                 self.hass,
                 (
-                    f"esphome_{kwargs.get('entry_id')}"
-                    f"_update_{kwargs.get('component_key')}_{kwargs.get('key')}"
-                ),
-                self._on_state_update,
-            )
-        )
-
-        self._remove_callbacks.append(
-            async_dispatcher_connect(
-                self.hass,
-                (
-                    f"esphome_{kwargs.get('entry_id')}_remove_"
-                    f"{kwargs.get('component_key')}_{kwargs.get('key')}"
+                    f"esphome_{self._entry_id}_remove_"
+                    f"{self._component_key}_{self._key}"
                 ),
                 self.async_remove,
             )
@@ -531,15 +515,10 @@ class EsphomeEntity(Entity):
         self._remove_callbacks.append(
             async_dispatcher_connect(
                 self.hass,
-                f"esphome_{kwargs.get('entry_id')}_on_device_update",
+                f"esphome_{self._entry_id}_on_device_update",
                 self._on_device_update,
             )
         )
-
-    @callback
-    def _on_state_update(self) -> None:
-        """Update the entity state when state or static info changed."""
-        self.async_write_ha_state()
 
     @callback
     def _on_device_update(self) -> None:
@@ -621,3 +600,23 @@ class EsphomeEntity(Entity):
     def should_poll(self) -> bool:
         """Disable polling."""
         return False
+
+
+class EsphomeEntity(EsphomeBaseEntity):
+    """Define a generic esphome entity."""
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        await super().async_added_to_hass()
+
+        self._remove_callbacks.append(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"esphome_{self._entry_id}"
+                    f"_update_{self._component_key}_{self._key}"
+                ),
+                self.async_write_ha_state,
+            )
+        )
