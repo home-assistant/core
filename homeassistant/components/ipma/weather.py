@@ -16,10 +16,12 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_MODE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
 
-from .const import DOMAIN, IPMA_API, IPMA_LOCATION
+from .const import DOMAIN, FORECAST_MODE, IPMA_API, IPMA_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass_data = hass.data[DOMAIN][config_entry.entry_id]
     api = hass_data[IPMA_API]
     location = hass_data[IPMA_LOCATION]
+    mode = hass_data[FORECAST_MODE]
 
     # Migrate old unique_id
     @callback
