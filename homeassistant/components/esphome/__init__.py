@@ -497,11 +497,10 @@ class EsphomeBaseEntity(Entity):
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
-        self._remove_callbacks: List[Callable[[], None]] = []
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 (
@@ -512,7 +511,7 @@ class EsphomeBaseEntity(Entity):
             )
         )
 
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"esphome_{self._entry_id}_on_device_update",
@@ -529,12 +528,6 @@ class EsphomeBaseEntity(Entity):
             # through the next entity state packet.
             return
         self.async_write_ha_state()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        for remove_callback in self._remove_callbacks:
-            remove_callback()
-        self._remove_callbacks = []
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
@@ -610,7 +603,7 @@ class EsphomeEntity(EsphomeBaseEntity):
 
         await super().async_added_to_hass()
 
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 (
