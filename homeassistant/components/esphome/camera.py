@@ -50,7 +50,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity):
 
         await super().async_added_to_hass()
 
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 (
