@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "K\u00fcsz\u00f6b (%)"
+                }
+            }
+        }
+    },
+    "title": "Nemzeti \u00d3ce\u00e1n- \u00e9s L\u00e9gk\u00f6rkutat\u00e1si Hivatal (NOAA) Aurora \u00e9rz\u00e9kel\u0151"
+}
