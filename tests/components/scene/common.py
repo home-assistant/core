@@ -17,3 +17,9 @@ def activate(hass, entity_id=ENTITY_MATCH_ALL):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+
+async def async_activate(hass, entity_id=ENTITY_MATCH_ALL):
+    """Activate a scene."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)

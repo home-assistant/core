@@ -5,6 +5,8 @@ import json
 import pytest
 
 from homeassistant.components import scene
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component
 
 from .test_common import (
     help_test_availability_when_connection_lost,
@@ -19,6 +21,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
+from tests.components.scene import common
 
 DEFAULT_CONFIG = {
     scene.DOMAIN: {
@@ -28,6 +31,38 @@ DEFAULT_CONFIG = {
         "payload_on": "test-payload-on",
     }
 }
+
+
+async def test_sending_mqtt_commands(hass, mqtt_mock):
+    """Test the sending MQTT commands."""
+    fake_state = ha.State("scene.test", scene.STATE)
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        assert await async_setup_component(
+            hass,
+            scene.DOMAIN,
+            {
+                scene.DOMAIN: {
+                    "platform": "mqtt",
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "payload_on": "beer on",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("scene.test")
+    assert state.state == scene.STATE
+
+    await common.async_activate(hass, "scene.test")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "beer on", 0, False
+    )
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
