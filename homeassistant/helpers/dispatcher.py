@@ -83,7 +83,5 @@ def async_dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> N
     """
     target_list = hass.data.get(DATA_DISPATCHER, {}).get(signal, [])
 
-    _LOGGER.warning("SIGNAL: %s", signal)
-
     for job in target_list:
         hass.async_add_hass_job(job, *args)
