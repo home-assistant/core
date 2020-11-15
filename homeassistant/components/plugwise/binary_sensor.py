@@ -122,7 +122,6 @@ class PwNotifySensor(PwBinarySensor, BinarySensorEntity):
         super().__init__(api, coordinator, name, dev_id, binary_sensor, model)
 
         self._binary_sensor = binary_sensor
-        self._hass = hass
 
         self._is_on = False
         self._icon = None
