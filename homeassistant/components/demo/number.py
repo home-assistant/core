@@ -18,6 +18,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "mdi:volume-high",
                 False,
             ),
+            DemoNumber(
+                "pwm1",
+                "PWM 1",
+                42.0,
+                "mdi:square-wave",
+                False,
+                0.0,
+                1.0,
+                0.01,
+            ),
         ]
     )
 
@@ -30,13 +40,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
-    def __init__(self, unique_id, name, state, icon, assumed):
+    def __init__(self, unique_id, name, state, icon, assumed, min_value=None, max_value=None, step=None):
         """Initialize the Demo Number entity."""
         self._unique_id = unique_id
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
         self._assumed = assumed
+        self._min_value = min_value
+        self._max_value = max_value
+        self._step = step
 
     @property
     def device_info(self):
@@ -78,6 +91,21 @@ class DemoNumber(NumberEntity):
     def state(self):
         """Return the current value."""
         return self._state
+
+    @property
+    def min_value(self):
+        """Return the minimum value."""
+        return self._min_value or super().min_value
+
+    @property
+    def max_value(self):
+        """Return the maximum value."""
+        return self._max_value or super().max_value
+
+    @property
+    def step(self):
+        """Return the value step."""
+        return self._step or super().step
 
     async def async_set_value(self, value):
         """Update the current value."""

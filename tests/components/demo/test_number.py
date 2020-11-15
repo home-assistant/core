@@ -15,6 +15,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 ENTITY_VOLUME = "number.volume"
+ENTITY_PWM = "number.pwm_1"
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +37,11 @@ def test_default_setup_params(hass):
     assert state.attributes.get(ATTR_MIN) == 0.0
     assert state.attributes.get(ATTR_MAX) == 100.0
     assert state.attributes.get(ATTR_STEP) == 1.0
+
+    state = hass.states.get(ENTITY_PWM)
+    assert state.attributes.get(ATTR_MIN) == 0.0
+    assert state.attributes.get(ATTR_MAX) == 1.0
+    assert state.attributes.get(ATTR_STEP) == 0.01
 
 
 async def test_set_value_bad_attr(hass):
