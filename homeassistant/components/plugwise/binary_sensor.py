@@ -145,7 +145,7 @@ class PwNotifySensor(PwBinarySensor, BinarySensorEntity):
         self._state = STATE_OFF
         self._icon = NO_NOTIFICATION_ICON
 
-        if notify != {}:
+        if notify:
             self._is_on = True
             self._state = STATE_ON
             self._icon = NOTIFICATION_ICON
