@@ -1886,7 +1886,8 @@ async def test_openclose_cover_unknown_state(hass):
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
-    assert trt.query_attributes() == {"openPercent": 100}
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
 
 
 async def test_openclose_cover_assumed_state(hass):
@@ -1918,8 +1919,6 @@ async def test_openclose_cover_assumed_state(hass):
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 40}
-
-    assert trt.query_attributes() == {"openPercent": 40}
 
 
 async def test_openclose_cover_no_position(hass):
