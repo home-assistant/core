@@ -87,6 +87,7 @@
                 "data": {
                     "api_host": "API Host URL iwwerschr\u00e9iwen (optionell)",
                     "blink": "Blink panel LED un wann Status \u00c4nnerung gesch\u00e9ckt g\u00ebtt",
+                    "discovery": "\u00c4ntwert op Entdeckungsufroen an dengem Netzwierk",
                     "override_api_host": "Standard Home Assistant API Host Tableau URL iwwerschr\u00e9iwen"
                 },
                 "description": "Wielt w.e.g. dat gew\u00ebnschte Verhalen fir \u00c4re Panel aus",

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha na conex\u00e3o"
         },
         "error": {
             "device_fail": "Erro inesperado",

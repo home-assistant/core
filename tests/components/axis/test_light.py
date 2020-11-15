@@ -91,7 +91,7 @@ async def test_lights(hass):
             {"entity_id": f"light.{NAME}_ir_light_0", ATTR_BRIGHTNESS: 50},
             blocking=True,
         )
-        mock_activate.not_called()
+        mock_activate.assert_not_awaited()
         mock_set_intensity.assert_called_once_with("led0", 29)
 
     # Turn off

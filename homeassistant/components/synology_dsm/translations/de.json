@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minuten zwischen den Scans"
+                    "scan_interval": "Minuten zwischen den Scans",
+                    "timeout": "Timeout (Sekunden)"
                 }
             }
         }

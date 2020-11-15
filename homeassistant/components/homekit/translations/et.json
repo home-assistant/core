@@ -1,0 +1,20 @@
+{
+    "options": {
+        "step": {
+            "include_exclude": {
+                "data": {
+                    "entities": "Olemid",
+                    "mode": "Re\u017eiim"
+                },
+                "description": "Vali avaldatavad olemid. Tarvikute re\u017eiimis on avaldatav ainult \u00fcks olem. Silla re\u017eiimis, kuvatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud juhul, kui valitud on kindlad olemid. Silla v\u00e4listamisre\u017eiimis avaldatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud v\u00e4listatud olemid.",
+                "title": "Vali avaldatavad olemid"
+            },
+            "init": {
+                "data": {
+                    "mode": "Re\u017eiim"
+                }
+            }
+        }
+    },
+    "title": ""
+}

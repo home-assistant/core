@@ -12,7 +12,10 @@ def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     parser = get_base_arg_parser()
     parser.add_argument(
-        "--target", type=str, default="core", choices=["core", "frontend"],
+        "--target",
+        type=str,
+        default="core",
+        choices=["core", "frontend"],
     )
     return parser.parse_args()
 
@@ -44,7 +47,10 @@ def find_core():
         translations = int_dir / "translations" / "en.json"
 
         strings_json = json.loads(strings.read_text())
-        translations_json = json.loads(translations.read_text())
+        if translations.is_file():
+            translations_json = json.loads(translations.read_text())
+        else:
+            translations_json = {}
 
         find_extra(
             strings_json, translations_json, f"component::{int_dir.name}", missing_keys

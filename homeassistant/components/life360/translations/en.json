@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_auth": "Invalid authentication",
             "invalid_credentials": "Invalid credentials",
             "user_already_configured": "Account is already configured"
         },
@@ -8,6 +9,7 @@
             "default": "To set advanced options, see [Life360 documentation]({docs_url})."
         },
         "error": {
+            "invalid_auth": "Invalid authentication",
             "invalid_credentials": "Invalid credentials",
             "invalid_username": "Invalid username",
             "unexpected": "Unexpected error communicating with Life360 server",

@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
+    DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_TEMPERATURE
@@ -32,24 +33,21 @@ DEVICE_CLASS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors):
         """Add binary sensor from deCONZ."""
         entities = []
 
         for sensor in sensors:
 
             if (
-                new
-                and sensor.BINARY
+                sensor.BINARY
+                and sensor.uniqueid not in gateway.entities[DOMAIN]
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
@@ -57,7 +55,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -73,15 +72,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
-    @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
-        """Update the sensor's state."""
-        if ignore_update:
-            return
+    TYPE = DOMAIN
 
+    @callback
+    def async_update_callback(self, force_update=False):
+        """Update the sensor's state."""
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def is_on(self):

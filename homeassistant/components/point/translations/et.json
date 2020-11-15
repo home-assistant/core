@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
+            "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
+            "no_flows": "Osis pole seadistatud. Palun vaata dokumentatsiooni."
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "no_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end"
+        },
+        "step": {
+            "user": {
+                "description": "Kas alustan seadistamist?",
+                "title": "Vali tuvastusmeetod"
+            }
+        }
+    }
+}

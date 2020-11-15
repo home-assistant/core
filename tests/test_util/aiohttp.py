@@ -249,7 +249,7 @@ class AiohttpClientMockResponse:
         """Return mock response as a string."""
         return self.response.decode(encoding)
 
-    async def json(self, encoding="utf-8"):
+    async def json(self, encoding="utf-8", content_type=None):
         """Return mock response as a json."""
         return _json.loads(self.response.decode(encoding))
 

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Ger\u00e4t nicht unterst\u00fctzt"
+        },
+        "step": {
+            "auth": {
+                "title": "Authentifiziere dich beim Ger\u00e4t"
+            },
+            "finish": {
+                "data": {
+                    "name": "Name"
+                },
+                "title": "W\u00e4hle einen Namen f\u00fcr das Ger\u00e4t"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

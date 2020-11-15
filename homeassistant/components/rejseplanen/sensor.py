@@ -24,8 +24,12 @@ ATTR_STOP_NAME = "stop"
 ATTR_ROUTE = "route"
 ATTR_TYPE = "type"
 ATTR_DIRECTION = "direction"
+ATTR_FINAL_STOP = "final_stop"
 ATTR_DUE_IN = "due_in"
 ATTR_DUE_AT = "due_at"
+ATTR_SCHEDULED_AT = "scheduled_at"
+ATTR_REAL_TIME_AT = "real_time_at"
+ATTR_TRACK = "track"
 ATTR_NEXT_UP = "next_departures"
 
 ATTRIBUTION = "Data provided by rejseplanen.dk"
@@ -115,17 +119,16 @@ class RejseplanenTransportSensor(Entity):
         if len(self._times) > 1:
             next_up = self._times[1:]
 
-        return {
-            ATTR_DUE_IN: self._times[0][ATTR_DUE_IN],
-            ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
-            ATTR_TYPE: self._times[0][ATTR_TYPE],
-            ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-            ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
-            ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
-            ATTR_STOP_ID: self._stop_id,
+        attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_NEXT_UP: next_up,
+            ATTR_STOP_ID: self._stop_id,
         }
+
+        if self._times[0] is not None:
+            attributes.update(self._times[0])
+
+        return attributes
 
     @property
     def unit_of_measurement(self):
@@ -203,13 +206,15 @@ class PublicTransportData:
         for item in results:
             route = item.get("name")
 
-            due_at_date = item.get("rtDate")
-            due_at_time = item.get("rtTime")
+            scheduled_date = item.get("date")
+            scheduled_time = item.get("time")
+            real_time_date = due_at_date = item.get("rtDate")
+            real_time_time = due_at_time = item.get("rtTime")
 
             if due_at_date is None:
-                due_at_date = item.get("date")  # Scheduled date
+                due_at_date = scheduled_date
             if due_at_time is None:
-                due_at_time = item.get("time")  # Scheduled time
+                due_at_time = scheduled_time
 
             if (
                 due_at_date is not None
@@ -217,15 +222,26 @@ class PublicTransportData:
                 and route is not None
             ):
                 due_at = f"{due_at_date} {due_at_time}"
+                scheduled_at = f"{scheduled_date} {scheduled_time}"
 
                 departure_data = {
+                    ATTR_DIRECTION: item.get("direction"),
                     ATTR_DUE_IN: due_in_minutes(due_at),
                     ATTR_DUE_AT: due_at,
-                    ATTR_TYPE: item.get("type"),
+                    ATTR_FINAL_STOP: item.get("finalStop"),
                     ATTR_ROUTE: route,
-                    ATTR_DIRECTION: item.get("direction"),
+                    ATTR_SCHEDULED_AT: scheduled_at,
                     ATTR_STOP_NAME: item.get("stop"),
+                    ATTR_TYPE: item.get("type"),
                 }
+
+                if real_time_date is not None and real_time_time is not None:
+                    departure_data[
+                        ATTR_REAL_TIME_AT
+                    ] = f"{real_time_date} {real_time_time}"
+                if item.get("rtTrack") is not None:
+                    departure_data[ATTR_TRACK] = item.get("rtTrack")
+
                 self.info.append(departure_data)
 
         if not self.info:

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+        }
+    }
+}

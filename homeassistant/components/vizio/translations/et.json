@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN kood"
+                }
+            },
+            "pairing_complete_import": {
+                "description": "[VOID] on n\u00fc\u00fcd \u00fchendatud Home Assistantiga.\n\nJuurdep\u00e4\u00e4sut\u00f5end on '** {access_token} **'."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
+                    "host": "",
+                    "name": "Nimi"
+                },
+                "description": "Juurdep\u00e4\u00e4sut\u00f5end on vaja ainult telerite jaoks. Kui seadistad telerit ja pole veel Juurdep\u00e4\u00e4sut\u00f5end , j\u00e4ta v\u00e4li paaristamisprotsessi l\u00e4bimiseks t\u00fchjaks.",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "include_or_exclude": "Kas kaasata v\u00f5i v\u00e4listada rakendused?"
+                }
+            }
+        }
+    }
+}

@@ -8,8 +8,8 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    PERCENTAGE,
     TIME_HOURS,
-    UNIT_PERCENTAGE,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -31,7 +31,7 @@ ATTR_TO_HA_METRIC = {
     "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
     # No icon as this is dealt with directly as a special case in icon()
-    "charging_level_hv": [None, UNIT_PERCENTAGE],
+    "charging_level_hv": [None, PERCENTAGE],
 }
 
 ATTR_TO_HA_IMPERIAL = {
@@ -44,7 +44,7 @@ ATTR_TO_HA_IMPERIAL = {
     "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
     # No icon as this is dealt with directly as a special case in icon()
-    "charging_level_hv": [None, UNIT_PERCENTAGE],
+    "charging_level_hv": [None, PERCENTAGE],
 }
 
 

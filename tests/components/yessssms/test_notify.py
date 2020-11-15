@@ -1,9 +1,7 @@
 """The tests for the notify yessssms platform."""
 import logging
-import unittest
 
 import pytest
-import requests_mock
 
 from homeassistant.components.yessssms.const import CONF_PROVIDER
 import homeassistant.components.yessssms.notify as yessssms
@@ -151,210 +149,219 @@ async def test_connection_error_on_init(hass, caplog, valid_settings, connection
             )
 
 
-class TestNotifyYesssSMS(unittest.TestCase):
-    """Test the yessssms notify."""
+@pytest.fixture(name="yessssms")
+def yessssms_init():
+    """Set up things to be run when tests are started."""
+    login = "06641234567"
+    passwd = "testpasswd"
+    recipient = "06501234567"
+    client = yessssms.YesssSMS(login, passwd)
+    return yessssms.YesssSMSNotificationService(client, recipient)
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        login = "06641234567"
-        passwd = "testpasswd"
-        recipient = "06501234567"
-        client = yessssms.YesssSMS(login, passwd)
-        self.yessssms = yessssms.YesssSMSNotificationService(client, recipient)
 
-    @requests_mock.Mocker()
-    def test_login_error(self, mock):
-        """Test login that fails."""
-        mock.register_uri(
-            requests_mock.POST,
-            # pylint: disable=protected-access
-            self.yessssms.yesss._login_url,
-            status_code=200,
-            text="BlaBlaBla<strong>Login nicht erfolgreichBlaBla",
-        )
-
-        message = "Testing YesssSMS platform :)"
-
-        with self.assertLogs("homeassistant.components.yessssms.notify", level="ERROR"):
-            self.yessssms.send_message(message)
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
-
-    def test_empty_message_error(self):
-        """Test for an empty SMS message error."""
-        message = ""
-        with self.assertLogs("homeassistant.components.yessssms.notify", level="ERROR"):
-            self.yessssms.send_message(message)
-
-    @requests_mock.Mocker()
-    def test_error_account_suspended(self, mock):
-        """Test login that fails after multiple attempts."""
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._login_url,
-            status_code=200,
-            text="BlaBlaBla<strong>Login nicht erfolgreichBlaBla",
-        )
-
-        message = "Testing YesssSMS platform :)"
-
-        with self.assertLogs("homeassistant.components.yessssms.notify", level="ERROR"):
-            self.yessssms.send_message(message)
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
-
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._login_url,
-            status_code=200,
-            text="Wegen 3 ungültigen Login-Versuchen ist Ihr Account für "
-            "eine Stunde gesperrt.",
-        )
-
-        message = "Testing YesssSMS platform :)"
-
-        with self.assertLogs("homeassistant.components.yessssms.notify", level="ERROR"):
-            self.yessssms.send_message(message)
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
-
-    def test_error_account_suspended_2(self):
-        """Test login that fails after multiple attempts."""
-        message = "Testing YesssSMS platform :)"
+async def test_login_error(yessssms, requests_mock, caplog):
+    """Test login that fails."""
+    requests_mock.post(
         # pylint: disable=protected-access
-        self.yessssms.yesss._suspended = True
+        yessssms.yesss._login_url,
+        status_code=200,
+        text="BlaBlaBla<strong>Login nicht erfolgreichBlaBla",
+    )
 
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="ERROR"
-        ) as context:
-            self.yessssms.send_message(message)
-        self.assertIn("Account is suspended, cannot send SMS.", context.output[0])
+    message = "Testing YesssSMS platform :)"
 
-    @requests_mock.Mocker()
-    def test_send_message(self, mock):
-        """Test send message."""
-        message = "Testing YesssSMS platform :)"
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._login_url,
-            status_code=302,
-            # pylint: disable=protected-access
-            headers={"location": self.yessssms.yesss._kontomanager},
-        )
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+    assert requests_mock.called is True
+    assert requests_mock.call_count == 1
+
+
+async def test_empty_message_error(yessssms, caplog):
+    """Test for an empty SMS message error."""
+    message = ""
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert "Cannot send empty SMS message" in record.message
+
+
+async def test_error_account_suspended(yessssms, requests_mock, caplog):
+    """Test login that fails after multiple attempts."""
+    requests_mock.post(
         # pylint: disable=protected-access
-        login = self.yessssms.yesss._logindata["login_rufnummer"]
-        mock.register_uri(
-            "GET",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._kontomanager,
-            status_code=200,
-            text=f"test...{login}</a>",
-        )
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._websms_url,
-            status_code=200,
-            text="<h1>Ihre SMS wurde erfolgreich verschickt!</h1>",
-        )
-        mock.register_uri(
-            "GET",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._logout_url,
-            status_code=200,
-        )
+        yessssms.yesss._login_url,
+        status_code=200,
+        text="BlaBlaBla<strong>Login nicht erfolgreichBlaBla",
+    )
 
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="INFO"
-        ) as context:
-            self.yessssms.send_message(message)
-        self.assertIn("SMS sent", context.output[0])
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 4)
-        self.assertIn(
-            mock.last_request.scheme
-            + "://"
-            + mock.last_request.hostname
-            + mock.last_request.path
-            + "?"
-            + mock.last_request.query,
-            # pylint: disable=protected-access
-            self.yessssms.yesss._logout_url,
-        )
+    message = "Testing YesssSMS platform :)"
 
-    def test_no_recipient_error(self):
-        """Test for missing/empty recipient."""
-        message = "Testing YesssSMS platform :)"
+    yessssms.send_message(message)
+    assert requests_mock.called is True
+    assert requests_mock.call_count == 1
+
+    requests_mock.post(
         # pylint: disable=protected-access
-        self.yessssms._recipient = ""
+        yessssms.yesss._login_url,
+        status_code=200,
+        text="Wegen 3 ungültigen Login-Versuchen ist Ihr Account für "
+        "eine Stunde gesperrt.",
+    )
 
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="ERROR"
-        ) as context:
-            self.yessssms.send_message(message)
+    message = "Testing YesssSMS platform :)"
 
-        self.assertIn(
-            "You need to provide a recipient for SMS notification", context.output[0]
-        )
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+    assert requests_mock.called is True
+    assert requests_mock.call_count == 2
 
-    @requests_mock.Mocker()
-    def test_sms_sending_error(self, mock):
-        """Test sms sending error."""
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._login_url,
-            status_code=302,
-            # pylint: disable=protected-access
-            headers={"location": self.yessssms.yesss._kontomanager},
-        )
+
+async def test_error_account_suspended_2(yessssms, caplog):
+    """Test login that fails after multiple attempts."""
+    message = "Testing YesssSMS platform :)"
+    # pylint: disable=protected-access
+    yessssms.yesss._suspended = True
+
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert "Account is suspended, cannot send SMS." in record.message
+
+
+async def test_send_message(yessssms, requests_mock, caplog):
+    """Test send message."""
+    message = "Testing YesssSMS platform :)"
+    requests_mock.post(
         # pylint: disable=protected-access
-        login = self.yessssms.yesss._logindata["login_rufnummer"]
-        mock.register_uri(
-            "GET",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._kontomanager,
-            status_code=200,
-            text=f"test...{login}</a>",
-        )
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._websms_url,
-            status_code=HTTP_INTERNAL_SERVER_ERROR,
-        )
+        yessssms.yesss._login_url,
+        status_code=302,
+        # pylint: disable=protected-access
+        headers={"location": yessssms.yesss._kontomanager},
+    )
+    # pylint: disable=protected-access
+    login = yessssms.yesss._logindata["login_rufnummer"]
+    requests_mock.get(
+        # pylint: disable=protected-access
+        yessssms.yesss._kontomanager,
+        status_code=200,
+        text=f"test...{login}</a>",
+    )
+    requests_mock.post(
+        # pylint: disable=protected-access
+        yessssms.yesss._websms_url,
+        status_code=200,
+        text="<h1>Ihre SMS wurde erfolgreich verschickt!</h1>",
+    )
+    requests_mock.get(
+        # pylint: disable=protected-access
+        yessssms.yesss._logout_url,
+        status_code=200,
+    )
 
-        message = "Testing YesssSMS platform :)"
+    with caplog.at_level(logging.INFO):
+        yessssms.send_message(message)
+    for record in caplog.records:
+        if (
+            record.levelname == "INFO"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert "SMS sent" in record.message
 
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="ERROR"
-        ) as context:
-            self.yessssms.send_message(message)
+    assert requests_mock.called is True
+    assert requests_mock.call_count == 4
+    assert (
+        requests_mock.last_request.scheme
+        + "://"
+        + requests_mock.last_request.hostname
+        + requests_mock.last_request.path
+        + "?"
+        + requests_mock.last_request.query
+    ) in yessssms.yesss._logout_url  # pylint: disable=protected-access
 
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 3)
-        self.assertIn("YesssSMS: error sending SMS", context.output[0])
 
-    @requests_mock.Mocker()
-    def test_connection_error(self, mock):
-        """Test connection error."""
-        mock.register_uri(
-            "POST",
-            # pylint: disable=protected-access
-            self.yessssms.yesss._login_url,
-            exc=yessssms.YesssSMS.ConnectionError,
-        )
+async def test_no_recipient_error(yessssms, caplog):
+    """Test for missing/empty recipient."""
+    message = "Testing YesssSMS platform :)"
+    # pylint: disable=protected-access
+    yessssms._recipient = ""
 
-        message = "Testing YesssSMS platform :)"
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "You need to provide a recipient for SMS notification" in record.message
+            )
 
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="ERROR"
-        ) as context:
-            self.yessssms.send_message(message)
 
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 1)
-        self.assertIn("cannot connect to provider", context.output[0])
+async def test_sms_sending_error(yessssms, requests_mock, caplog):
+    """Test sms sending error."""
+    requests_mock.post(
+        # pylint: disable=protected-access
+        yessssms.yesss._login_url,
+        status_code=302,
+        # pylint: disable=protected-access
+        headers={"location": yessssms.yesss._kontomanager},
+    )
+    # pylint: disable=protected-access
+    login = yessssms.yesss._logindata["login_rufnummer"]
+    requests_mock.get(
+        # pylint: disable=protected-access
+        yessssms.yesss._kontomanager,
+        status_code=200,
+        text=f"test...{login}</a>",
+    )
+    requests_mock.post(
+        # pylint: disable=protected-access
+        yessssms.yesss._websms_url,
+        status_code=HTTP_INTERNAL_SERVER_ERROR,
+    )
+
+    message = "Testing YesssSMS platform :)"
+
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+
+    assert requests_mock.called is True
+    assert requests_mock.call_count == 3
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert "YesssSMS: error sending SMS" in record.message
+
+
+async def test_connection_error(yessssms, requests_mock, caplog):
+    """Test connection error."""
+    requests_mock.post(
+        # pylint: disable=protected-access
+        yessssms.yesss._login_url,
+        exc=yessssms.yesss.ConnectionError,
+    )
+
+    message = "Testing YesssSMS platform :)"
+
+    with caplog.at_level(logging.ERROR):
+        yessssms.send_message(message)
+
+    assert requests_mock.called is True
+    assert requests_mock.call_count == 1
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert "cannot connect to provider" in record.message

@@ -1,4 +1,7 @@
 """The tests for the MQTT switch platform."""
+import copy
+import json
+
 import pytest
 
 from homeassistant.components import switch
@@ -15,6 +18,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -303,21 +307,91 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     await help_test_discovery_removal(hass, mqtt_mock, caplog, switch.DOMAIN, data)
 
 
-async def test_discovery_update_switch(hass, mqtt_mock, caplog):
+async def test_discovery_update_switch_topic_template(hass, mqtt_mock, caplog):
+    """Test update of discovered switch."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "switch/state1"
+    config2["state_topic"] = "switch/state2"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("switch/state1", '{"state1":{"state":"ON"}}')], "on", None),
+    ]
+    state_data2 = [
+        ([("switch/state2", '{"state2":{"state":"OFF"}}')], "off", None),
+        ([("switch/state2", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("switch/state1", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("switch/state1", '{"state2":{"state":"OFF"}}')], "on", None),
+        ([("switch/state2", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("switch/state2", '{"state2":{"state":"OFF"}}')], "off", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        switch.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_switch_template(hass, mqtt_mock, caplog):
+    """Test update of discovered switch."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "switch/state1"
+    config2["state_topic"] = "switch/state1"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("switch/state1", '{"state1":{"state":"ON"}}')], "on", None),
+    ]
+    state_data2 = [
+        ([("switch/state1", '{"state2":{"state":"OFF"}}')], "off", None),
+        ([("switch/state1", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("switch/state1", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("switch/state1", '{"state2":{"state":"OFF"}}')], "off", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        switch.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_unchanged_switch(hass, mqtt_mock, caplog):
     """Test update of discovered switch."""
     data1 = (
         '{ "name": "Beer",'
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic" }'
-    )
-    await help_test_discovery_update(
-        hass, mqtt_mock, caplog, switch.DOMAIN, data1, data2
-    )
+    with patch(
+        "homeassistant.components.mqtt.switch.MqttSwitch.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, switch.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

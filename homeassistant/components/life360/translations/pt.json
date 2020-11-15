@@ -5,7 +5,9 @@
         },
         "error": {
             "invalid_credentials": "Credenciais inv\u00e1lidas",
-            "invalid_username": "Nome de utilizador incorreto"
+            "invalid_username": "Nome de utilizador incorreto",
+            "unexpected": "Erro inesperado ao comunicar com o servidor do Life360",
+            "user_already_configured": "Conta j\u00e1 configurada"
         },
         "step": {
             "user": {

@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "client_id": "ID do cliente (Opcional)",
-                    "client_secret": "Segredo do cliente (Opcional)"
+                    "client_secret": "Segredo do cliente (Opcional)",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
                 },
                 "title": "Credenciais de login do Flick"
             }

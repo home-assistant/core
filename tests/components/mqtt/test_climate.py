@@ -34,6 +34,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -48,7 +49,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import call
+from tests.async_mock import call, patch
 from tests.common import async_fire_mqtt_message
 from tests.components.climate import common
 
@@ -321,7 +322,9 @@ async def test_set_target_temperature(hass, mqtt_mock):
     await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") == 47
-    mqtt_mock.async_publish.assert_called_once_with("temperature-topic", 47, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "temperature-topic", "47.0", 0, False
+    )
 
     # also test directly supplying the operation mode to set_temperature
     mqtt_mock.async_publish.reset_mock()
@@ -332,7 +335,10 @@ async def test_set_target_temperature(hass, mqtt_mock):
     assert state.state == "cool"
     assert state.attributes.get("temperature") == 21
     mqtt_mock.async_publish.assert_has_calls(
-        [call("mode-topic", "cool", 0, False), call("temperature-topic", 21, 0, False)]
+        [
+            call("mode-topic", "cool", 0, False),
+            call("temperature-topic", "21.0", 0, False),
+        ]
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -371,8 +377,8 @@ async def test_set_target_temperature_low_high(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("target_temp_low") == 20
     assert state.attributes.get("target_temp_high") == 23
-    mqtt_mock.async_publish.assert_any_call("temperature-low-topic", 20, 0, False)
-    mqtt_mock.async_publish.assert_any_call("temperature-high-topic", 23, 0, False)
+    mqtt_mock.async_publish.assert_any_call("temperature-low-topic", "20.0", 0, False)
+    mqtt_mock.async_publish.assert_any_call("temperature-high-topic", "23.0", 0, False)
 
 
 async def test_set_target_temperature_low_highpessimistic(hass, mqtt_mock):
@@ -909,11 +915,22 @@ async def test_discovery_update_climate(hass, mqtt_mock, caplog):
     )
 
 
+async def test_discovery_update_unchanged_climate(hass, mqtt_mock, caplog):
+    """Test update of discovered climate."""
+    data1 = '{ "name": "Beer" }'
+    with patch(
+        "homeassistant.components.mqtt.climate.MqttClimate.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, discovery_update
+        )
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "power_command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk", ' '  "power_command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "power_command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk", "power_command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
     )

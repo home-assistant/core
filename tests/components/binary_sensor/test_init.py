@@ -10,11 +10,13 @@ def test_state():
     sensor = binary_sensor.BinarySensorEntity()
     assert STATE_OFF == sensor.state
     with mock.patch(
-        "homeassistant.components.binary_sensor.BinarySensorEntity.is_on", new=False,
+        "homeassistant.components.binary_sensor.BinarySensorEntity.is_on",
+        new=False,
     ):
         assert STATE_OFF == binary_sensor.BinarySensorEntity().state
     with mock.patch(
-        "homeassistant.components.binary_sensor.BinarySensorEntity.is_on", new=True,
+        "homeassistant.components.binary_sensor.BinarySensorEntity.is_on",
+        new=True,
     ):
         assert STATE_ON == binary_sensor.BinarySensorEntity().state
 

@@ -1,21 +1,30 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na",
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
+        "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
             "user": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API",
                     "host": "Hostitel",
-                    "port": "Port"
-                }
+                    "port": "Port",
+                    "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
+                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
+                },
+                "title": "P\u0159ipojen\u00ed k Sonarr"
             }
         }
-    }
+    },
+    "title": "Sonarr"
 }

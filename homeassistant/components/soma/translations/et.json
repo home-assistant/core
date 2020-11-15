@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche Soma konto.",
+            "connection_error": "SOMA Connect seadmega \u00fchenduse loomine nurjus."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": ""
+            }
+        }
+    }
+}

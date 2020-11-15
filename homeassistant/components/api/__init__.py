@@ -38,6 +38,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
+from homeassistant.helpers.system_info import async_get_system_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ ATTR_BASE_URL = "base_url"
 ATTR_EXTERNAL_URL = "external_url"
 ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
+ATTR_INSTALLATION_TYPE = "installation_type"
 ATTR_REQUIRES_API_PASSWORD = "requires_api_password"
 ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
@@ -181,6 +183,7 @@ class APIDiscoveryView(HomeAssistantView):
         """Get discovery information."""
         hass = request.app["hass"]
         uuid = await hass.helpers.instance_id.async_get()
+        system_info = await async_get_system_info(hass)
 
         data = {
             ATTR_UUID: uuid,
@@ -188,6 +191,7 @@ class APIDiscoveryView(HomeAssistantView):
             ATTR_EXTERNAL_URL: None,
             ATTR_INTERNAL_URL: None,
             ATTR_LOCATION_NAME: hass.config.location_name,
+            ATTR_INSTALLATION_TYPE: system_info[ATTR_INSTALLATION_TYPE],
             # always needs authentication
             ATTR_REQUIRES_API_PASSWORD: True,
             ATTR_VERSION: __version__,
@@ -375,8 +379,8 @@ class APIDomainServicesView(HomeAssistantView):
                 await hass.services.async_call(
                     domain, service, data, True, self.context(request)
                 )
-            except (vol.Invalid, ServiceNotFound):
-                raise HTTPBadRequest()
+            except (vol.Invalid, ServiceNotFound) as ex:
+                raise HTTPBadRequest() from ex
 
         return self.json(changed_states)
 
@@ -406,7 +410,7 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return tpl.async_render(data.get("variables"))
+            return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTP_BAD_REQUEST

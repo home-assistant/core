@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
         "error": {
-            "identifier_exists": "Kod pocztowy jest ju\u017c zarejestrowany.",
             "invalid_zip_code": "Kod pocztowy jest nieprawid\u0142owy"
         },
         "step": {

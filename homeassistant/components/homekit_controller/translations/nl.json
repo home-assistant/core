@@ -7,6 +7,7 @@
             "already_paired": "Dit accessoire is al gekoppeld aan een ander apparaat. Reset het accessoire en probeer het opnieuw.",
             "ignored_model": "HomeKit-ondersteuning voor dit model is geblokkeerd omdat er een meer functie volledige native integratie beschikbaar is.",
             "invalid_config_entry": "Dit apparaat geeft aan dat het gereed is om te koppelen, maar er is al een conflicterend configuratie-item voor in de Home Assistant dat eerst moet worden verwijderd.",
+            "invalid_properties": "Ongeldige eigenschappen aangekondigd door apparaat.",
             "no_devices": "Er zijn geen gekoppelde apparaten gevonden"
         },
         "error": {
@@ -34,6 +35,26 @@
                 "description": "Selecteer het apparaat waarmee u wilt koppelen",
                 "title": "Koppel met HomeKit accessoire"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Knop 1",
+            "button10": "Knop 10",
+            "button2": "Knop 2",
+            "button3": "Knop 3",
+            "button4": "Knop 4",
+            "button5": "Knop 5",
+            "button6": "Knop 6",
+            "button7": "Knop 7",
+            "button8": "Knop 8",
+            "button9": "Knop 9",
+            "doorbell": "Deurbel"
+        },
+        "trigger_type": {
+            "double_press": "\" {subtype} \" tweemaal ingedrukt",
+            "long_press": "\"{subtype}\" ingedrukt en vastgehouden",
+            "single_press": "\" {subtype} \" ingedrukt"
         }
     },
     "title": "HomeKit Accessoires"

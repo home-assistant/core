@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "TelldusLive ist bereits konfiguriert",
             "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "unknown": "Unbekannter Fehler ist aufgetreten"

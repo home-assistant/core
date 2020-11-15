@@ -115,7 +115,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
         vol.Coerce(int), vol.Range(min=1)
     ),
-    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
@@ -343,7 +343,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = await hass.async_add_job(load_profile_data, hass)
+        cls._all = await hass.async_add_executor_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod
@@ -442,7 +442,6 @@ class LightEntity(ToggleEntity):
             data[ATTR_COLOR_TEMP] = self.color_temp
 
         if supported_features & SUPPORT_COLOR and self.hs_color:
-            # pylint: disable=unsubscriptable-object,not-an-iterable
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
             data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
@@ -469,5 +468,6 @@ class Light(LightEntity):
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+            "Light is deprecated, modify %s to extend LightEntity",
+            cls.__name__,
         )

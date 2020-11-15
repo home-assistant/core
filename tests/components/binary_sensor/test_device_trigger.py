@@ -60,6 +60,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_triggers = [
         {

@@ -4,8 +4,7 @@
             "all_configured": "Todos los servidores vinculados ya configurados",
             "already_configured": "Este servidor Plex ya est\u00e1 configurado",
             "already_in_progress": "Plex se est\u00e1 configurando",
-            "invalid_import": "La configuraci\u00f3n importada no es v\u00e1lida",
-            "non-interactive": "Importaci\u00f3n no interactiva",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "token_request_timeout": "Tiempo de espera agotado para la obtenci\u00f3n del token",
             "unknown": "Fall\u00f3 por razones desconocidas"
         },
@@ -22,7 +21,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Puerto",
-                    "ssl": "Usar SSL",
+                    "ssl": "Utiliza un certificado SSL",
                     "token": "Token (Opcional)",
                     "verify_ssl": "Verificar certificado SSL"
                 },

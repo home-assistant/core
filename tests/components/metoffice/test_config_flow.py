@@ -36,7 +36,8 @@ async def test_form(hass, requests_mock):
     with patch(
         "homeassistant.components.metoffice.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.metoffice.async_setup_entry", return_value=True,
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": TEST_API_KEY}
@@ -67,7 +68,8 @@ async def test_form_already_configured(hass, requests_mock):
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text="",
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly",
+        text="",
     )
 
     MockConfigEntry(
@@ -98,7 +100,8 @@ async def test_form_cannot_connect(hass, requests_mock):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": TEST_API_KEY},
+        result["flow_id"],
+        {"api_key": TEST_API_KEY},
     )
 
     assert result2["type"] == "form"
@@ -115,7 +118,8 @@ async def test_form_unknown_error(hass, mock_simple_manager_fail):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": TEST_API_KEY},
+        result["flow_id"],
+        {"api_key": TEST_API_KEY},
     )
 
     assert result2["type"] == "form"

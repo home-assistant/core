@@ -28,6 +28,9 @@ from homeassistant.const import (
     HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
+
+from . import DOMAIN, PLATFORMS
 
 CONF_DATA = "data"
 CONF_DATA_TEMPLATE = "data_template"
@@ -67,6 +70,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
@@ -158,7 +163,7 @@ class RestNotificationService(BaseNotificationService):
                         key: _data_template_creator(item) for key, item in value.items()
                     }
                 value.hass = self._hass
-                return value.async_render(kwargs)
+                return value.async_render(kwargs, parse_result=False)
 
             data.update(_data_template_creator(self._data_template))
 

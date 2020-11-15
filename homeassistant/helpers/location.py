@@ -46,7 +46,8 @@ def closest(
             state.attributes.get(ATTR_LONGITUDE),
             latitude,
             longitude,
-        ),
+        )
+        or 0,
     )
 
 

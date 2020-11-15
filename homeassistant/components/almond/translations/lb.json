@@ -3,7 +3,8 @@
         "abort": {
             "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Almond Kont konfigur\u00e9ieren.",
             "cannot_connect": "Kann sech net mam Almond Server verbannen.",
-            "missing_configuration": "Kuckt w.e.g. Dokumentatioun iwwert d'ariichten vun Almond."
+            "missing_configuration": "Kuckt w.e.g. Dokumentatioun iwwert d'ariichten vun Almond.",
+            "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})"
         },
         "step": {
             "hassio_confirm": {

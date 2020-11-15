@@ -11,6 +11,7 @@
             "incorrect_password": "Ong\u00ebltegt Passwuert",
             "incorrect_username": "Ong\u00ebltege Benotzernumm",
             "incorrect_username_or_password": "Ong\u00ebltege Benotzernumm oder Passwuert",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "invalid_url": "Ong\u00eblteg URL",
             "login_attempts_exceeded": "Maximal Login Versich iwwerschratt, w.e.g. m\u00e9i sp\u00e9it nach eng K\u00e9ier",
             "response_error": "Onbekannte Feeler vum Apparat",

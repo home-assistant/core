@@ -3,8 +3,10 @@ import asyncio
 import datetime
 import functools
 import logging
+import ssl
 import threading
 
+from aiohttp.test_utils import make_mocked_request
 import pytest
 import requests_mock as _requests_mock
 
@@ -24,7 +26,7 @@ from homeassistant.helpers import event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -107,7 +109,18 @@ def hass(loop, hass_storage, request):
 
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
-        exceptions.append(context["exception"])
+        # Most of these contexts will contain an exception, but not all.
+        # The docs note the key as "optional"
+        # See https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_exception_handler
+        if "exception" in context:
+            exceptions.append(context["exception"])
+        else:
+            exceptions.append(
+                Exception(
+                    "Received exception handler without exception, but with message: %s"
+                    % context["message"]
+                )
+            )
         orig_exception_handler(loop, context)
 
     exceptions = []
@@ -264,6 +277,20 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
+def current_request(hass):
+    """Mock current request."""
+    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+        mocked_request = make_mocked_request(
+            "GET",
+            "/some/request",
+            headers={"Host": "example.com"},
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+        )
+        mock_request_context.get = Mock(return_value=mocked_request)
+        yield mock_request_context
+
+
+@pytest.fixture
 def hass_ws_client(aiohttp_client, hass_access_token, hass):
     """Websocket client fixture connected to websocket server."""
 
@@ -319,15 +346,41 @@ def mqtt_config():
 def mqtt_client_mock(hass):
     """Fixture to mock MQTT client."""
 
-    @ha.callback
-    def _async_fire_mqtt_message(topic, payload, qos, retain):
-        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+    mid = 0
+
+    def get_mid():
+        nonlocal mid
+        mid += 1
+        return mid
+
+    class FakeInfo:
+        def __init__(self, mid):
+            self.mid = mid
+            self.rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
+
+        @ha.callback
+        def _async_fire_mqtt_message(topic, payload, qos, retain):
+            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            mid = get_mid()
+            mock_client.on_publish(0, 0, mid)
+            return FakeInfo(mid)
+
+        def _subscribe(topic, qos=0):
+            mid = get_mid()
+            mock_client.on_subscribe(0, 0, mid)
+            return (0, mid)
+
+        def _unsubscribe(topic):
+            mid = get_mid()
+            mock_client.on_unsubscribe(0, 0, mid)
+            return (0, mid)
+
         mock_client = mock_client.return_value
         mock_client.connect.return_value = 0
-        mock_client.subscribe.return_value = (0, 0)
-        mock_client.unsubscribe.return_value = (0, 0)
+        mock_client.subscribe.side_effect = _subscribe
+        mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
         yield mock_client
 
@@ -342,9 +395,13 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     assert result
     await hass.async_block_till_done()
 
+    # Workaround: asynctest==0.13 fails on @functools.lru_cache
+    spec = dir(hass.data["mqtt"])
+    spec.remove("_matching_subscriptions")
+
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
+        spec_set=spec,
         wraps=hass.data["mqtt"],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
@@ -353,6 +410,13 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     component = hass.data["mqtt"]
     component.reset_mock()
     return component
+
+
+@pytest.fixture
+def mock_zeroconf():
+    """Mock zeroconf."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
+        yield mock_zc.return_value
 
 
 @pytest.fixture
@@ -365,6 +429,10 @@ def legacy_patchable_time():
         """Add a listener that fires once after a specific point in UTC time."""
         # Ensure point_in_time is UTC
         point_in_time = event.dt_util.as_utc(point_in_time)
+
+        # Since this is called once, we accept a HassJob so we can avoid
+        # having to figure out how to call the action every time its called.
+        job = action if isinstance(action, ha.HassJob) else ha.HassJob(action)
 
         @ha.callback
         def point_in_time_listener(event):
@@ -382,7 +450,7 @@ def legacy_patchable_time():
             setattr(point_in_time_listener, "run", True)
             async_unsub()
 
-            hass.async_run_job(action, now)
+            hass.async_run_hass_job(job, now)
 
         async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
 
@@ -394,6 +462,8 @@ def legacy_patchable_time():
         hass, action, hour=None, minute=None, second=None, local=False
     ):
         """Add a listener that will fire if time matches a pattern."""
+
+        job = ha.HassJob(action)
         # We do not have to wrap the function with time pattern matching logic
         # if no pattern given
         if all(val is None for val in (hour, minute, second)):
@@ -401,7 +471,7 @@ def legacy_patchable_time():
             @ha.callback
             def time_change_listener(ev) -> None:
                 """Fire every time event that comes in."""
-                hass.async_run_job(action, ev.data[ATTR_NOW])
+                hass.async_run_hass_job(job, ev.data[ATTR_NOW])
 
             return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
 
@@ -438,8 +508,8 @@ def legacy_patchable_time():
             last_now = now
 
             if next_time <= now:
-                hass.async_run_job(
-                    action, event.dt_util.as_local(now) if local else now
+                hass.async_run_hass_job(
+                    job, event.dt_util.as_local(now) if local else now
                 )
                 calculate_next(now + datetime.timedelta(seconds=1))
 

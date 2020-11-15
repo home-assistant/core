@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Tema de nacimiento inv\u00e1lido.",
             "bad_will": "Tema deseado inv\u00e1lido.",
-            "cannot_connect": "No se puede conectar con el agente."
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "broker": {
@@ -66,11 +66,13 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Habilitar mensaje de nacimiento",
                     "birth_payload": "Carga del mensaje de nacimiento",
                     "birth_qos": "QoS del mensaje de nacimiento",
                     "birth_retain": "Retenci\u00f3n del mensaje de nacimiento",
                     "birth_topic": "Tema del mensaje de nacimiento",
                     "discovery": "Habilitar descubrimiento",
+                    "will_enable": "Habilitar mensaje de nacimiento",
                     "will_payload": "Enviar\u00e1 la carga",
                     "will_qos": "El mensaje usar\u00e1 el QoS",
                     "will_retain": "Retendr\u00e1 el mensaje",

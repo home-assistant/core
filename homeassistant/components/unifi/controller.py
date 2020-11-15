@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
@@ -45,6 +46,7 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
@@ -184,6 +186,13 @@ class UniFiController:
             CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
         )
 
+    @property
+    def option_allow_uptime_sensors(self):
+        """Config entry option to allow uptime sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
+        )
+
     @callback
     def async_unifi_signalling_callback(self, signal, data):
         """Handle messages back from UniFi library."""
@@ -295,8 +304,8 @@ class UniFiController:
             description = await self.api.site_description()
             self._site_role = description[0]["site_role"]
 
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as err:
+            raise ConfigEntryNotReady from err
 
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
@@ -323,7 +332,9 @@ class UniFiController:
             client = self.api.clients_all[mac]
             self.api.clients.process_raw([client.raw])
             LOGGER.debug(
-                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
+                "Restore disconnected client %s (%s)",
+                entity.entity_id,
+                client.mac,
             )
 
         wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -426,14 +437,14 @@ async def get_controller(
             await controller.login()
         return controller
 
-    except aiounifi.Unauthorized:
+    except aiounifi.Unauthorized as err:
         LOGGER.warning("Connected to UniFi at %s but not registered.", host)
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, aiounifi.RequestError):
+    except (asyncio.TimeoutError, aiounifi.RequestError) as err:
         LOGGER.error("Error connecting to the UniFi controller at %s", host)
-        raise CannotConnect
+        raise CannotConnect from err
 
-    except aiounifi.AiounifiException:
+    except aiounifi.AiounifiException as err:
         LOGGER.exception("Unknown UniFi communication error occurred")
-        raise AuthenticationRequired
+        raise AuthenticationRequired from err

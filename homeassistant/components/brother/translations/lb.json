@@ -5,6 +5,7 @@
             "unsupported_model": "D\u00ebse Printer Modell g\u00ebtt net \u00ebnnerst\u00ebtzt."
         },
         "error": {
+            "cannot_connect": "Feeler beim verbannen",
             "connection_error": "Feeler bei der Verbindung.",
             "snmp_error": "SNMP Server ausgeschalt oder Printer net \u00ebnnerst\u00ebtzt.",
             "wrong_host": "Ong\u00ebltege Numm oder IP Adresse"

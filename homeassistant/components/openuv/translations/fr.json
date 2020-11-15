@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Cl\u00e9 d'API OpenUV",
+                    "api_key": "Cl\u00e9 d'API",
                     "elevation": "Altitude",
                     "latitude": "Latitude",
                     "longitude": "Longitude"

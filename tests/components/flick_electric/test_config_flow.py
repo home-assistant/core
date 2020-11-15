@@ -15,7 +15,9 @@ CONF = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
 async def _flow_submit(hass):
     return await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONF,
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=CONF,
     )
 
 
@@ -34,10 +36,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.flick_electric.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.flick_electric.async_setup_entry", return_value=True,
+        "homeassistant.components.flick_electric.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONF,
+            result["flow_id"],
+            CONF,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    }
+}

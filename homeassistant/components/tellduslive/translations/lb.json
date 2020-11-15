@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "TelldusLive ass scho konfigur\u00e9iert",
-            "already_setup": "TelldusLive ass scho konfigur\u00e9iert",
             "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "unknown": "Onbekannten Feeler opgetrueden"

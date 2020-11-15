@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "invalid_url": "Sobimatu URL",
+            "unknown_state": "Printeri olek teadmata, kontrolli URL-i ja v\u00f5rgu\u00fchendust"
+        }
+    }
+}

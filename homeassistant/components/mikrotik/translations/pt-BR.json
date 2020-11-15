@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "name": "Nome",
+                    "username": "Usu\u00e1rio",
                     "verify_ssl": "Usar SSL"
                 },
                 "title": "Configurar roteador Mikrotik"

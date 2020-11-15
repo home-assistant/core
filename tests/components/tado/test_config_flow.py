@@ -30,11 +30,13 @@ async def test_form(hass):
     mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
 
     with patch(
-        "homeassistant.components.tado.config_flow.Tado", return_value=mock_tado_api,
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=mock_tado_api,
     ), patch(
         "homeassistant.components.tado.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.tado.async_setup_entry", return_value=True,
+        "homeassistant.components.tado.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -59,11 +61,13 @@ async def test_import(hass):
     mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
 
     with patch(
-        "homeassistant.components.tado.config_flow.Tado", return_value=mock_tado_api,
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=mock_tado_api,
     ), patch(
         "homeassistant.components.tado.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.tado.async_setup_entry", return_value=True,
+        "homeassistant.components.tado.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -93,7 +97,8 @@ async def test_form_invalid_auth(hass):
     mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
 
     with patch(
-        "homeassistant.components.tado.config_flow.Tado", return_value=mock_tado_api,
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=mock_tado_api,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -115,7 +120,8 @@ async def test_form_cannot_connect(hass):
     mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
 
     with patch(
-        "homeassistant.components.tado.config_flow.Tado", return_value=mock_tado_api,
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=mock_tado_api,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -135,7 +141,8 @@ async def test_no_homes(hass):
     mock_tado_api = _get_mock_tado_api(getMe={"homes": []})
 
     with patch(
-        "homeassistant.components.tado.config_flow.Tado", return_value=mock_tado_api,
+        "homeassistant.components.tado.config_flow.Tado",
+        return_value=mock_tado_api,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

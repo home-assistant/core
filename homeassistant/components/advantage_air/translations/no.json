@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "[VOID] oppsett",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresse",
+                    "port": "Port"
+                },
+                "description": "Koble til API p\u00e5 din Advantage Air veggmonterte nettbrett.",
+                "title": "Koble til"
+            }
+        }
+    },
+    "title": ""
+}

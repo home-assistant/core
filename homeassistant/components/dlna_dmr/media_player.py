@@ -168,7 +168,7 @@ async def async_setup_platform(
     requester = AiohttpSessionRequester(session, True)
 
     # ensure event handler has been started
-    with await hass.data[DLNA_DMR_DATA]["lock"]:
+    async with hass.data[DLNA_DMR_DATA]["lock"]:
         server_host = config.get(CONF_LISTEN_IP)
         if server_host is None:
             server_host = get_local_ip()
@@ -182,8 +182,8 @@ async def async_setup_platform(
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        raise PlatformNotReady() from err
 
     # wrap with DmrDevice
     dlna_device = DmrDevice(upnp_device, event_handler)
@@ -220,7 +220,7 @@ class DlnaDmrDevice(MediaPlayerEntity):
 
     async def _async_on_hass_stop(self, event):
         """Event handler on Home Assistant stop."""
-        with await self.hass.data[DLNA_DMR_DATA]["lock"]:
+        async with self.hass.data[DLNA_DMR_DATA]["lock"]:
             await self._device.async_unsubscribe_services()
 
     async def async_update(self):

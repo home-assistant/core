@@ -1,15 +1,11 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-import logging
-
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN
 from .entity import RingEntityMixin
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -202,7 +198,7 @@ SENSOR_TYPES = {
     "battery": [
         "Battery",
         ["doorbots", "authorized_doorbots", "stickup_cams"],
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         None,
         "battery",
@@ -256,7 +252,7 @@ SENSOR_TYPES = {
     "wifi_signal_strength": [
         "WiFi Signal Strength",
         ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        "dBm",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         "wifi",
         None,
         "signal_strength",

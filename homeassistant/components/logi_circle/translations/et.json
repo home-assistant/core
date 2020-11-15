@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche Logi Circle konto.",
+            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni."
+        },
+        "error": {
+            "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
+            "invalid_auth": "Tuvastamine eba\u00f5nnestus"
+        }
+    }
+}

@@ -24,6 +24,8 @@ SIGNAL_SMARTAPP_PREFIX = "smartthings_smartap_"
 
 SETTINGS_INSTANCE_ID = "hassInstanceId"
 
+SUBSCRIPTION_WARNING_LIMIT = 40
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -39,6 +41,12 @@ SUPPORTED_PLATFORMS = [
     "binary_sensor",
     "sensor",
     "scene",
+]
+
+IGNORED_CAPABILITIES = [
+    "execute",
+    "healthCheck",
+    "ocf",
 ]
 
 TOKEN_REFRESH_INTERVAL = timedelta(days=14)

@@ -4,9 +4,10 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kunne ikke koble til BSB-Lan-enheten."
         },
-        "flow_title": "BSB-Lan: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
@@ -19,5 +20,5 @@
             }
         }
     },
-    "title": "BSB-Lan"
+    "title": ""
 }

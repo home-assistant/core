@@ -1,5 +1,4 @@
 """Support for FFmpeg."""
-import logging
 import re
 
 from haffmpeg.tools import FFVersion
@@ -7,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -19,8 +19,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "ffmpeg"
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_START = "start"
 SERVICE_STOP = "stop"
@@ -122,9 +120,9 @@ class FFmpegManager:
     def ffmpeg_stream_content_type(self):
         """Return HTTP content type for ffmpeg stream."""
         if self._major_version is not None and self._major_version > 3:
-            return "multipart/x-mixed-replace;boundary=ffmpeg"
+            return CONTENT_TYPE_MULTIPART.format("ffmpeg")
 
-        return "multipart/x-mixed-replace;boundary=ffserver"
+        return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
 class FFmpegBase(Entity):

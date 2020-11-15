@@ -1,0 +1,35 @@
+{
+    "config": {
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib deinen Kodi-Benutzernamen und Passwort ein. Diese findest du unter System/Einstellungen/Netzwerk/Dienste."
+            },
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?"
+            },
+            "host": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "\u00dcber SSL verbinden"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                }
+            }
+        }
+    }
+}

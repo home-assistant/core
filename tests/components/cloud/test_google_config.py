@@ -1,9 +1,11 @@
 """Test the Cloud Google Config."""
+import pytest
+
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, HTTP_NOT_FOUND
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, State
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
@@ -11,19 +13,24 @@ from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 
-async def test_google_update_report_state(hass, cloud_prefs):
-    """Test Google config responds to updating preference."""
-    config = CloudGoogleConfig(
+@pytest.fixture
+def mock_conf(hass, cloud_prefs):
+    """Mock Google conf."""
+    return CloudGoogleConfig(
         hass,
         GACTIONS_SCHEMA({}),
         "mock-user-id",
         cloud_prefs,
         Mock(claims={"cognito:username": "abcdefghjkl"}),
     )
-    await config.async_initialize()
-    await config.async_connect_agent_user("mock-user-id")
 
-    with patch.object(config, "async_sync_entities") as mock_sync, patch(
+
+async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
+    """Test Google config responds to updating preference."""
+    await mock_conf.async_initialize()
+    await mock_conf.async_connect_agent_user("mock-user-id")
+
+    with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
         "homeassistant.components.google_assistant.report_state.async_enable_report_state"
     ) as mock_report_state:
         await cloud_prefs.async_update(google_report_state=True)
@@ -161,3 +168,26 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
+
+
+async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
+    """Test Google config should expose using prefs."""
+    entity_conf = {"should_expose": False}
+    await cloud_prefs.async_update(
+        google_entity_configs={"light.kitchen": entity_conf},
+        google_default_expose=["light"],
+    )
+
+    state = State("light.kitchen", "on")
+
+    assert not mock_conf.should_expose(state)
+    entity_conf["should_expose"] = True
+    assert mock_conf.should_expose(state)
+
+    entity_conf["should_expose"] = None
+    assert mock_conf.should_expose(state)
+
+    await cloud_prefs.async_update(
+        google_default_expose=["sensor"],
+    )
+    assert not mock_conf.should_expose(state)

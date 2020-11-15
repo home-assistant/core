@@ -45,7 +45,7 @@ ATTR_ZONES = "zones"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-PROGRAM_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
+RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
 
 SOIL_TYPE_MAP = {
     0: "Not Set",
@@ -233,7 +233,7 @@ class RainMachineProgram(RainMachineSwitch):
                 ATTR_ID: self._switch_data["uid"],
                 ATTR_NEXT_RUN: next_run,
                 ATTR_SOAK: self._switch_data.get("soak"),
-                ATTR_STATUS: PROGRAM_STATUS_MAP[self._switch_data["status"]],
+                ATTR_STATUS: RUN_STATUS_MAP[self._switch_data["status"]],
                 ATTR_ZONES: ", ".join(z["name"] for z in self.zones),
             }
         )
@@ -290,6 +290,7 @@ class RainMachineZone(RainMachineSwitch):
 
         self._attrs.update(
             {
+                ATTR_STATUS: RUN_STATUS_MAP[self._switch_data["state"]],
                 ATTR_AREA: details.get("waterSense").get("area"),
                 ATTR_CURRENT_CYCLE: self._switch_data.get("cycle"),
                 ATTR_FIELD_CAPACITY: details.get("waterSense").get("fieldCapacity"),

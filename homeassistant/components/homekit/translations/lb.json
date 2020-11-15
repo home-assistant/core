@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
-                    "safe_mode": "Safe Mode (n\u00ebmmen aktiv\u00e9ieren wann Kopplung net geht)",
-                    "zeroconf_default_interface": "Standard Zeroconf Interface benotzen (aktiv\u00e9ieren falls d'Bridge net an der Home App fonnt g\u00ebtt)"
+                    "safe_mode": "Safe Mode (n\u00ebmmen aktiv\u00e9ieren wann Kopplung net geht)"
                 },
                 "description": "D\u00ebs Astellungen brauche n\u00ebmmen ajust\u00e9iert ze ginn fals d'HomeKit Bridge net funktion\u00e9iert.",
                 "title": "Erweidert Konfiguratioun"

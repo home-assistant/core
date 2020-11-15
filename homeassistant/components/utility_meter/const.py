@@ -5,10 +5,11 @@ HOURLY = "hourly"
 DAILY = "daily"
 WEEKLY = "weekly"
 MONTHLY = "monthly"
+BIMONTHLY = "bimonthly"
 QUARTERLY = "quarterly"
 YEARLY = "yearly"
 
-METER_TYPES = [HOURLY, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY]
+METER_TYPES = [HOURLY, DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, YEARLY]
 
 DATA_UTILITY = "utility_meter_data"
 

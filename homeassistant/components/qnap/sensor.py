@@ -18,8 +18,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -62,12 +62,12 @@ _SYSTEM_MON_COND = {
 }
 _CPU_MON_COND = {
     "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "cpu_usage": ["CPU Usage", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_usage": ["CPU Usage", PERCENTAGE, "mdi:chip"],
 }
 _MEMORY_MON_COND = {
     "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory"],
     "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory"],
-    "memory_percent_used": ["Memory Usage", UNIT_PERCENTAGE, "mdi:memory"],
+    "memory_percent_used": ["Memory Usage", PERCENTAGE, "mdi:memory"],
 }
 _NETWORK_MON_COND = {
     "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
@@ -81,7 +81,7 @@ _DRIVE_MON_COND = {
 _VOLUME_MON_COND = {
     "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie"],
     "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
+    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
 }
 
 _MONITORED_CONDITIONS = (

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        }
+    }
+}

@@ -1,6 +1,4 @@
 """Support for HomematicIP Cloud devices."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,11 +16,9 @@ from .const import (
     HMIPC_HAPID,
     HMIPC_NAME,
 )
-from .device import HomematicipGenericDevice  # noqa: F401
+from .generic_entity import HomematicipGenericEntity  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 from .services import async_setup_services, async_unload_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -99,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     # Add the HAP name from configuration if set.
     hapname = home.label if not home.name else f"{home.name} {home.label}"
     device_registry.async_get_or_create(
-        config_entry_id=home.id,
+        config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, home.id)},
         manufacturer="eQ-3",
         name=hapname,

@@ -72,7 +72,6 @@ async def test_record_service_lookback(hass):
     ):
         # Setup stubs
         hls_mock = MagicMock()
-        hls_mock.num_segments = 3
         hls_mock.target_duration = 2
         hls_mock.recv = AsyncMock(return_value=None)
         stream_mock.return_value.outputs = {"hls": hls_mock}

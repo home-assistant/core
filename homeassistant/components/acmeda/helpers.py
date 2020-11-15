@@ -37,5 +37,6 @@ async def update_devices(hass, config_entry, api):
         )
         if device is not None:
             dev_registry.async_update_device(
-                device.id, name=api_item.name,
+                device.id,
+                name=api_item.name,
             )

@@ -15,7 +15,6 @@ DOMAIN = const.DOMAIN
 DEPENDENCIES = ("http",)
 
 # Backwards compat / Make it easier to integrate
-# pylint: disable=invalid-name
 ActiveConnection = connection.ActiveConnection
 BASE_COMMAND_MESSAGE_SCHEMA = messages.BASE_COMMAND_MESSAGE_SCHEMA
 error_message = messages.error_message
@@ -25,7 +24,6 @@ async_response = decorators.async_response
 require_admin = decorators.require_admin
 ws_require_user = decorators.ws_require_user
 websocket_command = decorators.websocket_command
-# pylint: enable=invalid-name
 
 
 @bind_hass

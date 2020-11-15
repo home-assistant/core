@@ -17,7 +17,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.1.0",)
+REQUIREMENTS = ("colorlog==4.2.1",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -45,7 +45,7 @@ def color(the_color, *args, reset=None):
             return parse_colors(the_color)
         return parse_colors(the_color) + " ".join(args) + escape_codes[reset or "reset"]
     except KeyError as k:
-        raise ValueError(f"Invalid color {k!s} in {the_color}")
+        raise ValueError(f"Invalid color {k!s} in {the_color}") from k
 
 
 def run(script_args: List) -> int:

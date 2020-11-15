@@ -13,7 +13,8 @@
             "user": {
                 "data": {
                     "host": "Host (IP-adres)",
-                    "name": "Apparaatnaam"
+                    "name": "Apparaatnaam",
+                    "username": "Gebruikersnaam"
                 },
                 "title": "Maak verbinding met de DoorBird"
             }

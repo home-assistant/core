@@ -6,6 +6,7 @@ import dweepy
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     CONF_NAME,
     CONF_WHITELIST,
     EVENT_STATE_CHANGED,
@@ -58,7 +59,7 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        json_body[state.attributes.get("friendly_name")] = _state
+        json_body[state.attributes.get(ATTR_FRIENDLY_NAME)] = _state
 
         send_data(name, json_body)
 

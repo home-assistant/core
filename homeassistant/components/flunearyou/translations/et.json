@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "general_error": "Tekkis tundmatu viga.",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                }
+            }
+        }
+    }
+}

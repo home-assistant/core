@@ -10,9 +10,9 @@ from .objects import NodeListClass
 
 def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(_dict, default_flow_style=False, allow_unicode=True).replace(
-        ": null\n", ":\n"
-    )
+    return yaml.safe_dump(
+        _dict, default_flow_style=False, allow_unicode=True, sort_keys=False
+    ).replace(": null\n", ":\n")
 
 
 def save_yaml(path: str, data: dict) -> None:

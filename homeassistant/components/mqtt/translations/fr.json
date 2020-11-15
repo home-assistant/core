@@ -50,6 +50,8 @@
     },
     "options": {
         "error": {
+            "bad_birth": "Topic de naissance invalide",
+            "bad_will": "Topic de testament invalide",
             "cannot_connect": "Impossible de se connecter au broker."
         },
         "step": {
@@ -64,7 +66,17 @@
             },
             "options": {
                 "data": {
-                    "discovery": "Activer la d\u00e9couverte"
+                    "birth_enable": "Activer le message de naissance",
+                    "birth_payload": "Contenu du message de naissance",
+                    "birth_qos": "QoS du message de naissance",
+                    "birth_retain": "Retenir le message de naissance",
+                    "birth_topic": "Topic du message de naissance",
+                    "discovery": "Activer la d\u00e9couverte",
+                    "will_enable": "Activer le message de naissance",
+                    "will_payload": "Contenu du message de testament",
+                    "will_qos": "QoS du message de testament",
+                    "will_retain": "Retenir le message de testament",
+                    "will_topic": "Topic du message de testament"
                 },
                 "description": "Veuillez s\u00e9lectionner les options MQTT."
             }

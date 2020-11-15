@@ -8,6 +8,11 @@
             "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "user": {
                 "data": {
                     "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

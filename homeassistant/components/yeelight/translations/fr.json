@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Appareil"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "ip_address": "Adresse IP"
+                },
+                "description": "Si vous laissez l'adresse IP vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Mod\u00e8le (facultatif)",
+                    "nightlight_switch": "Utiliser l'interrupteur de la veilleuse",
+                    "save_on_change": "Sauvegarder le statut lors d'un changement",
+                    "transition": "Temps de transition (ms)",
+                    "use_music_mode": "Activer le mode musique"
+                },
+                "description": "Si vous ne pr\u00e9cisez pas le mod\u00e8le, il sera automatiquement d\u00e9tect\u00e9."
+            }
+        }
+    },
+    "title": "Yeelight"
+}

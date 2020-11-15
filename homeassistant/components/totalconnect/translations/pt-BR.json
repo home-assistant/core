@@ -8,6 +8,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "username": "Usu\u00e1rio"
+                },
                 "title": "Total Connect"
             }
         }

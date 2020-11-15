@@ -5,6 +5,7 @@ import logging
 from typing import (
     TYPE_CHECKING,
     Any,
+    Awaitable,
     Callable,
     Dict,
     Iterable,
@@ -12,6 +13,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Union,
 )
 
 import voluptuous as vol
@@ -34,16 +36,16 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, TemplateVarsType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import Integration, async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity import Entity  # noqa
+    from homeassistant.helpers.entity_platform import EntityPlatform
 
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
 CONF_SERVICE_DATA = "data"
@@ -109,9 +111,12 @@ def async_prepare_call_from_config(
     if CONF_SERVICE in config:
         domain_service = config[CONF_SERVICE]
     else:
+        domain_service = config[CONF_SERVICE_TEMPLATE]
+
+    if isinstance(domain_service, Template):
         try:
-            config[CONF_SERVICE_TEMPLATE].hass = hass
-            domain_service = config[CONF_SERVICE_TEMPLATE].async_render(variables)
+            domain_service.hass = hass
+            domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
             raise HomeAssistantError(
@@ -123,14 +128,14 @@ def async_prepare_call_from_config(
             ) from ex
 
     domain, service = domain_service.split(".", 1)
-    service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
-    if CONF_SERVICE_DATA_TEMPLATE in config:
+    service_data = {}
+    for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
+        if conf not in config:
+            continue
         try:
-            template.attach(hass, config[CONF_SERVICE_DATA_TEMPLATE])
-            service_data.update(
-                template.render_complex(config[CONF_SERVICE_DATA_TEMPLATE], variables)
-            )
+            template.attach(hass, config[conf])
+            service_data.update(template.render_complex(config[conf], variables))
         except TemplateError as ex:
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
@@ -247,19 +252,27 @@ async def async_extract_entity_ids(
     return extracted
 
 
-async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE:
+def _load_services_file(hass: HomeAssistantType, integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
-    integration = await async_get_integration(hass, domain)
     try:
-        return await hass.async_add_executor_job(
-            load_yaml, str(integration.file_path / "services.yaml")
-        )
+        return load_yaml(str(integration.file_path / "services.yaml"))
     except FileNotFoundError:
-        _LOGGER.warning("Unable to find services.yaml for the %s integration", domain)
+        _LOGGER.warning(
+            "Unable to find services.yaml for the %s integration", integration.domain
+        )
         return {}
     except HomeAssistantError:
-        _LOGGER.warning("Unable to parse services.yaml for the %s integration", domain)
+        _LOGGER.warning(
+            "Unable to parse services.yaml for the %s integration", integration.domain
+        )
         return {}
+
+
+def _load_services_files(
+    hass: HomeAssistantType, integrations: Iterable[Integration]
+) -> List[JSON_TYPE]:
+    """Load service files for multiple intergrations."""
+    return [_load_services_file(hass, integration) for integration in integrations]
 
 
 @bind_hass
@@ -284,8 +297,12 @@ async def async_get_all_descriptions(
     loaded = {}
 
     if missing:
-        contents = await asyncio.gather(
-            *(_load_services_file(hass, domain) for domain in missing)
+        integrations = await asyncio.gather(
+            *(async_get_integration(hass, domain) for domain in missing)
+        )
+
+        contents = await hass.async_add_executor_job(
+            _load_services_files, hass, integrations
         )
 
         for domain, content in zip(missing, contents):
@@ -303,7 +320,7 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})
+                yaml_description = domain_yaml.get(service, {})  # type: ignore
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -335,7 +352,13 @@ def async_set_service_schema(
 
 
 @bind_hass
-async def entity_service_call(hass, platforms, func, call, required_features=None):
+async def entity_service_call(
+    hass: HomeAssistantType,
+    platforms: Iterable["EntityPlatform"],
+    func: Union[str, Callable[..., Any]],
+    call: ha.ServiceCall,
+    required_features: Optional[Iterable[int]] = None,
+) -> None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -344,7 +367,9 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        entity_perms = user.permissions.check_entity
+        entity_perms: Optional[
+            Callable[[str, str], bool]
+        ] = user.permissions.check_entity
     else:
         entity_perms = None
 
@@ -356,7 +381,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data = {
+        data: Union[Dict, ha.ServiceCall] = {
             key: val
             for key, val in call.data.items()
             if key not in cv.ENTITY_SERVICE_FIELDS
@@ -368,7 +393,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
     # Check the permissions
 
     # A list with entities to call the service on.
-    entity_candidates = []
+    entity_candidates: List["Entity"] = []
 
     if entity_perms is None:
         for platform in platforms:
@@ -430,9 +455,12 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
             continue
 
         # Skip entities that don't have the required feature.
-        if required_features is not None and not any(
-            entity.supported_features & feature_set == feature_set
-            for feature_set in required_features
+        if required_features is not None and (
+            entity.supported_features is None
+            or not any(
+                entity.supported_features & feature_set == feature_set
+                for feature_set in required_features
+            )
         ):
             continue
 
@@ -471,12 +499,18 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
             future.result()  # pop exception if have
 
 
-async def _handle_entity_call(hass, entity, func, data, context):
+async def _handle_entity_call(
+    hass: HomeAssistantType,
+    entity: "Entity",
+    func: Union[str, Callable[..., Any]],
+    data: Union[Dict, ha.ServiceCall],
+    context: ha.Context,
+) -> None:
     """Handle calling service method."""
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_add_job(partial(getattr(entity, func), **data))
+        result = hass.async_add_job(partial(getattr(entity, func), **data))  # type: ignore
     else:
         result = hass.async_add_job(func, entity, data)
 
@@ -490,7 +524,7 @@ async def _handle_entity_call(hass, entity, func, data, context):
             func,
             entity.entity_id,
         )
-        await result
+        await result  # type: ignore
 
 
 @bind_hass
@@ -499,7 +533,7 @@ def async_register_admin_service(
     hass: HomeAssistantType,
     domain: str,
     service: str,
-    service_func: Callable,
+    service_func: Callable[[ha.ServiceCall], Optional[Awaitable]],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
@@ -525,12 +559,12 @@ def async_register_admin_service(
 def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
     """Ensure permission to access any entity under domain in service call."""
 
-    def decorator(service_handler: Callable) -> Callable:
+    def decorator(service_handler: Callable[[ha.ServiceCall], Any]) -> Callable:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")
 
-        async def check_permissions(call):
+        async def check_permissions(call: ha.ServiceCall) -> Any:
             """Check user permission and raise before call if unauthorized."""
             if not call.context.user_id:
                 return await service_handler(call)

@@ -7,18 +7,20 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_HUMIDITY,
     ATTR_API_PM1,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -26,6 +28,8 @@ ATTRIBUTION = "Data provided by Airly"
 ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
+
+PARALLEL_UPDATES = 1
 
 SENSOR_TYPES = {
     ATTR_API_PM1: {
@@ -38,7 +42,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_LABEL: ATTR_API_HUMIDITY.capitalize(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_API_PRESSURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
@@ -63,20 +67,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
-        sensors.append(AirlySensor(coordinator, name, sensor, unique_id))
+        sensors.append(AirlySensor(coordinator, name, sensor))
 
     async_add_entities(sensors, False)
 
 
-class AirlySensor(Entity):
+class AirlySensor(CoordinatorEntity):
     """Define an Airly sensor."""
 
-    def __init__(self, coordinator, name, kind, unique_id):
+    def __init__(self, coordinator, name, kind):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._name = name
-        self._unique_id = unique_id
         self.kind = kind
         self._device_class = None
         self._state = None
@@ -88,11 +90,6 @@ class AirlySensor(Entity):
     def name(self):
         """Return the name."""
         return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def state(self):
@@ -123,24 +120,21 @@ class AirlySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return self._unique_id
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
+            },
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SENSOR_TYPES[self.kind][ATTR_UNIT]
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update Airly entity."""
-        await self.coordinator.async_request_refresh()

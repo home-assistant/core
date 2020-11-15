@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
-                    "safe_mode": "Modo seguro (habil\u00edtelo solo si falla el emparejamiento)",
-                    "zeroconf_default_interface": "Use la interfaz zeroconf predeterminada (habil\u00edtela si no se puede encontrar el puente en la aplicaci\u00f3n Inicio)"
+                    "safe_mode": "Modo seguro (habil\u00edtelo solo si falla el emparejamiento)"
                 },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
                 "title": "Configuraci\u00f3n avanzada"
@@ -43,9 +42,18 @@
                 "description": "Elija las entidades que NO desea puentear.",
                 "title": "Excluir entidades en dominios seleccionados de bridge"
             },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entidades",
+                    "mode": "Modo"
+                },
+                "description": "Selecciona las entidades que deseas exponer. En el modo de accesorio, solo se expone una \u00fanica entidad. En el modo de inclusi\u00f3n de puente, todas las entidades del dominio se expondr\u00e1n a menos que se seleccionen entidades espec\u00edficas. En el modo de exclusi\u00f3n de puentes, todas las entidades del dominio se expondr\u00e1n excepto las entidades excluidas.",
+                "title": "Seleccionar entidades para exponer"
+            },
             "init": {
                 "data": {
-                    "include_domains": "Dominios para incluir"
+                    "include_domains": "Dominios para incluir",
+                    "mode": "Modo"
                 },
                 "description": "Las entidades de los \"Dominios que se van a incluir\" se establecer\u00e1n en HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
                 "title": "Seleccione los dominios que desea establecer un puente."

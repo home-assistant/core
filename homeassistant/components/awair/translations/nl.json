@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "no_devices_found": "Geen apparaten op het netwerk gevonden"
+        }
+    }
+}

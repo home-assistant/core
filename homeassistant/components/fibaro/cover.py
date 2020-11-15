@@ -1,6 +1,4 @@
 """Support for Fibaro cover - curtains, rollershutters etc."""
-import logging
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -9,8 +7,6 @@ from homeassistant.components.cover import (
 )
 
 from . import FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

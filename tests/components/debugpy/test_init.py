@@ -53,7 +53,9 @@ async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
     assert len(mock_debugpy.method_calls) == 0
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, blocking=True,
+        DOMAIN,
+        SERVICE_START,
+        blocking=True,
     )
 
     mock_debugpy.listen.assert_called_once_with(("127.0.0.1", 80))

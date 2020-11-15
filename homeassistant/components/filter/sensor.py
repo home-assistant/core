@@ -25,8 +25,11 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,6 +153,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
 
@@ -239,7 +245,7 @@ class SensorFilter(Entity):
 
             # Retrieve the largest window_size of each type
             if largest_window_items > 0:
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.get_last_state_changes,
                         self.hass,
@@ -251,7 +257,7 @@ class SensorFilter(Entity):
                     history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.state_changes_during_period,
                         self.hass,
@@ -279,8 +285,10 @@ class SensorFilter(Entity):
             for state in history_list:
                 self._update_filter_sensor_state(state, False)
 
-        async_track_state_change_event(
-            self.hass, [self._entity], self._update_filter_sensor_state_event
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._entity], self._update_filter_sensor_state_event
+            )
         )
 
     @property
@@ -311,8 +319,7 @@ class SensorFilter(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {ATTR_ENTITY_ID: self._entity}
-        return state_attr
+        return {ATTR_ENTITY_ID: self._entity}
 
 
 class FilterState:

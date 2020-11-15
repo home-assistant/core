@@ -479,7 +479,7 @@ class DeviceScanner:
 
     async def async_scan_devices(self) -> Any:
         """Scan for devices."""
-        return await self.hass.async_add_job(self.scan_devices)
+        return await self.hass.async_add_executor_job(self.scan_devices)
 
     def get_device_name(self, device: str) -> str:
         """Get the name of a device."""
@@ -487,7 +487,7 @@ class DeviceScanner:
 
     async def async_get_device_name(self, device: str) -> Any:
         """Get the name of a device."""
-        return await self.hass.async_add_job(self.get_device_name, device)
+        return await self.hass.async_add_executor_job(self.get_device_name, device)
 
     def get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
@@ -495,7 +495,7 @@ class DeviceScanner:
 
     async def async_get_extra_attributes(self, device: str) -> Any:
         """Get the extra attributes of a device."""
-        return await self.hass.async_add_job(self.get_extra_attributes, device)
+        return await self.hass.async_add_executor_job(self.get_extra_attributes, device)
 
 
 async def async_load_config(
@@ -522,7 +522,7 @@ async def async_load_config(
     )
     result = []
     try:
-        devices = await hass.async_add_job(load_yaml_config_file, path)
+        devices = await hass.async_add_executor_job(load_yaml_config_file, path)
     except HomeAssistantError as err:
         LOGGER.error("Unable to load %s: %s", path, str(err))
         return []

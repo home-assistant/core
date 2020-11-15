@@ -1,7 +1,11 @@
 """Class to hold all cover accessories."""
 import logging
 
-from pyhap.const import CATEGORY_GARAGE_DOOR_OPENER, CATEGORY_WINDOW_COVERING
+from pyhap.const import (
+    CATEGORY_GARAGE_DOOR_OPENER,
+    CATEGORY_WINDOW,
+    CATEGORY_WINDOW_COVERING,
+)
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -46,6 +50,7 @@ from .const import (
     HK_POSITION_GOING_TO_MIN,
     HK_POSITION_STOPPED,
     SERV_GARAGE_DOOR_OPENER,
+    SERV_WINDOW,
     SERV_WINDOW_COVERING,
 )
 
@@ -128,16 +133,16 @@ class GarageDoorOpener(HomeAccessory):
             self.char_current_state.set_value(current_door_state)
 
 
-class WindowCoveringBase(HomeAccessory):
+class OpeningDeviceBase(HomeAccessory):
     """Generate a base Window accessory for a cover entity.
 
     This class is used for WindowCoveringBasic and
     WindowCovering
     """
 
-    def __init__(self, *args, category):
-        """Initialize a WindowCoveringBase accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+    def __init__(self, *args, category, service):
+        """Initialize a OpeningDeviceBase accessory object."""
+        super().__init__(*args, category=category)
         state = self.hass.states.get(self.entity_id)
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -151,7 +156,7 @@ class WindowCoveringBase(HomeAccessory):
         if self._supports_tilt:
             self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
 
-        self.serv_cover = self.add_preload_service(SERV_WINDOW_COVERING, self.chars)
+        self.serv_cover = self.add_preload_service(service, self.chars)
 
         if self._supports_stop:
             self.char_hold_position = self.serv_cover.configure_char(
@@ -211,16 +216,15 @@ class WindowCoveringBase(HomeAccessory):
                 self._homekit_target_tilt = None
 
 
-@TYPES.register("WindowCovering")
-class WindowCovering(WindowCoveringBase, HomeAccessory):
-    """Generate a Window accessory for a cover entity.
+class OpeningDevice(OpeningDeviceBase, HomeAccessory):
+    """Generate a Window/WindowOpening accessory for a cover entity.
 
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args, category, service):
         """Initialize a WindowCovering accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+        super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
         self._homekit_target = None
 
@@ -278,8 +282,34 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
         super().async_update_state(new_state)
 
 
+@TYPES.register("Window")
+class Window(OpeningDevice):
+    """Generate a Window accessory for a cover entity with DEVICE_CLASS_WINDOW.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a Window accessory object."""
+        super().__init__(*args, category=CATEGORY_WINDOW, service=SERV_WINDOW)
+
+
+@TYPES.register("WindowCovering")
+class WindowCovering(OpeningDevice):
+    """Generate a WindowCovering accessory for a cover entity.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a WindowCovering accessory object."""
+        super().__init__(
+            *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
+        )
+
+
 @TYPES.register("WindowCoveringBasic")
-class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
+class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
     The cover entity must support: open_cover, close_cover,
@@ -287,8 +317,10 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
     """
 
     def __init__(self, *args):
-        """Initialize a WindowCovering accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+        """Initialize a WindowCoveringBasic accessory object."""
+        super().__init__(
+            *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
+        )
         state = self.hass.states.get(self.entity_id)
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0

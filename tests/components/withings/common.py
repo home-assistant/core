@@ -252,7 +252,8 @@ class ComponentFactory:
         data_manager = get_data_manager_by_user_id(self._hass, user_id)
         self._aioclient_mock.clear_requests()
         self._aioclient_mock.request(
-            "HEAD", data_manager.webhook_config.url,
+            "HEAD",
+            data_manager.webhook_config.url,
         )
 
         return self._api_class_mock.return_value

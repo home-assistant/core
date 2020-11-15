@@ -9,10 +9,11 @@
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
+            "cannot_connect": "Kan geen verbinding maken",
             "device_unavailable": "Apparaat is niet beschikbaar",
             "faulty_credentials": "Ongeldige gebruikersreferenties"
         },
-        "flow_title": "Axis apparaat: {naam} ({host})",
+        "flow_title": "Axis apparaat: {name} ({host})",
         "step": {
             "user": {
                 "data": {

@@ -526,7 +526,10 @@ async def test_restore_states(hass):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "light", "hue", "1234", suggested_object_id="simple",
+        "light",
+        "hue",
+        "1234",
+        suggested_object_id="simple",
     )
     # Should not be created
     registry.async_get_or_create(

@@ -1,14 +1,10 @@
 """Support gathering system information of hosts which are running glances."""
-import logging
-
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -157,7 +153,8 @@ class GlancesSensor(Entity):
                         self._state = round(disk["free"] / 1024 ** 3, 1)
                     except KeyError:
                         self._state = round(
-                            (disk["size"] - disk["used"]) / 1024 ** 3, 1,
+                            (disk["size"] - disk["used"]) / 1024 ** 3,
+                            1,
                         )
             elif self.type == "sensor_temp":
                 for sensor in value["sensors"]:

@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "confirm": {
+                "description": ""
+            },
+            "user": {
+                "data": {
+                    "host": "IP aadress",
+                    "port": ""
+                },
+                "description": "Palun sisesta oma Konnected Paneli hostiinfo."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "bad_host": "Sobimatu API hosti alistamise URL"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "name": "Nimi (valikuline)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nimi (valikuline)"
+                }
+            },
+            "options_io": {
+                "description": "Avastati {model} kohas {host}. Vali iga allpool oleva I/O baaskonfiguratsioon \u2013 s\u00f5ltuvalt I/O-st v\u00f5ib see lubada binaarsensoreid (avatud/suletud), digitaalseid andureid (dht ja ds18b20) v\u00f5i vahetatavaid v\u00e4ljundeid. Saad konfigureerida \u00fcksikasjalikke suvandeid j\u00e4rgmistes etappides."
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Alista API hosti URL (valikuline)",
+                    "override_api_host": "Alista Home Assistanti API hostipaneeli vaikimisi URL"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Nimi (valikuline)"
+                }
+            }
+        }
+    }
+}

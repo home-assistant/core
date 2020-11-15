@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry ya est\u00e1 configurado"
+            "already_configured": "Sentry ya est\u00e1 configurado",
+            "single_instance_allowed": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
             "bad_dsn": "DSN no v\u00e1lido",
@@ -9,8 +10,27 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Introduzca su DSN Sentry",
                 "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Nombre opcional del entorno.",
+                    "event_custom_components": "Env\u00eda eventos desde componentes personalizados",
+                    "event_handled": "Enviar eventos controlados",
+                    "event_third_party_packages": "Env\u00eda eventos desde paquetes de terceros",
+                    "logging_event_level": "El nivel de registro Sentry registrar\u00e1 un evento para",
+                    "logging_level": "El nivel de registro Sentry registrar\u00e1 registros como migas de pan para",
+                    "tracing": "Habilitar el seguimiento del rendimiento",
+                    "tracing_sample_rate": "Seguimiento de la frecuencia de muestreo; entre 0.0 y 1.0 (1.0 = 100%)"
+                }
             }
         }
     }

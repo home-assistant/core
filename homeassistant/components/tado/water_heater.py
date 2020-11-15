@@ -71,7 +71,9 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_WATER_HEATER_TIMER, WATER_HEATER_TIMER_SCHEMA, "set_timer",
+        SERVICE_WATER_HEATER_TIMER,
+        WATER_HEATER_TIMER_SCHEMA,
+        "set_timer",
     )
 
     if entities:

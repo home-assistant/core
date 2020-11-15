@@ -125,7 +125,9 @@ async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry
     with patch(
         "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
         side_effect=Exception,
-    ), patch("homematicip.aio.connection.AsyncConnection.init",):
+    ), patch(
+        "homematicip.aio.connection.AsyncConnection.init",
+    ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
     assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]

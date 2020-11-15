@@ -104,7 +104,9 @@ async def test_webhook_post(
 
 
 async def test_webhook_head(
-    hass: HomeAssistant, component_factory: ComponentFactory, aiohttp_client,
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    aiohttp_client,
 ) -> None:
     """Test head method on webhook view."""
     person0 = new_profile_config("person0", 0)
@@ -119,7 +121,9 @@ async def test_webhook_head(
 
 
 async def test_webhook_put(
-    hass: HomeAssistant, component_factory: ComponentFactory, aiohttp_client,
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    aiohttp_client,
 ) -> None:
     """Test webhook callback."""
     person0 = new_profile_config("person0", 0)
@@ -187,7 +191,9 @@ async def test_data_manager_webhook_subscription(
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
-        "HEAD", data_manager.webhook_config.url, status=200,
+        "HEAD",
+        data_manager.webhook_config.url,
+        status=200,
     )
 
     # Test subscribing

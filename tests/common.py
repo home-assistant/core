@@ -205,7 +205,9 @@ async def async_test_home_assistant(loop):
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
+    hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
+    hass.config.legacy_templates = False
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
@@ -261,8 +263,7 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        @asyncio.coroutine
-        def async_handle(self, intent):
+        async def async_handle(self, intent):
             """Handle the intent."""
             intents.append(intent)
             return intent.create_response()
@@ -295,8 +296,8 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
         if task.cancelled():
             continue
 
-        future_seconds = task.when() - hass.loop.time()
         mock_seconds_into_future = datetime_.timestamp() - time.time()
+        future_seconds = task.when() - hass.loop.time()
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
@@ -818,11 +819,7 @@ def mock_restore_cache(hass, states):
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    async def get_restore_state_data() -> restore_state.RestoreStateData:
-        return data
-
-    # Patch the singleton task in hass.data to return our new RestoreStateData
-    hass.data[key] = hass.async_create_task(get_restore_state_data())
+    hass.data[key] = data
 
 
 class MockEntity(entity.Entity):
@@ -976,6 +973,14 @@ def mock_integration(hass, module):
     integration = loader.Integration(
         hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
+
+    def mock_import_platform(platform_name):
+        raise ImportError(
+            f"Mocked unable to import platform '{platform_name}'",
+            name=f"{integration.pkg_path}.{platform_name}",
+        )
+
+    integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration

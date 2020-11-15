@@ -44,6 +44,7 @@ async def test_humanify_alexa_event(hass):
                 ),
             ],
             entity_attr_cache,
+            {},
         )
     )
 

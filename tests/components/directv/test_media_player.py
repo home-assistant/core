@@ -10,6 +10,7 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
 )
+from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
@@ -169,12 +170,15 @@ async def test_unique_id(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert main.device_class == DEVICE_CLASS_RECEIVER
     assert main.unique_id == "028877455858"
 
     client = entity_registry.async_get(CLIENT_ENTITY_ID)
+    assert client.device_class == DEVICE_CLASS_RECEIVER
     assert client.unique_id == "2CA17D1CD30X"
 
     unavailable_client = entity_registry.async_get(UNAVAILABLE_ENTITY_ID)
+    assert unavailable_client.device_class == DEVICE_CLASS_RECEIVER
     assert unavailable_client.unique_id == "9XXXXXXXXXX9"
 
 

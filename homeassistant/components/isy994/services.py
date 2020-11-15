@@ -13,9 +13,10 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -353,6 +354,30 @@ def async_setup_services(hass: HomeAssistantType):
         domain=DOMAIN, service=SERVICE_RELOAD, service_func=async_reload_config_entries
     )
 
+    async def _async_send_raw_node_command(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), SERVICE_SEND_RAW_NODE_COMMAND, call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_SEND_RAW_NODE_COMMAND,
+        schema=cv.make_entity_service_schema(SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA),
+        service_func=_async_send_raw_node_command,
+    )
+
+    async def _async_send_node_command(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), SERVICE_SEND_NODE_COMMAND, call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_SEND_NODE_COMMAND,
+        schema=cv.make_entity_service_schema(SERVICE_SEND_NODE_COMMAND_SCHEMA),
+        service_func=_async_send_node_command,
+    )
+
 
 @callback
 def async_unload_services(hass: HomeAssistantType):
@@ -374,23 +399,8 @@ def async_unload_services(hass: HomeAssistantType):
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SET_VARIABLE)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_CLEANUP)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_RELOAD)
-
-
-@callback
-def async_setup_device_services(hass: HomeAssistantType):
-    """Create device-specific services for the ISY Integration."""
-    platform = entity_platform.current_platform.get()
-
-    platform.async_register_entity_service(
-        SERVICE_SEND_RAW_NODE_COMMAND,
-        SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA,
-        SERVICE_SEND_RAW_NODE_COMMAND,
-    )
-    platform.async_register_entity_service(
-        SERVICE_SEND_NODE_COMMAND,
-        SERVICE_SEND_NODE_COMMAND_SCHEMA,
-        SERVICE_SEND_NODE_COMMAND,
-    )
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_RAW_NODE_COMMAND)
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_NODE_COMMAND)
 
 
 @callback

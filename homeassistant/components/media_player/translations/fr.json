@@ -11,8 +11,8 @@
     "state": {
         "_": {
             "idle": "En veille",
-            "off": "\u00c9teint",
-            "on": "Marche",
+            "off": "Inactif",
+            "on": "Actif",
             "paused": "En pause",
             "playing": "Lecture en cours",
             "standby": "En veille"

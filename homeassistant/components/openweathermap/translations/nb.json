@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "OpenWeatherMap-integrering for disse koordinatene er allerede konfigurert."
+        },
+        "error": {
+            "auth": "API-n\u00f8kkelen er ikke riktig."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mode": "Modus"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Spr\u00e5k",
+                    "mode": "Modus"
+                }
+            }
+        }
+    }
+}

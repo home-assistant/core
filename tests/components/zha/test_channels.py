@@ -3,6 +3,7 @@ import asyncio
 from unittest import mock
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.types as t
 import zigpy.zcl.clusters
 
@@ -286,7 +287,11 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     """Test EndpointChannels adding all channels."""
     zha_device = zha_device_mock(
         {
-            1: {"in_clusters": [0, 1, 6, 8], "out_clusters": [], "device_type": 0x0000},
+            1: {
+                "in_clusters": [0, 1, 6, 8],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            },
             2: {
                 "in_clusters": [0, 1, 6, 8, 768],
                 "out_clusters": [],

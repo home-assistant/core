@@ -7,7 +7,7 @@
             "user": {
                 "data": {
                     "latitude": "Latitudine",
-                    "longitude": "Longitudine",
+                    "longitude": "Logitudine",
                     "mode": "Modalit\u00e0",
                     "name": "Nome"
                 },

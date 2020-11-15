@@ -192,7 +192,7 @@ class BaseLight(LogMixin, light.LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
-        duration = transition * 10 if transition else 0
+        duration = transition * 10 if transition else 1
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
         flash = kwargs.get(light.ATTR_FLASH)
@@ -410,13 +410,10 @@ class Light(BaseLight, ZhaEntity):
         if "effect" in last_state.attributes:
             self._effect = last_state.attributes["effect"]
 
-    async def async_update(self):
-        """Attempt to retrieve on off state from the light."""
-        await super().async_update()
-        await self.async_get_state()
-
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve on off state from the light."""
+        if not from_cache and not self.available:
+            return
         self.debug("polling current state - from cache: %s", from_cache)
         if self._on_off_channel:
             state = await self._on_off_channel.get_attribute_value(
@@ -460,8 +457,8 @@ class Light(BaseLight, ZhaEntity):
             ):
                 self._color_temp = results["color_temperature"]
 
-            color_x = results.get("color_x")
-            color_y = results.get("color_y")
+            color_x = results.get("current_x")
+            color_y = results.get("current_y")
             if color_x is not None and color_y is not None:
                 self._hs_color = color_util.color_xy_to_hs(
                     float(color_x / 65535), float(color_y / 65535)

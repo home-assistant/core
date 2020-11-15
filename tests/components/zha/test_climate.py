@@ -466,7 +466,11 @@ async def test_target_temperature(
 
 @pytest.mark.parametrize(
     "preset, unoccupied, target_temp",
-    ((None, 1800, 17), (PRESET_AWAY, 1800, 18), (PRESET_AWAY, None, None),),
+    (
+        (None, 1800, 17),
+        (PRESET_AWAY, 1800, 18),
+        (PRESET_AWAY, None, None),
+    ),
 )
 async def test_target_temperature_high(
     hass, device_climate_mock, preset, unoccupied, target_temp
@@ -502,7 +506,11 @@ async def test_target_temperature_high(
 
 @pytest.mark.parametrize(
     "preset, unoccupied, target_temp",
-    ((None, 1600, 21), (PRESET_AWAY, 1600, 16), (PRESET_AWAY, None, None),),
+    (
+        (None, 1600, 21),
+        (PRESET_AWAY, 1600, 16),
+        (PRESET_AWAY, None, None),
+    ),
 )
 async def test_target_temperature_low(
     hass, device_climate_mock, preset, unoccupied, target_temp

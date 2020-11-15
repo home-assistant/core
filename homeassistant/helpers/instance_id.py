@@ -18,7 +18,9 @@ async def async_get(hass: HomeAssistant) -> str:
     store = storage.Store(hass, DATA_VERSION, DATA_KEY, True)
 
     data: Optional[Dict[str, str]] = await storage.async_migrator(  # type: ignore
-        hass, hass.config.path(LEGACY_UUID_FILE), store,
+        hass,
+        hass.config.path(LEGACY_UUID_FILE),
+        store,
     )
 
     if data is not None:

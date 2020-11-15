@@ -1,7 +1,27 @@
 {
+    "config": {
+        "abort": {
+            "port_name_in_use": "Er is al een bridge met dezelfde naam of poort geconfigureerd."
+        },
+        "step": {
+            "pairing": {
+                "title": "Koppel HomeKit Bridge"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Automatisch starten (uitschakelen als u Z-Wave of een ander vertraagd startsysteem gebruikt)"
+                },
+                "title": "Activeer HomeKit Bridge"
+            }
+        }
+    },
     "options": {
         "step": {
             "advanced": {
+                "data": {
+                    "safe_mode": "Veilige modus (alleen inschakelen als het koppelen mislukt)"
+                },
+                "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
                 "title": "Geavanceerde configuratie"
             },
             "exclude": {
@@ -14,8 +34,14 @@
             "init": {
                 "data": {
                     "include_domains": "Op te nemen domeinen"
-                }
+                },
+                "title": "Selecteer domeinen om zichtbaar te maken."
+            },
+            "yaml": {
+                "description": "Deze invoer wordt beheerd via YAML",
+                "title": "Pas de HomeKit Bridge-opties aan"
             }
         }
-    }
+    },
+    "title": "HomeKit Bridge"
 }

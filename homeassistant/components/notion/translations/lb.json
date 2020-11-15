@@ -4,6 +4,7 @@
             "already_configured": "D\u00ebse Benotzernumm g\u00ebtt scho benotzt."
         },
         "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "invalid_credentials": "Ong\u00ebltege Benotzernumm oder Passwuert",
             "no_devices": "Keng Apparater am Kont fonnt"
         },

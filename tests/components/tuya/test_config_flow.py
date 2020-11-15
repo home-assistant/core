@@ -65,9 +65,11 @@ async def test_import(hass, tuya):
     """Test import step."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.tuya.async_setup", return_value=True,
+        "homeassistant.components.tuya.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.tuya.async_setup_entry", return_value=True,
+        "homeassistant.components.tuya.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -118,14 +120,14 @@ async def test_abort_on_invalid_credentials(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "auth_failed"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "auth_failed"
+    assert result["reason"] == "invalid_auth"
 
 
 async def test_abort_on_connection_error(hass, tuya):
@@ -137,11 +139,11 @@ async def test_abort_on_connection_error(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "conn_error"
+    assert result["reason"] == "cannot_connect"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "conn_error"
+    assert result["reason"] == "cannot_connect"

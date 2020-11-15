@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "wrong_location": "Asukoht saab olla ainult Rootsis"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "name": "Nimi"
+                },
+                "title": "Asukoht Rootsis"
+            }
+        }
+    }
+}

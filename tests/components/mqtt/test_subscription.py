@@ -1,12 +1,11 @@
 """The tests for the MQTT subscription component."""
-from unittest import mock
-
 from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
 from homeassistant.core import callback
 
+from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 
@@ -131,9 +130,7 @@ async def test_qos_encoding_default(hass, mqtt_mock, caplog):
         sub_state,
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
-    mqtt_mock.async_subscribe.assert_called_once_with(
-        "test-topic1", mock.ANY, 0, "utf-8"
-    )
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 0, "utf-8")
 
 
 async def test_qos_encoding_custom(hass, mqtt_mock, caplog):
@@ -157,9 +154,7 @@ async def test_qos_encoding_custom(hass, mqtt_mock, caplog):
             }
         },
     )
-    mqtt_mock.async_subscribe.assert_called_once_with(
-        "test-topic1", mock.ANY, 1, "utf-16"
-    )
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 1, "utf-16")
 
 
 async def test_no_change(hass, mqtt_mock, caplog):

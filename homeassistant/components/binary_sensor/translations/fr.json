@@ -155,11 +155,11 @@
             "on": "Dangereux"
         },
         "smoke": {
-            "off": "RAS",
+            "off": "Non d\u00e9tect\u00e9",
             "on": "D\u00e9tect\u00e9"
         },
         "sound": {
-            "off": "RAS",
+            "off": "Non d\u00e9tect\u00e9",
             "on": "D\u00e9tect\u00e9"
         },
         "vibration": {

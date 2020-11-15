@@ -10,9 +10,9 @@ from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 
-from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return vol.Schema(
             {
                 vol.Required(CONF_HOST, default=self.host): str,
-                vol.Optional(CONF_KEY): str,
+                vol.Optional(CONF_API_KEY): str,
                 vol.Optional(CONF_PASSWORD): str,
             }
         )
@@ -50,7 +50,7 @@ class FlowHandler(config_entries.ConfigFlow):
             data={
                 CONF_HOST: host,
                 KEY_MAC: mac,
-                CONF_KEY: key,
+                CONF_API_KEY: key,
                 CONF_UUID: uuid,
                 CONF_PASSWORD: password,
             },
@@ -81,21 +81,27 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "device_timeout"},
+                errors={"base": "cannot_connect"},
             )
         except web_exceptions.HTTPForbidden:
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "forbidden"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "invalid_auth"},
             )
         except ClientError:
             _LOGGER.exception("ClientError")
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "unknown"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
-                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "unknown"},
             )
 
         mac = device.mac
@@ -107,7 +113,7 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(step_id="user", data_schema=self.schema)
         return await self._create_device(
             user_input[CONF_HOST],
-            user_input.get(CONF_KEY),
+            user_input.get(CONF_API_KEY),
             user_input.get(CONF_PASSWORD),
         )
 
@@ -130,6 +136,13 @@ class FlowHandler(config_entries.ConfigFlow):
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
         devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        if not devices:
+            _LOGGER.debug(
+                "Could not find MAC-address for %s,"
+                " make sure the required UDP ports are open (see integration documentation)",
+                discovery_info[CONF_HOST],
+            )
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[CONF_HOST]

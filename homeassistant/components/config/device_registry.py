@@ -73,6 +73,7 @@ def _entry_dict(entry):
         "sw_version": entry.sw_version,
         "entry_type": entry.entry_type,
         "id": entry.id,
+        "identifiers": list(entry.identifiers),
         "via_device_id": entry.via_device_id,
         "area_id": entry.area_id,
         "name_by_user": entry.name_by_user,

@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Postleitzahl bereits registriert",
             "invalid_zip_code": "Postleitzahl ist ung\u00fcltig"
         },
         "step": {

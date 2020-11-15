@@ -1,10 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "name_exists": "Nimi on juba kasutusel"
+        },
         "step": {
             "user": {
                 "data": {
                     "host_ip": "",
-                    "name": "Nimi"
+                    "name": "Nimi",
+                    "upnp_bind_multicast": "Seo multicast (jah/ei)"
                 }
             }
         }

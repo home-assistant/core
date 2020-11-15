@@ -1,5 +1,5 @@
 """Constants for Brother integration."""
-from homeassistant.const import TIME_DAYS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE
 
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
 ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
@@ -75,96 +75,92 @@ SENSOR_TYPES = {
     ATTR_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_BLACK_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_CYAN_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_MAGENTA_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_YELLOW_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_BELT_UNIT_REMAINING_LIFE: {
         ATTR_ICON: "mdi:current-ac",
         ATTR_LABEL: ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_FUSER_REMAINING_LIFE: {
         ATTR_ICON: "mdi:water-outline",
         ATTR_LABEL: ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_LASER_REMAINING_LIFE: {
         ATTR_ICON: "mdi:spotlight-beam",
         ATTR_LABEL: ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_PF_KIT_1_REMAINING_LIFE: {
         ATTR_ICON: "mdi:printer-3d",
         ATTR_LABEL: ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_PF_KIT_MP_REMAINING_LIFE: {
         ATTR_ICON: "mdi:printer-3d",
         ATTR_LABEL: ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_BLACK_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_CYAN_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_MAGENTA_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_YELLOW_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_BLACK_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_CYAN_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_MAGENTA_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_YELLOW_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
-    ATTR_UPTIME: {
-        ATTR_ICON: "mdi:timer-outline",
-        ATTR_LABEL: ATTR_UPTIME.title(),
-        ATTR_UNIT: TIME_DAYS,
-    },
+    ATTR_UPTIME: {ATTR_ICON: None, ATTR_LABEL: ATTR_UPTIME.title(), ATTR_UNIT: None},
 }

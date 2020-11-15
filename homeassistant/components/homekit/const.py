@@ -30,6 +30,7 @@ ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 
 # #### Config ####
+CONF_HOMEKIT_MODE = "mode"
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
@@ -41,6 +42,7 @@ CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
+CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
@@ -55,6 +57,7 @@ CONF_SUPPORT_AUDIO = "support_audio"
 CONF_VIDEO_CODEC = "video_codec"
 CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
+CONF_STREAM_COUNT = "stream_count"
 
 # #### Config Defaults ####
 DEFAULT_SUPPORT_AUDIO = False
@@ -72,6 +75,7 @@ DEFAULT_SAFE_MODE = False
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
+DEFAULT_STREAM_COUNT = 3
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"
@@ -82,6 +86,12 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
 EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
+
+# #### HomeKit Modes ####
+HOMEKIT_MODE_ACCESSORY = "accessory"
+HOMEKIT_MODE_BRIDGE = "bridge"
+DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
+HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
@@ -110,6 +120,7 @@ SERV_CAMERA_RTP_STREAM_MANAGEMENT = "CameraRTPStreamManagement"
 SERV_CARBON_DIOXIDE_SENSOR = "CarbonDioxideSensor"
 SERV_CARBON_MONOXIDE_SENSOR = "CarbonMonoxideSensor"
 SERV_CONTACT_SENSOR = "ContactSensor"
+SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
 SERV_HUMIDIFIER_DEHUMIDIFIER = "HumidifierDehumidifier"
@@ -124,12 +135,15 @@ SERV_OCCUPANCY_SENSOR = "OccupancySensor"
 SERV_OUTLET = "Outlet"
 SERV_SECURITY_SYSTEM = "SecuritySystem"
 SERV_SMOKE_SENSOR = "SmokeSensor"
+SERV_SPEAKER = "Speaker"
+SERV_STATELESS_PROGRAMMABLE_SWITCH = "StatelessProgrammableSwitch"
 SERV_SWITCH = "Switch"
 SERV_TELEVISION = "Television"
 SERV_TELEVISION_SPEAKER = "TelevisionSpeaker"
 SERV_TEMPERATURE_SENSOR = "TemperatureSensor"
 SERV_THERMOSTAT = "Thermostat"
 SERV_VALVE = "Valve"
+SERV_WINDOW = "Window"
 SERV_WINDOW_COVERING = "WindowCovering"
 
 # #### Characteristics ####
@@ -182,6 +196,7 @@ CHAR_OCCUPANCY_DETECTED = "OccupancyDetected"
 CHAR_ON = "On"
 CHAR_OUTLET_IN_USE = "OutletInUse"
 CHAR_POSITION_STATE = "PositionState"
+CHAR_PROGRAMMABLE_SWITCH_EVENT = "ProgrammableSwitchEvent"
 CHAR_REMOTE_KEY = "RemoteKey"
 CHAR_ROTATION_DIRECTION = "RotationDirection"
 CHAR_ROTATION_SPEED = "RotationSpeed"
@@ -275,4 +290,5 @@ CONFIG_OPTIONS = [
     CONF_AUTO_START,
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
+    CONF_HOMEKIT_MODE,
 ]

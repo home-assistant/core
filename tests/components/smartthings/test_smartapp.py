@@ -1,7 +1,7 @@
 """Tests for the smartapp module."""
 from uuid import uuid4
 
-from pysmartthings import AppEntity, Capability
+from pysmartthings import CAPABILITIES, AppEntity, Capability
 
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
@@ -89,7 +89,7 @@ async def test_smartapp_webhook(hass):
 async def test_smartapp_sync_subscriptions(
     hass, smartthings_mock, device_factory, subscription_factory
 ):
-    """Test synchronization adds and removes."""
+    """Test synchronization adds and removes and ignores unused."""
     smartthings_mock.subscriptions.return_value = [
         subscription_factory(Capability.thermostat),
         subscription_factory(Capability.switch),
@@ -98,7 +98,7 @@ async def test_smartapp_sync_subscriptions(
     devices = [
         device_factory("", [Capability.battery, "ping"]),
         device_factory("", [Capability.switch, Capability.switch_level]),
-        device_factory("", [Capability.switch]),
+        device_factory("", [Capability.switch, Capability.execute]),
     ]
 
     await smartapp.smartapp_sync_subscriptions(
@@ -132,6 +132,25 @@ async def test_smartapp_sync_subscriptions_up_to_date(
     assert smartthings_mock.subscriptions.call_count == 1
     assert smartthings_mock.delete_subscription.call_count == 0
     assert smartthings_mock.create_subscription.call_count == 0
+
+
+async def test_smartapp_sync_subscriptions_limit_warning(
+    hass, smartthings_mock, device_factory, subscription_factory, caplog
+):
+    """Test synchronization over the limit logs a warning."""
+    smartthings_mock.subscriptions.return_value = []
+    devices = [
+        device_factory("", CAPABILITIES),
+    ]
+
+    await smartapp.smartapp_sync_subscriptions(
+        hass, str(uuid4()), str(uuid4()), str(uuid4()), devices
+    )
+
+    assert (
+        "Some device attributes may not receive push updates and there may be "
+        "subscription creation failures" in caplog.text
+    )
 
 
 async def test_smartapp_sync_subscriptions_handles_exceptions(

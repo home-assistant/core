@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "TelldusLive is al geconfigureerd",
             "authorize_url_fail": "Onbekende fout bij het genereren van een autorisatie url.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "unknown": "Onbekende fout opgetreden"

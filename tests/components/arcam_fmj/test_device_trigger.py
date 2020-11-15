@@ -38,7 +38,8 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "host", 1234)},
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "host", 1234)},
     )
     entity_reg.async_get_or_create(
         "media_player", DOMAIN, "5678", device_id=device_entry.id
@@ -83,7 +84,10 @@ async def test_if_fires_on_turn_on_request(hass, calls, player_setup, state):
     )
 
     await hass.services.async_call(
-        "media_player", "turn_on", {"entity_id": player_setup}, blocking=True,
+        "media_player",
+        "turn_on",
+        {"entity_id": player_setup},
+        blocking=True,
     )
 
     await hass.async_block_till_done()

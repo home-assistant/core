@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Kont ass",
             "no_devices": "Keng Apparater am Netzwierk fonnt",
-            "reauth_successful": "Acc\u00e8s Jeton erfollegr\u00e4ich aktualis\u00e9iert"
+            "reauth_successful": "Erfollegr\u00e4ich aktualis\u00e9iert"
         },
         "error": {
             "auth": "Ong\u00ebltege Acc\u00e8s Jeton",

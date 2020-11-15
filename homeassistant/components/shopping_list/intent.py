@@ -24,7 +24,7 @@ class AddItemIntent(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]
-        intent_obj.hass.data[DOMAIN].async_add(item)
+        await intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()
         response.async_set_speech(f"I've added {item} to your shopping list")
