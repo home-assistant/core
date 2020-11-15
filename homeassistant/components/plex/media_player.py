@@ -636,11 +636,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self, media_content_type, media_content_id, media_image_id=None
     ):
         """Get media image from Plex server."""
-        image_url = self.plex_server.thumbnail_cache.get(media_image_id)
+        image_url = self.plex_server.thumbnail_cache.get(media_content_id)
         if image_url:
             result = await self._async_fetch_image(image_url)
-            if result == (None, None):
-                _LOGGER.debug("Error retrieving proxied image from %s", image_url)
             return result
 
         return (None, None)
