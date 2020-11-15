@@ -38,9 +38,6 @@ RtmAPI==0.7.2
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
-# homeassistant.components.yessssms
-YesssSMS==0.4.1
-
 # homeassistant.components.abode
 abodepy==1.1.0
 
@@ -109,7 +106,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.54
+aiohomekit==0.2.57
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -287,7 +284,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.7
+elkm1-lib==0.8.8
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -364,7 +361,7 @@ google-cloud-pubsub==2.1.0
 google-nest-sdm==0.1.14
 
 # homeassistant.components.gree
-greeclimate==0.10.2
+greeclimate==0.10.3
 
 # homeassistant.components.griddy
 griddypower==0.1.0
@@ -710,7 +707,7 @@ pygti==0.9.2
 pyhaversion==3.4.2
 
 # homeassistant.components.heos
-pyheos==0.6.0
+pyheos==0.7.2
 
 # homeassistant.components.homematic
 pyhomematic==0.1.70
@@ -839,10 +836,10 @@ pysma==0.3.5
 pysmappee==0.2.13
 
 # homeassistant.components.smartthings
-pysmartapp==0.3.2
+pysmartapp==0.3.3
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.4
+pysmartthings==0.7.6
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -1137,7 +1134,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.1
+zigpy-zigate==0.7.2
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2

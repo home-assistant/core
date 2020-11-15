@@ -8,9 +8,9 @@ pubsub subscriber.
 import datetime
 from typing import List
 
+from aiohttp.client_exceptions import ClientConnectionError
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
-from requests import HTTPError
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
@@ -315,8 +315,8 @@ async def test_refresh_expired_stream_failure(hass, aiohttp_client):
                 },
             }
         ),
-        # Extending the stream fails
-        FakeResponse(error=HTTPError(response="Some Error")),
+        # Extending the stream fails with arbitrary error
+        FakeResponse(error=ClientConnectionError()),
         # Next attempt to get a stream fetches a new url
         FakeResponse(
             {

@@ -518,7 +518,6 @@ homeassistant/components/yamaha_musiccast/* @jalmeroth
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
-homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
 homeassistant/components/zeroconf/* @bdraco
 homeassistant/components/zerproc/* @emlove
