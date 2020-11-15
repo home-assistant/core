@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeBaseEntity, platform_async_setup_entry
 
 
 async def async_setup_entry(
@@ -28,13 +28,13 @@ async def async_setup_entry(
     )
 
 
-class EsphomeCamera(Camera, EsphomeEntity):
+class EsphomeCamera(Camera, EsphomeBaseEntity):
     """A camera implementation for ESPHome."""
 
     def __init__(self, entry_id: str, component_key: str, key: int):
         """Initialize."""
         Camera.__init__(self)
-        EsphomeEntity.__init__(self, entry_id, component_key, key)
+        EsphomeBaseEntity.__init__(self, entry_id, component_key, key)
         self._image_cond = asyncio.Condition()
 
     @property
