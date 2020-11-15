@@ -86,13 +86,13 @@ async def test_entity_power_consumption_report_state(hass, device_factory):
     """Test the state attributes."""
     test_attr_values = {
         "start": "00110501T000000-0800",  # Nov 5 2020 America/Los Angeles
-        "end": "00110601T000000-0800",  # Nov 6 2020 America/Los Angeles
-        "energy": 10000,
         "power": 90,
-        "deltaEnergy": 100,
-        "powerEnergy": 80,
-        "energySaved": 300,
-        "persistedEnergy": 20000,
+        "energy": 10000.0,
+        "end": "00110601T000000-0800",  # Nov 6 2020 America/Los Angeles
+        "deltaEnergy": 100.0,
+        "powerEnergy": 80.0,
+        "energySaved": 300.0,
+        "persistedEnergy": 20000.0,
     }
     device = device_factory(
         "Appliance",
@@ -101,22 +101,25 @@ async def test_entity_power_consumption_report_state(hass, device_factory):
     )
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("sensor.appliance_power_consumption_report")
-    assert state.state == "10000"
+    assert state.state == "10000.0"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{device.label} Power Consumption Report"
     )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
-    # Only check for currently supported values
     attributes = [
         "power_consumption_start",
         "power_consumption_power",
         "power_consumption_energy",
         "power_consumption_end",
+        "power_consumption_delta_energy",
+        "power_consumption_power_energy",
+        "power_consumption_energy_saved",
+        "power_consumption_persisted_energy",
     ]
-    for attribute in attributes:
-        assert state.attributes[attribute] == test_attr_values[attribute[18:]]
+    for attribute, test_attr_value in zip(attributes, test_attr_values):
+        assert state.attributes[attribute] == test_attr_values[test_attr_value]
 
 
 async def test_entity_power_consumption_report_invalid_state(hass, device_factory):
