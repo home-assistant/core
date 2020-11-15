@@ -18,7 +18,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.noautofixt
+@pytest.mark.no_bypass_setup
 async def test_services_registered(hass: HomeAssistantType):
     """Test if all services are registered."""
     with patch(
