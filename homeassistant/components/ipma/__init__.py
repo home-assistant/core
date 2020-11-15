@@ -6,7 +6,7 @@ import async_timeout
 from pyipma.api import IPMA_API as ipma_api
 from pyipma.location import Location
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -29,12 +29,15 @@ async def async_setup_entry(hass, config_entry):
     """Set up IPMA station as config entry."""
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
+    mode = config_entry.data[CONF_MODE]
 
     websession = async_get_clientsession(hass)
     api = ipma_api(websession)
 
     with async_timeout.timeout(30):
-        location = await Location.get(api, float(latitude), float(longitude))
+        location = await Location.get(
+            api, float(latitude), float(longitude), sea_stations=True
+        )
 
     _LOGGER.debug(
         "Initializing for coordinates %s, %s -> station %s (%d, %d)",
@@ -49,6 +52,7 @@ async def async_setup_entry(hass, config_entry):
     ipma_hass_data[config_entry.entry_id] = {
         IPMA_API: api,
         IPMA_LOCATION: location,
+        CONF_MODE: mode,
     }
 
     for component in PLATFORMS:

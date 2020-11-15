@@ -2,6 +2,7 @@
 from collections import namedtuple
 
 from homeassistant.components import weather
+from homeassistant.components.ipma import DOMAIN
 from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
@@ -18,10 +19,11 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
-from tests.async_mock import patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 TEST_CONFIG = {
@@ -34,6 +36,20 @@ TEST_CONFIG = {
 
 class MockLocation:
     """Mock Location from pyipma."""
+
+    @property
+    def station(self):
+        """Mock Station."""
+        return MagicMock()
+
+    @property
+    def sea_station_name(self):
+        """Mock Maritime Station."""
+        return Mock()
+
+    async def sea_forecast(self, api):
+        """Mock sea forecast."""
+        return MagicMock()
 
     async def observation(self, api):
         """Mock Observation."""
@@ -131,8 +147,15 @@ class MockLocation:
 
 async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
+    ipma_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
+    )
+    ipma_entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         assert await async_setup_component(
@@ -143,6 +166,7 @@ async def test_setup_configuration(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
+    print(state)
     assert state.state == "rainy"
 
     data = state.attributes
@@ -156,8 +180,15 @@ async def test_setup_configuration(hass):
 
 async def test_setup_config_flow(hass):
     """Test for successfully setting up the IPMA platform."""
+    ipma_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
+    )
+    ipma_entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
@@ -178,8 +209,15 @@ async def test_setup_config_flow(hass):
 
 async def test_daily_forecast(hass):
     """Test for successfully getting daily forecast."""
+    ipma_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
+    )
+    ipma_entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         assert await async_setup_component(
@@ -204,8 +242,15 @@ async def test_daily_forecast(hass):
 
 async def test_hourly_forecast(hass):
     """Test for successfully getting daily forecast."""
+    ipma_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "hourly"},
+    )
+    ipma_entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         assert await async_setup_component(
