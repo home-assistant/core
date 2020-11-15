@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato aggiunto a HomeAssistant"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "connection_error": "Impossibile connettersi",
+            "cannot_connect": "Impossibile connettersi",
             "unauthorized": "Associazione negata, controllare il dispositivo per la richiesta di autenticazione"
         },
         "step": {
@@ -17,6 +17,5 @@
                 "title": "Connettersi al dispositivo"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

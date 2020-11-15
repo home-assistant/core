@@ -6,7 +6,7 @@
         "error": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
-            "invalid_host": "Nome host o indirizzo IP non valido."
+            "invalid_host": "Nome host o indirizzo IP non valido"
         },
         "step": {
             "user": {

@@ -1,7 +1,26 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
         "error": {
+            "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Kaheastmeline autentimiskood"
+                },
+                "title": "Kaheastmeline tuvastamine (2FA)"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Logi sisse Ringi kontoga"
+            }
         }
     }
 }

@@ -3,5 +3,15 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimum tid mellom entitetsoppdateringer [s]"
+                },
+                "title": "DSMR alternativer"
+            }
+        }
     }
 }

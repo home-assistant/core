@@ -37,5 +37,14 @@
             "turn_off": "St\u00e4ng av",
             "turn_on": "Starta"
         }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
     }
 }

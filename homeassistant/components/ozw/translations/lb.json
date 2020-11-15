@@ -2,13 +2,7 @@
     "config": {
         "abort": {
             "mqtt_required": "MQTT Integratioun ass net ageriicht",
-            "one_instance_allowed": "D'Integratioun \u00ebnnerst\u00ebtzt n\u00ebmmen 1 Z-Wave Instanz",
             "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun ass m\u00e9iglech."
-        },
-        "step": {
-            "user": {
-                "title": "Installatioun konfirm\u00e9ieren"
-            }
         }
     }
 }

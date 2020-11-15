@@ -24,8 +24,8 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Po\u0142\u0105czenie z API HVV"
             }
@@ -43,6 +43,5 @@
                 "title": "Opcje"
             }
         }
-    },
-    "title": "Odjazdy HVV"
+    }
 }

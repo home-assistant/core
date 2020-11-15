@@ -1,5 +1,6 @@
 """Test OpenZWave Websocket API."""
 from openzwavemqtt.const import (
+    ATTR_CODE_SLOT,
     ATTR_LABEL,
     ATTR_OPTIONS,
     ATTR_POSITION,
@@ -8,6 +9,7 @@ from openzwavemqtt.const import (
 )
 
 from homeassistant.components.ozw.const import ATTR_CONFIG_PARAMETER
+from homeassistant.components.ozw.lock import ATTR_USERCODE
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
     ATTR_IS_BEAMING,
@@ -26,6 +28,7 @@ from homeassistant.components.ozw.websocket_api import (
     NODE_ID,
     OZW_INSTANCE,
     PARAMETER,
+    SCHEMA,
     TYPE,
     VALUE,
 )
@@ -150,16 +153,17 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
 
     # Test set config parameter
     config_param = result[0]
+    print(config_param)
     current_val = config_param[ATTR_VALUE]
     new_val = next(
-        option["Value"]
-        for option in config_param[ATTR_OPTIONS]
-        if option["Label"] != current_val
+        option[0]
+        for option in config_param[SCHEMA][0][ATTR_OPTIONS]
+        if option[0] != current_val
     )
     new_label = next(
-        option["Label"]
-        for option in config_param[ATTR_OPTIONS]
-        if option["Label"] != current_val and option["Value"] != new_val
+        option[1]
+        for option in config_param[SCHEMA][0][ATTR_OPTIONS]
+        if option[1] != current_val and option[0] != new_val
     )
     await client.send_json(
         {
@@ -275,6 +279,45 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     msg = await client.receive_json()
     result = msg["error"]
     assert result["code"] == ERR_NOT_FOUND
+
+
+async def test_ws_locks(hass, lock_data, hass_ws_client):
+    """Test lock websocket apis."""
+    await setup_ozw(hass, fixture=lock_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            ID: 1,
+            TYPE: "ozw/get_code_slots",
+            NODE_ID: 10,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json(
+        {
+            ID: 2,
+            TYPE: "ozw/set_usercode",
+            NODE_ID: 10,
+            ATTR_CODE_SLOT: 1,
+            ATTR_USERCODE: "1234",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json(
+        {
+            ID: 3,
+            TYPE: "ozw/clear_usercode",
+            NODE_ID: 10,
+            ATTR_CODE_SLOT: 1,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
 
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):

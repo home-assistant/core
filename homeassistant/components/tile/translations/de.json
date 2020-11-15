@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto ist bereits konfiguriert"
+        },
         "step": {
             "user": {
                 "data": {

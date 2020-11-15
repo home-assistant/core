@@ -5,8 +5,7 @@ import json
 
 import pytest
 
-from homeassistant.components import binary_sensor, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import binary_sensor
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -162,9 +161,6 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     hass, mqtt_mock, caplog
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
     config = {
         "name": "Test",
         "state_topic": "test-topic",

@@ -1,9 +1,5 @@
 """Base class for multi level switches in devolo Home Control."""
-import logging
-
 from .devolo_device import DevoloDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):

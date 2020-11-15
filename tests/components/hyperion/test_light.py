@@ -1,6 +1,4 @@
 """Tests for the Hyperion integration."""
-# from tests.async_mock import AsyncMock, MagicMock, patch
-from asynctest import CoroutineMock, Mock, call, patch
 from hyperion import const
 
 from homeassistant.components.hyperion import light as hyperion_light
@@ -13,6 +11,8 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, Mock, call, patch
+
 TEST_HOST = "test-hyperion-host"
 TEST_PORT = const.DEFAULT_PORT
 TEST_NAME = "test_hyperion_name"
@@ -23,7 +23,7 @@ TEST_ENTITY_ID = f"{DOMAIN}.{TEST_NAME}"
 def create_mock_client():
     """Create a mock Hyperion client."""
     mock_client = Mock()
-    mock_client.async_client_connect = CoroutineMock(return_value=True)
+    mock_client.async_client_connect = AsyncMock(return_value=True)
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.id = "%s:%i" % (TEST_HOST, TEST_PORT)
@@ -65,7 +65,7 @@ async def test_setup_platform(hass):
 async def test_setup_platform_not_ready(hass):
     """Test the platform not being ready."""
     client = create_mock_client()
-    client.async_client_connect = CoroutineMock(return_value=False)
+    client.async_client_connect = AsyncMock(return_value=False)
 
     await setup_entity(hass, client=client)
     assert hass.states.get(TEST_ENTITY_ID) is None
@@ -97,7 +97,7 @@ async def test_light_async_turn_on(hass):
     await setup_entity(hass, client=client)
 
     # On (=), 100% (=), solid (=), [255,255,255] (=)
-    client.async_send_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
     )
@@ -113,8 +113,8 @@ async def test_light_async_turn_on(hass):
     # On (=), 50% (!), solid (=), [255,255,255] (=)
     # ===
     brightness = 128
-    client.async_send_set_color = CoroutineMock(return_value=True)
-    client.async_send_set_adjustment = CoroutineMock(return_value=True)
+    client.async_send_set_color = AsyncMock(return_value=True)
+    client.async_send_set_adjustment = AsyncMock(return_value=True)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -142,7 +142,7 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 50% (=), solid (=), [0,255,255] (!)
     hs_color = (180.0, 100.0)
-    client.async_send_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -171,8 +171,8 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (!), solid, [0,255,255] (=)
     brightness = 255
-    client.async_send_set_color = CoroutineMock(return_value=True)
-    client.async_send_set_adjustment = CoroutineMock(return_value=True)
+    client.async_send_set_color = AsyncMock(return_value=True)
+    client.async_send_set_adjustment = AsyncMock(return_value=True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -198,8 +198,8 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (=), V4L (!), [0,255,255] (=)
     effect = const.KEY_COMPONENTID_EXTERNAL_SOURCES[2]  # V4L
-    client.async_send_clear = CoroutineMock(return_value=True)
-    client.async_send_set_component = CoroutineMock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -244,8 +244,8 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (=), "Warm Blobs" (!), [0,255,255] (=)
     effect = "Warm Blobs"
-    client.async_send_clear = CoroutineMock(return_value=True)
-    client.async_send_set_effect = CoroutineMock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_effect = AsyncMock(return_value=True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -276,8 +276,8 @@ async def test_light_async_turn_on(hass):
     # No calls if disconnected.
     client.has_loaded_state = False
     call_registered_callback(client, "client-update", {"loaded-state": False})
-    client.async_send_clear = CoroutineMock(return_value=True)
-    client.async_send_set_effect = CoroutineMock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_effect = AsyncMock(return_value=True)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
@@ -292,7 +292,7 @@ async def test_light_async_turn_off(hass):
     client = create_mock_client()
     await setup_entity(hass, client=client)
 
-    client.async_send_set_component = CoroutineMock(return_value=True)
+    client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
     )
@@ -308,7 +308,7 @@ async def test_light_async_turn_off(hass):
 
     # No calls if no state loaded.
     client.has_loaded_state = False
-    client.async_send_set_component = CoroutineMock(return_value=True)
+    client.async_send_set_component = AsyncMock(return_value=True)
     call_registered_callback(client, "client-update", {"loaded-state": False})
 
     await hass.services.async_call(

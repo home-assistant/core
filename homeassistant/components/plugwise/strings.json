@@ -12,12 +12,20 @@
   "config": {
     "step": {
       "user": {
+        "title": "Plugwise type",
+        "description": "Product:",
+        "data": {
+          "flow_type": "Connection type"
+        }
+      },
+      "user_gateway": {
         "title": "Connect to the Smile",
-        "description": "Please enter:",
+        "description": "Please enter",
         "data": {
           "password": "Smile ID",
           "host": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "username" : "Smile Username"
         }
       }
     },

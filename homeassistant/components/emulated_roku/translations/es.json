@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "name_exists": "El nombre ya existe"
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "step": {
             "user": {
@@ -17,5 +17,5 @@
             }
         }
     },
-    "title": "EmulatedRoku"
+    "title": "Roku emulado"
 }

@@ -32,7 +32,6 @@ ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"
 ATTR_USERNAME = "username"
-ATTR_USERNAME = "username"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
 
@@ -119,7 +118,7 @@ def _async_templatize_blocks(hass, value):
         }
 
     tmpl = template.Template(value, hass=hass)
-    return tmpl.async_render()
+    return tmpl.async_render(parse_result=False)
 
 
 class SlackNotificationService(BaseNotificationService):

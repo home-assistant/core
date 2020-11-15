@@ -61,12 +61,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_import(
-        self, user_input: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
         self, user_input: Optional[Dict] = None
     ) -> Dict[str, Any]:

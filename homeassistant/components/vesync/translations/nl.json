@@ -1,10 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Er is slechts \u00e9\u00e9n Vesync instantie toegestaan."
-        },
-        "error": {
-            "invalid_login": "Ongeldige gebruikersnaam of wachtwoord"
+            "single_instance_allowed": "Al geconfigureerd. Slecht \u00e9\u00e9n configuratie mogelijk."
         },
         "step": {
             "user": {

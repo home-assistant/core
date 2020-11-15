@@ -32,10 +32,11 @@ class HlsMasterPlaylistView(StreamView):
     def render(track):
         """Render M3U8 file."""
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
-        # Calculate file size / duration and use a multiplier to account for variation
+        # Calculate file size / duration and use a small multiplier to account for variation
+        # hls spec already allows for 25% variation
         segment = track.get_segment(track.segments[-1])
         bandwidth = round(
-            segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 3
+            segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 1.2
         )
         codecs = get_codec_string(segment.segment)
         lines = [

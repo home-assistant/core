@@ -1,6 +1,4 @@
 """Platform for beewi_smartclim integration."""
-import logging
-
 from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -16,8 +14,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Default values
 DEFAULT_NAME = "BeeWi SmartClim"

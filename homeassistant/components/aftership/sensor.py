@@ -31,7 +31,7 @@ UPDATE_TOPIC = f"{DOMAIN}_update"
 
 ICON = "mdi:package-variant-closed"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SERVICE_ADD_TRACKING = "add_tracking"
 SERVICE_REMOVE_TRACKING = "remove_tracking"

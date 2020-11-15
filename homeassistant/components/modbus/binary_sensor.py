@@ -1,5 +1,4 @@
 """Support for Modbus Coil and Discrete Input sensors."""
-import logging
 from typing import Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -25,8 +24,6 @@ from .const import (
     DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_COILS, CONF_INPUTS),
@@ -122,5 +119,5 @@ class ModbusBinarySensor(BinarySensorEntity):
             self._available = False
             return
 
-        self._value = result.bits[0]
+        self._value = result.bits[0] & 1
         self._available = True

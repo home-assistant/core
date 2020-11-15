@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "no_homes": "Det er ingen hjem knyttet til denne tado-kontoen.",
             "unknown": "Uventet feil"
