@@ -1,12 +1,15 @@
 """Config flow to configure the Jenkins integration."""
+import logging
+
 from jenkinsapi.jenkins import Jenkins
 from requests.exceptions import HTTPError, MissingSchema
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.jenkins import _LOGGER
 from homeassistant.components.jenkins.const import CONF_JOB_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_USERNAME
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -36,8 +39,6 @@ class JenkinsFlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             self.url = user_input[CONF_HOST]
             self.username = user_input.get(CONF_USERNAME)
-                user_input[CONF_USERNAME] if CONF_USERNAME in user_input else None
-            )
             self.token = user_input.get(CONF_TOKEN)
 
             try:

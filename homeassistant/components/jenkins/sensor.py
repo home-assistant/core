@@ -1,5 +1,7 @@
 """This component provides a HA sensor for Jenkins."""
 
+import logging
+
 from jenkinsapi.jenkins import Jenkins
 from requests.exceptions import HTTPError
 
@@ -7,8 +9,9 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_USERNAME
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
-from . import _LOGGER
 from .const import CONF_JOB_NAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
