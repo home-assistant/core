@@ -44,4 +44,6 @@ async def test_adam_climate_binary_sensor_change(hass, mock_smile_adam):
 
     state = hass.states.get("binary_sensor.adam_plugwise_notification")
     assert str(state.state) == STATE_ON
-    assert "unreachable" in state.attributes.get("WARNING")
+    assert "unreachable" in state.attributes.get("warning_msg")
+    assert not state.attributes.get("error_msg")
+    assert not state.attributes.get("other_msg")

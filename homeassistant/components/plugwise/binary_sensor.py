@@ -21,6 +21,7 @@ BINARY_SENSOR_MAP = {
     "dhw_state": ["Domestic Hot Water State", None],
     "slave_boiler_state": ["Secondary Heater Device State", None],
 }
+SEVERITIES = ["other", "info", "warning", "error"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +141,8 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
         super().__init__(api, coordinator, name, dev_id, binary_sensor)
 
         self._attributes = {}
+        for severity in SEVERITIES:
+            self._attributes[f"{severity}_msg"] = None
 
     @property
     def device_state_attributes(self):
@@ -149,8 +152,6 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        self._attributes = {}
-
         notify = self._api.notifications
 
         self._is_on = False
@@ -162,6 +163,9 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
 
             for dummy, details in notify.items():
                 for msg_type, msg in details.items():
-                    self._attributes[msg_type.upper()] = msg
+                    if msg_type not in SEVERITIES:
+                        msg_type = "other"
+
+                    self._attributes[f"{msg_type.lower()}_msg"] = msg
 
         self.async_write_ha_state()
