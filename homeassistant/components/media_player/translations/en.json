@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} is idle",
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on",
+            "is_paused": "{entity_name} is paused",
+            "is_playing": "{entity_name} is playing"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Idle",
+            "off": "Off",
+            "on": "On",
+            "paused": "Paused",
+            "playing": "Playing",
+            "standby": "Standby"
+        }
+    },
+    "title": "Media player"
+}

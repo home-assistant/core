@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Annonser IP-adresse",
+                    "advertise_port": "Annonser port",
+                    "host_ip": "Vertens IP-adresse",
+                    "listen_port": "Lytte port",
+                    "name": "Navn",
+                    "upnp_bind_multicast": "Bind multicast (Sant/Usant)"
+                },
+                "title": "Definer serverkonfigurasjon"
+            }
+        }
+    },
+    "title": "Emulert Roku"
+}

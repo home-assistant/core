@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "data": {
+                    "code": "Pin code"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "description": "V\u00e4nligen ange din information.",
+                "title": "Tesla - Konfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunder mellan skanningar"
+                }
+            }
+        }
+    }
+}

@@ -129,7 +129,7 @@ def teardown():
 
 
 def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, leaf_name + ".yaml")
+    return os.path.join(TMP_DIR, f"{leaf_name}.yaml")
 
 
 def test_save_and_load():

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "idle": "Bo\u015fta",
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k",
+            "paused": "Durduruldu",
+            "playing": "Oynat\u0131l\u0131yor",
+            "standby": "Beklemede"
+        }
+    },
+    "title": "Medya oynat\u0131c\u0131"
+}

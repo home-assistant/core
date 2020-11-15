@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant, aby \u0142\u0105czy\u0142 si\u0119 z Almond dostarczonym przez dodatek Hass.io: {addon}?",
+                "title": "Almond poprzez dodatek Hass.io"
+            },
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            }
+        }
+    }
+}

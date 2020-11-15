@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "profile": {
+                "data": {
+                    "profile": "Perfil"
+                }
+            },
+            "reauth": {
+                "title": "Re-autenticar Perfil"
+            }
+        }
+    }
+}

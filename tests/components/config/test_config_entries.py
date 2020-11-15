@@ -1,7 +1,6 @@
 """Test config entries API."""
 
 from collections import OrderedDict
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -13,10 +12,10 @@ from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    mock_coro_func,
     mock_entity_platform,
     mock_integration,
 )
@@ -54,12 +53,14 @@ async def test_get_entries(hass, client):
             "comp2", "Comp 2", lambda: None, core_ce.CONN_CLASS_ASSUMED
         )
 
-        MockConfigEntry(
+        entry = MockConfigEntry(
             domain="comp1",
             title="Test 1",
             source="bla",
             connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
-        ).add_to_hass(hass)
+        )
+        entry.supports_unload = True
+        entry.add_to_hass(hass)
         MockConfigEntry(
             domain="comp2",
             title="Test 2",
@@ -81,6 +82,7 @@ async def test_get_entries(hass, client):
                 "state": "not_loaded",
                 "connection_class": "local_poll",
                 "supports_options": True,
+                "supports_unload": True,
             },
             {
                 "domain": "comp2",
@@ -89,6 +91,7 @@ async def test_get_entries(hass, client):
                 "state": "loaded",
                 "connection_class": "assumed",
                 "supports_options": False,
+                "supports_unload": False,
             },
         ]
 
@@ -97,13 +100,30 @@ async def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
-    resp = await client.delete(
-        "/api/config/config_entries/entry/{}".format(entry.entry_id)
-    )
+    resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 200
     data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 0
+
+
+async def test_reload_entry(hass, client):
+    """Test reloading an entry via the API."""
+    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+    resp = await client.post(
+        f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data == {"require_restart": True}
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_invalid_entry(hass, client):
+    """Test reloading an invalid entry via the API."""
+    resp = await client.post("/api/config/config_entries/entry/invalid/reload")
+    assert resp.status == 404
 
 
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
@@ -111,10 +131,31 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
     hass_admin_user.groups = []
     entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
-    resp = await client.delete(
-        "/api/config/config_entries/entry/{}".format(entry.entry_id)
+    resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
+    assert resp.status == 401
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_entry_unauth(hass, client, hass_admin_user):
+    """Test reloading an entry via the API."""
+    hass_admin_user.groups = []
+    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+    resp = await client.post(
+        f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
     assert resp.status == 401
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
+    """Test reloading an entry via the API that has already failed to unload."""
+    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_FAILED_UNLOAD)
+    entry.add_to_hass(hass)
+    resp = await client.post(
+        f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+    )
+    assert resp.status == 403
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -124,7 +165,7 @@ async def test_available_flows(hass, client):
         resp = await client.get("/api/config/config_entries/flow_handlers")
         assert resp.status == 200
         data = await resp.json()
-        assert set(data) == set(["hello", "world"])
+        assert set(data) == {"hello", "world"}
 
 
 ############################
@@ -145,13 +186,17 @@ async def test_initialize_flow(hass, client):
             return self.async_show_form(
                 step_id="user",
                 data_schema=schema,
-                description_placeholders={"url": "https://example.com"},
+                description_placeholders={
+                    "url": "https://example.com",
+                    "show_advanced_options": self.show_advanced_options,
+                },
                 errors={"username": "Should be unique."},
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/flow", json={"handler": "test"}
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "show_advanced_options": True},
         )
 
     assert resp.status == 200
@@ -167,7 +212,10 @@ async def test_initialize_flow(hass, client):
             {"name": "username", "required": True, "type": "string"},
             {"name": "password", "required": True, "type": "string"},
         ],
-        "description_placeholders": {"url": "https://example.com"},
+        "description_placeholders": {
+            "url": "https://example.com",
+            "show_advanced_options": True,
+        },
         "errors": {"username": "Should be unique."},
     }
 
@@ -225,7 +273,9 @@ async def test_create_account(hass, client):
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -260,7 +310,9 @@ async def test_create_account(hass, client):
 
 async def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
@@ -294,7 +346,7 @@ async def test_two_step_flow(hass, client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/flow/{}".format(flow_id),
+            f"/api/config/config_entries/flow/{flow_id}",
             json={"user_title": "user-title"},
         )
         assert resp.status == 200
@@ -317,7 +369,9 @@ async def test_two_step_flow(hass, client):
 
 async def test_continue_flow_unauth(hass, client, hass_admin_user):
     """Test we can't finish a two step flow."""
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
@@ -352,7 +406,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     hass_admin_user.groups = []
 
     resp = await client.post(
-        "/api/config/config_entries/flow/{}".format(flow_id),
+        f"/api/config/config_entries/flow/{flow_id}",
         json={"user_title": "user-title"},
     )
     assert resp.status == 401
@@ -383,7 +437,12 @@ async def test_get_progress_index(hass, hass_ws_client):
 
     assert response["success"]
     assert response["result"] == [
-        {"flow_id": form["flow_id"], "handler": "test", "context": {"source": "hassio"}}
+        {
+            "flow_id": form["flow_id"],
+            "handler": "test",
+            "step_id": "account",
+            "context": {"source": "hassio"},
+        }
     ]
 
 
@@ -514,7 +573,9 @@ async def test_options_flow(hass, client):
 
 async def test_two_step_options_flow(hass, client):
     """Test we can finish a two step options flow."""
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -559,7 +620,7 @@ async def test_two_step_options_flow(hass, client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/options/flow/{}".format(flow_id),
+            f"/api/config/config_entries/options/flow/{flow_id}",
             json={"enabled": True},
         )
         assert resp.status == 200
@@ -619,10 +680,54 @@ async def test_update_system_options(hass, hass_ws_client):
     assert entry.system_options.disable_new_entities
 
 
+async def test_update_entry(hass, hass_ws_client):
+    """Test that we can update entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="demo", title="Initial Title")
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/update",
+            "entry_id": entry.entry_id,
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["title"] == "Updated Title"
+    assert entry.title == "Updated Title"
+
+
+async def test_update_entry_nonexisting(hass, hass_ws_client):
+    """Test that we can update entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/update",
+            "entry_id": "non_existing",
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
 async def test_ignore_flow(hass, hass_ws_client):
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):

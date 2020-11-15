@@ -10,7 +10,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn.add_listener(async_add_service)
 
 
-class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
+class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
     """Representation of a HomeKit Controller Television."""
 
     def get_characteristic_types(self):
@@ -129,7 +129,8 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
         this_tv = this_accessory.services.iid(self._iid)
 
         input_sources = this_accessory.services.filter(
-            service_type=ServicesTypes.INPUT_SOURCE, parent_service=this_tv,
+            service_type=ServicesTypes.INPUT_SOURCE,
+            parent_service=this_tv,
         )
 
         for input_source in input_sources:

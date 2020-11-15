@@ -26,7 +26,6 @@ def manager():
 
             flow = handler()
             flow.init_step = context.get("init_step", "init")
-            flow.source = context.get("source")
             return flow
 
         async def async_finish_flow(self, flow, result):
@@ -59,7 +58,14 @@ async def test_configure_reuses_handler_instance(manager):
     assert form["errors"]["base"] == "1"
     form = await manager.async_configure(form["flow_id"])
     assert form["errors"]["base"] == "2"
-    assert len(manager.async_progress()) == 1
+    assert manager.async_progress() == [
+        {
+            "flow_id": form["flow_id"],
+            "handler": "test",
+            "step_id": "init",
+            "context": {},
+        }
+    ]
     assert len(manager.mock_created_entries) == 0
 
 
@@ -274,6 +280,76 @@ async def test_external_step(hass, manager):
     }
 
     # Frontend refreshses the flow
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Hello"
+
+
+async def test_show_progress(hass, manager):
+    """Test show progress logic."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        data = None
+        task_one_done = False
+
+        async def async_step_init(self, user_input=None):
+            if not user_input:
+                if not self.task_one_done:
+                    self.task_one_done = True
+                    progress_action = "task_one"
+                else:
+                    progress_action = "task_two"
+                return self.async_show_progress(
+                    step_id="init",
+                    progress_action=progress_action,
+                )
+
+            self.data = user_input
+            return self.async_show_progress_done(next_step_id="finish")
+
+        async def async_step_finish(self, user_input=None):
+            return self.async_create_entry(title=self.data["title"], data=self.data)
+
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED
+    )
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert len(manager.async_progress()) == 1
+
+    # Mimic task one done and moving to task two
+    # Called by integrations: `hass.config_entries.flow.async_configure(…)`
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["progress_action"] == "task_two"
+
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # Mimic task two done and continuing step
+    # Called by integrations: `hass.config_entries.flow.async_configure(…)`
+    result = await manager.async_configure(result["flow_id"], {"title": "Hello"})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
+
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # Frontend refreshes the flow
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Hello"

@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Marw",
+            "initializing": "Ymgychwyn",
+            "ready": "Barod",
+            "sleeping": "Cysgu"
+        },
+        "query_stage": {
+            "dead": "Marw ({query_stage})",
+            "initializing": "Ymgychwyn ( {query_stage} )"
+        }
+    }
+}

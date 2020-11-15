@@ -1,9 +1,7 @@
 """Tests for Minio Hass related code."""
 import asyncio
 import json
-from unittest.mock import MagicMock
 
-from asynctest import call, patch
 import pytest
 
 from homeassistant.components.minio import (
@@ -20,6 +18,7 @@ from homeassistant.components.minio import (
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock, call, patch
 from tests.components.minio.common import TEST_EVENT
 
 
@@ -55,7 +54,7 @@ def minio_client_event_fixture():
 
 async def test_minio_services(hass, caplog, minio_client):
     """Test Minio services."""
-    hass.config.whitelist_external_dirs = set("/test")
+    hass.config.allowlist_external_dirs = {"/test"}
 
     await async_setup_component(
         hass,

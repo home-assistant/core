@@ -1,5 +1,5 @@
 """The tests for the GeoNet NZ Volcano Feed integration."""
-from unittest.mock import MagicMock
+from tests.async_mock import MagicMock
 
 
 def _generate_mock_feed_entry(

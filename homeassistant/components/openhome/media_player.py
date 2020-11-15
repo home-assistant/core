@@ -2,8 +2,9 @@
 import logging
 
 from openhomedevice.Device import Device
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -20,38 +21,48 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.helpers import config_validation as cv, entity_platform
+
+from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICES = []
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Openhome platform."""
 
     if not discovery_info:
-        return True
+        return
+
+    openhome_data = hass.data.setdefault(DATA_OPENHOME, set())
 
     name = discovery_info.get("name")
     description = discovery_info.get("ssdp_description")
+
     _LOGGER.info("Openhome device found: %s", name)
-    device = Device(description)
+    device = await hass.async_add_executor_job(Device, description)
 
     # if device has already been discovered
-    if device.Uuid() in [x.unique_id for x in DEVICES]:
+    if device.Uuid() in openhome_data:
         return True
 
-    device = OpenhomeDevice(hass, device)
+    entity = OpenhomeDevice(hass, device)
 
-    add_entities([device], True)
-    DEVICES.append(device)
+    async_add_entities([entity])
+    openhome_data.add(device.Uuid())
 
-    return True
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_INVOKE_PIN,
+        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
+        "invoke_pin",
+    )
 
 
-class OpenhomeDevice(MediaPlayerDevice):
+class OpenhomeDevice(MediaPlayerEntity):
     """Representation of an Openhome device."""
 
     def __init__(self, hass, device):
@@ -64,7 +75,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_level = None
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
-        self._source_names = list()
+        self._source_names = []
         self._source_index = {}
         self._source = {}
         self._name = None
@@ -79,7 +90,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._name = self._device.Room().decode("utf-8")
         self._supported_features = SUPPORT_OPENHOME
         source_index = {}
-        source_names = list()
+        source_names = []
 
         if self._device.VolumeEnabled():
             self._supported_features |= (
@@ -162,6 +173,10 @@ class OpenhomeDevice(MediaPlayerDevice):
         """Select input source."""
         self._device.SetSource(self._source_index[source])
 
+    def invoke_pin(self, pin):
+        """Invoke pin."""
+        self._device.InvokePin(pin)
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -171,11 +186,6 @@ class OpenhomeDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag of features commands that are supported."""
         return self._supported_features
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def unique_id(self):

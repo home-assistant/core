@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "error_auth_mfa": "C\u00f3digo incorreto",
+            "error_auth_user": "Usu\u00e1rio ou senha incorretos"
+        },
+        "step": {
+            "auth_app": {
+                "title": "Credenciais do aplicativo"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "C\u00f3digo da imagem"
+                },
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "C\u00f3digo SMS"
+                },
+                "description": "Digite o c\u00f3digo enviado para o telefone {phone_number}",
+                "title": "Autoriza\u00e7\u00e3o de dois fatores"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

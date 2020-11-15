@@ -3,6 +3,5 @@
   "name": "Serial",
   "documentation": "https://www.home-assistant.io/integrations/serial",
   "requirements": ["pyserial-asyncio==0.4"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

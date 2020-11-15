@@ -3,70 +3,76 @@
 import asyncio
 from datetime import timedelta
 import threading
-from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.config import DATA_CUSTOMIZE
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_HIDDEN, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
-from homeassistant.helpers.entity_values import EntityValues
 
-from tests.common import get_test_home_assistant, mock_registry
+from tests.async_mock import MagicMock, PropertyMock, patch
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    get_test_home_assistant,
+    mock_registry,
+)
 
 
 def test_generate_entity_id_requires_hass_or_ids():
     """Ensure we require at least hass or current ids."""
-    fmt = "test.{}"
     with pytest.raises(ValueError):
-        entity.generate_entity_id(fmt, "hello world")
+        entity.generate_entity_id("test.{}", "hello world")
 
 
 def test_generate_entity_id_given_keys():
     """Test generating an entity id given current ids."""
-    fmt = "test.{}"
     assert (
         entity.generate_entity_id(
-            fmt, "overwrite hidden true", current_ids=["test.overwrite_hidden_true"]
+            "test.{}",
+            "overwrite hidden true",
+            current_ids=["test.overwrite_hidden_true"],
         )
         == "test.overwrite_hidden_true_2"
     )
     assert (
         entity.generate_entity_id(
-            fmt, "overwrite hidden true", current_ids=["test.another_entity"]
+            "test.{}", "overwrite hidden true", current_ids=["test.another_entity"]
         )
         == "test.overwrite_hidden_true"
     )
 
 
-def test_async_update_support(hass):
+async def test_async_update_support(hass):
     """Test async update getting called."""
     sync_update = []
     async_update = []
 
     class AsyncEntity(entity.Entity):
+        """A test entity."""
+
         entity_id = "sensor.test"
 
         def update(self):
+            """Update entity."""
             sync_update.append([1])
 
     ent = AsyncEntity()
     ent.hass = hass
 
-    hass.loop.run_until_complete(ent.async_update_ha_state(True))
+    await ent.async_update_ha_state(True)
 
     assert len(sync_update) == 1
     assert len(async_update) == 0
 
-    @asyncio.coroutine
-    def async_update_func():
+    async def async_update_func():
         """Async update."""
         async_update.append(1)
 
     ent.async_update = async_update_func
 
-    hass.loop.run_until_complete(ent.async_update_ha_state(True))
+    await ent.async_update_ha_state(True)
 
     assert len(sync_update) == 1
     assert len(async_update) == 1
@@ -86,21 +92,6 @@ class TestHelpersEntity:
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-
-    def test_default_hidden_not_in_attributes(self):
-        """Test that the default hidden property is set to False."""
-        assert ATTR_HIDDEN not in self.hass.states.get(self.entity.entity_id).attributes
-
-    def test_overwriting_hidden_property_to_true(self):
-        """Test we can overwrite hidden property to True."""
-        self.hass.data[DATA_CUSTOMIZE] = EntityValues(
-            {self.entity.entity_id: {ATTR_HIDDEN: True}}
-        )
-        self.entity.schedule_update_ha_state()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_HIDDEN)
 
     def test_generate_entity_id_given_hass(self):
         """Test generating an entity id given hass object."""
@@ -123,15 +114,14 @@ class TestHelpersEntity:
         assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
-@asyncio.coroutine
-def test_warn_slow_update(hass):
+async def test_warn_slow_update(hass, caplog):
     """Warn we log when entity update takes a long time."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
+        await asyncio.sleep(0.00001)
         update_call = True
 
     mock_entity = entity.Entity()
@@ -139,31 +129,24 @@ def test_warn_slow_update(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
-        yield from mock_entity.async_update_ha_state(True)
-        assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
+    fast_update_time = 0.0000001
 
-        timeout, logger_method = mock_call.mock_calls[0][1][:2]
-
-        assert timeout == entity.SLOW_UPDATE_WARNING
-        assert logger_method == entity._LOGGER.warning
-
-        assert mock_call().cancel.called
-
+    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+        await mock_entity.async_update_ha_state(True)
+        assert str(fast_update_time) in caplog.text
+        assert mock_entity.entity_id in caplog.text
         assert update_call
 
 
-@asyncio.coroutine
-def test_warn_slow_update_with_exception(hass):
+async def test_warn_slow_update_with_exception(hass, caplog):
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
         update_call = True
+        await asyncio.sleep(0.00001)
         raise AssertionError("Fake update error")
 
     mock_entity = entity.Entity()
@@ -171,30 +154,23 @@ def test_warn_slow_update_with_exception(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
-        yield from mock_entity.async_update_ha_state(True)
-        assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
+    fast_update_time = 0.0000001
 
-        timeout, logger_method = mock_call.mock_calls[0][1][:2]
-
-        assert timeout == entity.SLOW_UPDATE_WARNING
-        assert logger_method == entity._LOGGER.warning
-
-        assert mock_call().cancel.called
-
+    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+        await mock_entity.async_update_ha_state(True)
+        assert str(fast_update_time) in caplog.text
+        assert mock_entity.entity_id in caplog.text
         assert update_call
 
 
-@asyncio.coroutine
-def test_warn_slow_device_update_disabled(hass):
+async def test_warn_slow_device_update_disabled(hass, caplog):
     """Disable slow update warning with async_device_update."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
+        await asyncio.sleep(0.00001)
         update_call = True
 
     mock_entity = entity.Entity()
@@ -202,20 +178,20 @@ def test_warn_slow_device_update_disabled(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
-        yield from mock_entity.async_device_update(warning=False)
+    fast_update_time = 0.0000001
 
-        assert not mock_call.called
+    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+        await mock_entity.async_device_update(warning=False)
+        assert str(fast_update_time) not in caplog.text
+        assert mock_entity.entity_id not in caplog.text
         assert update_call
 
 
-@asyncio.coroutine
-def test_async_schedule_update_ha_state(hass):
+async def test_async_schedule_update_ha_state(hass):
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
         update_call = True
@@ -226,7 +202,7 @@ def test_async_schedule_update_ha_state(hass):
     mock_entity.async_update = async_update
 
     mock_entity.async_schedule_update_ha_state(True)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert update_call is True
 
@@ -236,6 +212,8 @@ async def test_async_async_request_call_without_lock(hass):
     updates = []
 
     class AsyncEntity(entity.Entity):
+        """Test entity."""
+
         def __init__(self, entity_id):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -271,6 +249,8 @@ async def test_async_async_request_call_with_lock(hass):
     test_semaphore = asyncio.Semaphore(1)
 
     class AsyncEntity(entity.Entity):
+        """Test entity."""
+
         def __init__(self, entity_id, lock):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -319,6 +299,8 @@ async def test_async_parallel_updates_with_zero(hass):
     test_lock = asyncio.Event()
 
     class AsyncEntity(entity.Entity):
+        """Test entity."""
+
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -354,6 +336,8 @@ async def test_async_parallel_updates_with_zero_on_sync_update(hass):
     test_lock = threading.Event()
 
     class AsyncEntity(entity.Entity):
+        """Test entity."""
+
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -393,6 +377,8 @@ async def test_async_parallel_updates_with_one(hass):
     test_semaphore = asyncio.Semaphore(1)
 
     class AsyncEntity(entity.Entity):
+        """Test entity."""
+
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -467,6 +453,8 @@ async def test_async_parallel_updates_with_two(hass):
     test_semaphore = asyncio.Semaphore(2)
 
     class AsyncEntity(entity.Entity):
+        """Test entity."""
+
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -474,11 +462,10 @@ async def test_async_parallel_updates_with_two(hass):
             self._count = count
             self.parallel_updates = test_semaphore
 
-        @asyncio.coroutine
-        def async_update(self):
+        async def async_update(self):
             """Test update."""
             updates.append(self._count)
-            yield from test_lock.acquire()
+            await test_lock.acquire()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
@@ -529,15 +516,14 @@ async def test_async_parallel_updates_with_two(hass):
         test_lock.release()
 
 
-@asyncio.coroutine
-def test_async_remove_no_platform(hass):
+async def test_async_remove_no_platform(hass):
     """Test async_remove method when no platform set."""
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
-    yield from ent.async_update_ha_state()
+    await ent.async_update_ha_state()
     assert len(hass.states.async_entity_ids()) == 1
-    yield from ent.async_remove()
+    await ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
 
 
@@ -616,7 +602,7 @@ async def test_disabled_in_entity_registry(hass):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by="user",
+        disabled_by=None,
     )
     registry = mock_registry(hass, {"hello.world": entry})
 
@@ -624,23 +610,24 @@ async def test_disabled_in_entity_registry(hass):
     ent.hass = hass
     ent.entity_id = "hello.world"
     ent.registry_entry = entry
-    ent.platform = MagicMock(platform_name="test-platform")
+    assert ent.enabled is True
 
-    await ent.async_internal_added_to_hass()
-    ent.async_write_ha_state()
-    assert hass.states.get("hello.world") is None
+    ent.add_to_platform_start(hass, MagicMock(platform_name="test-platform"), None)
+    await ent.add_to_platform_finish()
+    assert hass.states.get("hello.world") is not None
 
-    entry2 = registry.async_update_entity("hello.world", disabled_by=None)
+    entry2 = registry.async_update_entity("hello.world", disabled_by="user")
     await hass.async_block_till_done()
     assert entry2 != entry
     assert ent.registry_entry == entry2
-    assert ent.enabled is True
+    assert ent.enabled is False
+    assert hass.states.get("hello.world") is None
 
-    entry3 = registry.async_update_entity("hello.world", disabled_by="user")
+    entry3 = registry.async_update_entity("hello.world", disabled_by=None)
     await hass.async_block_till_done()
     assert entry3 != entry2
-    assert ent.registry_entry == entry3
-    assert ent.enabled is False
+    # Entry is no longer updated, entity is no longer tracking changes
+    assert ent.registry_entry == entry2
 
 
 async def test_capability_attrs(hass):
@@ -677,7 +664,7 @@ async def test_warn_slow_write_state(hass, caplog):
         "Updating state for comp_test.test_entity "
         "(<class 'homeassistant.helpers.entity.Entity'>) "
         "took 10.000 seconds. Please create a bug report at "
-        "https://github.com/home-assistant/home-assistant/issues?"
+        "https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
@@ -686,6 +673,8 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
     """Check that we log a warning if reading properties takes too long."""
 
     class CustomComponentEntity(entity.Entity):
+        """Custom component entity."""
+
         __module__ = "custom_components.bla.sensor"
 
     mock_entity = CustomComponentEntity()
@@ -701,3 +690,31 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
         "took 10.000 seconds. Please report it to the custom component author."
     ) in caplog.text
+
+
+async def test_setup_source(hass):
+    """Check that we register sources correctly."""
+    platform = MockEntityPlatform(hass)
+
+    entity_platform = MockEntity(name="Platform Config Source")
+    await platform.async_add_entities([entity_platform])
+
+    platform.config_entry = MockConfigEntry()
+    entity_entry = MockEntity(name="Config Entry Source")
+    await platform.async_add_entities([entity_entry])
+
+    assert entity.entity_sources(hass) == {
+        "test_domain.platform_config_source": {
+            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "domain": "test_platform",
+        },
+        "test_domain.config_entry_source": {
+            "source": entity.SOURCE_CONFIG_ENTRY,
+            "config_entry": platform.config_entry.entry_id,
+            "domain": "test_platform",
+        },
+    }
+
+    await platform.async_reset()
+
+    assert entity.entity_sources(hass) == {}

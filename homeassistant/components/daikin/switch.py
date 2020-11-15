@@ -1,11 +1,7 @@
 """Support for Daikin AirBase zones."""
-import logging
-
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN as DAIKIN_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 ZONE_ICON = "mdi:home-circle"
 
@@ -16,7 +12,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -44,7 +39,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.mac}-zone{self._zone_id}"
+        return f"{self._api.device.mac}-zone{self._zone_id}"
 
     @property
     def icon(self):

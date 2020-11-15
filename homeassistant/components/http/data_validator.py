@@ -1,10 +1,14 @@
 """Decorator for view methods to help with data validation."""
 from functools import wraps
 import logging
+from typing import Any, Awaitable, Callable
 
+from aiohttp import web
 import voluptuous as vol
 
-# mypy: allow-untyped-defs
+from homeassistant.const import HTTP_BAD_REQUEST
+
+from .view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +22,7 @@ class RequestDataValidator:
     Will return a 400 if no JSON provided or doesn't match schema.
     """
 
-    def __init__(self, schema, allow_empty=False):
+    def __init__(self, schema: vol.Schema, allow_empty: bool = False) -> None:
         """Initialize the decorator."""
         if isinstance(schema, dict):
             schema = vol.Schema(schema)
@@ -26,26 +30,32 @@ class RequestDataValidator:
         self._schema = schema
         self._allow_empty = allow_empty
 
-    def __call__(self, method):
+    def __call__(
+        self, method: Callable[..., Awaitable[web.StreamResponse]]
+    ) -> Callable:
         """Decorate a function."""
 
         @wraps(method)
-        async def wrapper(view, request, *args, **kwargs):
+        async def wrapper(
+            view: HomeAssistantView, request: web.Request, *args: Any, **kwargs: Any
+        ) -> web.StreamResponse:
             """Wrap a request handler with data validation."""
             data = None
             try:
                 data = await request.json()
             except ValueError:
                 if not self._allow_empty or (await request.content.read()) != b"":
-                    _LOGGER.error("Invalid JSON received.")
-                    return view.json_message("Invalid JSON.", 400)
+                    _LOGGER.error("Invalid JSON received")
+                    return view.json_message("Invalid JSON.", HTTP_BAD_REQUEST)
                 data = {}
 
             try:
                 kwargs["data"] = self._schema(data)
             except vol.Invalid as err:
                 _LOGGER.error("Data does not match schema: %s", err)
-                return view.json_message(f"Message format incorrect: {err}", 400)
+                return view.json_message(
+                    f"Message format incorrect: {err}", HTTP_BAD_REQUEST
+                )
 
             result = await method(view, request, *args, **kwargs)
             return result

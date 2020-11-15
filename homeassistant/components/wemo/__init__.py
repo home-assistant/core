@@ -121,7 +121,8 @@ async def async_setup_entry(hass, entry):
         _LOGGER.debug("Scanning network for WeMo devices...")
         for device in await hass.async_add_executor_job(pywemo.discover_devices):
             devices.setdefault(
-                device.serialnumber, device,
+                device.serialnumber,
+                device,
             )
 
     loaded_components = set()
@@ -153,7 +154,9 @@ async def async_setup_entry(hass, entry):
 
         else:
             async_dispatcher_send(
-                hass, f"{DOMAIN}.{component}", device,
+                hass,
+                f"{DOMAIN}.{component}",
+                device,
             )
 
     return True
@@ -161,7 +164,7 @@ async def async_setup_entry(hass, entry):
 
 def validate_static_config(host, port):
     """Handle a static config."""
-    url = setup_url_for_address(host, port)
+    url = pywemo.setup_url_for_address(host, port)
 
     if not url:
         _LOGGER.error(
@@ -172,19 +175,11 @@ def validate_static_config(host, port):
 
     try:
         device = pywemo.discovery.device_from_description(url, None)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,) as err:
+    except (
+        requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
+    ) as err:
         _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
         return None
 
     return device
-
-
-def setup_url_for_address(host, port):
-    """Determine setup.xml url for given host and port pair."""
-    if not port:
-        port = pywemo.ouimeaux_device.probe_wemo(host)
-
-    if not port:
-        return None
-
-    return f"http://{host}:{port}/setup.xml"

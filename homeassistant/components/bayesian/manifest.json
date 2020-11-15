@@ -2,8 +2,6 @@
   "domain": "bayesian",
   "name": "Bayesian",
   "documentation": "https://www.home-assistant.io/integrations/bayesian",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

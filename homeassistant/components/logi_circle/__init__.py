@@ -1,6 +1,5 @@
 """Support for Logi Circle devices."""
 import asyncio
-import logging
 
 from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
@@ -12,6 +11,8 @@ from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_MODE,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
@@ -22,8 +23,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import config_flow
 from .const import (
     CONF_API_KEY,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_REDIRECT_URI,
     DATA_LOGI,
     DEFAULT_CACHEDB,
@@ -39,7 +38,6 @@ from .const import (
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"
 
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
 SERVICE_SET_CONFIG = "set_config"

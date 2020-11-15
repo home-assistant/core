@@ -1,12 +1,11 @@
 """Tests for the Abode config flow."""
-from unittest.mock import patch
-
 from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"
@@ -62,7 +61,7 @@ async def test_invalid_credentials(hass):
         side_effect=AbodeAuthenticationException((400, "auth error")),
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_connection_error(hass):
@@ -74,10 +73,12 @@ async def test_connection_error(hass):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((500, "connection error")),
+        side_effect=AbodeAuthenticationException(
+            (HTTP_INTERNAL_SERVER_ERROR, "connection error")
+        ),
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {"base": "connection_error"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_step_import(hass):

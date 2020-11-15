@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

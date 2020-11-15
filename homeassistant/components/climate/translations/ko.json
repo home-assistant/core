@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "{entity_name} \uc758 HVAC \ubaa8\ub4dc \ubcc0\uacbd",
+            "set_preset_mode": "{entity_name} \uc758 \ud504\ub9ac\uc14b \ubcc0\uacbd"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} \uc774(\uac00) \ud2b9\uc815 HVAC \ubaa8\ub4dc\ub85c \uc124\uc815\ub418\uc5b4\uc788\uc73c\uba74",
+            "is_preset_mode": "{entity_name} \uc774(\uac00) \ud2b9\uc815 \ud504\ub9ac\uc14b \ubaa8\ub4dc\ub85c \uc124\uc815\ub418\uc5b4\uc788\uc73c\uba74"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} \uc774(\uac00) \uc2b5\ub3c4 \ubcc0\ud654\ub97c \uac10\uc9c0\ud560 \ub54c",
+            "current_temperature_changed": "{entity_name} \uc774(\uac00) \uc628\ub3c4 \ubcc0\ud654\ub97c \uac10\uc9c0\ud560 \ub54c",
+            "hvac_mode_changed": "{entity_name} HVAC \ubaa8\ub4dc\uac00 \ubcc0\uacbd\ub420 \ub54c"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "\uc790\ub3d9",
+            "cool": "\ub0c9\ubc29",
+            "dry": "\uc81c\uc2b5",
+            "fan_only": "\uc1a1\ud48d",
+            "heat": "\ub09c\ubc29",
+            "heat_cool": "\ub0c9\ub09c\ubc29",
+            "off": "\uaebc\uc9d0"
+        }
+    },
+    "title": "\uacf5\uc870\uae30\uae30"
+}

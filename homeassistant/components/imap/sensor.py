@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not await sensor.connection():
         raise PlatformNotReady
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown)
     async_add_entities([sensor], True)
 
 
@@ -130,7 +130,7 @@ class ImapSensor(Entity):
             try:
                 if await self.connection():
                     await self.refresh_email_count()
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
 
                     idle = await self._connection.idle_start()
                     await self._connection.wait_server_push()
@@ -138,7 +138,7 @@ class ImapSensor(Entity):
                     with async_timeout.timeout(10):
                         await idle
                 else:
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
             except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
@@ -173,7 +173,7 @@ class ImapSensor(Entity):
         _LOGGER.warning("Lost %s (will attempt to reconnect)", self._server)
         self._connection = None
 
-    async def shutdown(self):
+    async def shutdown(self, *_):
         """Close resources."""
         if self._connection:
             if self._connection.has_pending_idle():

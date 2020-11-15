@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Verbinding mislukt, controleer het host-adres"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "De hostnaam of het IP-adres van uw Solar-Log apparaat",
+                    "name": "Het voorvoegsel dat moet worden gebruikt voor uw Solar-Log sensoren"
+                },
+                "title": "Definieer uw Solar-Log verbinding"
+            }
+        }
+    }
+}

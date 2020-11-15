@@ -16,16 +16,20 @@ WebSocketCommandHandler = Callable[[HomeAssistant, "ActiveConnection", dict], No
 
 DOMAIN = "websocket_api"
 URL = "/api/websocket"
-MAX_PENDING_MSG = 512
+PENDING_MSG_PEAK = 512
+PENDING_MSG_PEAK_TIME = 5
+MAX_PENDING_MSG = 2048
 
 ERR_ID_REUSE = "id_reuse"
 ERR_INVALID_FORMAT = "invalid_format"
 ERR_NOT_FOUND = "not_found"
+ERR_NOT_SUPPORTED = "not_supported"
 ERR_HOME_ASSISTANT_ERROR = "home_assistant_error"
 ERR_UNKNOWN_COMMAND = "unknown_command"
 ERR_UNKNOWN_ERROR = "unknown_error"
 ERR_UNAUTHORIZED = "unauthorized"
 ERR_TIMEOUT = "timeout"
+ERR_TEMPLATE_ERROR = "template_error"
 
 TYPE_RESULT = "result"
 
@@ -39,6 +43,6 @@ SIGNAL_WEBSOCKET_CONNECTED = "websocket_connected"
 SIGNAL_WEBSOCKET_DISCONNECTED = "websocket_disconnected"
 
 # Data used to store the current connection list
-DATA_CONNECTIONS = DOMAIN + ".connections"
+DATA_CONNECTIONS = f"{DOMAIN}.connections"
 
 JSON_DUMP = partial(json.dumps, cls=JSONEncoder, allow_nan=False)

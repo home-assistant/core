@@ -1,18 +1,20 @@
 """Support for MelCloud device sensors."""
-import logging
-
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
 
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import MelCloudDevice
-from .const import DOMAIN, TEMP_UNIT_LOOKUP
+from .const import DOMAIN
 
 ATTR_MEASUREMENT_NAME = "measurement_name"
 ATTR_ICON = "icon"
-ATTR_UNIT_FN = "unit_fn"
+ATTR_UNIT = "unit"
 ATTR_DEVICE_CLASS = "device_class"
 ATTR_VALUE_FN = "value_fn"
 ATTR_ENABLED_FN = "enabled"
@@ -21,7 +23,7 @@ ATA_SENSORS = {
     "room_temperature": {
         ATTR_MEASUREMENT_NAME: "Room Temperature",
         ATTR_ICON: "mdi:thermometer",
-        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_UNIT: TEMP_CELSIUS,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda x: x.device.room_temperature,
         ATTR_ENABLED_FN: lambda x: True,
@@ -29,7 +31,7 @@ ATA_SENSORS = {
     "energy": {
         ATTR_MEASUREMENT_NAME: "Energy",
         ATTR_ICON: "mdi:factory",
-        ATTR_UNIT_FN: lambda x: "kWh",
+        ATTR_UNIT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_VALUE_FN: lambda x: x.device.total_energy_consumed,
         ATTR_ENABLED_FN: lambda x: x.device.has_energy_consumed_meter,
@@ -39,7 +41,7 @@ ATW_SENSORS = {
     "outside_temperature": {
         ATTR_MEASUREMENT_NAME: "Outside Temperature",
         ATTR_ICON: "mdi:thermometer",
-        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_UNIT: TEMP_CELSIUS,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda x: x.device.outside_temperature,
         ATTR_ENABLED_FN: lambda x: True,
@@ -47,7 +49,7 @@ ATW_SENSORS = {
     "tank_temperature": {
         ATTR_MEASUREMENT_NAME: "Tank Temperature",
         ATTR_ICON: "mdi:thermometer",
-        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_UNIT: TEMP_CELSIUS,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda x: x.device.tank_temperature,
         ATTR_ENABLED_FN: lambda x: True,
@@ -57,14 +59,28 @@ ATW_ZONE_SENSORS = {
     "room_temperature": {
         ATTR_MEASUREMENT_NAME: "Room Temperature",
         ATTR_ICON: "mdi:thermometer",
-        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_UNIT: TEMP_CELSIUS,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda zone: zone.room_temperature,
         ATTR_ENABLED_FN: lambda x: True,
-    }
+    },
+    "flow_temperature": {
+        ATTR_MEASUREMENT_NAME: "Flow Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT: TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda zone: zone.flow_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    },
+    "return_temperature": {
+        ATTR_MEASUREMENT_NAME: "Flow Return Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT: TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda zone: zone.return_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    },
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -127,7 +143,7 @@ class MelDeviceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._def[ATTR_UNIT_FN](self._api)
+        return self._def[ATTR_UNIT]
 
     @property
     def device_class(self):
@@ -147,9 +163,7 @@ class MelDeviceSensor(Entity):
 class AtwZoneSensor(MelDeviceSensor):
     """Air-to-Air device sensor."""
 
-    def __init__(
-        self, api: MelCloudDevice, zone: Zone, measurement, definition,
-    ):
+    def __init__(self, api: MelCloudDevice, zone: Zone, measurement, definition):
         """Initialize the sensor."""
         super().__init__(api, measurement, definition)
         self._zone = zone

@@ -1,11 +1,8 @@
 """Support for Xiaomi curtain."""
-import logging
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
-
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice
-
-_LOGGER = logging.getLogger(__name__)
+from . import XiaomiDevice
+from .const import DOMAIN, GATEWAYS_KEY
 
 ATTR_CURTAIN_LEVEL = "curtain_level"
 
@@ -13,29 +10,31 @@ DATA_KEY_PROTO_V1 = "status"
 DATA_KEY_PROTO_V2 = "curtain_status"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
-    devices = []
-    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-        for device in gateway.devices["cover"]:
-            model = device["model"]
-            if model in ["curtain", "curtain.aq2", "curtain.hagl04"]:
-                if "proto" not in device or int(device["proto"][0:1]) == 1:
-                    data_key = DATA_KEY_PROTO_V1
-                else:
-                    data_key = DATA_KEY_PROTO_V2
-                devices.append(XiaomiGenericCover(device, "Curtain", data_key, gateway))
-    add_entities(devices)
+    entities = []
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    for device in gateway.devices["cover"]:
+        model = device["model"]
+        if model in ["curtain", "curtain.aq2", "curtain.hagl04"]:
+            if "proto" not in device or int(device["proto"][0:1]) == 1:
+                data_key = DATA_KEY_PROTO_V1
+            else:
+                data_key = DATA_KEY_PROTO_V2
+            entities.append(
+                XiaomiGenericCover(device, "Curtain", data_key, gateway, config_entry)
+            )
+    async_add_entities(entities)
 
 
-class XiaomiGenericCover(XiaomiDevice, CoverDevice):
+class XiaomiGenericCover(XiaomiDevice, CoverEntity):
     """Representation of a XiaomiGenericCover."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub):
+    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
     def current_cover_position(self):

@@ -1,22 +1,9 @@
 """Support for binary sensors using Tellstick Net."""
-import logging
-
 from homeassistant.components import binary_sensor, tellduslive
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up TelldusLive.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -36,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveSensor(TelldusLiveEntity, BinarySensorDevice):
+class TelldusLiveSensor(TelldusLiveEntity, BinarySensorEntity):
     """Representation of a Tellstick sensor."""
 
     @property

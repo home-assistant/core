@@ -1,30 +1,36 @@
 """Test the Cloud Google Config."""
-from unittest.mock import Mock, patch
+import pytest
 
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, HTTP_NOT_FOUND
+from homeassistant.core import CoreState, State
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.async_mock import AsyncMock, Mock, patch
+from tests.common import async_fire_time_changed
 
 
-async def test_google_update_report_state(hass, cloud_prefs):
-    """Test Google config responds to updating preference."""
-    config = CloudGoogleConfig(
+@pytest.fixture
+def mock_conf(hass, cloud_prefs):
+    """Mock Google conf."""
+    return CloudGoogleConfig(
         hass,
         GACTIONS_SCHEMA({}),
         "mock-user-id",
         cloud_prefs,
         Mock(claims={"cognito:username": "abcdefghjkl"}),
     )
-    await config.async_initialize()
-    await config.async_connect_agent_user("mock-user-id")
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch(
+
+async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
+    """Test Google config responds to updating preference."""
+    await mock_conf.async_initialize()
+    await mock_conf.async_connect_agent_user("mock-user-id")
+
+    with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
         "homeassistant.components.google_assistant.report_state.async_enable_report_state"
     ) as mock_report_state:
         await cloud_prefs.async_update(google_report_state=True)
@@ -41,18 +47,20 @@ async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
         GACTIONS_SCHEMA({}),
         "mock-user-id",
         cloud_prefs,
-        Mock(auth=Mock(async_check_token=Mock(side_effect=mock_coro)),),
+        Mock(auth=Mock(async_check_token=AsyncMock())),
     )
 
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=mock_coro(Mock(status=404)),
+        return_value=Mock(status=HTTP_NOT_FOUND),
     ) as mock_request_sync:
-        assert await config.async_sync_entities("user") == 404
+        assert await config.async_sync_entities("user") == HTTP_NOT_FOUND
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
+async def test_google_update_expose_trigger_sync(
+    hass, legacy_patchable_time, cloud_prefs
+):
     """Test Google config responds to updating exposed entities."""
     config = CloudGoogleConfig(
         hass,
@@ -64,9 +72,9 @@ async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
     await config.async_initialize()
     await config.async_connect_agent_user("mock-user-id")
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+    with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
+        ga_helpers, "SYNC_DELAY", 0
+    ):
         await cloud_prefs.async_update_google_entity_config(
             entity_id="light.kitchen", should_expose=True
         )
@@ -76,9 +84,9 @@ async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
 
     assert len(mock_sync.mock_calls) == 1
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+    with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
+        ga_helpers, "SYNC_DELAY", 0
+    ):
         await cloud_prefs.async_update_google_entity_config(
             entity_id="light.kitchen", should_expose=False
         )
@@ -104,30 +112,27 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     await config.async_connect_agent_user("mock-user-id")
 
     with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
+        config, "async_schedule_google_sync_all"
     ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+        # Created entity
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
 
-    assert len(mock_sync.mock_calls) == 1
+        assert len(mock_sync.mock_calls) == 1
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+        # Removed entity
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "remove", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
 
-    assert len(mock_sync.mock_calls) == 1
+        assert len(mock_sync.mock_calls) == 2
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+        # Entity registry updated with relevant changes
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
             {
@@ -138,4 +143,51 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
         )
         await hass.async_block_till_done()
 
-    assert len(mock_sync.mock_calls) == 1
+        assert len(mock_sync.mock_calls) == 3
+
+        # Entity registry updated with non-relevant changes
+        hass.bus.async_fire(
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 3
+
+        # When hass is not started yet we wait till started
+        hass.state = CoreState.starting
+        hass.bus.async_fire(
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "create", "entity_id": "light.kitchen"},
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 3
+
+    with patch.object(config, "async_sync_entities_all") as mock_sync:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert len(mock_sync.mock_calls) == 1
+
+
+async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
+    """Test Google config should expose using prefs."""
+    entity_conf = {"should_expose": False}
+    await cloud_prefs.async_update(
+        google_entity_configs={"light.kitchen": entity_conf},
+        google_default_expose=["light"],
+    )
+
+    state = State("light.kitchen", "on")
+
+    assert not mock_conf.should_expose(state)
+    entity_conf["should_expose"] = True
+    assert mock_conf.should_expose(state)
+
+    entity_conf["should_expose"] = None
+    assert mock_conf.should_expose(state)
+
+    await cloud_prefs.async_update(
+        google_default_expose=["sensor"],
+    )
+    assert not mock_conf.should_expose(state)

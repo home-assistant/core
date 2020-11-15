@@ -1,6 +1,4 @@
 """Test the NEW_NAME config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
@@ -9,11 +7,13 @@ from homeassistant.components.NEW_DOMAIN.const import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,

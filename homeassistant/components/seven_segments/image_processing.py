@@ -69,14 +69,12 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "SevenSegment OCR {0}".format(
-                split_entity_id(camera_entity)[1]
-            )
+            self._name = "SevenSegment OCR {}".format(split_entity_id(camera_entity)[1])
         self._state = None
 
         self.filepath = os.path.join(
             self.hass.config.config_dir,
-            "ssocr-{0}.png".format(self._name.replace(" ", "_")),
+            "ssocr-{}.png".format(self._name.replace(" ", "_")),
         )
         crop = [
             "crop",

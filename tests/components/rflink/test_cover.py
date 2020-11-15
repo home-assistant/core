@@ -4,9 +4,6 @@ Test setup of RFLink covers component/platform. State tracking and
 control of RFLink cover devices.
 
 """
-
-import logging
-
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -37,8 +34,6 @@ CONFIG = {
     },
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the RFLink cover component."""
@@ -51,7 +46,7 @@ async def test_default_setup(hass, monkeypatch):
     assert create.call_args_list[0][1]["ignore"]
 
     # test default state of cover loaded from config
-    cover_initial = hass.states.get(DOMAIN + ".test")
+    cover_initial = hass.states.get(f"{DOMAIN}.test")
     assert cover_initial.state == STATE_CLOSED
     assert cover_initial.attributes["assumed_state"]
 
@@ -62,7 +57,7 @@ async def test_default_setup(hass, monkeypatch):
     event_callback({"id": "protocol_0_0", "command": "up"})
     await hass.async_block_till_done()
 
-    cover_after_first_command = hass.states.get(DOMAIN + ".test")
+    cover_after_first_command = hass.states.get(f"{DOMAIN}.test")
     assert cover_after_first_command.state == STATE_OPEN
     # not sure why, but cover have always assumed_state=true
     assert cover_after_first_command.attributes.get("assumed_state")
@@ -71,46 +66,46 @@ async def test_default_setup(hass, monkeypatch):
     event_callback({"id": "protocol_0_0", "command": "down"})
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # should respond to group command
     event_callback({"id": "protocol_0_0", "command": "allon"})
     await hass.async_block_till_done()
 
-    cover_after_first_command = hass.states.get(DOMAIN + ".test")
+    cover_after_first_command = hass.states.get(f"{DOMAIN}.test")
     assert cover_after_first_command.state == STATE_OPEN
 
     # should respond to group command
     event_callback({"id": "protocol_0_0", "command": "alloff"})
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # test following aliases
     # mock incoming command event for this device alias
     event_callback({"id": "test_alias_0_0", "command": "up"})
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
 
     # test changing state from HA propagates to RFLink
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test"}
+            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
         )
     )
     await hass.async_block_till_done()
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_0"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "DOWN"
 
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test"}
+            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
         )
     )
     await hass.async_block_till_done()
-    assert hass.states.get(DOMAIN + ".test").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[1][0][1] == "UP"
 
 
@@ -146,7 +141,7 @@ async def test_firing_bus_event(hass, monkeypatch):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert calls[0].data == {"state": "down", "entity_id": DOMAIN + ".test"}
+    assert calls[0].data == {"state": "down", "entity_id": f"{DOMAIN}.test"}
 
 
 async def test_signal_repetitions(hass, monkeypatch):
@@ -169,7 +164,7 @@ async def test_signal_repetitions(hass, monkeypatch):
     # test if signal repetition is performed according to configuration
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test"}
+            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
         )
     )
 
@@ -181,7 +176,7 @@ async def test_signal_repetitions(hass, monkeypatch):
     # test if default apply to configured devices
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test1"}
+            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
         )
     )
 
@@ -209,12 +204,12 @@ async def test_signal_repetitions_alternation(hass, monkeypatch):
 
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test"}
+            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
         )
     )
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test1"}
+            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
         )
     )
 
@@ -241,13 +236,13 @@ async def test_signal_repetitions_cancelling(hass, monkeypatch):
 
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test"}
+            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
         )
     )
 
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + ".test"}
+            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
         )
     )
 
@@ -274,19 +269,19 @@ async def test_group_alias(hass, monkeypatch):
     # setup mocking rflink module
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # test sending group command to group alias
     event_callback({"id": "test_group_0_0", "command": "allon"})
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
 
     # test sending group command to group alias
     event_callback({"id": "test_group_0_0", "command": "down"})
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
 
 
 async def test_nogroup_alias(hass, monkeypatch):
@@ -307,19 +302,19 @@ async def test_nogroup_alias(hass, monkeypatch):
     # setup mocking rflink module
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # test sending group command to nogroup alias
     event_callback({"id": "test_nogroup_0_0", "command": "allon"})
     await hass.async_block_till_done()
     # should not affect state
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # test sending group command to nogroup alias
     event_callback({"id": "test_nogroup_0_0", "command": "up"})
     await hass.async_block_till_done()
     # should affect state
-    assert hass.states.get(DOMAIN + ".test").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
 
 
 async def test_nogroup_device_id(hass, monkeypatch):
@@ -335,19 +330,19 @@ async def test_nogroup_device_id(hass, monkeypatch):
     # setup mocking rflink module
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # test sending group command to nogroup
     event_callback({"id": "test_nogroup_0_0", "command": "allon"})
     await hass.async_block_till_done()
     # should not affect state
-    assert hass.states.get(DOMAIN + ".test").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
 
     # test sending group command to nogroup
     event_callback({"id": "test_nogroup_0_0", "command": "up"})
     await hass.async_block_till_done()
     # should affect state
-    assert hass.states.get(DOMAIN + ".test").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
 
 
 async def test_restore_state(hass, monkeypatch):
@@ -366,7 +361,7 @@ async def test_restore_state(hass, monkeypatch):
     }
 
     mock_restore_cache(
-        hass, (State(DOMAIN + ".c1", STATE_OPEN), State(DOMAIN + ".c2", STATE_CLOSED))
+        hass, (State(f"{DOMAIN}.c1", STATE_OPEN), State(f"{DOMAIN}.c2", STATE_CLOSED))
     )
 
     hass.state = CoreState.starting
@@ -374,20 +369,20 @@ async def test_restore_state(hass, monkeypatch):
     # setup mocking rflink module
     _, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    state = hass.states.get(DOMAIN + ".c1")
+    state = hass.states.get(f"{DOMAIN}.c1")
     assert state
     assert state.state == STATE_OPEN
 
-    state = hass.states.get(DOMAIN + ".c2")
+    state = hass.states.get(f"{DOMAIN}.c2")
     assert state
     assert state.state == STATE_CLOSED
 
-    state = hass.states.get(DOMAIN + ".c3")
+    state = hass.states.get(f"{DOMAIN}.c3")
     assert state
     assert state.state == STATE_CLOSED
 
     # not cached cover must default values
-    state = hass.states.get(DOMAIN + ".c4")
+    state = hass.states.get(f"{DOMAIN}.c4")
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes["assumed_state"]
@@ -431,7 +426,7 @@ async def test_inverted_cover(hass, monkeypatch):
     )
 
     # test default state of cover loaded from config
-    standard_cover = hass.states.get(DOMAIN + ".nonkaku_type_standard")
+    standard_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_standard")
     assert standard_cover.state == STATE_CLOSED
     assert standard_cover.attributes["assumed_state"]
 
@@ -439,7 +434,7 @@ async def test_inverted_cover(hass, monkeypatch):
     event_callback({"id": "nonkaku_device_1", "command": "up"})
     await hass.async_block_till_done()
 
-    standard_cover = hass.states.get(DOMAIN + ".nonkaku_type_standard")
+    standard_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_standard")
     assert standard_cover.state == STATE_OPEN
     assert standard_cover.attributes.get("assumed_state")
 
@@ -447,7 +442,7 @@ async def test_inverted_cover(hass, monkeypatch):
     event_callback({"id": "nonkaku_device_2", "command": "up"})
     await hass.async_block_till_done()
 
-    standard_cover = hass.states.get(DOMAIN + ".nonkaku_type_none")
+    standard_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_none")
     assert standard_cover.state == STATE_OPEN
     assert standard_cover.attributes.get("assumed_state")
 
@@ -456,7 +451,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".nonkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_inverted")
     assert inverted_cover.state == STATE_OPEN
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -465,7 +460,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_standard")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_standard")
     assert inverted_cover.state == STATE_OPEN
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -474,7 +469,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_none")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_none")
     assert inverted_cover.state == STATE_OPEN
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -483,7 +478,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_inverted")
     assert inverted_cover.state == STATE_OPEN
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -492,7 +487,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    standard_cover = hass.states.get(DOMAIN + ".nonkaku_type_standard")
+    standard_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_standard")
     assert standard_cover.state == STATE_CLOSED
     assert standard_cover.attributes.get("assumed_state")
 
@@ -501,7 +496,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    standard_cover = hass.states.get(DOMAIN + ".nonkaku_type_none")
+    standard_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_none")
     assert standard_cover.state == STATE_CLOSED
     assert standard_cover.attributes.get("assumed_state")
 
@@ -510,7 +505,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".nonkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_inverted")
     assert inverted_cover.state == STATE_CLOSED
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -519,7 +514,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_standard")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_standard")
     assert inverted_cover.state == STATE_CLOSED
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -528,7 +523,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_none")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_none")
     assert inverted_cover.state == STATE_CLOSED
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -537,7 +532,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_inverted")
     assert inverted_cover.state == STATE_CLOSED
     assert inverted_cover.attributes.get("assumed_state")
 
@@ -549,7 +544,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".nonkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_inverted")
     assert inverted_cover.state == STATE_CLOSED
 
     # should respond to group command
@@ -557,7 +552,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".nonkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.nonkaku_type_inverted")
     assert inverted_cover.state == STATE_OPEN
 
     # should respond to group command
@@ -565,7 +560,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_standard")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_standard")
     assert inverted_cover.state == STATE_CLOSED
 
     # should respond to group command
@@ -573,7 +568,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_standard")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_standard")
     assert inverted_cover.state == STATE_OPEN
 
     # should respond to group command
@@ -581,7 +576,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_none")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_none")
     assert inverted_cover.state == STATE_CLOSED
 
     # should respond to group command
@@ -589,7 +584,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_none")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_none")
     assert inverted_cover.state == STATE_OPEN
 
     # should respond to group command
@@ -597,7 +592,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_inverted")
     assert inverted_cover.state == STATE_CLOSED
 
     # should respond to group command
@@ -605,7 +600,7 @@ async def test_inverted_cover(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    inverted_cover = hass.states.get(DOMAIN + ".newkaku_type_inverted")
+    inverted_cover = hass.states.get(f"{DOMAIN}.newkaku_type_inverted")
     assert inverted_cover.state == STATE_OPEN
 
     # Sending the close command from HA should result
@@ -615,13 +610,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".nonkaku_type_standard"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_standard"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".nonkaku_type_standard").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.nonkaku_type_standard").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[0][0][0] == "nonkaku_device_1"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "DOWN"
 
@@ -632,13 +627,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".nonkaku_type_standard"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_standard"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".nonkaku_type_standard").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.nonkaku_type_standard").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[1][0][0] == "nonkaku_device_1"
     assert protocol.send_command_ack.call_args_list[1][0][1] == "UP"
 
@@ -647,13 +642,13 @@ async def test_inverted_cover(hass, monkeypatch):
     # that has its type not specified.
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + ".nonkaku_type_none"}
+            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_none"}
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".nonkaku_type_none").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.nonkaku_type_none").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[2][0][0] == "nonkaku_device_2"
     assert protocol.send_command_ack.call_args_list[2][0][1] == "DOWN"
 
@@ -662,13 +657,13 @@ async def test_inverted_cover(hass, monkeypatch):
     # that has its type not specified.
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + ".nonkaku_type_none"}
+            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_none"}
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".nonkaku_type_none").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.nonkaku_type_none").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[3][0][0] == "nonkaku_device_2"
     assert protocol.send_command_ack.call_args_list[3][0][1] == "UP"
 
@@ -679,13 +674,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".nonkaku_type_inverted"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_inverted"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".nonkaku_type_inverted").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.nonkaku_type_inverted").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[4][0][0] == "nonkaku_device_3"
     assert protocol.send_command_ack.call_args_list[4][0][1] == "UP"
 
@@ -696,13 +691,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".nonkaku_type_inverted"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_inverted"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".nonkaku_type_inverted").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.nonkaku_type_inverted").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[5][0][0] == "nonkaku_device_3"
     assert protocol.send_command_ack.call_args_list[5][0][1] == "DOWN"
 
@@ -713,13 +708,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".newkaku_type_standard"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_standard"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".newkaku_type_standard").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.newkaku_type_standard").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[6][0][0] == "newkaku_device_4"
     assert protocol.send_command_ack.call_args_list[6][0][1] == "DOWN"
 
@@ -730,13 +725,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".newkaku_type_standard"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_standard"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".newkaku_type_standard").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.newkaku_type_standard").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[7][0][0] == "newkaku_device_4"
     assert protocol.send_command_ack.call_args_list[7][0][1] == "UP"
 
@@ -745,13 +740,13 @@ async def test_inverted_cover(hass, monkeypatch):
     # that has its type not specified.
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + ".newkaku_type_none"}
+            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_none"}
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".newkaku_type_none").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.newkaku_type_none").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[8][0][0] == "newkaku_device_5"
     assert protocol.send_command_ack.call_args_list[8][0][1] == "UP"
 
@@ -760,13 +755,13 @@ async def test_inverted_cover(hass, monkeypatch):
     # that has its type not specified.
     hass.async_create_task(
         hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + ".newkaku_type_none"}
+            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_none"}
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".newkaku_type_none").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.newkaku_type_none").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[9][0][0] == "newkaku_device_5"
     assert protocol.send_command_ack.call_args_list[9][0][1] == "DOWN"
 
@@ -777,13 +772,13 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".newkaku_type_inverted"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_inverted"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".newkaku_type_inverted").state == STATE_CLOSED
+    assert hass.states.get(f"{DOMAIN}.newkaku_type_inverted").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[10][0][0] == "newkaku_device_6"
     assert protocol.send_command_ack.call_args_list[10][0][1] == "UP"
 
@@ -794,12 +789,12 @@ async def test_inverted_cover(hass, monkeypatch):
         hass.services.async_call(
             DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: DOMAIN + ".newkaku_type_inverted"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_inverted"},
         )
     )
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(DOMAIN + ".newkaku_type_inverted").state == STATE_OPEN
+    assert hass.states.get(f"{DOMAIN}.newkaku_type_inverted").state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[11][0][0] == "newkaku_device_6"
     assert protocol.send_command_ack.call_args_list[11][0][1] == "DOWN"

@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,7 +131,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
+        return "summary_{}_{}".format(self._data.account_id, slugify(self._status))
 
     @property
     def unit_of_measurement(self):
@@ -220,7 +221,8 @@ class SeventeenTrackPackageSensor(Entity):
         await self._data.async_update()
 
         if not self.available:
-            self.hass.async_create_task(self._remove())
+            # Entity cannot be removed while its being added
+            async_call_later(self.hass, 1, self._remove)
             return
 
         package = self._data.packages.get(self._tracking_number, None)
@@ -229,7 +231,8 @@ class SeventeenTrackPackageSensor(Entity):
         # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             self._notify_delivered()
-            self.hass.async_create_task(self._remove())
+            # Entity cannot be removed while its being added
+            async_call_later(self.hass, 1, self._remove)
             return
 
         self._attrs.update(
@@ -238,7 +241,7 @@ class SeventeenTrackPackageSensor(Entity):
         self._state = package.status
         self._friendly_name = package.friendly_name
 
-    async def _remove(self):
+    async def _remove(self, *_):
         """Remove entity itself."""
         await self.async_remove()
 
@@ -259,7 +262,7 @@ class SeventeenTrackPackageSensor(Entity):
             self._friendly_name if self._friendly_name else self._tracking_number
         )
         message = NOTIFICATION_DELIVERED_MESSAGE.format(
-            self._tracking_number, identification
+            identification, self._tracking_number
         )
         title = NOTIFICATION_DELIVERED_TITLE.format(identification)
         notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)

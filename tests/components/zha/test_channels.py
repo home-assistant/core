@@ -2,8 +2,8 @@
 import asyncio
 from unittest import mock
 
-import asynctest
 import pytest
+import zigpy.profiles.zha
 import zigpy.types as t
 import zigpy.zcl.clusters
 
@@ -13,6 +13,9 @@ import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
 
 from .common import get_zha_gateway, make_zcl_header
+
+import tests.async_mock
+from tests.common import async_capture_events
 
 
 @pytest.fixture
@@ -285,7 +288,11 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     """Test EndpointChannels adding all channels."""
     zha_device = zha_device_mock(
         {
-            1: {"in_clusters": [0, 1, 6, 8], "out_clusters": [], "device_type": 0x0000},
+            1: {
+                "in_clusters": [0, 1, 6, 8],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            },
             2: {
                 "in_clusters": [0, 1, 6, 8, 768],
                 "out_clusters": [],
@@ -379,12 +386,12 @@ async def test_ep_channels_configure(channel):
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
-    ch_3.async_configure = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
-    ch_3.async_initialize = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_configure = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_initialize = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
     ch_4 = channel(zha_const.CHANNEL_ON_OFF, 6)
     ch_5 = channel(zha_const.CHANNEL_LEVEL, 8)
-    ch_5.async_configure = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
-    ch_5.async_initialize = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_configure = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_initialize = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
 
     channels = mock.MagicMock(spec_set=zha_channels.Channels)
     type(channels).semaphore = mock.PropertyMock(return_value=asyncio.Semaphore(3))
@@ -420,8 +427,8 @@ async def test_poll_control_configure(poll_control_ch):
 
 async def test_poll_control_checkin_response(poll_control_ch):
     """Test poll control channel checkin response."""
-    rsp_mock = asynctest.CoroutineMock()
-    set_interval_mock = asynctest.CoroutineMock()
+    rsp_mock = tests.async_mock.AsyncMock()
+    set_interval_mock = tests.async_mock.AsyncMock()
     cluster = poll_control_ch.cluster
     patch_1 = mock.patch.object(cluster, "checkin_response", rsp_mock)
     patch_2 = mock.patch.object(cluster, "set_long_poll_interval", set_interval_mock)
@@ -442,13 +449,10 @@ async def test_poll_control_checkin_response(poll_control_ch):
 
 async def test_poll_control_cluster_command(hass, poll_control_device):
     """Test poll control channel response to cluster command."""
-    checkin_mock = asynctest.CoroutineMock()
+    checkin_mock = tests.async_mock.AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-
-    events = []
-    hass.bus.async_listen("zha_event", lambda x: events.append(x))
-    await hass.async_block_till_done()
+    events = async_capture_events(hass, "zha_event")
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -469,3 +473,4 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["args"][1] is mock.sentinel.args2
     assert data["args"][2] is mock.sentinel.args3
     assert data["unique_id"] == "00:11:22:33:44:55:66:77:1:0x0020"
+    assert data["device_id"] == poll_control_device.device_id

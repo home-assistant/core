@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
     DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BinarySensor(ZhaEntity, BinarySensorDevice):
+class BinarySensor(ZhaEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = None
@@ -75,13 +75,12 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 
     async def get_device_class(self):
         """Get the HA device class from the channel."""
-        pass
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.get_device_class()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
@@ -142,6 +141,25 @@ class Opening(BinarySensor):
 
     SENSOR_ATTR = "on_off"
     DEVICE_CLASS = DEVICE_CLASS_OPENING
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    manufacturers="IKEA of Sweden",
+    models=lambda model: isinstance(model, str)
+    and model is not None
+    and model.find("motion") != -1,
+)
+@STRICT_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    manufacturers="Philips",
+    models={"SML001", "SML002"},
+)
+class Motion(BinarySensor):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "on_off"
+    DEVICE_CLASS = DEVICE_CLASS_MOTION
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ZONE)

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "link": {
+                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
+                "title": "Stellen Sie eine Verbindung zum PowerView Hub her"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-Adresse"
+                },
+                "title": "Stellen Sie eine Verbindung zum PowerView Hub her"
+            }
+        }
+    }
+}

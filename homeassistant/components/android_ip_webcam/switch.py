@@ -1,5 +1,5 @@
 """Support for Android IP Webcam settings."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import (
     CONF_HOST,
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_switches, True)
 
 
-class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
+class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
     """An abstract class for an IP Webcam setting."""
 
     def __init__(self, name, host, ipcam, setting):
@@ -67,7 +67,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         else:
             await self._ipcam.change_setting(self._setting, True)
         self._state = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
@@ -80,7 +80,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         else:
             await self._ipcam.change_setting(self._setting, False)
         self._state = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def icon(self):

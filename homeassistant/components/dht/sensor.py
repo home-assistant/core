@@ -9,8 +9,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    PERCENTAGE,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -33,7 +33,7 @@ SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
     SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_HUMIDITY: ["Humidity", UNIT_PERCENTAGE],
+    SENSOR_HUMIDITY: ["Humidity", PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -63,10 +63,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         "DHT11": Adafruit_DHT.DHT11,
         "DHT22": Adafruit_DHT.DHT22,
     }
-    sensor = available_sensors.get(config.get(CONF_SENSOR))
-    pin = config.get(CONF_PIN)
-    temperature_offset = config.get(CONF_TEMPERATURE_OFFSET)
-    humidity_offset = config.get(CONF_HUMIDITY_OFFSET)
+    sensor = available_sensors.get(config[CONF_SENSOR])
+    pin = config[CONF_PIN]
+    temperature_offset = config[CONF_TEMPERATURE_OFFSET]
+    humidity_offset = config[CONF_HUMIDITY_OFFSET]
 
     if not sensor:
         _LOGGER.error("DHT sensor type is not supported")
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data = DHTClient(Adafruit_DHT, sensor, pin)
     dev = []
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     try:
         for variable in config[CONF_MONITORED_CONDITIONS]:
@@ -165,7 +165,7 @@ class DHTClient:
         self.adafruit_dht = adafruit_dht
         self.sensor = sensor
         self.pin = pin
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

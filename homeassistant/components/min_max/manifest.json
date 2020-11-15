@@ -2,8 +2,6 @@
   "domain": "min_max",
   "name": "Min/Max",
   "documentation": "https://www.home-assistant.io/integrations/min_max",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@fabaff"],
   "quality_scale": "internal"
 }

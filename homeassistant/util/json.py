@@ -4,8 +4,9 @@ import json
 import logging
 import os
 import tempfile
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
+from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,10 +35,10 @@ def load_json(
         _LOGGER.debug("JSON file not found: %s", filename)
     except ValueError as error:
         _LOGGER.exception("Could not parse JSON content: %s", filename)
-        raise HomeAssistantError(error)
+        raise HomeAssistantError(error) from error
     except OSError as error:
         _LOGGER.exception("JSON file reading failed: %s", filename)
-        raise HomeAssistantError(error)
+        raise HomeAssistantError(error) from error
     return {} if default is None else default
 
 
@@ -53,12 +54,11 @@ def save_json(
     Returns True on success.
     """
     try:
-        json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
-    except TypeError:
-        # pylint: disable=no-member
-        msg = f"Failed to serialize to JSON: {filename}. Bad data found at {', '.join(find_paths_unserializable_data(data))}"
+        json_data = json.dumps(data, indent=4, cls=encoder)
+    except TypeError as error:
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)
-        raise SerializationError(msg)
+        raise SerializationError(msg) from error
 
     tmp_filename = ""
     tmp_path = os.path.split(filename)[0]
@@ -74,7 +74,7 @@ def save_json(
         os.replace(tmp_filename, filename)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
-        raise WriteError(error)
+        raise WriteError(error) from error
     finally:
         if os.path.exists(tmp_filename):
             try:
@@ -85,30 +85,48 @@ def save_json(
                 _LOGGER.error("JSON replacement cleanup failed: %s", err)
 
 
-def find_paths_unserializable_data(bad_data: Any) -> List[str]:
+def format_unserializable_data(data: Dict[str, Any]) -> str:
+    """Format output of find_paths in a friendly way.
+
+    Format is comma separated: <path>=<value>(<type>)
+    """
+    return ", ".join(f"{path}={value}({type(value)}" for path, value in data.items())
+
+
+def find_paths_unserializable_data(
+    bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
+) -> Dict[str, Any]:
     """Find the paths to unserializable data.
 
     This method is slow! Only use for error handling.
     """
     to_process = deque([(bad_data, "$")])
-    invalid = []
+    invalid = {}
 
     while to_process:
         obj, obj_path = to_process.popleft()
 
         try:
-            json.dumps(obj)
+            dump(obj)
             continue
-        except TypeError:
+        except (ValueError, TypeError):
             pass
+
+        # We convert states and events to dict so we can find bad data inside it
+        if isinstance(obj, State):
+            obj_path += f"(state: {obj.entity_id})"
+            obj = obj.as_dict()
+        elif isinstance(obj, Event):
+            obj_path += f"(event: {obj.event_type})"
+            obj = obj.as_dict()
 
         if isinstance(obj, dict):
             for key, value in obj.items():
                 try:
                     # Is key valid?
-                    json.dumps({key: None})
+                    dump({key: None})
                 except TypeError:
-                    invalid.append(f"{obj_path}<key: {key}>")
+                    invalid[f"{obj_path}<key: {key}>"] = key
                 else:
                     # Process value
                     to_process.append((value, f"{obj_path}.{key}"))
@@ -116,6 +134,6 @@ def find_paths_unserializable_data(bad_data: Any) -> List[str]:
             for idx, value in enumerate(obj):
                 to_process.append((value, f"{obj_path}[{idx}]"))
         else:
-            invalid.append(obj_path)
+            invalid[obj_path] = obj
 
     return invalid

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "credential_error": "Errore nel recupero delle credenziali.",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "port_987_bind_error": "Impossibile collegarsi alla porta 987. Fare riferimento alla [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni.",
+            "port_997_bind_error": "Impossibile collegarsi alla porta 997. Consultare la [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "credential_timeout": "Servizio credenziali scaduto. Premi Invia per riavviare.",
+            "login_failed": "Impossibile eseguire l'associazione a PlayStation 4. Verificare che il Codice PIN sia corretto.",
+            "no_ipaddress": "Inserire l'Indirizzo IP della PlayStation 4 che desideri configurare."
+        },
+        "step": {
+            "creds": {
+                "description": "Credenziali necessarie. Premi 'Invia' e poi, nella seconda schermata della App PS4, aggiorna i dispositivi e seleziona il dispositivo 'Home-Assistant' per continuare.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "Codice PIN",
+                    "ip_address": "Indirizzo IP",
+                    "name": "Nome",
+                    "region": "Area geografica"
+                },
+                "description": "Inserisci le informazioni per la tua PlayStation 4. Per il Codice PIN, vai a \"Impostazioni\" sulla PlayStation 4. Quindi vai a 'Impostazioni di connessione Mobile App' e seleziona 'Aggiungi dispositivo'. Immettere il Codice PIN visualizzato. Fare riferimento alla [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Indirizzo IP (Lasciare vuoto se si sta usando l'Auto-Rilevamento).",
+                    "mode": "Modalit\u00e0 di configurazione"
+                },
+                "description": "Selezionare la modalit\u00e0 per la configurazione. Il campo per l'Indirizzo IP pu\u00f2 essere lasciato vuoto se si seleziona Auto-Rilevamento, poich\u00e9 i dispositivi saranno automaticamente individuati.",
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

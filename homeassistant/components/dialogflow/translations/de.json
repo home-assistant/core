@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Um Ereignisse an den Home Assistant zu senden, musst du [Webhook-Integration von Dialogflow]({dialogflow_url}) einrichten. \n\nF\u00fclle die folgenden Informationen aus: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n - Inhaltstyp: application / json \n\nWeitere Informationen findest du in der [Dokumentation]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du Dialogflow wirklich einrichten?",
+                "title": "Dialogflow Webhook einrichten"
+            }
+        }
+    }
+}

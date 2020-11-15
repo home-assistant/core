@@ -58,7 +58,7 @@ class EditSceneConfigView(EditIdBasedConfigView):
             elif cur_value[CONF_ID] == config_key:
                 break
         else:
-            cur_value = dict()
+            cur_value = {}
             cur_value[CONF_ID] = config_key
             index = len(data)
             data.append(cur_value)

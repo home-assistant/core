@@ -136,15 +136,13 @@ class XiaomiCamera(Camera):
         else:
             video = videos[-1]
 
-        return "ftp://{0}:{1}@{2}:{3}{4}/{5}".format(
-            self.user, self.passwd, host, self.port, ftp.pwd(), video
-        )
+        return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
 
         try:
-            host = self.host.async_render()
+            host = self.host.async_render(parse_result=False)
         except TemplateError as exc:
             _LOGGER.error("Error parsing template %s: %s", self.host, exc)
             return self._last_image

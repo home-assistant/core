@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieser RainMachine-Kontroller ist bereits konfiguriert."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Hostname oder IP-Adresse",
+                    "password": "Passwort",
+                    "port": "Port"
+                },
+                "title": "Informationen eingeben"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "RainMachine konfigurieren"
+            }
+        }
+    }
+}

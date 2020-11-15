@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "updated_entry": "Den h\u00e4r posten har redan konfigurerats, men namnet och/eller alternativen som definierats i konfigurationen matchar inte den tidigare importerade konfigurationen och d\u00e4rf\u00f6r har konfigureringsposten uppdaterats i enlighet med detta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\u00c5tkomstnyckel",
+                    "device_class": "Enhetstyp",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Namn"
+                },
+                "title": "St\u00e4ll in Vizio SmartCast-klient"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Appar som ska inkluderas eller exkluderas",
+                    "include_or_exclude": "Inkludera eller exkludera appar?",
+                    "volume_step": "Storlek p\u00e5 volymsteg"
+                },
+                "title": "Uppdatera Vizo SmartCast-alternativ"
+            }
+        }
+    }
+}

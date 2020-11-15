@@ -18,8 +18,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the demo fan platform."""
     async_add_entities(
         [
-            DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
-            DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
+            DemoFan(hass, "fan1", "Living Room Fan", FULL_SUPPORT),
+            DemoFan(hass, "fan2", "Ceiling Fan", LIMITED_SUPPORT),
         ]
     )
 
@@ -32,19 +32,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoFan(FanEntity):
     """A demonstration fan component."""
 
-    def __init__(self, hass, name: str, supported_features: int) -> None:
+    def __init__(
+        self, hass, unique_id: str, name: str, supported_features: int
+    ) -> None:
         """Initialize the entity."""
         self.hass = hass
+        self._unique_id = unique_id
         self._supported_features = supported_features
         self._speed = STATE_OFF
-        self.oscillating = None
+        self._oscillating = None
         self._direction = None
         self._name = name
 
         if supported_features & SUPPORT_OSCILLATE:
-            self.oscillating = False
+            self._oscillating = False
         if supported_features & SUPPORT_DIRECTION:
             self._direction = "forward"
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -89,13 +97,18 @@ class DemoFan(FanEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        self.oscillating = oscillating
+        self._oscillating = oscillating
         self.schedule_update_ha_state()
 
     @property
     def current_direction(self) -> str:
         """Fan direction."""
         return self._direction
+
+    @property
+    def oscillating(self) -> bool:
+        """Oscillating."""
+        return self._oscillating
 
     @property
     def supported_features(self) -> int:

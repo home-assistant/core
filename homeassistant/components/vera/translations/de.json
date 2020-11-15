@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Konnte keine Verbindung zum Controller mit url {base_url} herstellen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Vera-Ger\u00e4te-IDs, die vom Home Assistant ausgeschlossen werden sollen.",
+                    "lights": "Vera Switch-Ger\u00e4te-IDs, die im Home Assistant als Lichter behandelt werden sollen.",
+                    "vera_controller_url": "Controller-URL"
+                },
+                "description": "Stellen Sie unten eine Vera-Controller-Url zur Verf\u00fcgung. Sie sollte wie folgt aussehen: http://192.168.1.161:3480.",
+                "title": "Richten Sie den Vera-Controller ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Vera-Ger\u00e4te-IDs, die vom Home Assistant ausgeschlossen werden sollen.",
+                    "lights": "Vera Switch-Ger\u00e4te-IDs, die im Home Assistant als Lichter behandelt werden sollen."
+                },
+                "description": "Weitere Informationen zu optionalen Parametern finden Sie in der Vera-Dokumentation: https://www.home-assistant.io/integrations/vera/. Hinweis: Alle \u00c4nderungen hier erfordern einen Neustart des Home Assistant-Servers. Geben Sie ein Leerzeichen ein, um Werte zu l\u00f6schen.",
+                "title": "Vera Controller Optionen"
+            }
+        }
+    }
+}

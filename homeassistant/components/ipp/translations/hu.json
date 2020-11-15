@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "connection_upgrade": "Nem siker\u00fclt csatlakozni a nyomtat\u00f3hoz, mert a kapcsolat friss\u00edt\u00e9se sz\u00fcks\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "connection_upgrade": "Nem siker\u00fclt csatlakozni a nyomtat\u00f3hoz. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra az SSL/TLS opci\u00f3 bejel\u00f6l\u00e9s\u00e9vel."
+        },
+        "flow_title": "Nyomtat\u00f3: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -3,7 +3,7 @@ import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import NotificationConfig as NC
+from wirelesstagpy import NotificationConfig as NC, WirelessTags, WirelessTagsException
 
 from homeassistant import util
 from homeassistant.const import (
@@ -11,7 +11,9 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -91,7 +93,7 @@ class WirelessTagPlatform:
 
     def make_notifications(self, binary_sensors, mac):
         """Create configurations for push notifications."""
-        _LOGGER.info("Creating configurations for push notifications.")
+        _LOGGER.info("Creating configurations for push notifications")
         configs = []
 
         bi_url = self.binary_event_callback_url
@@ -107,7 +109,7 @@ class WirelessTagPlatform:
 
     def install_push_notifications(self, binary_sensors):
         """Register local push notification from tag manager."""
-        _LOGGER.info("Registering local push notifications.")
+        _LOGGER.info("Registering local push notifications")
         for mac in self.tag_manager_macs:
             configs = self.make_notifications(binary_sensors, mac)
             # install notifications for all tags in tag manager
@@ -121,8 +123,7 @@ class WirelessTagPlatform:
                 )
             else:
                 _LOGGER.info(
-                    "Installed push notifications for all\
-                             tags in %s.",
+                    "Installed push notifications for all tags in %s",
                     mac,
                 )
 
@@ -130,7 +131,7 @@ class WirelessTagPlatform:
     def local_base_url(self):
         """Define base url of hass in local network."""
         if self._local_base_url is None:
-            self._local_base_url = "http://{}".format(util.get_local_ip())
+            self._local_base_url = f"http://{util.get_local_ip()}"
 
             port = self.hass.config.api.port
             if port is not None:
@@ -190,8 +191,6 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        from wirelesstagpy import WirelessTags, WirelessTagsException
-
         wirelesstags = WirelessTags(username=username, password=password)
 
         platform = WirelessTagPlatform(hass, wirelesstags)
@@ -200,7 +199,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />Please restart hass after fixing this.".format(ex),
+            f"Error: {ex}<br />Please restart hass after fixing this.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -227,11 +226,6 @@ class WirelessTagBaseSensor(Entity):
         self.tag_manager_mac = self._tag.tag_manager_mac
         self._name = self._tag.name
         self._state = None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
@@ -282,8 +276,8 @@ class WirelessTagBaseSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}V",
-            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
+            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{VOLT}",
+            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{UNIT_PERCENTAGE}",
+            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{PERCENTAGE}",
         }

@@ -15,6 +15,7 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
@@ -26,8 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "google"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_TRACK_NEW = "track_new_calendar"
 
 CONF_CAL_ID = "cal_id"
@@ -221,9 +220,9 @@ def setup(hass, config):
 
 def check_correct_scopes(token_file):
     """Check for the correct scopes in file."""
-    tokenfile = open(token_file, "r").read()
+    tokenfile = open(token_file).read()
     if "readonly" in tokenfile:
-        _LOGGER.warning("Please re-authenticate with Google.")
+        _LOGGER.warning("Please re-authenticate with Google")
         return False
     return True
 
@@ -234,7 +233,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     def _found_calendar(call):
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
-        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID], None) is not None:
+        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
             return
 
         hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})

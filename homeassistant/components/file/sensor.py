@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if hass.config.is_allowed_path(file_path):
         async_add_entities([FileSensor(name, file_path, unit, value_template)], True)
     else:
-        _LOGGER.error("'%s' is not a whitelisted directory", file_path)
+        _LOGGER.error("'%s' is not an allowed directory", file_path)
 
 
 class FileSensor(Entity):
@@ -77,7 +77,7 @@ class FileSensor(Entity):
     def update(self):
         """Get the latest entry from a file and updates the state."""
         try:
-            with open(self._file_path, "r", encoding="utf-8") as file_data:
+            with open(self._file_path, encoding="utf-8") as file_data:
                 for line in file_data:
                     data = line
                 data = data.strip()

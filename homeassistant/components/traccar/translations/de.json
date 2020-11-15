@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Um Ereignisse an den Heimassistenten zu senden, m\u00fcssen die Webhook-Funktionen in Traccar eingerichtet werden.\n\nVerwende die folgende URL: `{webhook_url}}`\n\nSiehe [die Dokumentation]( {docs_url} ) f\u00fcr weitere Details."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du Traccar wirklich einrichten?",
+                "title": "Traccar einrichten"
+            }
+        }
+    }
+}

@@ -90,7 +90,7 @@ class YiCamera(Camera):
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)
         except (ConnectionRefusedError, StatusCodeError) as err:
-            raise PlatformNotReady(err)
+            raise PlatformNotReady(err) from err
 
         try:
             await ftp.change_directory(self.path)
@@ -110,14 +110,9 @@ class YiCamera(Camera):
 
             await ftp.quit()
             self._is_on = True
-            return "ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}".format(
-                self.user,
-                self.passwd,
-                self.host,
-                self.port,
-                self.path,
-                latest_dir,
-                videos[-1],
+            return (
+                f"ftp://{self.user}:{self.passwd}@{self.host}:"
+                f"{self.port}{self.path}/{latest_dir}/{videos[-1]}"
             )
         except (ConnectionRefusedError, StatusCodeError) as err:
             _LOGGER.error("Error while fetching video: %s", err)

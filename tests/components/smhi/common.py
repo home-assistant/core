@@ -1,5 +1,5 @@
 """Common test utilities."""
-from unittest.mock import Mock
+from tests.async_mock import Mock
 
 
 class AsyncMock(Mock):

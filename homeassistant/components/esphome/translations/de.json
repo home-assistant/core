@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP ist bereits konfiguriert",
+            "already_in_progress": "Die ESP-Konfiguration wird bereits ausgef\u00fchrt"
+        },
+        "error": {
+            "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achte darauf, dass deine YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
+            "resolve_error": "Adresse des ESP kann nicht aufgel\u00f6st werden. Wenn dieser Fehler weiterhin besteht, lege eine statische IP-Adresse fest: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte gebe das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:"
+            },
+            "discovery_confirm": {
+                "description": "Willst du den ESPHome-Knoten `{name}` zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Gefundener ESPHome-Knoten"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome](https://esphomelib.com/)-Knotens ein."
+            }
+        }
+    }
+}

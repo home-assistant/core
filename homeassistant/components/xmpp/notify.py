@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_ROOM,
     CONF_SENDER,
+    HTTP_BAD_REQUEST,
 )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
@@ -262,7 +263,7 @@ async def async_send_message(
 
             result = await hass.async_add_executor_job(get_url, url)
 
-            if result.status_code >= 400:
+            if result.status_code >= HTTP_BAD_REQUEST:
                 _LOGGER.error("Could not load file from %s", url)
                 return None
 
@@ -297,10 +298,10 @@ async def async_send_message(
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            _LOGGER.info("Uploading file from path, %s ...", path)
+            _LOGGER.info("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
-                raise PermissionError("Could not access file. Not in whitelist.")
+                raise PermissionError("Could not access file. Path not allowed")
 
             with open(path, "rb") as upfile:
                 _LOGGER.debug("Reading file %s", path)

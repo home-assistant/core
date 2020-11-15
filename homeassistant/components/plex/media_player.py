@@ -1,16 +1,17 @@
 """Support to interface with the Plex API."""
 import json
 import logging
-from xml.etree.ElementTree import ParseError
 
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -36,16 +37,18 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
+from .media_browser import browse_media
+
+LIVE_TV_SECTION = "-4"
+PLAYLISTS_BROWSE_PAYLOAD = {
+    "title": "Playlists",
+    "media_content_id": "all",
+    "media_content_type": "playlists",
+    "can_play": False,
+    "can_expand": True,
+}
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Plex media_player platform.
-
-    Deprecated.
-    """
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -94,14 +97,15 @@ def _async_add_entities(
     async_add_entities(entities, True)
 
 
-class PlexMediaPlayer(MediaPlayerDevice):
+class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
-    def __init__(self, plex_server, device, session=None):
+    def __init__(self, plex_server, device, player_source, session=None):
         """Initialize the Plex device."""
         self.plex_server = plex_server
         self.device = device
         self.session = session
+        self.player_source = player_source
         self._app_name = ""
         self._available = False
         self._device_protocol_capabilities = None
@@ -255,17 +259,23 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         if self._is_player_active and self.session is not None:
             self._session_type = self.session.type
-            self._media_duration = int(self.session.duration / 1000)
+            if self.session.duration:
+                self._media_duration = int(self.session.duration / 1000)
+            else:
+                self._media_duration = None
             #  title (movie name, tv episode name, music song name)
             self._media_summary = self.session.summary
             self._media_title = self.session.title
             # media type
             self._set_media_type()
-            self._app_name = (
-                self.session.section().title
-                if self.session.section() is not None
-                else ""
-            )
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                self._app_name = "Live TV"
+            else:
+                self._app_name = (
+                    self.session.section().title
+                    if self.session.section() is not None
+                    else ""
+                )
             self._set_media_image()
         else:
             self._session_type = None
@@ -276,7 +286,10 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self.media_content_type is MEDIA_TYPE_TVSHOW
             and not self.plex_server.option_use_episode_art
         ):
-            thumb_url = self.session.url(self.session.grandparentThumb)
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                thumb_url = self.session.grandparentThumb
+            else:
+                thumb_url = self.session.url(self.session.grandparentThumb)
 
         if thumb_url is None:
             _LOGGER.debug(
@@ -301,7 +314,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def _set_media_type(self):
-        if self._session_type in ["clip", "episode"]:
+        if self._session_type == "episode":
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
@@ -310,7 +323,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
             if self.session.index is not None:
-                self._media_episode = str(self.session.index).zfill(2)
+                self._media_episode = self.session.index
 
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
@@ -330,6 +343,12 @@ class PlexMediaPlayer(MediaPlayerDevice):
                     self.name,
                 )
                 self._media_artist = self._media_album_artist
+
+        elif self._session_type == "clip":
+            _LOGGER.debug(
+                "Clip content type detected, compatibility may vary: %s", self.name
+            )
+            self._media_content_type = MEDIA_TYPE_VIDEO
 
     def force_idle(self):
         """Force client to idle."""
@@ -394,19 +413,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
-        if self._session_type == "clip":
-            _LOGGER.debug(
-                "Clip content type detected, compatibility may vary: %s", self.name
-            )
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "episode":
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "movie":
-            return MEDIA_TYPE_MOVIE
-        if self._session_type == "track":
-            return MEDIA_TYPE_MUSIC
-
-        return None
+        return self._media_content_type
 
     @property
     def media_artist(self):
@@ -491,16 +498,16 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
                 | SUPPORT_VOLUME_MUTE
+                | SUPPORT_BROWSE_MEDIA
             )
 
-        return 0
+        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.setVolume(int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
-            self.plex_server.update_platforms()
 
     @property
     def volume_level(self):
@@ -539,151 +546,64 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Send play command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_pause(self):
         """Send pause command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_stop(self):
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_next_track(self):
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
+            _LOGGER.debug(
+                "Client is not currently accepting playback controls: %s", self.name
+            )
             return
 
         src = json.loads(media_id)
-        library = src.get("library_name")
-        shuffle = src.get("shuffle", 0)
+        if isinstance(src, int):
+            src = {"plex_key": src}
 
-        media = None
-
-        if media_type == "MUSIC":
-            media = self._get_music_media(library, src)
-        elif media_type == "EPISODE":
-            media = self._get_tv_media(library, src)
-        elif media_type == "PLAYLIST":
-            media = self.plex_server.playlist(src["playlist_name"])
-        elif media_type == "VIDEO":
-            media = self.plex_server.library.section(library).get(src["video_name"])
+        shuffle = src.pop("shuffle", 0)
+        media = self.plex_server.lookup_media(media_type, **src)
 
         if media is None:
             _LOGGER.error("Media could not be found: %s", media_id)
             return
 
+        _LOGGER.debug("Attempting to play %s on %s", media, self.name)
+
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
             self.device.playMedia(playqueue)
-        except ParseError:
-            # Temporary workaround for Plexamp / plexapi issue
-            pass
         except requests.exceptions.ConnectTimeout:
             _LOGGER.error("Timed out playing on %s", self.name)
-
-        self.plex_server.update_platforms()
-
-    def _get_music_media(self, library_name, src):
-        """Find music media and return a Plex media object."""
-        artist_name = src["artist_name"]
-        album_name = src.get("album_name")
-        track_name = src.get("track_name")
-        track_number = src.get("track_number")
-
-        artist = self.plex_server.library.section(library_name).get(artist_name)
-
-        if album_name:
-            album = artist.album(album_name)
-
-            if track_name:
-                return album.track(track_name)
-
-            if track_number:
-                for track in album.tracks():
-                    if int(track.index) == int(track_number):
-                        return track
-                return None
-
-            return album
-
-        if track_name:
-            return artist.searchTracks(track_name, maxresults=1)
-        return artist
-
-    def _get_tv_media(self, library_name, src):
-        """Find TV media and return a Plex media object."""
-        show_name = src["show_name"]
-        season_number = src.get("season_number")
-        episode_number = src.get("episode_number")
-        target_season = None
-        target_episode = None
-
-        show = self.plex_server.library.section(library_name).get(show_name)
-
-        if not season_number:
-            return show
-
-        for season in show.seasons():
-            if int(season.seasonNumber) == int(season_number):
-                target_season = season
-                break
-
-        if target_season is None:
-            _LOGGER.error(
-                "Season not found: %s\\%s - S%sE%s",
-                library_name,
-                show_name,
-                str(season_number).zfill(2),
-                str(episode_number).zfill(2),
-            )
-        else:
-            if not episode_number:
-                return target_season
-
-            for episode in target_season.episodes():
-                if int(episode.index) == int(episode_number):
-                    target_episode = episode
-                    break
-
-            if target_episode is None:
-                _LOGGER.error(
-                    "Episode not found: %s\\%s - S%sE%s",
-                    library_name,
-                    show_name,
-                    str(season_number).zfill(2),
-                    str(episode_number).zfill(2),
-                )
-
-        return target_episode
 
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        attr = {
+        return {
             "media_content_rating": self._media_content_rating,
             "session_username": self.username,
             "media_library_name": self._app_name,
             "summary": self.media_summary,
+            "player_source": self.player_source,
         }
-
-        return attr
 
     @property
     def device_info(self):
@@ -699,3 +619,13 @@ class PlexMediaPlayer(MediaPlayerDevice):
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
         }
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.entity_id,
+            self.plex_server,
+            media_content_type,
+            media_content_id,
+        )

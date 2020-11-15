@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "external_error": "Wyst\u0105pi\u0142 wyj\u0105tek z innego przep\u0142ywu",
+            "external_setup": "Logi Circle zosta\u0142o pomy\u015blnie skonfigurowane z innego przep\u0142ywu",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
+        },
+        "error": {
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "follow_link": "Post\u0119puj zgodnie z linkiem i uwierzytelnij si\u0119 przed naci\u015bni\u0119ciem przycisku \"Zatwierd\u017a\"",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "auth": {
+                "description": "Kliknij poni\u017cszy link i **Zaakceptuj** dost\u0119p do konta Logi Circle, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij **Zatwierd\u017a** poni\u017cej. \n\n [Link]({authorization_url})",
+                "title": "Uwierzytelnij za pomoc\u0105 Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Dostawca"
+                },
+                "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Logi Circle.",
+                "title": "Dostawca uwierzytelnienia"
+            }
+        }
+    }
+}

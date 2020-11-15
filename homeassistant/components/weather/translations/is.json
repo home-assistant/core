@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Hei\u00f0sk\u00fdrt, n\u00f3tt",
+            "cloudy": "Sk\u00fdja\u00f0",
+            "exceptional": "Mj\u00f6g gott",
+            "fog": "\u00deoka",
+            "hail": "Hagl\u00e9l",
+            "lightning": "Eldingar",
+            "lightning-rainy": "Eldingar, rigning",
+            "partlycloudy": "A\u00f0 hluta til sk\u00fdja\u00f0",
+            "pouring": "\u00darhelli",
+            "rainy": "Rigning",
+            "snowy": "Snj\u00f3koma",
+            "snowy-rainy": "Slydda",
+            "sunny": "S\u00f3lskin",
+            "windy": "Vindasamt",
+            "windy-variant": "Vindasamt"
+        }
+    }
+}

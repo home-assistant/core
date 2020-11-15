@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "H\u00f6he",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad",
+                    "name": "Name"
+                },
+                "description": "Meteorologisches Institut",
+                "title": "Standort"
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "Bloquear {entity_name}",
+            "open": "Abrir {entity_name}",
+            "unlock": "Desbloquear {entity_name}"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} fechada",
+            "unlocked": "{entity_name} aberta"
+        }
+    },
+    "state": {
+        "_": {
+            "locked": "Trancada",
+            "unlocked": "Destrancada"
+        }
+    },
+    "title": "Fechadura"
+}

@@ -41,7 +41,7 @@ def setup(hass, config):
     """Set up the Digital Ocean component."""
 
     conf = config[DOMAIN]
-    access_token = conf.get(CONF_ACCESS_TOKEN)
+    access_token = conf[CONF_ACCESS_TOKEN]
 
     digital = DigitalOcean(access_token)
 

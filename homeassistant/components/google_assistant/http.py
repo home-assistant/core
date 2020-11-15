@@ -10,7 +10,11 @@ import jwt
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -177,7 +181,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return 500
+            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authentication."""
@@ -200,7 +204,7 @@ class GoogleConfig(AbstractConfig):
             try:
                 return await _call()
             except ClientResponseError as error:
-                if error.status == 401:
+                if error.status == HTTP_UNAUTHORIZED:
                     _LOGGER.warning(
                         "Request for %s unauthorized, renewing token and retrying", url
                     )
@@ -212,7 +216,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return 500
+            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""

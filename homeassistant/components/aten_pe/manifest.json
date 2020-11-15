@@ -3,6 +3,5 @@
   "name": "ATEN Rack PDU",
   "documentation": "https://www.home-assistant.io/integrations/aten_pe",
   "requirements": ["atenpdu==0.3.0"],
-  "dependencies": [],
   "codeowners": ["@mtdcr"]
 }

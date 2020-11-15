@@ -2,6 +2,7 @@
 
 import asyncio
 import collections
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -22,6 +23,7 @@ from .core.const import (
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_IEEE,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
@@ -52,7 +54,13 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .core.helpers import async_is_bindable_target, get_matched_clusters
+from .core.group import GroupMember
+from .core.helpers import (
+    async_is_bindable_target,
+    convert_install_code,
+    get_matched_clusters,
+    qr_to_install_code,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,9 +73,10 @@ DEVICE_INFO = "device_info"
 ATTR_DURATION = "duration"
 ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
-ATTR_IEEE = "ieee"
+ATTR_INSTALL_CODE = "install_code"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
+ATTR_QR_CODE = "qr_code"
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
@@ -81,24 +90,37 @@ SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
+SERVICE_PERMIT_PARAMS = {
+    vol.Optional(ATTR_IEEE, default=None): EUI64.convert,
+    vol.Optional(ATTR_DURATION, default=60): vol.All(
+        vol.Coerce(int), vol.Range(0, 254)
+    ),
+    vol.Inclusive(ATTR_SOURCE_IEEE, "install_code"): EUI64.convert,
+    vol.Inclusive(ATTR_INSTALL_CODE, "install_code"): convert_install_code,
+    vol.Exclusive(ATTR_QR_CODE, "install_code"): vol.All(str, qr_to_install_code),
+}
+
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema(
-        {
-            vol.Optional(ATTR_IEEE_ADDRESS, default=None): EUI64.convert,
-            vol.Optional(ATTR_DURATION, default=60): vol.All(
-                vol.Coerce(int), vol.Range(0, 254)
-            ),
-        }
+        vol.All(
+            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            SERVICE_PERMIT_PARAMS,
+        )
     ),
-    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): EUI64.convert}),
+    IEEE_SERVICE: vol.Schema(
+        vol.All(
+            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            {vol.Required(ATTR_IEEE): EUI64.convert},
+        )
+    ),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
             vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_ATTRIBUTE): cv.positive_int,
-            vol.Required(ATTR_VALUE): cv.string,
+            vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
+            vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -167,13 +189,7 @@ ClusterBinding = collections.namedtuple("ClusterBinding", "id endpoint_id type n
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {
-        vol.Required("type"): "zha/devices/permit",
-        vol.Optional(ATTR_IEEE, default=None): EUI64.convert,
-        vol.Optional(ATTR_DURATION, default=60): vol.All(
-            vol.Coerce(int), vol.Range(0, 254)
-        ),
-    }
+    {vol.Required("type"): "zha/devices/permit", **SERVICE_PERMIT_PARAMS}
 )
 async def websocket_permit_devices(hass, connection, msg):
     """Permit ZHA zigbee devices."""
@@ -197,7 +213,21 @@ async def websocket_permit_devices(hass, connection, msg):
 
     connection.subscriptions[msg["id"]] = async_cleanup
     zha_gateway.async_enable_debug_mode()
-    await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
+    if ATTR_SOURCE_IEEE in msg:
+        src_ieee = msg[ATTR_SOURCE_IEEE]
+        code = msg[ATTR_INSTALL_CODE]
+        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
+        await zha_gateway.application_controller.permit_with_key(
+            time_s=duration, node=src_ieee, code=code
+        )
+    elif ATTR_QR_CODE in msg:
+        src_ieee, code = msg[ATTR_QR_CODE]
+        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
+        await zha_gateway.application_controller.permit_with_key(
+            time_s=duration, node=src_ieee, code=code
+        )
+    else:
+        await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
     connection.send_result(msg["id"])
 
 
@@ -208,7 +238,7 @@ async def websocket_get_devices(hass, connection, msg):
     """Get ZHA devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
-    devices = [device.async_get_info() for device in zha_gateway.devices.values()]
+    devices = [device.zha_device_info for device in zha_gateway.devices.values()]
 
     connection.send_result(msg[ID], devices)
 
@@ -220,13 +250,35 @@ async def websocket_get_groupable_devices(hass, connection, msg):
     """Get ZHA devices that can be grouped."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
-    devices = [
-        device.async_get_info()
-        for device in zha_gateway.devices.values()
-        if device.is_groupable or device.is_coordinator
-    ]
+    devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
+    groupable_devices = []
 
-    connection.send_result(msg[ID], devices)
+    for device in devices:
+        entity_refs = zha_gateway.device_registry.get(device.ieee)
+        for ep_id in device.async_get_groupable_endpoints():
+            groupable_devices.append(
+                {
+                    "endpoint_id": ep_id,
+                    "entities": [
+                        {
+                            "name": zha_gateway.ha_entity_registry.async_get(
+                                entity_ref.reference_id
+                            ).name,
+                            "original_name": zha_gateway.ha_entity_registry.async_get(
+                                entity_ref.reference_id
+                            ).original_name,
+                        }
+                        for entity_ref in entity_refs
+                        if list(entity_ref.cluster_channels.values())[
+                            0
+                        ].cluster.endpoint.endpoint_id
+                        == ep_id
+                    ],
+                    "device": device.zha_device_info,
+                }
+            )
+
+    connection.send_result(msg[ID], groupable_devices)
 
 
 @websocket_api.require_admin
@@ -235,7 +287,7 @@ async def websocket_get_groupable_devices(hass, connection, msg):
 async def websocket_get_groups(hass, connection, msg):
     """Get ZHA groups."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    groups = [group.async_get_info() for group in zha_gateway.groups.values()]
+    groups = [group.group_info for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], groups)
 
 
@@ -250,7 +302,7 @@ async def websocket_get_device(hass, connection, msg):
     ieee = msg[ATTR_IEEE]
     device = None
     if ieee in zha_gateway.devices:
-        device = zha_gateway.devices[ieee].async_get_info()
+        device = zha_gateway.devices[ieee].zha_device_info
     if not device:
         connection.send_message(
             websocket_api.error_message(
@@ -273,7 +325,7 @@ async def websocket_get_group(hass, connection, msg):
     group = None
 
     if group_id in zha_gateway.groups:
-        group = zha_gateway.groups.get(group_id).async_get_info()
+        group = zha_gateway.groups.get(group_id).group_info
     if not group:
         connection.send_message(
             websocket_api.error_message(
@@ -284,13 +336,27 @@ async def websocket_get_group(hass, connection, msg):
     connection.send_result(msg[ID], group)
 
 
+def cv_group_member(value: Any) -> GroupMember:
+    """Validate and transform a group member."""
+    if not isinstance(value, Mapping):
+        raise vol.Invalid("Not a group member")
+    try:
+        group_member = GroupMember(
+            ieee=EUI64.convert(value["ieee"]), endpoint_id=value["endpoint_id"]
+        )
+    except KeyError as err:
+        raise vol.Invalid("Not a group member") from err
+
+    return group_member
+
+
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/group/add",
         vol.Required(GROUP_NAME): cv.string,
-        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
 async def websocket_add_group(hass, connection, msg):
@@ -299,7 +365,7 @@ async def websocket_add_group(hass, connection, msg):
     group_name = msg[GROUP_NAME]
     members = msg.get(ATTR_MEMBERS)
     group = await zha_gateway.async_create_zigpy_group(group_name, members)
-    connection.send_result(msg[ID], group.async_get_info())
+    connection.send_result(msg[ID], group.group_info)
 
 
 @websocket_api.require_admin
@@ -322,7 +388,7 @@ async def websocket_remove_groups(hass, connection, msg):
         await asyncio.gather(*tasks)
     else:
         await zha_gateway.async_remove_zigpy_group(group_ids[0])
-    ret_groups = [group.async_get_info() for group in zha_gateway.groups.values()]
+    ret_groups = [group.group_info for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], ret_groups)
 
 
@@ -332,7 +398,7 @@ async def websocket_remove_groups(hass, connection, msg):
     {
         vol.Required(TYPE): "zha/group/members/add",
         vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
 async def websocket_add_group_members(hass, connection, msg):
@@ -352,7 +418,7 @@ async def websocket_add_group_members(hass, connection, msg):
             )
         )
         return
-    ret_group = zha_group.async_get_info()
+    ret_group = zha_group.group_info
     connection.send_result(msg[ID], ret_group)
 
 
@@ -362,7 +428,7 @@ async def websocket_add_group_members(hass, connection, msg):
     {
         vol.Required(TYPE): "zha/group/members/remove",
         vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
 async def websocket_remove_group_members(hass, connection, msg):
@@ -382,7 +448,7 @@ async def websocket_remove_group_members(hass, connection, msg):
             )
         )
         return
-    ret_group = zha_group.async_get_info()
+    ret_group = zha_group.group_info
     connection.send_result(msg[ID], ret_group)
 
 
@@ -607,7 +673,7 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     source_device = zha_gateway.get_device(source_ieee)
 
     devices = [
-        device.async_get_info()
+        device.zha_device_info
         for device in zha_gateway.devices.values()
         if async_is_bindable_target(source_device, device)
     ]
@@ -677,7 +743,7 @@ async def websocket_unbind_devices(hass, connection, msg):
 
 def is_cluster_binding(value: Any) -> ClusterBinding:
     """Validate and transform a cluster binding."""
-    if not isinstance(value, collections.Mapping):
+    if not isinstance(value, Mapping):
         raise vol.Invalid("Not a cluster binding")
     try:
         cluster_binding = ClusterBinding(
@@ -686,8 +752,8 @@ def is_cluster_binding(value: Any) -> ClusterBinding:
             id=value["id"],
             endpoint_id=value["endpoint_id"],
         )
-    except KeyError:
-        raise vol.Invalid("Not a cluster binding")
+    except KeyError as err:
+        raise vol.Invalid("Not a cluster binding") from err
 
     return cluster_binding
 
@@ -741,18 +807,12 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 
+    zdo = source_device.device.zdo
     bind_tasks = []
-    for cluster_pair in clusters_to_bind:
-        destination_address = zdo_types.MultiAddress()
-        destination_address.addrmode = 3
-        destination_address.ieee = target_device.ieee
-        destination_address.endpoint = cluster_pair.target_cluster.endpoint.endpoint_id
-
-        zdo = cluster_pair.source_cluster.endpoint.device.zdo
-
+    for binding_pair in clusters_to_bind:
         op_msg = "cluster: %s %s --> [%s]"
         op_params = (
-            cluster_pair.source_cluster.cluster_id,
+            binding_pair.source_cluster.cluster_id,
             operation.name,
             target_ieee,
         )
@@ -763,9 +823,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
                 zdo.request(
                     operation,
                     source_device.ieee,
-                    cluster_pair.source_cluster.endpoint.endpoint_id,
-                    cluster_pair.source_cluster.cluster_id,
-                    destination_address,
+                    binding_pair.source_cluster.endpoint.endpoint_id,
+                    binding_pair.source_cluster.cluster_id,
+                    binding_pair.destination_address,
                 ),
                 op_msg,
                 op_params,
@@ -774,9 +834,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
     for outcome, log_msg in zip(res, bind_tasks):
         if isinstance(outcome, Exception):
-            fmt = log_msg[1] + " failed: %s"
+            fmt = f"{log_msg[1]} failed: %s"
         else:
-            fmt = log_msg[1] + " completed: %s"
+            fmt = f"{log_msg[1]} completed: %s"
         zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
@@ -788,8 +848,25 @@ def async_load_api(hass):
 
     async def permit(service):
         """Allow devices to join this network."""
-        duration = service.data.get(ATTR_DURATION)
-        ieee = service.data.get(ATTR_IEEE_ADDRESS)
+        duration = service.data[ATTR_DURATION]
+        ieee = service.data.get(ATTR_IEEE)
+        if ATTR_SOURCE_IEEE in service.data:
+            src_ieee = service.data[ATTR_SOURCE_IEEE]
+            code = service.data[ATTR_INSTALL_CODE]
+            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
+            await application_controller.permit_with_key(
+                time_s=duration, node=src_ieee, code=code
+            )
+            return
+
+        if ATTR_QR_CODE in service.data:
+            src_ieee, code = service.data[ATTR_QR_CODE]
+            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
+            await application_controller.permit_with_key(
+                time_s=duration, node=src_ieee, code=code
+            )
+            return
+
         if ieee:
             _LOGGER.info("Permitting joins for %ss on %s device", duration, ieee)
         else:
@@ -802,7 +879,7 @@ def async_load_api(hass):
 
     async def remove(service):
         """Remove a node from the network."""
-        ieee = service.data[ATTR_IEEE_ADDRESS]
+        ieee = service.data[ATTR_IEEE]
         zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None and zha_device.is_coordinator:

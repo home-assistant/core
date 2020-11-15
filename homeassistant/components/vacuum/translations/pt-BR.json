@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Limpando",
+            "docked": "Baseado",
+            "error": "Erro",
+            "idle": "Em espera",
+            "off": "Desligado",
+            "on": "Ligado",
+            "paused": "Pausado",
+            "returning": "Retornando para base"
+        }
+    },
+    "title": "Aspirador"
+}

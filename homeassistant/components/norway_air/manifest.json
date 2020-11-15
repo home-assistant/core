@@ -2,7 +2,6 @@
   "domain": "norway_air",
   "name": "Om Luftkvalitet i Norge (Norway Air)",
   "documentation": "https://www.home-assistant.io/integrations/norway_air",
-  "requirements": ["pyMetno==0.4.6"],
-  "dependencies": [],
+  "requirements": ["pyMetno==0.8.1"],
   "codeowners": []
 }

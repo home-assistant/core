@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Protsessori arhitektuur",
+            "chassis": "Korpus",
+            "dev": "Arendus",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Haldur",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Paigalduse t\u00fc\u00fcp",
+            "os_name": "Operatsioonis\u00fcsteemi j\u00e4rk",
+            "os_version": "Operatsioonis\u00fcsteemi versioon",
+            "python_version": "Pythoni versioon",
+            "supervisor": "Haldur",
+            "timezone": "Ajav\u00f6\u00f6nd",
+            "version": "Versioon",
+            "virtualenv": "Virtuaalne keskkond"
+        }
+    }
+}

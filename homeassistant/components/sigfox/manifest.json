@@ -2,7 +2,5 @@
   "domain": "sigfox",
   "name": "Sigfox",
   "documentation": "https://www.home-assistant.io/integrations/sigfox",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

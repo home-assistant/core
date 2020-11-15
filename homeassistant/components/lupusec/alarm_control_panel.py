@@ -1,7 +1,7 @@
 """Support for Lupusec System alarm control panels."""
 from datetime import timedelta
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(alarm_devices)
 
 
-class LupusecAlarm(LupusecDevice, AlarmControlPanel):
+class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
     @property

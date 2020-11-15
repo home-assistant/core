@@ -3,6 +3,5 @@
   "name": "Tautulli",
   "documentation": "https://www.home-assistant.io/integrations/tautulli",
   "requirements": ["pytautulli==0.5.0"],
-  "dependencies": [],
   "codeowners": ["@ludeeus"]
 }

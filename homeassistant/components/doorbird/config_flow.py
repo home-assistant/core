@@ -7,7 +7,13 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
@@ -39,11 +45,11 @@ async def validate_input(hass: core.HomeAssistant, data):
         status = await hass.async_add_executor_job(device.ready)
         info = await hass.async_add_executor_job(device.info)
     except urllib.error.HTTPError as err:
-        if err.code == 401:
-            raise InvalidAuth
-        raise CannotConnect
-    except OSError:
-        raise CannotConnect
+        if err.code == HTTP_UNAUTHORIZED:
+            raise InvalidAuth from err
+        raise CannotConnect from err
+    except OSError as err:
+        raise CannotConnect from err
 
     if not status[0]:
         raise CannotConnect
@@ -68,17 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if "base" not in errors:
+            info, errors = await self._async_validate_or_error(user_input)
+            if not errors:
                 await self.async_set_unique_id(info["mac_addr"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
@@ -119,7 +116,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        if user_input:
+            info, errors = await self._async_validate_or_error(user_input)
+            if not errors:
+                await self.async_set_unique_id(
+                    info["mac_addr"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["title"], data=user_input)
         return await self.async_step_user(user_input)
+
+    async def _async_validate_or_error(self, user_input):
+        """Validate doorbird or error."""
+        errors = {}
+        info = {}
+        try:
+            info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return info, errors
 
     @staticmethod
     @callback

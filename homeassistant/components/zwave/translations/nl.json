@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave is al geconfigureerd",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "option_error": "Z-Wave-validatie mislukt. Is het pad naar de USB-stick correct?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Netwerksleutel (laat leeg om automatisch te genereren)",
+                    "usb_path": "USB-pad"
+                },
+                "description": "Zie https://www.home-assistant.io/docs/z-wave/installation/ voor informatie over de configuratievariabelen",
+                "title": "Stel Z-Wave in"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Onbereikbaar",
+            "initializing": "Initialiseren",
+            "ready": "Gereed",
+            "sleeping": "Slaapt"
+        },
+        "query_stage": {
+            "dead": "Onbereikbaar",
+            "initializing": "Initialiseren"
+        }
+    }
+}

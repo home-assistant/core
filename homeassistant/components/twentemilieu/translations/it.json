@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_address": "Indirizzo non trovato nell'area di servizio di Twente Milieu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "Edificio, Scala, Interno, ecc. / Informazioni aggiuntive",
+                    "house_number": "Numero civico",
+                    "post_code": "Codice di Avviamento Postale"
+                },
+                "description": "Imposta Twente Milieu fornendo le informazioni sulla raccolta dei rifiuti al tuo indirizzo.",
+                "title": "Twente Milieu"
+            }
+        }
+    }
+}

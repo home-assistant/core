@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Name of the area",
+                    "lat_ne": "Latitude North-East corner",
+                    "lat_sw": "Latitude South-West corner",
+                    "lon_ne": "Longitude North-East corner",
+                    "lon_sw": "Longitude South-West corner",
+                    "mode": "Calculation",
+                    "show_on_map": "Show on map"
+                },
+                "description": "Configure a public weather sensor for an area.",
+                "title": "Netatmo public weather sensor"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Area name",
+                    "weather_areas": "Weather areas"
+                },
+                "description": "Configure public weather sensors.",
+                "title": "Netatmo public weather sensor"
+            }
+        }
+    }
+}

@@ -6,7 +6,12 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 
 from .const import CONF_SERIAL_NUMBER
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -31,24 +36,27 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await hass.async_add_executor_job(api.authenticate)
-    except requests.exceptions.Timeout:
-        raise CannotConnect
+    except requests.exceptions.Timeout as ex:
+        raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
-        if ex.request.status_code > 400 and ex.request.status_code < 500:
-            raise InvalidAuth
-        raise CannotConnect
+        if (
+            ex.response.status_code > HTTP_BAD_REQUEST
+            and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
+        ):
+            raise InvalidAuth from ex
+        raise CannotConnect from ex
     #
     # The underlying module throws a generic exception on login failure
     #
-    except Exception:  # pylint: disable=broad-except
-        raise InvalidAuth
+    except Exception as ex:
+        raise InvalidAuth from ex
 
     try:
         thermostat = await hass.async_add_executor_job(
             api.get_thermostat, data[CONF_SERIAL_NUMBER]
         )
-    except requests.exceptions.HTTPError:
-        raise InvalidThermostat
+    except requests.exceptions.HTTPError as ex:
+        raise InvalidThermostat from ex
 
     return {"title": thermostat.room, "serial_number": thermostat.serial_number}
 

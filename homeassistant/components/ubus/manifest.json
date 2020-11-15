@@ -2,7 +2,5 @@
   "domain": "ubus",
   "name": "OpenWrt (ubus)",
   "documentation": "https://www.home-assistant.io/integrations/ubus",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

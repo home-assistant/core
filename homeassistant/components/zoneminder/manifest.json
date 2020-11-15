@@ -3,6 +3,5 @@
   "name": "ZoneMinder",
   "documentation": "https://www.home-assistant.io/integrations/zoneminder",
   "requirements": ["zm-py==0.4.0"],
-  "dependencies": [],
   "codeowners": ["@rohankapoorcom"]
 }

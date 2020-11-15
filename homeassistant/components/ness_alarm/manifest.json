@@ -3,6 +3,5 @@
   "name": "Ness Alarm",
   "documentation": "https://www.home-assistant.io/integrations/ness_alarm",
   "requirements": ["nessclient==0.9.15"],
-  "dependencies": [],
   "codeowners": ["@nickw444"]
 }

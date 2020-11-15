@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} est inactif",
+            "is_off": "{entity_name} est d\u00e9sactiv\u00e9",
+            "is_on": "{entity_name} est activ\u00e9",
+            "is_paused": "{entity_name} est en pause",
+            "is_playing": "{entity_name} joue"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "En veille",
+            "off": "Inactif",
+            "on": "Actif",
+            "paused": "En pause",
+            "playing": "Lecture en cours",
+            "standby": "En veille"
+        }
+    },
+    "title": "Lecteur multim\u00e9dia"
+}

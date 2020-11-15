@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Hourly price of electricity in Spain (PVPC)",
     "step": {
       "user": {
         "title": "Tariff selection",
@@ -12,7 +11,7 @@
       }
     },
     "abort": {
-      "already_configured": "Integration is already configured with an existing sensor with that tariff"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

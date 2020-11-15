@@ -3,6 +3,5 @@
   "name": "Nuimo controller",
   "documentation": "https://www.home-assistant.io/integrations/nuimo_controller",
   "requirements": ["--only-binary=all nuimo==0.1.0"],
-  "dependencies": [],
   "codeowners": []
 }

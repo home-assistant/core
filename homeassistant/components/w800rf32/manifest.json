@@ -3,6 +3,5 @@
   "name": "WGL Designs W800RF32",
   "documentation": "https://www.home-assistant.io/integrations/w800rf32",
   "requirements": ["pyW800rf32==0.1"],
-  "dependencies": [],
   "codeowners": []
 }

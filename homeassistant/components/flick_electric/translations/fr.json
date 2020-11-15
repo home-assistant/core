@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce compte est d\u00e9j\u00e0 configur\u00e9."
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "ID client (facultatif)",
+                    "client_secret": "Secret client (facultatif)",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Identifiants de connexion Flick"
+            }
+        }
+    }
+}

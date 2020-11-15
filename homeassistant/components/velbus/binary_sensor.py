@@ -1,12 +1,8 @@
 """Support for Velbus Binary Sensors."""
-import logging
-
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import VelbusEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -20,7 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusBinarySensor(VelbusEntity, BinarySensorDevice):
+class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     """Representation of a Velbus Binary Sensor."""
 
     @property

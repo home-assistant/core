@@ -110,7 +110,7 @@ class MjpegCamera(Camera):
             self._authentication == HTTP_DIGEST_AUTHENTICATION
             or self._still_image_url is None
         ):
-            image = await self.hass.async_add_job(self.camera_image)
+            image = await self.hass.async_add_executor_job(self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
@@ -122,10 +122,10 @@ class MjpegCamera(Camera):
                 return image
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting camera image")
+            _LOGGER.error("Timeout getting camera image from %s", self._name)
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image: %s", err)
+            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
 
     def camera_image(self):
         """Return a still image response from the camera."""

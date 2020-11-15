@@ -125,8 +125,6 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema(
 class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
-    pass
-
 
 async def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
@@ -227,8 +225,8 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError:
-            raise PlatformNotReady
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 
@@ -253,11 +251,11 @@ class CityBikesNetwork:
             )
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
             self.ready.set()
-        except CityBikesRequestError:
+        except CityBikesRequestError as err:
             if now is not None:
                 self.ready.clear()
             else:
-                raise PlatformNotReady
+                raise PlatformNotReady from err
 
 
 class CityBikesStation(Entity):

@@ -13,7 +13,17 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import get_api
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_LIMIT,
+    CONF_ORDER,
+    DEFAULT_LIMIT,
+    DEFAULT_NAME,
+    DEFAULT_ORDER,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    SUPPORTED_ORDER_MODES,
+)
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
@@ -46,18 +56,20 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
+                if (
+                    entry.data[CONF_HOST] == user_input[CONF_HOST]
+                    and entry.data[CONF_PORT] == user_input[CONF_PORT]
+                ):
                     return self.async_abort(reason="already_configured")
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
                     break
-
             try:
                 await get_api(self.hass, user_input)
 
             except AuthenticationError:
-                errors[CONF_USERNAME] = "wrong_credentials"
-                errors[CONF_PASSWORD] = "wrong_credentials"
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except (CannotConnect, UnknownError):
                 errors["base"] = "cannot_connect"
 
@@ -67,7 +79,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors,
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):
@@ -94,7 +108,15 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
-            ): int
+            ): int,
+            vol.Optional(
+                CONF_LIMIT,
+                default=self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
+            vol.Optional(
+                CONF_ORDER,
+                default=self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
+            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

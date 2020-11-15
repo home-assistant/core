@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "ElkM1 s touto adresou je ji\u017e nastaven",
+            "already_configured": "ElkM1 s t\u00edmto prefixem je ji\u017e nastaven"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "prefix": "Jedine\u010dn\u00fd prefix (ponechte pr\u00e1zdn\u00e9, pokud m\u00e1te pouze jeden ElkM1).",
+                    "protocol": "Protokol",
+                    "temperature_unit": "Jednotka teploty pou\u017e\u00edvan\u00e1 ElkM1.",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "title": "P\u0159ipojen\u00ed k ovlada\u010di Elk-M1"
+            }
+        }
+    }
+}

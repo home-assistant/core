@@ -3,10 +3,10 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from gios import ApiError, Gios, NoStationError
+from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -43,11 +43,9 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     gios = Gios(user_input[CONF_STATION_ID], websession)
                     await gios.update()
 
-                if not gios.available:
-                    raise InvalidSensorsData()
-
                 return self.async_create_entry(
-                    title=user_input[CONF_STATION_ID], data=user_input,
+                    title=user_input[CONF_STATION_ID],
+                    data=user_input,
                 )
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
@@ -59,7 +57,3 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class InvalidSensorsData(exceptions.HomeAssistantError):
-    """Error to indicate invalid sensors data."""

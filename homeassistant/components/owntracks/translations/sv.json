@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "\n\n P\u00e5 Android, \u00f6ppna [OwnTracks-appen]({android_url}), g\u00e5 till inst\u00e4llningar -> anslutning. \u00c4ndra f\u00f6ljande inst\u00e4llningar: \n - L\u00e4ge: Privat HTTP \n - V\u00e4rden: {webhook_url}\n - Identifiering: \n - Anv\u00e4ndarnamn: `<Your name>`\n - Enhets-ID: `<Your device name>` \n\n P\u00e5 IOS, \u00f6ppna [OwnTracks-appen]({ios_url}), tryck p\u00e5 (i) ikonen i \u00f6vre v\u00e4nstra h\u00f6rnet -> inst\u00e4llningarna. \u00c4ndra f\u00f6ljande inst\u00e4llningar: \n - L\u00e4ge: HTTP \n - URL: {webhook_url}\n - Sl\u00e5 p\u00e5 autentisering \n - UserID: `<Your name>` \n\n {secret} \n \n Se [dokumentationen]({docs_url}) f\u00f6r mer information."
+        },
+        "step": {
+            "user": {
+                "description": "\u00c4r du s\u00e4ker p\u00e5 att du vill konfigurera OwnTracks?",
+                "title": "Konfigurera OwnTracks"
+            }
+        }
+    }
+}

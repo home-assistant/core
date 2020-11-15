@@ -3,7 +3,7 @@ import logging
 
 from velbus.util import VelbusException
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusClimate(VelbusEntity, ClimateDevice):
+class VelbusClimate(VelbusEntity, ClimateEntity):
     """Representation of a Velbus thermostat."""
 
     @property
@@ -38,7 +38,7 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit this state is expressed in."""
-        if self._module.get_unit(self._channel) == "°C":
+        if self._module.get_unit(self._channel) == TEMP_CELSIUS:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
@@ -82,4 +82,3 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        pass

@@ -1,0 +1,108 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "not_konn_panel": "Ikke en anerkjent Konnected.io-enhet",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "confirm": {
+                "description": "Modell: {model}\nID: {id}\nVert: {host}\nPort: {port}\n\nDu kan konfigurere IO- og panelvirkem\u00e5ten i innstillingene for Konnected Alarm Panel.",
+                "title": "Konnected Enhet klar"
+            },
+            "import_confirm": {
+                "description": "Et Konnected Alarm Panel med ID {id} er oppdaget i configuration.yaml. Denne flyten vil tillate deg \u00e5 importere den til en config-oppf\u00f8ring.",
+                "title": "Importer Konnected Enhet"
+            },
+            "user": {
+                "data": {
+                    "host": "IP adresse",
+                    "port": "Port"
+                },
+                "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Ikke en anerkjent Konnected.io-enhet"
+        },
+        "error": {
+            "bad_host": "Ugyldig overstyr API-vertsadresse"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Inverter \u00e5pen / lukk tilstand",
+                    "name": "Navn (valgfritt)",
+                    "type": "Bin\u00e6r sensortype"
+                },
+                "description": "{zone}-alternativer",
+                "title": "Konfigurer bin\u00e6r sensor"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Navn (valgfritt)",
+                    "poll_interval": "Avstemningsintervall (minutter) (valgfritt)",
+                    "type": "Sensortype"
+                },
+                "description": "{zone}-alternativer",
+                "title": "Konfigurere Digital Sensor"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Sone 1",
+                    "2": "Sone 2",
+                    "3": "Sone 3",
+                    "4": "Sone 4",
+                    "5": "Sone 5",
+                    "6": "Sone 6",
+                    "7": "Sone 7",
+                    "out": "OUT"
+                },
+                "description": "Oppdaget en {model} hos {host} . Velg basiskonfigurasjon for hver I / O nedenfor - avhengig av I / O kan det gi rom for bin\u00e6re sensorer (\u00e5pne / lukke kontakter), digitale sensorer (dht og ds18b20), eller switchbare utganger. Du vil kunne konfigurere detaljerte alternativer i de neste trinnene.",
+                "title": "Konfigurere I/O"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Sone 10",
+                    "11": "Sone 11",
+                    "12": "Sone 12",
+                    "8": "Sone 8",
+                    "9": "Sone 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "description": "Velg konfigurasjonen av de gjenv\u00e6rende I/O nedenfor. Du vil v\u00e6re i stand til \u00e5 konfigurere detaljerte alternativer i de neste trinnene.",
+                "title": "Konfigurer utvidet I/O"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Overstyre API-vert-URL (valgfritt)",
+                    "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring",
+                    "discovery": "Svar p\u00e5 oppdagelsesforesp\u00f8rsler i nettverket ditt",
+                    "override_api_host": "Overstyre standard Home Assistant API-vertspanel-URL"
+                },
+                "description": "Vennligst velg \u00f8nsket atferd for din panel",
+                "title": "Konfigurer diverse"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "Utgang n\u00e5r den er p\u00e5",
+                    "momentary": "Pulsvarighet (ms) (valgfritt)",
+                    "more_states": "Konfigurere flere tilstander for denne sonen",
+                    "name": "Navn (valgfritt)",
+                    "pause": "Pause mellom pulser (ms) (valgfritt)",
+                    "repeat": "Tider \u00e5 gjenta (-1 = uendelig) (valgfritt)"
+                },
+                "description": "{zone} alternativer: tilstand {state}",
+                "title": "Konfigurer utskiftbar utgang"
+            }
+        }
+    }
+}

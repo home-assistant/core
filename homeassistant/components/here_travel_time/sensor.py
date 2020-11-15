@@ -156,7 +156,7 @@ async def async_setup_platform(
         _are_valid_client_credentials, here_client
     ):
         _LOGGER.error(
-            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
+            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token"
         )
         return
 
@@ -423,6 +423,9 @@ class HERETravelTimeData:
             departure = self.departure
             if departure is not None:
                 departure = convert_time_to_isodate(departure)
+
+            if departure is None and arrival is None:
+                departure = "now"
 
             _LOGGER.debug(
                 "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",

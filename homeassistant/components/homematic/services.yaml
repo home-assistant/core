@@ -21,10 +21,10 @@ set_variable_value:
   fields:
     entity_id:
       description: Name(s) of homematic central to set value.
-      example: 'homematic.ccu2'
+      example: "homematic.ccu2"
     name:
       description: Name of the variable to set.
-      example: 'testvariable'
+      example: "testvariable"
     value:
       description: New value
       example: 1
@@ -75,11 +75,13 @@ put_paramset:
       example: wireless
     address:
       description: Address of Homematic device
-      example: LEQ3948571
+      example: LEQ3948571:0
     paramset_key:
       description: The paramset_key argument to putParamset
       example: MASTER
     paramset:
       description: A paramset dictionary
       example: '{"WEEK_PROGRAM_POINTER": 1}'
-
+    rx_mode:
+      description: The receive mode used.
+      example: BURST

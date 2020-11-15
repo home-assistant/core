@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Lukket",
+            "home": "Hjemme",
+            "locked": "L\u00e5st",
+            "not_home": "Borte",
+            "off": "Av",
+            "ok": "",
+            "on": "P\u00e5",
+            "open": "\u00c5pen",
+            "problem": "",
+            "unlocked": "Ul\u00e5st"
+        }
+    },
+    "title": "Gruppe"
+}

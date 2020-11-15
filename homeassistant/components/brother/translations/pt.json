@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "wrong_host": "Nome de servidor ou endere\u00e7o IP inv\u00e1lido."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "type": "Tipo de impressora"
+                }
+            }
+        }
+    }
+}

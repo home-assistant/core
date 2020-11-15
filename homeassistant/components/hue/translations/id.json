@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Semua Philips Hue bridges sudah dikonfigurasi",
+            "already_configured": "Bridge sudah dikonfigurasi",
+            "cannot_connect": "Tidak dapat terhubung ke bridge",
+            "discover_timeout": "Tidak dapat menemukan Hue Bridges.",
+            "no_bridges": "Bridge Philips Hue tidak ditemukan",
+            "unknown": "Kesalahan tidak dikenal terjadi."
+        },
+        "error": {
+            "linking": "Terjadi kesalahan tautan tidak dikenal.",
+            "register_failed": "Gagal mendaftar, silakan coba lagi."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Pilih Hue bridge"
+            },
+            "link": {
+                "description": "Tekan tombol di bridge untuk mendaftar Philips Hue dengan Home Assistant.\n\n![Lokasi tombol di bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Tautan Hub"
+            }
+        }
+    }
+}

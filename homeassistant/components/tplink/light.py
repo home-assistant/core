@@ -1,4 +1,5 @@
 """Support for TPLink lights."""
+import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -13,20 +14,24 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
+import homeassistant.util.dt as dt_util
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-from .common import async_add_entities_retry
+from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
+CURRENT_POWER_UPDATE_INTERVAL = timedelta(seconds=60)
+HISTORICAL_POWER_UPDATE_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,45 +39,47 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
+LIGHT_STATE_DFT_ON = "dft_on_state"
+LIGHT_STATE_ON_OFF = "on_off"
+LIGHT_STATE_RELAY_STATE = "relay_state"
+LIGHT_STATE_BRIGHTNESS = "brightness"
+LIGHT_STATE_COLOR_TEMP = "color_temp"
+LIGHT_STATE_HUE = "hue"
+LIGHT_STATE_SATURATION = "saturation"
+LIGHT_STATE_ERROR_MSG = "err_msg"
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform.
+LIGHT_SYSINFO_MAC = "mac"
+LIGHT_SYSINFO_ALIAS = "alias"
+LIGHT_SYSINFO_MODEL = "model"
+LIGHT_SYSINFO_IS_DIMMABLE = "is_dimmable"
+LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP = "is_variable_color_temp"
+LIGHT_SYSINFO_IS_COLOR = "is_color"
 
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Loading as a platform is no longer supported, "
-        "convert to use the tplink component."
-    )
+MAX_ATTEMPTS = 300
+SLEEP_TIME = 2
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
-    """Set up switches."""
-    await async_add_entities_retry(
-        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
+    """Set up lights."""
+    entities = await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
     )
 
-    return True
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
-
-def add_entity(device: SmartBulb, async_add_entities):
-    """Check if device is online and add the entity."""
-    # Attempt to get the sysinfo. If it fails, it will raise an
-    # exception that is caught by async_add_entities_retry which
-    # will try again later.
-    device.get_sysinfo()
-
-    async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
+    if hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]:
+        raise PlatformNotReady
 
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return int((byt * 100.0) / 255.0)
+    return round((byt * 100.0) / 255.0)
 
 
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
-    return (percent * 255.0) / 100.0
+    return round((percent * 255.0) / 100.0)
 
 
 class LightState(NamedTuple):
@@ -82,7 +89,21 @@ class LightState(NamedTuple):
     brightness: int
     color_temp: float
     hs: Tuple[int, int]
-    emeter_params: dict
+
+    def to_param(self):
+        """Return a version that we can send to the bulb."""
+        if self.color_temp:
+            color_temp = mired_to_kelvin(self.color_temp)
+        else:
+            color_temp = None
+
+        return {
+            LIGHT_STATE_ON_OFF: 1 if self.state else 0,
+            LIGHT_STATE_BRIGHTNESS: brightness_to_percentage(self.brightness),
+            LIGHT_STATE_COLOR_TEMP: color_temp,
+            LIGHT_STATE_HUE: self.hs[0] if self.hs else 0,
+            LIGHT_STATE_SATURATION: self.hs[1] if self.hs else 0,
+        }
 
 
 class LightFeatures(NamedTuple):
@@ -95,9 +116,10 @@ class LightFeatures(NamedTuple):
     supported_features: int
     min_mireds: float
     max_mireds: float
+    has_emeter: bool
 
 
-class TPLinkSmartBulb(Light):
+class TPLinkSmartBulb(LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     def __init__(self, smartbulb: SmartBulb) -> None:
@@ -107,6 +129,12 @@ class TPLinkSmartBulb(Light):
         self._light_state = cast(LightState, None)
         self._is_available = True
         self._is_setting_light_state = False
+        self._last_current_power_update = None
+        self._last_historical_power_update = None
+        self._emeter_params = {}
+
+        self._host = None
+        self._alias = None
 
     @property
     def unique_id(self):
@@ -137,45 +165,46 @@ class TPLinkSmartBulb(Light):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        return self._light_state.emeter_params
+        return self._emeter_params
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        brightness = (
-            int(kwargs[ATTR_BRIGHTNESS])
-            if ATTR_BRIGHTNESS in kwargs
-            else self._light_state.brightness
-            if self._light_state.brightness is not None
-            else 255
-        )
-        color_tmp = (
-            int(kwargs[ATTR_COLOR_TEMP])
-            if ATTR_COLOR_TEMP in kwargs
-            else self._light_state.color_temp
-        )
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = int(kwargs[ATTR_BRIGHTNESS])
+        elif self._light_state.brightness is not None:
+            brightness = self._light_state.brightness
+        else:
+            brightness = 255
 
-        await self.async_set_light_state_retry(
+        if ATTR_COLOR_TEMP in kwargs:
+            color_tmp = int(kwargs[ATTR_COLOR_TEMP])
+        else:
+            color_tmp = self._light_state.color_temp
+
+        if ATTR_HS_COLOR in kwargs:
+            # TP-Link requires integers.
+            hue_sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
+
+            # TP-Link cannot have both color temp and hue_sat
+            color_tmp = 0
+        else:
+            hue_sat = self._light_state.hs
+
+        await self._async_set_light_state_retry(
             self._light_state,
-            LightState(
+            self._light_state._replace(
                 state=True,
                 brightness=brightness,
                 color_temp=color_tmp,
-                hs=tuple(kwargs.get(ATTR_HS_COLOR, self._light_state.hs or ())),
-                emeter_params=self._light_state.emeter_params,
+                hs=hue_sat,
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        await self.async_set_light_state_retry(
+        await self._async_set_light_state_retry(
             self._light_state,
-            LightState(
-                state=False,
-                brightness=self._light_state.brightness,
-                color_temp=self._light_state.color_temp,
-                hs=self._light_state.hs,
-                emeter_params=self._light_state.emeter_params,
-            ),
+            self._light_state._replace(state=False),
         )
 
     @property
@@ -208,74 +237,58 @@ class TPLinkSmartBulb(Light):
         """Return True if device is on."""
         return self._light_state.state
 
-    def update(self):
-        """Update the TP-Link Bulb's state."""
+    def attempt_update(self, update_attempt):
+        """Attempt to get details the TP-Link bulb."""
         # State is currently being set, ignore.
         if self._is_setting_light_state:
-            return
+            return False
 
-        # Initial run, perform call blocking.
-        if not self._light_features:
-            self.do_update_retry(False)
-        # Subsequent runs should not block.
-        else:
-            self.hass.add_job(self.do_update_retry, True)
-
-    def do_update_retry(self, update_state: bool) -> None:
-        """Update state data with retry.""" ""
         try:
-            # Update light features only once.
-            self._light_features = (
-                self._light_features or self.get_light_features_retry()
-            )
-            self._light_state = self.get_light_state_retry(self._light_features)
-            self._is_available = True
-        except (SmartDeviceException, OSError) as ex:
-            if self._is_available:
-                _LOGGER.warning(
-                    "Could not read data for %s: %s", self.smartbulb.host, ex
-                )
-            self._is_available = False
+            if not self._light_features:
+                self._light_features = self._get_light_features()
+                self._alias = self._light_features.alias
+                self._host = self.smartbulb.host
+            self._light_state = self._get_light_state()
+            return True
 
-        # The local variables were updates asyncronousally,
-        # we need the entity registry to poll this object's properties for
-        # updated information. Calling schedule_update_ha_state will only
-        # cause a loop.
-        if update_state:
-            self.schedule_update_ha_state()
+        except (SmartDeviceException, OSError) as ex:
+            if update_attempt == 0:
+                _LOGGER.debug(
+                    "Retrying in %s seconds for %s|%s due to: %s",
+                    SLEEP_TIME,
+                    self._host,
+                    self._alias,
+                    ex,
+                )
+            return False
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._light_features.supported_features
 
-    def get_light_features_retry(self) -> LightFeatures:
-        """Retry the retrieval of the supported features."""
-        try:
-            return self.get_light_features()
-        except (SmartDeviceException, OSError):
-            pass
-
-        _LOGGER.debug("Retrying getting light features")
-        return self.get_light_features()
-
-    def get_light_features(self):
+    def _get_light_features(self):
         """Determine all supported features in one go."""
         sysinfo = self.smartbulb.sys_info
         supported_features = 0
+        # Calling api here as it reformats
         mac = self.smartbulb.mac
-        alias = self.smartbulb.alias
-        model = self.smartbulb.model
+        alias = sysinfo[LIGHT_SYSINFO_ALIAS]
+        model = sysinfo[LIGHT_SYSINFO_MODEL]
         min_mireds = None
         max_mireds = None
+        has_emeter = self.smartbulb.has_emeter
 
-        if self.smartbulb.is_dimmable:
+        if sysinfo.get(LIGHT_SYSINFO_IS_DIMMABLE) or LIGHT_STATE_BRIGHTNESS in sysinfo:
             supported_features += SUPPORT_BRIGHTNESS
-        if getattr(self.smartbulb, "is_variable_color_temp", False):
+        if sysinfo.get(LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP):
             supported_features += SUPPORT_COLOR_TEMP
-            min_mireds = kelvin_to_mired(self.smartbulb.valid_temperature_range[1])
-            max_mireds = kelvin_to_mired(self.smartbulb.valid_temperature_range[0])
-        if getattr(self.smartbulb, "is_color", False):
+            # Have to make another api request here in
+            # order to not re-implement pyHS100 here
+            max_range, min_range = self.smartbulb.valid_temperature_range
+            min_mireds = kelvin_to_mired(min_range)
+            max_mireds = kelvin_to_mired(max_range)
+        if sysinfo.get(LIGHT_SYSINFO_IS_COLOR):
             supported_features += SUPPORT_COLOR
 
         return LightFeatures(
@@ -286,112 +299,203 @@ class TPLinkSmartBulb(Light):
             supported_features=supported_features,
             min_mireds=min_mireds,
             max_mireds=max_mireds,
+            has_emeter=has_emeter,
         )
 
-    def get_light_state_retry(self, light_features: LightFeatures) -> LightState:
-        """Retry the retrieval of getting light states."""
-        try:
-            return self.get_light_state(light_features)
-        except (SmartDeviceException, OSError):
-            pass
-
-        _LOGGER.debug("Retrying getting light state")
-        return self.get_light_state(light_features)
-
-    def get_light_state(self, light_features: LightFeatures) -> LightState:
-        """Get the light state."""
-        emeter_params = {}
+    def _light_state_from_params(self, light_state_params) -> LightState:
         brightness = None
         color_temp = None
         hue_saturation = None
-        state = self.smartbulb.state == SmartBulb.BULB_STATE_ON
+        light_features = self._light_features
+
+        state = bool(light_state_params[LIGHT_STATE_ON_OFF])
+
+        if not state and LIGHT_STATE_DFT_ON in light_state_params:
+            light_state_params = light_state_params[LIGHT_STATE_DFT_ON]
 
         if light_features.supported_features & SUPPORT_BRIGHTNESS:
-            brightness = brightness_from_percentage(self.smartbulb.brightness)
+            brightness = brightness_from_percentage(
+                light_state_params[LIGHT_STATE_BRIGHTNESS]
+            )
 
         if light_features.supported_features & SUPPORT_COLOR_TEMP:
-            if self.smartbulb.color_temp is not None and self.smartbulb.color_temp != 0:
-                color_temp = kelvin_to_mired(self.smartbulb.color_temp)
+            if (
+                light_state_params.get(LIGHT_STATE_COLOR_TEMP) is not None
+                and light_state_params[LIGHT_STATE_COLOR_TEMP] != 0
+            ):
+                color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
         if light_features.supported_features & SUPPORT_COLOR:
-            hue, sat, _ = self.smartbulb.hsv
-            hue_saturation = (hue, sat)
-
-        if self.smartbulb.has_emeter:
-            emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                self.smartbulb.current_consumption()
+            hue_saturation = (
+                light_state_params[LIGHT_STATE_HUE],
+                light_state_params[LIGHT_STATE_SATURATION],
             )
-            daily_statistics = self.smartbulb.get_emeter_daily()
-            monthly_statistics = self.smartbulb.get_emeter_monthly()
-            try:
-                emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
-                    daily_statistics[int(time.strftime("%d"))]
-                )
-                emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
-                    monthly_statistics[int(time.strftime("%m"))]
-                )
-            except KeyError:
-                # device returned no daily/monthly history
-                pass
 
         return LightState(
             state=state,
             brightness=brightness,
             color_temp=color_temp,
             hs=hue_saturation,
-            emeter_params=emeter_params,
         )
 
-    async def async_set_light_state_retry(
+    def _get_light_state(self) -> LightState:
+        """Get the light state."""
+        self._update_emeter()
+        return self._light_state_from_params(self._get_device_state())
+
+    def _update_emeter(self):
+        if not self._light_features.has_emeter:
+            return
+
+        now = dt_util.utcnow()
+        if (
+            not self._last_current_power_update
+            or self._last_current_power_update + CURRENT_POWER_UPDATE_INTERVAL < now
+        ):
+            self._last_current_power_update = now
+            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
+                self.smartbulb.current_consumption()
+            )
+
+        if (
+            not self._last_historical_power_update
+            or self._last_historical_power_update + HISTORICAL_POWER_UPDATE_INTERVAL
+            < now
+        ):
+            self._last_historical_power_update = now
+            daily_statistics = self.smartbulb.get_emeter_daily()
+            monthly_statistics = self.smartbulb.get_emeter_monthly()
+            try:
+                self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
+                    daily_statistics[int(time.strftime("%d"))]
+                )
+                self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
+                    monthly_statistics[int(time.strftime("%m"))]
+                )
+            except KeyError:
+                # device returned no daily/monthly history
+                pass
+
+    async def _async_set_light_state_retry(
         self, old_light_state: LightState, new_light_state: LightState
     ) -> None:
         """Set the light state with retry."""
-        # Optimistically setting the light state.
-        self._light_state = new_light_state
-
         # Tell the device to set the states.
+        if not _light_state_diff(old_light_state, new_light_state):
+            # Nothing to do, avoid the executor
+            return
+
         self._is_setting_light_state = True
         try:
-            await self.hass.async_add_executor_job(
-                self.set_light_state, old_light_state, new_light_state
+            light_state_params = await self.hass.async_add_executor_job(
+                self._set_light_state, old_light_state, new_light_state
             )
             self._is_available = True
             self._is_setting_light_state = False
+            if LIGHT_STATE_ERROR_MSG in light_state_params:
+                raise HomeAssistantError(light_state_params[LIGHT_STATE_ERROR_MSG])
+            self._light_state = self._light_state_from_params(light_state_params)
             return
         except (SmartDeviceException, OSError):
             pass
 
         try:
             _LOGGER.debug("Retrying setting light state")
-            await self.hass.async_add_executor_job(
-                self.set_light_state, old_light_state, new_light_state
+            light_state_params = await self.hass.async_add_executor_job(
+                self._set_light_state, old_light_state, new_light_state
             )
             self._is_available = True
+            if LIGHT_STATE_ERROR_MSG in light_state_params:
+                raise HomeAssistantError(light_state_params[LIGHT_STATE_ERROR_MSG])
+            self._light_state = self._light_state_from_params(light_state_params)
         except (SmartDeviceException, OSError) as ex:
             self._is_available = False
             _LOGGER.warning("Could not set data for %s: %s", self.smartbulb.host, ex)
 
         self._is_setting_light_state = False
 
-    def set_light_state(
+    def _set_light_state(
         self, old_light_state: LightState, new_light_state: LightState
     ) -> None:
         """Set the light state."""
-        # Calling the API with the new state information.
-        if new_light_state.state != old_light_state.state:
-            if new_light_state.state:
-                self.smartbulb.state = SmartBulb.BULB_STATE_ON
+        diff = _light_state_diff(old_light_state, new_light_state)
+
+        if not diff:
+            return
+
+        return self._set_device_state(diff)
+
+    def _get_device_state(self):
+        """State of the bulb or smart dimmer switch."""
+        if isinstance(self.smartbulb, SmartBulb):
+            return self.smartbulb.get_light_state()
+
+        sysinfo = self.smartbulb.sys_info
+        # Its not really a bulb, its a dimmable SmartPlug (aka Wall Switch)
+        return {
+            LIGHT_STATE_ON_OFF: sysinfo[LIGHT_STATE_RELAY_STATE],
+            LIGHT_STATE_BRIGHTNESS: sysinfo.get(LIGHT_STATE_BRIGHTNESS, 0),
+            LIGHT_STATE_COLOR_TEMP: 0,
+            LIGHT_STATE_HUE: 0,
+            LIGHT_STATE_SATURATION: 0,
+        }
+
+    def _set_device_state(self, state):
+        """Set state of the bulb or smart dimmer switch."""
+        if isinstance(self.smartbulb, SmartBulb):
+            return self.smartbulb.set_light_state(state)
+
+        # Its not really a bulb, its a dimmable SmartPlug (aka Wall Switch)
+        if LIGHT_STATE_BRIGHTNESS in state:
+            # Brightness of 0 is accepted by the
+            # device but the underlying library rejects it
+            # so we turn off instead.
+            if state[LIGHT_STATE_BRIGHTNESS]:
+                self.smartbulb.brightness = state[LIGHT_STATE_BRIGHTNESS]
             else:
-                self.smartbulb.state = SmartBulb.BULB_STATE_OFF
-                return
+                self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
+        elif LIGHT_STATE_ON_OFF in state:
+            if state[LIGHT_STATE_ON_OFF]:
+                self.smartbulb.state = self.smartbulb.SWITCH_STATE_ON
+            else:
+                self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
 
-        if new_light_state.color_temp != old_light_state.color_temp:
-            self.smartbulb.color_temp = mired_to_kelvin(new_light_state.color_temp)
+        return self._get_device_state()
 
-        brightness_pct = brightness_to_percentage(new_light_state.brightness)
-        if new_light_state.hs != old_light_state.hs and len(new_light_state.hs) > 1:
-            hue, sat = new_light_state.hs
-            hsv = (int(hue), int(sat), brightness_pct)
-            self.smartbulb.hsv = hsv
-        elif new_light_state.brightness != old_light_state.brightness:
-            self.smartbulb.brightness = brightness_pct
+    async def async_update(self):
+        """Update the TP-Link bulb's state."""
+        for update_attempt in range(MAX_ATTEMPTS):
+            is_ready = await self.hass.async_add_executor_job(
+                self.attempt_update, update_attempt
+            )
+
+            if is_ready:
+                self._is_available = True
+                if update_attempt > 0:
+                    _LOGGER.debug(
+                        "Device %s|%s responded after %s attempts",
+                        self._host,
+                        self._alias,
+                        update_attempt,
+                    )
+                break
+            await asyncio.sleep(SLEEP_TIME)
+        else:
+            if self._is_available:
+                _LOGGER.warning(
+                    "Could not read state for %s|%s",
+                    self._host,
+                    self._alias,
+                )
+            self._is_available = False
+
+
+def _light_state_diff(old_light_state: LightState, new_light_state: LightState):
+    old_state_param = old_light_state.to_param()
+    new_state_param = new_light_state.to_param()
+
+    return {
+        key: value
+        for key, value in new_state_param.items()
+        if new_state_param.get(key) != old_state_param.get(key)
+    }

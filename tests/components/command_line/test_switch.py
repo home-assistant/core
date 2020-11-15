@@ -2,207 +2,240 @@
 import json
 import os
 import tempfile
-import unittest
 
 import homeassistant.components.command_line.switch as command_line
 import homeassistant.components.switch as switch
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.setup import setup_component
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant
-from tests.components.switch import common
+
+async def test_state_none(hass):
+    """Test with none state."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        test_switch = {
+            "command_on": f"echo 1 > {path}",
+            "command_off": f"echo 0 > {path}",
+        }
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            {
+                "switch": {
+                    "platform": "command_line",
+                    "switches": {"test": test_switch},
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
+
+        state = hass.states.get("switch.test")
+        assert STATE_ON == state.state
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
+
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
 
 
-# pylint: disable=invalid-name
-class TestCommandSwitch(unittest.TestCase):
-    """Test the command switch."""
+async def test_state_value(hass):
+    """Test with state value."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        test_switch = {
+            "command_state": f"cat {path}",
+            "command_on": f"echo 1 > {path}",
+            "command_off": f"echo 0 > {path}",
+            "value_template": '{{ value=="1" }}',
+        }
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            {
+                "switch": {
+                    "platform": "command_line",
+                    "switches": {"test": test_switch},
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
 
-    def test_state_none(self):
-        """Test with none state."""
-        with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, "switch_status")
-            test_switch = {
-                "command_on": "echo 1 > {}".format(path),
-                "command_off": "echo 0 > {}".format(path),
-            }
-            assert setup_component(
-                self.hass,
-                switch.DOMAIN,
-                {
-                    "switch": {
-                        "platform": "command_line",
-                        "switches": {"test": test_switch},
-                    }
-                },
-            )
+        state = hass.states.get("switch.test")
+        assert STATE_ON == state.state
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
 
-            common.turn_on(self.hass, "switch.test")
-            self.hass.block_till_done()
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_ON == state.state
 
-            common.turn_off(self.hass, "switch.test")
-            self.hass.block_till_done()
+async def test_state_json_value(hass):
+    """Test with state JSON value."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        oncmd = json.dumps({"status": "ok"})
+        offcmd = json.dumps({"status": "nope"})
+        test_switch = {
+            "command_state": f"cat {path}",
+            "command_on": f"echo '{oncmd}' > {path}",
+            "command_off": f"echo '{offcmd}' > {path}",
+            "value_template": '{{ value_json.status=="ok" }}',
+        }
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            {
+                "switch": {
+                    "platform": "command_line",
+                    "switches": {"test": test_switch},
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
 
-    def test_state_value(self):
-        """Test with state value."""
-        with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, "switch_status")
-            test_switch = {
-                "command_state": "cat {}".format(path),
-                "command_on": "echo 1 > {}".format(path),
-                "command_off": "echo 0 > {}".format(path),
-                "value_template": '{{ value=="1" }}',
-            }
-            assert setup_component(
-                self.hass,
-                switch.DOMAIN,
-                {
-                    "switch": {
-                        "platform": "command_line",
-                        "switches": {"test": test_switch},
-                    }
-                },
-            )
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
+        state = hass.states.get("switch.test")
+        assert STATE_ON == state.state
 
-            common.turn_on(self.hass, "switch.test")
-            self.hass.block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_ON == state.state
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
 
-            common.turn_off(self.hass, "switch.test")
-            self.hass.block_till_done()
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
+async def test_state_code(hass):
+    """Test with state code."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        test_switch = {
+            "command_state": f"cat {path}",
+            "command_on": f"echo 1 > {path}",
+            "command_off": f"echo 0 > {path}",
+        }
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            {
+                "switch": {
+                    "platform": "command_line",
+                    "switches": {"test": test_switch},
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-    def test_state_json_value(self):
-        """Test with state JSON value."""
-        with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, "switch_status")
-            oncmd = json.dumps({"status": "ok"})
-            offcmd = json.dumps({"status": "nope"})
-            test_switch = {
-                "command_state": "cat {}".format(path),
-                "command_on": "echo '{}' > {}".format(oncmd, path),
-                "command_off": "echo '{}' > {}".format(offcmd, path),
-                "value_template": '{{ value_json.status=="ok" }}',
-            }
-            assert setup_component(
-                self.hass,
-                switch.DOMAIN,
-                {
-                    "switch": {
-                        "platform": "command_line",
-                        "switches": {"test": test_switch},
-                    }
-                },
-            )
+        state = hass.states.get("switch.test")
+        assert STATE_OFF == state.state
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
 
-            common.turn_on(self.hass, "switch.test")
-            self.hass.block_till_done()
+        state = hass.states.get("switch.test")
+        assert STATE_ON == state.state
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_ON == state.state
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
 
-            common.turn_off(self.hass, "switch.test")
-            self.hass.block_till_done()
+        state = hass.states.get("switch.test")
+        assert STATE_ON == state.state
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
 
-    def test_state_code(self):
-        """Test with state code."""
-        with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, "switch_status")
-            test_switch = {
-                "command_state": "cat {}".format(path),
-                "command_on": "echo 1 > {}".format(path),
-                "command_off": "echo 0 > {}".format(path),
-            }
-            assert setup_component(
-                self.hass,
-                switch.DOMAIN,
-                {
-                    "switch": {
-                        "platform": "command_line",
-                        "switches": {"test": test_switch},
-                    }
-                },
-            )
+def test_assumed_state_should_be_true_if_command_state_is_none(hass):
+    """Test with state value."""
+    # args: hass, device_name, friendly_name, command_on, command_off,
+    #       command_state, value_template
+    init_args = [
+        hass,
+        "test_device_name",
+        "Test friendly name!",
+        "echo 'on command'",
+        "echo 'off command'",
+        None,
+        None,
+        15,
+    ]
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_OFF == state.state
+    no_state_device = command_line.CommandSwitch(*init_args)
+    assert no_state_device.assumed_state
 
-            common.turn_on(self.hass, "switch.test")
-            self.hass.block_till_done()
+    # Set state command
+    init_args[-3] = "cat {}"
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_ON == state.state
+    state_device = command_line.CommandSwitch(*init_args)
+    assert not state_device.assumed_state
 
-            common.turn_off(self.hass, "switch.test")
-            self.hass.block_till_done()
 
-            state = self.hass.states.get("switch.test")
-            assert STATE_ON == state.state
+def test_entity_id_set_correctly(hass):
+    """Test that entity_id is set correctly from object_id."""
+    init_args = [
+        hass,
+        "test_device_name",
+        "Test friendly name!",
+        "echo 'on command'",
+        "echo 'off command'",
+        False,
+        None,
+        15,
+    ]
 
-    def test_assumed_state_should_be_true_if_command_state_is_none(self):
-        """Test with state value."""
-        # args: hass, device_name, friendly_name, command_on, command_off,
-        #       command_state, value_template
-        init_args = [
-            self.hass,
-            "test_device_name",
-            "Test friendly name!",
-            "echo 'on command'",
-            "echo 'off command'",
-            None,
-            None,
-        ]
-
-        no_state_device = command_line.CommandSwitch(*init_args)
-        assert no_state_device.assumed_state
-
-        # Set state command
-        init_args[-2] = "cat {}"
-
-        state_device = command_line.CommandSwitch(*init_args)
-        assert not state_device.assumed_state
-
-    def test_entity_id_set_correctly(self):
-        """Test that entity_id is set correctly from object_id."""
-        init_args = [
-            self.hass,
-            "test_device_name",
-            "Test friendly name!",
-            "echo 'on command'",
-            "echo 'off command'",
-            False,
-            None,
-        ]
-
-        test_switch = command_line.CommandSwitch(*init_args)
-        assert test_switch.entity_id == "switch.test_device_name"
-        assert test_switch.name == "Test friendly name!"
+    test_switch = command_line.CommandSwitch(*init_args)
+    assert test_switch.entity_id == "switch.test_device_name"
+    assert test_switch.name == "Test friendly name!"

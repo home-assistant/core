@@ -1,12 +1,9 @@
 """Config flow to configure the AdGuard Home integration."""
-from distutils.version import LooseVersion
-import logging
-
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.adguard.const import DOMAIN, MIN_ADGUARD_HOME_VERSION
+from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
@@ -18,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @config_entries.HANDLERS.register(DOMAIN)
 class AdGuardHomeFlowHandler(ConfigFlow):
@@ -29,10 +24,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     _hassio_discovery = None
-
-    def __init__(self):
-        """Initialize AgGuard Home flow."""
-        pass
 
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
@@ -83,19 +74,10 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         )
 
         try:
-            version = await adguard.version()
+            await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
-
-        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
-            return self.async_abort(
-                reason="adguard_home_outdated",
-                description_placeholders={
-                    "current_version": version,
-                    "minimal_version": MIN_ADGUARD_HOME_VERSION,
-                },
-            )
 
         return self.async_create_entry(
             title=user_input[CONF_HOST],
@@ -109,7 +91,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             },
         )
 
-    async def async_step_hassio(self, user_input=None):
+    async def async_step_hassio(self, discovery_info):
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
@@ -117,14 +99,14 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         entries = self._async_current_entries()
 
         if not entries:
-            self._hassio_discovery = user_input
+            self._hassio_discovery = discovery_info
             return await self.async_step_hassio_confirm()
 
         cur_entry = entries[0]
 
         if (
-            cur_entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and cur_entry.data[CONF_PORT] == user_input[CONF_PORT]
+            cur_entry.data[CONF_HOST] == discovery_info[CONF_HOST]
+            and cur_entry.data[CONF_PORT] == discovery_info[CONF_PORT]
         ):
             return self.async_abort(reason="single_instance_allowed")
 
@@ -137,8 +119,8 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             cur_entry,
             data={
                 **cur_entry.data,
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
+                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_PORT: discovery_info[CONF_PORT],
             },
         )
 
@@ -164,19 +146,10 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         )
 
         try:
-            version = await adguard.version()
+            await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_hassio_form(errors)
-
-        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
-            return self.async_abort(
-                reason="adguard_home_addon_outdated",
-                description_placeholders={
-                    "current_version": version,
-                    "minimal_version": MIN_ADGUARD_HOME_VERSION,
-                },
-            )
 
         return self.async_create_entry(
             title=self._hassio_discovery["addon"],

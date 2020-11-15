@@ -15,10 +15,10 @@ from .const import DOMAIN, HOME_LOCATION_NAME
 @callback
 def smhi_locations(hass: HomeAssistant):
     """Return configurations of SMHI component."""
-    return set(
+    return {
         (slugify(entry.data[CONF_NAME]))
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)

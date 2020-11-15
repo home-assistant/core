@@ -5,7 +5,7 @@ from august.activity import ActivityType
 from august.lock import LockStatus
 from august.util import update_lock_detail_from_activity
 
-from homeassistant.components.lock import ATTR_CHANGED_BY, LockDevice
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
+class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
     def __init__(self, data, device):

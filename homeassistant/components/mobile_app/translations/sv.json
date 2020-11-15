@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "\u00d6ppna mobilappen f\u00f6r att konfigurera integrationen med Home Assistant. Se [docs] ({apps_url}) f\u00f6r en lista \u00f6ver kompatibla appar."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du konfigurera komponenten Mobile App?"
+            }
+        }
+    }
+}

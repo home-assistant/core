@@ -2,7 +2,6 @@
   "domain": "rss_feed_template",
   "name": "RSS Feed Template",
   "documentation": "https://www.home-assistant.io/integrations/rss_feed_template",
-  "requirements": [],
   "dependencies": ["http"],
   "codeowners": [],
   "quality_scale": "internal"

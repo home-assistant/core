@@ -19,7 +19,7 @@ ATTR_USERNAME = "username"
 DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = "mdi:message-settings-variant"
+ICON = "mdi:message-cog"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -98,7 +98,7 @@ class GitterSensor(Entity):
             _LOGGER.error(error)
             return
 
-        if "error" not in data.keys():
+        if "error" not in data:
             self._mention = len(data["mention"])
             self._state = len(data["chat"])
         else:

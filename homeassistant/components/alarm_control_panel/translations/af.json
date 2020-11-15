@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "Gewapen",
+            "armed_away": "Gewapend weg",
+            "armed_custom_bypass": "Gewapende pasgemaakte omseil",
+            "armed_home": "Gewapend tuis",
+            "armed_night": "Gewapend nag",
+            "arming": "Bewapen Tans",
+            "disarmed": "Ontwapen",
+            "disarming": "Ontwapen Tans",
+            "pending": "Hangende",
+            "triggered": "Geaktiveer"
+        }
+    },
+    "title": "Alarm beheer paneel"
+}

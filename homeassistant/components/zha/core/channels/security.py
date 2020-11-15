@@ -5,9 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import asyncio
-import logging
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
@@ -23,14 +22,10 @@ from ..const import (
 )
 from .base import ZigbeeChannel
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
-
-    pass
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
@@ -153,11 +148,20 @@ class IASZoneChannel(ZigbeeChannel):
                 self._cluster.ep_attribute,
                 res[0],
             )
-        except DeliveryError as ex:
+        except ZigbeeException as ex:
             self.debug(
                 "Failed to write cie_addr: %s to '%s' cluster: %s",
                 str(ieee),
                 self._cluster.ep_attribute,
+                str(ex),
+            )
+
+        try:
+            self.debug("Sending pro-active IAS enroll response")
+            await self._cluster.enroll_response(0, 0)
+        except ZigbeeException as ex:
+            self.debug(
+                "Failed to send pro-active IAS enroll response: %s",
                 str(ex),
             )
         self.debug("finished IASZoneChannel configuration")

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este dispositivo j\u00e1 foi adicionado ao Home Assistant"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail (Opcional)"
+                }
+            }
+        }
+    }
+}

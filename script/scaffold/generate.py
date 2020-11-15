@@ -113,60 +113,62 @@ def _custom_tasks(template, info) -> None:
     elif template == "config_flow":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
-                    "user": {"title": "Connect to the device", "data": {"host": "Host"}}
+                    "user": {
+                        "data": {
+                            "host": "[%key:common::config_flow::data::host%]",
+                            "username": "[%key:common::config_flow::data::username%]",
+                            "password": "[%key:common::config_flow::data::password%]",
+                        },
+                    }
                 },
                 "error": {
-                    "cannot_connect": "Failed to connect, please try again",
-                    "invalid_auth": "Invalid authentication",
-                    "unknown": "Unexpected error",
+                    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+                    "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+                    "unknown": "[%key:common::config_flow::error::unknown%]",
                 },
-                "abort": {"already_configured": "Device is already configured"},
-            }
+                "abort": {
+                    "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+                },
+            },
         )
 
     elif template == "config_flow_discovery":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
                     "confirm": {
-                        "title": info.name,
-                        "description": f"Do you want to set up {info.name}?",
+                        "description": "[%key:common::config_flow::description::confirm_setup%]",
                     }
                 },
                 "abort": {
-                    "single_instance_allowed": f"Only a single configuration of {info.name} is possible.",
-                    "no_devices_found": f"No {info.name} devices found on the network.",
+                    "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+                    "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
                 },
-            }
+            },
         )
 
     elif template == "config_flow_oauth2":
-        info.update_manifest(config_flow=True)
+        info.update_manifest(config_flow=True, dependencies=["http"])
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
-                    "pick_implementation": {"title": "Pick Authentication Method"}
+                    "pick_implementation": {
+                        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+                    }
                 },
                 "abort": {
-                    "missing_configuration": "The {info.name} component is not configured. Please follow the documentation."
+                    "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+                    "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+                    "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
                 },
                 "create_entry": {
-                    "default": f"Successfully authenticated with {info.name}."
+                    "default": "[%key:common::config_flow::create_entry::authenticated%]"
                 },
-            }
-        )
-        _append(
-            info.integration_dir / "const.py",
-            """
-
-# TODO Update with your own urls
-OAUTH2_AUTHORIZE = "https://www.example.com/auth/authorize"
-OAUTH2_TOKEN = "https://www.example.com/auth/token"
-""",
+            },
         )

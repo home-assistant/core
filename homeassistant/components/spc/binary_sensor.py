@@ -1,24 +1,23 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
-import logging
+from pyspcwebgw.const import ZoneInput, ZoneType
 
-from pyspcwebgw.const import ZoneInput
-
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_API, SIGNAL_UPDATE_SENSOR
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def _get_device_class(zone_type):
-    from pyspcwebgw.const import ZoneType
-
     return {
-        ZoneType.ALARM: "motion",
-        ZoneType.ENTRY_EXIT: "opening",
-        ZoneType.FIRE: "smoke",
+        ZoneType.ALARM: DEVICE_CLASS_MOTION,
+        ZoneType.ENTRY_EXIT: DEVICE_CLASS_OPENING,
+        ZoneType.FIRE: DEVICE_CLASS_SMOKE,
         ZoneType.TECHNICAL: "power",
     }.get(zone_type)
 
@@ -37,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SpcBinarySensor(BinarySensorDevice):
+class SpcBinarySensor(BinarySensorEntity):
     """Representation of a sensor based on a SPC zone."""
 
     def __init__(self, zone):
@@ -46,8 +45,12 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_SENSOR.format(self._zone.id), self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_SENSOR.format(self._zone.id),
+                self._update_callback,
+            )
         )
 
     @callback

@@ -7,6 +7,7 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_BAD_REQUEST, HTTP_OK
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -90,15 +91,15 @@ def registration_context(registration: Dict) -> Context:
     return Context(user_id=registration[CONF_USER_ID])
 
 
-def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
+def empty_okay_response(headers: Dict = None, status: int = HTTP_OK) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
-        text="{}", status=status, content_type="application/json", headers=headers
+        text="{}", status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 
 def error_response(
-    code: str, message: str, status: int = 400, headers: dict = None
+    code: str, message: str, status: int = HTTP_BAD_REQUEST, headers: dict = None
 ) -> Response:
     """Return an error Response."""
     return json_response(
@@ -144,7 +145,7 @@ def savable_state(hass: HomeAssistantType) -> Dict:
 
 
 def webhook_response(
-    data, *, registration: Dict, status: int = 200, headers: Dict = None
+    data, *, registration: Dict, status: int = HTTP_OK, headers: Dict = None
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)
@@ -160,7 +161,7 @@ def webhook_response(
         data = json.dumps({"encrypted": True, "encrypted_data": enc_data})
 
     return Response(
-        text=data, status=status, content_type="application/json", headers=headers
+        text=data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 

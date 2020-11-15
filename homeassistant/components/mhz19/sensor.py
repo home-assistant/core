@@ -124,7 +124,7 @@ class MHZClient:
         """Initialize the sensor."""
         self.co2sensor = co2sens
         self._serial = serial
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

@@ -3,6 +3,5 @@
   "name": "P5 FutureNow",
   "documentation": "https://www.home-assistant.io/integrations/futurenow",
   "requirements": ["pyfnip==0.2"],
-  "dependencies": [],
   "codeowners": []
 }

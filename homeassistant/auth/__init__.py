@@ -2,7 +2,6 @@
 import asyncio
 from collections import OrderedDict
 from datetime import timedelta
-import logging
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
@@ -20,7 +19,6 @@ from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_REMOVED = "user_removed"
 
-_LOGGER = logging.getLogger(__name__)
 _MfaModuleDict = Dict[str, MultiFactorAuthModule]
 _ProviderKey = Tuple[str, Optional[str]]
 _ProviderDict = Dict[_ProviderKey, AuthProvider]
@@ -312,9 +310,7 @@ class AuthManager:
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
             # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(  # type: ignore
-                credentials
-            )
+            await provider.async_will_remove_credentials(credentials)  # type: ignore
 
         await self._store.async_remove_credentials(credentials)
 

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "step": {
+            "import_failed": {
+                "description": "No se puede configurar bridge (host: {host}) importado desde configuration.yaml.",
+                "title": "Error al importar la configuraci\u00f3n del bridge Cas\u00e9ta."
+            }
+        }
+    }
+}

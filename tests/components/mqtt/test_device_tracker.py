@@ -1,11 +1,11 @@
 """The tests for the MQTT device tracker platform."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 
@@ -43,7 +43,7 @@ async def test_new_message(hass, mock_device_tracker_conf):
     topic = "/location/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: topic}}}
     )
@@ -60,7 +60,7 @@ async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
     topic = "/location/room/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -79,7 +79,7 @@ async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
     topic = "/location/room/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -98,7 +98,7 @@ async def test_single_level_wildcard_topic_not_matching(hass, mock_device_tracke
     topic = "/location/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -117,7 +117,7 @@ async def test_multi_level_wildcard_topic_not_matching(hass, mock_device_tracker
     topic = "/somewhere/room/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -138,7 +138,7 @@ async def test_matching_custom_payload_for_home_and_not_home(
     payload_home = "present"
     payload_not_home = "not present"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -171,7 +171,7 @@ async def test_not_matching_custom_payload_for_home_and_not_home(
     payload_not_home = "not present"
     payload_not_matching = "test"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -198,7 +198,7 @@ async def test_matching_source_type(hass, mock_device_tracker_conf):
     source_type = SOURCE_TYPE_BLUETOOTH
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
         DOMAIN,

@@ -30,29 +30,34 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     APP_NAME_PREFIX,
     APP_OAUTH_CLIENT_NAME,
     APP_OAUTH_SCOPES,
-    CONF_APP_ID,
     CONF_CLOUDHOOK_URL,
     CONF_INSTALLED_APP_ID,
-    CONF_INSTALLED_APPS,
     CONF_INSTANCE_ID,
-    CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DATA_MANAGER,
     DOMAIN,
+    IGNORED_CAPABILITIES,
     SETTINGS_INSTANCE_ID,
     SIGNAL_SMARTAPP_PREFIX,
     STORAGE_KEY,
     STORAGE_VERSION,
+    SUBSCRIPTION_WARNING_LIMIT,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def format_unique_id(app_id: str, location_id: str) -> str:
+    """Format the unique id for a config entry."""
+    return f"{app_id}_{location_id}"
 
 
 async def find_app(hass: HomeAssistantType, api):
@@ -109,7 +114,11 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
 
 
 def _get_app_template(hass: HomeAssistantType):
-    endpoint = f"at {hass.config.api.base_url}"
+    try:
+        endpoint = f"at {get_url(hass, allow_cloud=False, prefer_external=True)}"
+    except NoURLAvailableError:
+        endpoint = ""
+
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"
@@ -258,7 +267,6 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID],
         # Will not be present if not enabled
         CONF_CLOUDHOOK_URL: config.get(CONF_CLOUDHOOK_URL),
-        CONF_INSTALLED_APPS: [],
     }
     _LOGGER.debug(
         "Setup endpoint for %s",
@@ -349,7 +357,26 @@ async def smartapp_sync_subscriptions(
     capabilities = set()
     for device in devices:
         capabilities.update(device.capabilities)
+    # Remove items not defined in the library
     capabilities.intersection_update(CAPABILITIES)
+    # Remove unused capabilities
+    capabilities.difference_update(IGNORED_CAPABILITIES)
+    capability_count = len(capabilities)
+    if capability_count > SUBSCRIPTION_WARNING_LIMIT:
+        _LOGGER.warning(
+            "Some device attributes may not receive push updates and there may be subscription "
+            "creation failures under app '%s' because %s subscriptions are required but "
+            "there is a limit of %s per app",
+            installed_app_id,
+            capability_count,
+            SUBSCRIPTION_WARNING_LIMIT,
+        )
+    _LOGGER.debug(
+        "Synchronizing subscriptions for %s capabilities under app '%s': %s",
+        capability_count,
+        installed_app_id,
+        capabilities,
+    )
 
     # Get current subscriptions and find differences
     subscriptions = await api.subscriptions(installed_app_id)
@@ -369,42 +396,44 @@ async def smartapp_sync_subscriptions(
         _LOGGER.debug("Subscriptions for app '%s' are up-to-date", installed_app_id)
 
 
-async def smartapp_install(hass: HomeAssistantType, req, resp, app):
-    """
-    Handle when a SmartApp is installed by the user into a location.
-
-    Create a config entry representing the installation if this is not
-    the first installation under the account, otherwise store the data
-    for the config flow.
-    """
-    install_data = {
-        CONF_INSTALLED_APP_ID: req.installed_app_id,
-        CONF_LOCATION_ID: req.location_id,
-        CONF_REFRESH_TOKEN: req.refresh_token,
-    }
-    # App attributes (client id/secret, etc...) are copied from another entry
-    # with the same parent app_id.  If one is not found, the install data is
-    # stored for the config flow to retrieve during the wait step.
-    entry = next(
+async def _continue_flow(
+    hass: HomeAssistantType,
+    app_id: str,
+    location_id: str,
+    installed_app_id: str,
+    refresh_token: str,
+):
+    """Continue a config flow if one is in progress for the specific installed app."""
+    unique_id = format_unique_id(app_id, location_id)
+    flow = next(
         (
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.data[CONF_APP_ID] == app.app_id
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["handler"] == DOMAIN and flow["context"]["unique_id"] == unique_id
         ),
         None,
     )
-    if entry:
-        data = entry.data.copy()
-        data.update(install_data)
-        # Add as job not needed because the current coroutine was invoked
-        # from the dispatcher and is not being awaited.
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "install"}, data=data
+    if flow is not None:
+        await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {
+                CONF_INSTALLED_APP_ID: installed_app_id,
+                CONF_REFRESH_TOKEN: refresh_token,
+            },
         )
-    else:
-        # Store the data where the flow can find it
-        hass.data[DOMAIN][CONF_INSTALLED_APPS].append(install_data)
+        _LOGGER.debug(
+            "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
+            flow["flow_id"],
+            installed_app_id,
+            app_id,
+        )
 
+
+async def smartapp_install(hass: HomeAssistantType, req, resp, app):
+    """Handle a SmartApp installation and continue the config flow."""
+    await _continue_flow(
+        hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
+    )
     _LOGGER.debug(
         "Installed SmartApp '%s' under parent app '%s'",
         req.installed_app_id,
@@ -413,12 +442,7 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
 
 
 async def smartapp_update(hass: HomeAssistantType, req, resp, app):
-    """
-    Handle when a SmartApp is updated (reconfigured) by the user.
-
-    Store the refresh token in the config entry.
-    """
-    # Update refresh token in config entry
+    """Handle a SmartApp update and either update the entry or continue the flow."""
     entry = next(
         (
             entry
@@ -431,7 +455,16 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_REFRESH_TOKEN: req.refresh_token}
         )
+        _LOGGER.debug(
+            "Updated config entry '%s' for SmartApp '%s' under parent app '%s'",
+            entry.entry_id,
+            req.installed_app_id,
+            app.app_id,
+        )
 
+    await _continue_flow(
+        hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
+    )
     _LOGGER.debug(
         "Updated SmartApp '%s' under parent app '%s'", req.installed_app_id, app.app_id
     )

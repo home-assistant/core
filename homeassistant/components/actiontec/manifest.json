@@ -2,7 +2,5 @@
   "domain": "actiontec",
   "name": "Actiontec",
   "documentation": "https://www.home-assistant.io/integrations/actiontec",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

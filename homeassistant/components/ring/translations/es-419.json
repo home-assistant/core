@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "C\u00f3digo de dos factores"
+                },
+                "title": "Autenticaci\u00f3n de dos factores"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                },
+                "title": "Iniciar sesi\u00f3n con cuenta de Ring"
+            }
+        }
+    }
+}

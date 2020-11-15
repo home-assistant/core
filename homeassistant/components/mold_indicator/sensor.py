@@ -10,15 +10,15 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,13 +90,11 @@ class MoldIndicator(Entity):
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._available = False
-        self._entities = set(
-            [
-                self._indoor_temp_sensor,
-                self._indoor_humidity_sensor,
-                self._outdoor_temp_sensor,
-            ]
-        )
+        self._entities = {
+            self._indoor_temp_sensor,
+            self._indoor_humidity_sensor,
+            self._outdoor_temp_sensor,
+        }
 
         self._dewpoint = None
         self._indoor_temp = None
@@ -108,8 +106,11 @@ class MoldIndicator(Entity):
         """Register callbacks."""
 
         @callback
-        def mold_indicator_sensors_state_listener(entity, old_state, new_state):
+        def mold_indicator_sensors_state_listener(event):
             """Handle for state changes for dependent sensors."""
+            new_state = event.data.get("new_state")
+            old_state = event.data.get("old_state")
+            entity = event.data.get("entity_id")
             _LOGGER.debug(
                 "Sensor state change for %s that had old state %s and new state %s",
                 entity,
@@ -125,8 +126,8 @@ class MoldIndicator(Entity):
             """Add listeners and get 1st state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            async_track_state_change(
-                self.hass, self._entities, mold_indicator_sensors_state_listener
+            async_track_state_change_event(
+                self.hass, list(self._entities), mold_indicator_sensors_state_listener
             )
 
             # Read initial state
@@ -246,7 +247,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        if unit != UNIT_PERCENTAGE:
+        if unit != PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -361,7 +362,7 @@ class MoldIndicator(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def state(self):

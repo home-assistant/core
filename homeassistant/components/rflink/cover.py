@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_OPEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -112,7 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices_from_config(config))
 
 
-class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
+class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
     async def async_added_to_hass(self):

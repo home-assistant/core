@@ -7,6 +7,5 @@
     "httplib2==0.10.3",
     "oauth2client==4.0.0"
   ],
-  "dependencies": [],
   "codeowners": []
 }

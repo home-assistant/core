@@ -64,9 +64,7 @@ PLATFORM_SCHEMA = vol.Schema(
                             vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE): vol.In(
                                 SCOPE_TYPES
                             ),
-                            vol.Optional(CONF_DEVICE): vol.All(
-                                vol.Coerce(int), vol.Range(min=0)
-                            ),
+                            vol.Optional(CONF_DEVICE): cv.positive_int,
                         }
                     ],
                 ),
@@ -186,7 +184,6 @@ class FroniusAdapter:
 
     async def _update(self):
         """Return values of interest."""
-        pass
 
     async def register(self, sensor):
         """Register child sensor for update subscriptions."""

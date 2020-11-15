@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Configura la integraci\u00f3 Dune HD. Si tens problemes durant la configuraci\u00f3, v\u00e9s a: https://www.home-assistant.io/integrations/dunehd\n\nAssegura't que el reproductor estigui engegat.",
+                "title": "Dune HD"
+            }
+        }
+    }
+}

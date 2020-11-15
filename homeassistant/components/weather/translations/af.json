@@ -1,0 +1,20 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Helder, nag",
+            "cloudy": "Bewolk",
+            "fog": "Mis",
+            "hail": "Hael",
+            "lightning": "Weerlig",
+            "lightning-rainy": "Weerlig, Re\u00ebnagtig",
+            "partlycloudy": "Gedeeltelik bewolk",
+            "pouring": "Stort",
+            "rainy": "Re\u00ebnagtig",
+            "snowy": "Sneeuagtig",
+            "snowy-rainy": "Ysre\u00ebn",
+            "sunny": "Sonnig",
+            "windy": "Winderig",
+            "windy-variant": "Winderig"
+        }
+    }
+}

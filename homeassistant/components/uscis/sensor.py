@@ -6,7 +6,7 @@ import uscisstatus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_FRIENDLY_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -17,7 +17,7 @@ DEFAULT_NAME = "USCIS"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required("case_id"): cv.string,
     }
 )
@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform in Home Assistant and Case Information."""
-    uscis = UscisSensor(config["case_id"], config[CONF_FRIENDLY_NAME])
+    uscis = UscisSensor(config["case_id"], config[CONF_NAME])
     uscis.update()
     if uscis.valid_case_id:
         add_entities([uscis])

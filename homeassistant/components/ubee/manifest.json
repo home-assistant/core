@@ -3,6 +3,5 @@
   "name": "Ubee Router",
   "documentation": "https://www.home-assistant.io/integrations/ubee",
   "requirements": ["pyubee==0.10"],
-  "dependencies": [],
   "codeowners": ["@mzdrale"]
 }

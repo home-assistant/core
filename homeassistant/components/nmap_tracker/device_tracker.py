@@ -109,7 +109,7 @@ class NmapDeviceScanner(DeviceScanner):
             last_results = []
             exclude_hosts = self.exclude
         if exclude_hosts:
-            options += " --exclude {}".format(",".join(exclude_hosts))
+            options += f" --exclude {','.join(exclude_hosts)}"
 
         try:
             result = scanner.scan(hosts=" ".join(self.hosts), arguments=options)

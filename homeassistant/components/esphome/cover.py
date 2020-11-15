@@ -1,5 +1,4 @@
 """Support for ESPHome covers."""
-import logging
 from typing import Optional
 
 from aioesphomeapi import CoverInfo, CoverOperation, CoverState
@@ -14,14 +13,12 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -39,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeCover(EsphomeEntity, CoverDevice):
+class EsphomeCover(EsphomeEntity, CoverEntity):
     """A cover implementation for ESPHome."""
 
     @property

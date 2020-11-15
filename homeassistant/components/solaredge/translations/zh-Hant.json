@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "site_id \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "site_exists": "site_id \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "name": "\u5b89\u88dd\u540d\u7a31",
+                    "site_id": "SolarEdge site-id"
+                },
+                "title": "\u8a2d\u5b9a API \u53c3\u6578"
+            }
+        }
+    }
+}

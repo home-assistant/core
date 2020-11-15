@@ -6,25 +6,32 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BAD_REQUEST,
+    HTTP_OK,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BODY_OFF = "body_off"
 CONF_BODY_ON = "body_on"
 CONF_IS_ON_TEMPLATE = "is_on_template"
+CONF_STATE_RESOURCE = "state_resource"
 
 DEFAULT_METHOD = "post"
 DEFAULT_BODY_OFF = "OFF"
@@ -38,7 +45,9 @@ SUPPORT_REST_METHODS = ["post", "put"]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
+        vol.Optional(CONF_STATE_RESOURCE): cv.url,
         vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+        vol.Optional(CONF_PARAMS): {cv.string: cv.string},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
         vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
@@ -56,15 +65,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the RESTful switch."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
+    state_resource = config.get(CONF_STATE_RESOURCE) or resource
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
     auth = None
@@ -83,8 +97,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         switch = RestSwitch(
             name,
             resource,
+            state_resource,
             method,
             headers,
+            params,
             auth,
             body_on,
             body_off,
@@ -94,7 +110,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
         req = await switch.get_device_state(hass)
-        if req.status >= 400:
+        if req.status >= HTTP_BAD_REQUEST:
             _LOGGER.error("Got non-ok response from resource: %s", req.status)
         else:
             async_add_entities([switch])
@@ -107,15 +123,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("No route to resource/endpoint: %s", resource)
 
 
-class RestSwitch(SwitchDevice):
+class RestSwitch(SwitchEntity):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(
         self,
         name,
         resource,
+        state_resource,
         method,
         headers,
+        params,
         auth,
         body_on,
         body_off,
@@ -127,8 +145,10 @@ class RestSwitch(SwitchDevice):
         self._state = None
         self._name = name
         self._resource = resource
+        self._state_resource = state_resource
         self._method = method
         self._headers = headers
+        self._params = params
         self._auth = auth
         self._body_on = body_on
         self._body_off = body_off
@@ -148,12 +168,12 @@ class RestSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        body_on_t = self._body_on.async_render()
+        body_on_t = self._body_on.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status == 200:
+            if req.status == HTTP_OK:
                 self._state = True
             else:
                 _LOGGER.error(
@@ -164,11 +184,11 @@ class RestSwitch(SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        body_off_t = self._body_off.async_render()
+        body_off_t = self._body_off.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status == 200:
+            if req.status == HTTP_OK:
                 self._state = False
             else:
                 _LOGGER.error(
@@ -187,6 +207,7 @@ class RestSwitch(SwitchDevice):
                 auth=self._auth,
                 data=bytes(body, "utf-8"),
                 headers=self._headers,
+                params=self._params,
             )
             return req
 
@@ -205,7 +226,10 @@ class RestSwitch(SwitchDevice):
 
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
-                self._resource, auth=self._auth, headers=self._headers
+                self._state_resource,
+                auth=self._auth,
+                headers=self._headers,
+                params=self._params,
             )
             text = await req.text()
 

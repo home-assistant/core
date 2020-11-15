@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave \u00e4r redan konfigurerat"
+        },
+        "error": {
+            "option_error": "Z-Wave-valideringen misslyckades. \u00c4r s\u00f6kv\u00e4gen till USB-minnet korrekt?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "N\u00e4tverksnyckel (l\u00e4mna blank f\u00f6r automatisk generering)",
+                    "usb_path": "USB-s\u00f6kv\u00e4g"
+                },
+                "description": "Se https://www.home-assistant.io/docs/z-wave/installation/ f\u00f6r information om konfigurationsvariabler",
+                "title": "St\u00e4lla in Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "D\u00f6d",
+            "initializing": "Initierar",
+            "ready": "Redo",
+            "sleeping": "Sovande"
+        },
+        "query_stage": {
+            "dead": "D\u00f6d ({query_stage})",
+            "initializing": "Initierar ({query_stage})"
+        }
+    }
+}

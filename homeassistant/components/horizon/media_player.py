@@ -7,7 +7,7 @@ from horimote.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -71,14 +71,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except OSError as msg:
         # occurs if horizon box is offline
         _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
-        raise PlatformNotReady
+        raise PlatformNotReady from msg
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 
     add_entities([HorizonDevice(client, name, keys)], True)
 
 
-class HorizonDevice(MediaPlayerDevice):
+class HorizonDevice(MediaPlayerEntity):
     """Representation of a Horizon HD Recorder."""
 
     def __init__(self, client, name, remote_keys):
@@ -116,12 +116,12 @@ class HorizonDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the device on."""
-        if self._state is STATE_OFF:
+        if self._state == STATE_OFF:
             self._send_key(self._keys.POWER)
 
     def turn_off(self):
         """Turn the device off."""
-        if self._state is not STATE_OFF:
+        if self._state != STATE_OFF:
             self._send_key(self._keys.POWER)
 
     def media_previous_track(self):

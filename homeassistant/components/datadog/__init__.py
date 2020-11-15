@@ -45,10 +45,10 @@ def setup(hass, config):
     """Set up the Datadog component."""
 
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    sample_rate = conf.get(CONF_RATE)
-    prefix = conf.get(CONF_PREFIX)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    sample_rate = conf[CONF_RATE]
+    prefix = conf[CONF_PREFIX]
 
     initialize(statsd_host=host, statsd_port=port)
 
@@ -75,9 +75,6 @@ def setup(hass, config):
         if state is None or state.state == STATE_UNKNOWN:
             return
 
-        if state.attributes.get("hidden") is True:
-            return
-
         states = dict(state.attributes)
         metric = f"{prefix}.{state.domain}"
         tags = [f"entity:{state.entity_id}"]
@@ -85,6 +82,7 @@ def setup(hass, config):
         for key, value in states.items():
             if isinstance(value, (float, int)):
                 attribute = f"{metric}.{key.replace(' ', '_')}"
+                value = int(value) if isinstance(value, bool) else value
                 statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
 
                 _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)

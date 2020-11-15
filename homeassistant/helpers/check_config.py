@@ -40,7 +40,7 @@ class CheckConfigError(NamedTuple):
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors: List[CheckConfigError] = attr.ib(default=attr.Factory(list))
+    errors: List[CheckConfigError] = attr.ib(factory=list)
 
     def add_error(
         self,
@@ -107,7 +107,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = set(key.split(" ")[0] for key in config.keys())
+    components = {key.split(" ")[0] for key in config.keys()}
 
     # Process and validate config
     for domain in components:

@@ -1,7 +1,7 @@
 """Support for control of Elk-M1 connected thermostats."""
 from elkm1_lib.const import ThermostatFan, ThermostatMode, ThermostatSetting
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import PRECISION_WHOLE, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PRECISION_WHOLE, STATE_ON
 
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class ElkThermostat(ElkEntity, ClimateDevice):
+class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
     def __init__(self, element, elk, elk_data):
@@ -55,7 +55,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the temperature unit."""
-        return TEMP_FAHRENHEIT if self._temperature_unit == "F" else TEMP_CELSIUS
+        return self._temperature_unit
 
     @property
     def current_temperature(self):

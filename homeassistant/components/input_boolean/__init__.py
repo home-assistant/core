@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     storage_collection = InputBooleanStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}_storage_collection"),
+        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.attach_entity_component_collection(
@@ -198,12 +198,12 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         self._state = False
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""

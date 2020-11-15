@@ -15,6 +15,12 @@ homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
 
+# Home Assistant Supervisor
+build.json @home-assistant/supervisor
+machine/* @home-assistant/supervisor
+rootfs/* @home-assistant/supervisor
+Dockerfile @home-assistant/supervisor
+
 # Other code
 homeassistant/scripts/check_config.py @kellerza
 
@@ -48,11 +54,9 @@ def generate_and_validate(integrations: Dict[str, Integration]):
                     "codeowners", "Code owners need to be valid GitHub handles."
                 )
 
-        parts.append(
-            "homeassistant/components/{}/* {}".format(domain, " ".join(codeowners))
-        )
+        parts.append(f"homeassistant/components/{domain}/* {' '.join(codeowners)}")
 
-    parts.append("\n" + INDIVIDUAL_FILES.strip())
+    parts.append(f"\n{INDIVIDUAL_FILES.strip()}")
 
     return "\n".join(parts)
 
@@ -62,7 +66,10 @@ def validate(integrations: Dict[str, Integration], config: Config):
     codeowners_path = config.root / "CODEOWNERS"
     config.cache["codeowners"] = content = generate_and_validate(integrations)
 
-    with open(str(codeowners_path), "r") as fp:
+    if config.specific_integrations:
+        return
+
+    with open(str(codeowners_path)) as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "codeowners",
@@ -76,4 +83,4 @@ def generate(integrations: Dict[str, Integration], config: Config):
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     with open(str(codeowners_path), "w") as fp:
-        fp.write(config.cache["codeowners"] + "\n")
+        fp.write(f"{config.cache['codeowners']}\n")

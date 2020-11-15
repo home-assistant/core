@@ -3,7 +3,5 @@
   "name": "Local IP Address",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_ip",
-  "dependencies": [],
-  "codeowners": ["@issacg"],
-  "requirements": []
+  "codeowners": ["@issacg"]
 }

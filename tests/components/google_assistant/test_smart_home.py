@@ -1,6 +1,4 @@
 """Test Google Smart Home."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant.components import camera
@@ -11,7 +9,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
-from homeassistant.components.demo.light import DemoLight
+from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
@@ -22,6 +20,7 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, State
 from homeassistant.helpers import device_registry
@@ -29,12 +28,8 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import (
-    mock_area_registry,
-    mock_coro,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.async_mock import patch
+from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -53,7 +48,14 @@ def registries(hass):
 
 async def test_sync_message(hass):
     """Test a sync message."""
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = "light.demo_light"
     await light.async_update_ha_state()
@@ -100,10 +102,37 @@ async def test_sync_message(hass):
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
                         trait.TRAIT_COLOR_SETTING,
+                        trait.TRAIT_MODES,
                     ],
                     "type": const.TYPE_LIGHT,
                     "willReportState": False,
                     "attributes": {
+                        "availableModes": [
+                            {
+                                "name": "effect",
+                                "name_values": [
+                                    {"lang": "en", "name_synonym": ["effect"]}
+                                ],
+                                "ordered": False,
+                                "settings": [
+                                    {
+                                        "setting_name": "rainbow",
+                                        "setting_values": [
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["rainbow"],
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "setting_name": "none",
+                                        "setting_values": [
+                                            {"lang": "en", "setting_synonym": ["none"]}
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
                         "colorModel": "hsv",
                         "colorTemperatureRange": {
                             "temperatureMinK": 2000,
@@ -137,7 +166,14 @@ async def test_sync_in_area(hass, registries):
         "light", "test", "1235", suggested_object_id="demo_light", device_id=device.id
     )
 
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = entity.entity_id
     await light.async_update_ha_state()
@@ -167,10 +203,37 @@ async def test_sync_in_area(hass, registries):
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
                         trait.TRAIT_COLOR_SETTING,
+                        trait.TRAIT_MODES,
                     ],
                     "type": const.TYPE_LIGHT,
                     "willReportState": False,
                     "attributes": {
+                        "availableModes": [
+                            {
+                                "name": "effect",
+                                "name_values": [
+                                    {"lang": "en", "name_synonym": ["effect"]}
+                                ],
+                                "ordered": False,
+                                "settings": [
+                                    {
+                                        "setting_name": "rainbow",
+                                        "setting_values": [
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["rainbow"],
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "setting_name": "none",
+                                        "setting_values": [
+                                            {"lang": "en", "setting_synonym": ["none"]}
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
                         "colorModel": "hsv",
                         "colorTemperatureRange": {
                             "temperatureMinK": 2000,
@@ -191,7 +254,14 @@ async def test_sync_in_area(hass, registries):
 
 async def test_query_message(hass):
     """Test a sync message."""
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = "light.demo_light"
     await light.async_update_ha_state()
@@ -262,6 +332,8 @@ async def test_query_message(hass):
         },
     }
 
+    await hass.async_block_till_done()
+
     assert len(events) == 4
     assert events[0].event_type == EVENT_QUERY_RECEIVED
     assert events[0].data == {
@@ -292,6 +364,7 @@ async def test_query_message(hass):
 async def test_execute(hass):
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
@@ -338,8 +411,6 @@ async def test_execute(hass):
         },
         const.SOURCE_CLOUD,
     )
-
-    print(result)
 
     assert result == {
         "requestId": REQ_ID,
@@ -559,7 +630,14 @@ async def test_serialize_input_boolean(hass):
 
 async def test_unavailable_state_does_sync(hass):
     """Test that an unavailable entity does sync over."""
-    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+        effect_list=LIGHT_EFFECT_LIST,
+        effect=LIGHT_EFFECT_LIST[0],
+    )
     light.hass = hass
     light.entity_id = "light.demo_light"
     light._available = False  # pylint: disable=protected-access
@@ -588,10 +666,37 @@ async def test_unavailable_state_does_sync(hass):
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
                         trait.TRAIT_COLOR_SETTING,
+                        trait.TRAIT_MODES,
                     ],
                     "type": const.TYPE_LIGHT,
                     "willReportState": False,
                     "attributes": {
+                        "availableModes": [
+                            {
+                                "name": "effect",
+                                "name_values": [
+                                    {"lang": "en", "name_synonym": ["effect"]}
+                                ],
+                                "ordered": False,
+                                "settings": [
+                                    {
+                                        "setting_name": "rainbow",
+                                        "setting_values": [
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["rainbow"],
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "setting_name": "none",
+                                        "setting_values": [
+                                            {"lang": "en", "setting_synonym": ["none"]}
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
                         "colorModel": "hsv",
                         "colorTemperatureRange": {
                             "temperatureMinK": 2000,
@@ -690,7 +795,10 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {"queryOnlyOpenClose": True},
+                    "attributes": {
+                        "queryOnlyOpenClose": True,
+                        "discreteOnlyOpenClose": True,
+                    },
                     "id": "binary_sensor.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
@@ -746,8 +854,10 @@ async def test_device_class_cover(hass, device_class, google_type):
 @pytest.mark.parametrize(
     "device_class,google_type",
     [
-        ("non_existing_class", "action.devices.types.SWITCH"),
+        ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
+        ("speaker", "action.devices.types.SPEAKER"),
+        ("receiver", "action.devices.types.AUDIO_VIDEO_RECEIVER"),
     ],
 )
 async def test_device_media_player(hass, device_class, google_type):
@@ -771,10 +881,16 @@ async def test_device_media_player(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {
+                        "supportActivityState": True,
+                        "supportPlaybackState": True,
+                    },
                     "id": sensor.entity_id,
                     "name": {"name": sensor.name},
-                    "traits": ["action.devices.traits.OnOff"],
+                    "traits": [
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.MediaState",
+                    ],
                     "type": google_type,
                     "willReportState": False,
                 }
@@ -788,9 +904,7 @@ async def test_query_disconnect(hass):
     config = MockConfig(hass=hass)
     config.async_enable_report_state()
     assert config._unsub_report_state is not None
-    with patch.object(
-        config, "async_disconnect_agent_user", side_effect=mock_coro
-    ) as mock_disconnect:
+    with patch.object(config, "async_disconnect_agent_user") as mock_disconnect:
         result = await sh.async_handle_message(
             hass,
             config,
@@ -804,14 +918,17 @@ async def test_query_disconnect(hass):
 
 async def test_trait_execute_adding_query_data(hass):
     """Test a trait execute influencing query data."""
-    hass.config.api = Mock(base_url="http://1.1.1.1:8123")
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
     hass.states.async_set(
         "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
     )
 
     with patch(
         "homeassistant.components.camera.async_request_stream",
-        return_value=mock_coro("/api/streams/bla"),
+        return_value="/api/streams/bla",
     ):
         result = await sh.async_handle_message(
             hass,
@@ -858,7 +975,8 @@ async def test_trait_execute_adding_query_data(hass):
                     "status": "SUCCESS",
                     "states": {
                         "online": True,
-                        "cameraStreamAccessUrl": "http://1.1.1.1:8123/api/streams/bla",
+                        "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
+                        "cameraStreamReceiverAppId": "B12CE3CA",
                     },
                 }
             ]
@@ -1016,4 +1134,119 @@ async def test_reachable_devices(hass):
     assert result == {
         "requestId": REQ_ID,
         "payload": {"devices": [{"verificationId": "light.ceiling_lights"}]},
+    }
+
+
+async def test_sync_message_recovery(hass, caplog):
+    """Test a sync message recovers from bad entities."""
+    light = DemoLight(
+        None,
+        "Demo Light",
+        state=False,
+        hs_color=(180, 75),
+    )
+    light.hass = hass
+    light.entity_id = "light.demo_light"
+    await light.async_update_ha_state()
+
+    hass.states.async_set(
+        "light.bad_light",
+        "on",
+        {
+            "min_mireds": "badvalue",
+            "supported_features": hass.components.light.SUPPORT_COLOR_TEMP,
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "agentUserId": "test-agent",
+            "devices": [
+                {
+                    "id": "light.demo_light",
+                    "name": {"name": "Demo Light"},
+                    "attributes": {
+                        "colorModel": "hsv",
+                        "colorTemperatureRange": {
+                            "temperatureMaxK": 6535,
+                            "temperatureMinK": 2000,
+                        },
+                    },
+                    "traits": [
+                        "action.devices.traits.Brightness",
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.ColorSetting",
+                    ],
+                    "willReportState": False,
+                    "type": "action.devices.types.LIGHT",
+                },
+            ],
+        },
+    }
+
+    assert "Error serializing light.bad_light" in caplog.text
+
+
+async def test_query_recover(hass, caplog):
+    """Test that we recover if an entity raises during query."""
+
+    hass.states.async_set(
+        "light.good",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": 50,
+        },
+    )
+    hass.states.async_set(
+        "light.bad",
+        "on",
+        {
+            "supported_features": hass.components.light.SUPPORT_BRIGHTNESS,
+            "brightness": "shoe",
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.QUERY",
+                    "payload": {
+                        "devices": [
+                            {"id": "light.good"},
+                            {"id": "light.bad"},
+                        ]
+                    },
+                }
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+
+    assert (
+        f"Unexpected error serializing query for {hass.states.get('light.bad')}"
+        in caplog.text
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "devices": {
+                "light.bad": {"online": False},
+                "light.good": {"on": True, "online": True, "brightness": 19},
+            }
+        },
     }

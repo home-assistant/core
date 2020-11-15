@@ -3,8 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from asynctest import mock
-from asynctest.mock import call, patch
 import pytest
 from samsungctl import exceptions
 from samsungtvws.exceptions import ConnectionFailure
@@ -54,6 +52,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
@@ -98,7 +97,7 @@ MOCK_CALLS_ENTRY_WS = {
     "host": "fake",
     "name": "HomeAssistant",
     "port": 8001,
-    "timeout": 1,
+    "timeout": 8,
     "token": "abcde",
 }
 
@@ -120,9 +119,9 @@ def remote_fixture():
     ) as socket1, patch(
         "homeassistant.components.samsungtv.socket"
     ) as socket2:
-        remote = mock.Mock()
-        remote.__enter__ = mock.Mock()
-        remote.__exit__ = mock.Mock()
+        remote = Mock()
+        remote.__enter__ = Mock()
+        remote.__exit__ = Mock()
         remote_class.return_value = remote
         socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
@@ -139,10 +138,11 @@ def remotews_fixture():
     ) as socket1, patch(
         "homeassistant.components.samsungtv.socket"
     ) as socket2:
-        remote = mock.Mock()
-        remote.__enter__ = mock.Mock()
-        remote.__exit__ = mock.Mock()
+        remote = Mock()
+        remote.__enter__ = Mock()
+        remote.__exit__ = Mock()
         remote_class.return_value = remote
+        remote_class().__enter__().token = "FAKE_TOKEN"
         socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
@@ -184,11 +184,11 @@ async def test_setup_without_turnon(hass, remote):
 async def test_setup_websocket(hass, remotews, mock_now):
     """Test setup of platform."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
-        enter = mock.Mock()
-        type(enter).token = mock.PropertyMock(return_value="987654321")
-        remote = mock.Mock()
-        remote.__enter__ = mock.Mock(return_value=enter)
-        remote.__exit__ = mock.Mock()
+        enter = Mock()
+        type(enter).token = PropertyMock(return_value="987654321")
+        remote = Mock()
+        remote.__enter__ = Mock(return_value=enter)
+        remote.__exit__ = Mock()
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
@@ -203,7 +203,9 @@ async def test_setup_websocket_2(hass, mock_now):
     entity_id = f"{DOMAIN}.fake"
 
     entry = MockConfigEntry(
-        domain=SAMSUNGTV_DOMAIN, data=MOCK_ENTRY_WS, unique_id=entity_id,
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS,
+        unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 
@@ -246,7 +248,7 @@ async def test_update_off(hass, remote, mock_now):
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
+        side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
 
         next_update = mock_now + timedelta(minutes=5)
@@ -282,7 +284,7 @@ async def test_update_connection_failure(hass, remotews, mock_now):
     """Testing update tv connection failure exception."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
+        side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
@@ -308,7 +310,7 @@ async def test_update_unhandled_response(hass, remote, mock_now):
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[exceptions.UnhandledResponse("Boom"), mock.DEFAULT],
+        side_effect=[exceptions.UnhandledResponse("Boom"), DEFAULT_MOCK],
     ):
 
         next_update = mock_now + timedelta(minutes=5)
@@ -338,7 +340,7 @@ async def test_send_key(hass, remote):
 async def test_send_key_broken_pipe(hass, remote):
     """Testing broken pipe Exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=BrokenPipeError("Boom"))
+    remote.control = Mock(side_effect=BrokenPipeError("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -349,8 +351,8 @@ async def test_send_key_broken_pipe(hass, remote):
 async def test_send_key_connection_closed_retry_succeed(hass, remote):
     """Test retry on connection closed."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(
-        side_effect=[exceptions.ConnectionClosed("Boom"), mock.DEFAULT, mock.DEFAULT]
+    remote.control = Mock(
+        side_effect=[exceptions.ConnectionClosed("Boom"), DEFAULT_MOCK, DEFAULT_MOCK]
     )
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -370,7 +372,7 @@ async def test_send_key_connection_closed_retry_succeed(hass, remote):
 async def test_send_key_unhandled_response(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=exceptions.UnhandledResponse("Boom"))
+    remote.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -381,7 +383,7 @@ async def test_send_key_unhandled_response(hass, remote):
 async def test_send_key_websocketexception(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=WebSocketException("Boom"))
+    remote.control = Mock(side_effect=WebSocketException("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -392,7 +394,7 @@ async def test_send_key_websocketexception(hass, remote):
 async def test_send_key_os_error(hass, remote):
     """Testing broken pipe Exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=OSError("Boom"))
+    remote.control = Mock(side_effect=OSError("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -466,7 +468,7 @@ async def test_turn_off_websocket(hass, remotews):
     """Test for turn_off."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
+        side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv(hass, MOCK_CONFIGWS)
         assert await hass.services.async_call(
@@ -492,7 +494,7 @@ async def test_turn_off_os_error(hass, remote, caplog):
     """Test for turn_off with OSError."""
     caplog.set_level(logging.DEBUG)
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.close = mock.Mock(side_effect=OSError("BOOM"))
+    remote.close = Mock(side_effect=OSError("BOOM"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -648,9 +650,7 @@ async def test_play_media(hass, remote):
 
 async def test_play_media_invalid_type(hass, remote):
     """Test for play_media with invalid media type."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
@@ -672,9 +672,7 @@ async def test_play_media_invalid_type(hass, remote):
 
 async def test_play_media_channel_as_string(hass, remote):
     """Test for play_media with invalid channel as string."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
@@ -696,9 +694,7 @@ async def test_play_media_channel_as_string(hass, remote):
 
 async def test_play_media_channel_as_non_positive(hass, remote):
     """Test for play_media with invalid channel as non positive integer."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
         assert await hass.services.async_call(
@@ -735,9 +731,7 @@ async def test_select_source(hass, remote):
 
 async def test_select_source_invalid_source(hass, remote):
     """Test for select_source with invalid source."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
         assert await hass.services.async_call(

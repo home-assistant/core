@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starline",
   "requirements": ["starline==0.1.3"],
-  "dependencies": [],
   "codeowners": ["@anonym-tsk"]
 }

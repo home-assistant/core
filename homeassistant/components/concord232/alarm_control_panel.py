@@ -46,11 +46,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 alarm control panel platform."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     code = config.get(CONF_CODE)
-    mode = config.get(CONF_MODE)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    mode = config[CONF_MODE]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     url = f"http://{host}:{port}"
 
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
 
 
-class Concord232Alarm(alarm.AlarmControlPanel):
+class Concord232Alarm(alarm.AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
     def __init__(self, url, name, code, mode):
@@ -101,7 +101,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to %(host)s: %(reason)s",
-                dict(host=self._url, reason=ex),
+                {"host": self._url, "reason": ex},
             )
             return
         except IndexError:

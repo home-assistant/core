@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u017de konfigurirano"
+        },
+        "create_entry": {
+            "default": "Glejte [neato dokumentacija] ({docs_url})."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime",
+                    "vendor": "Prodajalec"
+                },
+                "description": "Glejte [neato dokumentacija] ({docs_url}).",
+                "title": "Podatki o ra\u010dunu Neato"
+            }
+        }
+    }
+}

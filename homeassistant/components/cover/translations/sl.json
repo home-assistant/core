@@ -1,0 +1,38 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "Zapri {entity_name}",
+            "close_tilt": "Zapri {entity_name} nagib",
+            "open": "Odprite {entity_name}",
+            "open_tilt": "Odprite {entity_name} nagib",
+            "set_position": "Nastavite polo\u017eaj {entity_name}",
+            "set_tilt_position": "Nastavite {entity_name} nagibni polo\u017eaj"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} je/so zaprt/a",
+            "is_closing": "{entity_name} se zapira/jo",
+            "is_open": "{entity_name} je odprt/a/o",
+            "is_opening": "{entity_name} se odpira/jo",
+            "is_position": "Trenutna pozicija {entity_name} je",
+            "is_tilt_position": "Trenutni polo\u017eaj nagiba {entity_name} je"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} se je/so se zaprla",
+            "closing": "{entity_name} se zapira/jo",
+            "opened": "{entity_name} se/so je odprla",
+            "opening": "{entity_name} se odpira/jo",
+            "position": "{entity_name} spremembe polo\u017eaja",
+            "tilt_position": "{entity_name} spremembe nagiba"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Zaprto",
+            "closing": "Zapiranje",
+            "open": "Odprto",
+            "opening": "Odpiranje",
+            "stopped": "Ustavljeno"
+        }
+    },
+    "title": "Cover"
+}

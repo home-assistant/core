@@ -1,9 +1,11 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
 bandit==1.6.2
-black==19.10b0
-codespell==v1.16.0
+black==20.8b1
+codespell==1.17.1
 flake8-docstrings==1.5.0
-flake8==3.7.9
-isort==v4.3.21
-pydocstyle==5.0.2
+flake8==3.8.4
+isort==5.5.3
+pydocstyle==5.1.1
+pyupgrade==2.7.2
+yamllint==1.24.2

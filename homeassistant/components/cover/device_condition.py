@@ -191,8 +191,8 @@ def async_condition_from_config(
         position = "current_position"
     if config[CONF_TYPE] == "is_tilt_position":
         position = "current_tilt_position"
-    min_pos = config.get(CONF_ABOVE, None)
-    max_pos = config.get(CONF_BELOW, None)
+    min_pos = config.get(CONF_ABOVE)
+    max_pos = config.get(CONF_BELOW)
     value_template = template.Template(  # type: ignore
         f"{{{{ state.attributes.{position} }}}}"
     )

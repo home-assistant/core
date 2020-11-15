@@ -12,7 +12,7 @@ from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 from homeassistant.loader import async_get_integration
-from homeassistant.util import sanitize_filename
+from homeassistant.util import sanitize_path
 
 from . import dashboard, resources, websocket
 from .const import (
@@ -46,7 +46,7 @@ YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_filename),
+        vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_path),
     }
 )
 
@@ -58,7 +58,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
-                    YAML_DASHBOARD_SCHEMA, slug_validator=url_slug,
+                    YAML_DASHBOARD_SCHEMA,
+                    slug_validator=url_slug,
                 ),
                 vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
@@ -138,8 +139,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.components.websocket_api.async_register_command(
         websocket.websocket_lovelace_dashboards
     )
-
-    hass.components.system_health.async_register_info(DOMAIN, system_health_info)
 
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.
@@ -225,19 +224,11 @@ async def create_yaml_resource_col(hass, yaml_resources):
         else:
             if CONF_RESOURCES in ll_conf:
                 _LOGGER.warning(
-                    "Resources need to be specified in your configuration.yaml. Please see the docs."
+                    "Resources need to be specified in your configuration.yaml. Please see the docs"
                 )
                 yaml_resources = ll_conf[CONF_RESOURCES]
 
     return resources.ResourceYAMLCollection(yaml_resources or [])
-
-
-async def system_health_info(hass):
-    """Get info for the info page."""
-    health_info = {"dashboards": len(hass.data[DOMAIN]["dashboards"])}
-    health_info.update(await hass.data[DOMAIN]["dashboards"][None].async_get_info())
-    health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
-    return health_info
 
 
 @callback

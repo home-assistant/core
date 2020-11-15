@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_CLASS,
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors)
 
 
-class I2CHatBinarySensor(BinarySensorDevice):
+class I2CHatBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that uses a I2C-HAT digital input."""
 
     I2C_HATS_MANAGER = None

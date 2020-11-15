@@ -39,7 +39,7 @@ NOTIFICATION_AUTH_TITLE = "Apple TV Authentication"
 NOTIFICATION_SCAN_ID = "apple_tv_scan_notification"
 NOTIFICATION_SCAN_TITLE = "Apple TV Scan"
 
-T = TypeVar("T")  # pylint: disable=invalid-name
+T = TypeVar("T")
 
 
 # This version of ensure_list interprets an empty dict as no value
@@ -129,8 +129,10 @@ async def scan_apple_tvs(hass):
     if not devices:
         devices = ["No device(s) found"]
 
+    found_devices = "<br /><br />".join(devices)
+
     hass.components.persistent_notification.async_create(
-        "The following devices were found:<br /><br />" + "<br /><br />".join(devices),
+        f"The following devices were found:<br /><br />{found_devices}",
         title=NOTIFICATION_SCAN_TITLE,
         notification_id=NOTIFICATION_SCAN_ID,
     )

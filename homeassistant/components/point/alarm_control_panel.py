@@ -1,7 +1,7 @@
 """Support for Minut Point."""
 import logging
 
-from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanel
+from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MinutPointAlarmControl(AlarmControlPanel):
+class MinutPointAlarmControl(AlarmControlPanelEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, home_id):
@@ -72,7 +72,7 @@ class MinutPointAlarmControl(AlarmControlPanel):
         _LOGGER.debug("Received webhook: %s", _type)
         self._home["alarm_status"] = _type
         self._changed_by = _changed_by
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def _home(self):
@@ -99,15 +99,15 @@ class MinutPointAlarmControl(AlarmControlPanel):
         """Return the user the last change was triggered by."""
         return self._changed_by
 
-    def alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        status = self._client.alarm_disarm(self._home_id)
+        status = await self._client.async_alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
-    def alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        status = self._client.alarm_arm(self._home_id)
+        status = await self._client.async_alarm_arm(self._home_id)
         if status:
             self._home["alarm_status"] = "on"
 

@@ -3,7 +3,7 @@ import logging
 
 from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_ROTARY, TYPE_ZLL_SWITCH
 
-from homeassistant.const import CONF_EVENT, CONF_ID
+from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -13,7 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HUE_EVENT = "hue_event"
 CONF_LAST_UPDATED = "last_updated"
-CONF_UNIQUE_ID = "unique_id"
 
 EVENT_NAME_FORMAT = "{}"
 
@@ -31,27 +30,21 @@ class HueEvent(GenericHueDevice):
         self.device_registry_id = None
 
         self.event_id = slugify(self.sensor.name)
-        # Use the 'lastupdated' string to detect new remote presses
-        self._last_updated = self.sensor.lastupdated
+        # Use the aiohue sensor 'state' dict to detect new remote presses
+        self._last_state = dict(self.sensor.state)
 
         # Register callback in coordinator and add job to remove it on bridge reset.
-        self.bridge.sensor_manager.coordinator.async_add_listener(
-            self.async_update_callback
+        self.bridge.reset_jobs.append(
+            self.bridge.sensor_manager.coordinator.async_add_listener(
+                self.async_update_callback
+            )
         )
-        self.bridge.reset_jobs.append(self.async_will_remove_from_hass)
         _LOGGER.debug("Hue event created: %s", self.event_id)
-
-    @callback
-    def async_will_remove_from_hass(self):
-        """Remove listener on bridge reset."""
-        self.bridge.sensor_manager.coordinator.async_remove_listener(
-            self.async_update_callback
-        )
 
     @callback
     def async_update_callback(self):
         """Fire the event if reason is that state is updated."""
-        if self.sensor.lastupdated == self._last_updated:
+        if self.sensor.state == self._last_state:
             return
 
         # Extract the press code as state
@@ -60,7 +53,7 @@ class HueEvent(GenericHueDevice):
         else:
             state = self.sensor.buttonevent
 
-        self._last_updated = self.sensor.lastupdated
+        self._last_state = dict(self.sensor.state)
 
         # Fire event
         data = {

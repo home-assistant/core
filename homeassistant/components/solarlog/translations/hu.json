@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6zt m\u00e1r konfigur\u00e1ltuk"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "No es pot connectar amb el Volumio descobert"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Vols afegir el Volumio (`{name}`) a Home Assistant?",
+                "title": "Volumio descobert"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

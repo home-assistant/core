@@ -3,6 +3,5 @@
   "name": "LIRC",
   "documentation": "https://www.home-assistant.io/integrations/lirc",
   "requirements": ["python-lirc==1.2.3"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -93,8 +93,7 @@ async def test_reproducing_states(hass, caplog):
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
             ),
-        ],
-        blocking=True,
+        ]
     )
 
     assert len(close_calls) == 0
@@ -106,7 +105,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("cover.entity_close", "not_supported")], blocking=True
+        [State("cover.entity_close", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -145,7 +144,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("cover.non_existing", "on"),
         ],
-        blocking=True,
     )
 
     valid_close_calls = [

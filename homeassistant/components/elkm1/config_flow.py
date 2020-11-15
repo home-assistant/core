@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
@@ -13,6 +14,8 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.util import slugify
 
@@ -33,7 +36,9 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME, default=""): str,
         vol.Optional(CONF_PASSWORD, default=""): str,
         vol.Optional(CONF_PREFIX, default=""): str,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): vol.In(["F", "C"]),
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
+            [TEMP_FAHRENHEIT, TEMP_CELSIUS]
+        ),
     }
 )
 
@@ -61,19 +66,7 @@ async def validate_input(data):
     )
     elk.connect()
 
-    timed_out = False
-    if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT):
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with elkm1",
-            VALIDATE_TIMEOUT,
-        )
-        timed_out = True
-
-    elk.disconnect()
-
-    if timed_out:
-        raise CannotConnect
-    if elk.invalid_auth:
+    if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
     device_name = data[CONF_PREFIX] if data[CONF_PREFIX] else "ElkM1"
@@ -111,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(user_input)
 
-            except CannotConnect:
+            except asyncio.TimeoutError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -154,10 +147,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries()
         }
         return urlparse(url).hostname in existing_hosts
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

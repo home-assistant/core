@@ -1,6 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 from datetime import datetime
-import logging
 from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
@@ -13,8 +12,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
 from .router import FreeboxRouter
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -65,9 +62,8 @@ class FreeboxDevice(ScannerEntity):
         self._active = False
         self._attrs = {}
 
-        self._unsub_dispatcher = None
-
-    def update(self) -> None:
+    @callback
+    def async_update_state(self) -> None:
         """Update the Freebox device."""
         device = self._router.devices[self._mac]
         self._active = device["active"]
@@ -128,21 +124,24 @@ class FreeboxDevice(ScannerEntity):
         """No polling needed."""
         return False
 
-    async def async_on_demand_update(self):
+    @callback
+    def async_on_demand_update(self):
         """Update state."""
-        self.async_schedule_update_ha_state(True)
+        self.async_update_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self._router.signal_device_update, self.async_on_demand_update
+        self.async_update_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_device_update,
+                self.async_on_demand_update,
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Clean up after entity before removal."""
-        self._unsub_dispatcher()
 
 
 def icon_for_freebox_device(device) -> str:
-    """Return a host icon from his type."""
+    """Return a device icon from its type."""
     return DEVICE_ICONS.get(device["host_type"], "mdi:help-network")

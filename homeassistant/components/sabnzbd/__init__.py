@@ -110,7 +110,9 @@ async def async_configure_sabnzbd(
     uri_scheme = "https" if use_ssl else "http"
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
-        conf = await hass.async_add_job(load_json, hass.config.path(CONFIG_FILE))
+        conf = await hass.async_add_executor_job(
+            load_json, hass.config.path(CONFIG_FILE)
+        )
         api_key = conf.get(base_url, {}).get(CONF_API_KEY, "")
 
     sab_api = SabnzbdApi(
@@ -134,7 +136,7 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN)
     if conf is not None:
-        use_ssl = conf.get(CONF_SSL)
+        use_ssl = conf[CONF_SSL]
         name = conf.get(CONF_NAME)
         api_key = conf.get(CONF_API_KEY)
         await async_configure_sabnzbd(hass, conf, use_ssl, name, api_key)

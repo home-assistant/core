@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_auth": "Invalid authentication"
+        },
+        "create_entry": {
+            "default": "See [Neato documentation]({docs_url})."
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username",
+                    "vendor": "Vendor"
+                },
+                "description": "See [Neato documentation]({docs_url}).",
+                "title": "Neato Account Info"
+            }
+        }
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} ass doheem",
+            "is_not_home": "{entity_name} ass net doheem"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Doheem",
+            "not_home": "\u00cbnnerwee"
+        }
+    },
+    "title": "Apparat Verfolgung"
+}

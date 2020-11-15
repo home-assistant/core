@@ -3,6 +3,5 @@
   "name": "LG Netcast",
   "documentation": "https://www.home-assistant.io/integrations/lg_netcast",
   "requirements": ["pylgnetcast-homeassistant==0.2.0.dev0"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "import_failed": {
+                "description": "Kunne ikke konfigurere bridge (host: {host} ) importert fra configuration.yaml.",
+                "title": "Kan ikke importere Cas\u00e9ta bridge-konfigurasjon."
+            }
+        }
+    }
+}

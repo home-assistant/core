@@ -41,14 +41,14 @@ class AbodeCamera(AbodeDevice, Camera):
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.add_timeline_callback,
             self._event,
             self._capture_callback,
         )
 
         signal = f"abode_camera_capture_{self.entity_id}"
-        async_dispatcher_connect(self.hass, signal, self.capture)
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
 
     def capture(self):
         """Request a new image capture."""
@@ -82,8 +82,21 @@ class AbodeCamera(AbodeDevice, Camera):
 
         return None
 
+    def turn_on(self):
+        """Turn on camera."""
+        self._device.privacy_mode(False)
+
+    def turn_off(self):
+        """Turn off camera."""
+        self._device.privacy_mode(True)
+
     def _capture_callback(self, capture):
         """Update the image with the device then refresh device."""
         self._device.update_image_location(capture)
         self.get_image()
         self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._device.is_on

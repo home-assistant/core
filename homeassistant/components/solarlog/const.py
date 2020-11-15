@@ -1,7 +1,7 @@
 """Constants for the Solar-Log integration."""
 from datetime import timedelta
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, UNIT_PERCENTAGE
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_WATT, VOLT
 
 DOMAIN = "solarlog"
 
@@ -17,8 +17,8 @@ SENSOR_TYPES = {
     "time": ["TIME", "last update", None, "mdi:calendar-clock"],
     "power_ac": ["powerAC", "power AC", POWER_WATT, "mdi:solar-power"],
     "power_dc": ["powerDC", "power DC", POWER_WATT, "mdi:solar-power"],
-    "voltage_ac": ["voltageAC", "voltage AC", "V", "mdi:flash"],
-    "voltage_dc": ["voltageDC", "voltage DC", "V", "mdi:flash"],
+    "voltage_ac": ["voltageAC", "voltage AC", VOLT, "mdi:flash"],
+    "voltage_dc": ["voltageDC", "voltage DC", VOLT, "mdi:flash"],
     "yield_day": ["yieldDAY", "yield day", ENERGY_KILO_WATT_HOUR, "mdi:solar-power"],
     "yield_yesterday": [
         "yieldYESTERDAY",
@@ -77,8 +77,13 @@ SENSOR_TYPES = {
         POWER_WATT,
         "mdi:solar-power",
     ],
-    "capacity": ["CAPACITY", "capacity", UNIT_PERCENTAGE, "mdi:solar-power"],
-    "efficiency": ["EFFICIENCY", "efficiency", "% W/Wp", "mdi:solar-power"],
+    "capacity": ["CAPACITY", "capacity", PERCENTAGE, "mdi:solar-power"],
+    "efficiency": [
+        "EFFICIENCY",
+        "efficiency",
+        f"% {POWER_WATT}/{POWER_WATT}p",
+        "mdi:solar-power",
+    ],
     "power_available": [
         "powerAVAILABLE",
         "power available",

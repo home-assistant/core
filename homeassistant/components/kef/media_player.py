@@ -1,6 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
 
-import asyncio
 from datetime import timedelta
 from functools import partial
 import ipaddress
@@ -23,7 +22,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -67,7 +66,7 @@ SERVICE_LOW_HZ = "set_low_hz"
 SERVICE_SUB_DB = "set_sub_db"
 SERVICE_UPDATE_DSP = "update_dsp"
 
-DSP_SCAN_INTERVAL = 3600
+DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -84,6 +83,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_STANDBY_TIME): vol.In([20, 60]),
     }
 )
+
+
+def get_ip_mode(host):
+    """Get the 'mode' used to retrieve the MAC address."""
+    try:
+        if ipaddress.ip_address(host).version == 6:
+            return "ip6"
+        return "ip"
+    except ValueError:
+        return "hostname"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -112,13 +121,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sources,
     )
 
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
+    mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
     unique_id = f"kef-{mac}" if mac is not None else None
 
@@ -133,7 +136,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         supports_on,
         sources,
         speaker_type,
-        ioloop=hass.loop,
+        loop=hass.loop,
         unique_id=unique_id,
     )
 
@@ -160,9 +163,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
 
     def add_service(name, which, option):
+        options = DSP_OPTION_MAPPING[which]
+        dtype = type(options[0])  # int or float
         platform.async_register_entity_service(
             name,
-            {vol.Required(option): vol.In(DSP_OPTION_MAPPING[which])},
+            {
+                vol.Required(option): vol.All(
+                    vol.Coerce(float), vol.Coerce(dtype), vol.In(options)
+                )
+            },
             f"set_{which}",
         )
 
@@ -174,7 +183,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
-class KefMediaPlayer(MediaPlayerDevice):
+class KefMediaPlayer(MediaPlayerEntity):
     """Kef Player Object."""
 
     def __init__(
@@ -189,7 +198,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         supports_on,
         sources,
         speaker_type,
-        ioloop,
+        loop,
         unique_id,
     ):
         """Initialize the media player."""
@@ -202,7 +211,7 @@ class KefMediaPlayer(MediaPlayerDevice):
             maximum_volume,
             standby_time,
             inverse_speaker_mode,
-            ioloop=ioloop,
+            loop=loop,
         )
         self._unique_id = unique_id
         self._supports_on = supports_on
@@ -357,23 +366,22 @@ class KefMediaPlayer(MediaPlayerDevice):
         """Send next track command."""
         await self._speaker.next_track()
 
-    async def update_dsp(self) -> None:
+    async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
         if self._speaker_type == "LS50" and self._state == STATE_OFF:
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
-        (mode, *rest) = await asyncio.gather(
-            self._speaker.get_mode(),
-            self._speaker.get_desk_db(),
-            self._speaker.get_wall_db(),
-            self._speaker.get_treble_db(),
-            self._speaker.get_high_hz(),
-            self._speaker.get_low_hz(),
-            self._speaker.get_sub_db(),
+        mode = await self._speaker.get_mode()
+        self._dsp = dict(
+            desk_db=await self._speaker.get_desk_db(),
+            wall_db=await self._speaker.get_wall_db(),
+            treble_db=await self._speaker.get_treble_db(),
+            high_hz=await self._speaker.get_high_hz(),
+            low_hz=await self._speaker.get_low_hz(),
+            sub_db=await self._speaker.get_sub_db(),
+            **mode._asdict(),
         )
-        keys = ["desk_db", "wall_db", "treble_db", "high_hz", "low_hz", "sub_db"]
-        self._dsp = dict(zip(keys, rest), **mode._asdict())
 
     async def async_added_to_hass(self):
         """Subscribe to DSP updates."""

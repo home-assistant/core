@@ -92,7 +92,7 @@ class MQTTRoomSensor(Entity):
             self._distance = distance
             self._updated = dt.utcnow()
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         @callback
         def message_received(msg):

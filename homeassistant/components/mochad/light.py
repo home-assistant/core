@@ -1,6 +1,4 @@
 """Support for X10 dimmer over Mochad."""
-import logging
-
 from pymochad import device
 import voluptuous as vol
 
@@ -8,14 +6,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
-from . import CONF_COMM_TYPE, CONTROLLER, DOMAIN, REQ_LOCK
-
-_LOGGER = logging.getLogger(__name__)
+from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
 
 CONF_BRIGHTNESS_LEVELS = "brightness_levels"
 
@@ -38,12 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up X10 dimmers over a mochad controller."""
+    mochad_controller = hass.data[DOMAIN]
     devs = config.get(CONF_DEVICES)
-    add_entities([MochadLight(hass, CONTROLLER.ctrl, dev) for dev in devs])
+    add_entities([MochadLight(hass, mochad_controller.ctrl, dev) for dev in devs])
     return True
 
 
-class MochadLight(Light):
+class MochadLight(LightEntity):
     """Representation of a X10 dimmer over Mochad."""
 
     def __init__(self, hass, ctrl, dev):

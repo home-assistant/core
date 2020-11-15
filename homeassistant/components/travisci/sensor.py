@@ -30,12 +30,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
-    "last_build_id": ["Last Build ID", "", "mdi:account-card-details"],
+    "last_build_id": ["Last Build ID", "", "mdi:card-account-details"],
     "last_build_duration": ["Last Build Duration", TIME_SECONDS, "mdi:timelapse"],
     "last_build_finished_at": ["Last Build Finished At", "", "mdi:timetable"],
     "last_build_started_at": ["Last Build Started At", "", "mdi:timetable"],
-    "last_build_state": ["Last Build State", "", "mdi:github-circle"],
-    "state": ["State", "", "mdi:github-circle"],
+    "last_build_state": ["Last Build State", "", "mdi:github"],
+    "state": ["State", "", "mdi:github"],
 }
 
 NOTIFICATION_ID = "travisci"
@@ -106,9 +106,7 @@ class TravisCISensor(Entity):
         self._user = user
         self._branch = branch
         self._state = None
-        self._name = "{0} {1}".format(
-            self._repo_name, SENSOR_TYPES[self._sensor_type][0]
-        )
+        self._name = "{} {}".format(self._repo_name, SENSOR_TYPES[self._sensor_type][0])
 
     @property
     def name(self):

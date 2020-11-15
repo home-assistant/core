@@ -3,7 +3,7 @@ from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -29,7 +29,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     return None
 
 
-class SmartThingsSwitch(SmartThingsEntity, SwitchDevice):
+class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     """Define a SmartThings switch."""
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -37,14 +37,14 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchDevice):
         await self._device.switch_off(set_status=True)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         await self._device.switch_on(set_status=True)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def current_power_w(self):

@@ -1,7 +1,6 @@
 """Support for Flux lights."""
 import logging
 import random
-import socket
 
 from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
@@ -20,7 +19,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
@@ -177,7 +176,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(lights, True)
 
 
-class FluxLight(Light):
+class FluxLight(LightEntity):
     """Representation of a Flux light."""
 
     def __init__(self, device):
@@ -363,7 +362,7 @@ class FluxLight(Light):
             try:
                 self._connect()
                 self._error_reported = False
-            except socket.error:
+            except OSError:
                 self._disconnect()
                 if not self._error_reported:
                     _LOGGER.warning(

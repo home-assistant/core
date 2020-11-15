@@ -1,5 +1,4 @@
 """Module to help with parsing and generating configuration files."""
-# pylint: disable=no-name-in-module
 from collections import OrderedDict
 from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
@@ -21,15 +20,21 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
+    CONF_ALLOWLIST_EXTERNAL_DIRS,
+    CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
     CONF_ELEVATION,
+    CONF_EXTERNAL_URL,
     CONF_ID,
+    CONF_INTERNAL_URL,
     CONF_LATITUDE,
+    CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
+    CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
     CONF_TEMPERATURE_UNIT,
@@ -37,7 +42,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_WHITELIST_EXTERNAL_DIRS,
+    LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     TEMP_CELSIUS,
     __version__,
 )
@@ -73,10 +78,6 @@ SCENE_CONFIG_PATH = "scenes.yaml"
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
-
-# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-# http:
-#   base_url: example.duckdns.org:8123
 
 # Text to speech
 tts:
@@ -116,10 +117,9 @@ def _no_duplicate_auth_provider(
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
             raise vol.Invalid(
-                "Duplicate auth provider {} found. Please add unique IDs if "
-                "you want to have the same auth provider twice".format(
-                    config[CONF_TYPE]
-                )
+                f"Duplicate auth provider {config[CONF_TYPE]} found. "
+                "Please add unique IDs "
+                "if you want to have the same auth provider twice"
             )
         config_keys.add(key)
     return configs
@@ -140,8 +140,9 @@ def _no_duplicate_auth_mfa_module(
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
             raise vol.Invalid(
-                "Duplicate mfa module {} found. Please add unique IDs if "
-                "you want to have the same mfa module twice".format(config[CONF_TYPE])
+                f"Duplicate mfa module {config[CONF_TYPE]} found. "
+                "Please add unique IDs "
+                "if you want to have the same mfa module twice"
             )
         config_keys.add(key)
     return configs
@@ -183,9 +184,15 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         CONF_UNIT_SYSTEM: cv.unit_system,
         CONF_TIME_ZONE: cv.time_zone,
-        vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
-        # pylint: disable=no-value-for-parameter
-        vol.All(cv.ensure_list, [vol.IsDir()]),
+        vol.Optional(CONF_INTERNAL_URL): cv.url,
+        vol.Optional(CONF_EXTERNAL_URL): cv.url,
+        vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
+            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+        ),
+        vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
+            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+        ),
+        vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(cv.ensure_list, [cv.url]),
         vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
         vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
             cv.ensure_list,
@@ -216,6 +223,9 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
             ],
             _no_duplicate_auth_mfa_module,
         ),
+        # pylint: disable=no-value-for-parameter
+        vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
+        vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
     }
 )
 
@@ -319,8 +329,9 @@ def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
     conf_dict = load_yaml(config_path)
 
     if not isinstance(conf_dict, dict):
-        msg = "The configuration file {} does not contain a dictionary".format(
-            os.path.basename(config_path)
+        msg = (
+            f"The configuration file {os.path.basename(config_path)} "
+            "does not contain a dictionary"
         )
         _LOGGER.error(msg)
         raise HomeAssistantError(msg)
@@ -339,7 +350,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     version_path = hass.config.path(VERSION_FILE)
 
     try:
-        with open(version_path, "rt") as inp:
+        with open(version_path) as inp:
             conf_version = inp.readline().strip()
     except FileNotFoundError:
         # Last version to not have this file
@@ -364,7 +375,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = hass.config.path(YAML_CONFIG_FILE)
 
-        with open(config_path, "rt", encoding="utf-8") as config_file:
+        with open(config_path, encoding="utf-8") as config_file:
             config_raw = config_file.read()
 
         if TTS_PRE_92 in config_raw:
@@ -375,7 +386,6 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
                     config_file.write(config_raw)
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
-                pass
 
     if version_obj < LooseVersion("0.94") and is_docker_env():
         # In 0.94 we no longer install packages inside the deps folder when
@@ -416,16 +426,13 @@ def _format_config_error(
     message = f"Invalid config for [{domain}]: "
     if isinstance(ex, vol.Invalid):
         if "extra keys not allowed" in ex.error_message:
+            path = "->".join(str(m) for m in ex.path)
             message += (
-                "[{option}] is an invalid option for [{domain}]. "
-                "Check: {domain}->{path}.".format(
-                    option=ex.path[-1],
-                    domain=domain,
-                    path="->".join(str(m) for m in ex.path),
-                )
+                f"[{ex.path[-1]}] is an invalid option for [{domain}]. "
+                f"Check: {domain}->{path}."
             )
         else:
-            message += "{}.".format(humanize_error(config, ex))
+            message += f"{humanize_error(config, ex)}."
     else:
         message += str(ex)
 
@@ -434,9 +441,9 @@ def _format_config_error(
     except AttributeError:
         domain_config = config
 
-    message += " (See {}, line {}). ".format(
-        getattr(domain_config, "__config_file__", "?"),
-        getattr(domain_config, "__line__", "?"),
+    message += (
+        f" (See {getattr(domain_config, '__config_file__', '?')}, "
+        f"line {getattr(domain_config, '__line__', '?')}). "
     )
 
     if domain != CONF_CORE and link:
@@ -473,16 +480,16 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     hac = hass.config
 
     if any(
-        [
-            k in config
-            for k in [
-                CONF_LATITUDE,
-                CONF_LONGITUDE,
-                CONF_NAME,
-                CONF_ELEVATION,
-                CONF_TIME_ZONE,
-                CONF_UNIT_SYSTEM,
-            ]
+        k in config
+        for k in [
+            CONF_LATITUDE,
+            CONF_LONGITUDE,
+            CONF_NAME,
+            CONF_ELEVATION,
+            CONF_TIME_ZONE,
+            CONF_UNIT_SYSTEM,
+            CONF_EXTERNAL_URL,
+            CONF_INTERNAL_URL,
         ]
     ):
         hac.config_source = SOURCE_YAML
@@ -492,6 +499,10 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_LONGITUDE, "longitude"),
         (CONF_NAME, "location_name"),
         (CONF_ELEVATION, "elevation"),
+        (CONF_INTERNAL_URL, "internal_url"),
+        (CONF_EXTERNAL_URL, "external_url"),
+        (CONF_MEDIA_DIRS, "media_dirs"),
+        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -499,10 +510,34 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
+    if CONF_MEDIA_DIRS not in config:
+        if is_docker_env():
+            hac.media_dirs = {"local": "/media"}
+        else:
+            hac.media_dirs = {"local": hass.config.path("media")}
+
     # Init whitelist external dir
-    hac.whitelist_external_dirs = {hass.config.path("www")}
-    if CONF_WHITELIST_EXTERNAL_DIRS in config:
-        hac.whitelist_external_dirs.update(set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
+    hac.allowlist_external_dirs = {hass.config.path("www"), *hac.media_dirs.values()}
+    if CONF_ALLOWLIST_EXTERNAL_DIRS in config:
+        hac.allowlist_external_dirs.update(set(config[CONF_ALLOWLIST_EXTERNAL_DIRS]))
+
+    elif LEGACY_CONF_WHITELIST_EXTERNAL_DIRS in config:
+        _LOGGER.warning(
+            "Key %s has been replaced with %s. Please update your config",
+            LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+            CONF_ALLOWLIST_EXTERNAL_DIRS,
+        )
+        hac.allowlist_external_dirs.update(
+            set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
+        )
+
+    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # already have it so that we can properly test "path ownership"
+    if CONF_ALLOWLIST_EXTERNAL_URLS in config:
+        hac.allowlist_external_urls.update(
+            url if url.endswith("/") else f"{url}/"
+            for url in config[CONF_ALLOWLIST_EXTERNAL_URLS]
+        )
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
@@ -534,10 +569,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             hac.units = METRIC_SYSTEM
     elif CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]
-        if unit == TEMP_CELSIUS:
-            hac.units = METRIC_SYSTEM
-        else:
-            hac.units = IMPERIAL_SYSTEM
+        hac.units = METRIC_SYSTEM if unit == TEMP_CELSIUS else IMPERIAL_SYSTEM
         _LOGGER.warning(
             "Found deprecated temperature unit in core "
             "configuration expected unit system. Replace '%s: %s' "
@@ -554,9 +586,9 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
     message = f"Package {package} setup failed. Integration {component} {message}"
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
-    message += " (See {}:{}). ".format(
-        getattr(pack_config, "__config_file__", "?"),
-        getattr(pack_config, "__line__", "?"),
+    message += (
+        f" (See {getattr(pack_config, '__config_file__', '?')}:"
+        f"{getattr(pack_config, '__line__', '?')}). "
     )
 
     _LOGGER.error(message)
@@ -564,12 +596,26 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
 
 def _identify_config_schema(module: ModuleType) -> Optional[str]:
     """Extract the schema and identify list or dict based."""
-    try:
-        key = next(k for k in module.CONFIG_SCHEMA.schema if k == module.DOMAIN)  # type: ignore
-    except (AttributeError, StopIteration):
+    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):  # type: ignore
         return None
 
-    schema = module.CONFIG_SCHEMA.schema[key]  # type: ignore
+    schema = module.CONFIG_SCHEMA.schema  # type: ignore
+
+    if isinstance(schema, vol.All):
+        for subschema in schema.validators:
+            if isinstance(subschema, dict):
+                schema = subschema
+                break
+        else:
+            return None
+
+    try:
+        key = next(k for k in schema if k == module.DOMAIN)  # type: ignore
+    except (TypeError, AttributeError, StopIteration):
+        return None
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected error identifying config schema")
+        return None
 
     if hasattr(key, "default") and not isinstance(
         key.default, vol.schema_builder.Undefined
@@ -586,7 +632,9 @@ def _identify_config_schema(module: ModuleType) -> Optional[str]:
 
         return None
 
-    t_schema = str(schema)
+    domain_schema = schema[key]
+
+    t_schema = str(domain_schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
         return "dict"
     if t_schema.startswith(("[", "All(<function ensure_list")):
@@ -702,8 +750,14 @@ async def async_process_component_config(
     config_validator = None
     try:
         config_validator = integration.get_platform("config")
-    except ImportError:
-        pass
+    except ImportError as err:
+        # Filter out import error of the config platform.
+        # If the config platform contains bad imports, make sure
+        # that still fails.
+        if err.name != f"{integration.pkg_path}.config":
+            _LOGGER.error("Error importing config platform %s: %s", domain, err)
+            return None
+
     if config_validator is not None and hasattr(
         config_validator, "async_validate_config"
     ):
@@ -774,9 +828,7 @@ async def async_process_component_config(
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                    p_config
-                )
+                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,
@@ -816,6 +868,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
 
     This method is a coroutine.
     """
+    # pylint: disable=import-outside-toplevel
     import homeassistant.helpers.check_config as check_config
 
     res = await check_config.async_check_ha_config_file(hass)
@@ -833,6 +886,7 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
+    # pylint: disable=import-outside-toplevel
     from homeassistant.components import persistent_notification
 
     errors = hass.data.get(DATA_PERSISTENT_ERRORS)
@@ -845,14 +899,10 @@ def async_notify_setup_error(
     message = "The following integrations and platforms could not be set up:\n\n"
 
     for name, link in errors.items():
-        if link:
-            part = f"[{name}]({link})"
-        else:
-            part = name
-
+        part = f"[{name}]({link})" if link else name
         message += f" - {part}\n"
 
-    message += "\nPlease check your config."
+    message += "\nPlease check your config and [logs](/config/logs)."
 
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"

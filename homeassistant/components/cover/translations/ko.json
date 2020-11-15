@@ -1,0 +1,38 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "{entity_name} \ub2eb\uae30",
+            "close_tilt": "{entity_name} \ub2eb\uae30",
+            "open": "{entity_name} \uc5f4\uae30",
+            "open_tilt": "{entity_name} \uc5f4\uae30",
+            "set_position": "{entity_name} \uac1c\ud3d0 \uc704\uce58 \uc124\uc815\ud558\uae30",
+            "set_tilt_position": "{entity_name} \uac1c\ud3d0 \uae30\uc6b8\uae30 \uc124\uc815\ud558\uae30"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} \uc774(\uac00) \ub2eb\ud600 \uc788\uc73c\uba74",
+            "is_closing": "{entity_name} \uc774(\uac00) \ub2eb\ud788\ub294 \uc911\uc774\uba74",
+            "is_open": "{entity_name} \uc774(\uac00) \uc5f4\ub824 \uc788\uc73c\uba74",
+            "is_opening": "{entity_name} \uc774(\uac00) \uc5f4\ub9ac\ub294 \uc911\uc774\uba74",
+            "is_position": "\ud604\uc7ac {entity_name} \uac1c\ud3d0 \uc704\uce58\uac00 ~ \uc774\uba74",
+            "is_tilt_position": "\ud604\uc7ac {entity_name} \uac1c\ud3d0 \uae30\uc6b8\uae30\uac00 ~ \uc774\uba74"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} \uc774(\uac00) \ub2eb\ud790 \ub54c",
+            "closing": "{entity_name} \uc774(\uac00) \ub2eb\ud788\ub294 \uc911\uc77c \ub54c",
+            "opened": "{entity_name} \uc774(\uac00) \uc5f4\ub9b4 \ub54c",
+            "opening": "{entity_name} \uc774(\uac00) \uc5f4\ub9ac\ub294 \uc911\uc77c \ub54c",
+            "position": "{entity_name} \uac1c\ud3d0 \uc704\uce58\uac00 \ubcc0\ud560 \ub54c",
+            "tilt_position": "{entity_name} \uac1c\ud3d0 \uae30\uc6b8\uae30\uac00 \ubcc0\ud560 \ub54c"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "\ub2eb\ud798",
+            "closing": "\ub2eb\ub294\uc911",
+            "open": "\uc5f4\ub9bc",
+            "opening": "\uc5ec\ub294\uc911",
+            "stopped": "\uba48\ucda4"
+        }
+    },
+    "title": "\uc5ec\ub2eb\uc774"
+}

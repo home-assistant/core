@@ -16,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
+from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
-        ),
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -60,6 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
+    state_file = hass.config.path(f"nexia_config_{username}.conf")
+
     try:
         nexia_home = await hass.async_add_executor_job(
             partial(
@@ -67,24 +70,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 username=username,
                 password=password,
                 device_name=hass.config.location_name,
+                state_file=state_file,
             )
         )
     except ConnectTimeout as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
     except HTTPError as http_ex:
-        if http_ex.response.status_code >= 400 and http_ex.response.status_code < 500:
+        if is_invalid_auth_code(http_ex.response.status_code):
             _LOGGER.error(
-                "Access error from Nexia service, please check credentials: %s",
-                http_ex,
+                "Access error from Nexia service, please check credentials: %s", http_ex
             )
             return False
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from http_ex
 
     async def _async_update_data():
         """Fetch data from API endpoint."""
-        return await hass.async_add_job(nexia_home.update)
+        return await hass.async_add_executor_job(nexia_home.update)
 
     coordinator = DataUpdateCoordinator(
         hass,

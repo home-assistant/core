@@ -62,7 +62,7 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
 
         title = ""
         if kwargs.get(ATTR_TITLE) is not None:
-            title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
+            title = f"{kwargs.get(ATTR_TITLE)}<br>"
 
         try:
             if "@" in self.room_or_email:

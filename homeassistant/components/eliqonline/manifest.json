@@ -3,6 +3,5 @@
   "name": "Eliqonline",
   "documentation": "https://www.home-assistant.io/integrations/eliqonline",
   "requirements": ["eliqonline==1.2.2"],
-  "dependencies": [],
   "codeowners": []
 }

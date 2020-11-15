@@ -13,7 +13,7 @@ from miio import (  # pylint: disable=import-error
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -57,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
                 "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -95,7 +96,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))}
+    {vol.Required(ATTR_PRICE): cv.positive_float}
 )
 
 SERVICE_TO_METHOD = {
@@ -139,10 +140,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3"]:
+    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
         plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
@@ -217,7 +218,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPlugGenericSwitch(SwitchDevice):
+class XiaomiPlugGenericSwitch(SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
     def __init__(self, name, plug, model, unique_id):
@@ -233,11 +234,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def should_poll(self):
-        """Poll the plug."""
-        return True
 
     @property
     def unique_id(self):
@@ -284,8 +280,10 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, **kwargs):
@@ -320,8 +318,9 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
@@ -406,8 +405,9 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
@@ -429,7 +429,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
-            unique_id = "{}-{}".format(unique_id, "usb")
+            unique_id = f"{unique_id}-usb"
 
         super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb
@@ -496,8 +496,9 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
@@ -545,5 +546,6 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)

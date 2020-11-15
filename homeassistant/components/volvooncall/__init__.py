@@ -54,6 +54,7 @@ RESOURCES = [
     "odometer",
     "trip_meter1",
     "trip_meter2",
+    "average_speed",
     "fuel_amount",
     "fuel_amount_level",
     "average_fuel_consumption",
@@ -70,6 +71,7 @@ RESOURCES = [
     "last_trip",
     "is_engine_running",
     "doors_hood_open",
+    "doors_tailgate_open",
     "doors_front_left_door_open",
     "doors_front_right_door_open",
     "doors_rear_left_door_open",
@@ -230,8 +232,10 @@ class VolvoEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_STATE_UPDATED, self.async_schedule_update_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state
+            )
         )
 
     @property
@@ -279,3 +283,8 @@ class VolvoEntity(Entity):
             self.instrument.attributes,
             model=f"{self.vehicle.vehicle_type}/{self.vehicle.model_year}",
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.vin}-{self.component}-{self.attribute}"

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "idle": "\u0c10\u0c21\u0c3f\u0c32\u0c4d",
+            "off": "\u0c06\u0c2b\u0c4d",
+            "on": "\u0c06\u0c28\u0c4d",
+            "paused": "\u0c06\u0c2a\u0c3f\u0c35\u0c41\u0c02\u0c26\u0c3f",
+            "playing": "\u0c06\u0c21\u0c41\u0c24\u0c4b\u0c02\u0c26\u0c3f",
+            "standby": "\u0c28\u0c3f\u0c32\u0c15\u0c21"
+        }
+    },
+    "title": "\u0c2e\u0c40\u0c21\u0c3f\u0c2f\u0c3e \u0c2a\u0c4d\u0c32\u0c47\u0c2f\u0c30\u0c4d"
+}

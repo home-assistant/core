@@ -1,6 +1,4 @@
 """Support Wink alarm control panels."""
-import logging
-
 import pywink
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -15,8 +13,6 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 STATE_ALARM_PRIVACY = "Private"
 
@@ -35,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 add_entities([WinkCameraDevice(camera, hass)])
 
 
-class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
+class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanelEntity):
     """Representation a Wink camera alarm."""
 
     async def async_added_to_hass(self):

@@ -11,8 +11,8 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PROTOCOL,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "temperature", config.get(CONF_TEMPERATURE_SCALE)
         ),
         tellcore_constants.TELLSTICK_HUMIDITY: DatatypeDescription(
-            "humidity", UNIT_PERCENTAGE
+            "humidity", PERCENTAGE
         ),
         tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription("rain rate", ""),
         tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription("rain total", ""),
@@ -93,9 +93,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             id_ = named_sensor[CONF_ID]
             if proto is not None:
                 if model is not None:
-                    named_sensors["{}{}{}".format(proto, model, id_)] = name
+                    named_sensors[f"{proto}{model}{id_}"] = name
                 else:
-                    named_sensors["{}{}".format(proto, id_)] = name
+                    named_sensors[f"{proto}{id_}"] = name
             else:
                 named_sensors[id_] = name
 
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not config[CONF_ONLY_NAMED]:
             sensor_name = str(tellcore_sensor.id)
         else:
-            proto_id = "{}{}".format(tellcore_sensor.protocol, tellcore_sensor.id)
+            proto_id = f"{tellcore_sensor.protocol}{tellcore_sensor.id}"
             proto_model_id = "{}{}{}".format(
                 tellcore_sensor.protocol, tellcore_sensor.model, tellcore_sensor.id
             )

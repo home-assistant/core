@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "L\u00e5s {entity_name}",
+            "open": "\u00c5pne {entity_name}",
+            "unlock": "L\u00e5s opp {entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} er l\u00e5st",
+            "is_unlocked": "{entity_name} er l\u00e5st opp"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} l\u00e5st",
+            "unlocked": "{entity_name} l\u00e5st opp"
+        }
+    },
+    "state": {
+        "_": {
+            "locked": "L\u00e5st",
+            "unlocked": "Ul\u00e5st"
+        }
+    },
+    "title": "L\u00e5s"
+}

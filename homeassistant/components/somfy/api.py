@@ -25,7 +25,9 @@ class ConfigEntrySomfyApi(somfy_api.SomfyApi):
         )
         super().__init__(None, None, token=self.session.token)
 
-    def refresh_tokens(self,) -> Dict[str, Union[str, int]]:
+    def refresh_tokens(
+        self,
+    ) -> Dict[str, Union[str, int]]:
         """Refresh and return new Somfy tokens using Home Assistant OAuth2 session."""
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop

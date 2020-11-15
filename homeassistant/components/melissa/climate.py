@@ -1,7 +1,7 @@
 """Support for Melissa Climate A/C."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_devices)
 
 
-class MelissaClimate(ClimateDevice):
+class MelissaClimate(ClimateEntity):
     """Representation of a Melissa Climate device."""
 
     def __init__(self, api, serial_number, init_data):
@@ -170,7 +170,9 @@ class MelissaClimate(ClimateDevice):
             self._cur_settings.update(value)
         except AttributeError:
             old_value = None
-        if not await self._api.async_send(self._serial_number, self._cur_settings):
+        if not await self._api.async_send(
+            self._serial_number, "melissa", self._cur_settings
+        ):
             self._cur_settings = old_value
 
     async def async_update(self):

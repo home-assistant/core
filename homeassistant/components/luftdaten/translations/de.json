@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_sensor": "Sensor nicht verf\u00fcgbar oder ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Auf Karte anzeigen",
+                    "station_id": "Luftdaten-Sensor-ID"
+                },
+                "title": "Luftdaten einrichten"
+            }
+        }
+    }
+}

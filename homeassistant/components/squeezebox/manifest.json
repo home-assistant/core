@@ -2,7 +2,11 @@
   "domain": "squeezebox",
   "name": "Logitech Squeezebox",
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@rajlaud"
+  ],
+  "requirements": [
+    "pysqueezebox==0.5.5"
+  ],
+  "config_flow": true
 }

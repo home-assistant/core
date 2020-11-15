@@ -3,12 +3,13 @@
 import logging
 from typing import Optional
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
 
 from .const import (
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
+    KEY_FLEX_SCHEDULES,
     KEY_ID,
     KEY_MAC_ADDRESS,
     KEY_MODEL,
@@ -38,17 +39,19 @@ class RachioPerson:
 
     def setup(self, hass):
         """Rachio device setup."""
-        response = self.rachio.person.getInfo()
-        assert int(response[0][KEY_STATUS]) == 200, "API key error"
+        response = self.rachio.person.info()
+        assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = self.rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == 200, "User ID error"
+        assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
-            webhooks = self.rachio.notification.getDeviceWebhook(controller[KEY_ID])[1]
+            webhooks = self.rachio.notification.get_device_webhook(controller[KEY_ID])[
+                1
+            ]
             # The API does not provide a way to tell if a controller is shared
             # or if they are the owner. To work around this problem we fetch the webooks
             # before we setup the device so we can skip it instead of failing.
@@ -77,6 +80,10 @@ class RachioPerson:
         """Get a list of controllers managed by this account."""
         return self._controllers
 
+    def start_multiple_zones(self, zones) -> None:
+        """Start multiple zones."""
+        self.rachio.zone.start_multiple(zones)
+
 
 class RachioIro:
     """Represent a Rachio Iro."""
@@ -92,6 +99,7 @@ class RachioIro:
         self.model = data[KEY_MODEL]
         self._zones = data[KEY_ZONES]
         self._schedules = data[KEY_SCHEDULES]
+        self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
         self._webhooks = webhooks
         _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
@@ -111,7 +119,7 @@ class RachioIro:
             if not self._webhooks:
                 # We fetched webhooks when we created the device, however if we call _init_webhooks
                 # again we need to fetch again
-                self._webhooks = self.rachio.notification.getDeviceWebhook(
+                self._webhooks = self.rachio.notification.get_device_webhook(
                     self.controller_id
                 )[1]
             for webhook in self._webhooks:
@@ -119,21 +127,21 @@ class RachioIro:
                     webhook[KEY_EXTERNAL_ID].startswith(WEBHOOK_CONST_ID)
                     or webhook[KEY_ID] == current_webhook_id
                 ):
-                    self.rachio.notification.deleteWebhook(webhook[KEY_ID])
+                    self.rachio.notification.delete(webhook[KEY_ID])
             self._webhooks = None
 
         _deinit_webhooks(None)
 
         # Choose which events to listen for and get their IDs
         event_types = []
-        for event_type in self.rachio.notification.getWebhookEventType()[1]:
+        for event_type in self.rachio.notification.get_webhook_event_type()[1]:
             if event_type[KEY_NAME] in LISTEN_EVENT_TYPES:
                 event_types.append({"id": event_type[KEY_ID]})
 
         # Register to listen to these events from the device
         url = self.rachio.webhook_url
         auth = WEBHOOK_CONST_ID + self.rachio.webhook_auth
-        new_webhook = self.rachio.notification.postWebhook(
+        new_webhook = self.rachio.notification.add(
             self.controller_id, auth, url, event_types
         )
         # Save ID for deletion at shutdown
@@ -152,7 +160,7 @@ class RachioIro:
     @property
     def current_schedule(self) -> str:
         """Return the schedule that the device is running right now."""
-        return self.rachio.device.getCurrentSchedule(self.controller_id)[1]
+        return self.rachio.device.current_schedule(self.controller_id)[1]
 
     @property
     def init_data(self) -> dict:
@@ -177,10 +185,14 @@ class RachioIro:
         return None
 
     def list_schedules(self) -> list:
-        """Return a list of schedules."""
+        """Return a list of fixed schedules."""
         return self._schedules
+
+    def list_flex_schedules(self) -> list:
+        """Return a list of flex schedules."""
+        return self._flex_schedules
 
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
-        self.rachio.device.stopWater(self.controller_id)
+        self.rachio.device.stop_water(self.controller_id)
         _LOGGER.info("Stopped watering of all zones on %s", str(self))

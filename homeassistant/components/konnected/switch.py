@@ -81,6 +81,11 @@ class KonnectedSwitch(ToggleEntity):
             "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
         }
 
+    @property
+    def available(self):
+        """Return whether the panel is available."""
+        return self.panel.available
+
     async def async_turn_on(self, **kwargs):
         """Send a command to turn on the switch."""
         resp = await self.panel.update_switch(
@@ -117,7 +122,7 @@ class KonnectedSwitch(ToggleEntity):
 
     def _set_state(self, state):
         self._state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
         _LOGGER.debug(
             "Setting status of %s actuator zone %s to %s",
             self._device_id,

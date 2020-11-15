@@ -1,4 +1,5 @@
 {
+  "title": "Switch",
   "device_automation": {
     "action_type": {
       "toggle": "Toggle {entity_name}",
@@ -12,6 +13,12 @@
     "trigger_type": {
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
     }
   }
 }

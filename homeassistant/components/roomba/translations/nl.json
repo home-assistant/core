@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Doorlopend",
+                    "delay": "Vertraging",
+                    "host": "Hostnaam of IP-adres",
+                    "password": "Wachtwoord"
+                },
+                "description": "Het ophalen van de BLID en het wachtwoord is momenteel een handmatig proces. Volg de stappen in de documentatie op: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Verbinding maken met het apparaat"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Doorlopend",
+                    "delay": "Vertraging"
+                }
+            }
+        }
+    }
+}

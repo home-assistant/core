@@ -1,10 +1,11 @@
 """Test Verisure ethernet status."""
 from contextlib import contextmanager
-from unittest.mock import patch
 
 from homeassistant.components.verisure import DOMAIN as VERISURE_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 CONFIG = {
     "verisure": {

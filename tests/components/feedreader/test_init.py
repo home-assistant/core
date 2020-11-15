@@ -6,7 +6,6 @@ from os.path import exists
 import time
 import unittest
 from unittest import mock
-from unittest.mock import patch
 
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import (
@@ -22,6 +21,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 _LOGGER = getLogger(__name__)
@@ -38,13 +38,13 @@ class TestFeedreaderComponent(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        # Delete any previously stored data
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
+        """Clean up files and stop Home Assistant."""
         data_file = self.hass.config.path(f"{feedreader.DOMAIN}.pickle")
         if exists(data_file):
             remove(data_file)
-
-    def tearDown(self):
-        """Stop everything that was started."""
         self.hass.stop()
 
     def test_setup_one_feed(self):

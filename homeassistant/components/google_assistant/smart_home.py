@@ -83,18 +83,29 @@ async def async_devices_sync(hass, data, payload):
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
-
-    devices = await asyncio.gather(
+    entities = async_get_entities(hass, data.config)
+    results = await asyncio.gather(
         *(
             entity.sync_serialize(agent_user_id)
-            for entity in async_get_entities(hass, data.config)
+            for entity in entities
             if entity.should_expose()
-        )
+        ),
+        return_exceptions=True,
     )
+
+    devices = []
+
+    for entity, result in zip(entities, results):
+        if isinstance(result, Exception):
+            _LOGGER.error("Error serializing %s", entity.entity_id, exc_info=result)
+        else:
+            devices.append(result)
 
     response = {"agentUserId": agent_user_id, "devices": devices}
 
     await data.config.async_connect_agent_user(agent_user_id)
+
+    _LOGGER.debug("Syncing entities response: %s", response)
 
     return response
 
@@ -126,7 +137,11 @@ async def async_devices_query(hass, data, payload):
             continue
 
         entity = GoogleEntity(hass, data.config, state)
-        devices[devid] = entity.query_serialize()
+        try:
+            devices[devid] = entity.query_serialize()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error serializing query for %s", state)
+            devices[devid] = {"online": False}
 
     return {"devices": devices}
 
@@ -243,7 +258,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
     """
     return {
         "device": {
-            "id": data.context.user_id,
+            "id": data.config.get_agent_user_id(data.context),
             "isLocalOnly": True,
             "isProxy": True,
             "deviceInfo": {
@@ -262,7 +277,7 @@ async def async_devices_reachable(hass, data: RequestData, payload):
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
     """
-    google_ids = set(dev["id"] for dev in (data.devices or []))
+    google_ids = {dev["id"] for dev in (data.devices or [])}
 
     return {
         "devices": [

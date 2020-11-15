@@ -1,12 +1,11 @@
 {
   "config": {
-    "title": "GIOŚ",
     "step": {
       "user": {
-        "title": "GIOŚ (Polish Chief Inspectorate Of Environmental Protection)",
-        "description": "Set up GIOŚ (Polish Chief Inspectorate Of Environmental Protection) air quality integration. If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/gios",
+        "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)",
+        "description": "Set up GIO\u015a (Polish Chief Inspectorate Of Environmental Protection) air quality integration. If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/gios",
         "data": {
-          "name": "Name of the integration",
+          "name": "[%key:common::config_flow::data::name%]",
           "station_id": "ID of the measuring station"
         }
       }
@@ -14,10 +13,10 @@
     "error": {
       "wrong_station_id": "ID of the measuring station is not correct.",
       "invalid_sensors_data": "Invalid sensors' data for this measuring station.",
-      "cannot_connect": "Cannot connect to the GIOŚ server."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "GIOŚ integration for this measuring station is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

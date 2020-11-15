@@ -2,7 +2,5 @@
   "domain": "openexchangerates",
   "name": "Open Exchange Rates",
   "documentation": "https://www.home-assistant.io/integrations/openexchangerates",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

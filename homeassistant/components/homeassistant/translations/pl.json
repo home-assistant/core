@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Architektura procesora",
+            "chassis": "Wersja komputera",
+            "dev": "Wersja deweloperska",
+            "docker": "Docker",
+            "docker_version": "Wersja Dockera",
+            "hassio": "Supervisor",
+            "host_os": "System operacyjny HA",
+            "installation_type": "Typ instalacji",
+            "os_name": "Rodzina systemu operacyjnego",
+            "os_version": "Wersja systemu operacyjnego",
+            "python_version": "Wersja Pythona",
+            "supervisor": "Supervisor",
+            "timezone": "Strefa czasowa",
+            "version": "Wersja",
+            "virtualenv": "\u015arodowisko wirtualne"
+        }
+    }
+}

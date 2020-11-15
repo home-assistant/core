@@ -1,10 +1,10 @@
 """Test Automation config panel."""
 import json
 
-from asynctest import patch
-
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+
+from tests.async_mock import patch
 
 
 async def test_get_device_config(hass, hass_client):

@@ -1,5 +1,4 @@
 """Support for tracking for iCloud devices."""
-import logging
 from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -17,14 +16,11 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_scanner(
     hass: HomeAssistantType, config, see, discovery_info=None
 ):
     """Old way of setting up the iCloud tracker."""
-    pass
 
 
 async def async_setup_entry(

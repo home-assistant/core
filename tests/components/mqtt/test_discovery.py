@@ -1,10 +1,10 @@
 """The tests for the MQTT discovery."""
 from pathlib import Path
 import re
-from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
@@ -13,11 +13,11 @@ from homeassistant.components.mqtt.abbreviations import (
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import STATE_OFF, STATE_ON
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
-    MockConfigEntry,
     async_fire_mqtt_message,
-    mock_coro,
     mock_device_registry,
+    mock_entity_platform,
     mock_registry,
 )
 
@@ -34,13 +34,16 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+)
 async def test_subscribing_config_topic(hass, mqtt_mock):
     """Test setting up discovery."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
-    hass_config = {}
     discovery_topic = "homeassistant"
-    await async_start(hass, discovery_topic, hass_config, entry)
+    await async_start(hass, discovery_topic, entry)
 
     assert mqtt_mock.async_subscribe.called
     call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
@@ -51,71 +54,56 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
 async def test_invalid_topic(hass, mqtt_mock):
     """Test sending to invalid topic."""
     with patch(
-        "homeassistant.components.mqtt.discovery.async_load_platform"
-    ) as mock_load_platform:
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
-        )
-
-        mock_load_platform.return_value = mock_coro()
-        await async_start(hass, "homeassistant", {}, entry)
+        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+    ) as mock_dispatcher_send:
+        mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
             hass, "homeassistant/binary_sensor/bla/not_config", "{}"
         )
         await hass.async_block_till_done()
-        assert not mock_load_platform.called
+        assert not mock_dispatcher_send.called
 
 
 async def test_invalid_json(hass, mqtt_mock, caplog):
     """Test sending in invalid JSON."""
     with patch(
-        "homeassistant.components.mqtt.discovery.async_load_platform"
-    ) as mock_load_platform:
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
-        )
+        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+    ) as mock_dispatcher_send:
 
-        mock_load_platform.return_value = mock_coro()
-        await async_start(hass, "homeassistant", {}, entry)
+        mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
             hass, "homeassistant/binary_sensor/bla/config", "not json"
         )
         await hass.async_block_till_done()
         assert "Unable to parse JSON" in caplog.text
-        assert not mock_load_platform.called
+        assert not mock_dispatcher_send.called
 
 
 async def test_only_valid_components(hass, mqtt_mock, caplog):
     """Test for a valid component."""
     with patch(
-        "homeassistant.components.mqtt.discovery.async_load_platform"
-    ) as mock_load_platform:
-        entry = MockConfigEntry(domain=mqtt.DOMAIN)
+        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+    ) as mock_dispatcher_send:
 
         invalid_component = "timer"
 
-        mock_load_platform.return_value = mock_coro()
-        await async_start(hass, "homeassistant", {}, entry)
+        mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
-            hass, "homeassistant/{}/bla/config".format(invalid_component), "{}"
+            hass, f"homeassistant/{invalid_component}/bla/config", "{}"
         )
 
     await hass.async_block_till_done()
 
-    assert "Integration {} is not supported".format(invalid_component) in caplog.text
+    assert f"Integration {invalid_component} is not supported" in caplog.text
 
-    assert not mock_load_platform.called
+    assert not mock_dispatcher_send.called
 
 
 async def test_correct_config_discovery(hass, mqtt_mock, caplog):
     """Test sending in correct JSON."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -132,10 +120,6 @@ async def test_correct_config_discovery(hass, mqtt_mock, caplog):
 
 async def test_discover_fan(hass, mqtt_mock, caplog):
     """Test discovering an MQTT fan."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/fan/bla/config",
@@ -152,10 +136,6 @@ async def test_discover_fan(hass, mqtt_mock, caplog):
 
 async def test_discover_climate(hass, mqtt_mock, caplog):
     """Test discovering an MQTT climate component."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     data = (
         '{ "name": "ClimateTest",'
         '  "current_temperature_topic": "climate/bla/current_temp",'
@@ -174,10 +154,6 @@ async def test_discover_climate(hass, mqtt_mock, caplog):
 
 async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
     """Test discovering an MQTT alarm control panel component."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     data = (
         '{ "name": "AlarmControlPanelTest",'
         '  "state_topic": "test_topic",'
@@ -196,10 +172,6 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
 
 async def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
     """Test sending in correct JSON with optional node_id included."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/my_node_id/bla/config",
@@ -216,10 +188,6 @@ async def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
 
 async def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     """Test for a non duplicate component."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -243,10 +211,6 @@ async def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
 
 async def test_removal(hass, mqtt_mock, caplog):
     """Test removal of component through empty discovery message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -264,10 +228,6 @@ async def test_removal(hass, mqtt_mock, caplog):
 
 async def test_rediscover(hass, mqtt_mock, caplog):
     """Test rediscover of removed component."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -294,10 +254,6 @@ async def test_rediscover(hass, mqtt_mock, caplog):
 
 async def test_duplicate_removal(hass, mqtt_mock, caplog):
     """Test for a non duplicate component."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -316,10 +272,6 @@ async def test_duplicate_removal(hass, mqtt_mock, caplog):
 
 async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     """Test discvered device is cleaned up when removed from registry."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    config_entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, config_entry)
-
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -350,6 +302,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     # Verify state is removed
     state = hass.states.get("sensor.mqtt_sensor")
     assert state is None
+    await hass.async_block_till_done()
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
@@ -359,10 +312,6 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
 
 async def test_discovery_expansion(hass, mqtt_mock, caplog):
     """Test expansion of abbreviated discovery payload."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -430,6 +379,8 @@ async def test_missing_discover_abbreviations(hass, mqtt_mock, caplog):
     missing = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
+        if fil.name == "trigger.py":
+            continue
         with open(fil) as file:
             matches = re.findall(regex, file.read())
             for match in matches:
@@ -449,10 +400,6 @@ async def test_missing_discover_abbreviations(hass, mqtt_mock, caplog):
 
 async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
     """Test no implicit state topic for switch."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "homeassistant", {}, entry)
-
     data = '{ "name": "Test1",' '  "command_topic": "cmnd"' "}"
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
@@ -472,12 +419,17 @@ async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
     assert state.state == "off"
 
 
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+        }
+    ],
+)
 async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
     """Tests handling of discovery topic prefix with multiple slashes."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-
-    await async_start(hass, "my_home/homeassistant/register", {}, entry)
-
     async_fire_mqtt_message(
         hass,
         ("my_home/homeassistant/register/binary_sensor/node1/object1/config"),
@@ -490,3 +442,75 @@ async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == "Beer"
     assert ("binary_sensor", "node1 object1") in hass.data[ALREADY_DISCOVERED]
+
+
+async def test_mqtt_integration_discovery_subscribe_unsubscribe(
+    hass, mqtt_client_mock, mqtt_mock
+):
+    """Check MQTT integration discovery subscribe and unsubscribe."""
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    entry = hass.config_entries.async_entries("mqtt")[0]
+    mqtt_mock().connected = True
+
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_get_mqtt",
+        return_value={"comp": ["comp/discovery/#"]},
+    ):
+        await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
+
+    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert not mqtt_client_mock.unsubscribe.called
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        async def async_step_mqtt(self, discovery_info):
+            """Test mqtt step."""
+            return self.async_abort(reason="already_configured")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+        assert not mqtt_client_mock.unsubscribe.called
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await hass.async_block_till_done()
+        mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
+        mqtt_client_mock.unsubscribe.reset_mock()
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await hass.async_block_till_done()
+        assert not mqtt_client_mock.unsubscribe.called
+
+
+async def test_mqtt_discovery_unsubscribe_once(hass, mqtt_client_mock, mqtt_mock):
+    """Check MQTT integration discovery unsubscribe once."""
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    entry = hass.config_entries.async_entries("mqtt")[0]
+    mqtt_mock().connected = True
+
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_get_mqtt",
+        return_value={"comp": ["comp/discovery/#"]},
+    ):
+        await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
+
+    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert not mqtt_client_mock.unsubscribe.called
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        async def async_step_mqtt(self, discovery_info):
+            """Test mqtt step."""
+            return self.async_abort(reason="already_configured")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")

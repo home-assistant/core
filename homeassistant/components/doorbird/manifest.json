@@ -2,16 +2,9 @@
   "domain": "doorbird",
   "name": "DoorBird",
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
-  "requirements": [
-    "doorbirdpy==2.0.8"
-  ],
-  "dependencies": [
-    "http",
-    "logbook"
-  ],
-  "zeroconf": ["_axis-video._tcp.local."],
-  "codeowners": [
-    "@oblogic7", "@bdraco"
-  ],
+  "requirements": ["doorbirdpy==2.1.0"],
+  "dependencies": ["http"],
+  "zeroconf": [{"type":"_axis-video._tcp.local.","macaddress":"1CCAE3*"}],
+  "codeowners": ["@oblogic7", "@bdraco"],
   "config_flow": true
 }

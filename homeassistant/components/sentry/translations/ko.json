@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "bad_dsn": "DSN \uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "description": "Sentry DSN \uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "\ud658\uacbd\uc758 \uc120\ud0dd\uc801 \uba85\uce6d",
+                    "event_custom_components": "\uc0ac\uc6a9\uc790 \uc9c0\uc815 \uad6c\uc131 \uc694\uc18c\uc5d0\uc11c \uc774\ubca4\ud2b8 \ubcf4\ub0b4\uae30",
+                    "event_handled": "\ucc98\ub9ac\ub41c \uc774\ubca4\ud2b8 \ubcf4\ub0b4\uae30",
+                    "event_third_party_packages": "\uc368\ub4dc\ud30c\ud2f0 \ud328\ud0a4\uc9c0\uc5d0\uc11c \uc774\ubca4\ud2b8 \ubcf4\ub0b4\uae30",
+                    "logging_event_level": "Log level Sentry\ub294 \ub2e4\uc74c\uc5d0 \ub300\ud55c \uc774\ubca4\ud2b8\ub97c \ub4f1\ub85d\ud569\ub2c8\ub2e4.",
+                    "logging_level": "Log level sentry\ub294 \ub2e4\uc74c\uc5d0 \ub300\ud55c \ub85c\uadf8\ub97c \ube0c\ub808\ub4dc \ud06c\ub7fc\uc73c\ub85c \uae30\ub85d\ud569\ub2c8\ub2e4.",
+                    "tracing": "\uc131\ub2a5 \ucd94\uc801 \ud65c\uc131\ud654",
+                    "tracing_sample_rate": "\uc0d8\ud50c\ub9c1 \uc18d\ub3c4 \ucd94\uc801; 0.0\uc5d0\uc11c 1.0 \uc0ac\uc774 (1.0 = 100 %)"
+                }
+            }
+        }
+    }
+}

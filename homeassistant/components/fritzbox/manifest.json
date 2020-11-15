@@ -1,8 +1,13 @@
 {
   "domain": "fritzbox",
-  "name": "AVM FRITZ!Box",
+  "name": "AVM FRITZ!SmartHome",
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",
-  "requirements": ["pyfritzhome==0.4.0"],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["pyfritzhome==0.4.2"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:fritzbox:1"
+    }
+  ],
+  "codeowners": [],
+  "config_flow": true
 }

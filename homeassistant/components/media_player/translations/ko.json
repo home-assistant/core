@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} \uc774(\uac00) \uc720\ud734 \uc0c1\ud0dc\uc774\uba74",
+            "is_off": "{entity_name} \uc774(\uac00) \uaebc\uc838 \uc788\uc73c\uba74",
+            "is_on": "{entity_name} \uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74",
+            "is_paused": "{entity_name} \uc774(\uac00) \uc77c\uc2dc\uc911\uc9c0\ub418\uc5b4 \uc788\uc73c\uba74",
+            "is_playing": "{entity_name} \uc774(\uac00) \uc7ac\uc0dd \uc911\uc774\uba74"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "\ub300\uae30\uc911",
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0",
+            "paused": "\uc77c\uc2dc\uc911\uc9c0",
+            "playing": "\uc7ac\uc0dd\uc911",
+            "standby": "\uc900\ube44\uc911"
+        }
+    },
+    "title": "\ubbf8\ub514\uc5b4 \ud50c\ub808\uc774\uc5b4"
+}

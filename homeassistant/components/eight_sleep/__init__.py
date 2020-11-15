@@ -107,7 +107,7 @@ async def async_setup(hass, config):
     partner = conf.get(CONF_PARTNER)
 
     if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant.")
+        _LOGGER.error("Timezone is not set in Home Assistant")
         return False
 
     timezone = str(hass.config.time_zone)
@@ -214,7 +214,11 @@ class EightSleepUserEntity(Entity):
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_USER, async_eight_user_update
+            )
+        )
 
     @property
     def should_poll(self):
@@ -237,7 +241,11 @@ class EightSleepHeatEntity(Entity):
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update
+            )
+        )
 
     @property
     def should_poll(self):

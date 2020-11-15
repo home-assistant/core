@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_agreements": "Dieses Konto hat keine Toon-Anzeigen."
+        }
+    }
+}

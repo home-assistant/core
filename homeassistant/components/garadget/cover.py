@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_COVERS,
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers)
 
 
-class GaradgetCover(CoverDevice):
+class GaradgetCover(CoverEntity):
     """Representation of a Garadget cover."""
 
     def __init__(self, hass, args):
@@ -105,14 +105,14 @@ class GaradgetCover(CoverDevice):
                     self._name = doorconfig["nme"]
             self.update()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
@@ -128,11 +128,6 @@ class GaradgetCover(CoverDevice):
     def name(self):
         """Return the name of the cover."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
 
     @property
     def available(self):
@@ -229,18 +224,18 @@ class GaradgetCover(CoverDevice):
         try:
             status = self._get_variable("doorStatus")
             _LOGGER.debug("Current Status: %s", status["status"])
-            self._state = STATES_MAP.get(status["status"], None)
+            self._state = STATES_MAP.get(status["status"])
             self.time_in_state = status["time"]
             self.signal = status["signal"]
             self.sensor = status["sensor"]
             self._available = True
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._state = STATE_OFFLINE
 

@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+# pylint: disable=import-error
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from pyezviz.camera import EzvizCamera
 from pyezviz.client import EzvizClient, PyEzvizError
@@ -219,15 +220,16 @@ class HassEzvizCamera(Camera):
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
 
         image = await asyncio.shield(
-            ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG,)
+            ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG)
         )
         return image
 
     async def stream_source(self):
         """Return the stream source."""
         if self._local_rtsp_port:
-            rtsp_stream_source = "rtsp://{}:{}@{}:{}".format(
-                self._username, self._password, self._local_ip, self._local_rtsp_port
+            rtsp_stream_source = (
+                f"rtsp://{self._username}:{self._password}@"
+                f"{self._local_ip}:{self._local_rtsp_port}"
             )
             _LOGGER.debug(
                 "Camera %s source stream: %s", self._serial, rtsp_stream_source

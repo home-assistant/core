@@ -1,6 +1,6 @@
 """Classes to help gather user submissions."""
 import abc
-import logging
+import asyncio
 from typing import Any, Dict, List, Optional, cast
 import uuid
 
@@ -9,15 +9,15 @@ import voluptuous as vol
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 
-_LOGGER = logging.getLogger(__name__)
-
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
 RESULT_TYPE_ABORT = "abort"
 RESULT_TYPE_EXTERNAL_STEP = "external"
 RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
+RESULT_TYPE_SHOW_PROGRESS = "progress"
+RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 
-# Event that is fired when a flow is progressed via external source.
+# Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
 
@@ -50,10 +50,23 @@ class AbortFlow(FlowError):
 class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass: HomeAssistant,) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
+        self._initializing: Dict[str, List[asyncio.Future]] = {}
         self._progress: Dict[str, Any] = {}
+
+    async def async_wait_init_flow_finish(self, handler: str) -> None:
+        """Wait till all flows in progress are initialized."""
+        current = self._initializing.get(handler)
+
+        if not current:
+            return
+
+        await asyncio.wait(current)
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -67,26 +80,28 @@ class FlowManager(abc.ABC):
 
         Handler key is the domain of the component that we want to set up.
         """
-        pass
 
     @abc.abstractmethod
     async def async_finish_flow(
         self, flow: "FlowHandler", result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Finish a config flow and add an entry."""
-        pass
 
     async def async_post_init(
         self, flow: "FlowHandler", result: Dict[str, Any]
     ) -> None:
         """Entry has finished executing its first step asynchronously."""
-        pass
 
     @callback
     def async_progress(self) -> List[Dict]:
         """Return the flows in progress."""
         return [
-            {"flow_id": flow.flow_id, "handler": flow.handler, "context": flow.context}
+            {
+                "flow_id": flow.flow_id,
+                "handler": flow.handler,
+                "context": flow.context,
+                "step_id": flow.cur_step["step_id"],
+            }
             for flow in self._progress.values()
             if flow.cur_step is not None
         ]
@@ -97,8 +112,13 @@ class FlowManager(abc.ABC):
         """Start a configuration flow."""
         if context is None:
             context = {}
+
+        init_done: asyncio.Future = asyncio.Future()
+        self._initializing.setdefault(handler, []).append(init_done)
+
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
+            self._initializing[handler].remove(init_done)
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
@@ -106,7 +126,12 @@ class FlowManager(abc.ABC):
         flow.context = context
         self._progress[flow.flow_id] = flow
 
-        result = await self._async_handle_step(flow, flow.init_step, data)
+        try:
+            result = await self._async_handle_step(
+                flow, flow.init_step, data, init_done
+            )
+        finally:
+            self._initializing[handler].remove(init_done)
 
         if result["type"] != RESULT_TYPE_ABORT:
             await self.async_post_init(flow, result)
@@ -129,8 +154,8 @@ class FlowManager(abc.ABC):
 
         result = await self._async_handle_step(flow, cur_step["step_id"], user_input)
 
-        if cur_step["type"] == RESULT_TYPE_EXTERNAL_STEP:
-            if result["type"] not in (
+        if cur_step["type"] in (RESULT_TYPE_EXTERNAL_STEP, RESULT_TYPE_SHOW_PROGRESS):
+            if cur_step["type"] == RESULT_TYPE_EXTERNAL_STEP and result["type"] not in (
                 RESULT_TYPE_EXTERNAL_STEP,
                 RESULT_TYPE_EXTERNAL_STEP_DONE,
             ):
@@ -138,10 +163,20 @@ class FlowManager(abc.ABC):
                     "External step can only transition to "
                     "external step or external step done."
                 )
+            if cur_step["type"] == RESULT_TYPE_SHOW_PROGRESS and result["type"] not in (
+                RESULT_TYPE_SHOW_PROGRESS,
+                RESULT_TYPE_SHOW_PROGRESS_DONE,
+            ):
+                raise ValueError(
+                    "Show progress can only transition to show progress or show progress done."
+                )
 
             # If the result has changed from last result, fire event to update
             # the frontend.
-            if cur_step["step_id"] != result.get("step_id"):
+            if (
+                cur_step["step_id"] != result.get("step_id")
+                or result["type"] == RESULT_TYPE_SHOW_PROGRESS
+            ):
                 # Tell frontend to reload the flow state.
                 self.hass.bus.async_fire(
                     EVENT_DATA_ENTRY_FLOW_PROGRESSED,
@@ -157,13 +192,19 @@ class FlowManager(abc.ABC):
             raise UnknownFlow
 
     async def _async_handle_step(
-        self, flow: Any, step_id: str, user_input: Optional[Dict]
+        self,
+        flow: Any,
+        step_id: str,
+        user_input: Optional[Dict],
+        step_done: Optional[asyncio.Future] = None,
     ) -> Dict:
         """Handle a step of a flow."""
         method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
+            if step_done:
+                step_done.set_result(None)
             raise UnknownStep(
                 f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
@@ -175,21 +216,30 @@ class FlowManager(abc.ABC):
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
 
+        # Mark the step as done.
+        # We do this before calling async_finish_flow because config entries will hit a
+        # circular dependency where async_finish_flow sets up new entry, which needs the
+        # integration to be set up, which is waiting for init to be done.
+        if step_done:
+            step_done.set_result(None)
+
         if result["type"] not in (
             RESULT_TYPE_FORM,
             RESULT_TYPE_EXTERNAL_STEP,
             RESULT_TYPE_CREATE_ENTRY,
             RESULT_TYPE_ABORT,
             RESULT_TYPE_EXTERNAL_STEP_DONE,
+            RESULT_TYPE_SHOW_PROGRESS,
+            RESULT_TYPE_SHOW_PROGRESS_DONE,
         ):
-            raise ValueError(
-                "Handler returned incorrect type: {}".format(result["type"])
-            )
+            raise ValueError(f"Handler returned incorrect type: {result['type']}")
 
         if result["type"] in (
             RESULT_TYPE_FORM,
             RESULT_TYPE_EXTERNAL_STEP,
             RESULT_TYPE_EXTERNAL_STEP_DONE,
+            RESULT_TYPE_SHOW_PROGRESS,
+            RESULT_TYPE_SHOW_PROGRESS_DONE,
         ):
             flow.cur_step = result
             return result
@@ -223,6 +273,22 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+
+    @property
+    def source(self) -> Optional[str]:
+        """Source that initialized the flow."""
+        if not hasattr(self, "context"):
+            return None
+
+        return self.context.get("source", None)
+
+    @property
+    def show_advanced_options(self) -> bool:
+        """If we should show advanced options."""
+        if not hasattr(self, "context"):
+            return False
+
+        return self.context.get("show_advanced_options", False)
 
     @callback
     def async_show_form(
@@ -293,6 +359,34 @@ class FlowHandler:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,
+            "flow_id": self.flow_id,
+            "handler": self.handler,
+            "step_id": next_step_id,
+        }
+
+    @callback
+    def async_show_progress(
+        self,
+        *,
+        step_id: str,
+        progress_action: str,
+        description_placeholders: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
+        """Show a progress message to the user, without user input allowed."""
+        return {
+            "type": RESULT_TYPE_SHOW_PROGRESS,
+            "flow_id": self.flow_id,
+            "handler": self.handler,
+            "step_id": step_id,
+            "progress_action": progress_action,
+            "description_placeholders": description_placeholders,
+        }
+
+    @callback
+    def async_show_progress_done(self, *, next_step_id: str) -> Dict[str, Any]:
+        """Mark the progress done."""
+        return {
+            "type": RESULT_TYPE_SHOW_PROGRESS_DONE,
             "flow_id": self.flow_id,
             "handler": self.handler,
             "step_id": next_step_id,

@@ -1,14 +1,10 @@
 """Support for switch sensor using I2C PCAL9535A chip."""
-import logging
-
 from pcal9535a import PCAL9535A
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_I2C_ADDRESS = "i2c_address"
@@ -58,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class PCAL9535ASwitch(SwitchDevice):
+class PCAL9535ASwitch(SwitchEntity):
     """Representation of a PCAL9535A output pin."""
 
     def __init__(self, name, pin, invert_logic):

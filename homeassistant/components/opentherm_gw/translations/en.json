@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "id_exists": "Gateway id already exists"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Path or URL",
+                    "id": "ID",
+                    "name": "Name"
+                },
+                "title": "OpenTherm Gateway"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Floor Temperature",
+                    "precision": "Precision"
+                },
+                "description": "Options for the OpenTherm Gateway"
+            }
+        }
+    }
+}

@@ -1,6 +1,5 @@
 """Tests for the Home Assistant auth module."""
 from datetime import timedelta
-from unittest.mock import Mock, patch
 
 import jwt
 import pytest
@@ -12,6 +11,7 @@ from homeassistant.auth.const import MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded, flush_store
 
 

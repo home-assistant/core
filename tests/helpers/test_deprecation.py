@@ -1,7 +1,7 @@
 """Test deprecation helpers."""
-from unittest.mock import MagicMock, patch
-
 from homeassistant.helpers.deprecation import deprecated_substitute, get_deprecated
+
+from tests.async_mock import MagicMock, patch
 
 
 class MockBaseClass:

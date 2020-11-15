@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Most je \u017ee konfiguriran",
+            "already_in_progress": "Konfiguracija mostu je \u017ee v teku."
+        },
+        "error": {
+            "cannot_connect": "Povezava s prehodom ni mogo\u010de.",
+            "invalid_key": "Ni se bilo mogo\u010de registrirati s prilo\u017eenim klju\u010dem. \u010ce se to dogaja, poskusite znova zagnati prehod.",
+            "timeout": "\u010casovna omejitev za potrditev kode je potekla."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Gostitelj",
+                    "security_code": "Varnostna koda"
+                },
+                "description": "Varnostno kodo najdete na hrbtni strani va\u0161ega prehoda.",
+                "title": "Vnesite varnostno kodo"
+            }
+        }
+    }
+}

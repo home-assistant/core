@@ -1,13 +1,11 @@
 {
   "config": {
-    "title": "Brother Printer",
     "flow_title": "Brother Printer: {model} {serial_number}",
     "step": {
       "user": {
-        "title": "Brother Printer",
         "description": "Set up Brother printer integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/brother",
         "data": {
-          "host": "Printer hostname or IP address",
+          "host": "[%key:common::config_flow::data::host%]",
           "type": "Type of the printer"
         }
       },
@@ -21,12 +19,12 @@
     },
     "error": {
       "wrong_host": "Invalid hostname or IP address.",
-      "connection_error": "Connection error.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "snmp_error": "SNMP server turned off or printer not supported."
     },
     "abort": {
       "unsupported_model": "This printer model is not supported.",
-      "already_configured": "This printer is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "condition_type": {
-            "is_home": "{entity_name} ist Zuhause",
-            "is_not_home": "{entity_name} ist nicht zu Hause"
-        }
-    }
-}

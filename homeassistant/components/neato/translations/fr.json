@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00e9j\u00e0 configur\u00e9",
+            "invalid_auth": "Authentification invalide"
+        },
+        "create_entry": {
+            "default": "Voir [Documentation Neato]({docs_url})."
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur",
+                    "vendor": "Vendeur"
+                },
+                "description": "Voir [Documentation Neato] ( {docs_url} ).",
+                "title": "Informations compte Neato"
+            }
+        }
+    }
+}

@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "port_config": {
+                "data": {
+                    "baudrate": "rychlost portu"
+                },
+                "title": "Nastaven\u00ed"
+            },
+            "user": {
+                "description": "Vyberte s\u00e9riov\u00fd port pro r\u00e1dio Zigbee",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "warn": "Varovat"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Ob\u011b tla\u010d\u00edtka",
+            "button_1": "Prvn\u00ed tla\u010d\u00edtko",
+            "button_2": "Druh\u00e9 tla\u010d\u00edtko",
+            "button_3": "T\u0159et\u00ed tla\u010d\u00edtko",
+            "button_4": "\u010ctvrt\u00e9 tla\u010d\u00edtko",
+            "button_5": "P\u00e1t\u00e9 tla\u010d\u00edtko",
+            "button_6": "\u0160est\u00e9 tla\u010d\u00edtko",
+            "close": "Zav\u0159\u00edt",
+            "dim_down": "ztmavit",
+            "dim_up": "ro\u017ehnout",
+            "face_1": "aktivov\u00e1no tv\u00e1\u0159\u00ed 1",
+            "face_2": "aktivov\u00e1no tv\u00e1\u0159\u00ed 2",
+            "face_3": "aktivov\u00e1no tv\u00e1\u0159\u00ed 3",
+            "face_4": "aktivov\u00e1no tv\u00e1\u0159\u00ed 4",
+            "face_5": "aktivov\u00e1no tv\u00e1\u0159\u00ed 5",
+            "face_6": "aktivov\u00e1no tv\u00e1\u0159\u00ed 6",
+            "left": "Vlevo",
+            "open": "Otev\u0159eno",
+            "right": "Vpravo",
+            "turn_off": "Vypnout",
+            "turn_on": "Zapnout"
+        },
+        "trigger_type": {
+            "device_offline": "Za\u0159\u00edzen\u00ed je offline",
+            "device_rotated": "Za\u0159\u00edzen\u00ed oto\u010deno \"{subtype}\"",
+            "device_shaken": "Za\u0159\u00edzen\u00ed se zat\u0159\u00e1slo",
+            "device_tilted": "Za\u0159\u00edzen\u00ed naklon\u011bno",
+            "remote_button_alt_double_press": "Dvakr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_quintuple_press": "P\u011btkr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_short_press": "Stiknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_triple_press": "T\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_double_press": "Dvakr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku",
+            "remote_button_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_quintuple_press": "P\u011btkr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_short_press": "Stiknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_triple_press": "T\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\""
+        }
+    }
+}

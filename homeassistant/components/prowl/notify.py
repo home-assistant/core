@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +39,7 @@ class ProwlNotificationService(BaseNotificationService):
         """Send the message to the user."""
         response = None
         session = None
-        url = "{}{}".format(_RESOURCE, "add")
+        url = f"{_RESOURCE}add"
         data = kwargs.get(ATTR_DATA)
         payload = {
             "apikey": self._api_key,
@@ -57,7 +57,7 @@ class ProwlNotificationService(BaseNotificationService):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 
-            if response.status != 200 or "error" in result:
+            if response.status != HTTP_OK or "error" in result:
                 _LOGGER.error(
                     "Prowl service returned http status %d, response %s",
                     response.status,

@@ -2,7 +2,5 @@
   "domain": "bloomsky",
   "name": "BloomSky",
   "documentation": "https://www.home-assistant.io/integrations/bloomsky",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

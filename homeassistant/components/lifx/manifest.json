@@ -7,6 +7,5 @@
   "homekit": {
     "models": ["LIFX"]
   },
-  "dependencies": [],
   "codeowners": []
 }

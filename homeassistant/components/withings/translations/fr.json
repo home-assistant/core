@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Configuration mise \u00e0 jour pour le profil.",
+            "authorize_url_timeout": "D\u00e9lai d'expiration g\u00e9n\u00e9rant une URL d'autorisation.",
+            "missing_configuration": "L'int\u00e9gration Withings n'est pas configur\u00e9e. Veuillez suivre la documentation.",
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )"
+        },
+        "create_entry": {
+            "default": "Authentifi\u00e9 avec succ\u00e8s \u00e0 Withings pour le profil s\u00e9lectionn\u00e9."
+        },
+        "error": {
+            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9"
+        },
+        "flow_title": "Withings: {profile}",
+        "step": {
+            "pick_implementation": {
+                "title": "Choisissez une m\u00e9thode d'authentification"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "Quel profil avez-vous s\u00e9lectionn\u00e9 sur le site Withings? Il est important que les profils correspondent, sinon les donn\u00e9es seront mal \u00e9tiquet\u00e9es.",
+                "title": "Profil utilisateur"
+            },
+            "reauth": {
+                "description": "Le profile \" {profile} \" doit \u00eatre r\u00e9-authentifi\u00e9 afin de continuer \u00e0 recevoir les donn\u00e9es Withings.",
+                "title": "R\u00e9-authentifier le profil"
+            }
+        }
+    }
+}

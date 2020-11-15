@@ -27,7 +27,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     @property
     def name(self):
         """Switch name."""
-        return "{} {}".format(self.car.leaf.nickname, "Climate Control")
+        return f"{self.car.leaf.nickname} Climate Control"
 
     def log_registration(self):
         """Log registration."""

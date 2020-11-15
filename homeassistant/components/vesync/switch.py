@@ -1,7 +1,7 @@
-"""Support for Etekcity VeSync switches."""
+"""Support for VeSync switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -55,7 +55,15 @@ def _async_setup_entities(devices, async_add_entities):
     async_add_entities(dev_list, update_before_add=True)
 
 
-class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
+class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
+    """Base class for VeSync switch Device Representations."""
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self.device.turn_on()
+
+
+class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     """Representation of a VeSync switch."""
 
     def __init__(self, plug):
@@ -66,13 +74,14 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
-        if hasattr(self.smartplug, "weekly_energy_total"):
-            attr["voltage"] = self.smartplug.voltage
-            attr["weekly_energy_total"] = self.smartplug.weekly_energy_total
-            attr["monthly_energy_total"] = self.smartplug.monthly_energy_total
-            attr["yearly_energy_total"] = self.smartplug.yearly_energy_total
-        return attr
+        if not hasattr(self.smartplug, "weekly_energy_total"):
+            return {}
+        return {
+            "voltage": self.smartplug.voltage,
+            "weekly_energy_total": self.smartplug.weekly_energy_total,
+            "monthly_energy_total": self.smartplug.monthly_energy_total,
+            "yearly_energy_total": self.smartplug.yearly_energy_total,
+        }
 
     @property
     def current_power_w(self):
@@ -90,7 +99,7 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
         self.smartplug.update_energy()
 
 
-class VeSyncLightSwitch(VeSyncDevice, SwitchDevice):
+class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
 
     def __init__(self, switch):

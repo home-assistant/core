@@ -3,7 +3,7 @@ Provide a mock alarm_control_panel platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -32,12 +32,12 @@ def init(empty=False):
         if empty
         else {
             "arm_code": MockAlarm(
-                name=f"Alarm arm code",
+                name="Alarm arm code",
                 code_arm_required=True,
                 unique_id="unique_arm_code",
             ),
             "no_arm_code": MockAlarm(
-                name=f"Alarm no arm code",
+                name="Alarm no arm code",
                 code_arm_required=False,
                 unique_id="unique_no_arm_code",
             ),
@@ -52,7 +52,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockAlarm(MockEntity, AlarmControlPanel):
+class MockAlarm(MockEntity, AlarmControlPanelEntity):
     """Mock Alarm control panel class."""
 
     def __init__(self, **values):

@@ -1,5 +1,5 @@
 """Demo platform that has two fake switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 from . import DOMAIN
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoSwitch(SwitchDevice):
+class DemoSwitch(SwitchEntity):
     """Representation of a demo switch."""
 
     def __init__(self, unique_id, name, state, icon, assumed, device_class=None):

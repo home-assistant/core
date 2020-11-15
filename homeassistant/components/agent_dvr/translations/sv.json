@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r enhet p\u00e5g\u00e5r redan."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                },
+                "title": "Konfigurera DVR Agent"
+            }
+        }
+    }
+}

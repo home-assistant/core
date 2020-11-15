@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevacija",
+                    "latitude": "Zemljopisna \u0161irina",
+                    "longitude": "Zemljopisna du\u017eina",
+                    "name": "Ime"
+                },
+                "description": "Meteorolo\u0161ki institutt",
+                "title": "Lokacija"
+            }
+        }
+    }
+}

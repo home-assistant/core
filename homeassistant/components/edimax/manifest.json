@@ -3,6 +3,5 @@
   "name": "Edimax",
   "documentation": "https://www.home-assistant.io/integrations/edimax",
   "requirements": ["pyedimax==0.2.1"],
-  "dependencies": [],
   "codeowners": []
 }

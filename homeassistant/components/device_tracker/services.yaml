@@ -5,22 +5,22 @@ see:
   fields:
     mac:
       description: MAC address of device
-      example: 'FF:FF:FF:FF:FF:FF'
+      example: "FF:FF:FF:FF:FF:FF"
     dev_id:
       description: Id of device (find id in known_devices.yaml).
-      example: 'phonedave'
+      example: "phonedave"
     host_name:
       description: Hostname of device
-      example: 'Dave'
+      example: "Dave"
     location_name:
       description: Name of location where device is located (not_home is away).
-      example: 'home'
+      example: "home"
     gps:
       description: GPS coordinates where device is located (latitude, longitude).
-      example: '[51.509802, -0.086692]'
+      example: "[51.509802, -0.086692]"
     gps_accuracy:
       description: Accuracy of GPS coordinates.
-      example: '80'
+      example: "80"
     battery:
       description: Battery level of device.
-      example: '100'
+      example: "100"

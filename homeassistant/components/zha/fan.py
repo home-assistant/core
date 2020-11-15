@@ -1,9 +1,8 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
-import logging
 from typing import List
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.components.fan import (
@@ -29,8 +28,6 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Additional speeds in zigbee's ZCL
 # Spec is unclear as to what this value means. On King Of Fans HBUniversal
@@ -121,7 +118,6 @@ class BaseFan(FanEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        pass
 
 
 @STRICT_MATCH(channel_names=CHANNEL_FAN)
@@ -136,7 +132,7 @@ class ZhaFan(BaseFan, ZhaEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
@@ -178,7 +174,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
             """Set the speed of the fan."""
             try:
                 await self._fan_channel.write_attributes({"fan_mode": value})
-            except DeliveryError as ex:
+            except ZigbeeException as ex:
                 self.error("Could not set speed: %s", ex)
                 return
 

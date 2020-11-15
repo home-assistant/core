@@ -3,6 +3,11 @@
 turn_on:
   description: Activate a scene.
   fields:
+    transition:
+      description:
+        Transition duration in seconds it takes to bring devices to the state
+        defined in the scene.
+      example: 2.5
     entity_id:
       description: Name(s) of scenes to turn on
       example: "scene.romantic"
@@ -11,8 +16,15 @@ reload:
   description: Reload the scene configuration
 
 apply:
-  description: Activate a scene. Takes same data as the entities field from a single scene in the config.
+  description:
+    Activate a scene. Takes same data as the entities field from a single scene
+    in the config.
   fields:
+    transition:
+      description:
+        Transition duration in seconds it takes to bring devices to the state
+        defined in the scene.
+      example: 2.5
     entities:
       description: The entities and the state that they need to be.
       example:

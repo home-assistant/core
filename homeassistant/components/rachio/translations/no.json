@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Du trenger API-n\u00f8kkelen fra https://app.rach.io/. G\u00e5 til Innstillinger, og klikk deretter 'GET API KEY'.",
+                "title": "Koble til Rachio-enheten din"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Varighet i minutter \u00e5 kj\u00f8re n\u00e5r du aktiverer en sonebryter"
+                }
+            }
+        }
+    }
+}

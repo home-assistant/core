@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Siaga",
+            "recording": "Merekam",
+            "streaming": "Streaming"
+        }
+    },
+    "title": "Kamera"
+}

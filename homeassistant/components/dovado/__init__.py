@@ -41,8 +41,8 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = DovadoData(
         dovado.Dovado(
-            config[DOMAIN].get(CONF_USERNAME),
-            config[DOMAIN].get(CONF_PASSWORD),
+            config[DOMAIN][CONF_USERNAME],
+            config[DOMAIN][CONF_PASSWORD],
             config[DOMAIN].get(CONF_HOST),
             config[DOMAIN].get(CONF_PORT),
         )

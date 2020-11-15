@@ -1,7 +1,7 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 import logging
 
-import btsmarthub_devicelist
+from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -15,15 +15,24 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_IP = "192.168.1.254"
+CONF_SMARTHUB_MODEL = "smarthub_model"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
+    {
+        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+        vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),
+    }
 )
 
 
 def get_scanner(hass, config):
     """Return a BT Smart Hub scanner if successful."""
-    scanner = BTSmartHubScanner(config[DOMAIN])
+    info = config[DOMAIN]
+    smarthub_client = BTSmartHub(
+        router_ip=info[CONF_HOST], smarthub_model=info.get(CONF_SMARTHUB_MODEL)
+    )
+
+    scanner = BTSmartHubScanner(smarthub_client)
 
     return scanner if scanner.success_init else None
 
@@ -31,10 +40,9 @@ def get_scanner(hass, config):
 class BTSmartHubScanner(DeviceScanner):
     """This class queries a BT Smart Hub."""
 
-    def __init__(self, config):
+    def __init__(self, smarthub_client):
         """Initialise the scanner."""
-        _LOGGER.debug("Initialising BT Smart Hub")
-        self.host = config[CONF_HOST]
+        self.smarthub = smarthub_client
         self.last_results = {}
         self.success_init = False
 
@@ -43,7 +51,7 @@ class BTSmartHubScanner(DeviceScanner):
         if data:
             self.success_init = True
         else:
-            _LOGGER.info("Failed to connect to %s", self.host)
+            _LOGGER.info("Failed to connect to %s", self.smarthub.router_ip)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -77,9 +85,8 @@ class BTSmartHubScanner(DeviceScanner):
         """Retrieve data from BT Smart Hub and return parsed result."""
 
         # Request data from bt smarthub into a list of dicts.
-        data = btsmarthub_devicelist.get_devicelist(
-            router_ip=self.host, only_active_devices=True
-        )
+        data = self.smarthub.get_devicelist(only_active_devices=True)
+
         # Renaming keys from parsed result.
         devices = {}
         for device in data:

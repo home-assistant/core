@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "Pick Authentication Method"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "hassio_confirm": {
         "title": "Almond via Hass.io add-on",
@@ -10,10 +10,10 @@
       }
     },
     "abort": {
-      "already_setup": "You can only configure one Almond account.",
-      "cannot_connect": "Unable to connect to the Almond server.",
-      "missing_configuration": "Please check the documentation on how to set up Almond."
-    },
-    "title": "Almond"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+    }
   }
 }

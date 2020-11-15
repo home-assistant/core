@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Architektura procesoru",
+            "chassis": "\u0160asi",
+            "dev": "V\u00fdvoj",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Typ instalace",
+            "os_name": "Rodina opera\u010dn\u00edch syst\u00e9m\u016f",
+            "os_version": "Verze opera\u010dn\u00edho syst\u00e9mu",
+            "python_version": "Verze Pythonu",
+            "supervisor": "Supervisor",
+            "timezone": "\u010casov\u00e9 p\u00e1smo",
+            "version": "Verze",
+            "virtualenv": "Virtu\u00e1ln\u00ed prost\u0159ed\u00ed"
+        }
+    }
+}

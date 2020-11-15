@@ -78,7 +78,7 @@ class LcnVariableSensor(LcnDevice):
             return
 
         self._value = input_obj.get_value().to_var_unit(self.unit)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnLedLogicSensor(LcnDevice):
@@ -115,4 +115,4 @@ class LcnLedLogicSensor(LcnDevice):
         elif self.source in pypck.lcn_defs.LogicOpPort:
             self._value = input_obj.get_logic_op_state(self.source.value).name.lower()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

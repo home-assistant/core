@@ -1,12 +1,12 @@
 """Fixtures for cloud tests."""
-from unittest.mock import patch
-
 import jwt
 import pytest
 
 from homeassistant.components.cloud import const, prefs
 
 from . import mock_cloud, mock_cloud_prefs
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True)

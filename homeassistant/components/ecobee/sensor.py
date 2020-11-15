@@ -4,8 +4,8 @@ from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -13,14 +13,14 @@ from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
-    "humidity": ["Humidity", UNIT_PERCENTAGE],
+    "humidity": ["Humidity", PERCENTAGE],
 }
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up ecobee (temperature and humidity) sensors."""
     data = hass.data[DOMAIN]
-    dev = list()
+    dev = []
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
             for item in sensor["capability"]:
@@ -82,7 +82,7 @@ class EcobeeSensor(Entity):
                     _LOGGER.error(
                         "Model number for ecobee thermostat %s not recognized. "
                         "Please visit this link and provide the following information: "
-                        "https://github.com/home-assistant/home-assistant/issues/27172 "
+                        "https://github.com/home-assistant/core/issues/27172 "
                         "Unrecognized model number: %s",
                         thermostat["name"],
                         thermostat["modelNumber"],
@@ -108,7 +108,11 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN, "unknown"]:
+        if self._state in [
+            ECOBEE_STATE_CALIBRATING,
+            ECOBEE_STATE_UNKNOWN,
+            "unknown",
+        ]:
             return None
 
         if self.type == "temperature":

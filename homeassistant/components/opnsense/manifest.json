@@ -2,9 +2,6 @@
   "domain": "opnsense",
   "name": "OPNSense",
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
-  "requirements": [
-    "pyopnsense==0.2.0"
-  ],
-  "dependencies": [],
+  "requirements": ["pyopnsense==0.2.0"],
   "codeowners": ["@mtreinish"]
 }

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave j\u00e1 est\u00e1 configurado."
+        },
+        "error": {
+            "option_error": "A valida\u00e7\u00e3o Z-Wave falhou. O caminho para o USB est\u00e1 correto?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Chave de rede (deixe em branco para gerar automaticamente)",
+                    "usb_path": "Caminho do USB"
+                },
+                "description": "Consulte https://www.home-assistant.io/docs/z-wave/installation/ para obter informa\u00e7\u00f5es sobre as vari\u00e1veis de configura\u00e7\u00e3o",
+                "title": "Configurar o Z-Wave"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Morto",
+            "initializing": "Iniciando",
+            "ready": "Pronto",
+            "sleeping": "Dormindo"
+        },
+        "query_stage": {
+            "dead": "Morto ({query_stage})",
+            "initializing": "Iniciando ( {query_stage} )"
+        }
+    }
+}

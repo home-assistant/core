@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "link_local_address": "Gli indirizzi locali di collegamento non sono supportati",
+            "not_axis_device": "Il dispositivo rilevato non \u00e8 un dispositivo Axis"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "Dispositivo Axis: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Impostazione del dispositivo Axis"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selezionare il profilo di flusso da utilizzare"
+                },
+                "title": "Opzioni del flusso video del dispositivo Axis"
+            }
+        }
+    }
+}

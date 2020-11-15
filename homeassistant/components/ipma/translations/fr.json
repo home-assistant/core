@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Ce nom est d\u00e9j\u00e0 utilis\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "mode": "Mode",
+                    "name": "Nom"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Emplacement"
+            }
+        }
+    }
+}

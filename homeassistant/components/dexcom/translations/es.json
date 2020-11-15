@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "server": "Servidor",
+                    "username": "Usuario"
+                },
+                "description": "Introducir las credenciales de Dexcom Share",
+                "title": "Configurar integraci\u00f3n de Dexcom"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unidad de medida"
+                }
+            }
+        }
+    }
+}

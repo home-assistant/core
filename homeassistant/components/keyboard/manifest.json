@@ -3,6 +3,5 @@
   "name": "Keyboard",
   "documentation": "https://www.home-assistant.io/integrations/keyboard",
   "requirements": ["pyuserinput==0.1.11"],
-  "dependencies": [],
   "codeowners": []
 }

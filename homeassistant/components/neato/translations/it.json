@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "create_entry": {
+            "default": "Vedere la [Documentazione di Neato]({docs_url})."
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente",
+                    "vendor": "Fornitore"
+                },
+                "description": "Vedere la [Documentazione di Neato]({docs_url}).",
+                "title": "Informazioni sull'account Neato"
+            }
+        }
+    }
+}

@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Habilita el descobriment autom\u00e0tic",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Habilitar descobriment autom\u00e0tic"
+                },
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement de Hass.io: {addon}?",
+                "title": "Broker MQTT a trav\u00e9s del complement de Hass.io"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3",
+            "button_2": "Segon bot\u00f3",
+            "button_3": "Tercer bot\u00f3",
+            "button_4": "Quart bot\u00f3",
+            "button_5": "Cinqu\u00e8 bot\u00f3",
+            "button_6": "Sis\u00e8 bot\u00f3",
+            "turn_off": "Desactiva",
+            "turn_on": "Activa"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" clicat dues vegades",
+            "button_long_press": "\"{subtype}\" premut cont\u00ednuament",
+            "button_long_release": "\"{subtype}\" alliberat despr\u00e9s d'una estona premut",
+            "button_quadruple_press": "\"{subtype}\" clicat quatre vegades",
+            "button_quintuple_press": "\"{subtype}\" clicat cinc vegades",
+            "button_short_press": "\"{subtype}\" premut",
+            "button_short_release": "\"{subtype}\" alliberat",
+            "button_triple_press": "\"{subtype}\" clicat tres vegades"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Topic missatge de naixement inv\u00e0lid.",
+            "bad_will": "Topic missatge d'\u00faltima voluntat inv\u00e0lid.",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Activa el missatge de naixement",
+                    "birth_payload": "Dades (payload) missatge de naixement",
+                    "birth_qos": "QoS missatge de naixement",
+                    "birth_retain": "Retenci\u00f3 missatge de naixement",
+                    "birth_topic": "Topic missatge de naixement",
+                    "discovery": "Activar descobriment",
+                    "will_enable": "Activa el missatge d'\u00faltima voluntat",
+                    "will_payload": "Dades (payload) missatge d'\u00faltima voluntat",
+                    "will_qos": "QoS missatge d'\u00faltima voluntat",
+                    "will_retain": "Retenci\u00f3 missatge d'\u00faltima voluntat",
+                    "will_topic": "Topic missatge d'\u00faltima voluntat"
+                },
+                "description": "Selecciona les opcions MQTT."
+            }
+        }
+    }
+}

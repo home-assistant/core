@@ -1,8 +1,8 @@
 {
   "domain": "flume",
-  "name": "flume",
+  "name": "Flume",
   "documentation": "https://www.home-assistant.io/integrations/flume/",
-  "requirements": ["pyflume==0.3.0"],
-  "dependencies": [],
-  "codeowners": ["@ChrisMandich"]
+  "requirements": ["pyflume==0.5.5"],
+  "codeowners": ["@ChrisMandich", "@bdraco"],
+  "config_flow": true
 }

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "A configura\u00e7\u00e3o de ponte j\u00e1 est\u00e1 em andamento."
+        },
+        "error": {
+            "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao gateway.",
+            "invalid_key": "Falha ao registrar-se com a chave fornecida. Se isso continuar acontecendo, tente reiniciar o gateway.",
+            "timeout": "Excedido tempo limite para validar c\u00f3digo"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Hospedeiro",
+                    "security_code": "C\u00f3digo de seguran\u00e7a"
+                },
+                "description": "Voc\u00ea pode encontrar o c\u00f3digo de seguran\u00e7a na parte de tr\u00e1s do seu gateway.",
+                "title": "Digite o c\u00f3digo de seguran\u00e7a"
+            }
+        }
+    }
+}

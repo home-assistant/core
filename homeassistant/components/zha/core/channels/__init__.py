@@ -1,8 +1,10 @@
 """Channels module for Zigbee Home Automation."""
 import asyncio
-import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import zigpy.zcl.clusters.closures
+
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -28,7 +30,6 @@ from .. import (
     typing as zha_typing,
 )
 
-_LOGGER = logging.getLogger(__name__)
 ChannelsDict = Dict[str, zha_typing.ChannelType]
 
 
@@ -92,6 +93,14 @@ class Channels:
         """Return the unique id for this channel."""
         return self._unique_id
 
+    @property
+    def zigbee_signature(self) -> Dict[int, Dict[str, Any]]:
+        """Get the zigbee signatures for the pools in channels."""
+        return {
+            signature[0]: signature[1]
+            for signature in [pool.zigbee_signature for pool in self.pools]
+        }
+
     @classmethod
     def new(cls, zha_device: zha_typing.ZhaDeviceType) -> "Channels":
         """Create new instance."""
@@ -149,6 +158,7 @@ class Channels:
             {
                 const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
                 const.ATTR_UNIQUE_ID: self.unique_id,
+                ATTR_DEVICE_ID: self.zha_device.device_id,
                 **event_data,
             },
         )
@@ -231,6 +241,27 @@ class ChannelPool:
         """Return the unique id for this channel."""
         return self._unique_id
 
+    @property
+    def zigbee_signature(self) -> Tuple[int, Dict[str, Any]]:
+        """Get the zigbee signature for the endpoint this pool represents."""
+        return (
+            self.endpoint.endpoint_id,
+            {
+                const.ATTR_PROFILE_ID: self.endpoint.profile_id,
+                const.ATTR_DEVICE_TYPE: f"0x{self.endpoint.device_type:04x}"
+                if self.endpoint.device_type is not None
+                else "",
+                const.ATTR_IN_CLUSTERS: [
+                    f"0x{cluster_id:04x}"
+                    for cluster_id in sorted(self.endpoint.in_clusters)
+                ],
+                const.ATTR_OUT_CLUSTERS: [
+                    f"0x{cluster_id:04x}"
+                    for cluster_id in sorted(self.endpoint.out_clusters)
+                ],
+            },
+        )
+
     @classmethod
     def new(cls, channels: Channels, ep_id: int) -> "ChannelPool":
         """Create new channels for an endpoint."""
@@ -251,9 +282,10 @@ class ChannelPool:
             # incorrectly.
             if (
                 hasattr(cluster, "ep_attribute")
+                and cluster_id == zigpy.zcl.clusters.closures.DoorLock.cluster_id
                 and cluster.ep_attribute == "multistate_input"
             ):
-                channel_class = base.ZigbeeChannel
+                channel_class = general.MultistateInput
             # end of ugly hack
             channel = channel_class(cluster, self)
             if channel.name == const.CHANNEL_POWER_CONFIGURATION:

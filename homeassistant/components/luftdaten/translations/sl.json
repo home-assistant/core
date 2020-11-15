@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_sensor": "Senzor ni na voljo ali je neveljaven"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Prika\u017ei na zemljevidu",
+                    "station_id": "Luftdaten ID Senzorja"
+                },
+                "title": "Dolo\u010dite Luftdaten"
+            }
+        }
+    }
+}

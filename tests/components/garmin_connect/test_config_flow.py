@@ -1,6 +1,4 @@
 """Test the Garmin Connect config flow."""
-from unittest.mock import patch
-
 from garminconnect import (
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -12,6 +10,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_CONF = {
@@ -24,7 +23,9 @@ MOCK_CONF = {
 @pytest.fixture(name="mock_garmin_connect")
 def mock_garmin():
     """Mock Garmin."""
-    with patch("homeassistant.components.garmin_connect.config_flow.Garmin",) as garmin:
+    with patch(
+        "homeassistant.components.garmin_connect.config_flow.Garmin",
+    ) as garmin:
         garmin.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
         yield garmin.return_value
 
@@ -40,9 +41,13 @@ async def test_show_form(hass):
 
 async def test_step_user(hass, mock_garmin_connect):
     """Test registering an integration and finishing flow works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_CONF
-    )
+
+    with patch(
+        "homeassistant.components.garmin_connect.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.garmin_connect.async_setup", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == MOCK_CONF
 

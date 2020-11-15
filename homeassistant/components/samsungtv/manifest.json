@@ -4,14 +4,13 @@
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "samsungctl[websocket]==0.7.1",
-    "samsungtvws[websocket]==1.4.0"
+    "samsungtvws==1.4.0"
   ],
   "ssdp": [
     {
       "st": "urn:samsung.com:device:RemoteControlReceiver:1"
     }
   ],
-  "dependencies": [],
   "codeowners": [
     "@escoand"
   ],

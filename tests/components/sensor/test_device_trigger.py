@@ -6,7 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, UNIT_PERCENTAGE
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -61,6 +61,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_triggers = [
         {
@@ -75,7 +76,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 8
+    assert len(triggers) == 12
     assert triggers == expected_triggers
 
 
@@ -98,17 +99,18 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"suffix": UNIT_PERCENTAGE},
+                "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"suffix": UNIT_PERCENTAGE},
+                "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
                 "type": "float",
@@ -134,6 +136,7 @@ async def test_get_trigger_capabilities_none(hass, device_reg, entity_reg):
     config_entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     triggers = [
         {
@@ -165,6 +168,7 @@ async def test_if_fires_not_on_above_below(hass, calls, caplog):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -194,6 +198,7 @@ async def test_if_fires_on_state_above(hass, calls):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -251,6 +256,7 @@ async def test_if_fires_on_state_below(hass, calls):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -308,6 +314,7 @@ async def test_if_fires_on_state_between(hass, calls):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -378,6 +385,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -426,6 +434,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     await hass.async_block_till_done()
-    assert calls[0].data[
-        "some"
-    ] == "turn_off device - {} - unknown - 11 - 0:00:05".format(sensor1.entity_id)
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {sensor1.entity_id} - unknown - 11 - 0:00:05"
+    )

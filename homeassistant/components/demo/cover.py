@@ -4,7 +4,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_utc_time_change
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoCover(CoverDevice):
+class DemoCover(CoverEntity):
     """Representation of a demo cover."""
 
     def __init__(

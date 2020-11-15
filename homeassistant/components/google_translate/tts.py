@@ -8,9 +8,9 @@ from aiohttp.hdrs import REFERER, USER_AGENT
 import async_timeout
 from gtts_token import gtts_token
 import voluptuous as vol
-import yarl
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.const import HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,12 +123,19 @@ class GoogleProvider(Provider):
 
         data = b""
         for idx, part in enumerate(message_parts):
-            part_token = await self.hass.async_add_job(token.calculate_token, part)
+            try:
+                part_token = await self.hass.async_add_executor_job(
+                    token.calculate_token, part
+                )
+            except ValueError as err:
+                # If token seed fetching fails.
+                _LOGGER.warning(err)
+                return None, None
 
             url_param = {
                 "ie": "UTF-8",
                 "tl": language,
-                "q": yarl.URL(part).raw_path,
+                "q": part,
                 "tk": part_token,
                 "total": len(message_parts),
                 "idx": idx,
@@ -142,7 +149,7 @@ class GoogleProvider(Provider):
                         GOOGLE_SPEECH_URL, params=url_param, headers=self.headers
                     )
 
-                    if request.status != 200:
+                    if request.status != HTTP_OK:
                         _LOGGER.error(
                             "Error %d on load URL %s", request.status, request.url
                         )

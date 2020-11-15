@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Nuit d\u00e9gag\u00e9e",
+            "cloudy": "Nuageux",
+            "exceptional": "Exceptionnel",
+            "fog": "Brouillard",
+            "hail": "Gr\u00eale",
+            "lightning": "Orage",
+            "lightning-rainy": "Orage / Pluie",
+            "partlycloudy": "\u00c9claircies",
+            "pouring": "Averses",
+            "rainy": "Pluie",
+            "snowy": "Neigeux",
+            "snowy-rainy": "Neigeux, pluvieux",
+            "sunny": "Ensoleill\u00e9",
+            "windy": "Venteux",
+            "windy-variant": "Venteux"
+        }
+    }
+}

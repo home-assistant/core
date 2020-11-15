@@ -2,7 +2,5 @@
   "domain": "pushsafer",
   "name": "Pushsafer",
   "documentation": "https://www.home-assistant.io/integrations/pushsafer",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

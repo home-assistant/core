@@ -1,7 +1,7 @@
 """Binary sensor to read Proxmox VE data."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
 
 from . import CONF_CONTAINERS, CONF_NODES, CONF_VMS, PROXMOX_CLIENTS, ProxmoxItemType
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class ProxmoxBinarySensor(BinarySensorDevice):
+class ProxmoxBinarySensor(BinarySensorEntity):
     """A binary sensor for reading Proxmox VE data."""
 
     def __init__(self, proxmox_client, item_node, item_type, item_id):

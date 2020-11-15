@@ -1,5 +1,5 @@
 """Tests for the geonetnz_quakes component."""
-from unittest.mock import MagicMock
+from tests.async_mock import MagicMock
 
 
 def _generate_mock_feed_entry(

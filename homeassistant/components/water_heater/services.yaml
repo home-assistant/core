@@ -5,7 +5,7 @@ set_away_mode:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.water_heater'
+      example: "water_heater.water_heater"
     away_mode:
       description: New value of away mode.
       example: true
@@ -15,7 +15,7 @@ set_temperature:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.water_heater'
+      example: "water_heater.water_heater"
     temperature:
       description: New target temperature for water heater.
       example: 25
@@ -25,7 +25,7 @@ set_operation_mode:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.water_heater'
+      example: "water_heater.water_heater"
     operation_mode:
       description: New value of operation mode.
       example: eco

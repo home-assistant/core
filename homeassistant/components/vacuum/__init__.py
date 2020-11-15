@@ -148,6 +148,11 @@ class _BaseVacuum(Entity):
         return None
 
     @property
+    def battery_icon(self):
+        """Return the battery icon for the vacuum cleaner."""
+        raise NotImplementedError()
+
+    @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
         return None
@@ -156,6 +161,26 @@ class _BaseVacuum(Entity):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         raise NotImplementedError()
+
+    @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        if self.supported_features & SUPPORT_FAN_SPEED:
+            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the vacuum cleaner."""
+        data = {}
+
+        if self.supported_features & SUPPORT_BATTERY:
+            data[ATTR_BATTERY_LEVEL] = self.battery_level
+            data[ATTR_BATTERY_ICON] = self.battery_icon
+
+        if self.supported_features & SUPPORT_FAN_SPEED:
+            data[ATTR_FAN_SPEED] = self.fan_speed
+
+        return data
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
@@ -228,7 +253,7 @@ class _BaseVacuum(Entity):
         )
 
 
-class VacuumDevice(_BaseVacuum, ToggleEntity):
+class VacuumEntity(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
 
     @property
@@ -247,25 +272,12 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         )
 
     @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        if self.fan_speed is not None:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
-
-    @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
-        data = {}
+        data = super().state_attributes
 
-        if self.status is not None:
+        if self.supported_features & SUPPORT_STATUS:
             data[ATTR_STATUS] = self.status
-
-        if self.battery_level is not None:
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
-        if self.fan_speed is not None:
-            data[ATTR_FAN_SPEED] = self.fan_speed
 
         return data
 
@@ -304,14 +316,23 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
 
     async def async_pause(self):
         """Not supported."""
-        pass
 
     async def async_start(self):
         """Not supported."""
-        pass
 
 
-class StateVacuumDevice(_BaseVacuum):
+class VacuumDevice(VacuumEntity):
+    """Representation of a vacuum (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
+        )
+
+
+class StateVacuumEntity(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
 
     @property
@@ -327,27 +348,6 @@ class StateVacuumDevice(_BaseVacuum):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
-
-    @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        if self.fan_speed is not None:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the vacuum cleaner."""
-        data = {}
-
-        if self.battery_level is not None:
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
-        if self.fan_speed is not None:
-            data[ATTR_FAN_SPEED] = self.fan_speed
-            data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
-
-        return data
 
     def start(self):
         """Start or resume the cleaning task."""
@@ -373,12 +373,21 @@ class StateVacuumDevice(_BaseVacuum):
 
     async def async_turn_on(self, **kwargs):
         """Not supported."""
-        pass
 
     async def async_turn_off(self, **kwargs):
         """Not supported."""
-        pass
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-        pass
+
+
+class StateVacuumDevice(StateVacuumEntity):
+    """Representation of a vacuum (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
+            cls.__name__,
+        )

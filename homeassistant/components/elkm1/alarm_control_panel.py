@@ -1,12 +1,12 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
-import logging
-
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
+from elkm1_lib.util import username
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
+    ATTR_CHANGED_BY,
     FORMAT_NUMBER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -14,7 +14,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
-    ATTR_CODE,
     ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -26,22 +25,15 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import (
-    SERVICE_ALARM_ARM_HOME_INSTANT,
-    SERVICE_ALARM_ARM_NIGHT_INSTANT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISPLAY_MESSAGE,
-    ElkAttachedEntity,
-    create_elk_entities,
-)
-from .const import DOMAIN
-
-ELK_ALARM_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999)),
-    }
+from . import ElkAttachedEntity, create_elk_entities
+from .const import (
+    ATTR_CHANGED_BY_ID,
+    ATTR_CHANGED_BY_KEYPAD,
+    ATTR_CHANGED_BY_TIME,
+    DOMAIN,
+    ELK_USER_CODE_SERVICE_SCHEMA,
 )
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
@@ -57,41 +49,37 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
+SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
+SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
+SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
+SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
+SERVICE_ALARM_BYPASS = "alarm_bypass"
+SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ElkM1 alarm platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-
     elk = elk_data["elk"]
-    areas_with_keypad = set()
-    for keypad in elk.keypads:
-        areas_with_keypad.add(keypad.area)
-
-    areas = []
-    for area in elk.areas:
-        if area.index in areas_with_keypad or elk_data["auto_configure"] is False:
-            areas.append(area)
-    create_elk_entities(elk_data, areas, "area", ElkArea, entities)
+    entities = []
+    create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
-        ELK_ALARM_SERVICE_SCHEMA,
+        ELK_USER_CODE_SERVICE_SCHEMA,
         "async_alarm_arm_vacation",
     )
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME_INSTANT,
-        ELK_ALARM_SERVICE_SCHEMA,
+        ELK_USER_CODE_SERVICE_SCHEMA,
         "async_alarm_arm_home_instant",
     )
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT_INSTANT,
-        ELK_ALARM_SERVICE_SCHEMA,
+        ELK_USER_CODE_SERVICE_SCHEMA,
         "async_alarm_arm_night_instant",
     )
     platform.async_register_entity_service(
@@ -99,29 +87,75 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         DISPLAY_MESSAGE_SERVICE_SCHEMA,
         "async_display_message",
     )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_bypass",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_CLEAR_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_clear_bypass",
+    )
 
 
-class ElkArea(ElkAttachedEntity, AlarmControlPanel):
+class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
+        self._elk = elk
         self._changed_by_keypad = None
+        self._changed_by_time = None
+        self._changed_by_id = None
+        self._changed_by = None
         self._state = None
 
     async def async_added_to_hass(self):
         """Register callback for ElkM1 changes."""
         await super().async_added_to_hass()
-        for keypad in self._elk.keypads:
-            keypad.add_callback(self._watch_keypad)
+        if len(self._elk.areas.elements) == 1:
+            for keypad in self._elk.keypads:
+                keypad.add_callback(self._watch_keypad)
+        self._element.add_callback(self._watch_area)
+
+        # We do not get changed_by back from resync.
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        if ATTR_CHANGED_BY_KEYPAD in last_state.attributes:
+            self._changed_by_keypad = last_state.attributes[ATTR_CHANGED_BY_KEYPAD]
+        if ATTR_CHANGED_BY_TIME in last_state.attributes:
+            self._changed_by_time = last_state.attributes[ATTR_CHANGED_BY_TIME]
+        if ATTR_CHANGED_BY_ID in last_state.attributes:
+            self._changed_by_id = last_state.attributes[ATTR_CHANGED_BY_ID]
+        if ATTR_CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
 
     def _watch_keypad(self, keypad, changeset):
         if keypad.area != self._element.index:
             return
         if changeset.get("last_user") is not None:
             self._changed_by_keypad = keypad.name
+            self._changed_by_time = keypad.last_user_time.isoformat()
+            self._changed_by_id = keypad.last_user + 1
+            self._changed_by = username(self._elk, keypad.last_user)
             self.async_write_ha_state()
+
+    def _watch_area(self, area, changeset):
+        last_log = changeset.get("last_log")
+        if not last_log:
+            return
+        # user_number only set for arm/disarm logs
+        if not last_log.get("user_number"):
+            return
+        self._changed_by_keypad = None
+        self._changed_by_id = last_log["user_number"]
+        self._changed_by = username(self._elk, self._changed_by_id - 1)
+        self._changed_by_time = last_log["timestamp"]
+        self.async_write_ha_state()
 
     @property
     def code_format(self):
@@ -152,8 +186,15 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
             attrs["arm_up_state"] = ArmUpState(elmt.arm_up_state).name.lower()
         if elmt.alarm_state is not None:
             attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
-        attrs["changed_by_keypad"] = self._changed_by_keypad
+        attrs[ATTR_CHANGED_BY_KEYPAD] = self._changed_by_keypad
+        attrs[ATTR_CHANGED_BY_TIME] = self._changed_by_time
+        attrs[ATTR_CHANGED_BY_ID] = self._changed_by_id
         return attrs
+
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return self._changed_by
 
     def _element_changed(self, element, changeset):
         elk_state_to_hass_state = {
@@ -214,3 +255,11 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
     async def async_display_message(self, clear, beep, timeout, line1, line2):
         """Display a message on all keypads for the area."""
         self._element.display_message(clear, beep, timeout, line1, line2)
+
+    async def async_bypass(self, code=None):
+        """Bypass all zones in area."""
+        self._element.bypass(code)
+
+    async def async_clear_bypass(self, code=None):
+        """Clear bypass for all zones in area."""
+        self._element.clear_bypass(code)

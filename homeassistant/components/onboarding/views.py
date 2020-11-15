@@ -4,8 +4,10 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components.auth import indieauth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN
 from homeassistant.core import callback
 
 from .const import (
@@ -95,7 +97,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("User step already done", 403)
+                return self.json_message("User step already done", HTTP_FORBIDDEN)
 
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
@@ -116,7 +118,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Create default areas using the users supplied language.
             translations = await hass.helpers.translation.async_get_translations(
-                data["language"]
+                data["language"], "area", DOMAIN
             )
 
             area_registry = await hass.helpers.area_registry.async_get_registry()
@@ -147,13 +149,23 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("Core config step already done", 403)
+                return self.json_message(
+                    "Core config step already done", HTTP_FORBIDDEN
+                )
 
             await self._async_mark_done(hass)
 
             await hass.config_entries.flow.async_init(
                 "met", context={"source": "onboarding"}
             )
+
+            if (
+                hass.components.hassio.is_hassio()
+                and "raspberrypi" in hass.components.hassio.get_core_info()["machine"]
+            ):
+                await hass.config_entries.flow.async_init(
+                    "rpi_power", context={"source": "onboarding"}
+                )
 
             return self.json({})
 
@@ -165,7 +177,9 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     name = "api:onboarding:integration"
     step = STEP_INTEGRATION
 
-    @RequestDataValidator(vol.Schema({vol.Required("client_id"): str}))
+    @RequestDataValidator(
+        vol.Schema({vol.Required("client_id"): str, vol.Required("redirect_uri"): str})
+    )
     async def post(self, request, data):
         """Handle token creation."""
         hass = request.app["hass"]
@@ -173,9 +187,19 @@ class IntegrationOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("Integration step already done", 403)
+                return self.json_message(
+                    "Integration step already done", HTTP_FORBIDDEN
+                )
 
             await self._async_mark_done(hass)
+
+            # Validate client ID and redirect uri
+            if not await indieauth.verify_redirect_uri(
+                request.app["hass"], data["client_id"], data["redirect_uri"]
+            ):
+                return self.json_message(
+                    "invalid client id or redirect uri", HTTP_BAD_REQUEST
+                )
 
             # Return authorization code so we can redirect user and log them in
             auth_code = hass.components.auth.create_auth_code(data["client_id"], user)

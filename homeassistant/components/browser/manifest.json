@@ -2,8 +2,6 @@
   "domain": "browser",
   "name": "Browser",
   "documentation": "https://www.home-assistant.io/integrations/browser",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

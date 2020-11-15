@@ -1,10 +1,10 @@
 """The tests for the Command line sensor platform."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components.command_line import sensor as command_line
 from homeassistant.helpers.template import Template
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -14,10 +14,7 @@ class TestCommandSensorSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def update_side_effect(self, data):
         """Side effect function for mocking CommandSensorData.update()."""
@@ -40,12 +37,12 @@ class TestCommandSensorSensor(unittest.TestCase):
 
         command_line.setup_platform(self.hass, config, add_dev_callback)
 
-        assert 1 == len(devices)
+        assert len(devices) == 1
         entity = devices[0]
         entity.update()
-        assert "Test" == entity.name
-        assert "in" == entity.unit_of_measurement
-        assert "5" == entity.state
+        assert entity.name == "Test"
+        assert entity.unit_of_measurement == "in"
+        assert entity.state == "5"
 
     def test_template(self):
         """Test command sensor with template."""
@@ -61,7 +58,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         )
 
         entity.update()
-        assert 5 == float(entity.state)
+        assert float(entity.state) == 5
 
     def test_template_render(self):
         """Ensure command with templates get rendered properly."""
@@ -71,7 +68,26 @@ class TestCommandSensorSensor(unittest.TestCase):
         )
         data.update()
 
-        assert "Works" == data.value
+        assert data.value == "Works"
+
+    def test_template_render_with_quote(self):
+        """Ensure command with templates and quotes get rendered properly."""
+        self.hass.states.set("sensor.test_state", "Works 2")
+        with patch(
+            "homeassistant.components.command_line.subprocess.check_output",
+            return_value=b"Works\n",
+        ) as check_output:
+            data = command_line.CommandSensorData(
+                self.hass,
+                'echo "{{ states.sensor.test_state.state }}" "3 4"',
+                15,
+            )
+            data.update()
+
+        assert data.value == "Works"
+        check_output.assert_called_once_with(
+            'echo "Works 2" "3 4"', shell=True, timeout=15  # nosec # shell by design
+        )
 
     def test_bad_command(self):
         """Test bad command."""
@@ -95,11 +111,11 @@ class TestCommandSensorSensor(unittest.TestCase):
             self.hass, data, "test", None, None, ["key", "another_key", "key_three"]
         )
         self.sensor.update()
-        assert "some_json_value" == self.sensor.device_state_attributes["key"]
+        assert self.sensor.device_state_attributes["key"] == "some_json_value"
         assert (
-            "another_json_value" == self.sensor.device_state_attributes["another_key"]
+            self.sensor.device_state_attributes["another_key"] == "another_json_value"
         )
-        assert "value_three" == self.sensor.device_state_attributes["key_three"]
+        assert self.sensor.device_state_attributes["key_three"] == "value_three"
 
     @patch("homeassistant.components.command_line.sensor._LOGGER")
     def test_update_with_json_attrs_no_data(self, mock_logger):
@@ -156,12 +172,12 @@ class TestCommandSensorSensor(unittest.TestCase):
             ["key", "another_key", "key_three", "special_key"],
         )
         self.sensor.update()
-        assert "some_json_value" == self.sensor.device_state_attributes["key"]
+        assert self.sensor.device_state_attributes["key"] == "some_json_value"
         assert (
-            "another_json_value" == self.sensor.device_state_attributes["another_key"]
+            self.sensor.device_state_attributes["another_key"] == "another_json_value"
         )
-        assert "value_three" == self.sensor.device_state_attributes["key_three"]
-        assert not ("special_key" in self.sensor.device_state_attributes)
+        assert self.sensor.device_state_attributes["key_three"] == "value_three"
+        assert "special_key" not in self.sensor.device_state_attributes
 
     def test_update_with_unnecessary_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
@@ -178,8 +194,8 @@ class TestCommandSensorSensor(unittest.TestCase):
             self.hass, data, "test", None, None, ["key", "another_key"]
         )
         self.sensor.update()
-        assert "some_json_value" == self.sensor.device_state_attributes["key"]
+        assert self.sensor.device_state_attributes["key"] == "some_json_value"
         assert (
-            "another_json_value" == self.sensor.device_state_attributes["another_key"]
+            self.sensor.device_state_attributes["another_key"] == "another_json_value"
         )
-        assert not ("key_three" in self.sensor.device_state_attributes)
+        assert "key_three" not in self.sensor.device_state_attributes

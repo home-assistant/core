@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "unauthorized": "P\u00e1rov\u00e1n\u00ed bylo odm\u00edtnuto, zkontrolujte po\u017eadavek na autorizaci na za\u0159\u00edzen\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "host": "Hostitel",
+                    "port": "Port"
+                },
+                "title": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed"
+            }
+        }
+    }
+}

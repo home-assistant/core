@@ -1,0 +1,33 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Aktuell {entity_name} batteriniv\u00e5",
+            "is_humidity": "Aktuell {entity_name} fuktighet",
+            "is_illuminance": "Aktuell {entity_name} belysning",
+            "is_power": "Aktuell {entity_name} str\u00f6m",
+            "is_pressure": "Aktuellt {entity_name} tryck",
+            "is_signal_strength": "Aktuell {entity_name} signalstyrka",
+            "is_temperature": "Aktuell {entity_name} temperatur",
+            "is_timestamp": "Aktuell {entity_name} tidsst\u00e4mpel",
+            "is_value": "Aktuellt {entity_name} v\u00e4rde"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} batteriniv\u00e5 \u00e4ndras",
+            "humidity": "{entity_name} fuktighet \u00e4ndras",
+            "illuminance": "{entity_name} belysning \u00e4ndras",
+            "power": "{entity_name} str\u00f6mf\u00f6r\u00e4ndringar",
+            "pressure": "{entity_name} tryckf\u00f6r\u00e4ndringar",
+            "signal_strength": "{entity_name} signalstyrka \u00e4ndras",
+            "temperature": "{entity_name} temperaturf\u00f6r\u00e4ndringar",
+            "timestamp": "{entity_name} tidst\u00e4mpel \u00e4ndras",
+            "value": "{entity_name} v\u00e4rde \u00e4ndras"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": "Sensor"
+}

@@ -1,5 +1,5 @@
 """Support for Qwikswitch relays."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DOMAIN as QWIKSWITCH, QSToggleEntity
 
@@ -14,5 +14,5 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSSwitch(QSToggleEntity, SwitchDevice):
+class QSSwitch(QSToggleEntity, SwitchEntity):
     """Switch based on a Qwikswitch relay module."""

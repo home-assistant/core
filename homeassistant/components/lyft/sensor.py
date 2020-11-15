@@ -8,15 +8,13 @@ from lyft_rides.errors import APIError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_END_LATITUDE = "end_latitude"
 CONF_END_LONGITUDE = "end_longitude"
 CONF_PRODUCT_IDS = "product_ids"

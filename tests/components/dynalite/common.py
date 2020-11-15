@@ -1,9 +1,8 @@
 """Common functions for tests."""
-from asynctest import CoroutineMock, Mock, call, patch
-
 from homeassistant.components import dynalite
 from homeassistant.helpers import entity_registry
 
+from tests.async_mock import AsyncMock, Mock, call, patch
 from tests.common import MockConfigEntry
 
 ATTR_SERVICE = "service"
@@ -38,12 +37,13 @@ async def create_entity_from_device(hass, device):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
     ) as mock_dyn_dev:
-        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        mock_dyn_dev().async_setup = AsyncMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
         new_device_func([device])
     await hass.async_block_till_done()
+    return mock_dyn_dev.mock_calls[1][2]["update_device_func"]
 
 
 async def run_service_tests(hass, device, platform, services):

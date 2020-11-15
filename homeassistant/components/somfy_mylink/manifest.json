@@ -3,6 +3,5 @@
   "name": "Somfy MyLink",
   "documentation": "https://www.home-assistant.io/integrations/somfy_mylink",
   "requirements": ["somfy-mylink-synergy==1.0.6"],
-  "dependencies": [],
   "codeowners": []
 }

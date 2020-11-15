@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "name_exists": "Nazwa ju\u017c istnieje"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Konfiguracja klienta Transmission"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Limit",
+                    "order": "Kolejno\u015b\u0107",
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji"
+                },
+                "title": "Konfiguracja opcji dla Transmission"
+            }
+        }
+    }
+}

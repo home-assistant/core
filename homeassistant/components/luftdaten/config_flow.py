@@ -22,10 +22,10 @@ from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 @callback
 def configured_sensors(hass):
     """Return a set of configured Luftdaten sensors."""
-    return set(
+    return {
         entry.data[CONF_SENSOR_ID]
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @callback
@@ -69,7 +69,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
         sensor_id = user_input[CONF_SENSOR_ID]
 
         if sensor_id in configured_sensors(self.hass):
-            return self._show_form({CONF_SENSOR_ID: "sensor_exists"})
+            return self._show_form({CONF_SENSOR_ID: "already_configured"})
 
         session = aiohttp_client.async_get_clientsession(self.hass)
         luftdaten = Luftdaten(user_input[CONF_SENSOR_ID], self.hass.loop, session)
@@ -77,7 +77,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             await luftdaten.get_data()
             valid = await luftdaten.validate_sensor()
         except LuftdatenConnectionError:
-            return self._show_form({CONF_SENSOR_ID: "communication_error"})
+            return self._show_form({CONF_SENSOR_ID: "cannot_connect"})
 
         if not valid:
             return self._show_form({CONF_SENSOR_ID: "invalid_sensor"})

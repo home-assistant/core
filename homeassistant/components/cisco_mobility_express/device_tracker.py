@@ -43,8 +43,8 @@ def get_scanner(hass, config):
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
-        config.get(CONF_SSL),
-        config.get(CONF_VERIFY_SSL),
+        config[CONF_SSL],
+        config[CONF_VERIFY_SSL],
     )
     if not controller.is_logged_in():
         return None

@@ -1,5 +1,4 @@
 """Support for repeating alerts when conditions are met."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -80,15 +79,15 @@ async def async_setup(hass, config):
         if not cfg:
             cfg = {}
 
-        name = cfg.get(CONF_NAME)
-        watched_entity_id = cfg.get(CONF_ENTITY_ID)
-        alert_state = cfg.get(CONF_STATE)
-        repeat = cfg.get(CONF_REPEAT)
-        skip_first = cfg.get(CONF_SKIP_FIRST)
+        name = cfg[CONF_NAME]
+        watched_entity_id = cfg[CONF_ENTITY_ID]
+        alert_state = cfg[CONF_STATE]
+        repeat = cfg[CONF_REPEAT]
+        skip_first = cfg[CONF_SKIP_FIRST]
         message_template = cfg.get(CONF_ALERT_MESSAGE)
         done_message_template = cfg.get(CONF_DONE_MESSAGE)
-        notifiers = cfg.get(CONF_NOTIFIERS)
-        can_ack = cfg.get(CONF_CAN_ACK)
+        notifiers = cfg[CONF_NOTIFIERS]
+        can_ack = cfg[CONF_CAN_ACK]
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
 
@@ -144,9 +143,8 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service, schema=ALERT_SERVICE_SCHEMA
     )
 
-    tasks = [alert.async_update_ha_state() for alert in entities]
-    if tasks:
-        await asyncio.wait(tasks)
+    for alert in entities:
+        alert.async_write_ha_state()
 
     return True
 
@@ -201,8 +199,8 @@ class Alert(ToggleEntity):
         self._send_done_message = False
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
-        event.async_track_state_change(
-            hass, watched_entity_id, self.watched_entity_change
+        event.async_track_state_change_event(
+            hass, [watched_entity_id], self.watched_entity_change
         )
 
     @property
@@ -224,14 +222,12 @@ class Alert(ToggleEntity):
             return STATE_ON
         return STATE_IDLE
 
-    @property
-    def hidden(self):
-        """Hide the alert when it is not firing."""
-        return not self._can_ack or not self._firing
-
-    async def watched_entity_change(self, entity, from_state, to_state):
+    async def watched_entity_change(self, ev):
         """Determine if the alert should start or stop."""
-        _LOGGER.debug("Watched entity (%s) has changed", entity)
+        to_state = ev.data.get("new_state")
+        if to_state is None:
+            return
+        _LOGGER.debug("Watched entity (%s) has changed", ev.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:
@@ -249,7 +245,7 @@ class Alert(ToggleEntity):
         else:
             await self._schedule_notify()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def end_alerting(self):
         """End the alert procedures."""
@@ -259,7 +255,7 @@ class Alert(ToggleEntity):
         self._firing = False
         if self._send_done_message:
             await self._notify_done_message()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _schedule_notify(self):
         """Schedule a notification."""
@@ -280,7 +276,7 @@ class Alert(ToggleEntity):
             self._send_done_message = True
 
             if self._message_template is not None:
-                message = self._message_template.async_render()
+                message = self._message_template.async_render(parse_result=False)
             else:
                 message = self._name
 
@@ -295,7 +291,7 @@ class Alert(ToggleEntity):
         if self._done_message_template is None:
             return
 
-        message = self._done_message_template.async_render()
+        message = self._done_message_template.async_render(parse_result=False)
 
         await self._send_notification_message(message)
 
@@ -304,7 +300,7 @@ class Alert(ToggleEntity):
         msg_payload = {ATTR_MESSAGE: message}
 
         if self._title_template is not None:
-            title = self._title_template.async_render()
+            title = self._title_template.async_render(parse_result=False)
             msg_payload.update({ATTR_TITLE: title})
         if self._data:
             msg_payload.update({ATTR_DATA: self._data})
@@ -312,19 +308,21 @@ class Alert(ToggleEntity):
         _LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
-            await self.hass.services.async_call(DOMAIN_NOTIFY, target, msg_payload)
+            await self.hass.services.async_call(
+                DOMAIN_NOTIFY, target, msg_payload, context=self._context
+            )
 
     async def async_turn_on(self, **kwargs):
         """Async Unacknowledge alert."""
         _LOGGER.debug("Reset Alert: %s", self._name)
         self._ack = False
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Async Acknowledge alert."""
         _LOGGER.debug("Acknowledged Alert: %s", self._name)
         self._ack = True
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_toggle(self, **kwargs):
         """Async toggle alert."""

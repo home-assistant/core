@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -25,9 +24,14 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    VacuumDevice,
+    VacuumEntity,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -174,7 +178,7 @@ class MqttVacuum(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    VacuumDevice,
+    VacuumEntity,
 ):
     """Representation of a MQTT-controlled legacy vacuum."""
 
@@ -395,39 +399,29 @@ class MqttVacuum(
     @property
     def status(self):
         """Return a status string for the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
-            return None
-
         return self._status
 
     @property
     def fan_speed(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return None
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return []
         return self._fan_speed_list
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
     def battery_icon(self):
-        """Return the battery icon for the vacuum cleaner."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
+        """Return the battery icon for the vacuum cleaner.
+
+        No need to check SUPPORT_BATTERY, this won't be called if battery_level is None.
+        """
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self._charging

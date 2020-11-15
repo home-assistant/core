@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
 
 from . import trait
@@ -207,7 +208,11 @@ class AbstractConfig(ABC):
             return
 
         webhook.async_register(
-            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook,
+            self.hass,
+            DOMAIN,
+            "Local Support",
+            webhook_id,
+            self._handle_local_webhook,
         )
 
         self._local_sdk_active = True
@@ -338,6 +343,15 @@ class GoogleEntity:
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if not isinstance(features, int):
+            _LOGGER.warning(
+                "Entity %s contains invalid supported_features value %s",
+                self.entity_id,
+                features,
+            )
+            return []
+
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         self._traits = [
@@ -372,13 +386,18 @@ class GoogleEntity:
     @callback
     def might_2fa(self) -> bool:
         """Return if the entity might encounter 2FA."""
+        if not self.config.should_2fa(self.state):
+            return False
+
+        return self.might_2fa_traits()
+
+    @callback
+    def might_2fa_traits(self) -> bool:
+        """Return if the entity might encounter 2FA based on just traits."""
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-
-        if not self.config.should_2fa(state):
-            return False
 
         return any(
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
@@ -418,8 +437,10 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.local_sdk_webhook_id,
-                "httpPort": self.hass.config.api.port,
+                "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
+                "uuid": await self.hass.helpers.instance_id.async_get(),
+                "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }
 

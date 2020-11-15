@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/emulated_roku",
   "requirements": ["emulated_roku==0.2.1"],
-  "dependencies": [],
   "codeowners": []
 }

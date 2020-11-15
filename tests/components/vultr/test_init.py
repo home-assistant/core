@@ -2,13 +2,13 @@
 from copy import deepcopy
 import json
 import unittest
-from unittest.mock import patch
 
 import requests_mock
 
 from homeassistant import setup
 import homeassistant.components.vultr as vultr
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {"vultr": {"api_key": "ABCDEFG1234567"}}
@@ -21,8 +21,9 @@ class TestVultr(unittest.TestCase):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that we started."""
         self.hass.stop()
 

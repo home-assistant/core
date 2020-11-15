@@ -2,8 +2,6 @@
   "domain": "fan",
   "name": "Fan",
   "documentation": "https://www.home-assistant.io/integrations/fan",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

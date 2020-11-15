@@ -1,7 +1,7 @@
 """Support for Eight Sleep sensors."""
 import logging
 
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from . import (
     CONF_SENSORS,
@@ -20,9 +20,9 @@ ATTR_AVG_RESP_RATE = "Average Respiratory Rate"
 ATTR_HEART_RATE = "Heart Rate"
 ATTR_AVG_HEART_RATE = "Average Heart Rate"
 ATTR_SLEEP_DUR = "Time Slept"
-ATTR_LIGHT_PERC = f"Light Sleep {UNIT_PERCENTAGE}"
-ATTR_DEEP_PERC = f"Deep Sleep {UNIT_PERCENTAGE}"
-ATTR_REM_PERC = f"REM Sleep {UNIT_PERCENTAGE}"
+ATTR_LIGHT_PERC = f"Light Sleep {PERCENTAGE}"
+ATTR_DEEP_PERC = f"Deep Sleep {PERCENTAGE}"
+ATTR_REM_PERC = f"REM Sleep {PERCENTAGE}"
 ATTR_TNT = "Tosses & Turns"
 ATTR_SLEEP_STAGE = "Sleep Stage"
 ATTR_TARGET_HEAT = "Target Heating Level"
@@ -102,7 +102,7 @@ class EightHeatSensor(EightSleepHeatEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -112,11 +112,11 @@ class EightHeatSensor(EightSleepHeatEntity):
     @property
     def device_state_attributes(self):
         """Return device state attributes."""
-        state_attr = {ATTR_TARGET_HEAT: self._usrobj.target_heating_level}
-        state_attr[ATTR_ACTIVE_HEAT] = self._usrobj.now_heating
-        state_attr[ATTR_DURATION_HEAT] = self._usrobj.heating_remaining
-
-        return state_attr
+        return {
+            ATTR_TARGET_HEAT: self._usrobj.target_heating_level,
+            ATTR_ACTIVE_HEAT: self._usrobj.now_heating,
+            ATTR_DURATION_HEAT: self._usrobj.heating_remaining,
+        }
 
 
 class EightUserSensor(EightSleepUserEntity):
@@ -166,8 +166,8 @@ class EightUserSensor(EightSleepUserEntity):
             return "Score"
         if "bed_temp" in self._sensor:
             if self._units == "si":
-                return "°C"
-            return "°F"
+                return TEMP_CELSIUS
+            return TEMP_FAHRENHEIT
         return None
 
     @property
@@ -329,8 +329,8 @@ class EightRoomSensor(EightSleepUserEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._units == "si":
-            return "°C"
-        return "°F"
+            return TEMP_CELSIUS
+        return TEMP_FAHRENHEIT
 
     @property
     def icon(self):

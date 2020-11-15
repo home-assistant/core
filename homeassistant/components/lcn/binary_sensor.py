@@ -1,7 +1,7 @@
 """Support for LCN binary sensors."""
 import pypck
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice
@@ -36,7 +36,7 @@ async def async_setup_platform(
     async_add_entities(devices)
 
 
-class LcnRegulatorLockSensor(LcnDevice, BinarySensorDevice):
+class LcnRegulatorLockSensor(LcnDevice, BinarySensorEntity):
     """Representation of a LCN binary sensor for regulator locks."""
 
     def __init__(self, config, address_connection):
@@ -68,10 +68,10 @@ class LcnRegulatorLockSensor(LcnDevice, BinarySensorDevice):
             return
 
         self._value = input_obj.get_value().is_locked_regulator()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
-class LcnBinarySensor(LcnDevice, BinarySensorDevice):
+class LcnBinarySensor(LcnDevice, BinarySensorEntity):
     """Representation of a LCN binary sensor for binary sensor ports."""
 
     def __init__(self, config, address_connection):
@@ -100,10 +100,10 @@ class LcnBinarySensor(LcnDevice, BinarySensorDevice):
             return
 
         self._value = input_obj.get_state(self.bin_sensor_port.value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
-class LcnLockKeysSensor(LcnDevice, BinarySensorDevice):
+class LcnLockKeysSensor(LcnDevice, BinarySensorEntity):
     """Representation of a LCN sensor for key locks."""
 
     def __init__(self, config, address_connection):
@@ -135,4 +135,4 @@ class LcnLockKeysSensor(LcnDevice, BinarySensorDevice):
         key_id = int(self.source.name[1]) - 1
 
         self._value = input_obj.get_state(table_id, key_id)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

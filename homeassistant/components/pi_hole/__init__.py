@@ -1,11 +1,12 @@
 """The pi_hole component."""
+import asyncio
 import logging
 
 from hole import Hole
 from hole.exceptions import HoleError
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -13,55 +14,29 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_LOCATION,
-    CONF_SLUG,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
-    SERVICE_DISABLE,
-    SERVICE_DISABLE_ATTR_DURATION,
-    SERVICE_DISABLE_ATTR_NAME,
-    SERVICE_ENABLE,
-    SERVICE_ENABLE_ATTR_NAME,
 )
 
-
-def ensure_unique_names_and_slugs(config):
-    """Ensure that each configuration dict contains a unique `name` value."""
-    names = {}
-    slugs = {}
-    for conf in config:
-        if conf[CONF_NAME] not in names and conf[CONF_SLUG] not in slugs:
-            names[conf[CONF_NAME]] = conf[CONF_HOST]
-            slugs[conf[CONF_SLUG]] = conf[CONF_HOST]
-        else:
-            raise vol.Invalid(
-                "Duplicate name '{}' (or slug '{}') for '{}' (already in use by '{}'). Each configured Pi-hole must have a unique name.".format(
-                    conf[CONF_NAME],
-                    conf[CONF_SLUG],
-                    conf[CONF_HOST],
-                    names.get(conf[CONF_NAME], slugs[conf[CONF_SLUG]]),
-                )
-            )
-    return config
-
-
-def coerce_slug(config):
-    """Coerce the name of the Pi-Hole into a slug."""
-    config[CONF_SLUG] = cv.slugify(config[CONF_NAME])
-    return config
-
-
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 PI_HOLE_SCHEMA = vol.Schema(
     vol.All(
@@ -73,172 +48,131 @@ PI_HOLE_SCHEMA = vol.Schema(
             vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
             vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         },
-        coerce_slug,
     )
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(cv.ensure_list, [PI_HOLE_SCHEMA], ensure_unique_names_and_slugs)
-        )
-    },
+    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass, config):
-    """Set up the pi_hole integration."""
-
-    def get_data():
-        """Retrieve component data."""
-        return hass.data[DOMAIN]
-
-    def ensure_api_token(call_data):
-        """Ensure the Pi-Hole to be enabled/disabled has a api_token configured."""
-        data = get_data()
-        if SERVICE_DISABLE_ATTR_NAME not in call_data:
-            for slug in data:
-                call_data[SERVICE_DISABLE_ATTR_NAME] = data[slug].name
-                ensure_api_token(call_data)
-
-            call_data[SERVICE_DISABLE_ATTR_NAME] = None
-        else:
-            slug = cv.slugify(call_data[SERVICE_DISABLE_ATTR_NAME])
-
-            if (data[slug]).api.api_token is None:
-                raise vol.Invalid(
-                    "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
-                        pi_hole.name
-                    )
-                )
-
-        return call_data
-
-    service_disable_schema = vol.Schema(
-        vol.All(
-            {
-                vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
-                    cv.time_period_str, cv.positive_timedelta
-                ),
-                vol.Optional(SERVICE_DISABLE_ATTR_NAME): vol.In(
-                    [conf[CONF_NAME] for conf in config[DOMAIN]], msg="Unknown Pi-Hole",
-                ),
-            },
-            ensure_api_token,
-        )
-    )
-
-    service_enable_schema = vol.Schema(
-        {
-            vol.Optional(SERVICE_ENABLE_ATTR_NAME): vol.In(
-                [conf[CONF_NAME] for conf in config[DOMAIN]], msg="Unknown Pi-Hole"
-            )
-        }
-    )
+    """Set up the Pi-hole integration."""
 
     hass.data[DOMAIN] = {}
 
-    for conf in config[DOMAIN]:
-        name = conf[CONF_NAME]
-        slug = conf[CONF_SLUG]
-        host = conf[CONF_HOST]
-        use_tls = conf[CONF_SSL]
-        verify_tls = conf[CONF_VERIFY_SSL]
-        location = conf[CONF_LOCATION]
-        api_key = conf.get(CONF_API_KEY)
-
-        LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
-
-        session = async_get_clientsession(hass, verify_tls)
-        pi_hole = PiHoleData(
-            Hole(
-                host,
-                hass.loop,
-                session,
-                location=location,
-                tls=use_tls,
-                api_token=api_key,
-            ),
-            name,
-        )
-
-        await pi_hole.async_update()
-
-        hass.data[DOMAIN][slug] = pi_hole
-
-    async def disable_service_handler(call):
-        """Handle the service call to disable a single Pi-Hole or all configured Pi-Holes."""
-        duration = call.data[SERVICE_DISABLE_ATTR_DURATION].total_seconds()
-        name = call.data.get(SERVICE_DISABLE_ATTR_NAME)
-
-        async def do_disable(name):
-            """Disable the named Pi-Hole."""
-            slug = cv.slugify(name)
-            pi_hole = hass.data[DOMAIN][slug]
-
-            LOGGER.debug(
-                "Disabling Pi-hole '%s' (%s) for %d seconds",
-                name,
-                pi_hole.api.host,
-                duration,
+    # import
+    if DOMAIN in config:
+        for conf in config[DOMAIN]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                )
             )
-            await pi_hole.api.disable(duration)
-
-        if name is not None:
-            await do_disable(name)
-        else:
-            for pi_hole in hass.data[DOMAIN].values():
-                await do_disable(pi_hole.name)
-
-    async def enable_service_handler(call):
-        """Handle the service call to enable a single Pi-Hole or all configured Pi-Holes."""
-
-        name = call.data.get(SERVICE_ENABLE_ATTR_NAME)
-
-        async def do_enable(name):
-            """Enable the named Pi-Hole."""
-            slug = cv.slugify(name)
-            pi_hole = hass.data[DOMAIN][slug]
-
-            LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, pi_hole.api.host)
-            await pi_hole.api.enable()
-
-        if name is not None:
-            await do_enable(name)
-        else:
-            for pi_hole in hass.data[DOMAIN].values():
-                await do_enable(pi_hole.name)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE, disable_service_handler, schema=service_disable_schema
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE, enable_service_handler, schema=service_enable_schema
-    )
-
-    hass.async_create_task(async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, {}, config))
 
     return True
 
 
-class PiHoleData:
-    """Get the latest data and update the states."""
+async def async_setup_entry(hass, entry):
+    """Set up Pi-hole entry."""
+    name = entry.data[CONF_NAME]
+    host = entry.data[CONF_HOST]
+    use_tls = entry.data[CONF_SSL]
+    verify_tls = entry.data[CONF_VERIFY_SSL]
+    location = entry.data[CONF_LOCATION]
+    api_key = entry.data.get(CONF_API_KEY)
 
-    def __init__(self, api, name):
-        """Initialize the data object."""
-        self.api = api
-        self.name = name
-        self.available = True
+    _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data from the Pi-hole."""
+    try:
+        session = async_get_clientsession(hass, verify_tls)
+        api = Hole(
+            host,
+            hass.loop,
+            session,
+            location=location,
+            tls=use_tls,
+            api_token=api_key,
+        )
+        await api.get_data()
+    except HoleError as ex:
+        _LOGGER.warning("Failed to connect: %s", ex)
+        raise ConfigEntryNotReady from ex
 
+    async def async_update_data():
+        """Fetch data from API endpoint."""
         try:
-            await self.api.get_data()
-            self.available = True
-        except HoleError:
-            LOGGER.error("Unable to fetch data from Pi-hole")
-            self.available = False
+            await api.get_data()
+        except HoleError as err:
+            raise UpdateFailed(f"Failed to communicating with API: {err}") from err
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=name,
+        update_method=async_update_data,
+        update_interval=MIN_TIME_BETWEEN_UPDATES,
+    )
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_KEY_API: api,
+        DATA_KEY_COORDINATOR: coordinator,
+    }
+
+    for platform in _async_platforms(entry):
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload Pi-hole entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in _async_platforms(entry)
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
+
+
+@callback
+def _async_platforms(entry):
+    """Return platforms to be loaded / unloaded."""
+    platforms = ["sensor"]
+    if entry.data.get(CONF_API_KEY):
+        platforms.append("switch")
+    else:
+        platforms.append("binary_sensor")
+    return platforms
+
+
+class PiHoleEntity(CoordinatorEntity):
+    """Representation of a Pi-hole entity."""
+
+    def __init__(self, api, coordinator, name, server_unique_id):
+        """Initialize a Pi-hole entity."""
+        super().__init__(coordinator)
+        self.api = api
+        self._name = name
+        self._server_unique_id = server_unique_id
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:pi-hole"
+
+    @property
+    def device_info(self):
+        """Return the device information of the entity."""
+        return {
+            "identifiers": {(DOMAIN, self._server_unique_id)},
+            "name": self._name,
+            "manufacturer": "Pi-hole",
+        }

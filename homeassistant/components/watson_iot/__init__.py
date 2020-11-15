@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -74,10 +75,10 @@ def setup(hass, config):
 
     include = conf[CONF_INCLUDE]
     exclude = conf[CONF_EXCLUDE]
-    whitelist_e = set(include[CONF_ENTITIES])
-    whitelist_d = set(include[CONF_DOMAINS])
-    blacklist_e = set(exclude[CONF_ENTITIES])
-    blacklist_d = set(exclude[CONF_DOMAINS])
+    include_e = set(include[CONF_ENTITIES])
+    include_d = set(include[CONF_DOMAINS])
+    exclude_e = set(exclude[CONF_ENTITIES])
+    exclude_d = set(exclude[CONF_DOMAINS])
 
     client_args = {
         "org": conf[CONF_ORG],
@@ -94,13 +95,13 @@ def setup(hass, config):
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
-            or state.entity_id in blacklist_e
-            or state.domain in blacklist_d
+            or state.entity_id in exclude_e
+            or state.domain in exclude_d
         ):
             return
 
-        if (whitelist_e and state.entity_id not in whitelist_e) or (
-            whitelist_d and state.domain not in whitelist_d
+        if (include_e and state.entity_id not in include_e) or (
+            include_d and state.domain not in include_d
         ):
             return
 
@@ -165,6 +166,7 @@ class WatsonIOTThread(threading.Thread):
         self.shutdown = False
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
+    @callback
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Watson IoT."""
         item = (time.monotonic(), event)
@@ -208,7 +210,7 @@ class WatsonIOTThread(threading.Thread):
                         _LOGGER.error("Failed to publish message to Watson IoT")
                         continue
                     break
-                except (MissingMessageEncoderException, IOError):
+                except (MissingMessageEncoderException, OSError):
                     if retry < MAX_TRIES:
                         time.sleep(RETRY_DELAY)
                     else:

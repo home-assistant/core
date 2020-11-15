@@ -1,10 +1,8 @@
 """Support for Wink locks."""
-import logging
-
 import pywink
 import voluptuous as vol
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -15,8 +13,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_VACATION_MODE = "set_lock_vacation_mode"
 SERVICE_SET_ALARM_MODE = "set_lock_alarm_mode"
@@ -133,7 +129,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class WinkLockDevice(WinkDevice, LockDevice):
+class WinkLockDevice(WinkDevice, LockEntity):
     """Representation of a Wink lock."""
 
     async def async_added_to_hass(self):

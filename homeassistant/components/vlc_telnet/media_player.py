@@ -4,7 +4,7 @@ import logging
 from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class VlcDevice(MediaPlayerDevice):
+class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
     def __init__(self, name, host, port, passwd):

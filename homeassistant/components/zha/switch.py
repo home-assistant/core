@@ -1,12 +1,11 @@
 """Switches on Zigbee Home Automation networks."""
 import functools
-import logging
 from typing import Any, List
 
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,7 +21,6 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
-_LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 
@@ -41,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseSwitch(SwitchDevice):
+class BaseSwitch(SwitchEntity):
     """Common base class for zha switches."""
 
     def __init__(self, *args, **kwargs):
@@ -92,7 +90,7 @@ class Switch(BaseSwitch, ZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "error": {
+            "error_auth_mfa": "Neplatn\u00fd k\u00f3d",
+            "error_auth_user": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "ID aplikace"
+                },
+                "description": "ID aplikace a tajn\u00fd k\u00f3d z [\u00fa\u010dtu v\u00fdvoj\u00e1\u0159e StarLine](https://my.starline.ru/developer)",
+                "title": "P\u0159ihla\u0161ovac\u00ed \u00fadaje aplikace"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "K\u00f3d z obr\u00e1zku"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS k\u00f3d"
+                },
+                "description": "Zadejte k\u00f3d odeslan\u00fd na tel. \u010d\u00edslo {phone_number}",
+                "title": "Dvoufaktorov\u00e9 ov\u011b\u0159en\u00ed"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "description": "E-mail a heslo k \u00fa\u010dtu StarLine",
+                "title": "P\u0159ihla\u0161ovac\u00ed \u00fadaje u\u017eivatele"
+            }
+        }
+    }
+}

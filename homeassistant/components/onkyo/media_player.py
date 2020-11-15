@@ -6,7 +6,7 @@ import eiscp
 from eiscp import eISCP
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_PLAY,
@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(
             CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME
-        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        ): cv.positive_int,
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
     }
 )
@@ -120,7 +120,7 @@ def determine_zones(receiver):
     out = {"zone2": False, "zone3": False}
     try:
         _LOGGER.debug("Checking for zone 2 capability")
-        receiver.raw("ZPW")
+        receiver.raw("ZPWQSTN")
         out["zone2"] = True
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
@@ -128,12 +128,14 @@ def determine_zones(receiver):
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
-        receiver.raw("PW3")
+        receiver.raw("PW3QSTN")
         out["zone3"] = True
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
+    except AssertionError:
+        _LOGGER.error("Zone 3 detection failed")
 
     return out
 
@@ -211,7 +213,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(hosts, True)
 
 
-class OnkyoDevice(MediaPlayerDevice):
+class OnkyoDevice(MediaPlayerEntity):
     """Representation of an Onkyo device."""
 
     def __init__(
@@ -237,6 +239,7 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._attributes = {}
+        self._hdmi_out_supported = True
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -249,6 +252,7 @@ class OnkyoDevice(MediaPlayerDevice):
             else:
                 _LOGGER.info("%s is disconnected. Attempting to reconnect", self._name)
             return False
+        _LOGGER.debug("Result for %s: %s", command, result)
         return result
 
     def update(self):
@@ -266,7 +270,13 @@ class OnkyoDevice(MediaPlayerDevice):
         volume_raw = self.command("volume query")
         mute_raw = self.command("audio-muting query")
         current_source_raw = self.command("input-selector query")
-        hdmi_out_raw = self.command("hdmi-output-selector query")
+        # If the following command is sent to a device with only one HDMI out,
+        # the display shows 'Not Available'.
+        # We avoid this by checking if HDMI out is supported
+        if self._hdmi_out_supported:
+            hdmi_out_raw = self.command("hdmi-output-selector query")
+        else:
+            hdmi_out_raw = []
         preset_raw = self.command("preset query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
@@ -289,13 +299,15 @@ class OnkyoDevice(MediaPlayerDevice):
 
         self._muted = bool(mute_raw[1] == "on")
         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-        self._volume = (
-            volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+        self._volume = volume_raw[1] / (
+            self._receiver_max_volume * self._max_volume / 100
         )
 
         if not hdmi_out_raw:
             return
         self._attributes["video_out"] = ",".join(hdmi_out_raw[1])
+        if hdmi_out_raw[1] == "N/A":
+            self._hdmi_out_supported = False
 
     @property
     def name(self):

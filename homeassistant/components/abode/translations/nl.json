@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Slechts een enkele configuratie van Abode is toegestaan."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mailadres"
+                },
+                "title": "Vul uw Abode-inloggegevens in"
+            }
+        }
+    }
+}

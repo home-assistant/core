@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gostitelj je \u017ee konfiguriran."
+        },
+        "error": {
+            "cannot_connect": "Ni mogo\u010de vzpostaviti povezave z gostiteljem",
+            "wrong_version": "Razli\u010dica ni podprta (samo 2 ali 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Ime",
+                    "password": "Geslo",
+                    "port": "Vrata",
+                    "ssl": "Za povezavo s sistemom Glances uporabite SSL/TLS",
+                    "username": "Uporabni\u0161ko ime",
+                    "verify_ssl": "Preverite veljavnost potrdila sistema",
+                    "version": "Glances API Version (2 ali 3)"
+                },
+                "title": "Nastavite Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Pogostost posodabljanja"
+                },
+                "description": "Konfiguracija mo\u017enosti za Glances"
+            }
+        }
+    }
+}

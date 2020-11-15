@@ -1,14 +1,14 @@
 """Tests for the Entity Registry."""
 import asyncio
-from unittest.mock import patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
+import tests.async_mock
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -154,6 +154,7 @@ async def test_loading_saving_data(hass, registry):
         "hue",
         "5678",
         device_id="mock-dev-id",
+        area_id="mock-area-id",
         config_entry=mock_config,
         capabilities={"max": 100},
         supported_features=5,
@@ -182,6 +183,7 @@ async def test_loading_saving_data(hass, registry):
     assert orig_entry2 == new_entry2
 
     assert new_entry2.device_id == "mock-dev-id"
+    assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.disabled_by == entity_registry.DISABLED_HASS
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.supported_features == 5
@@ -241,11 +243,19 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",
                 },
+                {
+                    "entity_id": "test.invalid__entity",
+                    "platform": "super_platform",
+                    "unique_id": "invalid-hass",
+                    "disabled_by": "hass",
+                },
             ]
         },
     }
 
     registry = await entity_registry.async_get_registry(hass)
+
+    assert len(registry.entities) == 4
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"
@@ -320,6 +330,19 @@ async def test_removing_config_entry_id(hass, registry, update_events):
     assert update_events[0]["entity_id"] == entry.entity_id
     assert update_events[1]["action"] == "remove"
     assert update_events[1]["entity_id"] == entry.entity_id
+
+
+async def test_removing_area_id(registry):
+    """Make sure we can clear area id."""
+    entry = registry.async_get_or_create("light", "hue", "5678")
+
+    entry_w_area = registry.async_update_entity(entry.entity_id, area_id="12345A")
+
+    registry.async_clear_area_id("12345A")
+    entry_wo_area = registry.async_get(entry.entity_id)
+
+    assert not entry_wo_area.area_id
+    assert entry_w_area != entry_wo_area
 
 
 async def test_migration(hass):
@@ -401,7 +424,7 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with tests.async_mock.patch(
         "homeassistant.helpers.entity_registry.EntityRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(
@@ -420,6 +443,8 @@ async def test_update_entity_unique_id(registry):
     entry = registry.async_get_or_create(
         "light", "hue", "5678", config_entry=mock_config
     )
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+
     new_unique_id = "1234"
     with patch.object(registry, "async_schedule_save") as mock_schedule_save:
         updated_entry = registry.async_update_entity(
@@ -428,6 +453,9 @@ async def test_update_entity_unique_id(registry):
     assert updated_entry != entry
     assert updated_entry.unique_id == new_unique_id
     assert mock_schedule_save.call_count == 1
+
+    assert registry.async_get_entity_id("light", "hue", "5678") is None
+    assert registry.async_get_entity_id("light", "hue", "1234") == entry.entity_id
 
 
 async def test_update_entity_unique_id_conflict(registry):
@@ -444,6 +472,8 @@ async def test_update_entity_unique_id_conflict(registry):
     ) as mock_schedule_save, pytest.raises(ValueError):
         registry.async_update_entity(entry.entity_id, new_unique_id=entry2.unique_id)
     assert mock_schedule_save.call_count == 0
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    assert registry.async_get_entity_id("light", "hue", "1234") == entry2.entity_id
 
 
 async def test_update_entity(registry):
@@ -465,6 +495,10 @@ async def test_update_entity(registry):
         assert getattr(updated_entry, attr_name) == new_value
         assert getattr(updated_entry, attr_name) != getattr(entry, attr_name)
 
+        assert (
+            registry.async_get_entity_id("light", "hue", "5678")
+            == updated_entry.entity_id
+        )
         entry = updated_entry
 
 
@@ -507,7 +541,10 @@ async def test_restore_states(hass):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "light", "hue", "1234", suggested_object_id="simple",
+        "light",
+        "hue",
+        "1234",
+        suggested_object_id="simple",
     )
     # Should not be created
     registry.async_get_or_create(
@@ -561,3 +598,82 @@ async def test_restore_states(hass):
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+
+
+async def test_async_get_device_class_lookup(hass):
+    """Test registry device class lookup."""
+    hass.state = CoreState.not_running
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "light",
+        "battery_charging",
+        device_id="light_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "sensor",
+        "light",
+        "battery",
+        device_id="light_device_entry_id",
+        device_class="battery",
+    )
+    ent_reg.async_get_or_create(
+        "light", "light", "demo", device_id="light_device_entry_id"
+    )
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "vacuum",
+        "battery_charging",
+        device_id="vacuum_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "sensor",
+        "vacuum",
+        "battery",
+        device_id="vacuum_device_entry_id",
+        device_class="battery",
+    )
+    ent_reg.async_get_or_create(
+        "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
+    )
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "remote",
+        "battery_charging",
+        device_id="remote_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "remote", "remote", "demo", device_id="remote_device_entry_id"
+    )
+
+    device_lookup = ent_reg.async_get_device_class_lookup(
+        {("binary_sensor", "battery_charging"), ("sensor", "battery")}
+    )
+
+    assert device_lookup == {
+        "remote_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.remote_battery_charging"
+        },
+        "light_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.light_battery_charging",
+            ("sensor", "battery"): "sensor.light_battery",
+        },
+        "vacuum_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.vacuum_battery_charging",
+            ("sensor", "battery"): "sensor.vacuum_battery",
+        },
+    }

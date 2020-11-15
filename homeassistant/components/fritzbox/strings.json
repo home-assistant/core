@@ -1,0 +1,31 @@
+{
+  "config": {
+    "flow_title": "AVM FRITZ!Box: {name}",
+    "step": {
+      "user": {
+        "description": "Enter your AVM FRITZ!Box information.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  }
+}

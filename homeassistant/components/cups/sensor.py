@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, UNIT_PERCENTAGE
+from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -53,10 +53,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CUPS sensor."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    printers = config.get(CONF_PRINTERS)
-    is_cups = config.get(CONF_IS_CUPS_SERVER)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    printers = config[CONF_PRINTERS]
+    is_cups = config[CONF_IS_CUPS_SERVER]
 
     if is_cups:
         data = CupsData(host, port, None)
@@ -268,7 +268,7 @@ class MarkerSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_state_attributes(self):

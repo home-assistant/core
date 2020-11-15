@@ -2,14 +2,21 @@
 import logging
 
 from homeassistant.const import (
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
-    UNIT_PERCENTAGE,
+    TEMP_CELSIUS,
+    VOLT,
     VOLUME_CUBIC_METERS,
 )
 
@@ -19,6 +26,7 @@ from .entity import HMDevice
 _LOGGER = logging.getLogger(__name__)
 
 HM_STATE_HA_CAST = {
+    "IPGarage": {0: "closed", 1: "open", 2: "ventilation", 3: None},
     "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
     "RotaryHandleSensorIP": {0: "closed", 1: "tilted", 2: "open"},
     "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
@@ -33,30 +41,31 @@ HM_STATE_HA_CAST = {
 }
 
 HM_UNIT_HA_CAST = {
-    "HUMIDITY": UNIT_PERCENTAGE,
-    "TEMPERATURE": "°C",
-    "ACTUAL_TEMPERATURE": "°C",
+    "HUMIDITY": PERCENTAGE,
+    "TEMPERATURE": TEMP_CELSIUS,
+    "ACTUAL_TEMPERATURE": TEMP_CELSIUS,
     "BRIGHTNESS": "#",
     "POWER": POWER_WATT,
     "CURRENT": "mA",
-    "VOLTAGE": "V",
+    "VOLTAGE": VOLT,
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "GAS_POWER": VOLUME_CUBIC_METERS,
     "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
-    "LUX": "lx",
-    "ILLUMINATION": "lx",
-    "CURRENT_ILLUMINATION": "lx",
-    "AVERAGE_ILLUMINATION": "lx",
-    "LOWEST_ILLUMINATION": "lx",
-    "HIGHEST_ILLUMINATION": "lx",
-    "RAIN_COUNTER": "mm",
+    "LUX": LIGHT_LUX,
+    "ILLUMINATION": LIGHT_LUX,
+    "CURRENT_ILLUMINATION": LIGHT_LUX,
+    "AVERAGE_ILLUMINATION": LIGHT_LUX,
+    "LOWEST_ILLUMINATION": LIGHT_LUX,
+    "HIGHEST_ILLUMINATION": LIGHT_LUX,
+    "RAIN_COUNTER": LENGTH_MILLIMETERS,
     "WIND_SPEED": SPEED_KILOMETERS_PER_HOUR,
-    "WIND_DIRECTION": "°",
-    "WIND_DIRECTION_RANGE": "°",
+    "WIND_DIRECTION": DEGREE,
+    "WIND_DIRECTION_RANGE": DEGREE,
     "SUNSHINEDURATION": "#",
-    "AIR_PRESSURE": "hPa",
-    "FREQUENCY": "Hz",
+    "AIR_PRESSURE": PRESSURE_HPA,
+    "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
+    "VALVE_STATE": PERCENTAGE,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {

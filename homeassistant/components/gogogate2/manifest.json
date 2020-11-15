@@ -1,8 +1,13 @@
 {
   "domain": "gogogate2",
-  "name": "Gogogate2",
+  "name": "Gogogate2 and iSmartGate",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gogogate2",
-  "requirements": ["pygogogate2==0.1.1"],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["gogogate2-api==2.0.3"],
+  "codeowners": ["@vangorra"],
+  "homekit": {
+    "models": [
+      "iSmartGate"
+    ]
+  }
 }

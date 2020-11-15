@@ -3,6 +3,5 @@
   "name": "LaMetric",
   "documentation": "https://www.home-assistant.io/integrations/lametric",
   "requirements": ["lmnotify==0.0.4"],
-  "dependencies": [],
   "codeowners": ["@robbiet480"]
 }

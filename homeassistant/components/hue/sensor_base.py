@@ -61,11 +61,11 @@ class SensorManager:
                 return await self.bridge.async_request_call(
                     self.bridge.api.sensors.update
                 )
-        except Unauthorized:
+        except Unauthorized as err:
             await self.bridge.handle_unauthorized_error()
-            raise UpdateFailed("Unauthorized")
+            raise UpdateFailed("Unauthorized") from err
         except AiohueException as err:
-            raise UpdateFailed(f"Hue error: {err}")
+            raise UpdateFailed(f"Hue error: {err}") from err
 
     async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
@@ -76,9 +76,8 @@ class SensorManager:
             return
 
         # We have all components available, start the updating.
-        self.coordinator.async_add_listener(self.async_update_items)
         self.bridge.reset_jobs.append(
-            lambda: self.coordinator.async_remove_listener(self.async_update_items)
+            self.coordinator.async_add_listener(self.async_update_items)
         )
         await self.coordinator.async_refresh()
 
@@ -151,7 +150,9 @@ class SensorManager:
 
         self.bridge.hass.async_create_task(
             remove_devices(
-                self.bridge, [value.uniqueid for value in api.values()], current,
+                self.bridge,
+                [value.uniqueid for value in api.values()],
+                current,
             )
         )
 
@@ -178,14 +179,10 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self.bridge.sensor_manager.coordinator.async_add_listener(
-            self.async_write_ha_state
-        )
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self.bridge.sensor_manager.coordinator.async_remove_listener(
-            self.async_write_ha_state
+        self.async_on_remove(
+            self.bridge.sensor_manager.coordinator.async_add_listener(
+                self.async_write_ha_state
+            )
         )
 
     async def async_update(self):

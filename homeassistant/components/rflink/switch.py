@@ -1,9 +1,7 @@
 """Support for Rflink switches."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -19,8 +17,6 @@ from . import (
     DEVICE_DEFAULTS_SCHEMA,
     SwitchableRflinkDevice,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -69,7 +65,5 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices_from_config(config))
 
 
-class RflinkSwitch(SwitchableRflinkDevice, SwitchDevice):
+class RflinkSwitch(SwitchableRflinkDevice, SwitchEntity):
     """Representation of a Rflink switch."""
-
-    pass

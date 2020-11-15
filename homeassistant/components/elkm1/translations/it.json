@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Un ElkM1 con questo indirizzo \u00e8 gi\u00e0 configurato",
+            "already_configured": "Un ElkM1 con questo prefisso \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "L'indirizzo IP o il dominio o la porta seriale se ci si connette tramite seriale.",
+                    "password": "Password",
+                    "prefix": "Un prefisso univoco (lasciare vuoto se si dispone di un solo ElkM1).",
+                    "protocol": "Protocollo",
+                    "temperature_unit": "L'unit\u00e0 di temperatura utilizzata da ElkM1.",
+                    "username": "Nome utente"
+                },
+                "description": "La stringa di indirizzi deve essere nella forma \"address[:port]\" per \"secure\" e \"non secure\". Esempio: '192.168.1.1.1'. La porta \u00e8 facoltativa e il valore predefinito \u00e8 2101 per 'non sicuro' e 2601 per 'sicuro'. Per il protocollo seriale, l'indirizzo deve essere nella forma 'tty[:baud]'. Esempio: '/dev/ttyS1'. Il baud \u00e8 opzionale e il valore predefinito \u00e8 115200.",
+                "title": "Collegamento al controllo Elk-M1"
+            }
+        }
+    }
+}

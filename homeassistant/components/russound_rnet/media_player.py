@@ -4,7 +4,7 @@ import logging
 from russound import russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Not connected to %s:%s", host, port)
 
 
-class RussoundRNETDevice(MediaPlayerDevice):
+class RussoundRNETDevice(MediaPlayerEntity):
     """Representation of a Russound RNET device."""
 
     def __init__(self, hass, russ, sources, zone_id, extra):

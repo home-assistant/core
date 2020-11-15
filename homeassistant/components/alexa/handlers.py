@@ -17,6 +17,7 @@ from homeassistant.components import (
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
@@ -355,7 +356,6 @@ async def async_api_deactivate(hass, config, directive, context):
 async def async_api_set_percentage(hass, config, directive, context):
     """Process a set percentage request."""
     entity = directive.entity
-    percentage = int(directive.payload["percentage"])
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
@@ -363,6 +363,7 @@ async def async_api_set_percentage(hass, config, directive, context):
         service = fan.SERVICE_SET_SPEED
         speed = "off"
 
+        percentage = int(directive.payload["percentage"])
         if percentage <= 33:
             speed = "low"
         elif percentage <= 66:
@@ -487,7 +488,7 @@ async def async_api_select_input(hass, config, directive, context):
         )
         media_input = media_input.lower().replace(" ", "")
         if (
-            formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys()
+            formatted_source in Inputs.VALID_SOURCE_NAME_MAP
             and formatted_source == media_input
         ) or (
             media_input.endswith("1") and formatted_source == media_input.rstrip("1")
@@ -568,7 +569,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    for _ in range(0, abs(volume_int)):
+    for _ in range(abs(volume_int)):
         await hass.services.async_call(
             entity.domain, service_volume, data, blocking=False, context=context
         )
@@ -849,7 +850,6 @@ async def async_api_reportstate(hass, config, directive, context):
 async def async_api_set_power_level(hass, config, directive, context):
     """Process a SetPowerLevel request."""
     entity = directive.entity
-    percentage = int(directive.payload["powerLevel"])
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
@@ -857,6 +857,7 @@ async def async_api_set_power_level(hass, config, directive, context):
         service = fan.SERVICE_SET_SPEED
         speed = "off"
 
+        percentage = int(directive.payload["powerLevel"])
         if percentage <= 33:
             speed = "low"
         elif percentage <= 66:
@@ -920,10 +921,10 @@ async def async_api_arm(hass, config, directive, context):
 
     if arm_state == "ARMED_AWAY":
         service = SERVICE_ALARM_ARM_AWAY
-    if arm_state == "ARMED_STAY":
-        service = SERVICE_ALARM_ARM_HOME
-    if arm_state == "ARMED_NIGHT":
+    elif arm_state == "ARMED_NIGHT":
         service = SERVICE_ALARM_ARM_NIGHT
+    elif arm_state == "ARMED_STAY":
+        service = SERVICE_ALARM_ARM_HOME
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -1383,7 +1384,7 @@ async def async_api_skipchannel(hass, config, directive, context):
     else:
         service_media = SERVICE_MEDIA_NEXT_TRACK
 
-    for _ in range(0, abs(channel)):
+    for _ in range(abs(channel)):
         await hass.services.async_call(
             entity.domain, service_media, data, blocking=False, context=context
         )
@@ -1532,8 +1533,21 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
-    camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
-    external_url = network.async_get_external_url(hass)
+    camera_image = hass.states.get(entity.entity_id).attributes[ATTR_ENTITY_PICTURE]
+
+    try:
+        external_url = network.get_url(
+            hass,
+            allow_internal=False,
+            allow_ip=False,
+            require_ssl=True,
+            require_standard_port=True,
+        )
+    except network.NoURLAvailableError as err:
+        raise AlexaInvalidValueError(
+            "Failed to find suitable URL to serve to Alexa"
+        ) from err
+
     payload = {
         "cameraStreams": [
             {

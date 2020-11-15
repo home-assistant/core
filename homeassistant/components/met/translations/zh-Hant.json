@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "\u6d77\u62d4",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "\u5ea7\u6a19"
+            }
+        }
+    }
+}

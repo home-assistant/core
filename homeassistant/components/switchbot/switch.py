@@ -1,17 +1,14 @@
 """Support for Switchbot."""
-import logging
 from typing import Any, Dict
 
 # pylint: disable=import-error, no-member
 import switchbot
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Switchbot"
 
@@ -32,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SwitchBot(mac_addr, name, password)])
 
 
-class SwitchBot(SwitchDevice, RestoreEntity):
+class SwitchBot(SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     def __init__(self, mac, name, password) -> None:

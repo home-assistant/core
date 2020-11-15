@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "step": {
+            "import_failed": {
+                "description": "Konnt Bridge (host: {host}) net arrichten anhand vum import vun der configuration.yaml.",
+                "title": "Feeler beim import vun der Cas\u00e9ta Bridge Konfiguratioun"
+            }
+        }
+    }
+}

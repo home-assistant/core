@@ -1,7 +1,9 @@
 """Helper to deal with YAML + storage."""
 from abc import ABC, abstractmethod
+import asyncio
+from dataclasses import dataclass
 import logging
-from typing import Any, Awaitable, Callable, Dict, List, Optional, cast
+from typing import Any, Awaitable, Callable, Dict, Iterable, List, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -23,6 +25,20 @@ SAVE_DELAY = 10
 CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
+
+
+@dataclass
+class CollectionChangeSet:
+    """Class to represent a change set.
+
+    change_type: One of CHANGE_*
+    item_id: The id of the item
+    item: The item
+    """
+
+    change_type: str
+    item_id: str
+    item: Any
 
 
 ChangeListener = Callable[
@@ -104,11 +120,15 @@ class ObservableCollection(ABC):
         """
         self.listeners.append(listener)
 
-    async def notify_change(self, change_type: str, item_id: str, item: dict) -> None:
+    async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
         """Notify listeners of a change."""
-        self.logger.debug("%s %s: %s", change_type, item_id, item)
-        for listener in self.listeners:
-            await listener(change_type, item_id, item)
+        await asyncio.gather(
+            *[
+                listener(change_set.change_type, change_set.item_id, change_set.item)
+                for listener in self.listeners
+                for change_set in change_sets
+            ]
+        )
 
 
 class YamlCollection(ObservableCollection):
@@ -116,7 +136,10 @@ class YamlCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
+
         old_ids = set(self.data)
+
+        change_sets = []
 
         for item in data:
             item_id = item[CONF_ID]
@@ -131,11 +154,15 @@ class YamlCollection(ObservableCollection):
                 event = CHANGE_ADDED
 
             self.data[item_id] = item
-            await self.notify_change(event, item_id, item)
+            change_sets.append(CollectionChangeSet(event, item_id, item))
 
         for item_id in old_ids:
+            change_sets.append(
+                CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
+            )
 
-            await self.notify_change(CHANGE_REMOVED, item_id, self.data.pop(item_id))
+        if change_sets:
+            await self.notify_changes(change_sets)
 
 
 class StorageCollection(ObservableCollection):
@@ -169,7 +196,13 @@ class StorageCollection(ObservableCollection):
 
         for item in raw_storage["items"]:
             self.data[item[CONF_ID]] = item
-            await self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
+
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)
+                for item in raw_storage["items"]
+            ]
+        )
 
     @abstractmethod
     async def _process_create_data(self, data: dict) -> dict:
@@ -190,7 +223,9 @@ class StorageCollection(ObservableCollection):
         item[CONF_ID] = self.id_manager.generate_id(self._get_suggested_id(item))
         self.data[item[CONF_ID]] = item
         self._async_schedule_save()
-        await self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
+        await self.notify_changes(
+            [CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)]
+        )
         return item
 
     async def async_update_item(self, item_id: str, updates: dict) -> dict:
@@ -208,7 +243,9 @@ class StorageCollection(ObservableCollection):
         self.data[item_id] = updated
         self._async_schedule_save()
 
-        await self.notify_change(CHANGE_UPDATED, item_id, updated)
+        await self.notify_changes(
+            [CollectionChangeSet(CHANGE_UPDATED, item_id, updated)]
+        )
 
         return self.data[item_id]
 
@@ -220,7 +257,7 @@ class StorageCollection(ObservableCollection):
         item = self.data.pop(item_id)
         self._async_schedule_save()
 
-        await self.notify_change(CHANGE_REMOVED, item_id, item)
+        await self.notify_changes([CollectionChangeSet(CHANGE_REMOVED, item_id, item)])
 
     @callback
     def _async_schedule_save(self) -> None:
@@ -240,8 +277,12 @@ class IDLessCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the collection. Overrides existing data."""
-        for item_id, item in list(self.data.items()):
-            await self.notify_change(CHANGE_REMOVED, item_id, item)
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_REMOVED, item_id, item)
+                for item_id, item in list(self.data.items())
+            ]
+        )
 
         self.data.clear()
 
@@ -250,7 +291,13 @@ class IDLessCollection(ObservableCollection):
             item_id = f"fakeid-{self.counter}"
 
             self.data[item_id] = item
-            await self.notify_change(CHANGE_ADDED, item_id, item)
+
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_ADDED, item_id, item)
+                for item_id, item in self.data.items()
+            ]
+        )
 
 
 @callback
@@ -329,7 +376,13 @@ class StorageCollectionWebsocket:
         return f"{self.model_name}_id"
 
     @callback
-    def async_setup(self, hass: HomeAssistant, *, create_list: bool = True) -> None:
+    def async_setup(
+        self,
+        hass: HomeAssistant,
+        *,
+        create_list: bool = True,
+        create_create: bool = True,
+    ) -> None:
         """Set up the websocket commands."""
         if create_list:
             websocket_api.async_register_command(
@@ -341,19 +394,20 @@ class StorageCollectionWebsocket:
                 ),
             )
 
-        websocket_api.async_register_command(
-            hass,
-            f"{self.api_prefix}/create",
-            websocket_api.require_admin(
-                websocket_api.async_response(self.ws_create_item)
-            ),
-            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {
-                    **self.create_schema,
-                    vol.Required("type"): f"{self.api_prefix}/create",
-                }
-            ),
-        )
+        if create_create:
+            websocket_api.async_register_command(
+                hass,
+                f"{self.api_prefix}/create",
+                websocket_api.require_admin(
+                    websocket_api.async_response(self.ws_create_item)
+                ),
+                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                    {
+                        **self.create_schema,
+                        vol.Required("type"): f"{self.api_prefix}/create",
+                    }
+                ),
+            )
 
         websocket_api.async_register_command(
             hass,

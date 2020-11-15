@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Navnet eksisterer allerede",
+            "wrong_location": "Bare plassering i Sverige"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                },
+                "title": "Plassering i Sverige"
+            }
+        }
+    }
+}

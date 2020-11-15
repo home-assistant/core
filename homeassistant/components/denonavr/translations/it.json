@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi, riprovare, scollegare l'alimentazione della rete elettrica e i cavi ethernet e ricollegarli potrebbe essere d'aiuto",
+            "not_denonavr_manufacturer": "Non \u00e8 un ricevitore di rete Denon AVR, il produttore rilevato non corrisponde",
+            "not_denonavr_missing": "Non \u00e8 un ricevitore di rete Denon AVR, le informazioni di rilevamento non sono complete"
+        },
+        "error": {
+            "discovery_error": "Impossibile rilevare un ricevitore di rete Denon AVR"
+        },
+        "flow_title": "Ricevitore di rete Denon AVR: {name}",
+        "step": {
+            "confirm": {
+                "description": "Si prega di confermare l'aggiunta del ricevitore",
+                "title": "Ricevitori di rete Denon AVR"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Indirizzo IP del ricevitore"
+                },
+                "description": "Eseguire nuovamente il setup se si desidera collegare altri ricevitori",
+                "title": "Selezionare il ricevitore che si desidera collegare"
+            },
+            "user": {
+                "data": {
+                    "host": "Indirizzo IP"
+                },
+                "description": "Collegare il ricevitore, se l'indirizzo IP non \u00e8 impostato, sar\u00e0 utilizzato il rilevamento automatico",
+                "title": "Ricevitori di rete Denon AVR"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Mostra tutte le fonti",
+                    "zone2": "Imposta la Zona 2",
+                    "zone3": "Imposta la Zona 3"
+                },
+                "description": "Specificare le impostazioni opzionali",
+                "title": "Ricevitori di rete Denon AVR"
+            }
+        }
+    }
+}

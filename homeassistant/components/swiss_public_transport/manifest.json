@@ -3,6 +3,5 @@
   "name": "Swiss public transport",
   "documentation": "https://www.home-assistant.io/integrations/swiss_public_transport",
   "requirements": ["python_opendata_transport==0.2.1"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

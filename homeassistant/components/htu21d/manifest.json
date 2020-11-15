@@ -3,6 +3,5 @@
   "name": "HTU21D(F) Sensor",
   "documentation": "https://www.home-assistant.io/integrations/htu21d",
   "requirements": ["i2csense==0.0.4", "smbus-cffi==0.5.1"],
-  "dependencies": [],
   "codeowners": []
 }

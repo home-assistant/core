@@ -1,6 +1,5 @@
 """The tests for the google calendar platform."""
 import copy
-from unittest.mock import Mock, patch
 
 import httplib2
 import pytest
@@ -23,6 +22,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
 GOOGLE_CONFIG = {CONF_CLIENT_ID: "client_id", CONF_CLIENT_SECRET: "client_secret"}

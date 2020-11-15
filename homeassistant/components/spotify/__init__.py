@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.spotify import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CREDENTIALS
+from homeassistant.const import ATTR_CREDENTIALS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -17,12 +17,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     DATA_SPOTIFY_CLIENT,
     DATA_SPOTIFY_ME,
     DATA_SPOTIFY_SESSION,
     DOMAIN,
+    SPOTIFY_SCOPES,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -68,8 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         current_user = await hass.async_add_executor_job(spotify.me)
-    except SpotifyException:
-        raise ConfigEntryNotReady
+    except SpotifyException as err:
+        raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -77,6 +76,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_SPOTIFY_ME: current_user,
         DATA_SPOTIFY_SESSION: session,
     }
+
+    if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "reauth"},
+                data=entry.data,
+            )
+        )
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, MEDIA_PLAYER_DOMAIN)

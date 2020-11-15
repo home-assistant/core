@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "\uace0\ub3c4",
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4",
+                    "name": "\uc774\ub984"
+                },
+                "description": "\ub178\ub974\uc6e8\uc774 \uae30\uc0c1 \uc5f0\uad6c\uc18c (Meteorologisk institutt)",
+                "title": "\uc704\uce58"
+            }
+        }
+    }
+}

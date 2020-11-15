@@ -58,11 +58,11 @@ from .const import (
     PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
+    UNDO_UPDATE_LISTENER,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
     ZONES,
 )
-from .errors import CannotConnect
 from .handlers import HANDLERS
 from .panel import AlarmPanel
 
@@ -245,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         # hass.async_add_job to avoid a deadlock.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device,
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device
             )
         )
     return True
@@ -254,20 +254,22 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up panel from a config entry."""
     client = AlarmPanel(hass, entry)
-    # create a data store in hass.data[DOMAIN][CONF_DEVICES]
+    # creates a panel data store in hass.data[DOMAIN][CONF_DEVICES]
     await client.async_save_data()
 
-    try:
-        await client.async_connect()
-    except CannotConnect:
-        # this will trigger a retry in the future
-        raise config_entries.ConfigEntryNotReady
+    # if the cfg entry was created we know we could connect to the panel at some point
+    # async_connect will handle retries until it establishes a connection
+    await client.async_connect()
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-    entry.add_update_listener(async_entry_updated)
+
+    # config entry specific data to enable unload
+    hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(async_entry_updated)
+    }
     return True
 
 
@@ -281,8 +283,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN][CONF_DEVICES].pop(entry.data[CONF_ID])
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -314,7 +320,7 @@ class KonnectedView(HomeAssistantView):
         hass = request.app["hass"]
         data = hass.data[DOMAIN]
 
-        auth = request.headers.get(AUTHORIZATION, None)
+        auth = request.headers.get(AUTHORIZATION)
         tokens = []
         if hass.data[DOMAIN].get(CONF_ACCESS_TOKEN):
             tokens.extend([hass.data[DOMAIN][CONF_ACCESS_TOKEN]])
@@ -335,11 +341,9 @@ class KonnectedView(HomeAssistantView):
             payload = await request.json()
         except json.decoder.JSONDecodeError:
             _LOGGER.error(
-                (
-                    "Your Konnected device software may be out of "
-                    "date. Visit https://help.konnected.io for "
-                    "updating instructions."
-                )
+                "Your Konnected device software may be out of "
+                "date. Visit https://help.konnected.io for "
+                "updating instructions"
             )
 
         device = data[CONF_DEVICES].get(device_id)
@@ -348,8 +352,14 @@ class KonnectedView(HomeAssistantView):
                 "unregistered device", status_code=HTTP_BAD_REQUEST
             )
 
+        panel = device.get("panel")
+        if panel is not None:
+            # connect if we haven't already
+            hass.async_create_task(panel.async_connect())
+
         try:
             zone_num = str(payload.get(CONF_ZONE) or PIN_TO_ZONE[payload[CONF_PIN]])
+            payload[CONF_ZONE] = zone_num
             zone_data = device[CONF_BINARY_SENSORS].get(zone_num) or next(
                 (s for s in device[CONF_SENSORS] if s[CONF_ZONE] == zone_num), None
             )
@@ -382,6 +392,11 @@ class KonnectedView(HomeAssistantView):
                 f"Device {device_id} not configured", status_code=HTTP_NOT_FOUND
             )
 
+        panel = device.get("panel")
+        if panel is not None:
+            # connect if we haven't already
+            hass.async_create_task(panel.async_connect())
+
         # Our data model is based on zone ids but we convert from/to pin ids
         # based on whether they are specified in the request
         try:
@@ -389,11 +404,9 @@ class KonnectedView(HomeAssistantView):
                 request.query.get(CONF_ZONE) or PIN_TO_ZONE[request.query[CONF_PIN]]
             )
             zone = next(
-                (
-                    switch
-                    for switch in device[CONF_SWITCHES]
-                    if switch[CONF_ZONE] == zone_num
-                )
+                switch
+                for switch in device[CONF_SWITCHES]
+                if switch[CONF_ZONE] == zone_num
             )
 
         except StopIteration:
@@ -421,7 +434,7 @@ class KonnectedView(HomeAssistantView):
         zone_entity_id = zone.get(ATTR_ENTITY_ID)
         if zone_entity_id:
             resp["state"] = self.binary_value(
-                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION],
+                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
             )
             return self.json(resp)
 

@@ -1,5 +1,4 @@
 """SAJ solar inverter interface."""
-import asyncio
 from datetime import date
 import logging
 
@@ -92,16 +91,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         raise PlatformNotReady
 
     for sensor in sensor_def:
-        hass_sensors.append(
-            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-        )
+        if sensor.enabled:
+            hass_sensors.append(
+                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+            )
 
     async_add_entities(hass_sensors)
 
     async def async_saj():
         """Update all the SAJ sensors."""
-        tasks = []
-
         values = await saj.read(sensor_def)
 
         for sensor in hass_sensors:
@@ -118,11 +116,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     not sensor.per_day_basis and not sensor.per_total_basis
                 ):
                     state_unknown = True
-            task = sensor.async_update_values(unknown_state=state_unknown)
-            if task:
-                tasks.append(task)
-        if tasks:
-            await asyncio.wait(tasks)
+            sensor.async_update_values(unknown_state=state_unknown)
+
         return values
 
     def start_update_interval(event):
@@ -237,7 +232,8 @@ class SAJsensor(Entity):
             update = True
             self._state = None
 
-        return self.async_update_ha_state() if update else None
+        if update:
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):

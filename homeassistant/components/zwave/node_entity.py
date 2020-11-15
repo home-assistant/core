@@ -1,6 +1,6 @@
 """Entity class that represents Z-Wave node."""
+# pylint: disable=import-outside-toplevel
 from itertools import count
-import logging
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
 from homeassistant.core import callback
@@ -21,8 +21,6 @@ from .const import (
     EVENT_SCENE_ACTIVATED,
 )
 from .util import is_node_parsed, node_device_id_and_name, node_name
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_QUERY_STAGE = "query_stage"
 ATTR_AWAKE = "is_awake"
@@ -87,7 +85,7 @@ class ZWaveBaseEntity(Entity):
         @callback
         def do_update():
             """Really update."""
-            self.hass.async_add_job(self.async_update_ha_state)
+            self.async_write_ha_state()
             self._update_scheduled = False
 
         self._update_scheduled = True
@@ -273,7 +271,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(self.entity_id, new_entity_id=new_entity_id)
                 return
         # else for the above two ifs, update if not using update_entity
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def network_node_event(self, node, value):
         """Handle a node activated event on the network."""

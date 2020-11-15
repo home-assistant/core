@@ -3,6 +3,5 @@
   "name": "CUPS",
   "documentation": "https://www.home-assistant.io/integrations/cups",
   "requirements": ["pycups==1.9.73"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

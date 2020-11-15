@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "import_failed": {
+                "description": "Nie mo\u017cna skonfigurowa\u0107 mostka (host: {host}) zaimportowanego z pliku configuration.yaml.",
+                "title": "Nie uda\u0142o si\u0119 zaimportowa\u0107 konfiguracji mostka Cas\u00e9ta."
+            }
+        }
+    }
+}

@@ -1,0 +1,85 @@
+{
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        },
+        "battery": {
+            "off": "Normalt",
+            "on": "L\u00e5gt"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kald"
+        },
+        "connectivity": {
+            "off": "Fr\u00e5kopla",
+            "on": "Tilkopla"
+        },
+        "door": {
+            "off": "Lukka",
+            "on": "Open"
+        },
+        "garage_door": {
+            "off": "Lukka",
+            "on": "Open"
+        },
+        "gas": {
+            "off": "Ikkje oppdaga",
+            "on": "Oppdaga"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Varm"
+        },
+        "lock": {
+            "off": "L\u00e5st",
+            "on": "Ul\u00e5st"
+        },
+        "moisture": {
+            "off": "T\u00f8rr",
+            "on": "V\u00e5t"
+        },
+        "motion": {
+            "off": "Ikkje oppdaga",
+            "on": "Oppdaga"
+        },
+        "occupancy": {
+            "off": "Ikkje oppdaga",
+            "on": "Oppdaga"
+        },
+        "opening": {
+            "off": "Lukka",
+            "on": "Open"
+        },
+        "presence": {
+            "off": "Borte",
+            "on": "Heime"
+        },
+        "problem": {
+            "off": "Ok",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Sikker",
+            "on": "Usikker"
+        },
+        "smoke": {
+            "off": "Ikkje oppdaga",
+            "on": "Oppdaga"
+        },
+        "sound": {
+            "off": "Ikkje oppdaga",
+            "on": "Oppdaga"
+        },
+        "vibration": {
+            "off": "Ikkje oppdaga",
+            "on": "Oppdaga"
+        },
+        "window": {
+            "off": "Lukka",
+            "on": "Open"
+        }
+    },
+    "title": "Bin\u00e6rsensor"
+}

@@ -2,7 +2,6 @@
   "domain": "asterisk_cdr",
   "name": "Asterisk Call Detail Records",
   "documentation": "https://www.home-assistant.io/integrations/asterisk_cdr",
-  "requirements": [],
   "dependencies": ["asterisk_mbox"],
   "codeowners": []
 }

@@ -1,7 +1,5 @@
 """Vera tests."""
-from unittest.mock import MagicMock
-
-from pyvera import CATEGORY_THERMOSTAT, VeraController, VeraThermostat
+import pyvera as pv
 
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -13,17 +11,20 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import ComponentFactory
+from .common import ComponentFactory, new_simple_controller_config
+
+from tests.async_mock import MagicMock
 
 
 async def test_climate(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
+    vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_THERMOSTAT
+    vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
@@ -31,10 +32,10 @@ async def test_climate(
     entity_id = "climate.dev1_1"
 
     component_data = await vera_component_factory.configure_component(
-        hass=hass, devices=(vera_device,),
+        hass=hass,
+        controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    controller = component_data.controller
-    update_callback = controller.register.call_args_list[0][0][1]
+    update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == HVAC_MODE_OFF
 
@@ -87,7 +88,9 @@ async def test_climate(
     assert hass.states.get(entity_id).state == HVAC_MODE_OFF
 
     await hass.services.async_call(
-        "climate", "set_fan_mode", {"entity_id": entity_id, "fan_mode": "on"},
+        "climate",
+        "set_fan_mode",
+        {"entity_id": entity_id, "fan_mode": "on"},
     )
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
@@ -97,7 +100,9 @@ async def test_climate(
     assert hass.states.get(entity_id).attributes["fan_mode"] == FAN_ON
 
     await hass.services.async_call(
-        "climate", "set_fan_mode", {"entity_id": entity_id, "fan_mode": "off"},
+        "climate",
+        "set_fan_mode",
+        {"entity_id": entity_id, "fan_mode": "off"},
     )
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
@@ -107,7 +112,9 @@ async def test_climate(
     assert hass.states.get(entity_id).attributes["fan_mode"] == FAN_AUTO
 
     await hass.services.async_call(
-        "climate", "set_temperature", {"entity_id": entity_id, "temperature": 30},
+        "climate",
+        "set_temperature",
+        {"entity_id": entity_id, "temperature": 30},
     )
     await hass.async_block_till_done()
     vera_device.set_temperature.assert_called_with(30)
@@ -123,27 +130,32 @@ async def test_climate_f(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
+    vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_THERMOSTAT
+    vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
     vera_device.get_current_goal_temperature.return_value = 72
     entity_id = "climate.dev1_1"
 
-    def setup_callback(controller: VeraController, hass_config: dict) -> None:
+    def setup_callback(controller: pv.VeraController) -> None:
         controller.temperature_units = "F"
 
     component_data = await vera_component_factory.configure_component(
-        hass=hass, devices=(vera_device,), setup_callback=setup_callback
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            devices=(vera_device,), setup_callback=setup_callback
+        ),
     )
-    controller = component_data.controller
-    update_callback = controller.register.call_args_list[0][0][1]
+    update_callback = component_data.controller_data[0].update_callback
 
     await hass.services.async_call(
-        "climate", "set_temperature", {"entity_id": entity_id, "temperature": 30},
+        "climate",
+        "set_temperature",
+        {"entity_id": entity_id, "temperature": 30},
     )
     await hass.async_block_till_done()
     vera_device.set_temperature.assert_called_with(86)

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "Tento identifik\u00e1tor je ji\u017e nastaven"
+        },
+        "error": {
+            "site_exists": "Tento identifik\u00e1tor je ji\u017e nastaven"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "name": "Jm\u00e9no t\u00e9to instalace",
+                    "site_id": "Identifik\u00e1tor SolarEdge"
+                },
+                "title": "Nastavte parametry API t\u00e9to instalace"
+            }
+        }
+    }
+}

@@ -43,9 +43,9 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up an Arlo component."""
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     try:
 
@@ -59,7 +59,7 @@ def setup(hass, config):
         if arlo_base_station is not None:
             arlo_base_station.refresh_rate = scan_interval.total_seconds()
         elif not arlo.cameras:
-            _LOGGER.error("No Arlo camera or base station available.")
+            _LOGGER.error("No Arlo camera or base station available")
             return False
 
         hass.data[DATA_ARLO] = arlo

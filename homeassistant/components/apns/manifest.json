@@ -3,7 +3,6 @@
   "name": "Apple Push Notification Service (APNS)",
   "documentation": "https://www.home-assistant.io/integrations/apns",
   "requirements": ["apns2==0.3.0"],
-  "dependencies": [],
   "after_dependencies": ["device_tracker"],
   "codeowners": []
 }

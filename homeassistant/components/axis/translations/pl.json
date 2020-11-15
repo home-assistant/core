@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
+            "not_axis_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Axis"
+        },
+        "error": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "Urz\u0105dzenie Axis: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Konfiguracja urz\u0105dzenia Axis"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Wybierz profil strumienia do u\u017cycia"
+                },
+                "title": "Opcje strumienia wideo urz\u0105dzenia Axis"
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide",
+            "unknown": "Erreur inconnue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom"
+                },
+                "description": "Tout d'abord, vous devez t\u00e9l\u00e9charger l'application Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\n Suivez les instructions pour connecter votre Yeti \u00e0 votre r\u00e9seau Wifi. Ensuite, r\u00e9cup\u00e9rez l'adresse IP de votre routeur. DHCP doit \u00eatre configur\u00e9 dans les param\u00e8tres de votre routeur pour le p\u00e9riph\u00e9rique afin de garantir que l'adresse IP de l'h\u00f4te ne change pas. Reportez-vous au manuel d'utilisation de votre routeur.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

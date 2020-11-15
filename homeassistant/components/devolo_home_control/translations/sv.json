@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress / devolo-ID"
+                }
+            }
+        }
+    }
+}

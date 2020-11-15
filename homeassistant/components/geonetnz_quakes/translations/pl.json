@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Promie\u0144"
+                },
+                "title": "Wprowad\u017a szczeg\u00f3\u0142owe dane filtra."
+            }
+        }
+    }
+}

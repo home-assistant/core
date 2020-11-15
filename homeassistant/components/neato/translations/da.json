@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Allerede konfigureret"
+        },
+        "create_entry": {
+            "default": "Se [Neato-dokumentation]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn",
+                    "vendor": "Udbyder"
+                },
+                "description": "Se [Neato-dokumentation]({docs_url}).",
+                "title": "Neato-kontooplysninger"
+            }
+        }
+    }
+}

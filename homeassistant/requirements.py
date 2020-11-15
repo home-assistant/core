@@ -1,24 +1,23 @@
 """Module to handle installing requirements."""
 import asyncio
-import logging
 import os
-from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import Integration, async_get_integration
+from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
 import homeassistant.util.package as pkg_util
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
+DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
-PROGRESS_FILE = ".pip_progress"
-_LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+    "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
+_UNDEF = object()
 
 
 class RequirementsNotFound(HomeAssistantError):
@@ -50,6 +49,27 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip:
         return integration
 
+    cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
+    if cache is None:
+        cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
+
+    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
+
+    if isinstance(int_or_evt, asyncio.Event):
+        await int_or_evt.wait()
+        int_or_evt = cache.get(domain, _UNDEF)
+
+        # When we have waited and it's _UNDEF, it doesn't exist
+        # We don't cache that it doesn't exist, or else people can't fix it
+        # and then restart, because their config will never be valid.
+        if int_or_evt is _UNDEF:
+            raise IntegrationNotFound(domain)
+
+    if int_or_evt is not _UNDEF:
+        return cast(Integration, int_or_evt)
+
+    event = cache[domain] = asyncio.Event()
+
     if integration.requirements:
         await async_process_requirements(
             hass, integration.domain, integration.requirements
@@ -77,6 +97,8 @@ async def async_get_integration_with_requirements(
             ]
         )
 
+    cache[domain] = integration
+    event.set()
     return integration
 
 
@@ -99,20 +121,14 @@ async def async_process_requirements(
             if pkg_util.is_installed(req):
                 continue
 
-            ret = await hass.async_add_executor_job(_install, hass, req, kwargs)
+            def _install(req: str, kwargs: Dict) -> bool:
+                """Install requirement."""
+                return pkg_util.install_package(req, **kwargs)
+
+            ret = await hass.async_add_executor_job(_install, req, kwargs)
 
             if not ret:
                 raise RequirementsNotFound(name, [req])
-
-
-def _install(hass: HomeAssistant, req: str, kwargs: Dict) -> bool:
-    """Install requirement."""
-    progress_path = Path(hass.config.path(PROGRESS_FILE))
-    progress_path.touch()
-    try:
-        return pkg_util.install_package(req, **kwargs)
-    finally:
-        progress_path.unlink()
 
 
 def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:

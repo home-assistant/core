@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "station": "C\u00f3digo de estaci\u00f3n METAR"
+                },
+                "description": "Si no se especifica un c\u00f3digo de estaci\u00f3n METAR, se utilizar\u00e1n la latitud y la longitud para encontrar la estaci\u00f3n m\u00e1s cercana.",
+                "title": "Conectar con el National Weather Service"
+            }
+        }
+    }
+}

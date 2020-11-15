@@ -1,11 +1,9 @@
 """Test add-on panel."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +47,6 @@ async def test_hassio_addon_panel_startup(hass, aioclient_mock, hassio_env):
 
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
-        Mock(return_value=mock_coro()),
     ) as mock_panel:
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
@@ -92,7 +89,6 @@ async def test_hassio_addon_panel_api(hass, aioclient_mock, hassio_env, hass_cli
 
     with patch(
         "homeassistant.components.hassio.addon_panel._register_panel",
-        Mock(return_value=mock_coro()),
     ) as mock_panel:
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()

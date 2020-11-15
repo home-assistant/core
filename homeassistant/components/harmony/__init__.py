@@ -1,8 +1,11 @@
 """The Logitech Harmony Hub integration."""
 import asyncio
-import logging
 
-from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
+from homeassistant.components.remote import (
+    ATTR_ACTIVITY,
+    ATTR_DELAY_SECS,
+    DEFAULT_DELAY_SECS,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -11,8 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .remote import HarmonyRemote
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     address = entry.data[CONF_HOST]
     name = entry.data[CONF_NAME]
     activity = entry.options.get(ATTR_ACTIVITY)
-    delay_secs = entry.options.get(ATTR_DELAY_SECS)
+    delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     try:
@@ -41,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             name, entry.unique_id, address, activity, harmony_conf_file, delay_secs
         )
         connected_ok = await device.connect()
-    except (asyncio.TimeoutError, ValueError, AttributeError):
-        raise ConfigEntryNotReady
+    except (asyncio.TimeoutError, ValueError, AttributeError) as err:
+        raise ConfigEntryNotReady from err
 
     if not connected_ok:
         raise ConfigEntryNotReady

@@ -2,7 +2,6 @@
   "domain": "camera",
   "name": "Camera",
   "documentation": "https://www.home-assistant.io/integrations/camera",
-  "requirements": [],
   "dependencies": ["http"],
   "after_dependencies": ["media_player"],
   "codeowners": [],

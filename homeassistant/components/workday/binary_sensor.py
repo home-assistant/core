@@ -6,7 +6,7 @@ from typing import Any
 import holidays
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.helpers.config_validation as cv
 
@@ -20,6 +20,7 @@ CONF_WORKDAYS = "workdays"
 CONF_EXCLUDES = "excludes"
 CONF_OFFSET = "days_offset"
 CONF_ADD_HOLIDAYS = "add_holidays"
+CONF_REMOVE_HOLIDAYS = "remove_holidays"
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
@@ -36,10 +37,10 @@ def valid_country(value: Any) -> str:
 
     try:
         raw_value = value.encode("utf-8")
-    except UnicodeError:
+    except UnicodeError as err:
         raise vol.Invalid(
             "The country name or the abbreviation must be a valid UTF-8 string."
-        )
+        ) from err
     if not raw_value:
         raise vol.Invalid("Country name or the abbreviation must not be empty.")
     if value not in all_supported_countries:
@@ -60,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
         vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_REMOVE_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -67,6 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
     add_holidays = config.get(CONF_ADD_HOLIDAYS)
+    remove_holidays = config.get(CONF_REMOVE_HOLIDAYS)
     country = config[CONF_COUNTRY]
     days_offset = config[CONF_OFFSET]
     excludes = config[CONF_EXCLUDES]
@@ -96,6 +99,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except TypeError:
         _LOGGER.debug("No custom holidays or invalid holidays")
 
+    # Remove holidays
+    try:
+        for date in remove_holidays:
+            obj_holidays.pop(date)
+    except TypeError:
+        _LOGGER.debug("No holidays to remove or invalid holidays")
+
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
         _LOGGER.debug("%s %s", date, name)
@@ -119,7 +129,7 @@ def get_date(date):
     return date
 
 
-class IsWorkdaySensor(BinarySensorDevice):
+class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
     def __init__(self, obj_holidays, workdays, excludes, days_offset, name):

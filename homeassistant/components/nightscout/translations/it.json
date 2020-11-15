@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Nightscout",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "url": "URL"
+                },
+                "description": "- URL: l'indirizzo della tua istanza nightscout. Ad es.: https://myhomeassistant.duckdns.org:5423\n- Chiave API (opzionale): utilizzare solo se l'istanza \u00e8 protetta (auth_default_roles != readable).",
+                "title": "Inserisci le informazioni del tuo server Nightscout."
+            }
+        }
+    }
+}

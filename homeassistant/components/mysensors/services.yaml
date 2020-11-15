@@ -3,7 +3,7 @@ send_ir_code:
   fields:
     entity_id:
       description: Name(s) of entities that should have the IR code set and be turned on. Platform dependent.
-      example: 'switch.living_room_1_1'
+      example: "switch.living_room_1_1"
     V_IR_SEND:
       description: IR code to send.
-      example: '0xC284'
+      example: "0xC284"

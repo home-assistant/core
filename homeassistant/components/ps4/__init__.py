@@ -139,11 +139,9 @@ async def async_migrate_entry(hass, entry):
                 config_entries.async_update_entry(entry)
                 return True
 
-    msg = """{} for the PlayStation 4 Integration.
+    msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure
-            [here](/config/integrations).""".format(
-        reason[version]
-    )
+            [here](/config/integrations)."""
 
     hass.components.persistent_notification.async_create(
         title="PlayStation 4 Integration Configuration Requires Update",
@@ -159,11 +157,11 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistantType) -> dict:
+def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
     """Load games for sources."""
-    g_file = hass.config.path(GAMES_FILE)
+    g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
-        games = load_json(g_file, dict)
+        games = load_json(g_file)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
@@ -174,20 +172,20 @@ def load_games(hass: HomeAssistantType) -> dict:
 
     # If file exists
     if os.path.isfile(g_file):
-        games = _reformat_data(hass, games)
+        games = _reformat_data(hass, games, unique_id)
     return games
 
 
-def save_games(hass: HomeAssistantType, games: dict):
+def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
     """Save games to file."""
-    g_file = hass.config.path(GAMES_FILE)
+    g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
         save_json(g_file, games)
     except OSError as error:
         _LOGGER.error("Could not save game list, %s", error)
 
 
-def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
+def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict:
     """Reformat data to correct format."""
     data_reformatted = False
 
@@ -206,7 +204,7 @@ def _reformat_data(hass: HomeAssistantType, games: dict) -> dict:
             _LOGGER.debug("Reformatting media data for item: %s, %s", game, data)
 
     if data_reformatted:
-        save_games(hass, games)
+        save_games(hass, games, unique_id)
     return games
 
 

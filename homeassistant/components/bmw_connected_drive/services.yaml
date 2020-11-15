@@ -35,6 +35,16 @@ activate_air_conditioning:
         The vehicle identification number (VIN) of the vehicle, 17 characters
       example: WBANXXXXXX1234567
 
+find_vehicle:
+  description: >
+    Request vehicle to update the gps location. The vehicle is identified via the vin
+    (see below).
+  fields:
+    vin:
+      description: >
+        The vehicle identification number (VIN) of the vehicle, 17 characters
+      example: WBANXXXXXX1234567
+
 update_state:
   description: >
     Fetch the last state of the vehicles of all your accounts from the BMW

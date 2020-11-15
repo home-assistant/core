@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "create_entry": {
+            "default": "M\u00f6gliche erweiterte Einstellungen finden sich unter [Life360-Dokumentation]({docs_url})."
+        },
+        "error": {
+            "already_configured": "Konto ist bereits konfiguriert",
+            "invalid_username": "Ung\u00fcltiger Benutzername",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Erweiterte Optionen sind in der [Life360-Dokumentation]({docs_url}) zu finden.\nDies sollte vor dem Hinzuf\u00fcgen von Kontoinformationen getan werden.",
+                "title": "Life360-Kontoinformationen"
+            }
+        }
+    }
+}

@@ -3,6 +3,5 @@
   "name": "SoChain",
   "documentation": "https://www.home-assistant.io/integrations/sochain",
   "requirements": ["python-sochain-api==0.0.2"],
-  "dependencies": [],
   "codeowners": []
 }

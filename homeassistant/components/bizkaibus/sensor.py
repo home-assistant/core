@@ -1,7 +1,4 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
-
-import logging
-
 from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
@@ -9,8 +6,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_DUE_IN = "Due in"
 
@@ -30,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bizkaibus public transport sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]
     route = config[CONF_ROUTE]
 

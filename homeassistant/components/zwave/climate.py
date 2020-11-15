@@ -3,7 +3,7 @@
 import logging
 from typing import Optional, Tuple
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -149,7 +149,7 @@ def get_device(hass, values, **kwargs):
     return None
 
 
-class ZWaveClimateBase(ZWaveDeviceEntity, ClimateDevice):
+class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
     """Representation of a Z-Wave Climate device."""
 
     def __init__(self, values, temp_unit):

@@ -82,7 +82,9 @@ async def test_state_with_context(hass):
 
     context = Context()
 
-    await async_reproduce_states(hass, [State(ENTITY_1, HVAC_MODE_HEAT)], context)
+    await async_reproduce_states(
+        hass, [State(ENTITY_1, HVAC_MODE_HEAT)], context=context
+    )
 
     await hass.async_block_till_done()
 

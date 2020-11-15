@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\ub3c4\uc2dc\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "unknown": "\uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uc785\ub2c8\ub2e4. \ub098\uc911\uc5d0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694"
+        },
+        "error": {
+            "empty": "\ub3c4\uc2dc \uac80\uc0c9 \uacb0\uacfc \uc5c6\uc74c: \ub3c4\uc2dc \ud544\ub4dc\ub97c \ud655\uc778\ud558\uc2ed\uc2dc\uc624."
+        },
+        "step": {
+            "cities": {
+                "title": "\ud504\ub791\uc2a4 \uae30\uc0c1\uccad (M\u00e9t\u00e9o-France)"
+            },
+            "user": {
+                "data": {
+                    "city": "\ub3c4\uc2dc"
+                },
+                "description": "\uc6b0\ud3b8\ubc88\ud638 (\ud504\ub791\uc2a4) \ub610\ub294 \ub3c4\uc2dc \uc774\ub984\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "\ud504\ub791\uc2a4 \uae30\uc0c1\uccad (M\u00e9t\u00e9o-France)"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "\uc608\uce21 \ubaa8\ub4dc"
+                }
+            }
+        }
+    }
+}

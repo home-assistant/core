@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tiempo excedido generando la url de autorizaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, consulta la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado correctamente"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Selecciona un m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nombre del \u00e1rea",
+                    "lat_ne": "Latitud esquina Noreste",
+                    "lat_sw": "Latitud esquina Suroeste",
+                    "lon_ne": "Longitud esquina Noreste",
+                    "lon_sw": "Longitud esquina Suroeste",
+                    "mode": "C\u00e1lculo",
+                    "show_on_map": "Mostrar en el mapa"
+                },
+                "description": "Configura un sensor de clima p\u00fablico para un \u00e1rea.",
+                "title": "Sensor de clima p\u00fablico Netatmo"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nombre del \u00e1rea",
+                    "weather_areas": "Zonas meteorol\u00f3gicas"
+                },
+                "description": "Configurar sensores de clima p\u00fablicos.",
+                "title": "Sensor de clima p\u00fablico Netatmo"
+            }
+        }
+    }
+}

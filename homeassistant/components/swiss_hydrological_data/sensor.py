@@ -97,7 +97,7 @@ class SwissHydrologicalDataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0} {1}".format(self._data["water-body-name"], self._condition)
+        return "{} {}".format(self._data["water-body-name"], self._condition)
 
     @property
     def unique_id(self) -> str:

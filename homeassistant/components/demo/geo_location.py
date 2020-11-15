@@ -6,12 +6,12 @@ import random
 from typing import Optional
 
 from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
 AVG_KM_PER_DEGREE = 111.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 MAX_RADIUS_IN_KM = 50
 NUMBER_OF_DEMO_DEVICES = 5
@@ -71,7 +71,7 @@ class DemoManager:
 
         event_name = random.choice(EVENT_NAMES)
         return DemoGeolocationEvent(
-            event_name, radius_in_km, latitude, longitude, DEFAULT_UNIT_OF_MEASUREMENT
+            event_name, radius_in_km, latitude, longitude, LENGTH_KILOMETERS
         )
 
     def _init_regular_updates(self):

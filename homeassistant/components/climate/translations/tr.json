@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "auto": "Otomatik",
+            "cool": "So\u011futma",
+            "dry": "Nem alma",
+            "fan_only": "Sadece fan",
+            "heat": "Is\u0131tma",
+            "heat_cool": "Is\u0131tma / So\u011futma",
+            "off": "Kapal\u0131"
+        }
+    },
+    "title": "\u0130klim"
+}

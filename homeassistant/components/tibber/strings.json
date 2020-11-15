@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "timeout": "Timeout connecting to Tibber",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "Enter your access token from https://developer.tibber.com/settings/accesstoken",
+        "title": "Tibber"
+      }
+    }
+  }
+}

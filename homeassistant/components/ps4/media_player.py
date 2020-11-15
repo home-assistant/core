@@ -5,7 +5,7 @@ import logging
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
@@ -49,7 +49,7 @@ SUPPORT_PS4 = (
     | SUPPORT_SELECT_SOURCE
 )
 
-ICON = "mdi:playstation"
+ICON = "mdi:sony-playstation"
 MEDIA_IMAGE_DEFAULT = None
 
 DEFAULT_RETRIES = 2
@@ -69,7 +69,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(device_list, update_before_add=True)
 
 
-class PS4Device(MediaPlayerDevice):
+class PS4Device(MediaPlayerEntity):
     """Representation of a PS4."""
 
     def __init__(self, config, name, host, region, ps4, creds):
@@ -163,7 +163,7 @@ class PS4Device(MediaPlayerDevice):
         status = self._ps4.status
 
         if status is not None:
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
 
@@ -300,7 +300,7 @@ class PS4Device(MediaPlayerDevice):
                 self._media_image,
                 self._media_type,
             )
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
 
         self.get_source_list()
 
@@ -324,7 +324,7 @@ class PS4Device(MediaPlayerDevice):
                 }
             }
             games.update(game)
-            save_games(self.hass, games)
+            save_games(self.hass, games, self._unique_id)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""
@@ -352,7 +352,7 @@ class PS4Device(MediaPlayerDevice):
         else:
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
-            sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
+            sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._info = {
                 "name": status["host-name"],
                 "model": "PlayStation 4",
@@ -452,6 +452,10 @@ class PS4Device(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn on the media player."""
         self._ps4.wakeup()
+
+    async def async_toggle(self):
+        """Toggle media player."""
+        await self._ps4.toggle()
 
     async def async_media_pause(self):
         """Send keypress ps to return to menu."""

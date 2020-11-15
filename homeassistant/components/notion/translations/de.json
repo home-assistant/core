@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieser Benutzername wird bereits benutzt."
+        },
+        "error": {
+            "no_devices": "Keine Ger\u00e4te im Konto gefunden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Informationen eingeben"
+            }
+        }
+    }
+}

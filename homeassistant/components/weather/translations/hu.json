@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Tiszta, \u00e9jszaka",
+            "cloudy": "Felh\u0151s",
+            "exceptional": "Kiv\u00e9teles",
+            "fog": "K\u00f6d",
+            "hail": "J\u00e9ges\u0151",
+            "lightning": "Vihar",
+            "lightning-rainy": "Viharos, es\u0151s",
+            "partlycloudy": "R\u00e9szben felh\u0151s",
+            "pouring": "Szakad",
+            "rainy": "Es\u0151s",
+            "snowy": "Havaz\u00e1s",
+            "snowy-rainy": "Havas, es\u0151s",
+            "sunny": "Napos",
+            "windy": "Szeles",
+            "windy-variant": "Szeles"
+        }
+    }
+}

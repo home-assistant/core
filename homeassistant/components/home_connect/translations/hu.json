@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Sikeres autentik\u00e1ci\u00f3"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+            }
+        }
+    }
+}

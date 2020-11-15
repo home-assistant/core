@@ -1,17 +1,16 @@
 # Describes the format for available Wink services
-
 pair_new_device:
   description: Pair a new device to a Wink Hub.
   fields:
     hub_name:
       description: The name of the hub to pair a new device to.
-      example: 'My hub'
+      example: "My hub"
     pairing_mode:
       description: One of ["zigbee", "zwave", "zwave_exclusion", "zwave_network_rediscovery", "lutron", "bluetooth", "kidde"].
-      example: 'zigbee'
+      example: "zigbee"
     kidde_radio_code:
-      description: 'A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8. Down = 1 and Up = 0'
-      example: '10101010'
+      description: "A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8. Down = 1 and Up = 0"
+      example: "10101010"
 
 rename_wink_device:
   description: Rename the provided device.
@@ -40,47 +39,55 @@ set_siren_volume:
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     volume:
-        description: Volume level. One of ["low", "medium", "high"].
-        example: "high"
+      description: Volume level. One of ["low", "medium", "high"].
+      example: "high"
 
 enable_chime:
   description: Enable the chime of a Dome siren with the provided sound.
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     tone:
-        description: The tone to use for the chime. One of ["doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell", "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
-        example: "doorbell"
+      description: >-
+        The tone to use for the chime. One of ["doorbell", "fur_elise",
+        "doorbell_extended", "alert", "william_tell", "rondo_alla_turca",
+        "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
+      example: "doorbell"
 
 set_siren_tone:
   description: Set the sound to use when the siren is enabled. (This doesn't enable the siren)
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     tone:
-        description: The tone to use for the chime. One of ["doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell", "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
-        example: "alert"
+      description: >-
+        The tone to use for the chime. One of ["doorbell", "fur_elise",
+        "doorbell_extended", "alert", "william_tell", "rondo_alla_turca",
+        "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
+      example: "alert"
 
 siren_set_auto_shutoff:
   description: How long to sound the siren before turning off.
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     auto_shutoff:
-        description: The time in seconds to sound the siren. One of [None, -1, 30, 60, 120] (None and -1 are forever. Use None for gocontrol, and -1 for Dome)
-        example: 60
+      description: >-
+        The time in seconds to sound the siren. One of [None, -1, 30, 60, 120]
+        (None and -1 are forever. Use None for gocontrol, and -1 for Dome)
+      example: 60
 
 set_siren_strobe_enabled:
   description: Enable or disable the strobe light when the siren is sounding.
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     enabled:
       description: "True or False"
 
@@ -89,38 +96,38 @@ set_chime_strobe_enabled:
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     enabled:
-        description: "True or False"
+      description: "True or False"
 
 enable_siren:
   description: Enable/disable the siren.
   fields:
     entity_id:
       description: Name(s) of the entities to set
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     enabled:
-        description: "True or False"
+      description: "true or false"
 
 set_chime_volume:
   description: Set the volume of the chime for a Dome siren/chime.
   fields:
     entity_id:
       description: Name(s) of the entities to set.
-      example: 'switch.dome_siren'
+      example: "switch.dome_siren"
     volume:
-        description: Volume level. One of ["low", "medium", "high"]
-        example: "low"
+      description: Volume level. One of ["low", "medium", "high"]
+      example: "low"
 
 set_nimbus_dial_configuration:
   description: Set the configuration of an individual nimbus dial
   fields:
     entity_id:
       description: Name of the entity to set.
-      example: 'wink.nimbus_dial_3'
+      example: "wink.nimbus_dial_3"
     rotation:
       description: Direction dial hand should spin ["cw" or "ccw"]
-      example: 'cw'
+      example: "cw"
     ticks:
       description: Number of times the hand should move
       example: 12
@@ -145,12 +152,15 @@ set_nimbus_dial_state:
   fields:
     entity_id:
       description: Name of the entity to set.
-      example: 'wink.nimbus_dial_3'
+      example: "wink.nimbus_dial_3"
     value:
       description: The value that should be set (Should be between min_value and max_value)
       example: 250
     labels:
-      description: The values shown on the dial labels ["Dial 1", "test"] the first value is what is shown by default the second value is shown when the nimbus is pressed
+      description: >-
+        The values shown on the dial labels ["Dial 1", "test"] the first value
+        is what is shown by default the second value is shown when the nimbus is
+        pressed.
       example: ["example", "test"]
 
 set_lock_vacation_mode:
@@ -158,7 +168,7 @@ set_lock_vacation_mode:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     enabled:
       description: enable or disable. true or false.
       example: true
@@ -168,7 +178,7 @@ set_lock_alarm_mode:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     mode:
       description: One of tamper, activity, or forced_entry.
       example: tamper
@@ -178,7 +188,7 @@ set_lock_alarm_sensitivity:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     sensitivity:
       description: One of low, medium_low, medium, medium_high, high.
       example: medium
@@ -188,7 +198,7 @@ set_lock_alarm_state:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     enabled:
       description: enable or disable. true or false.
       example: true
@@ -198,7 +208,7 @@ set_lock_beeper_state:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     enabled:
       description: enable or disable. true or false.
       example: true
@@ -208,7 +218,7 @@ add_new_lock_key_code:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     name:
       description: name of the new key code.
       example: Bob

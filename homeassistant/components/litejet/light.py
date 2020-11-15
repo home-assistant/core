@@ -2,7 +2,11 @@
 import logging
 
 from homeassistant.components import litejet
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class LiteJetLight(Light):
+class LiteJetLight(LightEntity):
     """Representation of a single LiteJet light."""
 
     def __init__(self, hass, lj, i, name):

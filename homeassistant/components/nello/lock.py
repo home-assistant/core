@@ -5,7 +5,7 @@ import logging
 from pynello.private import Nello
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([NelloLock(lock) for lock in nello.locations], True)
 
 
-class NelloLock(LockDevice):
+class NelloLock(LockEntity):
     """Representation of a Nello lock."""
 
     def __init__(self, nello_lock):

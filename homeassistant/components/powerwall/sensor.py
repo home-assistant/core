@@ -1,22 +1,22 @@
 """Support for August sensors."""
 import logging
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    UNIT_PERCENTAGE,
-)
+from tesla_powerwall import MeterType
+
+from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
 from .const import (
     ATTR_ENERGY_EXPORTED,
     ATTR_ENERGY_IMPORTED,
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
+    ATTR_IS_ACTIVE,
     DOMAIN,
+    ENERGY_KILO_WATT,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_METERS,
+    POWERWALL_API_SERIAL_NUMBERS,
     POWERWALL_API_SITE_INFO,
     POWERWALL_API_STATUS,
     POWERWALL_COORDINATOR,
@@ -35,14 +35,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     site_info = powerwall_data[POWERWALL_API_SITE_INFO]
     device_type = powerwall_data[POWERWALL_API_DEVICE_TYPE]
     status = powerwall_data[POWERWALL_API_STATUS]
+    powerwalls_serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
 
     entities = []
-    for meter in coordinator.data[POWERWALL_API_METERS]:
+    for meter in MeterType:
         entities.append(
-            PowerWallEnergySensor(meter, coordinator, site_info, status, device_type)
+            PowerWallEnergySensor(
+                meter,
+                coordinator,
+                site_info,
+                status,
+                device_type,
+                powerwalls_serial_numbers,
+            )
         )
 
-    entities.append(PowerWallChargeSensor(coordinator, site_info, status, device_type))
+    entities.append(
+        PowerWallChargeSensor(
+            coordinator, site_info, status, device_type, powerwalls_serial_numbers
+        )
+    )
 
     async_add_entities(entities, True)
 
@@ -53,7 +65,7 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def name(self):
@@ -73,26 +85,36 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def state(self):
         """Get the current value in percentage."""
-        return round(self._coordinator.data[POWERWALL_API_CHARGE], 3)
+        return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
 
 class PowerWallEnergySensor(PowerWallEntity):
     """Representation of an Powerwall Energy sensor."""
 
-    def __init__(self, meter, coordinator, site_info, status, device_type):
+    def __init__(
+        self,
+        meter: MeterType,
+        coordinator,
+        site_info,
+        status,
+        device_type,
+        powerwalls_serial_numbers,
+    ):
         """Initialize the sensor."""
-        super().__init__(coordinator, site_info, status, device_type)
+        super().__init__(
+            coordinator, site_info, status, device_type, powerwalls_serial_numbers
+        )
         self._meter = meter
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
+        return ENERGY_KILO_WATT
 
     @property
     def name(self):
         """Device Name."""
-        return f"Powerwall {self._meter.title()} Now"
+        return f"Powerwall {self._meter.value.title()} Now"
 
     @property
     def device_class(self):
@@ -102,21 +124,25 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def unique_id(self):
         """Device Uniqueid."""
-        return f"{self.base_unique_id}_{self._meter}_instant_power"
+        return f"{self.base_unique_id}_{self._meter.value}_instant_power"
 
     @property
     def state(self):
-        """Get the current value in kWh."""
-        meter = self._coordinator.data[POWERWALL_API_METERS][self._meter]
-        return round(float(meter.instant_power / 1000), 3)
+        """Get the current value in kW."""
+        return (
+            self.coordinator.data[POWERWALL_API_METERS]
+            .get_meter(self._meter)
+            .get_power(precision=3)
+        )
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        meter = self._coordinator.data[POWERWALL_API_METERS][self._meter]
+        meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         return {
-            ATTR_FREQUENCY: meter.frequency,
-            ATTR_ENERGY_EXPORTED: meter.energy_exported,
-            ATTR_ENERGY_IMPORTED: meter.energy_imported,
-            ATTR_INSTANT_AVERAGE_VOLTAGE: meter.instant_average_voltage,
+            ATTR_FREQUENCY: round(meter.frequency, 1),
+            ATTR_ENERGY_EXPORTED: meter.get_energy_exported(),
+            ATTR_ENERGY_IMPORTED: meter.get_energy_imported(),
+            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.avarage_voltage, 1),
+            ATTR_IS_ACTIVE: meter.is_active(),
         }

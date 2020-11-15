@@ -2,8 +2,6 @@
   "domain": "climate",
   "name": "Climate",
   "documentation": "https://www.home-assistant.io/integrations/climate",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

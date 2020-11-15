@@ -3,8 +3,8 @@
   "name": "Daikin AC",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/daikin",
-  "requirements": ["pydaikin==1.6.2"],
-  "dependencies": [],
-  "codeowners": ["@fredrike", "@rofrantz"],
+  "requirements": ["pydaikin==2.3.1"],
+  "codeowners": ["@fredrike"],
+  "zeroconf": ["_dkapi._tcp.local."],
   "quality_scale": "platinum"
 }

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Az esem\u00e9ny Home Assistantnek val\u00f3 k\u00fcld\u00e9s\u00e9hez be kell \u00e1ll\u00edtanod a webhook funkci\u00f3t a Geofencyben. \n\n Az al\u00e1bbi inform\u00e1ci\u00f3kat haszn\u00e1ld: \n\n - URL: ` {webhook_url} ` \n - Method: POST \n\n Tov\u00e1bbi r\u00e9szletek a [dokument\u00e1ci\u00f3] ( {docs_url} ) linken tal\u00e1lhat\u00f3k."
+        },
+        "step": {
+            "user": {
+                "description": "Biztosan be szeretn\u00e9d \u00e1ll\u00edtani a Geofency Webhookot?",
+                "title": "A Geofency Webhook be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

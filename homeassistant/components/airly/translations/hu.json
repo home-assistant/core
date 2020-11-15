@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ezen koordin\u00e1t\u00e1k Airly integr\u00e1ci\u00f3ja m\u00e1r konfigur\u00e1lva van."
+        },
+        "error": {
+            "wrong_location": "Ezen a ter\u00fcleten nincs Airly m\u00e9r\u0151\u00e1llom\u00e1s."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "Az integr\u00e1ci\u00f3 neve"
+                },
+                "description": "Az Airly leveg\u0151min\u0151s\u00e9gi integr\u00e1ci\u00f3j\u00e1nak be\u00e1ll\u00edt\u00e1sa. Api-kulcs l\u00e9trehoz\u00e1s\u00e1hoz nyissa meg a k\u00f6vetkez\u0151 weboldalt: https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    }
+}

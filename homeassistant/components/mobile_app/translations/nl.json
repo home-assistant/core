@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Open de mobiele app om de integratie met de Home Assistant op te zetten. Zie [de docs]({apps_url}) voor een lijst met compatibele apps."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wilt u de Mobile App component instellen?"
+            }
+        }
+    }
+}

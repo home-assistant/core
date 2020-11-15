@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "invalid_auth": "Ogiltig autentisering",
+            "no_homes": "Det finns inga hem kopplade till detta tado-konto.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "title": "Anslut till ditt Tado-konto"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Aktivera reservl\u00e4ge."
+                },
+                "title": "Justera Tado inst\u00e4llningarna."
+            }
+        }
+    }
+}

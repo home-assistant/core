@@ -9,7 +9,7 @@ from homeassistant.components.twentemilieu.const import (
     CONF_POST_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONTENT_TYPE_JSON
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ async def test_show_set_form(hass):
 async def test_connection_error(hass, aioclient_mock):
     """Test we show user form on Twente Milieu connection error."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress", exc=aiohttp.ClientError
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress", exc=aiohttp.ClientError
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -43,15 +43,15 @@ async def test_connection_error(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_invalid_address(hass, aioclient_mock):
     """Test we show user form on Twente Milieu invalid address error."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": []},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -70,9 +70,9 @@ async def test_address_already_set_up(hass, aioclient_mock):
     )
 
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -80,15 +80,15 @@ async def test_address_already_set_up(hass, aioclient_mock):
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "address_already_set_up"
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow_implementation(hass, aioclient_mock):
     """Test registering an integration and finishing flow works."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()

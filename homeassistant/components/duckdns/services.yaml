@@ -3,4 +3,4 @@ set_txt:
   fields:
     txt:
       description: Payload for the TXT record.
-      example: 'This domain name is reserved for use in documentation'
+      example: "This domain name is reserved for use in documentation"

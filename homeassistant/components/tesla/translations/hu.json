@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "description": "K\u00e9rlek, add meg az adataidat.",
+                "title": "Tesla - Konfigur\u00e1ci\u00f3"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Szkennel\u00e9sek k\u00f6z\u00f6tti m\u00e1sodpercek"
+                }
+            }
+        }
+    }
+}

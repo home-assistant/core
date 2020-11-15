@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "create_entry": {
+            "default": "Se [Neato dokumentasjon]({docs_url})."
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn",
+                    "vendor": "Leverand\u00f8r"
+                },
+                "description": "Se [Neato dokumentasjon]({docs_url}).",
+                "title": "Neato kontoinformasjon"
+            }
+        }
+    }
+}

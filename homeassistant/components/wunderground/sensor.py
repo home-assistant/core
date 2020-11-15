@@ -17,16 +17,19 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
+    PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -217,9 +220,9 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
         :param field: field name to use as value
         """
         super().__init__(
-            friendly_name=lambda wu: "{} {}".format(
-                wu.data["hourly_forecast"][period]["FCTTIME"]["weekday_name_abbrev"],
-                wu.data["hourly_forecast"][period]["FCTTIME"]["civil"],
+            friendly_name=lambda wu: (
+                f"{wu.data['hourly_forecast'][period]['FCTTIME']['weekday_name_abbrev']} "
+                f"{wu.data['hourly_forecast'][period]['FCTTIME']['civil']}"
             ),
             feature="hourly",
             value=lambda wu: wu.data["hourly_forecast"][period][field],
@@ -329,7 +332,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
             for alert in ALERTS_ATTRS:
                 if data[alert]:
                     if multiple_alerts:
-                        dkey = alert.capitalize() + "_" + data["type"]
+                        dkey = f"{alert.capitalize()}_{data['type']}"
                     else:
                         dkey = alert.capitalize()
                     attrs[dkey] = data[alert]
@@ -390,7 +393,7 @@ SENSOR_TYPES = {
         "Precipitation 1hr", "precip_1hr_in", "mdi:umbrella", LENGTH_INCHES
     ),
     "precip_1hr_metric": WUCurrentConditionsSensorConfig(
-        "Precipitation 1hr", "precip_1hr_metric", "mdi:umbrella", "mm"
+        "Precipitation 1hr", "precip_1hr_metric", "mdi:umbrella", LENGTH_MILLIMETERS
     ),
     "precip_1hr_string": WUCurrentConditionsSensorConfig(
         "Precipitation 1hr", "precip_1hr_string", "mdi:umbrella"
@@ -399,13 +402,13 @@ SENSOR_TYPES = {
         "Precipitation Today", "precip_today_in", "mdi:umbrella", LENGTH_INCHES
     ),
     "precip_today_metric": WUCurrentConditionsSensorConfig(
-        "Precipitation Today", "precip_today_metric", "mdi:umbrella", "mm"
+        "Precipitation Today", "precip_today_metric", "mdi:umbrella", LENGTH_MILLIMETERS
     ),
     "precip_today_string": WUCurrentConditionsSensorConfig(
         "Precipitation Today", "precip_today_string", "mdi:umbrella"
     ),
     "pressure_in": WUCurrentConditionsSensorConfig(
-        "Pressure", "pressure_in", "mdi:gauge", "inHg", device_class="pressure"
+        "Pressure", "pressure_in", "mdi:gauge", PRESSURE_INHG, device_class="pressure"
     ),
     "pressure_mb": WUCurrentConditionsSensorConfig(
         "Pressure", "pressure_mb", "mdi:gauge", "mb", device_class="pressure"
@@ -417,7 +420,7 @@ SENSOR_TYPES = {
         "Relative Humidity",
         "conditions",
         value=lambda wu: int(wu.data["current_observation"]["relative_humidity"][:-1]),
-        unit_of_measurement=UNIT_PERCENTAGE,
+        unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
         device_class="humidity",
     ),
@@ -456,7 +459,7 @@ SENSOR_TYPES = {
     ),
     "weather": WUCurrentConditionsSensorConfig("Weather Summary", "weather", None),
     "wind_degrees": WUCurrentConditionsSensorConfig(
-        "Wind Degrees", "wind_degrees", "mdi:weather-windy", "°"
+        "Wind Degrees", "wind_degrees", "mdi:weather-windy", DEGREE
     ),
     "wind_dir": WUCurrentConditionsSensorConfig(
         "Wind Direction", "wind_dir", "mdi:weather-windy"
@@ -477,8 +480,9 @@ SENSOR_TYPES = {
         "Wind Summary", "wind_string", "mdi:weather-windy"
     ),
     "temp_high_record_c": WUAlmanacSensorConfig(
-        lambda wu: "High Temperature Record ({})".format(
-            wu.data["almanac"]["temp_high"]["recordyear"]
+        lambda wu: (
+            f"High Temperature Record "
+            f"({wu.data['almanac']['temp_high']['recordyear']})"
         ),
         "temp_high",
         "record",
@@ -487,8 +491,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_high_record_f": WUAlmanacSensorConfig(
-        lambda wu: "High Temperature Record ({})".format(
-            wu.data["almanac"]["temp_high"]["recordyear"]
+        lambda wu: (
+            f"High Temperature Record "
+            f"({wu.data['almanac']['temp_high']['recordyear']})"
         ),
         "temp_high",
         "record",
@@ -497,8 +502,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_low_record_c": WUAlmanacSensorConfig(
-        lambda wu: "Low Temperature Record ({})".format(
-            wu.data["almanac"]["temp_low"]["recordyear"]
+        lambda wu: (
+            f"Low Temperature Record "
+            f"({wu.data['almanac']['temp_low']['recordyear']})"
         ),
         "temp_low",
         "record",
@@ -507,8 +513,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_low_record_f": WUAlmanacSensorConfig(
-        lambda wu: "Low Temperature Record ({})".format(
-            wu.data["almanac"]["temp_low"]["recordyear"]
+        lambda wu: (
+            f"Low Temperature Record "
+            f"({wu.data['almanac']['temp_low']['recordyear']})"
         ),
         "temp_low",
         "record",
@@ -873,16 +880,36 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
     ),
     "precip_1d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity Today", 0, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity Today",
+        0,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_2d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity Tomorrow", 1, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity Tomorrow",
+        1,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_3d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity in 3 Days", 2, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity in 3 Days",
+        2,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_4d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity in 4 Days", 3, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity in 4 Days",
+        3,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_1d_in": WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Today",
@@ -921,7 +948,7 @@ SENSOR_TYPES = {
         0,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
     "precip_2d": WUDailySimpleForecastSensorConfig(
@@ -929,7 +956,7 @@ SENSOR_TYPES = {
         1,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
     "precip_3d": WUDailySimpleForecastSensorConfig(
@@ -937,7 +964,7 @@ SENSOR_TYPES = {
         2,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
     "precip_4d": WUDailySimpleForecastSensorConfig(
@@ -945,7 +972,7 @@ SENSOR_TYPES = {
         3,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
 }

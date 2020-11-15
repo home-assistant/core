@@ -22,7 +22,7 @@ from .const import (
     LOGGER,
     METHOD_LEGACY,
     RESULT_AUTH_MISSING,
-    RESULT_NOT_SUCCESSFUL,
+    RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     VALUE_CONF_ID,
@@ -164,7 +164,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             return RESULT_NOT_SUPPORTED
         except OSError as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
-            return RESULT_NOT_SUCCESSFUL
+            return RESULT_CANNOT_CONNECT
 
     def _get_remote(self):
         """Create or return a remote control instance."""
@@ -232,7 +232,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if result:
                 return result
 
-        return RESULT_NOT_SUCCESSFUL
+        return RESULT_CANNOT_CONNECT
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""
@@ -250,7 +250,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=1,
+                    timeout=8,
                     name=VALUE_CONF_NAME,
                 )
                 self._remote.open()
@@ -259,4 +259,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except ConnectionFailure:
                 self._notify_callback()
                 raise
+            except WebSocketException:
+                self._remote = None
         return self._remote

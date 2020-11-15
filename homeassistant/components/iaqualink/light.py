@@ -1,6 +1,4 @@
 """Support for Aqualink pool lights."""
-import logging
-
 from iaqualink import AqualinkLightEffect
 
 from homeassistant.components.light import (
@@ -9,15 +7,13 @@ from homeassistant.components.light import (
     DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -32,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkLight(AqualinkEntity, Light):
+class HassAqualinkLight(AqualinkEntity, LightEntity):
     """Representation of a light."""
 
     @property

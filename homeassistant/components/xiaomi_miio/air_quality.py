@@ -5,12 +5,7 @@ from miio import AirQualityMonitor, Device, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import NoEntitySpecifiedError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -58,8 +53,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         device_info = await hass.async_add_executor_job(miio_device.info)
-    except DeviceException:
-        raise PlatformNotReady
+    except DeviceException as ex:
+        raise PlatformNotReady from ex
 
     model = device_info.model
     unique_id = f"{model}-{device_info.mac_address}"
@@ -93,7 +88,6 @@ class AirMonitorB1(AirQualityEntity):
         self._device = device
         self._unique_id = unique_id
         self._icon = "mdi:cloud"
-        self._unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
         self._available = None
         self._air_quality_index = None
         self._carbon_dioxide = None
@@ -185,11 +179,6 @@ class AirMonitorB1(AirQualityEntity):
 
         return data
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
 
 class AirMonitorS1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
@@ -206,8 +195,9 @@ class AirMonitorS1(AirMonitorB1):
             self._humidity = state.humidity
             self._available = True
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class AirMonitorV1(AirMonitorB1):
@@ -221,8 +211,9 @@ class AirMonitorV1(AirMonitorB1):
             self._air_quality_index = state.aqi
             self._available = True
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def unit_of_measurement(self):

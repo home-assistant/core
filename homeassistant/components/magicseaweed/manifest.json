@@ -3,6 +3,5 @@
   "name": "Magicseaweed",
   "documentation": "https://www.home-assistant.io/integrations/magicseaweed",
   "requirements": ["magicseaweed==1.0.3"],
-  "dependencies": [],
   "codeowners": []
 }

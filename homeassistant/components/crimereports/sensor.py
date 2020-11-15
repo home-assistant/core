@@ -1,7 +1,6 @@
 """Sensor for Crime Reports."""
 from collections import defaultdict
 from datetime import timedelta
-import logging
 
 import crimereports
 import voluptuous as vol
@@ -26,8 +25,6 @@ from homeassistant.util import slugify
 from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
 
-_LOGGER = logging.getLogger(__name__)
-
 DOMAIN = "crimereports"
 
 EVENT_INCIDENT = f"{DOMAIN}_incident"
@@ -50,8 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Crime Reports platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-    radius = config.get(CONF_RADIUS)
+    name = config[CONF_NAME]
+    radius = config[CONF_RADIUS]
     include = config.get(CONF_INCLUDE)
     exclude = config.get(CONF_EXCLUDE)
 

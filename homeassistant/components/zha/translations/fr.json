@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Une seule configuration de ZHA est autoris\u00e9e."
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter au p\u00e9riph\u00e9rique ZHA."
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Type de radio"
+                },
+                "description": "Choisissez un type de radio Zigbee",
+                "title": "Type de radio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "vitesse du port",
+                    "flow_control": "contr\u00f4le du flux de donn\u00e9es",
+                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
+                },
+                "description": "Saisir les param\u00e8tres sp\u00e9cifiques au port",
+                "title": "R\u00e9glages"
+            },
+            "user": {
+                "data": {
+                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
+                },
+                "description": "S\u00e9lectionnez le port s\u00e9rie de la radio Zigbee",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Hurlement",
+            "warn": "Pr\u00e9venir"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Les deux boutons",
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "button_5": "Cinqui\u00e8me bouton",
+            "button_6": "Sixi\u00e8me bouton",
+            "close": "Fermer",
+            "dim_down": "Assombrir",
+            "dim_up": "\u00c9claircir",
+            "face_1": "avec face 1 activ\u00e9e",
+            "face_2": "avec face 2 activ\u00e9e",
+            "face_3": "avec face 3 activ\u00e9e",
+            "face_4": "avec face 4 activ\u00e9e",
+            "face_5": "avec face 5 activ\u00e9e",
+            "face_6": "avec face 6 activ\u00e9e",
+            "face_any": "Avec n'importe quelle face / face sp\u00e9cifi\u00e9e(s) activ\u00e9e",
+            "left": "Gauche",
+            "open": "Ouvert",
+            "right": "Droite",
+            "turn_off": "\u00c9teindre",
+            "turn_on": "Allumer"
+        },
+        "trigger_type": {
+            "device_dropped": "Appareil tomb\u00e9",
+            "device_flipped": "Appareil retourn\u00e9 \"{subtype}\"",
+            "device_knocked": "Appareil frapp\u00e9 \"{subtype}\"",
+            "device_offline": "Appareil hors ligne",
+            "device_rotated": "Appareil tourn\u00e9 \"{subtype}\"",
+            "device_shaken": "Appareil secou\u00e9",
+            "device_slid": "Appareil gliss\u00e9 \"{subtype}\"",
+            "device_tilted": "Dispositif inclin\u00e9",
+            "remote_button_alt_double_press": "Double-clic sur le bouton \" {subtype} \" (mode alternatif)",
+            "remote_button_alt_long_press": "Bouton \" {subtype} \" enfonc\u00e9 en continu (mode alternatif)",
+            "remote_button_alt_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long (mode alternatif)",
+            "remote_button_alt_quadruple_press": "Bouton \" {subtype} \" quadruple cliqu\u00e9 (mode alternatif)",
+            "remote_button_alt_quintuple_press": "Bouton \" {subtype} \" quintuple cliqu\u00e9 (mode alternatif)",
+            "remote_button_alt_short_press": "Bouton \" {subtype} \" appuy\u00e9 (mode alternatif)",
+            "remote_button_alt_short_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 (mode alternatif)",
+            "remote_button_alt_triple_press": "\"{subtype}\" bouton triple-cliqu\u00e9 (mode alternatif)",
+            "remote_button_double_press": "Double clic sur le bouton \" {subtype} \"",
+            "remote_button_long_press": "Bouton \"{subtype}\" appuy\u00e9 continuellement",
+            "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
+            "remote_button_quadruple_press": "bouton \" {subtype} \" quadruple clics",
+            "remote_button_quintuple_press": "bouton \" {subtype} \" quintuple clics",
+            "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
+            "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
+            "remote_button_triple_press": "Bouton \"{subtype}\" \u00e0 trois clics"
+        }
+    }
+}

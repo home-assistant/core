@@ -19,6 +19,8 @@ from .const import (
     SERVICE_STOP_RECORD,
 )
 
+DEFAULT_PORT = 8080
+
 SERVICE_CHANNEL_GUID = "guid"
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PORT): cv.port,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_EXCLUDE_CHANNELS, default=[]): vol.All(
                     cv.ensure_list_csv, [cv.positive_int]
                 ),
@@ -51,7 +53,7 @@ def setup(hass, config):
     user = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     host = conf[CONF_HOST]
-    port = conf.get(CONF_PORT)
+    port = conf[CONF_PORT]
     excluded_channels = conf[CONF_EXCLUDE_CHANNELS]
 
     try:

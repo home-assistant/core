@@ -1,12 +1,16 @@
 """Support for a Hue API to control Home Assistant."""
+import asyncio
 import hashlib
+from ipaddress import ip_address
 import logging
+import time
 
 from homeassistant import core
 from homeassistant.components import (
     climate,
     cover,
     fan,
+    humidifier,
     light,
     media_player,
     scene,
@@ -31,7 +35,10 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
 )
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.const import KEY_REAL_IP
+from homeassistant.components.humidifier.const import (
+    ATTR_HUMIDITY,
+    SERVICE_SET_HUMIDITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -60,9 +67,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
+
+# How long to wait for a state change to happen
+STATE_CHANGE_WAIT_TIMEOUT = 5.0
+# How long an entry state's cache will be valid for in seconds.
+STATE_CACHED_TIMEOUT = 2.0
 
 STATE_BRIGHTNESS = "bri"
 STATE_COLORMODE = "colormode"
@@ -89,7 +102,7 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
-HUE_API_USERNAME = "12345678901234567890"
+HUE_API_USERNAME = "nouser"
 UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
@@ -118,7 +131,7 @@ class HueUsernameView(HomeAssistantView):
 
     async def post(self, request):
         """Handle a POST request."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         try:
@@ -146,7 +159,7 @@ class HueAllGroupsStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to make the Brilliant Lightpad work."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         return self.json({})
@@ -166,7 +179,7 @@ class HueGroupView(HomeAssistantView):
     @core.callback
     def put(self, request, username):
         """Process a request to make the Logitech Pop working."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         return self.json(
@@ -196,7 +209,7 @@ class HueAllLightsStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the list of available lights."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         return self.json(create_list_of_entities(self.config, request))
@@ -216,20 +229,38 @@ class HueFullStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username):
         """Process a request to get the list of available lights."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
 
         json_response = {
             "lights": create_list_of_entities(self.config, request),
-            "config": {
-                "mac": "00:00:00:00:00:00",
-                "swversion": "01003542",
-                "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
-                "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
-            },
+            "config": create_config_model(self.config, request),
         }
+
+        return self.json(json_response)
+
+
+class HueConfigView(HomeAssistantView):
+    """Return config view of emulated hue."""
+
+    url = "/api/{username}/config"
+    extra_urls = ["/api/config"]
+    name = "emulated_hue:username:config"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username=""):
+        """Process a request to get the configuration."""
+        if not is_local(ip_address(request.remote)):
+            return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
+
+        json_response = create_config_model(self.config, request)
 
         return self.json(json_response)
 
@@ -248,7 +279,7 @@ class HueOneLightStateView(HomeAssistantView):
     @core.callback
     def get(self, request, username, entity_id):
         """Process a request to get the state of an individual light."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         hass = request.app["hass"]
@@ -289,7 +320,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
     async def put(self, request, username, entity_number):
         """Process a request to set the state of an individual light."""
-        if not is_local(request[KEY_REAL_IP]):
+        if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
         config = self.config
@@ -366,8 +397,9 @@ class HueOneLightChangeView(HomeAssistantView):
                 fan.DOMAIN,
                 cover.DOMAIN,
                 climate.DOMAIN,
+                humidifier.DOMAIN,
             ]:
-                # Convert 0-255 to 0-100
+                # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
                 parsed[STATE_BRIGHTNESS] = round(level)
                 parsed[STATE_ON] = True
@@ -390,7 +422,9 @@ class HueOneLightChangeView(HomeAssistantView):
             if parsed[STATE_ON]:
                 if entity_features & SUPPORT_BRIGHTNESS:
                     if parsed[STATE_BRIGHTNESS] is not None:
-                        data[ATTR_BRIGHTNESS] = parsed[STATE_BRIGHTNESS]
+                        data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                            parsed[STATE_BRIGHTNESS]
+                        )
 
                 if entity_features & SUPPORT_COLOR:
                     if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
@@ -434,6 +468,14 @@ class HueOneLightChangeView(HomeAssistantView):
                     domain = entity.domain
                     service = SERVICE_SET_TEMPERATURE
                     data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+
+        # If the requested entity is a humidifier, set the humidity
+        elif entity.domain == humidifier.DOMAIN:
+            if parsed[STATE_BRIGHTNESS] is not None:
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_SET_HUMIDITY
+                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
@@ -479,13 +521,6 @@ class HueOneLightChangeView(HomeAssistantView):
         if entity.domain in config.off_maps_to_on_domains:
             service = SERVICE_TURN_ON
 
-            # Caching is required because things like scripts and scenes won't
-            # report as "off" to Alexa if an "off" command is received, because
-            # they'll map to "on". Thus, instead of reporting its actual
-            # status, we report what Alexa will want to see, which is the same
-            # as the actual requested command.
-            config.cached_states[entity_id] = parsed
-
         # Separate call to turn on needed
         if turn_on_needed:
             hass.async_create_task(
@@ -498,13 +533,23 @@ class HueOneLightChangeView(HomeAssistantView):
             )
 
         if service is not None:
+            state_will_change = parsed[STATE_ON] != (entity.state != STATE_OFF)
+
             hass.async_create_task(
                 hass.services.async_call(domain, service, data, blocking=True)
             )
 
+            if state_will_change:
+                # Wait for the state to change.
+                await wait_for_state_change_or_timeout(
+                    hass, entity_id, STATE_CACHED_TIMEOUT
+                )
+
         # Create success responses for all received keys
         json_response = [
-            create_hue_success_response(entity_id, HUE_API_STATE_ON, parsed[STATE_ON])
+            create_hue_success_response(
+                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
+            )
         ]
 
         for (key, val) in (
@@ -515,15 +560,43 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             if parsed[key] is not None:
                 json_response.append(
-                    create_hue_success_response(entity_id, val, parsed[key])
+                    create_hue_success_response(entity_number, val, parsed[key])
                 )
+
+        if entity.domain in config.off_maps_to_on_domains:
+            # Caching is required because things like scripts and scenes won't
+            # report as "off" to Alexa if an "off" command is received, because
+            # they'll map to "on". Thus, instead of reporting its actual
+            # status, we report what Alexa will want to see, which is the same
+            # as the actual requested command.
+            config.cached_states[entity_id] = [parsed, None]
+        else:
+            config.cached_states[entity_id] = [parsed, time.time()]
 
         return self.json(json_response)
 
 
 def get_entity_state(config, entity):
     """Retrieve and convert state and brightness values for an entity."""
-    cached_state = config.cached_states.get(entity.entity_id, None)
+    cached_state_entry = config.cached_states.get(entity.entity_id, None)
+    cached_state = None
+
+    # Check if we have a cached entry, and if so if it hasn't expired.
+    if cached_state_entry is not None:
+        entry_state, entry_time = cached_state_entry
+        if entry_time is None:
+            # Handle the case where the entity is listed in config.off_maps_to_on_domains.
+            cached_state = entry_state
+        elif time.time() - entry_time < STATE_CACHED_TIMEOUT and entry_state[
+            STATE_ON
+        ] == (entity.state != STATE_OFF):
+            # We only want to use the cache if the actual state of the entity
+            # is in sync so that it can be detected as an error by Alexa.
+            cached_state = entry_state
+        else:
+            # Remove the now stale cached entry.
+            config.cached_states.pop(entity.entity_id)
+
     data = {
         STATE_ON: False,
         STATE_BRIGHTNESS: None,
@@ -536,8 +609,10 @@ def get_entity_state(config, entity):
         data[STATE_ON] = entity.state != STATE_OFF
 
         if data[STATE_ON]:
-            data[STATE_BRIGHTNESS] = entity.attributes.get(ATTR_BRIGHTNESS, 0)
-            hue_sat = entity.attributes.get(ATTR_HS_COLOR, None)
+            data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
+                entity.attributes.get(ATTR_BRIGHTNESS, 0)
+            )
+            hue_sat = entity.attributes.get(ATTR_HS_COLOR)
             if hue_sat is not None:
                 hue = hue_sat[0]
                 sat = hue_sat[1]
@@ -563,32 +638,36 @@ def get_entity_state(config, entity):
                 pass
         elif entity.domain == climate.DOMAIN:
             temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
-            # Convert 0-100 to 0-255
-            data[STATE_BRIGHTNESS] = round(temperature * 255 / 100)
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
+        elif entity.domain == humidifier.DOMAIN:
+            humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == media_player.DOMAIN:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
             )
-            # Convert 0.0-1.0 to 0-255
-            data[STATE_BRIGHTNESS] = round(min(1.0, level) * 255)
+            # Convert 0.0-1.0 to 0-254
+            data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
         elif entity.domain == fan.DOMAIN:
             speed = entity.attributes.get(ATTR_SPEED, 0)
-            # Convert 0.0-1.0 to 0-255
+            # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = 0
             if speed == SPEED_LOW:
                 data[STATE_BRIGHTNESS] = 85
             elif speed == SPEED_MEDIUM:
                 data[STATE_BRIGHTNESS] = 170
             elif speed == SPEED_HIGH:
-                data[STATE_BRIGHTNESS] = 255
+                data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX
         elif entity.domain == cover.DOMAIN:
             level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
-            data[STATE_BRIGHTNESS] = round(level / 100 * 255)
+            data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     else:
         data = cached_state
         # Make sure brightness is valid
         if data[STATE_BRIGHTNESS] is None:
-            data[STATE_BRIGHTNESS] = 255 if data[STATE_ON] else 0
+            data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX if data[STATE_ON] else 0
 
         # Make sure hue/saturation are valid
         if (data[STATE_HUE] is None) or (data[STATE_SATURATION] is None):
@@ -695,6 +774,12 @@ def entity_to_json(config, entity):
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
+    elif not config.lights_all_dimmable:
+        # On/Off light (ZigBee Device ID: 0x0000)
+        # Supports groups, scenes and on/off control
+        retval["type"] = "On/Off light"
+        retval["productname"] = "On/Off light"
+        retval["modelid"] = "HASS321"
     else:
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
@@ -706,10 +791,22 @@ def entity_to_json(config, entity):
     return retval
 
 
-def create_hue_success_response(entity_id, attr, value):
+def create_hue_success_response(entity_number, attr, value):
     """Create a success response for an attribute set on a light."""
-    success_key = f"/lights/{entity_id}/state/{attr}"
+    success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
+
+
+def create_config_model(config, request):
+    """Create a config resource."""
+    return {
+        "mac": "00:00:00:00:00:00",
+        "swversion": "01003542",
+        "apiversion": "1.17.0",
+        "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+        "ipaddress": f"{config.advertise_ip}:{config.advertise_port}",
+        "linkbutton": True,
+    }
 
 
 def create_list_of_entities(config, request):
@@ -717,9 +814,36 @@ def create_list_of_entities(config, request):
     hass = request.app["hass"]
     json_response = {}
 
-    for entity in hass.states.async_all():
-        if config.is_entity_exposed(entity):
-            number = config.entity_id_to_number(entity.entity_id)
-            json_response[number] = entity_to_json(config, entity)
+    for entity in config.filter_exposed_entities(hass.states.async_all()):
+        number = config.entity_id_to_number(entity.entity_id)
+        json_response[number] = entity_to_json(config, entity)
 
     return json_response
+
+
+def hue_brightness_to_hass(value):
+    """Convert hue brightness 1..254 to hass format 0..255."""
+    return min(255, round((value / HUE_API_STATE_BRI_MAX) * 255))
+
+
+def hass_to_hue_brightness(value):
+    """Convert hass brightness 0..255 to hue 1..254 scale."""
+    return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
+
+
+async def wait_for_state_change_or_timeout(hass, entity_id, timeout):
+    """Wait for an entity to change state."""
+    ev = asyncio.Event()
+
+    @core.callback
+    def _async_event_changed(_):
+        ev.set()
+
+    unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)
+
+    try:
+        await asyncio.wait_for(ev.wait(), timeout=STATE_CHANGE_WAIT_TIMEOUT)
+    except asyncio.TimeoutError:
+        pass
+    finally:
+        unsub()

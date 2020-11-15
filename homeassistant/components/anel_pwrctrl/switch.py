@@ -1,12 +1,11 @@
 """Support for ANEL PwrCtrl switches."""
 from datetime import timedelta
 import logging
-import socket
 
 from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -31,11 +30,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up PwrCtrl devices/switches."""
-    host = config.get(CONF_HOST, None)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port_recv = config.get(CONF_PORT_RECV)
-    port_send = config.get(CONF_PORT_SEND)
+    host = config.get(CONF_HOST)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    port_recv = config[CONF_PORT_RECV]
+    port_send = config[CONF_PORT_SEND]
 
     try:
         master = DeviceMaster(
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             write_port=port_recv,
         )
         master.query(ip_addr=host)
-    except socket.error as ex:
+    except OSError as ex:
         _LOGGER.error("Unable to discover PwrCtrl device: %s", str(ex))
         return False
 
@@ -59,18 +58,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class PwrCtrlSwitch(SwitchDevice):
+class PwrCtrlSwitch(SwitchEntity):
     """Representation of a PwrCtrl switch."""
 
     def __init__(self, port, parent_device):
         """Initialize the PwrCtrl switch."""
         self._port = port
         self._parent_device = parent_device
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def unique_id(self):

@@ -3,12 +3,11 @@
   "name": "Denon HEOS",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/heos",
-  "requirements": ["pyheos==0.6.0"],
+  "requirements": ["pyheos==0.7.2"],
   "ssdp": [
     {
       "st": "urn:schemas-denon-com:device:ACT-Denon:1"
     }
   ],
-  "dependencies": [],
   "codeowners": ["@andrewsayre"]
 }

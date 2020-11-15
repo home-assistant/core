@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "empty": "Brak wynik\u00f3w: sprawd\u017a nazw\u0119 w polu miasta"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Miasto"
+                },
+                "description": "Wybierz swoje miasto z listy",
+                "title": "M\u00e9t\u00e9o-France"
+            },
+            "user": {
+                "data": {
+                    "city": "Miasto"
+                },
+                "description": "Wprowad\u017a kod pocztowy (tylko dla Francji, zalecane) lub nazw\u0119 miasta",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Tryb prognozy"
+                }
+            }
+        }
+    }
+}

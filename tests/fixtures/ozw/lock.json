@@ -1,0 +1,25 @@
+{
+    "topic": "OpenZWave/1/node/10/instance/1/commandclass/98/value/173572112/",
+    "payload": {
+        "Label": "Lock",
+        "Value": false,
+        "Units": "",
+        "Min": 0,
+        "Max": 0,
+        "Type": "Bool",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_DOOR_LOCK",
+        "Index": 0,
+        "Node": 10,
+        "Genre": "User",
+        "Help": "Lock / Unlock Device",
+        "ValueIDKey": 173572112,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1579566891
+    }
+}

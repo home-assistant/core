@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "auth_captcha": {
+                "description": "{captcha_img}"
+            }
+        }
+    }
+}

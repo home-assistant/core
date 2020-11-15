@@ -3,6 +3,5 @@
   "name": "U.S. Citizenship and Immigration Services (USCIS)",
   "documentation": "https://www.home-assistant.io/integrations/uscis",
   "requirements": ["uscisstatus==0.1.1"],
-  "dependencies": [],
   "codeowners": []
 }

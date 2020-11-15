@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    ClimateDevice,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -37,6 +37,8 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_NAME,
+    CONF_TEMPERATURE_UNIT,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -46,14 +48,16 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_RETAIN,
-    CONF_UNIQUE_ID,
+    DOMAIN,
     MQTT_BASE_PLATFORM_SCHEMA,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -169,7 +173,8 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
-                CONF_FAN_MODE_LIST, default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+                CONF_FAN_MODE_LIST,
+                default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ): cv.ensure_list,
             vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -223,6 +228,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
@@ -236,6 +242,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT climate device through configuration.yaml."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(hass, config, async_add_entities)
 
 
@@ -271,7 +278,7 @@ class MqttClimate(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    ClimateDevice,
+    ClimateEntity,
 ):
     """Representation of an MQTT climate device."""
 
@@ -294,7 +301,6 @@ class MqttClimate(
         self._target_temp_high = None
         self._target_temp_low = None
         self._topic = None
-        self._unit_of_measurement = hass.config.units.temperature_unit
         self._value_templates = None
 
         self._setup_from_config(config)
@@ -583,7 +589,9 @@ class MqttClimate(
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        if self._config.get(CONF_TEMPERATURE_UNIT):
+            return self._config.get(CONF_TEMPERATURE_UNIT)
+        return self.hass.config.units.temperature_unit
 
     @property
     def current_temperature(self):

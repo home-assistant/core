@@ -1,6 +1,4 @@
 """Constants for the Vizio integration tests."""
-import logging
-
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV,
@@ -30,8 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
-
 NAME = "Vizio"
 NAME2 = "Vizio2"
 HOST = "192.168.1.1:9000"
@@ -47,7 +43,7 @@ RESPONSE_TOKEN = 1234
 PIN = "abcd"
 
 
-class MockStartPairingResponse(object):
+class MockStartPairingResponse:
     """Mock Vizio start pairing response."""
 
     def __init__(self, ch_type: int, token: int) -> None:
@@ -56,7 +52,7 @@ class MockStartPairingResponse(object):
         self.token = token
 
 
-class MockCompletePairingResponse(object):
+class MockCompletePairingResponse:
     """Mock Vizio complete pairing response."""
 
     def __init__(self, auth_token: str) -> None:
@@ -64,12 +60,29 @@ class MockCompletePairingResponse(object):
         self.auth_token = auth_token
 
 
+CURRENT_EQ = "Music"
+EQ_LIST = ["Music", "Movie"]
+
 CURRENT_INPUT = "HDMI"
 INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 
 CURRENT_APP = "Hulu"
 CURRENT_APP_CONFIG = {CONF_APP_ID: "3", CONF_NAME_SPACE: 4, CONF_MESSAGE: None}
-APP_LIST = ["Hulu", "Netflix"]
+APP_LIST = [
+    {
+        "name": "Hulu",
+        "country": ["*"],
+        "id": ["1"],
+        "config": [{"NAME_SPACE": 4, "APP_ID": "3", "MESSAGE": None}],
+    },
+    {
+        "name": "Netflix",
+        "country": ["*"],
+        "id": ["2"],
+        "config": [{"NAME_SPACE": 1, "APP_ID": "2", "MESSAGE": None}],
+    },
+]
+APP_NAME_LIST = [app["name"] for app in APP_LIST]
 INPUT_LIST_WITH_APPS = INPUT_LIST + ["CAST"]
 CUSTOM_CONFIG = {CONF_APP_ID: "test", CONF_MESSAGE: None, CONF_NAME_SPACE: 10}
 ADDITIONAL_APP_CONFIG = {
@@ -174,6 +187,7 @@ MOCK_INCLUDE_APPS = {
     CONF_INCLUDE_OR_EXCLUDE: CONF_INCLUDE.title(),
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE: [CURRENT_APP],
 }
+
 MOCK_INCLUDE_NO_APPS = {
     CONF_INCLUDE_OR_EXCLUDE: CONF_INCLUDE.title(),
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE: [],

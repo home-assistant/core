@@ -1,6 +1,5 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import librouteros
 import pytest
@@ -16,6 +15,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEMO_USER_INPUT = {
@@ -203,6 +203,6 @@ async def test_wrong_credentials(hass, auth_error):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {
-        CONF_USERNAME: "wrong_credentials",
-        CONF_PASSWORD: "wrong_credentials",
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
     }

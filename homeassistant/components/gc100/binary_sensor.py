@@ -1,7 +1,7 @@
 """Support for binary sensor using GC100."""
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors, True)
 
 
-class GC100BinarySensor(BinarySensorDevice):
+class GC100BinarySensor(BinarySensorEntity):
     """Representation of a binary sensor from GC100."""
 
     def __init__(self, name, port_addr, gc100):

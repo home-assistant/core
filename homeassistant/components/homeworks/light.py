@@ -3,7 +3,11 @@ import logging
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,7 +32,7 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     add_entities(devs, True)
 
 
-class HomeworksLight(HomeworksDevice, Light):
+class HomeworksLight(HomeworksDevice, LightEntity):
     """Homeworks Light."""
 
     def __init__(self, controller, addr, name, rate):
@@ -42,7 +46,9 @@ class HomeworksLight(HomeworksDevice, Light):
         """Call when entity is added to hass."""
         signal = f"homeworks_entity_{self._addr}"
         _LOGGER.debug("connecting %s", signal)
-        async_dispatcher_connect(self.hass, signal, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, signal, self._update_callback)
+        )
         self._controller.request_dimmer_level(self._addr)
 
     @property
@@ -93,4 +99,4 @@ class HomeworksLight(HomeworksDevice, Light):
             self._level = int((values[1] * 255.0) / 100.0)
             if self._level != 0:
                 self._prev_level = self._level
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

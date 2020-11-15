@@ -28,7 +28,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 import homeassistant.helpers.config_validation as cv
@@ -176,7 +176,7 @@ def state(new_state):
 
     def decorator(function):
         """Set up the decorator function."""
-        # pylint: disable=protected-access
+
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
 
@@ -200,7 +200,7 @@ def state(new_state):
     return decorator
 
 
-class LimitlessLEDGroup(Light, RestoreEntity):
+class LimitlessLEDGroup(LightEntity, RestoreEntity):
     """Representation of a LimitessLED group."""
 
     def __init__(self, group, config):

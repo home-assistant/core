@@ -127,4 +127,4 @@ async def handle_webhook(hass, webhook_id, request):
 
 def _device_id(data):
     """Return name of device sensor."""
-    return "{}_{}".format(data.get(ATTR_DEVICE_NAME), data.get(ATTR_DEVICE_ID))
+    return f"{data.get(ATTR_DEVICE_NAME)}_{data.get(ATTR_DEVICE_ID)}"

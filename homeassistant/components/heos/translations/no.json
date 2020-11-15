@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Vennligst fyll inn vertsnavnet eller IP-adressen til en Heos-enhet (helst en tilkoblet nettverket via kabel).",
+                "title": "Koble til Heos"
+            }
+        }
+    }
+}

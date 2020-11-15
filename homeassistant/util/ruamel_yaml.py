@@ -54,9 +54,8 @@ def _yaml_unsupported(
     constructor: ExtSafeConstructor, node: ruamel.yaml.nodes.Node
 ) -> None:
     raise UnsupportedYamlError(
-        "Unsupported YAML, you can not use {} in {}".format(
-            node.tag, os.path.basename(constructor.name or "(None)")
-        )
+        f"Unsupported YAML, you can not use {node.tag} in "
+        f"{os.path.basename(constructor.name or '(None)')}"
     )
 
 
@@ -71,7 +70,7 @@ def object_to_yaml(data: JSON_TYPE) -> str:
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def yaml_to_object(data: str) -> JSON_TYPE:
@@ -82,7 +81,7 @@ def yaml_to_object(data: str) -> JSON_TYPE:
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
@@ -103,10 +102,10 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
             return yaml.load(conf_file) or OrderedDict()
     except YAMLError as exc:
         _LOGGER.error("YAML error in %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def save_yaml(fname: str, data: JSON_TYPE) -> None:
@@ -133,10 +132,10 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
                 pass
     except YAMLError as exc:
         _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except OSError as exc:
         _LOGGER.exception("Saving YAML file %s failed: %s", fname, exc)
-        raise WriteError(exc)
+        raise WriteError(exc) from exc
     finally:
         if os.path.exists(tmp_fname):
             try:

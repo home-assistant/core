@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Home Assistant \ub85c \uc774\ubca4\ud2b8\ub97c \ubcf4\ub0b4\ub824\uba74 Geofency \uc5d0\uc11c \uc6f9 \ud6c5\uc744 \uc124\uc815\ud574\uc57c\ud569\ub2c8\ub2e4. \n\n\ub2e4\uc74c \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694:\n\n - URL: `{webhook_url}`\n - Method: POST\n  \n \uc790\uc138\ud55c \uc815\ubcf4\ub294 [\uc548\ub0b4]({docs_url}) \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "user": {
+                "description": "Geofency \uc6f9 \ud6c5\uc744 \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "Geofency \uc6f9 \ud6c5 \uc124\uc815\ud558\uae30"
+            }
+        }
+    }
+}

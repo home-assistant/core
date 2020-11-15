@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "register_failed": "Registratie is mislukt, probeer het opnieuw",
+            "unknown": "Onbekende fout: probeer het later nog eens"
+        },
+        "step": {
+            "link": {
+                "description": "Klik op \"Verzenden\" en tik vervolgens op de rechterpijl op de router om Freebox te registreren bij Home Assistant. \n\n ! [Locatie van knop op de router] (/ static / images / config_freebox.png)",
+                "title": "Freebox-router koppelen"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                },
+                "title": "Freebox"
+            }
+        }
+    }
+}

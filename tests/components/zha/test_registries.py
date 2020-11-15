@@ -221,7 +221,7 @@ def test_match_rule_claim_channels_color(channel):
 
     rule = registries.MatchRule(channel_names="on_off", aux_channels={"color", "level"})
     claimed = rule.claim_channels([ch_color, ch_level, ch_onoff])
-    assert {"color", "level", "on_off"} == set([ch.name for ch in claimed])
+    assert {"color", "level", "on_off"} == {ch.name for ch in claimed}
 
 
 @pytest.mark.parametrize(
@@ -253,7 +253,7 @@ def test_match_rule_claim_channels(rule, match, channel, channels):
     channels.append(ch_power)
 
     claimed = rule.claim_channels(channels)
-    assert match == set([ch.name for ch in claimed])
+    assert match == {ch.name for ch in claimed}
 
 
 @pytest.fixture

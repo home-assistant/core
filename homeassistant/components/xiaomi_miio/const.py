@@ -4,12 +4,13 @@ DOMAIN = "xiaomi_miio"
 # Fan Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
-SERVICE_SET_LED_ON = "fan_set_led_on"
-SERVICE_SET_LED_OFF = "fan_set_led_off"
+SERVICE_SET_FAN_LED_ON = "fan_set_led_on"
+SERVICE_SET_FAN_LED_OFF = "fan_set_led_off"
 SERVICE_SET_CHILD_LOCK_ON = "fan_set_child_lock_on"
 SERVICE_SET_CHILD_LOCK_OFF = "fan_set_child_lock_off"
 SERVICE_SET_LED_BRIGHTNESS = "fan_set_led_brightness"
 SERVICE_SET_FAVORITE_LEVEL = "fan_set_favorite_level"
+SERVICE_SET_FAN_LEVEL = "fan_set_fan_level"
 SERVICE_SET_AUTO_DETECT_ON = "fan_set_auto_detect_on"
 SERVICE_SET_AUTO_DETECT_OFF = "fan_set_auto_detect_off"
 SERVICE_SET_LEARN_MODE_ON = "fan_set_learn_mode_on"
@@ -33,6 +34,8 @@ SERVICE_EYECARE_MODE_OFF = "light_eyecare_mode_off"
 
 # Remote Services
 SERVICE_LEARN = "remote_learn_command"
+SERVICE_SET_REMOTE_LED_ON = "remote_set_led_on"
+SERVICE_SET_REMOTE_LED_OFF = "remote_set_led_off"
 
 # Switch Services
 SERVICE_SET_WIFI_LED_ON = "switch_set_wifi_led_on"
@@ -45,7 +48,9 @@ SERVICE_MOVE_REMOTE_CONTROL = "vacuum_remote_control_move"
 SERVICE_MOVE_REMOTE_CONTROL_STEP = "vacuum_remote_control_move_step"
 SERVICE_START_REMOTE_CONTROL = "vacuum_remote_control_start"
 SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
+SERVICE_CLEAN_SEGMENT = "vacuum_clean_segment"
 SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
+SERVICE_GOTO = "vacuum_goto"
 
 # AirQuality Model
 MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"
