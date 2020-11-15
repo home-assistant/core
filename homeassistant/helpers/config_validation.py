@@ -286,9 +286,12 @@ def entity_domain(domain: Union[str, List[str]]) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
     ent_domain = entities_domain(domain)
 
-    def validate(value: Any) -> str:
+    def validate(value: str) -> str:
         """Test if entity domain is domain."""
-        return ent_domain(value)[0]
+        validated = ent_domain(value)
+        if len(validated) != 1:
+            raise vol.Invalid(f"Expected exactly 1 entity, got {len(validated)}")
+        return validated[0]
 
     return validate
 

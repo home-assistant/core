@@ -3,9 +3,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, CONF_SELECTOR
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_BLUEPRINT,
@@ -32,6 +32,7 @@ BLUEPRINT_INPUT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): str,
         vol.Optional(CONF_DESCRIPTION): str,
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
 
