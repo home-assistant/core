@@ -35,10 +35,10 @@ class JenkinsFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             self.url = user_input[CONF_HOST]
-            self.username = (
+            self.username = user_input.get(CONF_USERNAME)
                 user_input[CONF_USERNAME] if CONF_USERNAME in user_input else None
             )
-            self.token = user_input[CONF_TOKEN] if CONF_TOKEN in user_input else None
+            self.token = user_input.get(CONF_TOKEN)
 
             try:
                 self.server = await self.hass.async_add_executor_job(

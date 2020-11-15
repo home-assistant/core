@@ -5,8 +5,8 @@
         "title": "Connect to Jenkins.",
         "description": "Username & token are optional and may not be required if anonymous reads are allowed.",
         "data": {
-          "host": "Host",
-          "username": "Username (Optional)",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "token": "Token (Optional)"
         }
       },

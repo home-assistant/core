@@ -68,9 +68,9 @@ class JenkinsSensor(Entity):
         """Return the state attributes."""
         return self._attributes
 
-    async def async_update(self):
+    def update(self):
         """Fetch the latest build and update state."""
-        last_build = await self.hass.async_add_executor_job(self.job.get_last_build)
+        last_build = self.job.get_last_build()
         self._state = last_build.get_status()
 
         self._attributes = {
