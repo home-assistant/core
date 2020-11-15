@@ -103,10 +103,17 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="install_addon", progress_action="install_addon"
             )
 
+        _LOGGER.warning(
+            "DEBUG: Awaiting finished task with done status: %s",
+            self.install_task.done(),
+        )
         try:
             await self.install_task
         except self.hass.components.hassio.HassioAPIError:
+            _LOGGER.warning("DEBUG: Caught error when awaiting finished task")
             return self.async_show_progress_done(next_step_id="install_failed")
+
+        _LOGGER.warning("DEBUG: Waited finished task ok")
 
         self.integration_created_addon = True
 
@@ -197,9 +204,16 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_install_addon(self):
         """Install the OpenZWave add-on."""
         try:
+            raise self.hass.components.hassio.HassioAPIError(
+                "Test raising add-on install error."
+            )
             await self.hass.components.hassio.async_install_addon("core_zwave")
         except self.hass.components.hassio.HassioAPIError as err:
             _LOGGER.error("Failed to install OpenZWave add-on: %s", err)
             raise
         finally:
-            await self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+            _LOGGER.warning("DEBUG: OpenZWave add-on finished install. Continuing flow")
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+            )
+            _LOGGER.warning("DEBUG: Continuing flow called ok")
