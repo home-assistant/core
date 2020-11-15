@@ -437,7 +437,7 @@ class MediaPlayerEntity(Entity):
         self,
         media_content_type: str,
         media_content_id: str,
-        media_image_id: Optional[str] = None
+        media_image_id: Optional[str] = None,
     ) -> Tuple[Optional[str], Optional[str]]:
         """
         Optionally fetch internally accessible image for media browser.
