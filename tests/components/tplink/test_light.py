@@ -577,7 +577,7 @@ async def test_update_failure(
     caplog.set_level(logging.DEBUG)
 
     await update_entity(hass, "light.light1")
-    assert f"Retrying in 0 seconds for 123.123.123.123|light1" in caplog.text
+    assert "Retrying in 0 seconds for 123.123.123.123|light1" in caplog.text
     assert "Device 123.123.123.123|light1 responded after " in caplog.text
 
 
