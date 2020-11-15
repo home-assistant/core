@@ -12,6 +12,7 @@ from homeassistant import data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
+    CONF_FILTER_STORAGE,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
@@ -39,7 +40,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .consts import (
     DEVICE_TOKEN,
     HOST,
-    HOST_2,
     MACS,
     PASSWORD,
     PORT,
@@ -53,6 +53,9 @@ from .consts import (
 from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
+DISKS = ["sda", "sdb", "sdc"]
+VOLUMES = ["volume_1"]
+
 
 @pytest.fixture(name="service")
 def mock_controller_service():
@@ -62,8 +65,8 @@ def mock_controller_service():
     ) as service_mock:
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
-        service_mock.return_value.storage.disks_ids = ["sda", "sdb", "sdc"]
-        service_mock.return_value.storage.volumes_ids = ["volume_1"]
+        service_mock.return_value.storage.disks_ids = DISKS
+        service_mock.return_value.storage.volumes_ids = VOLUMES
         service_mock.return_value.network.macs = MACS
         yield service_mock
 
@@ -79,8 +82,8 @@ def mock_controller_service_2sa():
         )
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
-        service_mock.return_value.storage.disks_ids = ["sda", "sdb", "sdc"]
-        service_mock.return_value.storage.volumes_ids = ["volume_1"]
+        service_mock.return_value.storage.disks_ids = DISKS
+        service_mock.return_value.storage.volumes_ids = VOLUMES
         service_mock.return_value.network.macs = MACS
         yield service_mock
 
@@ -94,7 +97,7 @@ def mock_controller_service_vdsm():
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
         service_mock.return_value.storage.disks_ids = []
-        service_mock.return_value.storage.volumes_ids = ["volume_1"]
+        service_mock.return_value.storage.volumes_ids = VOLUMES
         service_mock.return_value.network.macs = MACS
         yield service_mock
 
@@ -174,6 +177,46 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_user_filter_storage(hass: HomeAssistantType, service: MagicMock):
+    """Test user config with filter for disks and volumes."""
+    # test with filter storage enabled
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_SSL: USE_SSL,
+            CONF_VERIFY_SSL: VERIFY_SSL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_FILTER_STORAGE: True,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "filter_storage"
+
+    # test with filter storage enabled and selection is done
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_SSL: USE_SSL,
+            CONF_VERIFY_SSL: VERIFY_SSL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_FILTER_STORAGE: True,
+            CONF_DISKS: DISKS,
+            CONF_VOLUMES: VOLUMES,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_DISKS] == DISKS
+    assert result["data"][CONF_VOLUMES] == VOLUMES
 
 
 async def test_user_2sa(hass: HomeAssistantType, service_2sa: MagicMock):

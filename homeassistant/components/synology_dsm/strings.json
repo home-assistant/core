@@ -10,7 +10,8 @@
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "filter_storage": "Filter disks and volumes to add"
         }
       },
       "2sa": {
@@ -27,7 +28,16 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "filter_storage": "Filter disks and volumes to add"
+        }
+      },
+      "filter_storage": {
+        "title": "Synology DSM: filter disks and volumes",
+        "description": "Select the disks and volumes you want to add",
+        "data": {
+          "disks": "Disks",
+          "volumes": "Volumes"
         }
       }
     },

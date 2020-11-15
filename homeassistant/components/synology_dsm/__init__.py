@@ -45,7 +45,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_SERIAL,
-    CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,

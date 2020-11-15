@@ -27,11 +27,13 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 # Configuration
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
+CONF_FILTER_STORAGE = "filter_storage"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
+DEFAULT_FILTER_STORAGE = False
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = 10  # sec
