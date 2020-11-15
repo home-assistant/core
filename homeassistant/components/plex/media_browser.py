@@ -78,9 +78,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             if is_internal:
                 thumbnail = item.thumbUrl
             else:
-                thumbnail = entity.get_browse_image_url(
-                    item.type, item.ratingKey
-                )
+                thumbnail = entity.get_browse_image_url(item.type, item.ratingKey)
 
             payload["thumbnail"] = thumbnail
 
