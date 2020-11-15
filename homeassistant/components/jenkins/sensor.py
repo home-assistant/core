@@ -31,7 +31,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     job = await hass.async_add_executor_job(jenkins.get_job, entry.data[CONF_JOB_NAME])
     sensor = JenkinsSensor(repository, branch, job)
 
-    async_add_entities([sensor], True)
+    async_add_entities([sensor])
 
 
 class JenkinsSensor(Entity):
