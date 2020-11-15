@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u5bc6\u9470\uff08\u90f5\u4ef6\uff09",
+                    "api_key": "API \u5bc6\u9470",
                     "latitude": "\u7def\u5ea6",
                     "longitude": "\u7d93\u5ea6",
                     "station": "METAR \u6a5f\u5834\u4ee3\u78bc"

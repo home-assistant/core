@@ -79,5 +79,6 @@ class JoinNotificationService(BaseNotificationService):
             tts=data.get("tts"),
             tts_language=data.get("tts_language"),
             vibration=data.get("vibration"),
+            actions=data.get("actions"),
             api_key=self._api_key,
         )

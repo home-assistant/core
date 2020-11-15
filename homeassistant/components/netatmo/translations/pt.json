@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tempo excedido a gerar um URL de autoriza\u00e7\u00e3o",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma \u00fanica configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "create_entry": {
+            "default": "Autenticado com sucesso"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nome da \u00e1rea",
+                    "lat_ne": "Latitude nordeste",
+                    "lat_sw": "Latitude sudoeste",
+                    "lon_ne": "Longitude nordeste",
+                    "lon_sw": "Longitude sudoeste",
+                    "mode": "C\u00e1lculo",
+                    "show_on_map": "Mostrar no mapa"
+                },
+                "description": "Configurar um sensor de clima profundo para uma \u00e1rea.",
+                "title": "Sensor de clima Netatmo p\u00fablico"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nome da \u00e1rea",
+                    "weather_areas": "\u00c1reas de clima"
+                },
+                "description": "Configurar sensores de clima p\u00fablicos.",
+                "title": "Sensor de clima Netatmo p\u00fablico"
+            }
+        }
+    }
+}

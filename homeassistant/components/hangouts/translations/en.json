@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts is already configured",
-            "unknown": "Unknown error occurred."
+            "already_configured": "Service is already configured",
+            "unknown": "Unexpected error"
         },
         "error": {
             "invalid_2fa": "Invalid 2 Factor Authentication, please try again.",
@@ -19,7 +19,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Authorization Code (required for manual authentication)",
-                    "email": "E-Mail Address",
+                    "email": "Email",
                     "password": "Password"
                 },
                 "title": "Google Hangouts Login"

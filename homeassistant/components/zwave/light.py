@@ -209,7 +209,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
         """
         if self.values.dimming_duration is None:
             if ATTR_TRANSITION in kwargs:
-                _LOGGER.debug("Dimming not supported by %s.", self.entity_id)
+                _LOGGER.debug("Dimming not supported by %s", self.entity_id)
             return
 
         if ATTR_TRANSITION not in kwargs:
@@ -221,11 +221,11 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
             self.values.dimming_duration.data = int(transition)
         elif transition > 7620:
             self.values.dimming_duration.data = 0xFE
-            _LOGGER.warning("Transition clipped to 127 minutes for %s.", self.entity_id)
+            _LOGGER.warning("Transition clipped to 127 minutes for %s", self.entity_id)
         else:
             minutes = int(transition / 60)
             _LOGGER.debug(
-                "Transition rounded to %d minutes for %s.", minutes, self.entity_id
+                "Transition rounded to %d minutes for %s", minutes, self.entity_id
             )
             self.values.dimming_duration.data = minutes + 0x7F
 

@@ -136,6 +136,19 @@ EVENT_CLIENT_1_WIRELESS_DISCONNECTED = {
     "_id": "5ea32ff730c49e00f90dca1a",
 }
 
+EVENT_DEVICE_2_UPGRADED = {
+    "_id": "5eae7fe02ab79c00f9d38960",
+    "datetime": "2020-05-09T20:06:37Z",
+    "key": "EVT_SW_Upgraded",
+    "msg": f'Switch[{DEVICE_2["mac"]}] was upgraded from "{DEVICE_2["version"]}" to "4.3.13.11253"',
+    "subsystem": "lan",
+    "sw": DEVICE_2["mac"],
+    "sw_name": DEVICE_2["name"],
+    "time": 1589054797635,
+    "version_from": {DEVICE_2["version"]},
+    "version_to": "4.3.13.11253",
+}
+
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when configuring unifi through device tracker platform."""
@@ -252,7 +265,8 @@ async def test_tracked_clients(hass):
 async def test_tracked_devices(hass):
     """Test the update_items function with some devices."""
     controller = await setup_unifi_integration(
-        hass, devices_response=[DEVICE_1, DEVICE_2],
+        hass,
+        devices_response=[DEVICE_1, DEVICE_2],
     )
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
@@ -280,7 +294,7 @@ async def test_tracked_devices(hass):
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2.state == "home"
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
@@ -297,6 +311,22 @@ async def test_tracked_devices(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == STATE_UNAVAILABLE
+
+    # Update device registry when device is upgraded
+    device_2_copy = copy(DEVICE_2)
+    device_2_copy["version"] = EVENT_DEVICE_2_UPGRADED["version_to"]
+    message = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_2_copy]}
+    controller.api.message_handler(message)
+    event = {"meta": {"message": MESSAGE_EVENT}, "data": [EVENT_DEVICE_2_UPGRADED]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    # Verify device registry has been updated
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get("device_tracker.device_2")
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(entry.device_id)
+    assert device.sw_version == EVENT_DEVICE_2_UPGRADED["version_to"]
 
 
 async def test_remove_clients(hass):
@@ -331,7 +361,9 @@ async def test_remove_clients(hass):
 async def test_controller_state_change(hass):
     """Verify entities state reflect on controller becoming unavailable."""
     controller = await setup_unifi_integration(
-        hass, clients_response=[CLIENT_1], devices_response=[DEVICE_1],
+        hass,
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
     )
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
@@ -361,7 +393,9 @@ async def test_controller_state_change(hass):
 async def test_option_track_clients(hass):
     """Test the tracking of clients can be turned off."""
     controller = await setup_unifi_integration(
-        hass, clients_response=[CLIENT_1, CLIENT_2], devices_response=[DEVICE_1],
+        hass,
+        clients_response=[CLIENT_1, CLIENT_2],
+        devices_response=[DEVICE_1],
     )
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
@@ -375,7 +409,8 @@ async def test_option_track_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_CLIENTS: False},
+        controller.config_entry,
+        options={CONF_TRACK_CLIENTS: False},
     )
     await hass.async_block_till_done()
 
@@ -389,7 +424,8 @@ async def test_option_track_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_CLIENTS: True},
+        controller.config_entry,
+        options={CONF_TRACK_CLIENTS: True},
     )
     await hass.async_block_till_done()
 
@@ -406,7 +442,9 @@ async def test_option_track_clients(hass):
 async def test_option_track_wired_clients(hass):
     """Test the tracking of wired clients can be turned off."""
     controller = await setup_unifi_integration(
-        hass, clients_response=[CLIENT_1, CLIENT_2], devices_response=[DEVICE_1],
+        hass,
+        clients_response=[CLIENT_1, CLIENT_2],
+        devices_response=[DEVICE_1],
     )
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
@@ -420,7 +458,8 @@ async def test_option_track_wired_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_WIRED_CLIENTS: False},
+        controller.config_entry,
+        options={CONF_TRACK_WIRED_CLIENTS: False},
     )
     await hass.async_block_till_done()
 
@@ -434,7 +473,8 @@ async def test_option_track_wired_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_WIRED_CLIENTS: True},
+        controller.config_entry,
+        options={CONF_TRACK_WIRED_CLIENTS: True},
     )
     await hass.async_block_till_done()
 
@@ -451,7 +491,9 @@ async def test_option_track_wired_clients(hass):
 async def test_option_track_devices(hass):
     """Test the tracking of devices can be turned off."""
     controller = await setup_unifi_integration(
-        hass, clients_response=[CLIENT_1, CLIENT_2], devices_response=[DEVICE_1],
+        hass,
+        clients_response=[CLIENT_1, CLIENT_2],
+        devices_response=[DEVICE_1],
     )
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
@@ -465,7 +507,8 @@ async def test_option_track_devices(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_DEVICES: False},
+        controller.config_entry,
+        options={CONF_TRACK_DEVICES: False},
     )
     await hass.async_block_till_done()
 
@@ -479,7 +522,8 @@ async def test_option_track_devices(hass):
     assert device_1 is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_DEVICES: True},
+        controller.config_entry,
+        options={CONF_TRACK_DEVICES: True},
     )
     await hass.async_block_till_done()
 
@@ -515,7 +559,8 @@ async def test_option_ssid_filter(hass):
 
     # Setting SSID filter will remove clients outside of filter
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_SSID_FILTER: ["ssid"]},
+        controller.config_entry,
+        options={CONF_SSID_FILTER: ["ssid"]},
     )
     await hass.async_block_till_done()
 
@@ -549,7 +594,8 @@ async def test_option_ssid_filter(hass):
 
     # Remove SSID filter
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_SSID_FILTER: []},
+        controller.config_entry,
+        options={CONF_SSID_FILTER: []},
     )
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
@@ -759,7 +805,8 @@ async def test_dont_track_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_CLIENTS: True},
+        controller.config_entry,
+        options={CONF_TRACK_CLIENTS: True},
     )
     await hass.async_block_till_done()
 
@@ -789,7 +836,8 @@ async def test_dont_track_devices(hass):
     assert device_1 is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_DEVICES: True},
+        controller.config_entry,
+        options={CONF_TRACK_DEVICES: True},
     )
     await hass.async_block_till_done()
 
@@ -818,7 +866,8 @@ async def test_dont_track_wired_clients(hass):
     assert client_2 is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_TRACK_WIRED_CLIENTS: True},
+        controller.config_entry,
+        options={CONF_TRACK_WIRED_CLIENTS: True},
     )
     await hass.async_block_till_done()
 

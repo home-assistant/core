@@ -17,7 +17,7 @@
             },
             "pat": {
                 "data": {
-                    "access_token": "Zugangstoken"
+                    "access_token": "Zugriffs-Token"
                 },
                 "description": "Bitte geben Sie ein SmartThings [Personal Access Token] ({token_url}) ein, das gem\u00e4\u00df den [Anweisungen] ({component_url}) erstellt wurde. Dies wird zur Erstellung der Home Assistant-Integration in Ihrem SmartThings-Konto verwendet.",
                 "title": "Gib den pers\u00f6nlichen Zugangstoken an"

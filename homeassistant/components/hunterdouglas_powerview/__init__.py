@@ -31,9 +31,15 @@ from .const import (
     DEVICE_REVISION,
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
+    FIRMWARE_BUILD,
     FIRMWARE_IN_USERDATA,
+    FIRMWARE_SUB_REVISION,
     HUB_EXCEPTIONS,
     HUB_NAME,
+    LEGACY_DEVICE_BUILD,
+    LEGACY_DEVICE_MODEL,
+    LEGACY_DEVICE_REVISION,
+    LEGACY_DEVICE_SUB_REVISION,
     MAC_ADDRESS_IN_USERDATA,
     MAINPROCESSOR_IN_USERDATA_FIRMWARE,
     MODEL_IN_MAINPROCESSOR,
@@ -49,6 +55,9 @@ from .const import (
     SHADE_DATA,
     USER_DATA,
 )
+
+PARALLEL_UPDATES = 1
+
 
 DEVICE_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -103,28 +112,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
-    except HUB_EXCEPTIONS:
+
+        async with async_timeout.timeout(10):
+            rooms = Rooms(pv_request)
+            room_data = _async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
+
+        async with async_timeout.timeout(10):
+            scenes = Scenes(pv_request)
+            scene_data = _async_map_data_by_id(
+                (await scenes.get_resources())[SCENE_DATA]
+            )
+
+        async with async_timeout.timeout(10):
+            shades = Shades(pv_request)
+            shade_data = _async_map_data_by_id(
+                (await shades.get_resources())[SHADE_DATA]
+            )
+    except HUB_EXCEPTIONS as err:
         _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
+
     if not device_info:
         _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
         raise ConfigEntryNotReady
-
-    rooms = Rooms(pv_request)
-    room_data = _async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
-
-    scenes = Scenes(pv_request)
-    scene_data = _async_map_data_by_id((await scenes.get_resources())[SCENE_DATA])
-
-    shades = Shades(pv_request)
-    shade_data = _async_map_data_by_id((await shades.get_resources())[SHADE_DATA])
 
     async def async_update_data():
         """Fetch data from shade endpoint."""
         async with async_timeout.timeout(10):
             shade_entries = await shades.get_resources()
         if not shade_entries:
-            raise UpdateFailed(f"Failed to fetch new shade data.")
+            raise UpdateFailed("Failed to fetch new shade data.")
         return _async_map_data_by_id(shade_entries[SHADE_DATA])
 
     coordinator = DataUpdateCoordinator(
@@ -159,9 +176,19 @@ async def async_get_device_info(pv_request):
     resources = await userdata.get_resources()
     userdata_data = resources[USER_DATA]
 
-    main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
-        MAINPROCESSOR_IN_USERDATA_FIRMWARE
-    ]
+    if FIRMWARE_IN_USERDATA in userdata_data:
+        main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
+            MAINPROCESSOR_IN_USERDATA_FIRMWARE
+        ]
+    else:
+        # Legacy devices
+        main_processor_info = {
+            REVISION_IN_MAINPROCESSOR: LEGACY_DEVICE_REVISION,
+            FIRMWARE_SUB_REVISION: LEGACY_DEVICE_SUB_REVISION,
+            FIRMWARE_BUILD: LEGACY_DEVICE_BUILD,
+            MODEL_IN_MAINPROCESSOR: LEGACY_DEVICE_MODEL,
+        }
+
     return {
         DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
         DEVICE_MAC_ADDRESS: userdata_data[MAC_ADDRESS_IN_USERDATA],

@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API-Schl\u00fcssel (E-Mail)",
+                    "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
                     "station": "METAR Stationscode"

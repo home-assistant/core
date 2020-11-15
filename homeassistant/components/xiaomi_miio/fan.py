@@ -53,13 +53,13 @@ from .const import (
     SERVICE_SET_DRY_OFF,
     SERVICE_SET_DRY_ON,
     SERVICE_SET_EXTRA_FEATURES,
+    SERVICE_SET_FAN_LED_OFF,
+    SERVICE_SET_FAN_LED_ON,
     SERVICE_SET_FAN_LEVEL,
     SERVICE_SET_FAVORITE_LEVEL,
     SERVICE_SET_LEARN_MODE_OFF,
     SERVICE_SET_LEARN_MODE_ON,
     SERVICE_SET_LED_BRIGHTNESS,
-    SERVICE_SET_LED_OFF,
-    SERVICE_SET_LED_ON,
     SERVICE_SET_TARGET_HUMIDITY,
     SERVICE_SET_VOLUME,
 )
@@ -449,7 +449,7 @@ SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FEATURES): vol.All(vol.Coerce(int), vol.Range(min=0))}
+    {vol.Required(ATTR_FEATURES): cv.positive_int}
 )
 
 SERVICE_SCHEMA_TARGET_HUMIDITY = AIRPURIFIER_SERVICE_SCHEMA.extend(
@@ -463,8 +463,8 @@ SERVICE_SCHEMA_TARGET_HUMIDITY = AIRPURIFIER_SERVICE_SCHEMA.extend(
 SERVICE_TO_METHOD = {
     SERVICE_SET_BUZZER_ON: {"method": "async_set_buzzer_on"},
     SERVICE_SET_BUZZER_OFF: {"method": "async_set_buzzer_off"},
-    SERVICE_SET_LED_ON: {"method": "async_set_led_on"},
-    SERVICE_SET_LED_OFF: {"method": "async_set_led_off"},
+    SERVICE_SET_FAN_LED_ON: {"method": "async_set_led_on"},
+    SERVICE_SET_FAN_LED_OFF: {"method": "async_set_led_off"},
     SERVICE_SET_CHILD_LOCK_ON: {"method": "async_set_child_lock_on"},
     SERVICE_SET_CHILD_LOCK_OFF: {"method": "async_set_child_lock_off"},
     SERVICE_SET_AUTO_DETECT_ON: {"method": "async_set_auto_detect_on"},
@@ -523,8 +523,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
     if model in PURIFIER_MIOT:
         air_purifier = AirPurifierMiot(host, token)
@@ -655,8 +655,10 @@ class XiaomiGenericDevice(FanEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
@@ -785,8 +787,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def speed_list(self) -> list:
@@ -1029,8 +1032,9 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def speed_list(self) -> list:
@@ -1138,8 +1142,9 @@ class XiaomiAirFresh(XiaomiGenericDevice):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def speed_list(self) -> list:

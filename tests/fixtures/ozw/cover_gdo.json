@@ -1,0 +1,54 @@
+{
+    "topic": "OpenZWave/1/node/6/instance/1/commandclass/102/value/281475083239444/",
+    "payload": {
+        "Label": "Barrier State",
+        "Value": {
+            "List": [
+                {
+                    "Value": 0,
+                    "Label": "Closed"
+                },
+                {
+                    "Value": 1,
+                    "Label": "Closing"
+                },
+                {
+                    "Value": 2,
+                    "Label": "Stopped"
+                },
+                {
+                    "Value": 3,
+                    "Label": "Opening"
+                },
+                {
+                    "Value": 4,
+                    "Label": "Opened"
+                },
+                {
+                    "Value": 5,
+                    "Label": "Unknown"
+                }
+            ],
+            "Selected": "Closed",
+            "Selected_id": 0
+        },
+        "Units": "",
+        "ValueSet": true,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Min": 0,
+        "Max": 0,
+        "Type": "List",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_BARRIER_OPERATOR",
+        "Index": 1,
+        "Node": 6,
+        "Genre": "User",
+        "Help": "The Current State of the Barrier",
+        "ValueIDKey": 281475083239444,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "Event": "valueChanged",
+        "TimeStamp": 1593634453
+    }
+}

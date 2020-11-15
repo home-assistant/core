@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "device_name": "Enhet"
+                },
+                "title": "Velg WOLF-enhet"
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "WOLF SmartSet-tilkobling"
+            }
+        }
+    }
+}

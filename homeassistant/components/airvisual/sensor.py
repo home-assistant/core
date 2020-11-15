@@ -15,8 +15,8 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
@@ -38,10 +38,6 @@ ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
 
-MASS_PARTS_PER_MILLION = "ppm"
-MASS_PARTS_PER_BILLION = "ppb"
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
-
 SENSOR_KIND_LEVEL = "air_pollution_level"
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_POLLUTANT = "main_pollutant"
@@ -57,8 +53,8 @@ GEOGRAPHY_SENSORS = [
 GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 
 NODE_PRO_SENSORS = [
-    (SENSOR_KIND_BATTERY_LEVEL, "Battery", DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE),
-    (SENSOR_KIND_HUMIDITY, "Humidity", DEVICE_CLASS_HUMIDITY, UNIT_PERCENTAGE),
+    (SENSOR_KIND_BATTERY_LEVEL, "Battery", DEVICE_CLASS_BATTERY, PERCENTAGE),
+    (SENSOR_KIND_HUMIDITY, "Humidity", DEVICE_CLASS_HUMIDITY, PERCENTAGE),
     (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
@@ -98,7 +94,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
         sensors = [
             AirVisualGeographySensor(
-                coordinator, config_entry, kind, name, icon, unit, locale,
+                coordinator,
+                config_entry,
+                kind,
+                name,
+                icon,
+                unit,
+                locale,
             )
             for locale in GEOGRAPHY_SENSOR_LOCALES
             for kind, name, icon, unit in GEOGRAPHY_SENSORS
@@ -223,22 +225,20 @@ class AirVisualNodeProSensor(AirVisualEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {
-                (DOMAIN, self.coordinator.data["current"]["serial_number"])
-            },
-            "name": self.coordinator.data["current"]["settings"]["node_name"],
+            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
+            "name": self.coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["current"]["status"]["model"]}',
+            "model": f'{self.coordinator.data["status"]["model"]}',
             "sw_version": (
-                f'Version {self.coordinator.data["current"]["status"]["system_version"]}'
-                f'{self.coordinator.data["current"]["status"]["app_version"]}'
+                f'Version {self.coordinator.data["status"]["system_version"]}'
+                f'{self.coordinator.data["status"]["app_version"]}'
             ),
         }
 
     @property
     def name(self):
         """Return the name."""
-        node_name = self.coordinator.data["current"]["settings"]["node_name"]
+        node_name = self.coordinator.data["settings"]["node_name"]
         return f"{node_name} Node/Pro: {self._name}"
 
     @property
@@ -249,18 +249,14 @@ class AirVisualNodeProSensor(AirVisualEntity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['current']['serial_number']}_{self._kind}"
+        return f"{self.coordinator.data['serial_number']}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_BATTERY_LEVEL:
-            self._state = self.coordinator.data["current"]["status"]["battery"]
+            self._state = self.coordinator.data["status"]["battery"]
         elif self._kind == SENSOR_KIND_HUMIDITY:
-            self._state = self.coordinator.data["current"]["measurements"].get(
-                "humidity"
-            )
+            self._state = self.coordinator.data["measurements"].get("humidity")
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self.coordinator.data["current"]["measurements"].get(
-                "temperature_C"
-            )
+            self._state = self.coordinator.data["measurements"].get("temperature_C")

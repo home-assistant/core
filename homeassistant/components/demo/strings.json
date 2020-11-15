@@ -7,6 +7,7 @@
       },
       "options_1": {
         "data": {
+          "constant": "Constant",
           "bool": "Optional boolean",
           "int": "Numeric input"
         }

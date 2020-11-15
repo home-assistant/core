@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "auth_failed": "Nome de utilizador ou palavra passe incorretos"
-        },
         "step": {
             "confirm": {
                 "data": {
@@ -12,6 +9,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Servidor",
                     "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
                 }

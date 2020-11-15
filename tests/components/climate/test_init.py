@@ -65,6 +65,12 @@ class MockClimateEntity(ClimateEntity):
         """
         return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
 
+    def turn_on(self) -> None:
+        """Turn on."""
+
+    def turn_off(self) -> None:
+        """Turn off."""
+
 
 async def test_sync_turn_on(hass):
     """Test if async turn_on calls sync turn_on."""
@@ -92,9 +98,13 @@ def test_deprecated_base_class(caplog):
     """Test deprecated base class."""
 
     class CustomClimate(ClimateDevice):
+        """Custom climate entity class."""
+
+        @property
         def hvac_mode(self):
             pass
 
+        @property
         def hvac_modes(self):
             pass
 

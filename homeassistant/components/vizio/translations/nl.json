@@ -1,25 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dit item is al ingesteld.",
+            "already_configured_device": "Dit apparaat is al geconfigureerd",
             "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt."
         },
         "error": {
-            "cant_connect": "Kan geen verbinding maken met het apparaat. [Bekijk de documenten] (https://www.home-assistant.io/integrations/vizio/) en controleer of:\n- Het apparaat is ingeschakeld\n- Het apparaat is aangesloten op het netwerk\n- De waarden die u ingevuld correct zijn\nvoordat u weer probeert om opnieuw in te dienen.",
-            "host_exists": "Vizio apparaat met opgegeven host al geconfigureerd.",
-            "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd."
+            "cannot_connect": "Verbinding mislukt",
+            "complete_pairing_failed": "Kan het koppelen niet voltooien. Zorg ervoor dat de door u opgegeven pincode correct is en dat de tv nog steeds van stroom wordt voorzien en is verbonden met het netwerk voordat u opnieuw verzendt."
         },
         "step": {
             "pair_tv": {
                 "data": {
                     "pin": "PIN"
                 },
+                "description": "Uw TV zou een code moeten weergeven. Voer die code in het formulier in en ga dan door naar de volgende stap om de koppeling te voltooien.",
                 "title": "Voltooi het koppelingsproces"
             },
             "pairing_complete": {
+                "description": "Uw VIZIO SmartCast-apparaat is nu verbonden met Home Assistant.",
                 "title": "Koppelen voltooid"
             },
             "pairing_complete_import": {
+                "description": "Uw VIZIO SmartCast-apparaat is nu verbonden met Home Assistant.\n\nUw toegangstoken is '** {access_token} **'.",
                 "title": "Koppelen voltooid"
             },
             "user": {

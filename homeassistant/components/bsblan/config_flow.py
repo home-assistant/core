@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # pylint:disable=unused-import
     CONF_DEVICE_IDENT,
@@ -36,10 +36,10 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await self._get_bsblan_info(
                 host=user_input[CONF_HOST],
                 port=user_input[CONF_PORT],
-                passkey=user_input[CONF_PASSKEY],
+                passkey=user_input.get(CONF_PASSKEY),
             )
         except BSBLanError:
-            return self._show_setup_form({"base": "connection_error"})
+            return self._show_setup_form({"base": "cannot_connect"})
 
         # Check if already configured
         await self.async_set_unique_id(info.device_identification)
@@ -50,7 +50,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                CONF_PASSKEY: user_input[CONF_PASSKEY],
+                CONF_PASSKEY: user_input.get(CONF_PASSKEY),
                 CONF_DEVICE_IDENT: info.device_identification,
             },
         )
@@ -63,7 +63,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=80): int,
-                    vol.Optional(CONF_PASSKEY, default=""): str,
+                    vol.Optional(CONF_PASSKEY): str,
                 }
             ),
             errors=errors or {},
@@ -75,7 +75,5 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get device information from an BSBLan device."""
         session = async_get_clientsession(self.hass)
         _LOGGER.debug("request bsblan.info:")
-        bsblan = BSBLan(
-            host, passkey=passkey, port=port, session=session, loop=self.hass.loop
-        )
+        bsblan = BSBLan(host, passkey=passkey, port=port, session=session)
         return await bsblan.info()

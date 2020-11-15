@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebs Koordinate oder ode/Pro ID si schon registr\u00e9iert."
+            "already_configured": "Standuert ass scho konfigur\u00e9iert oder Node/Pro ID ass scho registr\u00e9iert.",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
         },
         "error": {
-            "general_error": "Onbekannten Feeler",
-            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel uginn",
-            "unable_to_connect": "Kann sech net mat der Node/Pri verbannen."
+            "cannot_connect": "Feeler beim verbannen",
+            "general_error": "Onerwaarte Feeler",
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
         },
         "step": {
             "geography": {
@@ -20,22 +21,25 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "IP Adresse / Numm vun der Unit\u00e9it",
-                    "password": "Passwuert vun der Unit\u00e9it"
+                    "ip_address": "Host",
+                    "password": "Passwuert"
                 },
                 "description": "Pers\u00e9inlech Airvisual Unit\u00e9it iwwerwaachen. Passwuert kann vum UI vum Apparat ausgelies ginn.",
                 "title": "Airvisual Node/Pro ariichten"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel"
+                },
+                "title": "AirVisual re-authentifiz\u00e9ieren"
+            },
             "user": {
                 "data": {
-                    "api_key": "API Schl\u00ebssel",
                     "cloud_api": "Geografesche Standuert",
-                    "latitude": "Breedegrad",
-                    "longitude": "L\u00e4ngegrad",
                     "node_pro": "Airvisual Node Pro",
                     "type": "Typ vun der Integratioun"
                 },
-                "description": "Loft Qualit\u00e9it an enger geografescher Lag iwwerwaachen.",
+                "description": "Typ vun Airvisual Donn\u00e9\u00eb fir d'Iwwerwachung auswielen.",
                 "title": "AirVisual konfigur\u00e9ieren"
             }
         }
@@ -46,7 +50,6 @@
                 "data": {
                     "show_on_map": "Iwwerwaachte Geografie op der Kaart uweisen"
                 },
-                "description": "Verschidden Optioune fir d'AirVisual Integratioun d\u00e9fin\u00e9ieren.",
                 "title": "Airvisual ariichten"
             }
         }

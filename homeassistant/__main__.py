@@ -1,6 +1,5 @@
 """Start Home Assistant."""
 import argparse
-import asyncio
 import os
 import platform
 import subprocess
@@ -8,30 +7,7 @@ import sys
 import threading
 from typing import List
 
-import yarl
-
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
-
-
-def set_loop() -> None:
-    """Attempt to use different loop."""
-    # pylint: disable=import-outside-toplevel
-    from asyncio.events import BaseDefaultEventLoopPolicy
-
-    if sys.platform == "win32":
-        if hasattr(asyncio, "WindowsProactorEventLoopPolicy"):
-            # pylint: disable=no-member
-            policy = asyncio.WindowsProactorEventLoopPolicy()
-        else:
-
-            class ProactorPolicy(BaseDefaultEventLoopPolicy):
-                """Event loop policy to create proactor loops."""
-
-                _loop_factory = asyncio.ProactorEventLoop
-
-            policy = ProactorPolicy()
-
-        asyncio.set_event_loop_policy(policy)
 
 
 def validate_python() -> None:
@@ -219,7 +195,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
     get rid of.
     """
     # pylint: disable=import-outside-toplevel
-    from fcntl import fcntl, F_GETFD, F_SETFD, FD_CLOEXEC
+    from fcntl import F_GETFD, F_SETFD, FD_CLOEXEC, fcntl
 
     for _fd in range(min_fd, max_fd):
         try:
@@ -238,39 +214,6 @@ def cmdline() -> List[str]:
         return [sys.executable] + [arg for arg in sys.argv if arg != "--daemon"]
 
     return [arg for arg in sys.argv if arg != "--daemon"]
-
-
-async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
-    """Set up Home Assistant and run."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant import bootstrap
-
-    hass = await bootstrap.async_setup_hass(
-        config_dir=config_dir,
-        verbose=args.verbose,
-        log_rotate_days=args.log_rotate_days,
-        log_file=args.log_file,
-        log_no_color=args.log_no_color,
-        skip_pip=args.skip_pip,
-        safe_mode=args.safe_mode,
-    )
-
-    if hass is None:
-        return 1
-
-    if args.open_ui:
-        import webbrowser  # pylint: disable=import-outside-toplevel
-
-        if hass.config.api is not None:
-            scheme = "https" if hass.config.api.use_ssl else "http"
-            url = str(
-                yarl.URL.build(
-                    scheme=scheme, host="127.0.0.1", port=hass.config.api.port
-                )
-            )
-            hass.add_job(webbrowser.open, url)
-
-    return await hass.async_run()
 
 
 def try_to_restart() -> None:
@@ -319,8 +262,6 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    set_loop()
-
     # Run a simple daemon runner process on Windows to handle restarts
     if os.name == "nt" and "--runner" not in sys.argv:
         nt_args = cmdline() + ["--runner"]
@@ -353,7 +294,22 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    exit_code = asyncio.run(setup_and_run_hass(config_dir, args), debug=args.debug)
+    # pylint: disable=import-outside-toplevel
+    from homeassistant import runner
+
+    runtime_conf = runner.RuntimeConfig(
+        config_dir=config_dir,
+        verbose=args.verbose,
+        log_rotate_days=args.log_rotate_days,
+        log_file=args.log_file,
+        log_no_color=args.log_no_color,
+        skip_pip=args.skip_pip,
+        safe_mode=args.safe_mode,
+        debug=args.debug,
+        open_ui=args.open_ui,
+    )
+
+    exit_code = runner.run(runtime_conf)
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 

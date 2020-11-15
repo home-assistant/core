@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            }
+        }
+    }
+}

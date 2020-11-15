@@ -71,11 +71,11 @@ class CommandLineAuthProvider(AuthProvider):
         except OSError as err:
             # happens when command doesn't exist or permission is denied
             _LOGGER.error("Error while authenticating %r: %s", username, err)
-            raise InvalidAuthError
+            raise InvalidAuthError from err
 
         if process.returncode != 0:
             _LOGGER.error(
-                "User %r failed to authenticate, command exited with code %d.",
+                "User %r failed to authenticate, command exited with code %d",
                 username,
                 process.returncode,
             )

@@ -139,7 +139,16 @@ class GraphiteFeeder(threading.Thread):
                 _LOGGER.debug("Event processing thread stopped")
                 self._queue.task_done()
                 return
-            if event.event_type == EVENT_STATE_CHANGED and event.data.get("new_state"):
+            if event.event_type == EVENT_STATE_CHANGED:
+                if not event.data.get("new_state"):
+                    _LOGGER.debug(
+                        "Skipping %s without new_state for %s",
+                        event.event_type,
+                        event.data["entity_id"],
+                    )
+                    self._queue.task_done()
+                    continue
+
                 _LOGGER.debug(
                     "Processing STATE_CHANGED event for %s", event.data["entity_id"]
                 )

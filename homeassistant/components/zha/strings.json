@@ -21,9 +21,9 @@
         }
       }
     },
-    "error": { "cannot_connect": "Unable to connect to ZHA device." },
+    "error": { "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]" },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of ZHA is allowed."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "device_automation": {
@@ -51,7 +51,8 @@
       "device_tilted": "Device tilted",
       "device_knocked": "Device knocked \"{subtype}\"",
       "device_dropped": "Device dropped",
-      "device_flipped": "Device flipped \"{subtype}\""
+      "device_flipped": "Device flipped \"{subtype}\"",
+      "device_offline": "Device offline"
     },
     "trigger_subtype": {
       "turn_on": "Turn on",

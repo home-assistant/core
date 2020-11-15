@@ -1,6 +1,4 @@
 """Support for Daikin AC sensors."""
-import logging
-
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -14,16 +12,17 @@ from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
     ATTR_COOL_ENERGY,
     ATTR_HEAT_ENERGY,
+    ATTR_HUMIDITY,
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
+    ATTR_TARGET_HUMIDITY,
     ATTR_TOTAL_POWER,
     SENSOR_TYPE_ENERGY,
+    SENSOR_TYPE_HUMIDITY,
     SENSOR_TYPE_POWER,
     SENSOR_TYPE_TEMPERATURE,
     SENSOR_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -44,6 +43,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(ATTR_TOTAL_POWER)
         sensors.append(ATTR_COOL_ENERGY)
         sensors.append(ATTR_HEAT_ENERGY)
+    if daikin_api.device.support_humidity:
+        sensors.append(ATTR_HUMIDITY)
+        sensors.append(ATTR_TARGET_HUMIDITY)
     async_add_entities([DaikinSensor.factory(daikin_api, sensor) for sensor in sensors])
 
 
@@ -55,6 +57,7 @@ class DaikinSensor(Entity):
         """Initialize any DaikinSensor."""
         cls = {
             SENSOR_TYPE_TEMPERATURE: DaikinClimateSensor,
+            SENSOR_TYPE_HUMIDITY: DaikinClimateSensor,
             SENSOR_TYPE_POWER: DaikinPowerSensor,
             SENSOR_TYPE_ENERGY: DaikinPowerSensor,
         }[SENSOR_TYPES[monitored_state][CONF_TYPE]]
@@ -117,6 +120,11 @@ class DaikinClimateSensor(DaikinSensor):
             return self._api.device.inside_temperature
         if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
             return self._api.device.outside_temperature
+
+        if self._device_attribute == ATTR_HUMIDITY:
+            return self._api.device.humidity
+        if self._device_attribute == ATTR_TARGET_HUMIDITY:
+            return self._api.device.target_humidity
         return None
 
 
@@ -129,7 +137,7 @@ class DaikinPowerSensor(DaikinSensor):
         if self._device_attribute == ATTR_TOTAL_POWER:
             return round(self._api.device.current_total_power_consumption, 3)
         if self._device_attribute == ATTR_COOL_ENERGY:
-            return round(self._api.device.last_hour_cool_power_consumption, 3)
+            return round(self._api.device.last_hour_cool_energy_consumption, 3)
         if self._device_attribute == ATTR_HEAT_ENERGY:
-            return round(self._api.device.last_hour_heat_power_consumption, 3)
+            return round(self._api.device.last_hour_heat_energy_consumption, 3)
         return None

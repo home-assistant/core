@@ -1,13 +1,10 @@
 """Sensor for checking the battery level of Roomba."""
-import logging
+from homeassistant.components.vacuum import STATE_DOCKED
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.helpers.icon import icon_for_battery_level
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
-
-from . import roomba_reported_state
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -40,13 +37,18 @@ class RoombaBattery(IRobotEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
+
+    @property
+    def icon(self):
+        """Return the icon for the battery."""
+        charging = bool(self._robot_state == STATE_DOCKED)
+
+        return icon_for_battery_level(
+            battery_level=self._battery_level, charging=charging
+        )
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return roomba_reported_state(self.vacuum).get("batPct")
-
-    def new_state_filter(self, new_state):
-        """Filter the new state."""
-        return "batPct" in new_state
+        return self._battery_level

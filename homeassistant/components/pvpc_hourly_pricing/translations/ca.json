@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integraci\u00f3 ja configurada amb un sensor amb aquesta tarifa"
+            "already_configured": "El servei ja est\u00e0 configurat"
         },
         "step": {
             "user": {

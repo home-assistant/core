@@ -1,0 +1,23 @@
+sensor:
+  - platform: snmp
+    name: UPS kW
+    unit_of_measurement: kW
+    baseoid: 1.3.6.1.4.1.3808.1.1.1.4.2.5.0
+    host: 192.168.210.25
+    community: public
+    accept_errors: true
+    value_template: '{{ ((value | int) / 1000) | float | round(3) }}'
+    scan_interval: 900
+  - platform: template
+    sensors:
+      combined_sensor_energy_usage:
+        friendly_name: Combined Sense Energy Usage
+        unit_of_measurement: kW
+        value_template: '{{ ((states(''sensor.energy_usage'') | float) + (states(''sensor.energy_usage_2'')
+          | float)) / 1000 }}'
+      watching_tv_in_master_bedroom:
+        friendly_name: Watching TV in Master Bedroom
+        value_template: '{% if state_attr("remote.alexander_master_bedroom","current_activity")
+          == "Watch TV" or state_attr("remote.alexander_master_bedroom","current_activity")
+          == "Watch Apple TV" %}on{% else %}off{% endif %}'
+

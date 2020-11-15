@@ -5,12 +5,12 @@
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Kunne ikke koble til, vennligst bekreft vertsadresse"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Vertsnavnet eller ip-adressen til din Solar-Log-enhet",
+                    "host": "Vert",
                     "name": "Prefikset som skal brukes til dine Solar-Log sensorer"
                 },
                 "title": "Definer din Solar-Log tilkobling"

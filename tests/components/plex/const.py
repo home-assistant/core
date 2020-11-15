@@ -2,6 +2,7 @@
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex import const
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_HOST,
     CONF_PORT,
     CONF_TOKEN,
@@ -35,12 +36,22 @@ MOCK_TOKEN = "secret_token"
 DEFAULT_DATA = {
     const.CONF_SERVER: MOCK_SERVERS[0][const.CONF_SERVER],
     const.PLEX_SERVER_CONFIG: {
-        const.CONF_CLIENT_IDENTIFIER: "00000000-0000-0000-0000-000000000000",
+        CONF_CLIENT_ID: "00000000-0000-0000-0000-000000000000",
         CONF_TOKEN: MOCK_TOKEN,
         CONF_URL: f"https://{MOCK_SERVERS[0][CONF_HOST]}:{MOCK_SERVERS[0][CONF_PORT]}",
         CONF_VERIFY_SSL: True,
     },
     const.CONF_SERVER_IDENTIFIER: MOCK_SERVERS[0][const.CONF_SERVER_IDENTIFIER],
+}
+SECONDARY_DATA = {
+    const.CONF_SERVER: MOCK_SERVERS[1][const.CONF_SERVER],
+    const.PLEX_SERVER_CONFIG: {
+        CONF_CLIENT_ID: "00000000-0000-0000-0000-000000000002",
+        CONF_TOKEN: MOCK_TOKEN,
+        CONF_URL: f"https://{MOCK_SERVERS[1][CONF_HOST]}:{MOCK_SERVERS[1][CONF_PORT]}",
+        CONF_VERIFY_SSL: True,
+    },
+    const.CONF_SERVER_IDENTIFIER: MOCK_SERVERS[1][const.CONF_SERVER_IDENTIFIER],
 }
 
 DEFAULT_OPTIONS = {

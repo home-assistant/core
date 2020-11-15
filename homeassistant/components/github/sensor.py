@@ -149,7 +149,7 @@ class GitHubSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return "mdi:github-circle"
+        return "mdi:github"
 
     def update(self):
         """Collect updated data from GitHub API."""

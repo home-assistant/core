@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "host": "Host",
+                    "location": "Locatie",
+                    "name": "Naam",
+                    "port": "Poort",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
+            }
+        }
+    }
+}

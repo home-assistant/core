@@ -566,7 +566,10 @@ async def test_fan_restore(hass, hk_driver, cls, events):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "fan", "generic", "1234", suggested_object_id="simple",
+        "fan",
+        "generic",
+        "1234",
+        suggested_object_id="simple",
     )
     registry.async_get_or_create(
         "fan",

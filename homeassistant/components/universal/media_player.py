@@ -1,6 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 from copy import copy
-import logging
 
 import voluptuous as vol
 
@@ -68,11 +67,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVE_CHILD = "active_child"
 ATTR_DATA = "data"
@@ -104,6 +104,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the universal media players."""
+
+    await async_setup_reload_service(hass, "universal", ["media_player"])
+
     player = UniversalMediaPlayer(
         hass,
         config.get(CONF_NAME),
@@ -132,27 +135,53 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                 attr.append(None)
             self._attrs[key] = attr
         self._child_state = None
+        self._state_template_result = None
         self._state_template = state_template
-        if state_template is not None:
-            self._state_template.hass = hass
 
     async def async_added_to_hass(self):
         """Subscribe to children and template state changes."""
 
         @callback
-        def async_on_dependency_update(*_):
+        def _async_on_dependency_update(event):
             """Update ha state when dependencies update."""
+            self.async_set_context(event.context)
             self.async_schedule_update_ha_state(True)
+
+        @callback
+        def _async_on_template_update(event, updates):
+            """Update ha state when dependencies update."""
+            result = updates.pop().result
+
+            if isinstance(result, TemplateError):
+                self._state_template_result = None
+            else:
+                self._state_template_result = result
+
+            if event:
+                self.async_set_context(event.context)
+
+            self.async_schedule_update_ha_state(True)
+
+        if self._state_template is not None:
+            result = async_track_template_result(
+                self.hass,
+                [TrackTemplate(self._state_template, None)],
+                _async_on_template_update,
+            )
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())
+            )
+
+            self.async_on_remove(result.async_remove)
 
         depend = copy(self._children)
         for entity in self._attrs.values():
             depend.append(entity[0])
-        if self._state_template is not None:
-            for entity in self._state_template.extract_entities():
-                depend.append(entity)
 
-        self.hass.helpers.event.async_track_state_change(
-            list(set(depend)), async_on_dependency_update
+        self.async_on_remove(
+            self.hass.helpers.event.async_track_state_change_event(
+                list(set(depend)), _async_on_dependency_update
+            )
         )
 
     def _entity_lkp(self, entity_id, state_attr=None):
@@ -205,7 +234,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         await self.hass.services.async_call(
-            DOMAIN, service_name, service_data, blocking=True
+            DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
 
     @property
@@ -217,7 +246,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def master_state(self):
         """Return the master state for entity or None."""
         if self._state_template is not None:
-            return self._state_template.async_render()
+            return self._state_template_result
         if CONF_STATE in self._attrs:
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]

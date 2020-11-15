@@ -62,7 +62,7 @@ class HomeConnectSensor(HomeConnectEntity):
                 elif (
                     self._state is not None
                     and self._sign == 1
-                    and self._state < dt_util.utcnow()
+                    and dt_util.parse_datetime(self._state) < dt_util.utcnow()
                 ):
                     # if the date is supposed to be in the future but we're
                     # already past it, set state to None.

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "M\u00f6chtest du TP-Link Smart Devices einrichten?",
-                "title": "TP-Link Smart Home"
+                "description": "M\u00f6chtest du TP-Link Smart Devices einrichten?"
             }
         }
     }

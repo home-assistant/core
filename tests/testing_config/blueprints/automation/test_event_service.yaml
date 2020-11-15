@@ -1,0 +1,11 @@
+blueprint:
+  name: "Call service based on event"
+  domain: automation
+  input:
+    trigger_event:
+    service_to_call:
+trigger:
+  platform: event
+  event_type: !placeholder trigger_event
+action:
+  service: !placeholder service_to_call

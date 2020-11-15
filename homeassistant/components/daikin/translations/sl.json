@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Naprava je \u017ee konfigurirana",
-            "device_fail": "Nepri\u010dakovana napaka pri ustvarjanju naprave.",
-            "device_timeout": "\u010casovna omejitev za priklop na napravo je potekla."
+            "already_configured": "Naprava je \u017ee konfigurirana"
         },
         "step": {
             "user": {

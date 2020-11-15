@@ -33,8 +33,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
-    except HUB_EXCEPTIONS:
-        raise CannotConnect
+    except HUB_EXCEPTIONS as err:
+        raise CannotConnect from err
     if not device_info:
         raise CannotConnect
 
@@ -126,7 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a hub with the host address configured."""
         existing_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
         }
         return host in existing_hosts
 

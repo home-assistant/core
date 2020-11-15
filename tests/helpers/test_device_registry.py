@@ -153,11 +153,21 @@ async def test_loading_from_storage(hass, hass_storage):
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                 }
-            ]
+            ],
+            "deleted_devices": [
+                {
+                    "config_entries": ["1234"],
+                    "connections": [["Zigbee", "23.45.67.89.01"]],
+                    "id": "bcdefghijklmn",
+                    "identifiers": [["serial", "34:56:AB:CD:EF:12"]],
+                }
+            ],
         },
     }
 
     registry = await device_registry.async_get_registry(hass)
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 1
 
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -171,6 +181,20 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.entry_type == "service"
     assert isinstance(entry.config_entries, set)
+    assert isinstance(entry.connections, set)
+    assert isinstance(entry.identifiers, set)
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "23.45.67.89.01")},
+        identifiers={("serial", "34:56:AB:CD:EF:12")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == "bcdefghijklmn"
+    assert isinstance(entry.config_entries, set)
+    assert isinstance(entry.connections, set)
+    assert isinstance(entry.identifiers, set)
 
 
 async def test_removing_config_entries(hass, registry, update_events):
@@ -224,6 +248,79 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert update_events[4]["device_id"] == entry3.id
 
 
+async def test_deleted_device_removing_config_entries(hass, registry, update_events):
+    """Make sure we do not get duplicate entries."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry2 = registry.async_get_or_create(
+        config_entry_id="456",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry3 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 2
+    assert len(registry.deleted_devices) == 0
+    assert entry.id == entry2.id
+    assert entry.id != entry3.id
+    assert entry2.config_entries == {"123", "456"}
+
+    registry.async_remove_device(entry.id)
+    registry.async_remove_device(entry3.id)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 2
+
+    await hass.async_block_till_done()
+    assert len(update_events) == 5
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry2.id
+    assert update_events[2]["action"] == "create"
+    assert update_events[2]["device_id"] == entry3.id
+    assert update_events[3]["action"] == "remove"
+    assert update_events[3]["device_id"] == entry.id
+    assert update_events[4]["action"] == "remove"
+    assert update_events[4]["device_id"] == entry3.id
+
+    registry.async_clear_config_entry("123")
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 1
+
+    registry.async_clear_config_entry("456")
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 0
+
+    # No event when a deleted device is purged
+    await hass.async_block_till_done()
+    assert len(update_events) == 5
+
+    # Re-add, expect new device id
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id != entry2.id
+
+
 async def test_removing_area_id(registry):
     """Make sure we can clear area id."""
     entry = registry.async_get_or_create(
@@ -237,6 +334,36 @@ async def test_removing_area_id(registry):
     entry_w_area = registry.async_update_device(entry.id, area_id="12345A")
 
     registry.async_clear_area_id("12345A")
+    entry_wo_area = registry.async_get_device({("bridgeid", "0123")}, set())
+
+    assert not entry_wo_area.area_id
+    assert entry_w_area != entry_wo_area
+
+
+async def test_deleted_device_removing_area_id(registry):
+    """Make sure we can clear area id of deleted device."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    entry_w_area = registry.async_update_device(entry.id, area_id="12345A")
+
+    registry.async_remove_device(entry.id)
+    registry.async_clear_area_id("12345A")
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == entry2.id
+
     entry_wo_area = registry.async_get_device({("bridgeid", "0123")}, set())
 
     assert not entry_wo_area.area_id
@@ -320,7 +447,47 @@ async def test_loading_saving_data(hass, registry):
         via_device=("hue", "0123"),
     )
 
-    assert len(registry.devices) == 2
+    orig_light2 = registry.async_get_or_create(
+        config_entry_id="456",
+        connections=set(),
+        identifiers={("hue", "789")},
+        manufacturer="manufacturer",
+        model="light",
+        via_device=("hue", "0123"),
+    )
+
+    registry.async_remove_device(orig_light2.id)
+
+    orig_light3 = registry.async_get_or_create(
+        config_entry_id="789",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        identifiers={("hue", "abc")},
+        manufacturer="manufacturer",
+        model="light",
+    )
+
+    registry.async_get_or_create(
+        config_entry_id="abc",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        identifiers={("abc", "123")},
+        manufacturer="manufacturer",
+        model="light",
+    )
+
+    registry.async_remove_device(orig_light3.id)
+
+    orig_light4 = registry.async_get_or_create(
+        config_entry_id="789",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        identifiers={("hue", "abc")},
+        manufacturer="manufacturer",
+        model="light",
+    )
+
+    assert orig_light4.id == orig_light3.id
+
+    assert len(registry.devices) == 3
+    assert len(registry.deleted_devices) == 1
 
     orig_via = registry.async_update_device(
         orig_via.id, area_id="mock-area-id", name_by_user="mock-name-by-user"
@@ -333,12 +500,15 @@ async def test_loading_saving_data(hass, registry):
 
     # Ensure same order
     assert list(registry.devices) == list(registry2.devices)
+    assert list(registry.deleted_devices) == list(registry2.deleted_devices)
 
     new_via = registry2.async_get_device({("hue", "0123")}, set())
     new_light = registry2.async_get_device({("hue", "456")}, set())
+    new_light4 = registry2.async_get_device({("hue", "abc")}, set())
 
     assert orig_via == new_via
     assert orig_light == new_light
+    assert orig_light4 == new_light4
 
 
 async def test_no_unnecessary_changes(registry):
@@ -421,6 +591,21 @@ async def test_update(registry):
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
+
+    assert registry.async_get_device({("hue", "456")}, {}) is None
+    assert registry.async_get_device({("bla", "123")}, {}) is None
+
+    assert registry.async_get_device({("hue", "654")}, {}) == updated_entry
+    assert registry.async_get_device({("bla", "321")}, {}) == updated_entry
+
+    assert (
+        registry.async_get_device(
+            {}, {(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
+        )
+        == updated_entry
+    )
+
+    assert registry.async_get(updated_entry.id) is not None
 
 
 async def test_update_remove_config_entries(hass, registry, update_events):
@@ -539,7 +724,7 @@ async def test_cleanup_device_registry(hass, registry):
     device_registry.async_cleanup(hass, registry, ent_reg)
 
     assert registry.async_get_device({("hue", "d1")}, set()) is not None
-    assert registry.async_get_device({("hue", "d2")}, set()) is None
+    assert registry.async_get_device({("hue", "d2")}, set()) is not None
     assert registry.async_get_device({("hue", "d3")}, set()) is not None
     assert registry.async_get_device({("something", "d4")}, set()) is None
 
@@ -584,3 +769,290 @@ async def test_cleanup_entity_registry_change(hass):
         ent_reg.async_remove(entity.entity_id)
         await hass.async_block_till_done()
         assert len(mock_call.mock_calls) == 2
+
+
+async def test_restore_device(hass, registry, update_events):
+    """Make sure device id is stable."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_remove_device(entry.id)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 1
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry3 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry3.id
+    assert entry.id != entry2.id
+    assert len(registry.devices) == 2
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry3.config_entries, set)
+    assert isinstance(entry3.connections, set)
+    assert isinstance(entry3.identifiers, set)
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 4
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "remove"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[2]["action"] == "create"
+    assert update_events[2]["device_id"] == entry2.id
+    assert update_events[3]["action"] == "create"
+    assert update_events[3]["device_id"] == entry3.id
+
+
+async def test_restore_simple_device(hass, registry, update_events):
+    """Make sure device id is stable."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_remove_device(entry.id)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 1
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
+        identifiers={("bridgeid", "4567")},
+    )
+    entry3 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+
+    assert entry.id == entry3.id
+    assert entry.id != entry2.id
+    assert len(registry.devices) == 2
+    assert len(registry.deleted_devices) == 0
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 4
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "remove"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[2]["action"] == "create"
+    assert update_events[2]["device_id"] == entry2.id
+    assert update_events[3]["action"] == "create"
+    assert update_events[3]["device_id"] == entry3.id
+
+
+async def test_restore_shared_device(hass, registry, update_events):
+    """Make sure device id is stable for shared devices."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_123", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_get_or_create(
+        config_entry_id="234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_234", "2345")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_remove_device(entry.id)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 1
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_123", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry2.id
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry2.config_entries, set)
+    assert isinstance(entry2.connections, set)
+    assert isinstance(entry2.identifiers, set)
+
+    registry.async_remove_device(entry.id)
+
+    entry3 = registry.async_get_or_create(
+        config_entry_id="234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_234", "2345")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry3.id
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry3.config_entries, set)
+    assert isinstance(entry3.connections, set)
+    assert isinstance(entry3.identifiers, set)
+
+    entry4 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_123", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry4.id
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry4.config_entries, set)
+    assert isinstance(entry4.connections, set)
+    assert isinstance(entry4.identifiers, set)
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 7
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[2]["action"] == "remove"
+    assert update_events[2]["device_id"] == entry.id
+    assert update_events[3]["action"] == "create"
+    assert update_events[3]["device_id"] == entry.id
+    assert update_events[4]["action"] == "remove"
+    assert update_events[4]["device_id"] == entry.id
+    assert update_events[5]["action"] == "create"
+    assert update_events[5]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+
+
+async def test_get_or_create_empty_then_set_default_values(hass, registry):
+    """Test creating an entry, then setting default name, model, manufacturer."""
+    entry = registry.async_get_or_create(
+        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+    )
+    assert entry.name is None
+    assert entry.model is None
+    assert entry.manufacturer is None
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 1",
+        default_model="default model 1",
+        default_manufacturer="default manufacturer 1",
+    )
+    assert entry.name == "default name 1"
+    assert entry.model == "default model 1"
+    assert entry.manufacturer == "default manufacturer 1"
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 2",
+        default_model="default model 2",
+        default_manufacturer="default manufacturer 2",
+    )
+    assert entry.name == "default name 1"
+    assert entry.model == "default model 1"
+    assert entry.manufacturer == "default manufacturer 1"
+
+
+async def test_get_or_create_empty_then_update(hass, registry):
+    """Test creating an entry, then setting name, model, manufacturer."""
+    entry = registry.async_get_or_create(
+        identifiers={("bridgeid", "0123")}, config_entry_id="1234"
+    )
+    assert entry.name is None
+    assert entry.model is None
+    assert entry.manufacturer is None
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        name="name 1",
+        model="model 1",
+        manufacturer="manufacturer 1",
+    )
+    assert entry.name == "name 1"
+    assert entry.model == "model 1"
+    assert entry.manufacturer == "manufacturer 1"
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 1",
+        default_model="default model 1",
+        default_manufacturer="default manufacturer 1",
+    )
+    assert entry.name == "name 1"
+    assert entry.model == "model 1"
+    assert entry.manufacturer == "manufacturer 1"
+
+
+async def test_get_or_create_sets_default_values(hass, registry):
+    """Test creating an entry, then setting default name, model, manufacturer."""
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 1",
+        default_model="default model 1",
+        default_manufacturer="default manufacturer 1",
+    )
+    assert entry.name == "default name 1"
+    assert entry.model == "default model 1"
+    assert entry.manufacturer == "default manufacturer 1"
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("bridgeid", "0123")},
+        default_name="default name 2",
+        default_model="default model 2",
+        default_manufacturer="default manufacturer 2",
+    )
+    assert entry.name == "default name 1"
+    assert entry.model == "default model 1"
+    assert entry.manufacturer == "default manufacturer 1"

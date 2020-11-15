@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "devices_configured": "Todos os dispositivos encontrados j\u00e1 est\u00e3o configurados.",
+            "credential_error": "Erro ao obter credenciais.",
             "no_devices_found": "N\u00e3o foram encontrados dispositivos PlayStation 4 na rede."
         },
         "error": {
-            "login_failed": "Falha ao emparelhar com a PlayStation 4. Verifique se o PIN est\u00e1 correto.",
-            "not_ready": "A PlayStation 4 n\u00e3o est\u00e1 ligada ou ligada \u00e0 rede."
+            "login_failed": "Falha ao emparelhar com a PlayStation 4. Verifique se o PIN est\u00e1 correto."
         },
         "step": {
             "creds": {
@@ -22,6 +21,9 @@
                 "title": "PlayStation 4"
             },
             "mode": {
+                "data": {
+                    "mode": "Modo de configura\u00e7\u00e3o"
+                },
                 "title": "PlayStation 4"
             }
         }

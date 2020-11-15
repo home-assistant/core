@@ -1,6 +1,4 @@
 """Manufacturer specific channels module for Zigbee Home Automation."""
-import logging
-
 from homeassistant.core import callback
 
 from .. import registries
@@ -15,8 +13,6 @@ from ..const import (
     UNKNOWN,
 )
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
@@ -35,6 +31,14 @@ class SmartThingsHumidity(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFD00)
 class OsramButton(ZigbeeChannel):
     """Osram button channel."""
+
+    REPORT_CONFIG = []
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
+class PhillipsRemote(ZigbeeChannel):
+    """Phillips remote channel."""
 
     REPORT_CONFIG = []
 

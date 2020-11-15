@@ -5,9 +5,6 @@ from typing import List, Optional
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -199,19 +196,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
             return HVAC_MODE_AUTO
         is_off = self.target_temperature <= self.min_temp
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
-
-    @property
-    def hvac_action(self) -> Optional[str]:
-        """Return the current running hvac operation if supported."""
-        if self._evo_tcs.systemModeStatus["mode"] == EVO_HEATOFF:
-            return CURRENT_HVAC_OFF
-        if self.target_temperature <= self.min_temp:
-            return CURRENT_HVAC_OFF
-        if not self._evo_device.temperatureStatus["isAvailable"]:
-            return None
-        if self.target_temperature <= self.current_temperature:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_HEAT
 
     @property
     def target_temperature(self) -> float:

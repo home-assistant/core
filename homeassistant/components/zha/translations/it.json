@@ -1,17 +1,33 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di ZHA."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al dispositivo ZHA."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipo di radio"
+                },
+                "description": "Scegli un tipo di radio Zigbee",
+                "title": "Tipo di radio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "velocit\u00e0 della porta",
+                    "flow_control": "controllo del flusso di dati",
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Inserire le impostazioni specifiche della porta",
+                "title": "Impostazioni"
+            },
             "user": {
                 "data": {
-                    "radio_type": "Tipo di Radio",
-                    "usb_path": "Percorso del dispositivo USB"
+                    "path": "Percorso del dispositivo seriale"
                 },
+                "description": "Selezionare la porta seriale per la radio Zigbee",
                 "title": "ZHA"
             }
         }
@@ -49,6 +65,7 @@
             "device_dropped": "Dispositivo caduto",
             "device_flipped": "Dispositivo capovolto \" {subtype} \"",
             "device_knocked": "Dispositivo bussato \" {subtype} \"",
+            "device_offline": "Dispositivo offline",
             "device_rotated": "Dispositivo ruotato \" {subtype} \"",
             "device_shaken": "Dispositivo in vibrazione",
             "device_slid": "Dispositivo scivolato \"{sottotipo}\"",

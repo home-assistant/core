@@ -6,7 +6,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
 from tests.async_mock import AsyncMock, MagicMock, patch
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 def _get_mock_powerview_userdata(userdata=None, get_resources=None):
@@ -43,15 +43,16 @@ async def test_user_form(hass):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.2.3.4"},
+            result["flow_id"],
+            {"host": "1.2.3.4"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "AlexanderHD"
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -62,7 +63,8 @@ async def test_user_form(hass):
     assert result3["errors"] == {}
 
     result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {"host": "1.2.3.4"},
+        result3["flow_id"],
+        {"host": "1.2.3.4"},
     )
     assert result4["type"] == "abort"
 
@@ -87,13 +89,13 @@ async def test_form_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={"host": "1.2.3.4"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "AlexanderHD"
     assert result["data"] == {
         "host": "1.2.3.4",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -101,6 +103,9 @@ async def test_form_import(hass):
 async def test_form_homekit(hass):
     """Test we get the form with homekit source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+
+    ignored_config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    ignored_config_entry.add_to_hass(hass)
 
     mock_powerview_userdata = _get_mock_powerview_userdata()
     with patch(
@@ -136,13 +141,13 @@ async def test_form_homekit(hass):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "PowerViewHub"
     assert result2["data"] == {"host": "1.2.3.4"}
     assert result2["result"].unique_id == "ABC123"
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -172,7 +177,8 @@ async def test_form_cannot_connect(hass):
         return_value=mock_powerview_userdata,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.2.3.4"},
+            result["flow_id"],
+            {"host": "1.2.3.4"},
         )
 
     assert result2["type"] == "form"
@@ -191,7 +197,8 @@ async def test_form_no_data(hass):
         return_value=mock_powerview_userdata,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.2.3.4"},
+            result["flow_id"],
+            {"host": "1.2.3.4"},
         )
 
     assert result2["type"] == "form"
@@ -210,7 +217,8 @@ async def test_form_unknown_exception(hass):
         return_value=mock_powerview_userdata,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.2.3.4"},
+            result["flow_id"],
+            {"host": "1.2.3.4"},
         )
 
     assert result2["type"] == "form"

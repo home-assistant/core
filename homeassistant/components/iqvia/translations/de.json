@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dienst ist bereits konfiguriert"
+        },
         "error": {
-            "identifier_exists": "Postleitzahl bereits registriert",
             "invalid_zip_code": "Postleitzahl ist ung\u00fcltig"
         },
         "step": {

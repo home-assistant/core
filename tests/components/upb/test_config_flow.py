@@ -1,9 +1,9 @@
 """Test the UPB Control config flow."""
 
-from asynctest import MagicMock, PropertyMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.upb.const import DOMAIN
+
+from tests.async_mock import MagicMock, PropertyMock, patch
 
 
 def mocked_upb(sync_complete=True, config_ok=True):
@@ -59,6 +59,7 @@ async def test_full_upb_flow_with_serial_port(hass):
                 "file_path": "upb.upe",
             },
         )
+        await hass.async_block_till_done()
 
     assert flow["type"] == "form"
     assert flow["errors"] == {}
@@ -68,7 +69,6 @@ async def test_full_upb_flow_with_serial_port(hass):
         "host": "serial:///dev/ttyS0:115200",
         "file_path": "upb.upe",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -107,7 +107,7 @@ async def test_form_user_with_already_configured(hass):
     _ = await valid_tcp_flow(hass)
     result2 = await valid_tcp_flow(hass)
     assert result2["type"] == "abort"
-    assert result2["reason"] == "address_already_configured"
+    assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()
 
 
@@ -125,12 +125,12 @@ async def test_form_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={"host": "tcp://42.4.2.42", "file_path": "upb.upe"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "UPB"
 
     assert result["data"] == {"host": "tcp://42.4.2.42", "file_path": "upb.upe"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

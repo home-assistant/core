@@ -1,0 +1,21 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_mode": "Wechsele Modus auf {entity_name}",
+            "toggle": "{entity_name} umschalten",
+            "turn_off": "Schalte {entity_name} aus",
+            "turn_on": "Schalte {entity_name} an"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} ausgeschaltet",
+            "turned_on": "{entity_name} eingeschaltet"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "An"
+        }
+    },
+    "title": "Luftbefeuchter"
+}

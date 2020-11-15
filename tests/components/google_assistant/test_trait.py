@@ -1,5 +1,5 @@
 """Tests for the Google Assistant traits."""
-import logging
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -11,6 +11,7 @@ from homeassistant.components import (
     fan,
     group,
     input_boolean,
+    input_select,
     light,
     lock,
     media_player,
@@ -22,6 +23,8 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
+from homeassistant.components.google_assistant.error import SmartHomeError
+from homeassistant.components.humidifier import const as humidifier
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -34,8 +37,13 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
+    STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -47,8 +55,6 @@ from . import BASIC_CONFIG, MockConfig
 
 from tests.async_mock import patch
 from tests.common import async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -101,7 +107,8 @@ async def test_brightness_light(hass):
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(camera.DOMAIN, camera.SUPPORT_STREAM, None)
@@ -125,7 +132,8 @@ async def test_camera_stream(hass):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
 
     assert trt.query_attributes() == {
-        "cameraStreamAccessUrl": "https://example.com/api/streams/bla"
+        "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
+        "cameraStreamReceiverAppId": "B12CE3CA",
     }
 
 
@@ -197,6 +205,11 @@ async def test_onoff_switch(hass):
     trt_off = trait.OnOffTrait(hass, State("switch.bla", STATE_OFF), BASIC_CONFIG)
 
     assert trt_off.query_attributes() == {"on": False}
+
+    trt_assumed = trait.OnOffTrait(
+        hass, State("switch.bla", STATE_OFF, {"assumed_state": True}), BASIC_CONFIG
+    )
+    assert trt_assumed.sync_attributes() == {"commandOnlyOnOff": True}
 
     on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
@@ -285,6 +298,33 @@ async def test_onoff_media_player(hass):
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
+
+
+async def test_onoff_humidifier(hass):
+    """Test OnOff trait support for humidifier domain."""
+    assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
+    assert trait.OnOffTrait.supported(humidifier.DOMAIN, 0, None)
+
+    trt_on = trait.OnOffTrait(hass, State("humidifier.bla", STATE_ON), BASIC_CONFIG)
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {"on": True}
+
+    trt_off = trait.OnOffTrait(hass, State("humidifier.bla", STATE_OFF), BASIC_CONFIG)
+
+    assert trt_off.query_attributes() == {"on": False}
+
+    on_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
+
+    off_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_OFF)
+
+    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
 
 
 async def test_dock_vacuum(hass):
@@ -477,6 +517,74 @@ async def test_color_light_temperature_light_bad_temp(hass):
     )
 
     assert trt.query_attributes() == {}
+
+
+async def test_light_modes(hass):
+    """Test Light Mode trait."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(light.DOMAIN, light.SUPPORT_EFFECT, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "light.living_room",
+            light.STATE_ON,
+            attributes={
+                light.ATTR_EFFECT_LIST: ["random", "colorloop"],
+                light.ATTR_EFFECT: "random",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "effect",
+                "name_values": [{"name_synonym": ["effect"], "lang": "en"}],
+                "settings": [
+                    {
+                        "setting_name": "random",
+                        "setting_values": [
+                            {"setting_synonym": ["random"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "colorloop",
+                        "setting_values": [
+                            {"setting_synonym": ["colorloop"], "lang": "en"}
+                        ],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"effect": "random"},
+        "on": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"effect": "colorloop"}},
+    )
+
+    calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"effect": "colorloop"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "light.living_room",
+        "effect": "colorloop",
+    }
 
 
 async def test_scene_scene(hass):
@@ -773,6 +881,42 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
+async def test_humidity_setting_humidifier_setpoint(hass):
+    """Test HumiditySetting trait support for humidifier domain - setpoint."""
+    assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
+    assert trait.HumiditySettingTrait.supported(humidifier.DOMAIN, 0, None)
+
+    trt = trait.HumiditySettingTrait(
+        hass,
+        State(
+            "humidifier.bla",
+            STATE_ON,
+            {
+                humidifier.ATTR_MIN_HUMIDITY: 20,
+                humidifier.ATTR_MAX_HUMIDITY: 90,
+                humidifier.ATTR_HUMIDITY: 38,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "humiditySetpointRange": {"minPercent": 20, "maxPercent": 90}
+    }
+    assert trt.query_attributes() == {
+        "humiditySetpointPercent": 38,
+    }
+    assert trt.can_execute(trait.COMMAND_SET_HUMIDITY, {})
+
+    calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_HUMIDITY)
+
+    await trt.execute(trait.COMMAND_SET_HUMIDITY, BASIC_DATA, {"humidity": 32}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "humidifier.bla",
+        humidifier.ATTR_HUMIDITY: 32,
+    }
+
+
 async def test_lock_unlock_lock(hass):
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
@@ -849,7 +993,9 @@ async def test_lock_unlock_unlock(hass):
 
     # Test with 2FA override
     with patch.object(
-        BASIC_CONFIG, "should_2fa", return_value=False,
+        BASIC_CONFIG,
+        "should_2fa",
+        return_value=False,
     ):
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
@@ -866,7 +1012,11 @@ async def test_arm_disarm_arm_away(hass):
         State(
             "alarm_control_panel.alarm",
             STATE_ALARM_ARMED_AWAY,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
+                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_ARM_HOME
+                | alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
+            },
         ),
         PIN_CONFIG,
     )
@@ -884,25 +1034,6 @@ async def test_arm_disarm_arm_away(hass):
                     "level_values": [
                         {"level_synonym": ["armed away", "away"], "lang": "en"}
                     ],
-                },
-                {
-                    "level_name": "armed_night",
-                    "level_values": [
-                        {"level_synonym": ["armed night", "night"], "lang": "en"}
-                    ],
-                },
-                {
-                    "level_name": "armed_custom_bypass",
-                    "level_values": [
-                        {
-                            "level_synonym": ["armed custom bypass", "custom"],
-                            "lang": "en",
-                        }
-                    ],
-                },
-                {
-                    "level_name": "triggered",
-                    "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
             "ordered": False,
@@ -1024,6 +1155,14 @@ async def test_arm_disarm_arm_away(hass):
     )
     assert len(calls) == 2
 
+    with pytest.raises(error.SmartHomeError) as err:
+        await trt.execute(
+            trait.COMMAND_ARMDISARM,
+            PIN_DATA,
+            {"arm": True},
+            {},
+        )
+
 
 async def test_arm_disarm_disarm(hass):
     """Test ArmDisarm trait Disarming support for alarm_control_panel domain."""
@@ -1036,31 +1175,17 @@ async def test_arm_disarm_disarm(hass):
         State(
             "alarm_control_panel.alarm",
             STATE_ALARM_DISARMED,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
+                ATTR_SUPPORTED_FEATURES: alarm_control_panel.const.SUPPORT_ALARM_TRIGGER
+                | alarm_control_panel.const.SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+            },
         ),
         PIN_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableArmLevels": {
             "levels": [
-                {
-                    "level_name": "armed_home",
-                    "level_values": [
-                        {"level_synonym": ["armed home", "home"], "lang": "en"}
-                    ],
-                },
-                {
-                    "level_name": "armed_away",
-                    "level_values": [
-                        {"level_synonym": ["armed away", "away"], "lang": "en"}
-                    ],
-                },
-                {
-                    "level_name": "armed_night",
-                    "level_values": [
-                        {"level_synonym": ["armed night", "night"], "lang": "en"}
-                    ],
-                },
                 {
                     "level_name": "armed_custom_bypass",
                     "level_values": [
@@ -1255,7 +1380,6 @@ async def test_fan_speed(hass):
     assert trt.query_attributes() == {
         "currentFanSpeedSetting": "low",
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
@@ -1267,14 +1391,73 @@ async def test_fan_speed(hass):
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
 
 
-async def test_modes(hass):
-    """Test Mode trait."""
+async def test_climate_fan_speed(hass):
+    """Test FanSpeed trait speed control support for climate domain."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(climate.DOMAIN, climate.SUPPORT_FAN_MODE, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "climate.living_room_ac",
+            "on",
+            attributes={
+                "fan_modes": ["auto", "low", "medium", "high"],
+                "fan_mode": "low",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "availableFanSpeeds": {
+            "ordered": True,
+            "speeds": [
+                {
+                    "speed_name": "auto",
+                    "speed_values": [{"speed_synonym": ["auto"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "low",
+                    "speed_values": [{"speed_synonym": ["low"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "medium",
+                    "speed_values": [{"speed_synonym": ["medium"], "lang": "en"}],
+                },
+                {
+                    "speed_name": "high",
+                    "speed_values": [{"speed_synonym": ["high"], "lang": "en"}],
+                },
+            ],
+        },
+        "reversible": False,
+    }
+
+    assert trt.query_attributes() == {
+        "currentFanSpeedSetting": "low",
+    }
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": "medium"}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "climate.living_room_ac",
+        "fan_mode": "medium",
+    }
+
+
+async def test_inputselector(hass):
+    """Test input selector trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
-    assert trait.ModesTrait.supported(
+    assert trait.InputSelectorTrait.supported(
         media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE, None
     )
 
-    trt = trait.ModesTrait(
+    trt = trait.InputSelectorTrait(
         hass,
         State(
             "media_player.living_room",
@@ -1294,32 +1477,182 @@ async def test_modes(hass):
 
     attribs = trt.sync_attributes()
     assert attribs == {
+        "availableInputs": [
+            {"key": "media", "names": [{"name_synonym": ["media"], "lang": "en"}]},
+            {"key": "game", "names": [{"name_synonym": ["game"], "lang": "en"}]},
+            {
+                "key": "chromecast",
+                "names": [{"name_synonym": ["chromecast"], "lang": "en"}],
+            },
+            {"key": "plex", "names": [{"name_synonym": ["plex"], "lang": "en"}]},
+        ],
+        "orderedInputs": True,
+    }
+
+    assert trt.query_attributes() == {
+        "currentInput": "game",
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_INPUT,
+        params={"newInput": "media"},
+    )
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        trait.COMMAND_INPUT,
+        BASIC_DATA,
+        {"newInput": "media"},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+
+@pytest.mark.parametrize(
+    "sources,source,source_next,source_prev",
+    [
+        (["a"], "a", "a", "a"),
+        (["a", "b"], "a", "b", "b"),
+        (["a", "b", "c"], "a", "b", "c"),
+    ],
+)
+async def test_inputselector_nextprev(hass, sources, source, source_next, source_prev):
+    """Test input selector trait."""
+    trt = trait.InputSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: sources,
+                media_player.ATTR_INPUT_SOURCE: source,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.can_execute("action.devices.commands.NextInput", params={})
+    assert trt.can_execute("action.devices.commands.PreviousInput", params={})
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        "action.devices.commands.NextInput",
+        BASIC_DATA,
+        {},
+        {},
+    )
+    await trt.execute(
+        "action.devices.commands.PreviousInput",
+        BASIC_DATA,
+        {},
+        {},
+    )
+
+    assert len(calls) == 2
+    assert calls[0].data == {
+        "entity_id": "media_player.living_room",
+        "source": source_next,
+    }
+    assert calls[1].data == {
+        "entity_id": "media_player.living_room",
+        "source": source_prev,
+    }
+
+
+@pytest.mark.parametrize(
+    "sources,source", [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
+)
+async def test_inputselector_nextprev_invalid(hass, sources, source):
+    """Test input selector trait."""
+    trt = trait.InputSelectorTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_INPUT_SOURCE_LIST: sources,
+                media_player.ATTR_INPUT_SOURCE: source,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.NextInput",
+            BASIC_DATA,
+            {},
+            {},
+        )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.PreviousInput",
+            BASIC_DATA,
+            {},
+            {},
+        )
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(
+            "action.devices.commands.InvalidCommand",
+            BASIC_DATA,
+            {},
+            {},
+        )
+
+
+async def test_modes_input_select(hass):
+    """Test Input Select Mode trait."""
+    assert helpers.get_google_type(input_select.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State("input_select.bla", "unavailable"),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {"availableModes": []}
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "input_select.bla",
+            "abc",
+            attributes={input_select.ATTR_OPTIONS: ["abc", "123", "xyz"]},
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
         "availableModes": [
             {
-                "name": "input source",
+                "name": "option",
                 "name_values": [
-                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                    {
+                        "name_synonym": ["option", "setting", "mode", "value"],
+                        "lang": "en",
+                    }
                 ],
                 "settings": [
                     {
-                        "setting_name": "media",
-                        "setting_values": [
-                            {"setting_synonym": ["media"], "lang": "en"}
-                        ],
+                        "setting_name": "abc",
+                        "setting_values": [{"setting_synonym": ["abc"], "lang": "en"}],
                     },
                     {
-                        "setting_name": "game",
-                        "setting_values": [{"setting_synonym": ["game"], "lang": "en"}],
+                        "setting_name": "123",
+                        "setting_values": [{"setting_synonym": ["123"], "lang": "en"}],
                     },
                     {
-                        "setting_name": "chromecast",
-                        "setting_values": [
-                            {"setting_synonym": ["chromecast"], "lang": "en"}
-                        ],
-                    },
-                    {
-                        "setting_name": "plex",
-                        "setting_values": [{"setting_synonym": ["plex"], "lang": "en"}],
+                        "setting_name": "xyz",
+                        "setting_values": [{"setting_synonym": ["xyz"], "lang": "en"}],
                     },
                 ],
                 "ordered": False,
@@ -1328,27 +1661,104 @@ async def test_modes(hass):
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"input source": "game"},
+        "currentModeSettings": {"option": "abc"},
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"input source": "media"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"option": "xyz"}},
     )
 
     calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+        hass, input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION
     )
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {"updateModeSettings": {"input source": "media"}},
+        {"updateModeSettings": {"option": "xyz"}},
         {},
     )
 
     assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+    assert calls[0].data == {"entity_id": "input_select.bla", "option": "xyz"}
+
+
+async def test_modes_humidifier(hass):
+    """Test Humidifier Mode trait."""
+    assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(humidifier.DOMAIN, humidifier.SUPPORT_MODES, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "humidifier.humidifier",
+            STATE_OFF,
+            attributes={
+                humidifier.ATTR_AVAILABLE_MODES: [
+                    humidifier.MODE_NORMAL,
+                    humidifier.MODE_AUTO,
+                    humidifier.MODE_AWAY,
+                ],
+                ATTR_SUPPORTED_FEATURES: humidifier.SUPPORT_MODES,
+                humidifier.ATTR_MIN_HUMIDITY: 30,
+                humidifier.ATTR_MAX_HUMIDITY: 99,
+                humidifier.ATTR_HUMIDITY: 50,
+                humidifier.ATTR_MODE: humidifier.MODE_AUTO,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "mode",
+                "name_values": [{"name_synonym": ["mode"], "lang": "en"}],
+                "settings": [
+                    {
+                        "setting_name": "normal",
+                        "setting_values": [
+                            {"setting_synonym": ["normal"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "auto",
+                        "setting_values": [{"setting_synonym": ["auto"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "away",
+                        "setting_values": [{"setting_synonym": ["away"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            },
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"mode": "auto"},
+        "on": False,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"mode": "away"}}
+    )
+
+    calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_MODE)
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"mode": "away"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "humidifier.humidifier",
+        "mode": "away",
+    }
 
 
 async def test_sound_modes(hass):
@@ -1401,11 +1811,11 @@ async def test_sound_modes(hass):
     assert trt.query_attributes() == {
         "currentModeSettings": {"sound mode": "stereo"},
         "on": True,
-        "online": True,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"sound mode": "stereo"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
     calls = async_mock_service(
@@ -1615,7 +2025,10 @@ async def test_openclose_binary_sensor(hass, device_class):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"queryOnlyOpenClose": True}
+    assert trt.sync_attributes() == {
+        "queryOnlyOpenClose": True,
+        "discreteOnlyOpenClose": True,
+    }
 
     assert trt.query_attributes() == {"openPercent": 100}
 
@@ -1625,7 +2038,10 @@ async def test_openclose_binary_sensor(hass, device_class):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"queryOnlyOpenClose": True}
+    assert trt.sync_attributes() == {
+        "queryOnlyOpenClose": True,
+        "discreteOnlyOpenClose": True,
+    }
 
     assert trt.query_attributes() == {"openPercent": 0}
 
@@ -1635,7 +2051,7 @@ async def test_volume_media_player(hass):
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.SUPPORT_VOLUME_SET | media_player.SUPPORT_VOLUME_MUTE,
+        media_player.SUPPORT_VOLUME_SET,
         None,
     )
 
@@ -1645,16 +2061,21 @@ async def test_volume_media_player(hass):
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_SET,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
-                media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
         ),
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {
+        "volumeMaxLevel": 100,
+        "levelStepSize": 10,
+        "volumeCanMuteAndUnmute": False,
+        "commandOnlyVolume": False,
+    }
 
-    assert trt.query_attributes() == {"currentVolume": 30, "isMuted": False}
+    assert trt.query_attributes() == {"currentVolume": 30}
 
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET
@@ -1666,40 +2087,144 @@ async def test_volume_media_player(hass):
         media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.6,
     }
 
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET
+    )
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": 10}, {}
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.4,
+    }
+
 
 async def test_volume_media_player_relative(hass):
-    """Test volume trait support for media player domain."""
+    """Test volume trait support for relative-volume-only media players."""
+    assert trait.VolumeTrait.supported(
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_STEP,
+        None,
+    )
     trt = trait.VolumeTrait(
         hass,
         State(
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
-                media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
+                ATTR_ASSUMED_STATE: True,
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_STEP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "volumeMaxLevel": 100,
+        "levelStepSize": 10,
+        "volumeCanMuteAndUnmute": False,
+        "commandOnlyVolume": True,
+    }
+
+    assert trt.query_attributes() == {}
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_UP
+    )
+
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE,
+        BASIC_DATA,
+        {"relativeSteps": 10},
+        {},
+    )
+    assert len(calls) == 10
+    for call in calls:
+        assert call.data == {
+            ATTR_ENTITY_ID: "media_player.bla",
+        }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_DOWN
+    )
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE,
+        BASIC_DATA,
+        {"relativeSteps": -10},
+        {},
+    )
+    assert len(calls) == 10
+    for call in calls:
+        assert call.data == {
+            ATTR_ENTITY_ID: "media_player.bla",
+        }
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(trait.COMMAND_SET_VOLUME, BASIC_DATA, {"volumeLevel": 42}, {})
+
+    with pytest.raises(SmartHomeError):
+        await trt.execute(trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {})
+
+
+async def test_media_player_mute(hass):
+    """Test volume trait support for muting."""
+    assert trait.VolumeTrait.supported(
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE,
+        None,
+    )
+    trt = trait.VolumeTrait(
+        hass,
+        State(
+            "media_player.bla",
+            media_player.STATE_PLAYING,
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE
+                ),
                 media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
         ),
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {
+        "volumeMaxLevel": 100,
+        "levelStepSize": 10,
+        "volumeCanMuteAndUnmute": True,
+        "commandOnlyVolume": False,
+    }
+    assert trt.query_attributes() == {"isMuted": False}
 
-    assert trt.query_attributes() == {"currentVolume": 30, "isMuted": False}
-
-    calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET
+    mute_calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
     )
-
     await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE,
+        trait.COMMAND_MUTE,
         BASIC_DATA,
-        {"volumeRelativeLevel": 20, "relativeSteps": 2},
+        {"mute": True},
         {},
     )
-    assert len(calls) == 1
-    assert calls[0].data == {
+    assert len(mute_calls) == 1
+    assert mute_calls[0].data == {
         ATTR_ENTITY_ID: "media_player.bla",
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: True,
+    }
+
+    unmute_calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
+    )
+    await trt.execute(
+        trait.COMMAND_MUTE,
+        BASIC_DATA,
+        {"mute": False},
+        {},
+    )
+    assert len(unmute_calls) == 1
+    assert unmute_calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        media_player.ATTR_MEDIA_VOLUME_MUTED: False,
     }
 
 
@@ -1783,3 +2308,167 @@ async def test_humidity_setting_sensor_data(hass, state, ambient):
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
+
+
+async def test_transport_control(hass):
+    """Test the TransportControlTrait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+
+    for feature in trait.MEDIA_COMMAND_SUPPORT_MAPPING.values():
+        assert trait.TransportControlTrait.supported(media_player.DOMAIN, feature, None)
+
+    now = datetime(2020, 1, 1)
+
+    trt = trait.TransportControlTrait(
+        hass,
+        State(
+            "media_player.bla",
+            media_player.STATE_PLAYING,
+            {
+                media_player.ATTR_MEDIA_POSITION: 100,
+                media_player.ATTR_MEDIA_DURATION: 200,
+                media_player.ATTR_MEDIA_POSITION_UPDATED_AT: now
+                - timedelta(seconds=10),
+                media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_PLAY
+                | media_player.SUPPORT_STOP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "transportControlSupportedCommands": ["RESUME", "STOP"]
+    }
+    assert trt.query_attributes() == {}
+
+    # COMMAND_MEDIA_SEEK_RELATIVE
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_SEEK
+    )
+
+    # Patch to avoid time ticking over during the command failing the test
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await trt.execute(
+            trait.COMMAND_MEDIA_SEEK_RELATIVE,
+            BASIC_DATA,
+            {"relativePositionMs": 10000},
+            {},
+        )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        # 100s (current position) + 10s (from command) + 10s (from updated_at)
+        media_player.ATTR_MEDIA_SEEK_POSITION: 120,
+    }
+
+    # COMMAND_MEDIA_SEEK_TO_POSITION
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_SEEK
+    )
+    await trt.execute(
+        trait.COMMAND_MEDIA_SEEK_TO_POSITION, BASIC_DATA, {"absPositionMs": 50000}, {}
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        media_player.ATTR_MEDIA_SEEK_POSITION: 50,
+    }
+
+    # COMMAND_MEDIA_NEXT
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_NEXT_TRACK
+    )
+    await trt.execute(trait.COMMAND_MEDIA_NEXT, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
+
+    # COMMAND_MEDIA_PAUSE
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PAUSE
+    )
+    await trt.execute(trait.COMMAND_MEDIA_PAUSE, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
+
+    # COMMAND_MEDIA_PREVIOUS
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PREVIOUS_TRACK
+    )
+    await trt.execute(trait.COMMAND_MEDIA_PREVIOUS, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
+
+    # COMMAND_MEDIA_RESUME
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PLAY
+    )
+    await trt.execute(trait.COMMAND_MEDIA_RESUME, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
+
+    # COMMAND_MEDIA_SHUFFLE
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SHUFFLE_SET
+    )
+    await trt.execute(trait.COMMAND_MEDIA_SHUFFLE, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.bla",
+        media_player.ATTR_MEDIA_SHUFFLE: True,
+    }
+
+    # COMMAND_MEDIA_STOP
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_STOP
+    )
+    await trt.execute(trait.COMMAND_MEDIA_STOP, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
+
+
+@pytest.mark.parametrize(
+    "state",
+    (
+        STATE_OFF,
+        STATE_IDLE,
+        STATE_PLAYING,
+        STATE_ON,
+        STATE_PAUSED,
+        STATE_STANDBY,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ),
+)
+async def test_media_state(hass, state):
+    """Test the MediaStateTrait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+
+    assert trait.TransportControlTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_PLAY, None
+    )
+
+    trt = trait.MediaStateTrait(
+        hass,
+        State(
+            "media_player.bla",
+            state,
+            {
+                media_player.ATTR_MEDIA_POSITION: 100,
+                media_player.ATTR_MEDIA_DURATION: 200,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_PLAY
+                | media_player.SUPPORT_STOP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "supportActivityState": True,
+        "supportPlaybackState": True,
+    }
+    assert trt.query_attributes() == {
+        "activityState": trt.activity_lookup.get(state),
+        "playbackState": trt.playback_lookup.get(state),
+    }

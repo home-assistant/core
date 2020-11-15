@@ -34,6 +34,7 @@ async def test_get_actions_support_open(hass, device_reg, entity_reg):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -77,6 +78,7 @@ async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -146,6 +148,7 @@ async def test_action(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     lock_calls = async_mock_service(hass, "lock", "lock")
     unlock_calls = async_mock_service(hass, "lock", "unlock")

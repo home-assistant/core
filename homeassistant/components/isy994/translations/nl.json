@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_host": "De hostvermelding had de niet volledig URL-indeling, bijvoorbeeld http://192.168.10.100:80",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "Universele apparaten ISY994 {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Wachtwoord",
+                    "tls": "De TLS-versie van de ISY-controller.",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Het hostvermelding moet de volledige URL-indeling hebben, bijvoorbeeld http://192.168.10.100:80",
+                "title": "Maak verbinding met uw ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Tekenreeks negeren",
+                    "restore_light_state": "Herstel lichthelderheid",
+                    "sensor_string": "Node Sensor String"
+                },
+                "description": "Stel de opties in voor de ISY-integratie:\n \u2022 Node Sensor String: elk apparaat of elke map die 'Node Sensor String' in de naam bevat, wordt behandeld als een sensor of binaire sensor.\n \u2022 Ignore String: elk apparaat met 'Ignore String' in de naam wordt genegeerd.\n \u2022 Variabele sensorreeks: elke variabele die 'Variabele sensorreeks' bevat, wordt als sensor toegevoegd.\n \u2022 Lichthelderheid herstellen: indien ingeschakeld, wordt de vorige helderheid hersteld wanneer u een lamp inschakelt in plaats van het ingebouwde Aan-niveau van het apparaat.",
+                "title": "ISY994-opties"
+            }
+        }
+    }
+}

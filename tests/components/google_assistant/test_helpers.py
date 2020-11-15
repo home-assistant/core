@@ -9,6 +9,7 @@ from homeassistant.components.google_assistant.const import (  # noqa: F401
     NOT_EXPOSE_LOCAL,
 )
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -27,7 +28,8 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     hass.states.async_set("light.ceiling_lights", "off")
     hass.config.api = Mock(port=1234, use_ssl=True)
     await async_process_ha_core_config(
-        hass, {"external_url": "https://hostname:1234"},
+        hass,
+        {"external_url": "https://hostname:1234"},
     )
 
     hass.http = Mock(server_port=1234)
@@ -44,15 +46,17 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
 
     config.async_enable_local_sdk()
 
-    serialized = await entity.sync_serialize(None)
-    assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
-    assert serialized["customData"] == {
-        "httpPort": 1234,
-        "httpSSL": True,
-        "proxyDeviceId": None,
-        "webhookId": "mock-webhook-id",
-        "baseUrl": "https://hostname:1234",
-    }
+    with patch("homeassistant.helpers.instance_id.async_get", return_value="abcdef"):
+        serialized = await entity.sync_serialize(None)
+        assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
+        assert serialized["customData"] == {
+            "httpPort": 1234,
+            "httpSSL": True,
+            "proxyDeviceId": None,
+            "webhookId": "mock-webhook-id",
+            "baseUrl": "https://hostname:1234",
+            "uuid": "abcdef",
+        }
 
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
@@ -225,7 +229,8 @@ async def test_report_state_all(agents):
 
 
 @pytest.mark.parametrize(
-    "agents, result", [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
+    "agents, result",
+    [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
 )
 async def test_sync_entities_all(agents, result):
     """Test sync entities ."""
@@ -238,3 +243,12 @@ async def test_sync_entities_all(agents, result):
         res = await config.async_sync_entities_all()
         assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
         assert res == result
+
+
+def test_supported_features_string(caplog):
+    """Test bad supported features."""
+    entity = helpers.GoogleEntity(
+        None, None, State("test.entity_id", "on", {"supported_features": "invalid"})
+    )
+    assert entity.is_supported() is False
+    assert "Entity test.entity_id contains invalid supported_features value invalid"

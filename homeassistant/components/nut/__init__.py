@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     COORDINATOR,
@@ -61,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_update_data():
         """Fetch data from NUT."""
         async with async_timeout.timeout(10):
-            return await hass.async_add_executor_job(data.update)
+            await hass.async_add_executor_job(data.update)
+            if not data.status:
+                raise UpdateFailed("Error fetching UPS state")
 
     coordinator = DataUpdateCoordinator(
         hass,

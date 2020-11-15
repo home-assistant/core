@@ -13,9 +13,7 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
-
-_LOGGER = logging.getLogger(__name__)
+from tests.common import async_fire_mqtt_message
 
 LOCATION_MESSAGE = {
     "longitude": 1.0,
@@ -28,9 +26,8 @@ LOCATION_MESSAGE_INCOMPLETE = {"longitude": 2.0}
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+def setup_comp(hass, mqtt_mock):
     """Initialize components."""
-    hass.loop.run_until_complete(async_mock_mqtt_component(hass))
     yaml_devices = hass.config.path(YAML_DEVICES)
     yield
     if os.path.isfile(yaml_devices):

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vil du konfigurere iZone?",
-                "title": "iZone"
+                "description": "Vil du konfigurere iZone?"
             }
         }
     }

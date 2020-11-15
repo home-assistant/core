@@ -254,7 +254,7 @@ class WinkThermostat(WinkDevice, ClimateEntity):
             except KeyError:
                 _LOGGER.error(
                     "Invalid operation mode mapping. %s doesn't map. "
-                    "Please report this.",
+                    "Please report this",
                     mode,
                 )
         return hvac_list
@@ -457,7 +457,7 @@ class WinkAC(WinkDevice, ClimateEntity):
             except KeyError:
                 _LOGGER.error(
                     "Invalid operation mode mapping. %s doesn't map. "
-                    "Please report this.",
+                    "Please report this",
                     mode,
                 )
         return hvac_list

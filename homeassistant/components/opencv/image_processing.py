@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             CONF_NEIGHBORS, DEFAULT_NEIGHBORS
                         ): cv.positive_int,
                         vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE): vol.Schema(
-                            (int, int)
+                            vol.All(vol.ExactSequence([int, int]), vol.Coerce(tuple))
                         ),
                     }
                 ),
@@ -160,6 +160,9 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         """Process the image."""
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
+        matches = {}
+        total_matches = 0
+
         for name, classifier in self._classifiers.items():
             scale = DEFAULT_SCALE
             neighbors = DEFAULT_NEIGHBORS
@@ -177,8 +180,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             detections = cascade.detectMultiScale(
                 cv_image, scaleFactor=scale, minNeighbors=neighbors, minSize=min_size
             )
-            matches = {}
-            total_matches = 0
             regions = []
             # pylint: disable=invalid-name
             for (x, y, w, h) in detections:

@@ -1,17 +1,33 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 de ZHA."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar amb el dispositiu ZHA."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "description": "Tria el teu tipus de r\u00e0dio Zigbee",
+                "title": "Tipus de r\u00e0dio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "velocitat del port",
+                    "flow_control": "control de flux de dades",
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Introdueix la configuraci\u00f3 espec\u00edfica de port",
+                "title": "Configuraci\u00f3"
+            },
             "user": {
                 "data": {
-                    "radio_type": "Tipus de r\u00e0dio",
-                    "usb_path": "Ruta del port USB al dispositiu"
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
                 },
+                "description": "Selecciona el port s\u00e8rie per a la r\u00e0dio Zigbee",
                 "title": "ZHA"
             }
         }
@@ -49,6 +65,7 @@
             "device_dropped": "Dispositiu caigut",
             "device_flipped": "Dispositiu voltejat a \"{subtype}\"",
             "device_knocked": "Dispositiu colpejat a \"{subtype}\"",
+            "device_offline": "Dispositiu desconnectat",
             "device_rotated": "Dispositiu rotat a \"{subtype}\"",
             "device_shaken": "Dispositiu sacsejat",
             "device_slid": "Dispositiu lliscat a \"{subtype}\"",

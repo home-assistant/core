@@ -1,0 +1,18 @@
+set_zone_moisture_percent:
+  description: Set the moisture percentage of a zone or group of zones.
+  fields:
+    entity_id:
+      description: Name of the zone entity. Can also be a group of zones. [Required]
+      example: "switch.front_yard"
+    percent:
+      description: Set the desired zone moisture percentage from 0 to 100. [Required]
+      example: 50
+start_multiple_zone_schedule:
+  description: Create a custom schedule of zones and runtimes.
+  fields:
+    entity_id:
+      description: Name of the zone or zones to run. Zones should all be on the same controller, attempting to start zones on multiple controllers may have undesired results. [Required]
+      example: "switch.front_yard, switch.side_yard"
+    duration:
+      description: Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zone listed above. [Required]
+      example: 15, 20

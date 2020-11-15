@@ -154,7 +154,7 @@ async def test_new_version_shows_entity_after_hour_hassio(
     """Test if binary sensor gets updated if new version is available / Hass.io."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_component(hass, "hassio")
-    hass.data["hassio_hass_version"] = "999.0"
+    hass.data["hassio_core_info"] = {"version_latest": "999.0"}
 
     assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 

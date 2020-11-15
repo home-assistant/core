@@ -200,7 +200,7 @@ class MailboxPlatformsView(MailboxView):
     url = "/api/mailbox/platforms"
     name = "api:mailbox:platforms"
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
         platforms = []
         for mailbox in self.mailboxes:

@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Brugernavn"
                 },
-                "description": "Indtast venligst forbindelsesindstillinger for din MQTT-broker.",
-                "title": "MQTT"
+                "description": "Indtast venligst forbindelsesindstillinger for din MQTT-broker."
             },
             "hassio_confirm": {
                 "data": {

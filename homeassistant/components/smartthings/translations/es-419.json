@@ -16,9 +16,6 @@
                 "title": "Autorizar Home Assistant"
             },
             "pat": {
-                "data": {
-                    "access_token": "Token de acceso"
-                },
                 "description": "Ingrese un SmartThings [Token de acceso personal] ({token_url}) que se ha creado seg\u00fan las [instrucciones] ({component_url}). Esto se usar\u00e1 para crear la integraci\u00f3n de Home Assistant dentro de su cuenta SmartThings.",
                 "title": "Ingresar token de acceso personal"
             },

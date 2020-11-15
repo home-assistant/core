@@ -1,6 +1,4 @@
 """Support for Xiaomi Miio."""
-import logging
-
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
@@ -9,9 +7,7 @@ from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
 from .const import DOMAIN
 from .gateway import ConnectXiaomiGateway
 
-_LOGGER = logging.getLogger(__name__)
-
-GATEWAY_PLATFORMS = ["alarm_control_panel"]
+GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -38,7 +34,11 @@ async def async_setup_gateway_entry(
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
-    gateway_id = entry.data["gateway_id"]
+    gateway_id = entry.unique_id
+
+    # For backwards compat
+    if entry.unique_id.endswith("-gateway"):
+        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass)

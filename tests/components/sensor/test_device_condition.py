@@ -4,7 +4,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, UNIT_PERCENTAGE
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -57,6 +57,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_conditions = [
         {
@@ -93,17 +94,18 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"suffix": UNIT_PERCENTAGE},
+                "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"suffix": UNIT_PERCENTAGE},
+                "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
                 "type": "float",
@@ -128,6 +130,7 @@ async def test_get_condition_capabilities_none(hass, device_reg, entity_reg):
     config_entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     conditions = [
         {
@@ -160,6 +163,7 @@ async def test_if_state_not_above_below(hass, calls, caplog):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -193,6 +197,7 @@ async def test_if_state_above(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -250,6 +255,7 @@ async def test_if_state_below(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 
@@ -307,6 +313,7 @@ async def test_if_state_between(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     sensor1 = platform.ENTITIES["battery"]
 

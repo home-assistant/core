@@ -12,6 +12,7 @@ import async_timeout
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, callback
+from homeassistant.helpers.frame import warn_use
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
@@ -64,7 +65,13 @@ def async_create_clientsession(
     connector = _async_get_connector(hass, verify_ssl)
 
     clientsession = aiohttp.ClientSession(
-        connector=connector, headers={USER_AGENT: SERVER_SOFTWARE}, **kwargs,
+        connector=connector,
+        headers={USER_AGENT: SERVER_SOFTWARE},
+        **kwargs,
+    )
+
+    clientsession.close = warn_use(  # type: ignore
+        clientsession.close, "closes the Home Assistant aiohttp session"
     )
 
     if auto_cleanup:
@@ -111,13 +118,14 @@ async def async_aiohttp_proxy_stream(
     hass: HomeAssistantType,
     request: web.BaseRequest,
     stream: aiohttp.StreamReader,
-    content_type: str,
+    content_type: Optional[str],
     buffer_size: int = 102400,
     timeout: int = 10,
 ) -> web.StreamResponse:
     """Stream a stream to aiohttp web response."""
     response = web.StreamResponse()
-    response.content_type = content_type
+    if content_type is not None:
+        response.content_type = content_type
     await response.prepare(request)
 
     try:

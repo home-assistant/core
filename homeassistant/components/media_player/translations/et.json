@@ -1,4 +1,13 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} on j\u00f5udeolekus",
+            "is_off": "{entity_name} on v\u00e4lja l\u00fclitatud",
+            "is_on": "{entity_name} on sisse l\u00fclitatud",
+            "is_paused": "{entity_name} on peatatud",
+            "is_playing": "{entity_name} m\u00e4ngib"
+        }
+    },
     "state": {
         "_": {
             "idle": "Ootel",

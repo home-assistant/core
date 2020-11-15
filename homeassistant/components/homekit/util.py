@@ -4,13 +4,14 @@ import io
 import ipaddress
 import logging
 import os
+import re
 import secrets
 import socket
 
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import fan, media_player, sensor
+from homeassistant.components import binary_sensor, fan, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -31,12 +32,18 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_HUMIDITY_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
+    CONF_LINKED_OBSTRUCTION_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
     CONF_STREAM_ADDRESS,
+    CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
@@ -49,6 +56,8 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_COUNT,
+    DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
@@ -81,6 +90,9 @@ BASIC_INFO_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
+            binary_sensor.DOMAIN
+        ),
         vol.Optional(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
         ): cv.positive_int,
@@ -98,12 +110,15 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): vol.In(
             VALID_AUDIO_CODECS
         ),
-        vol.Optional(CONF_SUPPORT_AUDIO, default=False): cv.boolean,
+        vol.Optional(CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO): cv.boolean,
         vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
         vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
         vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
         vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
         vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
+        vol.Optional(CONF_STREAM_COUNT, default=DEFAULT_STREAM_COUNT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=10)
+        ),
         vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
             VALID_VIDEO_CODECS
         ),
@@ -113,6 +128,23 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
+        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(binary_sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
+            binary_sensor.DOMAIN
+        ),
+    }
+)
+
+HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
+)
+
+
+COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
+            binary_sensor.DOMAIN
+        )
     }
 )
 
@@ -222,6 +254,12 @@ def validate_entity_config(values):
         elif domain == "switch":
             config = SWITCH_TYPE_SCHEMA(config)
 
+        elif domain == "humidifier":
+            config = HUMIDIFIER_SCHEMA(config)
+
+        elif domain == "cover":
+            config = COVER_SCHEMA(config)
+
         else:
             config = BASIC_INFO_SCHEMA(config)
 
@@ -290,7 +328,7 @@ class HomeKitSpeedMapping:
             _LOGGER.warning(
                 "%s does not contain the speed setting "
                 "%s as its first element. "
-                "Assuming that %s is equivalent to 'off'.",
+                "Assuming that %s is equivalent to 'off'",
                 speed_list,
                 fan.SPEED_OFF,
                 speed_list[0],
@@ -319,7 +357,7 @@ class HomeKitSpeedMapping:
         for state, speed_range in reversed(self.speed_ranges.items()):
             if speed_range.start <= speed:
                 return state
-        return list(self.speed_ranges.keys())[0]
+        return list(self.speed_ranges)[0]
 
 
 def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
@@ -329,7 +367,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
 
     buffer = io.BytesIO()
     url = pyqrcode.create(uri)
-    url.svg(buffer, scale=5)
+    url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
     hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
@@ -414,6 +452,14 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
+def format_sw_version(version):
+    """Extract the version string in a format homekit can consume."""
+    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    if match:
+        return match.group(0)
+    return None
+
+
 def migrate_filesystem_state_data_for_primary_imported_entry_id(
     hass: HomeAssistant, entry_id: str
 ):
@@ -472,3 +518,13 @@ def find_next_available_port(start_port: int):
             if port == MAX_PORT:
                 raise
             continue
+
+
+def pid_is_alive(pid):
+    """Check to see if a process is alive."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        pass
+    return False

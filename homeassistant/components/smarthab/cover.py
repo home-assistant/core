@@ -7,6 +7,7 @@ from requests.exceptions import Timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -20,21 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the SmartHab roller shutters platform."""
-
-    hub = hass.data[DOMAIN][DATA_HUB]
-    devices = hub.get_device_list()
-
-    _LOGGER.debug("Found a total of %s devices", str(len(devices)))
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up SmartHab covers from a config entry."""
+    hub = hass.data[DOMAIN][config_entry.entry_id][DATA_HUB]
 
     entities = (
         SmartHabCover(cover)
-        for cover in devices
+        for cover in await hub.async_get_device_list()
         if isinstance(cover, pysmarthab.Shutter)
     )
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class SmartHabCover(CoverEntity):
@@ -51,7 +48,7 @@ class SmartHabCover(CoverEntity):
 
     @property
     def name(self) -> str:
-        """Return the display name of this light."""
+        """Return the display name of this cover."""
         return self._cover.label
 
     @property
@@ -65,12 +62,7 @@ class SmartHabCover(CoverEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
-
-        if self.current_cover_position is not None:
-            supported_features |= SUPPORT_SET_POSITION
-
-        return supported_features
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     @property
     def is_closed(self) -> bool:
@@ -80,24 +72,24 @@ class SmartHabCover(CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "window"
+        return DEVICE_CLASS_WINDOW
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self._cover.open()
+        await self._cover.async_open()
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close cover."""
-        self._cover.close()
+        await self._cover.async_close()
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self._cover.state = kwargs[ATTR_POSITION]
+        await self._cover.async_set_state(kwargs[ATTR_POSITION])
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for this cover."""
         try:
-            self._cover.update()
+            await self._cover.async_update()
         except Timeout:
             _LOGGER.error(
                 "Reached timeout while updating cover %s from API", self.entity_id

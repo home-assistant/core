@@ -175,6 +175,7 @@ async def test_car(hass, requests_mock_car_disabled_response):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -236,6 +237,7 @@ async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -262,6 +264,7 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -293,6 +296,7 @@ async def test_route_mode_shortest(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -324,6 +328,7 @@ async def test_route_mode_fastest(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -347,6 +352,7 @@ async def test_truck(hass, requests_mock_truck_response):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -378,6 +384,7 @@ async def test_public_transport(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -428,6 +435,7 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -478,6 +486,7 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -529,6 +538,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -557,7 +567,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     assert sensor.attributes.get(ATTR_ICON) == ICON_BICYCLE
 
 
-async def test_location_zone(hass, requests_mock_truck_response):
+async def test_location_zone(hass, requests_mock_truck_response, legacy_patchable_time):
     """Test that origin/destination supplied by a zone works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -592,6 +602,7 @@ async def test_location_zone(hass, requests_mock_truck_response):
         }
         assert await async_setup_component(hass, "zone", zone_config)
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -607,7 +618,9 @@ async def test_location_zone(hass, requests_mock_truck_response):
         _assert_truck_sensor(sensor)
 
 
-async def test_location_sensor(hass, requests_mock_truck_response):
+async def test_location_sensor(
+    hass, requests_mock_truck_response, legacy_patchable_time
+):
     """Test that origin/destination supplied by a sensor works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -631,6 +644,7 @@ async def test_location_sensor(hass, requests_mock_truck_response):
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -646,7 +660,9 @@ async def test_location_sensor(hass, requests_mock_truck_response):
         _assert_truck_sensor(sensor)
 
 
-async def test_location_person(hass, requests_mock_truck_response):
+async def test_location_person(
+    hass, requests_mock_truck_response, legacy_patchable_time
+):
     """Test that origin/destination supplied by a person works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -679,6 +695,7 @@ async def test_location_person(hass, requests_mock_truck_response):
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -694,7 +711,9 @@ async def test_location_person(hass, requests_mock_truck_response):
         _assert_truck_sensor(sensor)
 
 
-async def test_location_device_tracker(hass, requests_mock_truck_response):
+async def test_location_device_tracker(
+    hass, requests_mock_truck_response, legacy_patchable_time
+):
     """Test that origin/destination supplied by a device_tracker works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -727,6 +746,7 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -743,7 +763,7 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
 
 
 async def test_location_device_tracker_added_after_update(
-    hass, requests_mock_truck_response, caplog
+    hass, requests_mock_truck_response, legacy_patchable_time, caplog
 ):
     """Test that device_tracker added after first update works."""
     caplog.set_level(logging.ERROR)
@@ -761,6 +781,7 @@ async def test_location_device_tracker_added_after_update(
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -829,6 +850,7 @@ async def test_location_device_tracker_in_zone(
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -862,6 +884,7 @@ async def test_route_not_found(hass, requests_mock_credentials_check, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -885,7 +908,8 @@ async def test_pattern_origin(hass, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
-    assert len(caplog.records) == 1
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 2
     assert "invalid latitude" in caplog.text
 
 
@@ -904,7 +928,8 @@ async def test_pattern_destination(hass, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
-    assert len(caplog.records) == 1
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 2
     assert "invalid latitude" in caplog.text
 
 
@@ -935,6 +960,7 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
     assert len(caplog.records) == 1
     assert "Invalid credentials" in caplog.text
 
@@ -964,6 +990,7 @@ async def test_attribution(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -992,6 +1019,7 @@ async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -1018,6 +1046,7 @@ async def test_pattern_entity_state_with_space(hass, requests_mock_truck_respons
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
 
 async def test_delayed_update(hass, requests_mock_truck_response, caplog):
@@ -1044,6 +1073,7 @@ async def test_delayed_update(hass, requests_mock_truck_response, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
     assert await async_setup_component(hass, "sensor", sensor_config)
     hass.states.async_set(
         "sensor.origin", ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
@@ -1084,6 +1114,7 @@ async def test_arrival(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -1121,6 +1152,7 @@ async def test_departure(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -1147,7 +1179,8 @@ async def test_arrival_only_allowed_for_timetable(hass, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
-    assert len(caplog.records) == 1
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 2
     assert "[arrival] is an invalid option" in caplog.text
 
 
@@ -1171,5 +1204,6 @@ async def test_exclusive_arrival_and_departure(hass, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
-    assert len(caplog.records) == 1
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 2
     assert "two or more values in the same group of exclusion" in caplog.text

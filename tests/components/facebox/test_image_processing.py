@@ -156,6 +156,7 @@ def test_valid_file_path():
 async def test_setup_platform(hass, mock_healthybox):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
@@ -166,12 +167,14 @@ async def test_setup_platform_with_auth(hass, mock_healthybox):
     valid_config_auth[ip.DOMAIN][CONF_PASSWORD] = MOCK_PASSWORD
 
     await async_setup_component(hass, ip.DOMAIN, valid_config_auth)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
 async def test_process_image(hass, mock_healthybox, mock_image):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     face_events = []
@@ -215,6 +218,7 @@ async def test_process_image(hass, mock_healthybox, mock_image):
 async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
     """Test process_image errors."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     # Test connection error.
@@ -246,6 +250,7 @@ async def test_teach_service(
 ):
     """Test teaching of facebox."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     # Patch out 'is_allowed_path' as the mock files aren't allowed
@@ -319,6 +324,7 @@ async def test_setup_platform_with_name(hass, mock_healthybox):
     valid_config_named[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME
 
     await async_setup_component(hass, ip.DOMAIN, valid_config_named)
+    await hass.async_block_till_done()
     assert hass.states.get(named_entity_id)
     state = hass.states.get(named_entity_id)
     assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME

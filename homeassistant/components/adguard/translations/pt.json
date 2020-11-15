@@ -1,6 +1,9 @@
 {
     "config": {
         "step": {
+            "hassio_confirm": {
+                "title": "AdGuard Home via Hass.io add-on"
+            },
             "user": {
                 "data": {
                     "host": "Servidor",

@@ -12,6 +12,7 @@
             "options_1": {
                 "data": {
                     "bool": "Izbirna logi\u010dna vrednost",
+                    "constant": "Constant",
                     "int": "\u0160tevil\u010dni vnos"
                 }
             },

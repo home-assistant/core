@@ -5,12 +5,12 @@
         },
         "error": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "cannot_connect": "Feeler beim verbannen, iwwerpr\u00e9ift w.e.g d'Adresse vum Apparat"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "De Numm oder IP Adresse vun \u00e4rem Solar-Log Apparat",
+                    "host": "Host",
                     "name": "Prefix dee fir \u00e4r Solar-Log Sensoren soll benotz ginn"
                 },
                 "title": "D\u00e9fin\u00e9iert \u00e4r Solar-Log Verbindung"

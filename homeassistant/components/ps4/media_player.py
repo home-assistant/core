@@ -49,7 +49,7 @@ SUPPORT_PS4 = (
     | SUPPORT_SELECT_SOURCE
 )
 
-ICON = "mdi:playstation"
+ICON = "mdi:sony-playstation"
 MEDIA_IMAGE_DEFAULT = None
 
 DEFAULT_RETRIES = 2
@@ -163,7 +163,7 @@ class PS4Device(MediaPlayerEntity):
         status = self._ps4.status
 
         if status is not None:
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
 
@@ -300,7 +300,7 @@ class PS4Device(MediaPlayerEntity):
                 self._media_image,
                 self._media_type,
             )
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
 
         self.get_source_list()
 
@@ -324,7 +324,7 @@ class PS4Device(MediaPlayerEntity):
                 }
             }
             games.update(game)
-            save_games(self.hass, games)
+            save_games(self.hass, games, self._unique_id)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""
@@ -452,6 +452,10 @@ class PS4Device(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn on the media player."""
         self._ps4.wakeup()
+
+    async def async_toggle(self):
+        """Toggle media player."""
+        await self._ps4.toggle()
 
     async def async_media_pause(self):
         """Send keypress ps to return to menu."""

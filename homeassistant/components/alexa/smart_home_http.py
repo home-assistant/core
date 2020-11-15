@@ -3,17 +3,11 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
 from .auth import Auth
 from .config import AbstractConfig
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_ENDPOINT,
-    CONF_ENTITY_CONFIG,
-    CONF_FILTER,
-    CONF_LOCALE,
-)
+from .const import CONF_ENDPOINT, CONF_ENTITY_CONFIG, CONF_FILTER, CONF_LOCALE
 from .smart_home import async_handle_message
 from .state_report import async_enable_proactive_mode
 

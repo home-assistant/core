@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Konfiguracja Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Poka\u017c nieaktywne urz\u0105dzenia Tile"
+                },
+                "title": "Konfiguracja urz\u0105dzenia Tile"
+            }
+        }
+    }
+}

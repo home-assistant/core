@@ -8,6 +8,7 @@ import zigpy.profiles.zll
 import zigpy.zcl as zcl
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
@@ -22,6 +23,8 @@ from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
+
+PHILLIPS_REMOTE_CLUSTER = 0xFC00
 
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
@@ -84,21 +87,24 @@ BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
 
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
+CLIMATE_CLUSTERS = SetRegistry()
 CUSTOM_CLUSTER_MAPPINGS = {}
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
         SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: DEVICE_TRACKER,
+        zigpy.profiles.zha.DeviceType.THERMOSTAT: CLIMATE,
         zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
         zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
         zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
+        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: COVER,
         zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
+        zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
     },
     zigpy.profiles.zll.PROFILE_ID: {
@@ -120,6 +126,7 @@ CLIENT_CHANNELS_REGISTRY = DictRegistry()
 
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
+    CLIMATE: CLIMATE_CLUSTERS,
     DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
     LIGHT: LIGHT_CLUSTERS,
     SWITCH: SWITCH_CLUSTERS,
@@ -173,10 +180,12 @@ class MatchRule:
         """
         weight = 0
         if self.models:
-            weight += 401 - len(self.models)
+            weight += 401 - (1 if callable(self.models) else len(self.models))
 
         if self.manufacturers:
-            weight += 301 - len(self.manufacturers)
+            weight += 301 - (
+                1 if callable(self.manufacturers) else len(self.manufacturers)
+            )
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)
@@ -233,12 +242,9 @@ class MatchRule:
         return matches
 
 
-RegistryDictType = Dict[
-    str, Dict[MatchRule, CALLABLE_T]
-]  # pylint: disable=invalid-name
+RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
 
-
-GroupRegistryDictType = Dict[str, CALLABLE_T]  # pylint: disable=invalid-name
+GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
 class ZHAEntityRegistry:

@@ -324,96 +324,58 @@ def find_frontend_states():
     migrate_project_keys_translations(FRONTEND_PROJECT_ID, CORE_PROJECT_ID, to_migrate)
 
 
-def clean_wled():
-    """Clean WLED strings."""
-    offending_translation = "Wykryto urządzenie [%key:component::wled::title%]"
-    ignore_lang = ["pl"]
-    core_api = get_api(CORE_PROJECT_ID)
-    translations = core_api.keys_list(
-        {
-            "include_translations": 1,
-            "filter_keys": ",".join(
-                [
-                    "component::wled::config::flow_title",
-                    "component::wled::config::step::user::description",
-                    "component::wled::config::step::user::data::host",
-                    "component::wled::config::step::zeroconf_confirm::description",
-                    "component::wled::config::step::zeroconf_confirm::title",
-                    "component::wled::config::error::connection_error",
-                    "component::wled::config::abort::already_configured",
-                    "component::wled::config::abort::connection_error",
-                ]
-            ),
-        }
-    )
-    bad_data = {}
-    for translation in translations:
-        bad_key_data = []
+def apply_data_references(to_migrate):
+    """Apply references."""
+    for strings_file in INTEGRATIONS_DIR.glob("*/strings.json"):
+        strings = json.loads(strings_file.read_text())
+        steps = strings.get("config", {}).get("step")
 
-        for key_trans in translation["translations"]:
-            if (
-                key_trans["translation"] == offending_translation
-                and key_trans["language_iso"] not in ignore_lang
-            ):
-                bad_key_data.append(key_trans["translation_id"])
+        if not steps:
+            continue
 
-        if bad_key_data:
-            bad_data[translation["key_id"]] = bad_key_data
+        changed = False
 
-    pprint(
-        [
-            {
-                "key_id": key_id,
-                "translations": [
-                    {"translation_id": trans_id, "translation": ""}
-                    for trans_id in trans_ids
-                ],
-            }
-            for key_id, trans_ids in bad_data.items()
-        ]
-    )
-    print(sum(len(val) for val in bad_data.values()))
+        for step_data in steps.values():
+            step_data = step_data.get("data", {})
+            for key, value in step_data.items():
 
-    return
+                if key in to_migrate and value != to_migrate[key]:
+                    if key.split("_")[0].lower() in value.lower():
+                        step_data[key] = to_migrate[key]
+                        changed = True
+                    elif value.startswith("[%key"):
+                        pass
+                    else:
+                        print(
+                            f"{strings_file}: Skipped swapping '{key}': '{value}' does not contain '{key}'"
+                        )
 
-    core_api.keys_bulk_update(
-        [
-            {
-                "key_id": key_id,
-                "translations": [
-                    {"translation_id": trans_id, "translation": ""}
-                    for trans_id in trans_ids
-                ],
-            }
-            for key_id, trans_ids in bad_data.items()
-        ]
-    )
+        if not changed:
+            continue
+
+        strings_file.write_text(json.dumps(strings, indent=2))
 
 
 def run():
     """Migrate translations."""
-    clean_wled()
+    apply_data_references(
+        {
+            "host": "[%key:common::config_flow::data::host%]",
+            "username": "[%key:common::config_flow::data::username%]",
+            "password": "[%key:common::config_flow::data::password%]",
+            "port": "[%key:common::config_flow::data::port%]",
+            "usb_path": "[%key:common::config_flow::data::usb_path%]",
+            "access_token": "[%key:common::config_flow::data::access_token%]",
+            "api_key": "[%key:common::config_flow::data::api_key%]",
+        }
+    )
 
-    # Import new common keys
+    # Rename existing keys to common keys,
+    # Old keys have been updated with reference to the common key
     # rename_keys(
     #     CORE_PROJECT_ID,
     #     {
-    #         "component::netatmo::config::step::pick_implementation::title": "common::config_flow::title::oauth2_pick_implementation",
-    #         "component::doorbird::config::step::user::data::username": "common::config_flow::data::username",
-    #         "component::doorbird::config::step::user::data::password": "common::config_flow::data::password",
-    #         "component::adguard::config::step::user::data::host": "common::config_flow::data::host",
-    #         "component::adguard::config::step::user::data::port": "common::config_flow::data::port",
-    #         "component::zha::config::step::user::data::usb_path": "common::config_flow::data::usb_path",
-    #         "component::smartthings::config::step::pat::data::access_token": "common::config_flow::data::access_token",
-    #         "component::airvisual::config::step::geography::data::api_key": "common::config_flow::data::api_key",
-    #         "component::doorbird::config::error::invalid_auth": "common::config_flow::error::invalid_auth",
-    #         "component::airvisual::config::error::invalid_api_key": "common::config_flow::error::invalid_api_key",
-    #         "component::tibber::config::error::invalid_access_token": "common::config_flow::error::invalid_access_token",
-    #         "component::doorbird::config::error::unknown": "common::config_flow::error::unknown",
-    #         "component::life360::config::abort::user_already_configured": "common::config_flow::abort::already_configured_account",
-    #         "component::xiaomi_miio::config::abort::already_configured": "common::config_flow::abort::already_configured_device",
-    #         "component::netatmo::config::abort::missing_configuration": "common::config_flow::abort::oauth2_missing_configuration",
-    #         "component::netatmo::config::abort::authorize_url_timeout": "common::config_flow::abort::oauth2_authorize_url_timeout",
+    #         "component::blebox::config::step::user::data::host": "common::config_flow::data::ip",
     #     },
     # )
 

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adresse."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Dune HD Integratioun ariichten. Falls et Problemer mat der Konfiguratioun g\u00ebtt g\u00e9i op:\nhttps://www.home-assistant.io/integrations/dunehd \nStell s\u00e9cher dass d\u00e4in Ofspiller un ass.",
+                "title": "Dune HD"
+            }
+        }
+    }
+}

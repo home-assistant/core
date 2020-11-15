@@ -1,6 +1,4 @@
 """Support for Homematic lights."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -16,8 +14,6 @@ from homeassistant.components.light import (
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
@@ -111,7 +107,7 @@ class HMLight(HMDevice, LightEntity):
         ):
             self._hmdevice.on(self._channel)
 
-        if ATTR_HS_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs and self.supported_features & SUPPORT_COLOR:
             self._hmdevice.set_hs_color(
                 hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,

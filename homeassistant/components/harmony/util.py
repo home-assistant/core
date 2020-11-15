@@ -9,11 +9,10 @@ from .const import DOMAIN
 
 def find_unique_id_for_remote(harmony: HarmonyAPI):
     """Find the unique id for both websocket and xmpp clients."""
-    websocket_unique_id = harmony.hub_config.info.get("activeRemoteId")
-    if websocket_unique_id is not None:
-        return str(websocket_unique_id)
+    if harmony.hub_id is not None:
+        return str(harmony.hub_id)
 
-    # fallback to the xmpp unique id if websocket is not available
+    # fallback timeStampHash if Hub ID is not available
     return harmony.config["global"]["timeStampHash"].split(";")[-1]
 
 
@@ -50,3 +49,14 @@ def find_matching_config_entries_for_host(hass, host):
         if entry.data[CONF_HOST] == host:
             return entry
     return None
+
+
+def list_names_from_hublist(hub_list):
+    """Extract the name key value from a hub list of names."""
+    if not hub_list:
+        return []
+    return [
+        element["name"]
+        for element in hub_list
+        if element.get("name") and element.get("id") != -1
+    ]

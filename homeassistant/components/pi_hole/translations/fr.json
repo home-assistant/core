@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Connexion impossible"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "host": "H\u00f4te",
+                    "location": "Emplacement",
+                    "name": "Nom",
+                    "port": "Port",
+                    "ssl": "Utiliser SSL",
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
+                }
+            }
+        }
+    }
+}

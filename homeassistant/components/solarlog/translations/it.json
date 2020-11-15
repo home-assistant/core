@@ -5,12 +5,12 @@
         },
         "error": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "cannot_connect": "Impossibile connettersi, verifica l'indirizzo host"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Il nome host o l'indirizzo IP del dispositivo Solar-Log",
+                    "host": "Host",
                     "name": "Il prefisso da utilizzare per i sensori Solar-Log"
                 },
                 "title": "Definire la connessione Solar-Log"

@@ -2,5 +2,8 @@
   "domain": "opengarage",
   "name": "OpenGarage",
   "documentation": "https://www.home-assistant.io/integrations/opengarage",
-  "codeowners": []
+  "codeowners": [
+    "@danielhiversen"
+  ],
+  "requirements": ["open-garage==0.1.4"]
 }

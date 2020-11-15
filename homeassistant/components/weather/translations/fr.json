@@ -8,14 +8,14 @@
             "hail": "Gr\u00eale",
             "lightning": "Orage",
             "lightning-rainy": "Orage / Pluie",
-            "partlycloudy": "Partiellement nuageux",
+            "partlycloudy": "\u00c9claircies",
             "pouring": "Averses",
             "rainy": "Pluie",
-            "snowy": "Neige",
-            "snowy-rainy": "Neige / Pluie",
-            "sunny": "Soleil",
-            "windy": "Vent",
-            "windy-variant": "Vent"
+            "snowy": "Neigeux",
+            "snowy-rainy": "Neigeux, pluvieux",
+            "sunny": "Ensoleill\u00e9",
+            "windy": "Venteux",
+            "windy-variant": "Venteux"
         }
     }
 }

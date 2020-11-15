@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Conta j\u00e1 configurada",
+            "reauth_successful": "Token de Acesso actualizado com sucesso"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "Email"
+                }
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token de Acesso",
+                    "email": "Email"
+                }
+            }
+        }
+    }
+}

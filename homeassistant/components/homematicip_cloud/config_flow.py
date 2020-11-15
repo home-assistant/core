@@ -47,6 +47,9 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.info("Connection to HomematicIP Cloud established")
                 return await self.async_step_link()
 
+            _LOGGER.info("Connection to HomematicIP Cloud failed")
+            errors["base"] = "invalid_sgtin_or_pin"
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(

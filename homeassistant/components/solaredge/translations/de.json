@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Der API-Schl\u00fcssel f\u00fcr diese Site",
+                    "api_key": "API-Schl\u00fcssel",
                     "name": "Der Name dieser Installation",
                     "site_id": "Die SolarEdge-Site-ID"
                 },

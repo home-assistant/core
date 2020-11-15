@@ -6,7 +6,12 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -50,7 +55,9 @@ ATTR_DIRECTION = "direction"
 def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
     state = hass.states.get(entity_id)
-    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
+    if ATTR_SPEED in state.attributes:
+        return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
+    return state.state == STATE_ON
 
 
 async def async_setup(hass, config: dict):
@@ -107,10 +114,10 @@ class FanEntity(ToggleEntity):
 
     async def async_set_speed(self, speed: str):
         """Set the speed of the fan."""
-        if speed is SPEED_OFF:
+        if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
-            await self.hass.async_add_job(self.set_speed, speed)
+            await self.hass.async_add_executor_job(self.set_speed, speed)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -118,7 +125,7 @@ class FanEntity(ToggleEntity):
 
     async def async_set_direction(self, direction: str):
         """Set the direction of the fan."""
-        await self.hass.async_add_job(self.set_direction, direction)
+        await self.hass.async_add_executor_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
@@ -128,17 +135,19 @@ class FanEntity(ToggleEntity):
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: Optional[str] = None, **kwargs):
         """Turn on the fan."""
-        if speed is SPEED_OFF:
+        if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
-            await self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))
+            await self.hass.async_add_executor_job(
+                ft.partial(self.turn_on, speed, **kwargs)
+            )
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
 
     async def async_oscillate(self, oscillating: bool):
         """Oscillate the fan."""
-        await self.hass.async_add_job(self.oscillate, oscillating)
+        await self.hass.async_add_executor_job(self.oscillate, oscillating)
 
     @property
     def is_on(self):

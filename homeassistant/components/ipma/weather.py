@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
@@ -25,7 +25,8 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
@@ -89,9 +90,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
+    mode = config_entry.data[CONF_MODE]
 
     api = await async_get_api(hass)
     location = await async_get_location(hass, api, latitude, longitude)
+
+    # Migrate old unique_id
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        # Reject if new unique_id
+        if entity_entry.unique_id.count(",") == 2:
+            return None
+
+        new_unique_id = (
+            f"{location.station_latitude}, {location.station_longitude}, {mode}"
+        )
+
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await entity_registry.async_migrate_entries(
+        hass, config_entry.entry_id, _async_migrator
+    )
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
 
@@ -157,7 +181,7 @@ class IPMAWeather(WeatherEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id."""
-        return f"{self._location.station_latitude}, {self._location.station_longitude}"
+        return f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
 
     @property
     def attribution(self):
@@ -256,9 +280,9 @@ class IPMAWeather(WeatherEntity):
                         None,
                     ),
                     ATTR_FORECAST_TEMP: float(data_in.feels_like_temperature),
-                    ATTR_FORECAST_PRECIPITATION: (
-                        data_in.precipitation_probability
-                        if float(data_in.precipitation_probability) >= 0
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                        int(float(data_in.precipitation_probability))
+                        if int(float(data_in.precipitation_probability)) >= 0
                         else None
                     ),
                     ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
@@ -281,7 +305,7 @@ class IPMAWeather(WeatherEntity):
                     ),
                     ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
                     ATTR_FORECAST_TEMP: data_in.max_temperature,
-                    ATTR_FORECAST_PRECIPITATION: data_in.precipitation_probability,
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.precipitation_probability,
                     ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
                     ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
                 }

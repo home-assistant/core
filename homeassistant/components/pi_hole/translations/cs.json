@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "host": "Hostitel",
+                    "location": "Um\u00edst\u011bn\u00ed",
+                    "name": "Jm\u00e9no",
+                    "port": "Port",
+                    "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
+                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
+                }
+            }
+        }
+    }
+}

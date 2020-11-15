@@ -1,7 +1,7 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -56,7 +56,7 @@ class LeafBatterySensor(LeafEntity):
     @property
     def unit_of_measurement(self):
         """Battery state measured in percentage."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def icon(self):

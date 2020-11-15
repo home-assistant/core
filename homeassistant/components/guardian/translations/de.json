@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-Adresse",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

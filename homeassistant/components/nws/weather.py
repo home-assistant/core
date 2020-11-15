@@ -1,8 +1,12 @@
 """Support for NWS weather service."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -24,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -31,7 +36,6 @@ from . import base_unique_id
 from .const import (
     ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
-    ATTR_FORECAST_PRECIP_PROB,
     ATTRIBUTION,
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
@@ -46,6 +50,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+OBSERVATION_VALID_TIME = timedelta(minutes=20)
+FORECAST_VALID_TIME = timedelta(minutes=45)
 
 
 def convert_condition(time, weather):
@@ -70,9 +77,9 @@ def convert_condition(time, weather):
 
     if cond == "clear":
         if time == "day":
-            return "sunny", max(prec_probs)
+            return ATTR_CONDITION_SUNNY, max(prec_probs)
         if time == "night":
-            return "clear-night", max(prec_probs)
+            return ATTR_CONDITION_CLEAR_NIGHT, max(prec_probs)
     return cond, max(prec_probs)
 
 
@@ -185,17 +192,16 @@ class NWSWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the current windspeed."""
-        wind_m_s = None
+        wind_km_hr = None
         if self.observation:
-            wind_m_s = self.observation.get("windSpeed")
-        if wind_m_s is None:
+            wind_km_hr = self.observation.get("windSpeed")
+        if wind_km_hr is None:
             return None
-        wind_m_hr = wind_m_s * 3600
 
         if self.is_metric:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_KILOMETERS)
+            wind = wind_km_hr
         else:
-            wind = convert_distance(wind_m_hr, LENGTH_METERS, LENGTH_MILES)
+            wind = convert_distance(wind_km_hr, LENGTH_KILOMETERS, LENGTH_MILES)
         return round(wind)
 
     @property
@@ -263,7 +269,7 @@ class NWSWeather(WeatherEntity):
             else:
                 cond, precip = None, None
             data[ATTR_FORECAST_CONDITION] = cond
-            data[ATTR_FORECAST_PRECIP_PROB] = precip
+            data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = precip
 
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")
@@ -287,10 +293,23 @@ class NWSWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return (
+        last_success = (
             self.coordinator_observation.last_update_success
             and self.coordinator_forecast.last_update_success
         )
+        if (
+            self.coordinator_observation.last_update_success_time
+            and self.coordinator_forecast.last_update_success_time
+        ):
+            last_success_time = (
+                utcnow() - self.coordinator_observation.last_update_success_time
+                < OBSERVATION_VALID_TIME
+                and utcnow() - self.coordinator_forecast.last_update_success_time
+                < FORECAST_VALID_TIME
+            )
+        else:
+            last_success_time = False
+        return last_success or last_success_time
 
     async def async_update(self):
         """Update the entity.
@@ -299,3 +318,8 @@ class NWSWeather(WeatherEntity):
         """
         await self.coordinator_observation.async_request_refresh()
         await self.coordinator_forecast.async_request_refresh()
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self.mode == DAYNIGHT

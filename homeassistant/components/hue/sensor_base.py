@@ -61,11 +61,11 @@ class SensorManager:
                 return await self.bridge.async_request_call(
                     self.bridge.api.sensors.update
                 )
-        except Unauthorized:
+        except Unauthorized as err:
             await self.bridge.handle_unauthorized_error()
-            raise UpdateFailed("Unauthorized")
+            raise UpdateFailed("Unauthorized") from err
         except AiohueException as err:
-            raise UpdateFailed(f"Hue error: {err}")
+            raise UpdateFailed(f"Hue error: {err}") from err
 
     async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
@@ -150,7 +150,9 @@ class SensorManager:
 
         self.bridge.hass.async_create_task(
             remove_devices(
-                self.bridge, [value.uniqueid for value in api.values()], current,
+                self.bridge,
+                [value.uniqueid for value in api.values()],
+                current,
             )
         )
 

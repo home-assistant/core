@@ -11,9 +11,9 @@ import attr
 class Error:
     """Error validating an integration."""
 
-    plugin = attr.ib(type=str)
-    error = attr.ib(type=str)
-    fixable = attr.ib(type=bool, default=False)
+    plugin: str = attr.ib()
+    error: str = attr.ib()
+    fixable: bool = attr.ib(default=False)
 
     def __str__(self) -> str:
         """Represent error as string."""
@@ -27,6 +27,7 @@ class Config:
     specific_integrations: Optional[pathlib.Path] = attr.ib()
     root: pathlib.Path = attr.ib()
     action: str = attr.ib()
+    requirements: bool = attr.ib()
     errors: List[Error] = attr.ib(factory=list)
     cache: Dict[str, Any] = attr.ib(factory=dict)
 
@@ -63,15 +64,20 @@ class Integration:
 
         return integrations
 
-    path = attr.ib(type=pathlib.Path)
-    manifest = attr.ib(type=dict, default=None)
-    errors = attr.ib(type=List[Error], factory=list)
-    warnings = attr.ib(type=List[Error], factory=list)
+    path: pathlib.Path = attr.ib()
+    manifest: Optional[dict] = attr.ib(default=None)
+    errors: List[Error] = attr.ib(factory=list)
+    warnings: List[Error] = attr.ib(factory=list)
 
     @property
     def domain(self) -> str:
         """Integration domain."""
         return self.path.name
+
+    @property
+    def disabled(self) -> Optional[str]:
+        """List of disabled."""
+        return self.manifest.get("disabled")
 
     @property
     def requirements(self) -> List[str]:

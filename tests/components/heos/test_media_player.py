@@ -120,6 +120,7 @@ async def test_updates_from_signals(hass, config_entry, config, controller, favo
         const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
+
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_PLAYING
 
@@ -227,6 +228,7 @@ async def test_updates_from_players_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
     await event.wait()
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_PLAYING
 
 
@@ -614,6 +616,29 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
     assert "Unable to play media: Failure (1)" in caplog.text
 
 
+async def test_play_media_music(hass, config_entry, config, controller, caplog):
+    """Test the play media service with type music."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    url = "http://news/podcast.mp3"
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_ID: url,
+            },
+            blocking=True,
+        )
+        player.play_url.assert_called_once_with(url)
+        player.play_url.reset_mock()
+        player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
+    assert "Unable to play media: Failure (1)" in caplog.text
+
+
 async def test_play_media_quick_select(
     hass, config_entry, config, controller, caplog, quick_selects
 ):
@@ -671,7 +696,7 @@ async def test_play_media_playlist(
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     playlist = playlists[0]
-    # Play without enqueing
+    # Play without enqueuing
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -685,7 +710,7 @@ async def test_play_media_playlist(
     player.add_to_queue.assert_called_once_with(
         playlist, const.ADD_QUEUE_REPLACE_AND_PLAY
     )
-    # Play with enqueing
+    # Play with enqueuing
     player.add_to_queue.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,

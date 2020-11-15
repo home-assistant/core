@@ -1,7 +1,4 @@
 """Support for FutureNow Ethernet unit outputs as Lights."""
-
-import logging
-
 import pyfnip
 import voluptuous as vol
 
@@ -13,8 +10,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DRIVER = "driver"
 CONF_DRIVER_FNIP6X10AD = "FNIP6x10ad"

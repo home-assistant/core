@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "Denon AVR \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4.",
+            "not_denonavr_manufacturer": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84\uac00 \uc544\ub2d9\ub2c8\ub2e4. \ubc1c\uacac\ub41c \uc81c\uc870\uc0ac\uac00 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4",
+            "not_denonavr_missing": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84\uac00 \uc544\ub2d9\ub2c8\ub2e4. \uac80\uc0c9 \uc815\ubcf4\uac00 \uc644\uc804\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "discovery_error": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84\ub97c \ucc3e\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84: {name}",
+        "step": {
+            "confirm": {
+                "description": "\ub9ac\uc2dc\ubc84 \ucd94\uac00\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694",
+                "title": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84"
+            },
+            "select": {
+                "data": {
+                    "select_host": "\ub9ac\uc2dc\ubc84 IP"
+                },
+                "description": "\ub9ac\uc2dc\ubc84 \uc5f0\uacb0\uc744 \ucd94\uac00\ud558\ub824\uba74 \uc124\uc815\uc744 \ub2e4\uc2dc \uc2e4\ud589\ud574\uc8fc\uc138\uc694",
+                "title": "\uc5f0\uacb0\ud560 \ub9ac\uc2dc\ubc84\ub97c \uc120\ud0dd\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c"
+                },
+                "description": "\ub9ac\uc2dc\ubc84\uc5d0 \uc5f0\uacb0\ud569\ub2c8\ub2e4. IP \uc8fc\uc18c\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc740 \uacbd\uc6b0 \uc790\ub3d9 \uac80\uc0c9\uc774 \uc0ac\uc6a9\ub429\ub2c8\ub2e4",
+                "title": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "\ubaa8\ub4e0 \uc785\ub825\uc18c\uc2a4 \ud45c\uc2dc",
+                    "zone2": "Zone 2 \uc124\uc815",
+                    "zone3": "Zone 3 \uc124\uc815"
+                },
+                "description": "\uc635\uc158 \uc124\uc815 \uc9c0\uc815",
+                "title": "Denon AVR \ub124\ud2b8\uc6cc\ud06c \ub9ac\uc2dc\ubc84"
+            }
+        }
+    }
+}

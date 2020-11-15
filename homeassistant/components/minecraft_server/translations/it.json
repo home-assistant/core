@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'host \u00e8 gi\u00e0 configurato."
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi al server. Controllare l'host e la porta e riprovare. Assicurarsi inoltre che si esegue almeno Minecraft versione 1.7 sul server.",

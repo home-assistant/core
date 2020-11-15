@@ -4,14 +4,14 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare.",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Indirizzo E-Mail",
+                    "email": "E-mail",
                     "password": "Password"
                 },
                 "title": "Connettiti al tuo Sense Energy Monitor"

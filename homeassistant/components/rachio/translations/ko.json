@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Rachio \uacc4\uc815\uc758 API \ud0a4."
+                    "api_key": "API \ud0a4"
                 },
                 "description": "https://app.rach.io/ \uc758 API \ud0a4\uac00 \ud544\uc694\ud569\ub2c8\ub2e4. \uacc4\uc815 \uc124\uc815\uc744 \uc120\ud0dd\ud55c \ub2e4\uc74c 'GET API KEY ' \ub97c \ud074\ub9ad\ud574\uc8fc\uc138\uc694.",
                 "title": "Rachio \uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"

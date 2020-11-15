@@ -1,8 +1,7 @@
 """Home Assistant Switcher Component."""
-
 from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
 from datetime import datetime, timedelta
-from logging import getLogger
+import logging
 from typing import Dict, Optional
 
 from aioswitcher.api import SwitcherV2Api
@@ -28,7 +27,7 @@ from homeassistant.helpers.typing import (
 )
 from homeassistant.loader import bind_hass
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "switcher_kis"
 
@@ -85,18 +84,12 @@ async def _validate_edit_permission(
     """Use for validating user control permissions."""
     splited = split_entity_id(entity_id)
     if splited[0] != SWITCH_DOMAIN or not splited[1].startswith(DOMAIN):
-        raise Unauthorized(
-            context=context, entity_id=entity_id, permission=(POLICY_EDIT,)
-        )
+        raise Unauthorized(context=context, entity_id=entity_id, permission=POLICY_EDIT)
     user = await hass.auth.async_get_user(context.user_id)
     if user is None:
-        raise UnknownUser(
-            context=context, entity_id=entity_id, permission=(POLICY_EDIT,)
-        )
+        raise UnknownUser(context=context, entity_id=entity_id, permission=POLICY_EDIT)
     if not user.permissions.check_entity(entity_id, POLICY_EDIT):
-        raise Unauthorized(
-            context=context, entity_id=entity_id, permission=(POLICY_EDIT,)
-        )
+        raise Unauthorized(context=context, entity_id=entity_id, permission=POLICY_EDIT)
 
 
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:

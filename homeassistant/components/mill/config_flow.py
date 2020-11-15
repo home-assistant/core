@@ -1,6 +1,4 @@
 """Adds config flow for Mill integration."""
-import logging
-
 from mill import Mill
 import voluptuous as vol
 
@@ -9,8 +7,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -27,22 +23,28 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors={},
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors={},
             )
 
         username = user_input[CONF_USERNAME].replace(" ", "")
         password = user_input[CONF_PASSWORD].replace(" ", "")
 
         mill_data_connection = Mill(
-            username, password, websession=async_get_clientsession(self.hass),
+            username,
+            password,
+            websession=async_get_clientsession(self.hass),
         )
 
         errors = {}
 
         if not await mill_data_connection.connect():
-            errors["connection_error"] = "connection_error"
+            errors["cannot_connect"] = "cannot_connect"
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors,
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors=errors,
             )
 
         unique_id = username
@@ -51,5 +53,6 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=unique_id, data={CONF_USERNAME: username, CONF_PASSWORD: password},
+            title=unique_id,
+            data={CONF_USERNAME: username, CONF_PASSWORD: password},
         )

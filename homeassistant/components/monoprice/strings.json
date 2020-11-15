@@ -4,7 +4,7 @@
       "user": {
         "title": "Connect to the device",
         "data": {
-          "port": "Serial port",
+          "port": "[%key:common::config_flow::data::port%]",
           "source_1": "Name of source #1",
           "source_2": "Name of source #2",
           "source_3": "Name of source #3",
@@ -15,10 +15,12 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": { "already_configured": "Device is already configured" }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
   },
   "options": {
     "step": {

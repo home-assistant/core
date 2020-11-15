@@ -38,22 +38,6 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not ssdp:
             continue
 
-        try:
-            with open(str(integration.path / "config_flow.py")) as fp:
-                content = fp.read()
-                if (
-                    " async_step_ssdp" not in content
-                    and "AbstractOAuth2FlowHandler" not in content
-                    and "register_discovery_flow" not in content
-                ):
-                    integration.add_error("ssdp", "Config flow has no async_step_ssdp")
-                    continue
-        except FileNotFoundError:
-            integration.add_error(
-                "ssdp", "SSDP info in a manifest requires a config flow to exist"
-            )
-            continue
-
         for matcher in ssdp:
             data[domain].append(sort_dict(matcher))
 

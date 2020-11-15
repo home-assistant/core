@@ -61,7 +61,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     # Create a new sensor for each sensor type.
     entities = []
     for sensor_key in SENSOR_TYPES:
-        sensor = SolarlogSensor(platform_name, sensor_key, data)
+        sensor = SolarlogSensor(entry.entry_id, platform_name, sensor_key, data)
         entities.append(sensor)
 
     async_add_entities(entities, True)
@@ -71,20 +71,28 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SolarlogSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, platform_name, sensor_key, data):
+    def __init__(self, entry_id, platform_name, sensor_key, data):
         """Initialize the sensor."""
         self.platform_name = platform_name
         self.sensor_key = sensor_key
         self.data = data
+        self.entry_id = entry_id
         self._state = None
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        self._label = SENSOR_TYPES[self.sensor_key][1]
         self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._icon = SENSOR_TYPES[self.sensor_key][3]
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return f"{self.entry_id}_{self.sensor_key}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self.platform_name} {self._label}"
 
     @property
     def unit_of_measurement(self):
@@ -94,7 +102,7 @@ class SolarlogSensor(Entity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][3]
+        return self._icon
 
     @property
     def state(self):

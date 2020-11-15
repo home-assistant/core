@@ -1,26 +1,25 @@
 """Webhook tests for mobile_app."""
-import logging
-
 import pytest
 
+from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
+from tests.async_mock import patch
 from tests.common import async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def encrypt_payload(secret_key, payload):
     """Return a encrypted payload given a key and dictionary of data."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -42,8 +41,8 @@ def encrypt_payload(secret_key, payload):
 def decrypt_payload(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -67,13 +66,26 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
     """Test that we render templates properly."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json=RENDER_TEMPLATE,
+        json={
+            "type": "render_template",
+            "data": {
+                "one": {"template": "Hello world"},
+                "two": {"template": "{{ now() | random }}"},
+                "three": {"template": "{{ now() 3 }}"},
+            },
+        },
     )
 
     assert resp.status == 200
 
     json = await resp.json()
-    assert json == {"one": "Hello world"}
+    assert json == {
+        "one": "Hello world",
+        "two": {"error": "TypeError: object of type 'datetime.datetime' has no len()"},
+        "three": {
+            "error": "TemplateSyntaxError: expected token 'end of print statement', got 'integer'"
+        },
+    }
 
 
 async def test_webhook_handle_call_services(hass, create_registrations, webhook_client):
@@ -140,7 +152,9 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
 async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
     """Test that we can get zones properly."""
     await async_setup_component(
-        hass, ZONE_DOMAIN, {ZONE_DOMAIN: {}},
+        hass,
+        ZONE_DOMAIN,
+        {ZONE_DOMAIN: {}},
     )
 
     resp = await webhook_client.post(
@@ -168,8 +182,8 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
     json = await resp.json()
     if "components" in json:
         json["components"] = set(json["components"])
-    if "whitelist_external_dirs" in json:
-        json["whitelist_external_dirs"] = set(json["whitelist_external_dirs"])
+    if "allowlist_external_dirs" in json:
+        json["allowlist_external_dirs"] = set(json["allowlist_external_dirs"])
 
     hass_config = hass.config.as_dict()
 
@@ -263,7 +277,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     webhook_id = create_registrations[1]["webhook_id"]
 
     enable_enc_resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}", json={"type": "enable_encryption"},
+        f"/api/webhook/{webhook_id}",
+        json={"type": "enable_encryption"},
     )
 
     assert enable_enc_resp.status == 200
@@ -275,7 +290,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     key = enable_enc_json["secret"]
 
     enc_required_resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}", json=RENDER_TEMPLATE,
+        f"/api/webhook/{webhook_id}",
+        json=RENDER_TEMPLATE,
     )
 
     assert enc_required_resp.status == 400
@@ -303,3 +319,128 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
     decrypted_data = decrypt_payload(key, enc_json["encrypted_data"])
 
     assert decrypted_data == {"one": "Hello world"}
+
+
+async def test_webhook_camera_stream_non_existent(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for a non-existent camera."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "stream_camera",
+            "data": {"camera_entity_id": "camera.doesnt_exist"},
+        },
+    )
+
+    assert resp.status == 400
+    webhook_json = await resp.json()
+    assert webhook_json["success"] is False
+
+
+async def test_webhook_camera_stream_non_hls(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for a non-HLS/stream-supporting camera."""
+    hass.states.async_set("camera.non_stream_camera", "idle", {"supported_features": 0})
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "stream_camera",
+            "data": {"camera_entity_id": "camera.non_stream_camera"},
+        },
+    )
+
+    assert resp.status == 200
+    webhook_json = await resp.json()
+    assert webhook_json["hls_path"] is None
+    assert (
+        webhook_json["mjpeg_path"]
+        == "/api/camera_proxy_stream/camera.non_stream_camera"
+    )
+
+
+async def test_webhook_camera_stream_stream_available(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for an HLS/stream-supporting camera."""
+    hass.states.async_set(
+        "camera.stream_camera", "idle", {"supported_features": CAMERA_SUPPORT_STREAM}
+    )
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    with patch(
+        "homeassistant.components.camera.async_request_stream",
+        return_value="/api/streams/some_hls_stream",
+    ):
+        resp = await webhook_client.post(
+            f"/api/webhook/{webhook_id}",
+            json={
+                "type": "stream_camera",
+                "data": {"camera_entity_id": "camera.stream_camera"},
+            },
+        )
+
+    assert resp.status == 200
+    webhook_json = await resp.json()
+    assert webhook_json["hls_path"] == "/api/streams/some_hls_stream"
+    assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_camera_stream_stream_available_but_errors(
+    hass, create_registrations, webhook_client
+):
+    """Test fetching camera stream URLs for an HLS/stream-supporting camera but that streaming errors."""
+    hass.states.async_set(
+        "camera.stream_camera", "idle", {"supported_features": CAMERA_SUPPORT_STREAM}
+    )
+
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    with patch(
+        "homeassistant.components.camera.async_request_stream",
+        side_effect=HomeAssistantError(),
+    ):
+        resp = await webhook_client.post(
+            f"/api/webhook/{webhook_id}",
+            json={
+                "type": "stream_camera",
+                "data": {"camera_entity_id": "camera.stream_camera"},
+            },
+        )
+
+    assert resp.status == 200
+    webhook_json = await resp.json()
+    assert webhook_json["hls_path"] is None
+    assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
+
+
+async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_client):
+    """Test that we can scan tags."""
+    events = []
+
+    @callback
+    def store_event(event):
+        """Helepr to store events."""
+        events.append(event)
+
+    hass.bus.async_listen("tag_scanned", store_event)
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "scan_tag", "data": {"tag_id": "mock-tag-id"}},
+    )
+
+    assert resp.status == 200
+    json = await resp.json()
+    assert json == {}
+
+    assert len(events) == 1
+    assert events[0].data["tag_id"] == "mock-tag-id"
+    assert events[0].data["device_id"] == "mock-device-id"

@@ -2,13 +2,14 @@
 
 import logging
 import time
-from typing import Any, List
+from typing import Any, Dict, List, Optional
 
 import attr
 from huawei_lte_api.exceptions import ResponseErrorException
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import Router
 from .const import DOMAIN
@@ -16,13 +17,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistantType,
+    config: Dict[str, Any],
+    discovery_info: Optional[Dict[str, Any]] = None,
+) -> Optional["HuaweiLteSmsNotificationService"]:
     """Get the notification service."""
     if discovery_info is None:
-        _LOGGER.warning(
-            "Loading as a platform is no longer supported, convert to use "
-            "config entries or the huawei_lte component"
-        )
         return None
 
     router = hass.data[DOMAIN].routers[discovery_info[CONF_URL]]

@@ -2,7 +2,7 @@
 from . import SleepIQSensor
 from .const import DOMAIN, SENSOR_TYPES, SIDES, SLEEP_NUMBER
 
-ICON = "mdi:hotel"
+ICON = "mdi:bed"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

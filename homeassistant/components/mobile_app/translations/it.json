@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Si desidera configurare il componente App per dispositivi mobili?",
-                "title": "App per dispositivi mobili"
+                "description": "Si desidera configurare il componente App per dispositivi mobili?"
             }
         }
     }

@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This username is already in use."
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "invalid_credentials": "Invalid username or password",
+            "invalid_auth": "Invalid authentication",
             "no_devices": "No devices found in account"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username/Email Address"
+                    "username": "Username"
                 },
                 "title": "Fill in your information"
             }

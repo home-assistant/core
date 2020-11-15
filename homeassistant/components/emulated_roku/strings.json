@@ -1,15 +1,15 @@
 {
   "title": "Emulated Roku",
   "config": {
-    "abort": { "name_exists": "Name already exists" },
+    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_device%]" }, 
     "step": {
       "user": {
         "data": {
-          "advertise_ip": "Advertise IP",
-          "advertise_port": "Advertise port",
-          "host_ip": "Host IP",
-          "listen_port": "Listen port",
-          "name": "Name",
+          "advertise_ip": "Advertise IP Address",
+          "advertise_port": "Advertise Port",
+          "host_ip": "Host IP Address",
+          "listen_port": "Listen Port",
+          "name": "[%key:common::config_flow::data::name%]",
           "upnp_bind_multicast": "Bind multicast (True/False)"
         },
         "title": "Define server configuration"

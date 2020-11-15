@@ -28,8 +28,6 @@ from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID,
     CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DOMAIN,
@@ -39,11 +37,17 @@ from homeassistant.components.smartthings.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
@@ -75,7 +79,8 @@ async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
     await async_process_ha_core_config(
-        hass, {"external_url": "https://test.local"},
+        hass,
+        {"external_url": "https://test.local"},
     )
     await async_setup_component(hass, "smartthings", {})
 
@@ -217,8 +222,8 @@ def config_entry_fixture(hass, installed_app, location):
         CONF_APP_ID: installed_app.app_id,
         CONF_LOCATION_ID: location.location_id,
         CONF_REFRESH_TOKEN: str(uuid4()),
-        CONF_OAUTH_CLIENT_ID: str(uuid4()),
-        CONF_OAUTH_CLIENT_SECRET: str(uuid4()),
+        CONF_CLIENT_ID: str(uuid4()),
+        CONF_CLIENT_SECRET: str(uuid4()),
     }
     return MockConfigEntry(
         domain=DOMAIN,
@@ -246,7 +251,7 @@ def subscription_factory_fixture():
 def device_factory_fixture():
     """Fixture for creating mock devices."""
     api = Mock(Api)
-    api.post_device_command.return_value = {}
+    api.post_device_command.return_value = {"results": [{"status": "ACCEPTED"}]}
 
     def _factory(label, capabilities, status: dict = None):
         device_data = {

@@ -14,6 +14,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_NAME,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_EMAIL,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
@@ -38,8 +40,6 @@ DOMAIN = "wink"
 
 SUBSCRIPTION_HANDLER = None
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_USER_AGENT = "user_agent"
 CONF_OAUTH = "oauth"
 CONF_LOCAL_CONTROL = "local_control"
@@ -47,8 +47,6 @@ CONF_MISSING_OAUTH_MSG = "Missing oauth2 credentials."
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_REFRESH_TOKEN = "refresh_token"
-ATTR_CLIENT_ID = "client_id"
-ATTR_CLIENT_SECRET = "client_secret"
 ATTR_PAIRING_MODE = "pairing_mode"
 ATTR_KIDDE_RADIO_CODE = "kidde_radio_code"
 ATTR_HUB_NAME = "hub_name"
@@ -58,7 +56,10 @@ WINK_AUTH_START = "/auth/wink"
 WINK_CONFIG_FILE = ".wink.conf"
 USER_AGENT = f"Manufacturer/Home-Assistant{__version__} python/3 Wink/3"
 
-DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
+DEFAULT_CONFIG = {
+    CONF_CLIENT_ID: "CLIENT_ID_HERE",
+    CONF_CLIENT_SECRET: "CLIENT_SECRET_HERE",
+}
 
 SERVICE_ADD_NEW_DEVICES = "pull_newly_added_devices_from_wink"
 SERVICE_REFRESH_STATES = "refresh_state_from_wink"
@@ -219,12 +220,12 @@ def _request_app_setup(hass, config):
             setup(hass, config)
             return
 
-        client_id = callback_data.get("client_id").strip()
-        client_secret = callback_data.get("client_secret").strip()
+        client_id = callback_data.get(CONF_CLIENT_ID).strip()
+        client_secret = callback_data.get(CONF_CLIENT_SECRET).strip()
         if None not in (client_id, client_secret):
             save_json(
                 _config_path,
-                {ATTR_CLIENT_ID: client_id, ATTR_CLIENT_SECRET: client_secret},
+                {CONF_CLIENT_ID: client_id, CONF_CLIENT_SECRET: client_secret},
             )
             setup(hass, config)
             return
@@ -249,8 +250,8 @@ def _request_app_setup(hass, config):
         submit_caption="submit",
         description_image="/static/images/config_wink.png",
         fields=[
-            {"id": "client_id", "name": "Client ID", "type": "string"},
-            {"id": "client_secret", "name": "Client secret", "type": "string"},
+            {"id": CONF_CLIENT_ID, "name": "Client ID", "type": "string"},
+            {"id": CONF_CLIENT_SECRET, "name": "Client secret", "type": "string"},
         ],
     )
 
@@ -293,8 +294,8 @@ def setup(hass, config):
         }
 
     if config.get(DOMAIN) is not None:
-        client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
-        client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
+        client_id = config[DOMAIN].get(CONF_CLIENT_ID)
+        client_secret = config[DOMAIN].get(CONF_CLIENT_SECRET)
         email = config[DOMAIN].get(CONF_EMAIL)
         password = config[DOMAIN].get(CONF_PASSWORD)
         local_control = config[DOMAIN].get(CONF_LOCAL_CONTROL)
@@ -309,8 +310,8 @@ def setup(hass, config):
         _LOGGER.info("Using legacy OAuth authentication")
         if not local_control:
             pywink.disable_local_control()
-        hass.data[DOMAIN]["oauth"]["client_id"] = client_id
-        hass.data[DOMAIN]["oauth"]["client_secret"] = client_secret
+        hass.data[DOMAIN]["oauth"][CONF_CLIENT_ID] = client_id
+        hass.data[DOMAIN]["oauth"][CONF_CLIENT_SECRET] = client_secret
         hass.data[DOMAIN]["oauth"]["email"] = email
         hass.data[DOMAIN]["oauth"]["password"] = password
         pywink.legacy_set_wink_credentials(email, password, client_id, client_secret)
@@ -341,8 +342,8 @@ def setup(hass, config):
         # This will be called after authorizing Home-Assistant
         if None not in (access_token, refresh_token):
             pywink.set_wink_credentials(
-                config_file.get(ATTR_CLIENT_ID),
-                config_file.get(ATTR_CLIENT_SECRET),
+                config_file.get(CONF_CLIENT_ID),
+                config_file.get(CONF_CLIENT_SECRET),
                 access_token=access_token,
                 refresh_token=refresh_token,
             )
@@ -353,7 +354,7 @@ def setup(hass, config):
             redirect_uri = f"{get_url(hass)}{WINK_AUTH_CALLBACK_PATH}"
 
             wink_auth_start_url = pywink.get_authorization_url(
-                config_file.get(ATTR_CLIENT_ID), redirect_uri
+                config_file.get(CONF_CLIENT_ID), redirect_uri
             )
             hass.http.register_redirect(WINK_AUTH_START, wink_auth_start_url)
             hass.http.register_view(
@@ -698,14 +699,14 @@ class WinkAuthCallbackView(HomeAssistantView):
 
         if data.get("code") is not None:
             response = self.request_token(
-                data.get("code"), self.config_file["client_secret"]
+                data.get("code"), self.config_file[CONF_CLIENT_SECRET]
             )
 
             config_contents = {
                 ATTR_ACCESS_TOKEN: response["access_token"],
                 ATTR_REFRESH_TOKEN: response["refresh_token"],
-                ATTR_CLIENT_ID: self.config_file["client_id"],
-                ATTR_CLIENT_SECRET: self.config_file["client_secret"],
+                CONF_CLIENT_ID: self.config_file[CONF_CLIENT_ID],
+                CONF_CLIENT_SECRET: self.config_file[CONF_CLIENT_SECRET],
             }
             save_json(hass.config.path(WINK_CONFIG_FILE), config_contents)
 

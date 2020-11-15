@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts \u00e8 gi\u00e0 configurato",
-            "unknown": "Si \u00e8 verificato un errore sconosciuto."
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "invalid_2fa": "Autenticazione a 2 fattori non valida, riprovare.",
@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Codice di autorizzazione (necessario per l'autenticazione manuale)",
-                    "email": "Indirizzo E-mail",
+                    "email": "E-mail",
                     "password": "Password"
                 },
                 "description": "Vuoto",

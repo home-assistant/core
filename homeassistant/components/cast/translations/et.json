@@ -1,8 +1,12 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi Google Casti seadet.",
+            "single_instance_allowed": "Vajalik on ainult \u00fcks Google Casti konfiguratsioon."
+        },
         "step": {
             "confirm": {
-                "title": ""
+                "description": "Kas soovid seadistada Google Casti?"
             }
         }
     }

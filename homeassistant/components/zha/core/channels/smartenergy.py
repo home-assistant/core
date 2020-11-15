@@ -1,16 +1,18 @@
 """Smart energy channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
-from homeassistant.const import TIME_HOURS, TIME_SECONDS
+from homeassistant.const import (
+    POWER_WATT,
+    TIME_HOURS,
+    TIME_SECONDS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+)
 from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
@@ -60,9 +62,9 @@ class Metering(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
-        0x00: "kW",
-        0x01: f"m³/{TIME_HOURS}",
-        0x02: f"ft³/{TIME_HOURS}",
+        0x00: POWER_WATT,
+        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
         0x03: f"ccf/{TIME_HOURS}",
         0x04: f"US gal/{TIME_HOURS}",
         0x05: f"IMP gal/{TIME_HOURS}",
@@ -80,8 +82,8 @@ class Metering(ZigbeeChannel):
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._divisor = None
-        self._multiplier = None
+        self._divisor = 1
+        self._multiplier = 1
         self._unit_enum = None
         self._format_spec = None
 
@@ -114,21 +116,15 @@ class Metering(ZigbeeChannel):
             from_cache=from_cache,
         )
 
-        self._divisor = results.get("divisor", 1)
-        if self._divisor == 0:
-            self._divisor = 1
-
-        self._multiplier = results.get("multiplier", 1)
-        if self._multiplier == 0:
-            self._multiplier = 1
-
+        self._divisor = results.get("divisor", self._divisor)
+        self._multiplier = results.get("multiplier", self._multiplier)
         self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
 
         fmting = results.get(
             "demand_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
 
-        r_digits = fmting & 0x07  # digits to the right of decimal point
+        r_digits = int(fmting & 0x07)  # digits to the right of decimal point
         l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
         if l_digits == 0:
             l_digits = 15
@@ -141,6 +137,12 @@ class Metering(ZigbeeChannel):
 
     def formatter_function(self, value):
         """Return formatted value for display."""
+        if self.unit_of_measurement == POWER_WATT:
+            # Zigbee spec power unit is kW, but we show the value in W
+            value_watt = value * 1000
+            if value_watt < 100:
+                return round(value_watt, 1)
+            return round(value_watt)
         return self._format_spec.format(value).lstrip()
 
 

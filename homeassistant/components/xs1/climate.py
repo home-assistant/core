@@ -1,6 +1,4 @@
 """Support for XS1 climate devices."""
-import logging
-
 from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.components.climate import ClimateEntity
@@ -11,8 +9,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TEMP = 8
 MAX_TEMP = 25
@@ -119,5 +115,5 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     async def async_update(self):
         """Also update the sensor when available."""
         await super().async_update()
-        if self.sensor is None:
+        if self.sensor is not None:
             await self.hass.async_add_executor_job(self.sensor.update)

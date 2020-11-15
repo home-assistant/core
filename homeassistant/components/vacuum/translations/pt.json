@@ -4,7 +4,8 @@
             "clean": "Deixar {entity_name} limpar"
         },
         "condition_type": {
-            "is_cleaning": "{entity_name} est\u00e1 a limpar"
+            "is_cleaning": "{entity_name} est\u00e1 a limpar",
+            "is_docked": "{entity_name} est\u00e1 ancorado"
         }
     },
     "state": {

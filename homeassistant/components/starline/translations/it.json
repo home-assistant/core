@@ -11,7 +11,7 @@
                     "app_id": "ID applicazione",
                     "app_secret": "Segreto"
                 },
-                "description": "ID applicazione e codice segreto da <a href=\"https://my.starline.ru/developer\" target=\"_blank\"> Account sviluppatore StarLine </a>",
+                "description": "ID applicazione e codice segreto dall'[account sviluppatore StarLine](https://my.starline.ru/developer)",
                 "title": "Credenziali dell'applicazione"
             },
             "auth_captcha": {

@@ -33,8 +33,8 @@ async def verify_redirect_uri(hass, client_id, redirect_uri):
     # Whitelist the iOS and Android callbacks so that people can link apps
     # without being connected to the internet.
     if redirect_uri == "homeassistant://auth-callback" and client_id in (
-        "https://www.home-assistant.io/android",
-        "https://www.home-assistant.io/iOS",
+        "https://home-assistant.io/android",
+        "https://home-assistant.io/iOS",
     ):
         return True
 
@@ -170,8 +170,8 @@ def _parse_client_id(client_id):
     try:
         # parts raises ValueError when port cannot be parsed as int
         parts.port
-    except ValueError:
-        raise ValueError("Client ID contains invalid port")
+    except ValueError as ex:
+        raise ValueError("Client ID contains invalid port") from ex
 
     # Additionally, hostnames
     # MUST be domain names or a loopback interface and

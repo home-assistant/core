@@ -4,6 +4,7 @@
             "options_1": {
                 "data": {
                     "bool": "Entrada booleana opcional",
+                    "constant": "Constant",
                     "int": "Entrada num\u00e8rica"
                 }
             },
@@ -11,7 +12,7 @@
                 "data": {
                     "multi": "Selecci\u00f3 m\u00faltiple",
                     "select": "Selecciona una opci\u00f3",
-                    "string": "Valor de cadena (string)"
+                    "string": "Valor de l'String"
                 }
             }
         }

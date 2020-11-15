@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Slechts \u00e9\u00e9n instantie is nodig."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "create_entry": {
             "default": "\n\nOp Android, open [the OwnTracks app]({android_url}), ga naar 'preferences' -> 'connection'. Verander de volgende instellingen:\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification:\n   - Username: `<Your name>`\n   - Device ID: `<Your device name>`\n\nOp iOS, open [the OwnTracks app]({ios_url}), tik op het (i) icoon links boven -> 'settings'. Verander de volgende instellingen:\n - Mode: HTTP\n - URL: {webhook_url}\n - zet 'authentication' aan\n - UserID: `<Your name>`\n\n{secret}\n\nZie [the documentation]({docs_url}) voor meer informatie."

@@ -57,7 +57,13 @@ def decorate_command(channel, command):
             return result
 
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
-            channel.debug("command failed: %s exception: %s", command.__name__, str(ex))
+            channel.debug(
+                "command failed: '%s' args: '%s' kwargs '%s' exception: '%s'",
+                command.__name__,
+                args,
+                kwds,
+                str(ex),
+            )
             return ex
 
     return wrapper
@@ -194,6 +200,10 @@ class ZigbeeChannel(LogMixin):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
+        if not from_cache and self._ch_pool.skip_configuration:
+            self._status = ChannelStatus.INITIALIZED
+            return
+
         self.debug("initializing channel: from_cache: %s", from_cache)
         attributes = []
         for report_config in self._report_config:
@@ -245,7 +255,7 @@ class ZigbeeChannel(LogMixin):
             self._cluster,
             [attribute],
             allow_cache=from_cache,
-            only_cache=from_cache,
+            only_cache=from_cache and not self._ch_pool.is_mains_powered,
             manufacturer=manufacturer,
         )
         return result.get(attribute)
@@ -260,7 +270,7 @@ class ZigbeeChannel(LogMixin):
             result, _ = await self.cluster.read_attributes(
                 attributes,
                 allow_cache=from_cache,
-                only_cache=from_cache,
+                only_cache=from_cache and not self._ch_pool.is_mains_powered,
                 manufacturer=manufacturer,
             )
             return result

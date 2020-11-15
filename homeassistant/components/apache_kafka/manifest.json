@@ -2,6 +2,6 @@
   "domain": "apache_kafka",
   "name": "Apache Kafka",
   "documentation": "https://www.home-assistant.io/integrations/apache_kafka",
-  "requirements": ["aiokafka==0.5.1"],
+  "requirements": ["aiokafka==0.6.0"],
   "codeowners": ["@bachya"]
 }

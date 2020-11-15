@@ -98,7 +98,7 @@ async def async_setup(hass, config):
         for site_id in site_ids:
             payload = json.dumps({"siteId": site_id})
             hass.components.mqtt.async_publish(
-                FEEDBACK_ON_TOPIC, None, qos=0, retain=False
+                FEEDBACK_ON_TOPIC, "", qos=0, retain=False
             )
             hass.components.mqtt.async_publish(
                 topic, payload, qos=int(state), retain=state
@@ -161,7 +161,7 @@ async def async_setup(hass, config):
                 "Received unknown intent %s", request["intent"]["intentName"]
             )
         except intent.IntentError:
-            _LOGGER.exception("Error while handling intent: %s.", intent_type)
+            _LOGGER.exception("Error while handling intent: %s", intent_type)
 
     await hass.components.mqtt.async_subscribe(INTENT_TOPIC, message_received)
 

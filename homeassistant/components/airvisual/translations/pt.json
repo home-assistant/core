@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "node_pro": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            }
+        }
+    }
+}

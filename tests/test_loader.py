@@ -13,27 +13,43 @@ async def test_component_dependencies(hass):
     """Test if we can get the proper load order of components."""
     mock_integration(hass, MockModule("mod1"))
     mock_integration(hass, MockModule("mod2", ["mod1"]))
-    mock_integration(hass, MockModule("mod3", ["mod2"]))
+    mod_3 = mock_integration(hass, MockModule("mod3", ["mod2"]))
 
-    assert {"mod1", "mod2", "mod3"} == await loader.async_component_dependencies(
-        hass, "mod3"
+    assert {"mod1", "mod2", "mod3"} == await loader._async_component_dependencies(
+        hass, "mod_3", mod_3, set(), set()
     )
 
     # Create circular dependency
     mock_integration(hass, MockModule("mod1", ["mod3"]))
 
     with pytest.raises(loader.CircularDependency):
-        print(await loader.async_component_dependencies(hass, "mod3"))
+        print(
+            await loader._async_component_dependencies(
+                hass, "mod_3", mod_3, set(), set()
+            )
+        )
 
     # Depend on non-existing component
-    mock_integration(hass, MockModule("mod1", ["nonexisting"]))
+    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
 
     with pytest.raises(loader.IntegrationNotFound):
-        print(await loader.async_component_dependencies(hass, "mod1"))
+        print(
+            await loader._async_component_dependencies(
+                hass, "mod_1", mod_1, set(), set()
+            )
+        )
 
-    # Try to get dependencies for non-existing component
-    with pytest.raises(loader.IntegrationNotFound):
-        print(await loader.async_component_dependencies(hass, "nonexisting"))
+    # Having an after dependency 2 deps down that is circular
+    mod_1 = mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod_3"]})
+    )
+
+    with pytest.raises(loader.CircularDependency):
+        print(
+            await loader._async_component_dependencies(
+                hass, "mod_3", mod_3, set(), set()
+            )
+        )
 
 
 def test_component_loader(hass):
@@ -152,10 +168,38 @@ def test_integration_properties(hass):
             "domain": "hue",
             "dependencies": ["test-dep"],
             "requirements": ["test-req==1.0.0"],
+            "zeroconf": ["_hue._tcp.local."],
+            "homekit": {"models": ["BSB002"]},
+            "ssdp": [
+                {
+                    "manufacturer": "Royal Philips Electronics",
+                    "modelName": "Philips hue bridge 2012",
+                },
+                {
+                    "manufacturer": "Royal Philips Electronics",
+                    "modelName": "Philips hue bridge 2015",
+                },
+                {"manufacturer": "Signify", "modelName": "Philips hue bridge 2015"},
+            ],
+            "mqtt": ["hue/discovery"],
         },
     )
     assert integration.name == "Philips Hue"
     assert integration.domain == "hue"
+    assert integration.homekit == {"models": ["BSB002"]}
+    assert integration.zeroconf == ["_hue._tcp.local."]
+    assert integration.ssdp == [
+        {
+            "manufacturer": "Royal Philips Electronics",
+            "modelName": "Philips hue bridge 2012",
+        },
+        {
+            "manufacturer": "Royal Philips Electronics",
+            "modelName": "Philips hue bridge 2015",
+        },
+        {"manufacturer": "Signify", "modelName": "Philips hue bridge 2015"},
+    ]
+    assert integration.mqtt == ["hue/discovery"]
     assert integration.dependencies == ["test-dep"]
     assert integration.requirements == ["test-req==1.0.0"]
     assert integration.is_built_in is True
@@ -172,6 +216,27 @@ def test_integration_properties(hass):
         },
     )
     assert integration.is_built_in is False
+    assert integration.homekit is None
+    assert integration.zeroconf is None
+    assert integration.ssdp is None
+    assert integration.mqtt is None
+
+    integration = loader.Integration(
+        hass,
+        "custom_components.hue",
+        None,
+        {
+            "name": "Philips Hue",
+            "domain": "hue",
+            "dependencies": ["test-dep"],
+            "zeroconf": [{"type": "_hue._tcp.local.", "name": "hue*"}],
+            "requirements": ["test-req==1.0.0"],
+        },
+    )
+    assert integration.is_built_in is False
+    assert integration.homekit is None
+    assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
+    assert integration.ssdp is None
 
 
 async def test_integrations_only_once(hass):
@@ -201,6 +266,29 @@ def _get_test_integration(hass, name, config_flow):
             "config_flow": config_flow,
             "dependencies": [],
             "requirements": [],
+            "zeroconf": [f"_{name}._tcp.local."],
+            "homekit": {"models": [name]},
+            "ssdp": [{"manufacturer": name, "modelName": name}],
+            "mqtt": [f"{name}/discovery"],
+        },
+    )
+
+
+def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
+    """Return a generated test integration with a zeroconf matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "dependencies": [],
+            "requirements": [],
+            "zeroconf": [{"type": f"_{name}._tcp.local.", "name": f"{name}*"}],
+            "homekit": {"models": [name]},
+            "ssdp": [{"manufacturer": name, "modelName": name}],
         },
     )
 
@@ -236,6 +324,70 @@ async def test_get_config_flows(hass):
         flows = await loader.async_get_config_flows(hass)
         assert "test_2" in flows
         assert "test_1" not in flows
+
+
+async def test_get_zeroconf(hass):
+    """Verify that custom components with zeroconf are found."""
+    test_1_integration = _get_test_integration(hass, "test_1", True)
+    test_2_integration = _get_test_integration_with_zeroconf_matcher(
+        hass, "test_2", True
+    )
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        zeroconf = await loader.async_get_zeroconf(hass)
+        assert zeroconf["_test_1._tcp.local."] == [{"domain": "test_1"}]
+        assert zeroconf["_test_2._tcp.local."] == [
+            {"domain": "test_2", "name": "test_2*"}
+        ]
+
+
+async def test_get_homekit(hass):
+    """Verify that custom components with homekit are found."""
+    test_1_integration = _get_test_integration(hass, "test_1", True)
+    test_2_integration = _get_test_integration(hass, "test_2", True)
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        homekit = await loader.async_get_homekit(hass)
+        assert homekit["test_1"] == "test_1"
+        assert homekit["test_2"] == "test_2"
+
+
+async def test_get_ssdp(hass):
+    """Verify that custom components with ssdp are found."""
+    test_1_integration = _get_test_integration(hass, "test_1", True)
+    test_2_integration = _get_test_integration(hass, "test_2", True)
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        ssdp = await loader.async_get_ssdp(hass)
+        assert ssdp["test_1"] == [{"manufacturer": "test_1", "modelName": "test_1"}]
+        assert ssdp["test_2"] == [{"manufacturer": "test_2", "modelName": "test_2"}]
+
+
+async def test_get_mqtt(hass):
+    """Verify that custom components with MQTT are found."""
+    test_1_integration = _get_test_integration(hass, "test_1", True)
+    test_2_integration = _get_test_integration(hass, "test_2", True)
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        mqtt = await loader.async_get_mqtt(hass)
+        assert mqtt["test_1"] == ["test_1/discovery"]
+        assert mqtt["test_2"] == ["test_2/discovery"]
 
 
 async def test_get_custom_components_safe_mode(hass):

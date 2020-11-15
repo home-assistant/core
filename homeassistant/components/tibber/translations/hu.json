@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token"
+                }
+            }
+        }
+    }
+}

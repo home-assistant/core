@@ -1,7 +1,6 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
 import asyncio
-import logging
 import os
 import threading
 
@@ -33,8 +32,6 @@ from tests.common import (
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
@@ -358,6 +355,7 @@ class TestSetup:
             "switch",
             {"comp_a": {"valid": True}, "switch": {"platform": "platform_a"}},
         )
+        self.hass.block_till_done()
         assert "comp_a" in self.hass.config.components
 
     def test_platform_specific_config_validation(self):
@@ -380,6 +378,7 @@ class TestSetup:
                 "switch",
                 {"switch": {"platform": "platform_a", "invalid": True}},
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 0
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -397,6 +396,7 @@ class TestSetup:
                     }
                 },
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 0
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -408,6 +408,7 @@ class TestSetup:
                 "switch",
                 {"switch": {"platform": "platform_a", "valid": True}},
             )
+            self.hass.block_till_done()
             assert mock_setup.call_count == 1
 
     def test_disable_component_if_invalid_return(self):
@@ -476,12 +477,6 @@ class TestSetup:
         assert call_order == [1, 1, 2]
 
 
-async def test_component_cannot_depend_config(hass):
-    """Test config is not allowed to be a dependency."""
-    result = await setup._async_process_dependencies(hass, None, "test", ["config"])
-    assert not result
-
-
 async def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     mock_integration(hass, MockModule("test_component1"))
@@ -489,8 +484,8 @@ async def test_component_warn_slow_setup(hass):
         result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert mock_call.called
-        assert len(mock_call.mock_calls) == 3
 
+        assert len(mock_call.mock_calls) == 3
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
         assert timeout == setup.SLOW_SETUP_WARNING
@@ -507,7 +502,25 @@ async def test_platform_no_warn_slow(hass):
     with patch.object(hass.loop, "call_later") as mock_call:
         result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
-        assert not mock_call.called
+        assert len(mock_call.mock_calls) == 0
+
+
+async def test_platform_error_slow_setup(hass, caplog):
+    """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
+
+    with patch.object(setup, "SLOW_SETUP_MAX_WAIT", 1):
+        called = []
+
+        async def async_setup(*args):
+            """Tracking Setup."""
+            called.append(1)
+            await asyncio.sleep(2)
+
+        mock_integration(hass, MockModule("test_component1", async_setup=async_setup))
+        result = await setup.async_setup_component(hass, "test_component1", {})
+        assert len(called) == 1
+        assert not result
+        assert "test_component1 is taking longer than 1 seconds" in caplog.text
 
 
 async def test_when_setup_already_loaded(hass):
@@ -561,9 +574,25 @@ async def test_parallel_entry_setup(hass):
         return True
 
     mock_integration(
-        hass, MockModule("comp", async_setup_entry=mock_async_setup_entry,),
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_async_setup_entry,
+        ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
     await setup.async_setup_component(hass, "comp", {})
 
     assert calls == [1, 2, 1, 2]
+
+
+async def test_integration_disabled(hass, caplog):
+    """Test we can disable an integration."""
+    disabled_reason = "Dependency contains code that breaks Home Assistant"
+    mock_integration(
+        hass,
+        MockModule("test_component1", partial_manifest={"disabled": disabled_reason}),
+    )
+    result = await setup.async_setup_component(hass, "test_component1", {})
+    assert not result
+    assert disabled_reason in caplog.text

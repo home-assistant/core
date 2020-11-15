@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta clave API ya est\u00e1 en uso."
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada o el Nodo/Pro ID ya est\u00e1 registrado.",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "general_error": "Se ha producido un error desconocido.",
-            "invalid_api_key": "Clave API inv\u00e1lida",
-            "unable_to_connect": "No se puede conectar a la unidad Node/Pro."
+            "invalid_api_key": "Se proporciona una clave API no v\u00e1lida."
         },
         "step": {
             "geography": {
@@ -21,21 +22,24 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP/Nombre de host de la Unidad",
-                    "password": "Contrase\u00f1a de la Unidad"
+                    "password": "Contrase\u00f1a"
                 },
                 "description": "Monitorizar una unidad personal AirVisual. La contrase\u00f1a puede ser recuperada desde la interfaz de la unidad.",
                 "title": "Configurar un AirVisual Node/Pro"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clave API"
+                },
+                "title": "Volver a autenticar AirVisual"
+            },
             "user": {
                 "data": {
-                    "api_key": "Clave API",
                     "cloud_api": "Ubicaci\u00f3n Geogr\u00e1fica",
-                    "latitude": "Latitud",
-                    "longitude": "Longitud",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Tipo de Integraci\u00f3n"
                 },
-                "description": "Monitorizar la calidad del aire en una ubicaci\u00f3n geogr\u00e1fica.",
+                "description": "Elige qu\u00e9 tipo de datos de AirVisual quieres monitorizar.",
                 "title": "Configurar AirVisual"
             }
         }
@@ -46,7 +50,6 @@
                 "data": {
                     "show_on_map": "Mostrar geograf\u00eda monitorizada en el mapa"
                 },
-                "description": "Ajustar varias opciones para la integraci\u00f3n de AirVisual.",
                 "title": "Configurar AirVisual"
             }
         }

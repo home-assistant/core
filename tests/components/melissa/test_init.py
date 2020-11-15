@@ -18,5 +18,6 @@ async def test_setup(hass):
 
         assert melissa.DATA_MELISSA in hass.data
         assert isinstance(
-            hass.data[melissa.DATA_MELISSA], type(mocked_melissa.return_value),
+            hass.data[melissa.DATA_MELISSA],
+            type(mocked_melissa.return_value),
         )

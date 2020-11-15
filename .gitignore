@@ -88,7 +88,7 @@ venv
 .venv
 Pipfile*
 share/*
-Scripts/
+/Scripts/
 
 # vimmy stuff
 *.swp
@@ -106,6 +106,7 @@ virtualization/vagrant/config
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+.env
 
 # Built docs
 docs/build

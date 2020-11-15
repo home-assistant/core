@@ -4,14 +4,14 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Kann sech net mam Server verbannen.",
-            "name_exists": "Numm g\u00ebtt et schonn",
-            "wrong_credentials": "Falsche Benotzernumm oder Passwuert"
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "name_exists": "Numm g\u00ebtt et schonn"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Server",
+                    "host": "Host",
                     "name": "Numm",
                     "password": "Passwuert",
                     "port": "Port",
@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limite",
+                    "order": "Reiefolleg",
                     "scan_interval": "Intervalle vun de Mise \u00e0 jour"
                 },
                 "title": "Optioune fir Transmission konfigur\u00e9ieren"

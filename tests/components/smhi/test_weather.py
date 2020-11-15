@@ -48,6 +48,7 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
 
     await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
 
     #  Testing the actual entity state for
@@ -198,7 +199,9 @@ async def test_refresh_weather_forecast_exception() -> None:
     with patch.object(
         hass.helpers.event, "async_call_later"
     ) as call_later, patch.object(
-        weather, "get_weather_forecast", side_effect=SmhiForecastException(),
+        weather,
+        "get_weather_forecast",
+        side_effect=SmhiForecastException(),
     ):
         await weather.async_update()
         assert len(call_later.mock_calls) == 1

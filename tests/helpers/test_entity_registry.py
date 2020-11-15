@@ -154,6 +154,7 @@ async def test_loading_saving_data(hass, registry):
         "hue",
         "5678",
         device_id="mock-dev-id",
+        area_id="mock-area-id",
         config_entry=mock_config,
         capabilities={"max": 100},
         supported_features=5,
@@ -182,6 +183,7 @@ async def test_loading_saving_data(hass, registry):
     assert orig_entry2 == new_entry2
 
     assert new_entry2.device_id == "mock-dev-id"
+    assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.disabled_by == entity_registry.DISABLED_HASS
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.supported_features == 5
@@ -330,6 +332,19 @@ async def test_removing_config_entry_id(hass, registry, update_events):
     assert update_events[1]["entity_id"] == entry.entity_id
 
 
+async def test_removing_area_id(registry):
+    """Make sure we can clear area id."""
+    entry = registry.async_get_or_create("light", "hue", "5678")
+
+    entry_w_area = registry.async_update_entity(entry.entity_id, area_id="12345A")
+
+    registry.async_clear_area_id("12345A")
+    entry_wo_area = registry.async_get(entry.entity_id)
+
+    assert not entry_wo_area.area_id
+    assert entry_w_area != entry_wo_area
+
+
 async def test_migration(hass):
     """Test migration from old data to new."""
     mock_config = MockConfigEntry(domain="test-platform", entry_id="test-config-id")
@@ -428,6 +443,8 @@ async def test_update_entity_unique_id(registry):
     entry = registry.async_get_or_create(
         "light", "hue", "5678", config_entry=mock_config
     )
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+
     new_unique_id = "1234"
     with patch.object(registry, "async_schedule_save") as mock_schedule_save:
         updated_entry = registry.async_update_entity(
@@ -436,6 +453,9 @@ async def test_update_entity_unique_id(registry):
     assert updated_entry != entry
     assert updated_entry.unique_id == new_unique_id
     assert mock_schedule_save.call_count == 1
+
+    assert registry.async_get_entity_id("light", "hue", "5678") is None
+    assert registry.async_get_entity_id("light", "hue", "1234") == entry.entity_id
 
 
 async def test_update_entity_unique_id_conflict(registry):
@@ -452,6 +472,8 @@ async def test_update_entity_unique_id_conflict(registry):
     ) as mock_schedule_save, pytest.raises(ValueError):
         registry.async_update_entity(entry.entity_id, new_unique_id=entry2.unique_id)
     assert mock_schedule_save.call_count == 0
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    assert registry.async_get_entity_id("light", "hue", "1234") == entry2.entity_id
 
 
 async def test_update_entity(registry):
@@ -473,6 +495,10 @@ async def test_update_entity(registry):
         assert getattr(updated_entry, attr_name) == new_value
         assert getattr(updated_entry, attr_name) != getattr(entry, attr_name)
 
+        assert (
+            registry.async_get_entity_id("light", "hue", "5678")
+            == updated_entry.entity_id
+        )
         entry = updated_entry
 
 
@@ -515,7 +541,10 @@ async def test_restore_states(hass):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "light", "hue", "1234", suggested_object_id="simple",
+        "light",
+        "hue",
+        "1234",
+        suggested_object_id="simple",
     )
     # Should not be created
     registry.async_get_or_create(

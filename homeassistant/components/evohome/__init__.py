@@ -107,7 +107,7 @@ def _dt_aware_to_naive(dt_aware: dt) -> dt:
     return dt_naive.replace(microsecond=0)
 
 
-def convert_until(status_dict: dict, until_key: str) -> str:
+def convert_until(status_dict: dict, until_key: str) -> None:
     """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
     if until_key in status_dict:  # only present for certain modes
         dt_utc_naive = dt_util.parse_datetime(status_dict[until_key])
@@ -140,8 +140,8 @@ def _handle_exception(err) -> bool:
     except evohomeasync2.AuthenticationError:
         _LOGGER.error(
             "Failed to authenticate with the vendor's server. "
-            "Check your network and the vendor's service status page. "
-            "Also check that your username and password are correct. "
+            "Check your username and password. NB: Some special password characters "
+            "that work correctly via the website will not work via the web API. "
             "Message is: %s",
             err,
         )
@@ -161,14 +161,14 @@ def _handle_exception(err) -> bool:
         if err.status == HTTP_SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
-                "Check the vendor's service status page."
+                "Check the vendor's service status page"
             )
             return False
 
         if err.status == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
-                "If this message persists, consider increasing the %s.",
+                "If this message persists, consider increasing the %s",
                 CONF_SCAN_INTERVAL,
             )
             return False
@@ -221,7 +221,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     except IndexError:
         _LOGGER.error(
             "Config error: '%s' = %s, but the valid range is 0-%s. "
-            "Unable to continue. Fix any configuration errors and restart HA.",
+            "Unable to continue. Fix any configuration errors and restart HA",
             CONF_LOCATION_IDX,
             loc_idx,
             len(client_v2.installation_info) - 1,
@@ -422,20 +422,20 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, refresh=True) -> Any:
-        """Call a client API."""
+    async def call_client_api(self, api_function, update_state=True) -> Any:
+        """Call a client API and update the broker state if required."""
         try:
             result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             if not _handle_exception(err):
                 return
 
-        if refresh:
-            self.hass.helpers.event.async_call_later(1, self.async_update())
+        if update_state:  # wait a moment for system to quiesce before updating state
+            self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
 
         return result
 
-    async def _update_v1(self, *args, **kwargs) -> None:
+    async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
         def get_session_id(client_v1) -> Optional[str]:
@@ -476,7 +476,7 @@ class EvoBroker:
         if session_id != get_session_id(self.client_v1):
             await self.save_auth_tokens()
 
-    async def _update_v2(self, *args, **kwargs) -> None:
+    async def _update_v2_api_state(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
         access_token = self.client.access_token
 
@@ -500,13 +500,10 @@ class EvoBroker:
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
-        await self._update_v2()
-
         if self.client_v1:
-            await self._update_v1()
+            await self._update_v1_api_temps()
 
-        # inform the evohome devices that state data has been updated
-        async_dispatcher_send(self.hass, DOMAIN)
+        await self._update_v2_api_state()
 
 
 class EvoDevice(Entity):
@@ -614,13 +611,14 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of a Zone."""
-        if not self._evo_device.temperatureStatus["isAvailable"]:
-            return None
-
-        if self._evo_broker.temps:
+        if (
+            self._evo_broker.temps
+            and self._evo_broker.temps[self._evo_device.zoneId] != 128
+        ):
             return self._evo_broker.temps[self._evo_device.zoneId]
 
-        return self._evo_device.temperatureStatus["temperature"]
+        if self._evo_device.temperatureStatus["isAvailable"]:
+            return self._evo_device.temperatureStatus["temperature"]
 
     @property
     def setpoints(self) -> Dict[str, Any]:
@@ -689,7 +687,7 @@ class EvoChild(EvoDevice):
                 return  # avoid unnecessary I/O - there's nothing to update
 
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.schedule(), refresh=False
+            self._evo_device.schedule(), update_state=False
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)

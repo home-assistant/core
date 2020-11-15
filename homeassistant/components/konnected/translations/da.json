@@ -23,8 +23,7 @@
                     "host": "Konnected-enhedens IP-adresse",
                     "port": "Konnected-enhedsport"
                 },
-                "description": "Indtast v\u00e6rtsinformationen for dit Konnected-panel.",
-                "title": "Find Konnected-enhed"
+                "description": "Indtast v\u00e6rtsinformationen for dit Konnected-panel."
             }
         }
     },

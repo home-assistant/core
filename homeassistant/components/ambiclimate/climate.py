@@ -11,14 +11,18 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_TEMPERATURE,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ATTR_VALUE,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     DOMAIN,
     SERVICE_COMFORT_FEEDBACK,
     SERVICE_COMFORT_MODE,

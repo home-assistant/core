@@ -1,7 +1,7 @@
 """
 Regression tests for Ecobee 3.
 
-https://github.com/home-assistant/home-assistant/issues/15336
+https://github.com/home-assistant/core/issues/15336
 """
 
 from unittest import mock

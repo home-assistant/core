@@ -3,15 +3,18 @@ from datetime import timedelta
 import logging
 
 from amcrest import AmcrestError
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import Throttle
 
 from .const import (
     BINARY_SENSOR_SCAN_INTERVAL_SECS,
@@ -28,23 +31,46 @@ from .helpers import log_update_error, service_signal
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
+_ONLINE_SCAN_INTERVAL = timedelta(seconds=60 - BINARY_SENSOR_SCAN_INTERVAL_SECS)
 
+BINARY_SENSOR_AUDIO_DETECTED = "audio_detected"
+BINARY_SENSOR_AUDIO_DETECTED_POLLED = "audio_detected_polled"
 BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
+BINARY_SENSOR_MOTION_DETECTED_POLLED = "motion_detected_polled"
 BINARY_SENSOR_ONLINE = "online"
+BINARY_POLLED_SENSORS = [
+    BINARY_SENSOR_AUDIO_DETECTED_POLLED,
+    BINARY_SENSOR_MOTION_DETECTED_POLLED,
+    BINARY_SENSOR_ONLINE,
+]
+_AUDIO_DETECTED_PARAMS = ("Audio Detected", DEVICE_CLASS_SOUND, "AudioMutation")
+_MOTION_DETECTED_PARAMS = ("Motion Detected", DEVICE_CLASS_MOTION, "VideoMotion")
 BINARY_SENSORS = {
-    BINARY_SENSOR_MOTION_DETECTED: (
-        "Motion Detected",
-        DEVICE_CLASS_MOTION,
-        "VideoMotion",
-    ),
+    BINARY_SENSOR_AUDIO_DETECTED: _AUDIO_DETECTED_PARAMS,
+    BINARY_SENSOR_AUDIO_DETECTED_POLLED: _AUDIO_DETECTED_PARAMS,
+    BINARY_SENSOR_MOTION_DETECTED: _MOTION_DETECTED_PARAMS,
+    BINARY_SENSOR_MOTION_DETECTED_POLLED: _MOTION_DETECTED_PARAMS,
     BINARY_SENSOR_ONLINE: ("Online", DEVICE_CLASS_CONNECTIVITY, None),
 }
 BINARY_SENSORS = {
     k: dict(zip((SENSOR_NAME, SENSOR_DEVICE_CLASS, SENSOR_EVENT_CODE), v))
     for k, v in BINARY_SENSORS.items()
 }
+_EXCLUSIVE_OPTIONS = [
+    {BINARY_SENSOR_MOTION_DETECTED, BINARY_SENSOR_MOTION_DETECTED_POLLED},
+]
 
 _UPDATE_MSG = "Updating %s binary sensor"
+
+
+def check_binary_sensors(value):
+    """Validate binary sensor configurations."""
+    for exclusive_options in _EXCLUSIVE_OPTIONS:
+        if len(set(value) & exclusive_options) > 1:
+            raise vol.Invalid(
+                f"must contain at most one of {', '.join(exclusive_options)}."
+            )
+    return value
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -80,7 +106,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return self._sensor_type == BINARY_SENSOR_ONLINE
+        return self._sensor_type in BINARY_POLLED_SENSORS
 
     @property
     def name(self):
@@ -109,6 +135,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         else:
             self._update_others()
 
+    @Throttle(_ONLINE_SCAN_INTERVAL)
     def _update_online(self):
         if not (self._api.available or self.is_on):
             return
@@ -137,6 +164,11 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     async def async_on_demand_update(self):
         """Update state."""
+        if self._sensor_type == BINARY_SENSOR_ONLINE:
+            _LOGGER.debug(_UPDATE_MSG, self._name)
+            self._state = self._api.available
+            self.async_write_ha_state()
+            return
         self.async_schedule_update_ha_state(True)
 
     @callback
@@ -155,7 +187,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
                 self.async_on_demand_update,
             )
         )
-        if self._event_code:
+        if self._event_code and self._sensor_type not in BINARY_POLLED_SENSORS:
             self._unsub_dispatcher.append(
                 async_dispatcher_connect(
                     self.hass,

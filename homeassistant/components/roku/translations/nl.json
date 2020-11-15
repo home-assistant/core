@@ -10,6 +10,10 @@
         "flow_title": "Roku: {name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Leeg",
+                    "other": "Leeg"
+                },
                 "description": "Wilt u {name} instellen?",
                 "title": "Roku"
             },
@@ -17,8 +21,7 @@
                 "data": {
                     "host": "Host- of IP-adres"
                 },
-                "description": "Voer uw Roku-informatie in.",
-                "title": "Roku"
+                "description": "Voer uw Roku-informatie in."
             }
         }
     }

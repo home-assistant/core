@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Ali \u017eelite nastaviti komponento aplikacije Mobile App?",
-                "title": "Mobilna Aplikacija"
+                "description": "Ali \u017eelite nastaviti komponento aplikacije Mobile App?"
             }
         }
     }

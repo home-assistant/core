@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Kiszolg\u00e1l\u00f3",
+                    "host": "Hoszt",
                     "port": "Port"
                 },
                 "description": "K\u00e9rj\u00fck, adja meg a SOMA Connect csatlakoz\u00e1si be\u00e1ll\u00edt\u00e1sait.",

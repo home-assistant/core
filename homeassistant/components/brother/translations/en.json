@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This printer is already configured.",
+            "already_configured": "Device is already configured",
             "unsupported_model": "This printer model is not supported."
         },
         "error": {
-            "connection_error": "Connection error.",
+            "cannot_connect": "Failed to connect",
             "snmp_error": "SNMP server turned off or printer not supported.",
             "wrong_host": "Invalid hostname or IP address."
         },
@@ -13,11 +13,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Printer hostname or IP address",
+                    "host": "Host",
                     "type": "Type of the printer"
                 },
-                "description": "Set up Brother printer integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/brother",
-                "title": "Brother Printer"
+                "description": "Set up Brother printer integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

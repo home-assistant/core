@@ -1,8 +1,9 @@
 """Data storage helper for ZHA."""
 # pylint: disable=unused-import
 from collections import OrderedDict
-import logging
-from typing import MutableMapping, cast
+import datetime
+import time
+from typing import MutableMapping, Optional, cast
 
 import attr
 
@@ -12,22 +13,21 @@ from homeassistant.loader import bind_hass
 
 from .typing import ZhaDeviceType
 
-_LOGGER = logging.getLogger(__name__)
-
 DATA_REGISTRY = "zha_storage"
 
 STORAGE_KEY = "zha.storage"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
+TOMBSTONE_LIFETIME = datetime.timedelta(days=60).total_seconds()
 
 
 @attr.s(slots=True, frozen=True)
 class ZhaDeviceEntry:
     """Zha Device storage Entry."""
 
-    name = attr.ib(type=str, default=None)
-    ieee = attr.ib(type=str, default=None)
-    last_seen = attr.ib(type=float, default=None)
+    name: Optional[str] = attr.ib(default=None)
+    ieee: Optional[str] = attr.ib(default=None)
+    last_seen: Optional[float] = attr.ib(default=None)
 
 
 class ZhaStorage:
@@ -99,7 +99,7 @@ class ZhaStorage:
                 devices[device["ieee"]] = ZhaDeviceEntry(
                     name=device["name"],
                     ieee=device["ieee"],
-                    last_seen=device["last_seen"] if "last_seen" in device else None,
+                    last_seen=device.get("last_seen"),
                 )
 
         self.devices = devices
@@ -121,6 +121,7 @@ class ZhaStorage:
         data["devices"] = [
             {"name": entry.name, "ieee": entry.ieee, "last_seen": entry.last_seen}
             for entry in self.devices.values()
+            if entry.last_seen and (time.time() - entry.last_seen) < TOMBSTONE_LIFETIME
         ]
 
         return data

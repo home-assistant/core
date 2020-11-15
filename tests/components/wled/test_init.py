@@ -1,20 +1,20 @@
 """Tests for the WLED integration."""
-import aiohttp
+from wled import WLEDConnectionError
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import MagicMock, patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    mock_update: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the WLED configuration entry not ready."""
-    aioclient_mock.get("http://192.168.1.123:80/json/", exc=aiohttp.ClientError)
-
     entry = await init_integration(hass, aioclient_mock)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 

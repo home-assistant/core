@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Dori\u021bi s\u0103 configura\u021bi Sonos?",
-                "title": "Sonos"
+                "description": "Dori\u021bi s\u0103 configura\u021bi Sonos?"
             }
         }
     }

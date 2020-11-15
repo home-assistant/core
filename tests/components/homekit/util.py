@@ -1,11 +1,10 @@
 """Test util for the homekit integration."""
 
-from asynctest import patch
-
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 PATH_HOMEKIT = "homeassistant.components.homekit"

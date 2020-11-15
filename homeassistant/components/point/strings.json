@@ -2,27 +2,27 @@
   "config": {
     "step": {
       "user": {
-        "title": "Authentication Provider",
-        "description": "Pick via which authentication provider you want to authenticate with Point.",
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": { "flow_impl": "Provider" }
       },
       "auth": {
         "title": "Authenticate Point",
-        "description": "Please follow the link below and <b>Accept</b> access to your Minut account, then come back and press <b>Submit</b> below.\n\n[Link]({authorization_url})"
+        "description": "Please follow the link below and **Accept** access to your Minut account, then come back and press **Submit** below.\n\n[Link]({authorization_url})"
       }
     },
     "create_entry": {
-      "default": "Successfully authenticated with Minut for your Point device(s)"
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "error": {
-      "no_token": "Not authenticated with Minut",
+      "no_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "follow_link": "Please follow the link and authenticate before pressing Submit"
     },
     "abort": {
-      "already_setup": "You can only configure a Point account.",
+      "already_setup": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "external_setup": "Point successfully configured from another flow.",
-      "no_flows": "You need to configure Point before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/point/).",
-      "authorize_url_timeout": "Timeout generating authorize url.",
+      "no_flows": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "authorize_url_fail": "Unknown error generating an authorize url."
     }
   }

@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "description": "V\u00e4nligen ange anslutningsinformationen f\u00f6r din MQTT broker.",
-                "title": "MQTT"
+                "description": "V\u00e4nligen ange anslutningsinformationen f\u00f6r din MQTT broker."
             },
             "hassio_confirm": {
                 "data": {
@@ -37,6 +36,15 @@
             "button_6": "Sj\u00e4tte knappen",
             "turn_off": "St\u00e4ng av",
             "turn_on": "Starta"
+        }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
         }
     }
 }

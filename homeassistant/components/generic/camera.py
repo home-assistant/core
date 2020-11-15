@@ -26,6 +26,9 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.reload import async_setup_reload_service
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +43,7 @@ DEFAULT_NAME = "Generic Camera"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STILL_IMAGE_URL): cv.template,
-        vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_STREAM_SOURCE): cv.template,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -59,6 +62,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a generic IP Camera."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     async_add_entities([GenericCamera(hass, config)])
 
 
@@ -72,8 +78,10 @@ class GenericCamera(Camera):
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
-        self._stream_source = device_info[CONF_STREAM_SOURCE]
+        self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         self._still_image_url.hass = hass
+        if self._stream_source is not None:
+            self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
@@ -113,7 +121,7 @@ class GenericCamera(Camera):
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         try:
-            url = self._still_image_url.async_render()
+            url = self._still_image_url.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
@@ -137,7 +145,7 @@ class GenericCamera(Camera):
                     )
                     return self._last_image
 
-            self._last_image = await self.hass.async_add_job(fetch)
+            self._last_image = await self.hass.async_add_executor_job(fetch)
         # async
         else:
             try:
@@ -166,4 +174,11 @@ class GenericCamera(Camera):
 
     async def stream_source(self):
         """Return the source of the stream."""
-        return self._stream_source
+        if self._stream_source is None:
+            return None
+
+        try:
+            return self._stream_source.async_render(parse_result=False)
+        except TemplateError as err:
+            _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
+            return None

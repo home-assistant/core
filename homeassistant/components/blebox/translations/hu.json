@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "unsupported_version": "A BleBox eszk\u00f6z elavult firmware-vel rendelkezik. El\u0151sz\u00f6r friss\u00edtse."
+        },
+        "flow_title": "BleBox eszk\u00f6z: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

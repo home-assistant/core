@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     meters = []
     for meter in essent.retrieve_meters():
         data = essent.retrieve_meter_data(meter)
-        for tariff in data["values"]["LVR"].keys():
+        for tariff in data["values"]["LVR"]:
             meters.append(
                 EssentMeter(
                     essent,

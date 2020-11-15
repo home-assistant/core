@@ -7,7 +7,7 @@ import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, TIME_SECONDS, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE, TIME_SECONDS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -69,7 +69,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             elif app.type == "Hob":
                 device = Hob(self.hass, app)
             else:
-                _LOGGER.warning("Appliance type %s not implemented.", app.type)
+                _LOGGER.warning("Appliance type %s not implemented", app.type)
                 continue
             devices.append({"device": device, "entities": device.get_entity_info()})
         self.devices = devices
@@ -93,15 +93,15 @@ class HomeConnectDevice:
         try:
             self.appliance.get_status()
         except (HomeConnectError, ValueError):
-            _LOGGER.debug("Unable to fetch appliance status. Probably offline.")
+            _LOGGER.debug("Unable to fetch appliance status. Probably offline")
         try:
             self.appliance.get_settings()
         except (HomeConnectError, ValueError):
-            _LOGGER.debug("Unable to fetch settings. Probably offline.")
+            _LOGGER.debug("Unable to fetch settings. Probably offline")
         try:
             program_active = self.appliance.get_programs_active()
         except (HomeConnectError, ValueError):
-            _LOGGER.debug("Unable to fetch active programs. Probably offline.")
+            _LOGGER.debug("Unable to fetch active programs. Probably offline")
             program_active = None
         if program_active and "key" in program_active:
             self.appliance.status[BSH_ACTIVE_PROGRAM] = {"value": program_active["key"]}
@@ -140,7 +140,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         sensors = {
             "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
-            "Program Progress": (UNIT_PERCENTAGE, "mdi:progress-clock", None, 1),
+            "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }
         return [
             {

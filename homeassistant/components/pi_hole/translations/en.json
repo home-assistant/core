@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "host": "Host",
+                    "location": "Location",
+                    "name": "Name",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    }
+}

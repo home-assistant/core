@@ -4,9 +4,6 @@
         "step": {
             "discovery_confirm": {
                 "title": "Fann ESPhome node"
-            },
-            "user": {
-                "title": "[%key:component::esphome::title%]"
             }
         }
     }

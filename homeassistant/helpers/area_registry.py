@@ -1,18 +1,15 @@
 """Provide a way to connect devices to one physical location."""
-from asyncio import Event
+from asyncio import Event, gather
 from collections import OrderedDict
-import logging
-from typing import Iterable, MutableMapping, Optional, cast
-import uuid
+from typing import Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+import homeassistant.util.uuid as uuid_util
 
 from .typing import HomeAssistantType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
@@ -25,8 +22,8 @@ SAVE_DELAY = 10
 class AreaEntry:
     """Area Registry Entry."""
 
-    name = attr.ib(type=str, default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    name: Optional[str] = attr.ib(default=None)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
 
 class AreaRegistry:
@@ -67,8 +64,12 @@ class AreaRegistry:
 
     async def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry, entity_registry = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+        )
         device_registry.async_clear_area_id(area_id)
+        entity_registry.async_clear_area_id(area_id)
 
         del self.areas[area_id]
 
@@ -132,7 +133,7 @@ class AreaRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> Dict[str, List[Dict[str, Optional[str]]]]:
         """Return data of area registry to store in a file."""
         data = {}
 
