@@ -364,7 +364,7 @@ google-cloud-pubsub==2.1.0
 google-nest-sdm==0.1.14
 
 # homeassistant.components.gree
-greeclimate==0.10.2
+greeclimate==0.10.3
 
 # homeassistant.components.griddy
 griddypower==0.1.0
