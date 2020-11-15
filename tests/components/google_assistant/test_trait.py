@@ -1909,7 +1909,7 @@ async def test_openclose_cover_assumed_state(hass):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"commandOnlyOpenClose": True}
 
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
