@@ -283,7 +283,9 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._available = False
         # We're going to wait for 10 seconds before announcing we're
         # unavailable, this to allow a reconnection to happen.
-        await asyncio.sleep(10)
+        _LOGGER.debug("pre sleep")
+        await self.sleep(10)
+        _LOGGER.debug("past sleep")
 
         if not self._available:
             # Still disconnected. Let the state engine know.
@@ -334,3 +336,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     async def sync(self):
         """Sync the Harmony device with the web service."""
         await self._data.sync()
+
+    async def sleep(self, time):
+        """Sleep for the given time."""
+        await asyncio.sleep(time)
