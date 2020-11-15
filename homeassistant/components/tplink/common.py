@@ -137,6 +137,8 @@ def add_available_devices(hass, device_type, device_class):
     """Get sysinfo for all devices."""
 
     devices = hass.data[TPLINK_DOMAIN][device_type]
+    add_attempt = hass.data[TPLINK_DOMAIN]["add_attempt"]
+    hass.data[TPLINK_DOMAIN]["add_attempt"] = add_attempt + 1
 
     if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
         devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
@@ -148,6 +150,16 @@ def add_available_devices(hass, device_type, device_class):
             device.get_sysinfo()
             entities_ready.append(device_class(device))
         except SmartDeviceException as ex:
+            if (
+                hass.data[TPLINK_DOMAIN]["add_attempt"]
+                >= hass.data[TPLINK_DOMAIN][CONF_RETRY_MAX_ATTEMPTS]
+            ):
+                _LOGGER.warning(
+                    "Reached maximum attempt to add device %s: %s",
+                    device.host,
+                    ex,
+                )
+                continue
             devices_unavailable.append(device)
             _LOGGER.warning(
                 "Unable to communicate with device %s: %s",

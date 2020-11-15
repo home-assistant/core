@@ -96,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
         hass.data[DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = config_data[
             CONF_RETRY_MAX_ATTEMPTS
         ]
+        hass.data[DOMAIN]["add_attempt"] = 0
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
