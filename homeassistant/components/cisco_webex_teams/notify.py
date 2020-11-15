@@ -30,31 +30,34 @@ def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
 
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
-    room_or_email = None
+    room = None
+    email = None
+
     try:
         # Validate the token & room_id
         if CONF_ROOM_ID in config.keys():
             client.rooms.get(config[CONF_ROOM_ID])
-            room_or_email = config[CONF_ROOM_ID]
-        elif CONF_EMAIL in config.keys():
-            room_or_email = config[CONF_EMAIL]
+            room = config[CONF_ROOM_ID]
+        if CONF_EMAIL in config.keys():
+            email = config[CONF_EMAIL]
     except exceptions.ApiError as error:
         _LOGGER.error(error)
         return None
 
-    if not room_or_email:
+    if not room and not email:
         _LOGGER.error("Please specify either room_id or email")
         return None
 
-    return CiscoWebexTeamsNotificationService(client, room_or_email)
+    return CiscoWebexTeamsNotificationService(client, room, email)
 
 
 class CiscoWebexTeamsNotificationService(BaseNotificationService):
     """The Cisco Webex Teams Notification Service."""
 
-    def __init__(self, client, room_or_email):
+    def __init__(self, client, room, email):
         """Initialize the service."""
-        self.room_or_email = room_or_email
+        self.room = room
+        self.email = email
         self.client = client
 
     def send_message(self, message="", **kwargs):
@@ -65,14 +68,13 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
             title = f"{kwargs.get(ATTR_TITLE)}<br>"
 
         try:
-            if "@" in self.room_or_email:
+            if self.email:
                 self.client.messages.create(
-                    toPersonEmail=self.room_or_email, html=f"{title}{message}"
+                    toPersonEmail=self.email, html=f"{title}{message}"
                 )
-            else:
-                self.client.messages.create(
-                    roomId=self.room_or_email, html=f"{title}{message}"
-                )
+            if self.room:
+                self.client.messages.create(roomId=self.room, html=f"{title}{message}")
+
         except ApiError as api_error:
             _LOGGER.error(
                 "Could not send CiscoWebexTeams notification. Error: %s", api_error
