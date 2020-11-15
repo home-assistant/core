@@ -11,9 +11,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the demo Number entity."""
     async_add_entities(
         [
-            DemoNumber("volume1", "volume", 42.0, "mdi:volume-high", False,),
             DemoNumber(
-                "pwm1", "PWM 1", 42.0, "mdi:square-wave", False, 0.0, 1.0, 0.01,
+                "volume1",
+                "volume",
+                42.0,
+                "mdi:volume-high",
+                False,
+            ),
+            DemoNumber(
+                "pwm1",
+                "PWM 1",
+                42.0,
+                "mdi:square-wave",
+                False,
+                0.0,
+                1.0,
+                0.01,
             ),
         ]
     )
