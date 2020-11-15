@@ -95,9 +95,6 @@ WSDiscovery==2.0.0
 # homeassistant.components.waze_travel_time
 WazeRouteCalculator==0.12
 
-# homeassistant.components.yessssms
-YesssSMS==0.4.1
-
 # homeassistant.components.abode
 abodepy==1.1.0
 
