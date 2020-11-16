@@ -7,7 +7,7 @@ import functools as ft
 import hashlib
 import logging
 import secrets
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -434,8 +434,11 @@ class MediaPlayerEntity(Entity):
         return await self._async_fetch_image_from_cache(url)
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: Optional[str] = None,
+    ) -> Tuple[Optional[str], Optional[str]]:
         """
         Optionally fetch internally accessible image for media browser.
 
@@ -906,8 +909,11 @@ class MediaPlayerEntity(Entity):
         return content, content_type
 
     def get_browse_image_url(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: Optional[str] = None,
+    ) -> str:
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
