@@ -78,13 +78,21 @@ async def test_step_user(hass):
 
     with patch(
         "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
-    ) as MockFireServiceRota:
+    ) as MockFireServiceRota, patch(
+        "homeassistant.components.fireservicerota.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.fireservicerota.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+
         mock_fireservicerota = MockFireServiceRota.return_value
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_CONF
         )
+
+        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == MOCK_CONF[CONF_USERNAME]
@@ -99,3 +107,6 @@ async def test_step_user(hass):
                 "created_at": 4321,
             },
         }
+
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
