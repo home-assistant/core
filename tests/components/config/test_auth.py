@@ -60,7 +60,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     assert len(data) == 4
     assert data[0] == {
         "id": hass_admin_user.id,
-        "username": "",
+        "username": None,
         "name": "Mock User",
         "is_owner": False,
         "is_active": True,
@@ -80,7 +80,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[2] == {
         "id": system.id,
-        "username": "",
+        "username": None,
         "name": "Test Hass.io",
         "is_owner": False,
         "is_active": True,
@@ -90,7 +90,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[3] == {
         "id": inactive.id,
-        "username": "",
+        "username": None,
         "name": "Inactive User",
         "is_owner": False,
         "is_active": False,
