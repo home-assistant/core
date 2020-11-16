@@ -129,7 +129,7 @@ def _user_info(user):
 
     ha_username = ""
     for c in filter(ha_cred, user.credentials):
-        ha_username = c.data["username"]
+        ha_username = c.data.get("username")
         break
 
     return {
