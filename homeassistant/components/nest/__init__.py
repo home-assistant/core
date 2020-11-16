@@ -216,14 +216,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except GoogleNestException as err:
         _LOGGER.error("Subscriber error: %s", err)
         subscriber.stop_async()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     try:
         await subscriber.async_get_device_manager()
     except GoogleNestException as err:
         _LOGGER.error("Device Manager error: %s", err)
         subscriber.stop_async()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.entry_id] = subscriber
 
