@@ -257,12 +257,9 @@ class HomeAssistant:
         fire_coroutine_threadsafe(self.async_start(), self.loop)
 
         # Run forever
-        try:
-            # Block until stopped
-            _LOGGER.info("Starting Home Assistant core loop")
-            self.loop.run_forever()
-        finally:
-            self.loop.close()
+        # Block until stopped
+        _LOGGER.info("Starting Home Assistant core loop")
+        self.loop.run_forever()
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -559,16 +556,11 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
             )
 
-        # Python 3.9+ and backported in runner.py
-        await self.loop.shutdown_default_executor()  # type: ignore
-
         self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
-        else:
-            self.loop.stop()
 
 
 @attr.s(slots=True, frozen=True)
