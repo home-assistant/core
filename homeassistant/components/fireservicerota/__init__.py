@@ -16,11 +16,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, WSS_BWRURL
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +65,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class FSRDataUpdateCoordinator:
+class FSRDataUpdateCoordinator(DataUpdateCoordinator):
     """Getting the latest data from fireservicerota."""
 
     def __init__(self, hass, entry):
@@ -75,12 +73,19 @@ class FSRDataUpdateCoordinator:
         self._hass = hass
         self._entry = entry
 
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=self.async_update,
+            update_interval=timedelta(seconds=60),
+        )
+
         self._url = entry.data[CONF_URL]
         self._tokens = entry.data[CONF_TOKEN]
-        self.availability_data = None
+
         self.incident_data = None
         self.incident_id = None
-        self.response_data = None
 
         self.fsr_avail = FireServiceRota(
             base_url=f"https://{self._url}", token_info=self._tokens
@@ -120,16 +125,15 @@ class FSRDataUpdateCoordinator:
             if await self.async_refresh_tokens():
                 return await self._hass.async_add_executor_job(func, *args)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest availability data."""
         _LOGGER.debug("Updating availability data")
 
-        self.availability_data = await self.update_call(
+        return await self.update_call(
             self.fsr_avail.get_availability, str(self._hass.config.time_zone)
         )
 
-    async def async_response_update(self) -> None:
+    async def async_response_update(self) -> object:
         """Get the latest incident response data."""
         if self.incident_data is None:
             return
@@ -137,15 +141,21 @@ class FSRDataUpdateCoordinator:
         self.incident_id = self.incident_data.get("id")
         _LOGGER.debug("Updating incident response data for id: %s", self.incident_id)
 
-        self.response_data = await self.update_call(
+        return await self.update_call(
             self.fsr_avail.get_incident_response, self.incident_id
         )
 
-    async def async_set_response(self, incident_id, value) -> None:
+    async def async_set_response(self, value) -> None:
         """Set incident response status."""
-        _LOGGER.debug("Setting incident response status")
+        _LOGGER.debug(
+            "Setting incident response for incident '%s' to status '%s'",
+            self.incident_id,
+            value,
+        )
 
-        await self.update_call(self.fsr_avail.set_incident_response, incident_id, value)
+        await self.update_call(
+            self.fsr_avail.set_incident_response, self.incident_id, value
+        )
 
     async def async_refresh_tokens(self) -> bool:
         """Refresh tokens and update config entry."""
