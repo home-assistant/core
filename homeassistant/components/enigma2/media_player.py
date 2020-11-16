@@ -136,7 +136,7 @@ class Enigma2Device(MediaPlayerEntity):
     @property
     def available(self):
         """Return True if the device is available."""
-        return self.e2_box.is_offline
+        return not self.e2_box.is_offline
 
     @property
     def supported_features(self):
