@@ -37,6 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = FSRDataUpdateCoordinator(hass, entry)
     await coordinator.async_update()
 
+    if coordinator.token_refresh_failure:
+        return False
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
