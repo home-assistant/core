@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -342,9 +343,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
+        hvacmode = kwargs.get(ATTR_HVAC_MODE)
         if temperature is None:
             return
         self._target_temp = temperature
+        if hvacmode is not None:
+            await self.async_set_hvac_mode(hvac_mode=hvacmode)
         await self._async_control_heating(force=True)
         self.async_write_ha_state()
 
