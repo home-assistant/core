@@ -336,7 +336,7 @@ def test_state_as_dict():
     assert state.as_dict() is state.as_dict()
 
 
-async def test_add_remove_listener(hass):
+async def test_eventbus_add_remove_listener(hass):
     """Test remove_listener method."""
     old_count = len(hass.bus.async_listeners())
 
@@ -355,7 +355,7 @@ async def test_add_remove_listener(hass):
     unsub()
 
 
-async def test_unsubscribe_listener(hass):
+async def test_eventbus_unsubscribe_listener(hass):
     """Test unsubscribe listener from returned function."""
     calls = []
 
@@ -379,7 +379,7 @@ async def test_unsubscribe_listener(hass):
     assert len(calls) == 1
 
 
-async def test_listen_once_event_with_callback(hass):
+async def test_eventbus_listen_once_event_with_callback(hass):
     """Test listen_once_event method."""
     runs = []
 
@@ -397,7 +397,7 @@ async def test_listen_once_event_with_callback(hass):
     assert len(runs) == 1
 
 
-async def test_listen_once_event_with_coroutine(hass):
+async def test_eventbus_listen_once_event_with_coroutine(hass):
     """Test listen_once_event method."""
     runs = []
 
@@ -414,7 +414,7 @@ async def test_listen_once_event_with_coroutine(hass):
     assert len(runs) == 1
 
 
-async def test_listen_once_event_with_thread(hass):
+async def test_eventbus_listen_once_event_with_thread(hass):
     """Test listen_once_event method."""
     runs = []
 
@@ -431,7 +431,7 @@ async def test_listen_once_event_with_thread(hass):
     assert len(runs) == 1
 
 
-async def test_thread_event_listener(hass):
+async def test_eventbus_thread_event_listener(hass):
     """Test thread event listener."""
     thread_calls = []
 
@@ -444,7 +444,7 @@ async def test_thread_event_listener(hass):
     assert len(thread_calls) == 1
 
 
-async def test_callback_event_listener(hass):
+async def test_eventbus_callback_event_listener(hass):
     """Test callback event listener."""
     callback_calls = []
 
@@ -458,7 +458,7 @@ async def test_callback_event_listener(hass):
     assert len(callback_calls) == 1
 
 
-async def test_coroutine_event_listener(hass):
+async def test_eventbus_coroutine_event_listener(hass):
     """Test coroutine event listener."""
     coroutine_calls = []
 
@@ -549,7 +549,7 @@ def test_state_repr():
     )
 
 
-async def test_is_state(hass):
+async def test_statemachine_is_state(hass):
     """Test is_state method."""
     hass.states.async_set("light.bowl", "on", {})
     assert hass.states.is_state("light.Bowl", "on")
@@ -557,7 +557,7 @@ async def test_is_state(hass):
     assert not hass.states.is_state("light.Non_existing", "on")
 
 
-async def test_entity_ids(hass):
+async def test_statemachine_entity_ids(hass):
     """Test get_entity_ids method."""
     hass.states.async_set("light.bowl", "on", {})
     hass.states.async_set("SWITCH.AC", "off", {})
@@ -574,7 +574,7 @@ async def test_entity_ids(hass):
     assert states == ["light.bowl", "switch.ac"]
 
 
-async def test_remove(hass):
+async def test_statemachine_remove(hass):
     """Test remove method."""
     hass.states.async_set("light.bowl", "on", {})
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
@@ -596,7 +596,7 @@ async def test_remove(hass):
     assert len(events) == 1
 
 
-async def test_case_insensitivty(hass):
+async def test_statemachine_case_insensitivty(hass):
     """Test insensitivty."""
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
@@ -607,7 +607,7 @@ async def test_case_insensitivty(hass):
     assert len(events) == 1
 
 
-async def test_last_changed_not_updated_on_same_state(hass):
+async def test_statemachine_last_changed_not_updated_on_same_state(hass):
     """Test to not update the existing, same state."""
     hass.states.async_set("light.bowl", "on", {})
     state = hass.states.get("light.Bowl")
@@ -623,7 +623,7 @@ async def test_last_changed_not_updated_on_same_state(hass):
     assert state.last_changed == state2.last_changed
 
 
-async def test_force_update(hass):
+async def test_statemachine_force_update(hass):
     """Test force update option."""
     hass.states.async_set("light.bowl", "on", {})
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
