@@ -1,4 +1,4 @@
-"""Test cloud system health."""
+"""Test AccuWeather system health."""
 import asyncio
 
 from aiohttp import ClientError
@@ -11,7 +11,7 @@ from tests.common import get_system_health_info
 
 
 async def test_accuweather_system_health(hass, aioclient_mock):
-    """Test cloud system health."""
+    """Test AccuWeather system health."""
     aioclient_mock.get("https://dataservice.accuweather.com/", text="")
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
@@ -35,7 +35,7 @@ async def test_accuweather_system_health(hass, aioclient_mock):
 
 
 async def test_accuweather_system_health_fail(hass, aioclient_mock):
-    """Test cloud system health."""
+    """Test AccuWeather system health."""
     aioclient_mock.get("https://dataservice.accuweather.com/", exc=ClientError)
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
