@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLT,
+    VOLUME_CUBIC_METERS,
 )
 
 from . import SmartThingsEntity
@@ -115,6 +116,12 @@ CAPABILITY_TO_SENSORS = {
             CONCENTRATION_PARTS_PER_MILLION,
             None,
         )
+    ],
+    Capability.gas_meter: [
+        Map(Attribute.gas_meter, "Gas Meter", ENERGY_KILO_WATT_HOUR, None),
+        Map(Attribute.gas_meter_calorific, "Gas Meter Calorific", None, None),
+        Map(Attribute.gas_meter_time, "Gas Meter Time", None, DEVICE_CLASS_TIMESTAMP),
+        Map(Attribute.gas_meter_volume, "Gas Meter Volume", VOLUME_CUBIC_METERS, None),
     ],
     Capability.illuminance_measurement: [
         Map(Attribute.illuminance, "Illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE)

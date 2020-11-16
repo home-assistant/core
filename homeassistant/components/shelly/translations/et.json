@@ -5,7 +5,6 @@
             "unsupported_firmware": "Seade kasutab toetuseta p\u00fcsivara versiooni."
         },
         "error": {
-            "auth_not_supported": "Autentimist vajavaid Shelly seadmeid praegu ei toetata.",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
@@ -28,6 +27,5 @@
                 "description": "Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadme nuppu."
             }
         }
-    },
-    "title": ""
+    }
 }

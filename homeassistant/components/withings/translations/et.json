@@ -10,9 +10,7 @@
             "default": "Edukalt Withing'siga autenditud."
         },
         "error": {
-            "already_configured": "Konto on juba seadistatud",
-            "already_configured_account": "Konto on juba h\u00e4\u00e4lestatud",
-            "profile_exists": "Kasutajaprofiil on juba seadistatud. Sisesta unikaalne profiilinimi."
+            "already_configured": "Konto on juba seadistatud"
         },
         "flow_title": "",
         "step": {

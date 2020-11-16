@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Twilio s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu ligip\u00e4\u00e4setav.",
-            "one_instance_allowed": "Lubatud on ainult \u00fcks sidumine.",
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "webhook_not_internet_accessible": "Veebikonksu s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu juurdep\u00e4\u00e4setav."
         },
         "create_entry": {
             "default": "S\u00fcndmuste saatmiseks Home Assistantile pead seadistama [Webhooks with Twilio] ( {twilio_url} ).\n\n Sisesta j\u00e4rgmine teave:\n\n - URL: \" {webhook_url} \"\n - Meetod: POST\n - Sisu t\u00fc\u00fcp: application/x-www-form-urlencoded\n\n Vaata [documentation] ( {docs_url} ) kuidas seadistada automatiseeringud sissetulevate andmete k\u00e4itlemiseks."

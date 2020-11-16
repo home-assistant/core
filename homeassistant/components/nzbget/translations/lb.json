@@ -5,8 +5,7 @@
             "unknown": "Onerwaarte Feeler"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "flow_title": "NZBGet: {name}",
         "step": {

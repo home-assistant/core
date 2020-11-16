@@ -6,7 +6,6 @@
             "no_bridges": "Geen deCONZ apparaten ontdekt",
             "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
             "not_deconz_bridge": "Dit is geen deCONZ bridge",
-            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instantie",
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {

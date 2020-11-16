@@ -1,63 +1,15 @@
 """Shelly entity helper."""
-from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, Union
 
 import aioshelly
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry, entity
+from homeassistant.helpers import device_registry, entity, update_coordinator
 
-from . import ShellyDeviceWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
-
-
-def temperature_unit(block_info: dict) -> str:
-    """Detect temperature unit."""
-    if block_info[aioshelly.BLOCK_VALUE_UNIT] == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
-
-
-def shelly_naming(self, block, entity_type: str):
-    """Naming for switch and sensors."""
-
-    entity_name = self.wrapper.name
-    if not block:
-        return f"{entity_name} {self.description.name}"
-
-    channels = 0
-    mode = block.type + "s"
-    if "num_outputs" in self.wrapper.device.shelly:
-        channels = self.wrapper.device.shelly["num_outputs"]
-        if (
-            self.wrapper.model in ["SHSW-21", "SHSW-25"]
-            and self.wrapper.device.settings["mode"] == "roller"
-        ):
-            channels = 1
-        if block.type == "emeter" and "num_emeters" in self.wrapper.device.shelly:
-            channels = self.wrapper.device.shelly["num_emeters"]
-    if channels > 1 and block.type != "device":
-        # Shelly EM (SHEM) with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
-        if "name" in self.wrapper.device.settings[mode][int(block.channel)]:
-            entity_name = self.wrapper.device.settings[mode][int(block.channel)]["name"]
-        else:
-            entity_name = None
-        if not entity_name:
-            if self.wrapper.model == "SHEM-3":
-                base = ord("A")
-            else:
-                base = ord("1")
-            entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
-
-    if entity_type == "switch":
-        return entity_name
-
-    if entity_type == "sensor":
-        return f"{entity_name} {self.description.name}"
-
-    raise ValueError
+from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
+from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
+from .utils import get_entity_name, get_rest_value_from_path
 
 
 async def async_setup_entry_attribute_entities(
@@ -66,7 +18,7 @@ async def async_setup_entry_attribute_entities(
     """Set up entities for block attributes."""
     wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
-    ]
+    ][COAP]
     blocks = []
 
     for block in wrapper.device.blocks:
@@ -84,14 +36,33 @@ async def async_setup_entry_attribute_entities(
     if not blocks:
         return
 
-    counts = Counter([item[1] for item in blocks])
-
     async_add_entities(
         [
-            sensor_class(wrapper, block, sensor_id, description, counts[sensor_id])
+            sensor_class(wrapper, block, sensor_id, description)
             for block, sensor_id, description in blocks
         ]
     )
+
+
+async def async_setup_entry_rest(
+    hass, config_entry, async_add_entities, sensors, sensor_class
+):
+    """Set up entities for REST sensors."""
+    wrapper: ShellyDeviceRestWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][REST]
+
+    entities = []
+    for sensor_id in sensors:
+        _desc = sensors.get(sensor_id)
+
+        if not wrapper.device.settings.get("sleep_mode"):
+            entities.append(_desc)
+
+    if not entities:
+        return
+
+    async_add_entities([sensor_class(wrapper, description) for description in entities])
 
 
 @dataclass
@@ -100,6 +71,7 @@ class BlockAttributeDescription:
 
     name: str
     # Callable = lambda attr_info: unit
+    icon: Optional[str] = None
     unit: Union[None, str, Callable[[dict], str]] = None
     value: Callable[[Any], Any] = lambda val: val
     device_class: Optional[str] = None
@@ -110,6 +82,21 @@ class BlockAttributeDescription:
     ] = None
 
 
+@dataclass
+class RestAttributeDescription:
+    """Class to describe a REST sensor."""
+
+    path: str
+    name: str
+    # Callable = lambda attr_info: unit
+    icon: Optional[str] = None
+    unit: Union[None, str, Callable[[dict], str]] = None
+    value: Callable[[Any], Any] = lambda val: val
+    device_class: Optional[str] = None
+    default_enabled: bool = True
+    attributes: Optional[dict] = None
+
+
 class ShellyBlockEntity(entity.Entity):
     """Helper class to represent a block."""
 
@@ -117,7 +104,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = shelly_naming(self, block, "switch")
+        self._name = get_entity_name(wrapper, block)
 
     @property
     def name(self):
@@ -169,7 +156,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         block: aioshelly.Block,
         attribute: str,
         description: BlockAttributeDescription,
-        same_type_count: int,
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper, block)
@@ -184,7 +170,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-        self._name = shelly_naming(self, block, "sensor")
+        self._name = get_entity_name(wrapper, block, self.description.name)
 
     @property
     def unique_id(self):
@@ -222,6 +208,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.device_class
 
     @property
+    def icon(self):
+        """Icon of sensor."""
+        return self.description.icon
+
+    @property
     def available(self):
         """Available."""
         available = super().available
@@ -238,3 +229,85 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
             return None
 
         return self.description.device_state_attributes(self.block)
+
+
+class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
+    """Class to load info from REST."""
+
+    def __init__(
+        self, wrapper: ShellyDeviceWrapper, description: RestAttributeDescription
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(wrapper)
+        self.wrapper = wrapper
+        self.description = description
+
+        self._unit = self.description.unit
+        self._name = get_entity_name(wrapper, None, self.description.name)
+        self.path = self.description.path
+        self._attributes = self.description.attributes
+
+    @property
+    def name(self):
+        """Name of sensor."""
+        return self._name
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+        }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if it should be enabled by default."""
+        return self.description.default_enabled
+
+    @property
+    def available(self):
+        """Available."""
+        return self.wrapper.last_update_success
+
+    @property
+    def attribute_value(self):
+        """Attribute."""
+        return get_rest_value_from_path(
+            self.wrapper.device.status, self.description.device_class, self.path
+        )
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self.description.unit
+
+    @property
+    def device_class(self):
+        """Device class of sensor."""
+        return self.description.device_class
+
+    @property
+    def icon(self):
+        """Icon of sensor."""
+        return self.description.icon
+
+    @property
+    def unique_id(self):
+        """Return unique ID of entity."""
+        return f"{self.wrapper.mac}-{self.description.path}"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+
+        if self._attributes is None:
+            return None
+
+        _description = self._attributes.get("description")
+        _attribute_value = get_rest_value_from_path(
+            self.wrapper.device.status,
+            self.description.device_class,
+            self._attributes.get("path"),
+        )
+
+        return {_description: _attribute_value}

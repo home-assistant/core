@@ -24,14 +24,6 @@
                 "description": "Vuoi aggiungere Kodi (`{name}`) a Home Assistant?",
                 "title": "Rilevato Kodi"
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Porta",
-                    "ssl": "Connettiti tramite SSL"
-                },
-                "description": "Informazioni sulla connessione Kodi. Assicurati di abilitare \"Consenti il controllo di Kodi tramite HTTP\" in Sistema/Impostazioni/Rete/Servizi."
-            },
             "user": {
                 "data": {
                     "host": "Host",

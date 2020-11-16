@@ -14,7 +14,7 @@
                     "host": "Vert",
                     "password": "Passord",
                     "port": "Port",
-                    "site": "Nettsted-ID",
+                    "site": "Nettsted ID",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },

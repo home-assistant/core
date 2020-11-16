@@ -150,6 +150,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
+            if new_state is None:
+                continue
             await self.async_update_supported_features(
                 entity_id, new_state, update_state=False
             )
@@ -307,6 +309,8 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._cover_position = 0 if self.is_closed else 100
             for entity_id in self._covers[KEY_POSITION]:
                 state = self.hass.states.get(entity_id)
+                if state is None:
+                    continue
                 pos = state.attributes.get(ATTR_CURRENT_POSITION)
                 if position == -1:
                     position = pos
@@ -323,6 +327,8 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._tilt_position = 100
             for entity_id in self._tilts[KEY_POSITION]:
                 state = self.hass.states.get(entity_id)
+                if state is None:
+                    continue
                 pos = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
                 if position == -1:
                     position = pos
@@ -351,6 +357,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         if not self._assumed_state:
             for entity_id in self._entities:
                 state = self.hass.states.get(entity_id)
+                if state is None:
+                    continue
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
                     self._assumed_state = True
                     break

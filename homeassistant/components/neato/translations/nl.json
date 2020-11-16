@@ -2,16 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Al geconfigureerd",
-            "invalid_auth": "Ongeldige authenticatie",
-            "invalid_credentials": "Ongeldige gebruikersgegevens"
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "create_entry": {
             "default": "Zie [Neato-documentatie] ({docs_url})."
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
-            "invalid_credentials": "Ongeldige inloggegevens",
-            "unexpected_error": "Onverwachte fout",
             "unknown": "Onverwachte fout"
         },
         "step": {

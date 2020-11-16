@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "connection_error": "Verbindung zum Guardian-Ger\u00e4t fehlgeschlagen."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "step": {
             "user": {
@@ -12,6 +11,5 @@
                 }
             }
         }
-    },
-    "title": "Elexa Guardian"
+    }
 }

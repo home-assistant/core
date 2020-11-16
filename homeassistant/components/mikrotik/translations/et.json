@@ -1,14 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
-            "name_exists": "Nimi on juba olemas",
-            "wrong_credentials": "Vale mandaat"
+            "name_exists": "Nimi on juba olemas"
         },
         "step": {
             "user": {

@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Aadress on juba seadistatud.",
             "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "\u00dchenduse loomine nurjus",
             "invalid_address": "Aadress ei kuuluTwente Milieu teeninduspiirkondat."
         },
         "step": {

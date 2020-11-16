@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "V\u00e4rden \u00e4r redan konfigurerad."
         },
-        "error": {
-            "connection": "Anslutningsfel: v\u00e4nligen kontrollera v\u00e4rd, port & SSL"
-        },
         "step": {
             "link": {
                 "data": {

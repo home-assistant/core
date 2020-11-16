@@ -1,8 +1,10 @@
 """Support for Google Nest SDM Cameras."""
 
+import datetime
 import logging
 from typing import Optional
 
+from aiohttp.client_exceptions import ClientError
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
 from haffmpeg.tools import IMAGE_JPEG
@@ -11,6 +13,7 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
@@ -18,6 +21,9 @@ from .const import DOMAIN, SIGNAL_NEST_UPDATE
 from .device_info import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+# Used to schedule an alarm to refresh the stream before expiration
+STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
 
 
 async def async_setup_sdm_entry(
@@ -49,6 +55,7 @@ class NestCamera(Camera):
         self._device = device
         self._device_info = DeviceInfo(device)
         self._stream = None
+        self._stream_refresh_unsub = None
 
     @property
     def should_poll(self) -> bool:
@@ -84,31 +91,59 @@ class NestCamera(Camera):
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = 0
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            features = features | SUPPORT_STREAM
-        return features
+            return SUPPORT_STREAM
+        return 0
 
     async def stream_source(self):
         """Return the source of the stream."""
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        now = utcnow()
         if not self._stream:
-            logging.debug("Fetching stream url")
+            _LOGGER.debug("Fetching stream url")
             self._stream = await trait.generate_rtsp_stream()
-        elif self._stream.expires_at < now:
-            logging.debug("Stream expired, extending stream")
-            new_stream = await self._stream.extend_rtsp_stream()
-            self._stream = new_stream
+            self._schedule_stream_refresh()
+        if self._stream.expires_at < utcnow():
+            _LOGGER.warning("Stream already expired")
         return self._stream.rtsp_stream_url
+
+    def _schedule_stream_refresh(self):
+        """Schedules an alarm to refresh the stream url before expiration."""
+        _LOGGER.debug("New stream url expires at %s", self._stream.expires_at)
+        refresh_time = self._stream.expires_at - STREAM_EXPIRATION_BUFFER
+        # Schedule an alarm to extend the stream
+        if self._stream_refresh_unsub is not None:
+            self._stream_refresh_unsub()
+
+        self._stream_refresh_unsub = async_track_point_in_utc_time(
+            self.hass,
+            self._handle_stream_refresh,
+            refresh_time,
+        )
+
+    async def _handle_stream_refresh(self, now):
+        """Alarm that fires to check if the stream should be refreshed."""
+        if not self._stream:
+            return
+        _LOGGER.debug("Extending stream url")
+        self._stream_refresh_unsub = None
+        try:
+            self._stream = await self._stream.extend_rtsp_stream()
+        except ClientError as err:
+            _LOGGER.debug("Failed to extend stream: %s", err)
+            # Next attempt to catch a url will get a new one
+            self._stream = None
+            return
+        self._schedule_stream_refresh()
 
     async def async_will_remove_from_hass(self):
         """Invalidates the RTSP token when unloaded."""
         if self._stream:
-            logging.debug("Invalidating stream")
+            _LOGGER.debug("Invalidating stream")
             await self._stream.stop_rtsp_stream()
+        if self._stream_refresh_unsub:
+            self._stream_refresh_unsub()
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""

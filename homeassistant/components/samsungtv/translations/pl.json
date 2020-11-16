@@ -5,7 +5,6 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "auth_missing": "Home Assistant nie ma uprawnie\u0144 do po\u0142\u0105czenia si\u0119 z tym telewizorem Samsung. Sprawd\u017a ustawienia telewizora, aby autoryzowa\u0107 Home Assistant.",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "not_successful": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem Samsung TV",
             "not_supported": "Ten telewizor Samsung nie jest obecnie obs\u0142ugiwany"
         },
         "flow_title": "Samsung TV: {model}",

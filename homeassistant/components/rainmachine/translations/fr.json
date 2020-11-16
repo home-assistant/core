@@ -4,9 +4,7 @@
             "already_configured": "Ce contr\u00f4leur RainMachine est d\u00e9j\u00e0 configur\u00e9."
         },
         "error": {
-            "identifier_exists": "Compte d\u00e9j\u00e0 enregistr\u00e9",
-            "invalid_auth": "Authentification invalide",
-            "invalid_credentials": "Informations d'identification invalides"
+            "invalid_auth": "Authentification invalide"
         },
         "step": {
             "user": {

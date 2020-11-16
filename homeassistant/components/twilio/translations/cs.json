@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "V\u00e1\u0161 Home Asistent mus\u00ed b\u00fdt p\u0159\u00edstupn\u00fd z internetu, aby mohl p\u0159ij\u00edmat zpr\u00e1vy od Twilio.",
-            "one_instance_allowed": "Povolena je pouze jedna instance.",
-            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "webhook_not_internet_accessible": "V\u00e1\u0161 Home Assistant mus\u00ed b\u00fdt p\u0159\u00edstupn\u00fd z internetu, aby mohl p\u0159ij\u00edmat zpr\u00e1vy webhook."
         },
         "create_entry": {
             "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, mus\u00edte nastavit [Webhooks s Twilio]({twilio_url}). \n\nVypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}' \n - Metoda: POST \n - Typ obsahu: application/x-www-form-urlencoded \n\nViz [dokumentace]({docs_url}), jak konfigurovat automatizace pro zpracov\u00e1n\u00ed p\u0159\u00edchoz\u00edch dat."

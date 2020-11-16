@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Du kan kun konfigurere en enkelt iAqualink-forbindelse."
-        },
-        "error": {
-            "connection_failure": "Kan ikke oprette forbindelse til iAqualink. Kontroller dit brugernavn og din adgangskode."
-        },
         "step": {
             "user": {
                 "data": {

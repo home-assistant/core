@@ -15,13 +15,6 @@
             "discovery_confirm": {
                 "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?"
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "\u00dcber SSL verbinden"
-                }
-            },
             "user": {
                 "data": {
                     "host": "Host",
