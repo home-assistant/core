@@ -330,7 +330,7 @@ class TodoistProjectData:
         # The latest date a task can be due (for making lists of everything
         # due today, or everything due in the next week, for example).
         if latest_task_due_date is not None:
-            self._latest_due_date = dt.utcnow() + timedelta(days=latest_task_due_date)
+            self._latest_due_date = timedelta(days=latest_task_due_date)
         else:
             self._latest_due_date = None
 
@@ -381,7 +381,7 @@ class TodoistProjectData:
             task[END] = _parse_due_date(data[DUE])
 
             if self._latest_due_date is not None and (
-                task[END] > self._latest_due_date
+                task[END] > dt.utcnow() + self._latest_due_date
             ):
                 # This task is out of range of our due date;
                 # it shouldn't be counted.
