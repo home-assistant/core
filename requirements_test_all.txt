@@ -376,7 +376,7 @@ ha-ffmpeg==2.0
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.37.2
+hass-nabucasa==0.38.0
 
 # homeassistant.components.tasmota
 hatasmota==0.0.30
