@@ -8,7 +8,11 @@ from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
 from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smartthings import sensor
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.components.smartthings.const import (
+    DOMAIN,
+    POWER_CONSUMPTION_REPORT_NAMES,
+    SIGNAL_SMARTTHINGS_UPDATE,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -84,10 +88,10 @@ async def test_entity_three_axis_invalid_state(hass, device_factory):
 
 async def test_entity_power_consumption_report_state(hass, device_factory):
     """Test the state attributes."""
-    test_attr_values = {
+    mock_report = {
         "start": "00110501T000000-0800",  # Nov 5 2020 America/Los Angeles
         "power": 90,
-        "energy": 10000.0,
+        "energy": 10000.0,  # primary attribute, reported by state of sensor
         "end": "00110601T000000-0800",  # Nov 6 2020 America/Los Angeles
         "deltaEnergy": 100.0,
         "powerEnergy": 80.0,
@@ -97,7 +101,7 @@ async def test_entity_power_consumption_report_state(hass, device_factory):
     device = device_factory(
         "Appliance",
         [Capability.power_consumption_report],
-        {Attribute.power_consumption: test_attr_values},
+        {Attribute.power_consumption: mock_report},
     )
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("sensor.appliance_power_consumption_report")
@@ -108,18 +112,10 @@ async def test_entity_power_consumption_report_state(hass, device_factory):
     )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
-    attributes = [
-        "power_consumption_start",
-        "power_consumption_power",
-        "power_consumption_energy",
-        "power_consumption_end",
-        "power_consumption_delta_energy",
-        "power_consumption_power_energy",
-        "power_consumption_energy_saved",
-        "power_consumption_persisted_energy",
-    ]
-    for attribute, test_attr_value in zip(attributes, test_attr_values):
-        assert state.attributes[attribute] == test_attr_values[test_attr_value]
+    attributes = POWER_CONSUMPTION_REPORT_NAMES.values()
+    mock_report = {k: v for k, v in mock_report.items() if k != "energy"}
+    for attribute, mock_value in zip(attributes, mock_report.values()):
+        assert state.attributes[attribute] == mock_value
 
 
 async def test_entity_power_consumption_report_invalid_state(hass, device_factory):
