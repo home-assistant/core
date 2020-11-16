@@ -119,7 +119,6 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        supports = SUPPORT_SET_SPEED
         if self._tuya.support_oscillate():
-            supports = supports | SUPPORT_OSCILLATE
-        return supports
+            return SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
+        return SUPPORT_SET_SPEED

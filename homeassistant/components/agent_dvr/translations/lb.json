@@ -5,7 +5,7 @@
         },
         "error": {
             "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
-            "device_unavailable": "Apparat ass net erreechbar"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "Agent DVR ariichten"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

@@ -257,12 +257,9 @@ class HomeAssistant:
         fire_coroutine_threadsafe(self.async_start(), self.loop)
 
         # Run forever
-        try:
-            # Block until stopped
-            _LOGGER.info("Starting Home Assistant core loop")
-            self.loop.run_forever()
-        finally:
-            self.loop.close()
+        # Block until stopped
+        _LOGGER.info("Starting Home Assistant core loop")
+        self.loop.run_forever()
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -559,16 +556,11 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
             )
 
-        # Python 3.9+ and backported in runner.py
-        await self.loop.shutdown_default_executor()  # type: ignore
-
         self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
-        else:
-            self.loop.stop()
 
 
 @attr.s(slots=True, frozen=True)
@@ -1180,12 +1172,14 @@ class StateMachine:
         if context is None:
             context = Context()
 
+        now = dt_util.utcnow()
+
         state = State(
             entity_id,
             new_state,
             attributes,
             last_changed,
-            None,
+            now,
             context,
             old_state is None,
         )
@@ -1195,6 +1189,7 @@ class StateMachine:
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             EventOrigin.local,
             context,
+            time_fired=now,
         )
 
 
@@ -1530,7 +1525,7 @@ class Config:
         self.safe_mode: bool = False
 
         # Use legacy template behavior
-        self.legacy_templates: bool = True
+        self.legacy_templates: bool = False
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.

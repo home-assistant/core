@@ -23,8 +23,7 @@
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
                     "verify_ssl": "Verificare il certificato SSL"
-                },
-                "title": "Connettiti a Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

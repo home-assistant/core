@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen mam Elgato key Light Apparat."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen mam Elgato key Light Apparat."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {

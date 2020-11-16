@@ -2,11 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
-            "no_devices": "\ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
             "reauth_successful": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uc131\uacf5\uc801\uc73c\ub85c \uc5c5\ub370\uc774\ud2b8\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "auth": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "unknown": "\uc54c \uc218 \uc5c6\ub294 Awair API \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4."
         },
         "step": {

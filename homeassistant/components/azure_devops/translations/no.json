@@ -5,9 +5,7 @@
             "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
-            "authorization_error": "Autoriseringsfeil. Sjekk at du har tilgang til prosjektet og har riktig legitimasjon.",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kunne ikke koble til Azure DevOps.",
             "invalid_auth": "Ugyldig godkjenning",
             "project_error": "Kunne ikke f\u00e5 prosjektinformasjon."
         },
@@ -30,6 +28,5 @@
                 "title": "Legg til Azure DevOps Project"
             }
         }
-    },
-    "title": ""
+    }
 }

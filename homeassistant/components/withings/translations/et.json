@@ -6,10 +6,13 @@
             "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
         },
-        "error": {
-            "already_configured": "Konto on juba seadistatud",
-            "already_configured_account": "Konto on juba h\u00e4\u00e4lestatud"
+        "create_entry": {
+            "default": "Edukalt Withing'siga autenditud."
         },
+        "error": {
+            "already_configured": "Konto on juba seadistatud"
+        },
+        "flow_title": "",
         "step": {
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"
@@ -23,7 +26,7 @@
             },
             "reauth": {
                 "description": "Withingi andmete jsaamiseks tuleb kasutaja {profile} taastuvastada.",
-                "title": "Taastuvasta profiil"
+                "title": "Taastuvasta sidumine"
             }
         }
     }

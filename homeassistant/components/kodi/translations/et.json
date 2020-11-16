@@ -24,24 +24,19 @@
                 "description": "Kas soovid lisada Kodi {name} Home Assistanti?",
                 "title": "Avastatud Kodi seadmed"
             },
-            "host": {
-                "data": {
-                    "host": "",
-                    "port": "",
-                    "ssl": "Loo \u00fchendus SSL-i kaudu"
-                }
-            },
             "user": {
                 "data": {
                     "host": "",
                     "port": "",
                     "ssl": "Kasutab SSL serti"
-                }
+                },
+                "description": "Kodi \u00fchenduse teave. Veendu, et lubaksid jaotises S\u00fcsteem / Seaded / V\u00f5rk / Teenused valiku \"Luba Kodi juhtimine HTTP kaudu\"."
             },
             "ws_port": {
                 "data": {
                     "ws_port": ""
-                }
+                },
+                "description": "WebSocket'i port (mida Kodis nimetatakse m\u00f5nikord ka TCP-pordiks). WebSocket'i kaudu \u00fchenduse loomiseks peadmen\u00fc\u00fcs S\u00fcsteem / Seaded / V\u00f5rk / Teenused lubama \"Luba programmidel ... Kodit juhtida\". Kui WebSocket pole lubatud, eemalda port ja j\u00e4tat\u00fchjaks."
             }
         }
     },

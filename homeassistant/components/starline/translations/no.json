@@ -8,7 +8,7 @@
         "step": {
             "auth_app": {
                 "data": {
-                    "app_id": "App-ID",
+                    "app_id": "",
                     "app_secret": "Hemmelig"
                 },
                 "description": "Applikasjons-ID og hemmelig kode fra [StarLine utviklerkonto](https://my.starline.ru/developer)",

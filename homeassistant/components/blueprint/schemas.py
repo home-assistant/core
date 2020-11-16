@@ -3,11 +3,17 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, CONF_SELECTOR
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
-from .const import CONF_BLUEPRINT, CONF_INPUT, CONF_USE_BLUEPRINT
+from .const import (
+    CONF_BLUEPRINT,
+    CONF_DESCRIPTION,
+    CONF_INPUT,
+    CONF_SOURCE_URL,
+    CONF_USE_BLUEPRINT,
+)
 
 
 @callback
@@ -22,14 +28,27 @@ def is_blueprint_instance_config(config: Any) -> bool:
     return isinstance(config, dict) and CONF_USE_BLUEPRINT in config
 
 
+BLUEPRINT_INPUT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): str,
+        vol.Optional(CONF_DESCRIPTION): str,
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    }
+)
+
 BLUEPRINT_SCHEMA = vol.Schema(
     {
-        # No definition yet for the inputs.
         vol.Required(CONF_BLUEPRINT): vol.Schema(
             {
                 vol.Required(CONF_NAME): str,
                 vol.Required(CONF_DOMAIN): str,
-                vol.Optional(CONF_INPUT, default=dict): {str: None},
+                vol.Optional(CONF_SOURCE_URL): cv.url,
+                vol.Optional(CONF_INPUT, default=dict): {
+                    str: vol.Any(
+                        None,
+                        BLUEPRINT_INPUT_SCHEMA,
+                    )
+                },
             }
         ),
     },

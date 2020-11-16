@@ -9,11 +9,13 @@
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "invalid_zone": "Ong\u00eblteg Zon"
         },
+        "flow_title": "Cloudflare: {name}",
         "step": {
             "user": {
                 "data": {
                     "api_token": "API Jeton"
-                }
+                },
+                "title": "Mat Cloudflare verbannen"
             },
             "zone": {
                 "data": {

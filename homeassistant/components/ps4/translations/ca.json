@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "credential_error": "Error en l'obtenci\u00f3 de les credencials.",
-            "devices_configured": "Tots els dispositius trobats ja estan configurats.",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
             "port_987_bind_error": "No s'ha pogut vincular amb el port 987. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3.",
             "port_997_bind_error": "No s'ha pogut vincular amb el port 997. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3."
@@ -12,8 +11,7 @@
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "credential_timeout": "El servei de credencials ha expirat. Prem Envia per reiniciar-lo.",
             "login_failed": "No s'ha pogut sincronitzar amb la PlayStation 4. Verifica que el Codi PIN sigui correcte.",
-            "no_ipaddress": "Introdueix l'Adre\u00e7a IP de la PlayStation 4 que vulguis configurar.",
-            "not_ready": "La PlayStation 4 no est\u00e0 engegada o no s'ha connectada a la xarxa."
+            "no_ipaddress": "Introdueix l'Adre\u00e7a IP de la PlayStation 4 que vulguis configurar."
         },
         "step": {
             "creds": {

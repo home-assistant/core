@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan kun konfigurere en enkelt Nest konto.",
             "authorize_url_fail": "Ukendt fejl ved generering af en autoriseret url.",
-            "authorize_url_timeout": "Timeout ved generering af autoriseret url.",
-            "no_flows": "Du skal konfigurere Nest f\u00f8r du kan autentificere med det. [L\u00e6s venligst vejledningen](https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "Timeout ved generering af autoriseret url."
         },
         "error": {
             "internal_error": "Intern fejl ved validering af kode",
-            "invalid_code": "Ugyldig kode",
             "timeout": "Timeout ved validering af kode",
             "unknown": "Ukendt fejl ved validering af kode"
         },

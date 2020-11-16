@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Konto on juba seadistatud",
+            "no_device": "\u00dchelgi seadmetest ei ole \"Leia minu iPhone\" aktiveeritud",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "login": "Sisselogimise viga: palun kontrolli oma e-posti ja salas\u00f5na",
             "send_verification_code": "Kinnituskoodi saatmine nurjus",
             "validate_verification_code": "Tuvastuskoodi kinnitamine nurjus. Vali usaldusseade ja proovi uuesti"
         },
@@ -28,7 +28,8 @@
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
-                    "username": "E-post"
+                    "username": "E-post",
+                    "with_family": "Perega"
                 },
                 "description": "Sisesta oma mandaat.",
                 "title": "iCloudi tuvastusandmed"
