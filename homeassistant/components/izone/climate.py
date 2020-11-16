@@ -25,11 +25,15 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_EXCLUDE,
+    CONF_ENTITY_ID,
+    CONF_SENSORS,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -72,7 +76,19 @@ async def async_setup_entry(
             return
         _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
 
-        device = ControllerDevice(ctrl)
+        # Find matching device ID's and pass in sensor entity_id
+        if conf and conf.get(CONF_SENSORS):
+            sensors = conf.get(CONF_SENSORS)
+            for device_id, value in sensors.items():
+                if device_id == ctrl.device_uid:
+                    entity_id = value.get(CONF_ENTITY_ID)
+                    _LOGGER.debug("Found external temperature sensor="+entity_id+", for device_id="+device_id)
+                    device = ControllerDevice(ctrl, entity_id)
+                    break
+            else:
+                device = ControllerDevice(ctrl)
+        else:
+            device = ControllerDevice(ctrl)
         async_add_entities([device])
         async_add_entities(device.zones.values())
 
@@ -104,9 +120,11 @@ def _return_on_connection_error(ret=None):
 class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
-    def __init__(self, controller: Controller) -> None:
+    def __init__(self, controller: Controller, entity_id=None) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
+        self._temperature_sensor = entity_id
+        self._current_temperature = None
 
         self._supported_features = SUPPORT_FAN_MODE
 
@@ -144,6 +162,14 @@ class ControllerDevice(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Call on adding to hass."""
+        if self._temperature_sensor:
+            async_track_state_change(self.hass, self._temperature_sensor,
+                                     self._async_temp_sensor_changed)
+
+            temp_sensor_state = self.hass.states.get(self._temperature_sensor)
+            if temp_sensor_state and temp_sensor_state.state != STATE_UNKNOWN:
+                self._async_update_temp(temp_sensor_state)
+
         # Register for connect/disconnect/update events
         @callback
         def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
@@ -310,6 +336,8 @@ class ControllerDevice(ClimateEntity):
     @_return_on_connection_error()
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
+        if self._temperature_sensor:
+            return self._current_temperature
         if self._controller.mode == Controller.Mode.FREE_AIR:
             return self._controller.temp_supply
         return self._controller.temp_return
@@ -399,6 +427,21 @@ class ControllerDevice(ClimateEntity):
         """Turn the entity on."""
         await self.wrap_and_catch(self._controller.set_on(True))
 
+    async def _async_temp_sensor_changed(self, entity_id, old_state, new_state):
+        """Handle temperature sensor changes."""
+        if new_state is None:
+            return
+        self._async_update_temp(new_state)
+        await self.async_update_ha_state()
+
+    @callback
+    def _async_update_temp(self, state):
+        """Update thermostat with latest state from temperature sensor."""
+        try:
+            if state.state != STATE_UNKNOWN:
+                self._current_temperature = float(state.state)
+        except ValueError as ex:
+            _LOGGER.error("Unable to update from temperature sensor: %s", ex)
 
 class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
