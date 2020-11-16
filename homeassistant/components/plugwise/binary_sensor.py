@@ -141,8 +141,6 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
         super().__init__(api, coordinator, name, dev_id, binary_sensor)
 
         self._attributes = {}
-        for severity in SEVERITIES:
-            self._attributes[f"{severity}_msg"] = None
 
     @property
     def device_state_attributes(self):
@@ -153,6 +151,9 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
     def _async_process_data(self):
         """Update the entity."""
         notify = self._api.notifications
+
+        for severity in SEVERITIES:
+            self._attributes[f"{severity}_msg"] = []
 
         self._is_on = False
         self._icon = NO_NOTIFICATION_ICON
@@ -166,6 +167,6 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
                     if msg_type not in SEVERITIES:
                         msg_type = "other"
 
-                    self._attributes[f"{msg_type.lower()}_msg"] = msg
+                    self._attributes[f"{msg_type.lower()}_msg"].append(msg)
 
         self.async_write_ha_state()
