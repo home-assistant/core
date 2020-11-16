@@ -122,8 +122,8 @@ class OpenSkySensor(Entity):
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
-                longitude = 0
-                latitude = 0
+                longitude = None
+                latitude = None
 
             data = {
                 ATTR_CALLSIGN: flight,
