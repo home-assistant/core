@@ -24,13 +24,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class BMWDeviceTracker(TrackerEntity, BMWConnectedDriveBaseEntity):
+class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     """BMW Connected Drive device tracker."""
 
     def __init__(self, account, vehicle):
         """Initialize the Tracker."""
-        self._account = account
-        self._vehicle = vehicle
+        super().__init__(account, vehicle)
+
         self._unique_id = vehicle.vin
         self._location = (
             vehicle.state.gps_position if vehicle.state.gps_position else (None, None)

@@ -25,13 +25,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class BMWLock(LockEntity, BMWConnectedDriveBaseEntity):
+class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     """Representation of a BMW vehicle lock."""
 
     def __init__(self, account, vehicle, attribute: str, sensor_name):
         """Initialize the lock."""
-        self._account = account
-        self._vehicle = vehicle
+        super().__init__(account, vehicle)
+
         self._attribute = attribute
         self._name = f"{self._vehicle.name} {self._attribute}"
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"

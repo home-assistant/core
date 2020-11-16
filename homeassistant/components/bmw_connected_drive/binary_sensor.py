@@ -66,15 +66,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class BMWConnectedDriveSensor(BinarySensorEntity, BMWConnectedDriveBaseEntity):
+class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
     """Representation of a BMW vehicle binary sensor."""
 
     def __init__(
         self, account, vehicle, attribute: str, sensor_name, device_class, icon
     ):
         """Initialize sensor."""
-        self._account = account
-        self._vehicle = vehicle
+        super().__init__(account, vehicle)
+
         self._attribute = attribute
         self._name = f"{self._vehicle.name} {self._attribute}"
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
