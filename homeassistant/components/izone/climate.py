@@ -19,35 +19,37 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_EXCLUDE,
-    CONF_ENTITY_ID,
-    CONF_SENSORS,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
-    STATE_UNKNOWN,
-)
+import logging
+from typing import List, Optional
+
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (FAN_AUTO, FAN_HIGH,
+                                                    FAN_LOW, FAN_MEDIUM,
+                                                    HVAC_MODE_COOL,
+                                                    HVAC_MODE_DRY,
+                                                    HVAC_MODE_FAN_ONLY,
+                                                    HVAC_MODE_HEAT,
+                                                    HVAC_MODE_HEAT_COOL,
+                                                    HVAC_MODE_OFF, PRESET_ECO,
+                                                    PRESET_NONE,
+                                                    SUPPORT_FAN_MODE,
+                                                    SUPPORT_PRESET_MODE,
+                                                    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_ENTITY_ID,
+                                 CONF_EXCLUDE, CONF_SENSORS, PRECISION_HALVES,
+                                 PRECISION_TENTHS, STATE_UNKNOWN, TEMP_CELSIUS)
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from pizone import Controller, Zone
 
-from .const import (
-    DATA_CONFIG,
-    DATA_DISCOVERY_SERVICE,
-    DISPATCH_CONTROLLER_DISCONNECTED,
-    DISPATCH_CONTROLLER_DISCOVERED,
-    DISPATCH_CONTROLLER_RECONNECTED,
-    DISPATCH_CONTROLLER_UPDATE,
-    DISPATCH_ZONE_UPDATE,
-    IZONE,
-)
+from .const import (DATA_CONFIG, DATA_DISCOVERY_SERVICE,
+                    DISPATCH_CONTROLLER_DISCONNECTED,
+                    DISPATCH_CONTROLLER_DISCOVERED,
+                    DISPATCH_CONTROLLER_RECONNECTED,
+                    DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE, IZONE)
 
 _LOGGER = logging.getLogger(__name__)
 
