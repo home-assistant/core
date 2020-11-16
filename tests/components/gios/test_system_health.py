@@ -1,4 +1,4 @@
-"""Test cloud system health."""
+"""Test GIOS system health."""
 import asyncio
 
 from aiohttp import ClientError
@@ -10,7 +10,7 @@ from tests.common import get_system_health_info
 
 
 async def test_gios_system_health(hass, aioclient_mock):
-    """Test gios system health."""
+    """Test GIOS system health."""
     aioclient_mock.get("http://api.gios.gov.pl/pjp-api/rest/station/findAll", text="")
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
@@ -25,7 +25,7 @@ async def test_gios_system_health(hass, aioclient_mock):
 
 
 async def test_gios_system_health_fail(hass, aioclient_mock):
-    """Test gios system health."""
+    """Test GIOS system health."""
     aioclient_mock.get(
         "http://api.gios.gov.pl/pjp-api/rest/station/findAll", exc=ClientError
     )
