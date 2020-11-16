@@ -38,7 +38,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.async_mock import MagicMock, Mock, PropertyMock, patch
-from tests.common import async_mock_service, get_test_home_assistant
+from tests.common import (
+    async_capture_events,
+    async_mock_service,
+    get_test_home_assistant,
+)
 
 PST = pytz.timezone("America/Los_Angeles")
 
@@ -151,22 +155,14 @@ def test_async_run_hass_job_delegates_non_async():
     assert len(hass.async_add_hass_job.mock_calls) == 1
 
 
-def test_stage_shutdown():
+async def test_stage_shutdown(hass):
     """Simulate a shutdown, test calling stuff."""
-    hass = get_test_home_assistant()
-    test_stop = []
-    test_final_write = []
-    test_close = []
-    test_all = []
+    test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
+    test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
+    test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
+    test_all = async_capture_events(hass, MATCH_ALL)
 
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, lambda event: test_stop.append(event))
-    hass.bus.listen(
-        EVENT_HOMEASSISTANT_FINAL_WRITE, lambda event: test_final_write.append(event)
-    )
-    hass.bus.listen(EVENT_HOMEASSISTANT_CLOSE, lambda event: test_close.append(event))
-    hass.bus.listen("*", lambda event: test_all.append(event))
-
-    hass.stop()
+    await hass.async_stop()
 
     assert len(test_stop) == 1
     assert len(test_close) == 1
@@ -341,147 +337,139 @@ def test_state_as_dict():
     assert state.as_dict() is state.as_dict()
 
 
-class TestEventBus(unittest.TestCase):
-    """Test EventBus methods."""
+async def test_add_remove_listener(hass):
+    """Test remove_listener method."""
+    old_count = len(hass.bus.async_listeners())
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.bus = self.hass.bus
+    def listener(_):
+        pass
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop down stuff we started."""
-        self.hass.stop()
+    unsub = hass.bus.async_listen("test", listener)
 
-    def test_add_remove_listener(self):
-        """Test remove_listener method."""
-        self.hass.allow_pool = False
-        old_count = len(self.bus.listeners)
+    assert old_count + 1 == len(hass.bus.async_listeners())
 
-        def listener(_):
-            pass
+    # Remove listener
+    unsub()
+    assert old_count == len(hass.bus.async_listeners())
 
-        unsub = self.bus.listen("test", listener)
+    # Should do nothing now
+    unsub()
 
-        assert old_count + 1 == len(self.bus.listeners)
 
-        # Remove listener
-        unsub()
-        assert old_count == len(self.bus.listeners)
+async def test_unsubscribe_listener(hass):
+    """Test unsubscribe listener from returned function."""
+    calls = []
 
-        # Should do nothing now
-        unsub()
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
 
-    def test_unsubscribe_listener(self):
-        """Test unsubscribe listener from returned function."""
-        calls = []
+    unsub = hass.bus.async_listen("test", listener)
 
-        @ha.callback
-        def listener(event):
-            """Mock listener."""
-            calls.append(event)
+    hass.bus.async_fire("test")
+    await hass.async_block_till_done()
 
-        unsub = self.bus.listen("test", listener)
+    assert len(calls) == 1
 
-        self.bus.fire("test")
-        self.hass.block_till_done()
+    unsub()
 
-        assert len(calls) == 1
+    hass.bus.async_fire("event")
+    await hass.async_block_till_done()
 
-        unsub()
+    assert len(calls) == 1
 
-        self.bus.fire("event")
-        self.hass.block_till_done()
 
-        assert len(calls) == 1
+async def test_listen_once_event_with_callback(hass):
+    """Test listen_once_event method."""
+    runs = []
 
-    def test_listen_once_event_with_callback(self):
-        """Test listen_once_event method."""
-        runs = []
+    @ha.callback
+    def event_handler(event):
+        runs.append(event)
 
-        @ha.callback
-        def event_handler(event):
-            runs.append(event)
+    hass.bus.async_listen_once("test_event", event_handler)
 
-        self.bus.listen_once("test_event", event_handler)
+    hass.bus.async_fire("test_event")
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
 
-        self.bus.fire("test_event")
-        # Second time it should not increase runs
-        self.bus.fire("test_event")
+    await hass.async_block_till_done()
+    assert len(runs) == 1
 
-        self.hass.block_till_done()
-        assert len(runs) == 1
 
-    def test_listen_once_event_with_coroutine(self):
-        """Test listen_once_event method."""
-        runs = []
+async def test_listen_once_event_with_coroutine(hass):
+    """Test listen_once_event method."""
+    runs = []
 
-        async def event_handler(event):
-            runs.append(event)
+    async def event_handler(event):
+        runs.append(event)
 
-        self.bus.listen_once("test_event", event_handler)
+    hass.bus.async_listen_once("test_event", event_handler)
 
-        self.bus.fire("test_event")
-        # Second time it should not increase runs
-        self.bus.fire("test_event")
+    hass.bus.async_fire("test_event")
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
 
-        self.hass.block_till_done()
-        assert len(runs) == 1
+    await hass.async_block_till_done()
+    assert len(runs) == 1
 
-    def test_listen_once_event_with_thread(self):
-        """Test listen_once_event method."""
-        runs = []
 
-        def event_handler(event):
-            runs.append(event)
+async def test_listen_once_event_with_thread(hass):
+    """Test listen_once_event method."""
+    runs = []
 
-        self.bus.listen_once("test_event", event_handler)
+    def event_handler(event):
+        runs.append(event)
 
-        self.bus.fire("test_event")
-        # Second time it should not increase runs
-        self.bus.fire("test_event")
+    hass.bus.async_listen_once("test_event", event_handler)
 
-        self.hass.block_till_done()
-        assert len(runs) == 1
+    hass.bus.async_fire("test_event")
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
 
-    def test_thread_event_listener(self):
-        """Test thread event listener."""
-        thread_calls = []
+    await hass.async_block_till_done()
+    assert len(runs) == 1
 
-        def thread_listener(event):
-            thread_calls.append(event)
 
-        self.bus.listen("test_thread", thread_listener)
-        self.bus.fire("test_thread")
-        self.hass.block_till_done()
-        assert len(thread_calls) == 1
+async def test_thread_event_listener(hass):
+    """Test thread event listener."""
+    thread_calls = []
 
-    def test_callback_event_listener(self):
-        """Test callback event listener."""
-        callback_calls = []
+    def thread_listener(event):
+        thread_calls.append(event)
 
-        @ha.callback
-        def callback_listener(event):
-            callback_calls.append(event)
+    hass.bus.async_listen("test_thread", thread_listener)
+    hass.bus.async_fire("test_thread")
+    await hass.async_block_till_done()
+    assert len(thread_calls) == 1
 
-        self.bus.listen("test_callback", callback_listener)
-        self.bus.fire("test_callback")
-        self.hass.block_till_done()
-        assert len(callback_calls) == 1
 
-    def test_coroutine_event_listener(self):
-        """Test coroutine event listener."""
-        coroutine_calls = []
+async def test_callback_event_listener(hass):
+    """Test callback event listener."""
+    callback_calls = []
 
-        async def coroutine_listener(event):
-            coroutine_calls.append(event)
+    @ha.callback
+    def callback_listener(event):
+        callback_calls.append(event)
 
-        self.bus.listen("test_coroutine", coroutine_listener)
-        self.bus.fire("test_coroutine")
-        self.hass.block_till_done()
-        assert len(coroutine_calls) == 1
+    hass.bus.async_listen("test_callback", callback_listener)
+    hass.bus.async_fire("test_callback")
+    await hass.async_block_till_done()
+    assert len(callback_calls) == 1
+
+
+async def test_coroutine_event_listener(hass):
+    """Test coroutine event listener."""
+    coroutine_calls = []
+
+    async def coroutine_listener(event):
+        coroutine_calls.append(event)
+
+    hass.bus.async_listen("test_coroutine", coroutine_listener)
+    hass.bus.async_fire("test_coroutine")
+    await hass.async_block_till_done()
+    assert len(coroutine_calls) == 1
 
 
 def test_state_init():

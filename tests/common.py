@@ -9,7 +9,6 @@ from io import StringIO
 import json
 import logging
 import os
-import sys
 import threading
 import time
 import uuid
@@ -109,24 +108,21 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config directory."""
-    if sys.platform == "win32":
-        loop = asyncio.ProactorEventLoop()
-    else:
-        loop = asyncio.new_event_loop()
-
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
-    stop_event = threading.Event()
+    loop_stop_event = threading.Event()
 
     def run_loop():
         """Run event loop."""
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        stop_event.set()
+        loop_stop_event.set()
 
     orig_stop = hass.stop
+    hass._stopped = Mock(set=loop.stop)
 
     def start_hass(*mocks):
         """Start hass."""
@@ -135,7 +131,7 @@ def get_test_home_assistant():
     def stop_hass():
         """Stop hass."""
         orig_stop()
-        stop_event.wait()
+        loop_stop_event.wait()
         loop.close()
 
     hass.start = start_hass
