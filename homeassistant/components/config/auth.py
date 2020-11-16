@@ -123,8 +123,18 @@ async def websocket_update(hass, connection, msg):
 
 def _user_info(user):
     """Format a user."""
+
+    def ha_cred(c):
+        return c.auth_provider_type == "homeassistant"
+
+    ha_username = ""
+    for c in filter(ha_cred, user.credentials):
+        ha_username = c.data["username"]
+        break
+
     return {
         "id": user.id,
+        "username": ha_username,
         "name": user.name,
         "is_owner": user.is_owner,
         "is_active": user.is_active,
