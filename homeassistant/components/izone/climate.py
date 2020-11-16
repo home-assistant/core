@@ -84,7 +84,7 @@ async def async_setup_entry(
             for device_id, value in sensors.items():
                 if device_id == ctrl.device_uid:
                     entity_id = value.get(CONF_ENTITY_ID)
-                    _LOGGER.debug("Found external temperature sensor="+entity_id+", for device_id="+device_id)
+                    _LOGGER.debug("Found external temperature sensor=%s, for device_id=%s", entity_id, device_id)
                     device = ControllerDevice(ctrl, entity_id)
                     break
             else:
