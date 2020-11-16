@@ -53,12 +53,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    return await hass.data[DOMAIN].async_setup_entry(entry)  # type: ignore
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    return await hass.data[DOMAIN].async_unload_entry(entry)  # type: ignore
 
 
 class NumberEntity(Entity):
