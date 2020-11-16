@@ -13,7 +13,7 @@ from tests.common import get_system_health_info
 async def test_airly_system_health(hass, aioclient_mock):
     """Test cloud system health."""
     aioclient_mock.get("https://airapi.airly.eu/v2/", text="")
-    hass.config.components.add("airly")
+    hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
 
     hass.data[DOMAIN] = {}
@@ -21,7 +21,7 @@ async def test_airly_system_health(hass, aioclient_mock):
         airly=Mock(AIRLY_API_URL="https://airapi.airly.eu/v2/")
     )
 
-    info = await get_system_health_info(hass, "airly")
+    info = await get_system_health_info(hass, DOMAIN)
 
     for key, val in info.items():
         if asyncio.iscoroutine(val):
@@ -33,7 +33,7 @@ async def test_airly_system_health(hass, aioclient_mock):
 async def test_airly_system_health_fail(hass, aioclient_mock):
     """Test cloud system health."""
     aioclient_mock.get("https://airapi.airly.eu/v2/", exc=ClientError)
-    hass.config.components.add("airly")
+    hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
 
     hass.data[DOMAIN] = {}
@@ -41,7 +41,7 @@ async def test_airly_system_health_fail(hass, aioclient_mock):
         airly=Mock(AIRLY_API_URL="https://airapi.airly.eu/v2/")
     )
 
-    info = await get_system_health_info(hass, "airly")
+    info = await get_system_health_info(hass, DOMAIN)
 
     for key, val in info.items():
         if asyncio.iscoroutine(val):
