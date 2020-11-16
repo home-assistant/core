@@ -512,7 +512,7 @@ async def test_template_with_delay_on_based_on_input(hass):
                     "friendly_name": "virtual thingy",
                     "value_template": "{{ states.sensor.test_state.state == 'on' }}",
                     "device_class": "motion",
-                    "delay_on_template": '{{ ({ "seconds": states.input_number.delay.state }) }}',
+                    "delay_on_template": '{{ ({ "seconds": states("input_number.delay")|int }) }}',
                 }
             },
         }
@@ -550,7 +550,10 @@ async def test_template_with_delay_on_based_on_input(hass):
     state = hass.states.get("binary_sensor.test")
     assert state.state == "off"
 
-    hass.states.async_set("input_number.delay", 2)
+    hass.states.async_set("input_number.delay", 4)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "on")
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
@@ -563,7 +566,7 @@ async def test_template_with_delay_on_based_on_input(hass):
     state = hass.states.get("binary_sensor.test")
     assert state.state == "off"
 
-    future = dt_util.utcnow() + timedelta(seconds=2)
+    future = dt_util.utcnow() + timedelta(seconds=4)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
@@ -581,7 +584,7 @@ async def test_template_with_delay_off_based_on_input(hass):
                     "friendly_name": "virtual thingy",
                     "value_template": "{{ states.sensor.test_state.state == 'on' }}",
                     "device_class": "motion",
-                    "delay_off_template": '{{ ({ "seconds": states.input_number.delay.state }) }}',
+                    "delay_off_template": '{{ ({ "seconds": states("input_number.delay")|int }) }}',
                 }
             },
         }
@@ -619,7 +622,10 @@ async def test_template_with_delay_off_based_on_input(hass):
     state = hass.states.get("binary_sensor.test")
     assert state.state == "on"
 
-    hass.states.async_set("input_number.delay", 2)
+    hass.states.async_set("input_number.delay", 4)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "off")
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
@@ -632,7 +638,7 @@ async def test_template_with_delay_off_based_on_input(hass):
     state = hass.states.get("binary_sensor.test")
     assert state.state == "on"
 
-    future = dt_util.utcnow() + timedelta(seconds=2)
+    future = dt_util.utcnow() + timedelta(seconds=4)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
