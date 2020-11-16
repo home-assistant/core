@@ -649,7 +649,7 @@ def test_service_call_repr():
     )
 
 
-async def test_has_service(hass):
+async def test_serviceregistry_has_service(hass):
     """Test has_service method."""
     hass.services.async_register("test_domain", "test_service", lambda call: None)
     assert len(hass.services.async_services()) == 1
@@ -658,7 +658,7 @@ async def test_has_service(hass):
     assert not hass.services.has_service("non_existing", "test_service")
 
 
-async def test_call_with_blocking_done_in_time(hass):
+async def test_serviceregistry_call_with_blocking_done_in_time(hass):
     """Test call with blocking."""
     registered_events = async_capture_events(hass, EVENT_SERVICE_REGISTERED)
     calls = async_mock_service(hass, "test_domain", "register_calls")
@@ -674,13 +674,13 @@ async def test_call_with_blocking_done_in_time(hass):
     assert len(calls) == 1
 
 
-async def test_call_non_existing_with_blocking(hass):
+async def test_serviceregistry_call_non_existing_with_blocking(hass):
     """Test non-existing with blocking."""
     with pytest.raises(ha.ServiceNotFound):
         await hass.services.async_call("test_domain", "i_do_not_exist", blocking=True)
 
 
-async def test_async_service(hass):
+async def test_serviceregistry_async_service(hass):
     """Test registering and calling an async service."""
     calls = []
 
@@ -696,7 +696,7 @@ async def test_async_service(hass):
     assert len(calls) == 1
 
 
-async def test_async_service_partial(hass):
+async def test_serviceregistry_async_service_partial(hass):
     """Test registering and calling an wrapped async service."""
     calls = []
 
@@ -715,7 +715,7 @@ async def test_async_service_partial(hass):
     assert len(calls) == 1
 
 
-async def test_callback_service(hass):
+async def test_serviceregistry_callback_service(hass):
     """Test registering and calling an async service."""
     calls = []
 
@@ -732,7 +732,7 @@ async def test_callback_service(hass):
     assert len(calls) == 1
 
 
-async def test_remove_service(hass):
+async def test_serviceregistry_remove_service(hass):
     """Test remove service."""
     calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
 
@@ -748,7 +748,7 @@ async def test_remove_service(hass):
     assert calls_remove[-1].data["service"] == "test_service"
 
 
-async def test_service_that_not_exists(hass):
+async def test_serviceregistry_service_that_not_exists(hass):
     """Test remove service that not exists."""
     calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
     assert not hass.services.has_service("test_xxx", "test_yyy")
@@ -760,7 +760,7 @@ async def test_service_that_not_exists(hass):
         await hass.services.async_call("test_do_not", "exist", {})
 
 
-async def test_async_service_raise_exception(hass):
+async def test_serviceregistry_async_service_raise_exception(hass):
     """Test registering and calling an async service raise exception."""
 
     async def service_handler(_):
@@ -779,7 +779,7 @@ async def test_async_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-async def test_callback_service_raise_exception(hass):
+async def test_serviceregistry_callback_service_raise_exception(hass):
     """Test registering and calling an callback service raise exception."""
 
     @ha.callback
