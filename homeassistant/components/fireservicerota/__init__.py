@@ -20,6 +20,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, WSS_BWRURL
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_PLATFORMS = {SENSOR_DOMAIN}
@@ -78,12 +80,13 @@ class FSRDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_method=self.async_update,
-            update_interval=timedelta(seconds=60),
+            update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 
         self._url = entry.data[CONF_URL]
         self._tokens = entry.data[CONF_TOKEN]
 
+        self.token_refresh_failure = False
         self.incident_data = None
         self.incident_id = None
 
@@ -119,6 +122,9 @@ class FSRDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def update_call(self, func, *args):
         """Perform update call and return data."""
+        if self.token_refresh_failure:
+            return
+
         try:
             return await self._hass.async_add_executor_job(func, *args)
         except (ExpiredTokenError, InvalidTokenError):
@@ -173,7 +179,8 @@ class FSRDataUpdateCoordinator(DataUpdateCoordinator):
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
-
+            self.token_refresh_failure = True
+            self.update_interval = None
             return False
 
         _LOGGER.debug("Saving new tokens in config entry")
@@ -185,6 +192,8 @@ class FSRDataUpdateCoordinator(DataUpdateCoordinator):
                 CONF_TOKEN: token_info,
             },
         )
+        self.update_interval = MIN_TIME_BETWEEN_UPDATES
+        self.token_refresh_failure = False
         self.start_ws_listener()
 
         return True
