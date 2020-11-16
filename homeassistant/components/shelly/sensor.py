@@ -28,10 +28,13 @@ from .utils import async_remove_entity_by_domain, temperature_unit
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSORS = {
+BATTERY_SENSOR = {
     ("device", "battery"): BlockAttributeDescription(
         name="Battery", unit=PERCENTAGE, device_class=sensor.DEVICE_CLASS_BATTERY
     ),
+}
+
+SENSORS = {
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
         unit=temperature_unit,
@@ -193,10 +196,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "Removed battery sensor [externally powered] for %s",
             get_device_name(wrapper.device),
         )
-        SENSORS.pop(("device", "battery"))
         unique_id = f'{wrapper.device.shelly["mac"]}-battery'
         await async_remove_entity_by_domain(
             hass, "sensor", unique_id, config_entry.entry_id
+        )
+    else:
+        await async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, BATTERY_SENSOR, ShellySensor
         )
 
     await async_setup_entry_attribute_entities(
