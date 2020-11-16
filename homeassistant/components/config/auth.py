@@ -124,13 +124,14 @@ async def websocket_update(hass, connection, msg):
 def _user_info(user):
     """Format a user."""
 
-    def ha_cred(c):
-        return c.auth_provider_type == "homeassistant"
-
-    ha_username = ""
-    for c in filter(ha_cred, user.credentials):
-        ha_username = c.data.get("username")
-        break
+    ha_username = next(
+        (
+            cred.data.get("username")
+            for cred in user.credentials
+            if cred.auth_provider_type == "homeassistant"
+        ),
+        None,
+    )
 
     return {
         "id": user.id,
