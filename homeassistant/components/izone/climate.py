@@ -2,8 +2,6 @@
 import logging
 from typing import List, Optional
 
-from pizone import Controller, Zone
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -19,25 +17,19 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
-import logging
-from typing import List, Optional
-
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (FAN_AUTO, FAN_HIGH,
-                                                    FAN_LOW, FAN_MEDIUM,
-                                                    HVAC_MODE_COOL,
-                                                    HVAC_MODE_DRY,
-                                                    HVAC_MODE_FAN_ONLY,
-                                                    HVAC_MODE_HEAT,
-                                                    HVAC_MODE_HEAT_COOL,
-                                                    HVAC_MODE_OFF, PRESET_ECO,
-                                                    PRESET_NONE,
-                                                    SUPPORT_FAN_MODE,
-                                                    SUPPORT_PRESET_MODE,
-                                                    SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_ENTITY_ID,
-                                 CONF_EXCLUDE, CONF_SENSORS, PRECISION_HALVES,
-                                 PRECISION_TENTHS, STATE_UNKNOWN, TEMP_CELSIUS)
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ENTITY_ID,
+    CONF_EXCLUDE,
+    CONF_SENSORS,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_state_change
@@ -45,11 +37,16 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from pizone import Controller, Zone
 
-from .const import (DATA_CONFIG, DATA_DISCOVERY_SERVICE,
-                    DISPATCH_CONTROLLER_DISCONNECTED,
-                    DISPATCH_CONTROLLER_DISCOVERED,
-                    DISPATCH_CONTROLLER_RECONNECTED,
-                    DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE, IZONE)
+from .const import (
+    DATA_CONFIG,
+    DATA_DISCOVERY_SERVICE,
+    DISPATCH_CONTROLLER_DISCONNECTED,
+    DISPATCH_CONTROLLER_DISCOVERED,
+    DISPATCH_CONTROLLER_RECONNECTED,
+    DISPATCH_CONTROLLER_UPDATE,
+    DISPATCH_ZONE_UPDATE,
+    IZONE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,20 +68,22 @@ async def async_setup_entry(
     def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
         conf = hass.data.get(DATA_CONFIG)  # type: ConfigType
-
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
             _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
             return
         _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
-
         # Find matching device ID's and pass in sensor entity_id
         if conf and conf.get(CONF_SENSORS):
             sensors = conf.get(CONF_SENSORS)
             for device_id, value in sensors.items():
                 if device_id == ctrl.device_uid:
                     entity_id = value.get(CONF_ENTITY_ID)
-                    _LOGGER.debug("Found external temperature sensor=%s, for device_id=%s", entity_id, device_id)
+                    _LOGGER.debug(
+                        "Found external temperature sensor=%s, for device_id=%s",
+                        entity_id,
+                        device_id,
+                    )
                     device = ControllerDevice(ctrl, entity_id)
                     break
             else:
@@ -127,7 +126,6 @@ class ControllerDevice(ClimateEntity):
         self._controller = controller
         self._temperature_sensor = entity_id
         self._current_temperature = None
-
         self._supported_features = SUPPORT_FAN_MODE
 
         if (
@@ -165,8 +163,9 @@ class ControllerDevice(ClimateEntity):
     async def async_added_to_hass(self):
         """Call on adding to hass."""
         if self._temperature_sensor:
-            async_track_state_change(self.hass, self._temperature_sensor,
-                                     self._async_temp_sensor_changed)
+            async_track_state_change(
+                self.hass, self._temperature_sensor, self._async_temp_sensor_changed
+            )
 
             temp_sensor_state = self.hass.states.get(self._temperature_sensor)
             if temp_sensor_state and temp_sensor_state.state != STATE_UNKNOWN:
@@ -444,6 +443,7 @@ class ControllerDevice(ClimateEntity):
                 self._current_temperature = float(state.state)
         except ValueError as ex:
             _LOGGER.error("Unable to update from temperature sensor: %s", ex)
+
 
 class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
