@@ -65,7 +65,7 @@ REST_SENSORS = {
         default_enabled=False,
         path="update/has_update",
         attributes=[
-            {"description": "released_version", "path": "update/new_version"},
+            {"description": "latest_stable_version", "path": "update/new_version"},
             {"description": "installed_version", "path": "update/old_version"},
         ],
     ),
