@@ -162,7 +162,7 @@ class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
             self._is_on = True
             self._icon = NOTIFICATION_ICON
 
-            for dummy, details in notify.items():
+            for details in notify.values():
                 for msg_type, msg in details.items():
                     if msg_type not in SEVERITIES:
                         msg_type = "other"
