@@ -44,7 +44,7 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     assert attrs["preset_mode"] == "asleep"
 
 
-async def test_adam_climate_switch_negative_testing(hass, mock_smile_adam):
+async def test_adam_climate_adjust_negative_testing(hass, mock_smile_adam):
     """Test exceptions of climate entities."""
     mock_smile_adam.set_preset.side_effect = PlugwiseException
     mock_smile_adam.set_schedule_state.side_effect = PlugwiseException
