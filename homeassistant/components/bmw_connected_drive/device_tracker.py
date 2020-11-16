@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 
-from . import DOMAIN as BMW_DOMAIN
+from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class BMWDeviceTracker(TrackerEntity):
+class BMWDeviceTracker(TrackerEntity, BMWConnectedDriveBaseEntity):
     """BMW Connected Drive device tracker."""
 
     def __init__(self, account, vehicle):
@@ -58,17 +58,6 @@ class BMWDeviceTracker(TrackerEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict:
-        """Return info for device registry."""
-        return {
-            "identifiers": {(BMW_DOMAIN, self._vehicle.vin)},
-            "sw_version": self._vehicle.vin,
-            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
-            "model": self._vehicle.name,
-            "manufacturer": self._vehicle.attributes.get("brand"),
-        }
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
@@ -90,14 +79,3 @@ class BMWDeviceTracker(TrackerEntity):
             if self._vehicle.state.is_vehicle_tracking_enabled
             else (None, None)
         )
-
-    def update_callback(self):
-        """Schedule a state update."""
-        self.schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
-        self._account.add_update_listener(self.update_callback)

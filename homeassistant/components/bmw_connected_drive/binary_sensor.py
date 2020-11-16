@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
-from . import DOMAIN as BMW_DOMAIN
+from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
 from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class BMWConnectedDriveSensor(BinarySensorEntity):
+class BMWConnectedDriveSensor(BinarySensorEntity, BMWConnectedDriveBaseEntity):
     """Representation of a BMW vehicle binary sensor."""
 
     def __init__(
@@ -82,17 +82,6 @@ class BMWConnectedDriveSensor(BinarySensorEntity):
         self._device_class = device_class
         self._icon = icon
         self._state = None
-
-    @property
-    def device_info(self) -> dict:
-        """Return info for device registry."""
-        return {
-            "identifiers": {(BMW_DOMAIN, self._vehicle.vin)},
-            "sw_version": self._vehicle.vin,
-            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
-            "model": self._vehicle.name,
-            "manufacturer": self._vehicle.attributes.get("brand"),
-        }
 
     @property
     def should_poll(self) -> bool:
@@ -215,14 +204,3 @@ class BMWConnectedDriveSensor(BinarySensorEntity):
                 f"{service_type} distance"
             ] = f"{distance} {self.hass.config.units.length_unit}"
         return result
-
-    def update_callback(self):
-        """Schedule a state update."""
-        self.schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
-        self._account.add_update_listener(self.update_callback)

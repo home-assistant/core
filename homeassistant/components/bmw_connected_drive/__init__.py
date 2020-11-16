@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -100,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     def _update_all() -> None:
         """Update all BMW accounts."""
-        for cd_account in list(hass.data[DOMAIN].values()):
+        for cd_account in hass.data[DOMAIN].values():
             cd_account.update()
 
     # Add update listener for config entry changes (options)
@@ -279,3 +280,34 @@ class BMWConnectedDriveAccount:
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
+
+
+class BMWConnectedDriveBaseEntity(Entity):
+    """Common base for BMW entities."""
+
+    def __init__(self, account, vehicle):
+        """Initialize sensor."""
+        self._account = account
+        self._vehicle = vehicle
+
+    @property
+    def device_info(self) -> dict:
+        """Return info for device registry."""
+        return {
+            "identifiers": {(DOMAIN, self._vehicle.vin)},
+            "sw_version": self._vehicle.vin,
+            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
+            "model": self._vehicle.name,
+            "manufacturer": self._vehicle.attributes.get("brand"),
+        }
+
+    def update_callback(self):
+        """Schedule a state update."""
+        self.schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Add callback after being added to hass.
+
+        Show latest data after startup.
+        """
+        self._account.add_update_listener(self.update_callback)

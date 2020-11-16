@@ -6,7 +6,7 @@ from bimmer_connected.state import LockState
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_LOCKED, STATE_UNLOCKED
 
-from . import DOMAIN as BMW_DOMAIN
+from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
 from .const import ATTRIBUTION
 
 DOOR_LOCK_STATE = "door_lock_state"
@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class BMWLock(LockEntity):
+class BMWLock(LockEntity, BMWConnectedDriveBaseEntity):
     """Representation of a BMW vehicle lock."""
 
     def __init__(self, account, vehicle, attribute: str, sensor_name):
@@ -40,17 +40,6 @@ class BMWLock(LockEntity):
         self.door_lock_state_available = (
             DOOR_LOCK_STATE in self._vehicle.available_attributes
         )
-
-    @property
-    def device_info(self) -> dict:
-        """Return info for device registry."""
-        return {
-            "identifiers": {(BMW_DOMAIN, self._vehicle.vin)},
-            "sw_version": self._vehicle.vin,
-            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
-            "model": self._vehicle.name,
-            "manufacturer": self._vehicle.attributes.get("brand"),
-        }
 
     @property
     def should_poll(self):
@@ -117,14 +106,3 @@ class BMWLock(LockEntity):
             if vehicle_state.door_lock_state in [LockState.LOCKED, LockState.SECURED]
             else STATE_UNLOCKED
         )
-
-    def update_callback(self):
-        """Schedule a state update."""
-        self.schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
-        self._account.add_update_listener(self.update_callback)
