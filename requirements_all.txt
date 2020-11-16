@@ -448,7 +448,7 @@ connect-box==0.2.8
 # homeassistant.components.eddystone_temperature
 # homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
-construct==2.9.45
+construct==2.10.56
 
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
@@ -1773,7 +1773,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.3
+python-miio==0.5.4
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
