@@ -1,0 +1,16 @@
+{
+  "domain": "jellyfin",
+  "name": "jellyfin",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/jellyfin",
+  "requirements": [
+    "jellyfin-apiclient-python==1.6.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@j-stienstra"
+  ]
+}
