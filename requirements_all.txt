@@ -29,7 +29,7 @@ OPi.GPIO==0.4.0
 Plugwise_Smile==1.6.0
 
 # homeassistant.components.essent
-PyEssent==0.13
+PyEssent==0.14
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
