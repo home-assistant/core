@@ -74,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class FireServiceRotaOauth:
-    """Handle oauth tokens"""
+    """Handle authentication tokens."""
 
     def __init__(self, hass, entry, coordinator):
         """Initialize the oauth object."""
