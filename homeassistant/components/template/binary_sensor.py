@@ -144,18 +144,18 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
 
         self.add_template_attribute("_state", self._template, None, self._update_state)
 
-        try:
-            self._delay_on = cv.positive_time_period(self._delay_on_raw)
-        except vol.Invalid:
-            if self._delay_on_raw is not None:
+        if self._delay_on_raw is not None:
+            try:
+                self._delay_on = cv.positive_time_period(self._delay_on_raw)
+            except vol.Invalid:
                 self.add_template_attribute(
                     "_delay_on", self._delay_on_raw, cv.positive_time_period
                 )
 
-        try:
-            self._delay_off = cv.positive_time_period(self._delay_off_raw)
-        except vol.Invalid:
-            if self._delay_off_raw is not None:
+        if self._delay_off_raw is not None:
+            try:
+                self._delay_off = cv.positive_time_period(self._delay_off_raw)
+            except vol.Invalid:
                 self.add_template_attribute(
                     "_delay_off", self._delay_off_raw, cv.positive_time_period
                 )
