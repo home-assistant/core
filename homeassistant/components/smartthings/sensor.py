@@ -396,7 +396,7 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self._name}"
+        return f"{self._device.device_id}.powerConsumptionReport"
 
     @property
     def state(self):
