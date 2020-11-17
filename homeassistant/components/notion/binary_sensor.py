@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from . import NotionEntity
+from . import NotionEntity, async_guard_against_missing_task
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
@@ -75,9 +75,10 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     """Define a Notion sensor."""
 
     @callback
+    @async_guard_against_missing_task
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        task = self.coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self.task_id]
 
         if "value" in task["status"]:
             self._state = task["status"]["value"]
@@ -85,9 +86,10 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
             self._state = task["status"]["data"]["to_state"]
 
     @property
+    @async_guard_against_missing_task
     def is_on(self) -> bool:
         """Return whether the sensor is on or off."""
-        task = self.coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self.task_id]
 
         if task["task_type"] == SENSOR_BATTERY:
             return self._state == "critical"
