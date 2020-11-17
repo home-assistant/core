@@ -61,17 +61,23 @@ def save_json(
         raise SerializationError(msg) from error
 
     tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
+    filepath = os.path.dirname(filename)
     try:
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=tmp_path, delete=False
+            mode="w", encoding="utf-8", dir=filepath, delete=False
         ) as fdesc:
             fdesc.write(json_data)
+            # Follow advice of os.fsync() and flush first
+            fdesc.flush()
+            os.fsync(fdesc.fileno())
             tmp_filename = fdesc.name
         if not private:
             os.chmod(tmp_filename, 0o644)
         os.replace(tmp_filename, filename)
+        dirfd = os.open(filepath, os.O_RDONLY)
+        os.fsync(dirfd)
+        os.close(dirfd)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
         raise WriteError(error) from error
