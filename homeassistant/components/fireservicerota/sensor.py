@@ -1,6 +1,7 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
 
+from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -118,7 +119,10 @@ class IncidentsSensor(RestoreEntity):
     @callback
     def coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if not self._coordinator.incident_data or "body" not in self._coordinator.incident_data:
+        if (
+            not self._coordinator.incident_data
+            or "body" not in self._coordinator.incident_data
+        ):
             return
 
         self._state = self._coordinator.incident_data["body"]
