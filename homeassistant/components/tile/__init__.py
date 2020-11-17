@@ -7,6 +7,7 @@ from pytile import async_login
 from pytile.errors import SessionExpiredError, TileError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -41,8 +42,7 @@ async def async_setup_entry(hass, entry):
         )
         hass.data[DOMAIN][DATA_TILE][entry.entry_id] = await client.async_get_tiles()
     except TileError as err:
-        LOGGER.error("Error during integration setup: %s", err)
-        return False
+        raise ConfigEntryNotReady(f"Error during integration setup: {err}")
 
     async def async_update_tile(tile):
         """Update the Tile."""
