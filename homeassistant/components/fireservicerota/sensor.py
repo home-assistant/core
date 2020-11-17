@@ -115,17 +115,12 @@ class IncidentsSensor(RestoreEntity):
             )
         )
 
-    async def coordinator_update(self) -> None:
+    @callback
+    def coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.async_schedule_update_ha_state(force_refresh=True)
-
-    async def async_update(self) -> None:
-        """Update using FireServiceRota data."""
-        if not self._coordinator.incident_data:
+        if not self._coordinator.incident_data or "body" not in self._coordinator.incident_data:
             return
 
-        if "body" in self._coordinator.incident_data:
-            self._state = self._coordinator.incident_data["body"]
-            self._state_attributes = self._coordinator.incident_data
-
-            _LOGGER.debug("Entity 'Incidents' state set to: %s", self._state)
+        self._state = self._coordinator.incident_data["body"]
+        self._state_attributes = self._coordinator.incident_data
+        self.async_write_ha_state()
