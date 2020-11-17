@@ -75,6 +75,8 @@ def mock_smile_adam():
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
 
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
@@ -118,6 +120,8 @@ def mock_smile_anna():
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
 
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
@@ -160,6 +164,8 @@ def mock_smile_p1():
         smile_mock.return_value.smile_version = "3.3.9"
         smile_mock.return_value.smile_type = "power"
         smile_mock.return_value.smile_hostname = "smile98765"
+
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
