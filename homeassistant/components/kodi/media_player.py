@@ -373,8 +373,9 @@ class KodiEntity(MediaPlayerEntity):
         if self._connection.connected:
             await self._on_ws_connected()
 
-        def start_watchdog(event=None):
+        async def start_watchdog(event=None):
             """Start websocket watchdog."""
+            await self._async_connect_websocket_if_disconnected()
             self.async_on_remove(
                 async_track_time_interval(
                     self.hass,
@@ -386,7 +387,7 @@ class KodiEntity(MediaPlayerEntity):
         # If Home Assistant is already in a running state, start the watchdog
         # immediately, else trigger it after Home Assistant has finished starting.
         if self.hass.state == CoreState.running:
-            start_watchdog()
+            await start_watchdog()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)
 
