@@ -1558,6 +1558,9 @@ class OpenCloseTrait(_Trait):
         response = {}
 
         # When it's an assumed state, we will return empty state
+        # This shouldn't happen because we set `commandOnlyOpenClose`
+        # but Google still queries. Erroring here will cause device
+        # to show up offline.
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             return response
 
