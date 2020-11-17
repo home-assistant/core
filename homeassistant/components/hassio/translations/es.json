@@ -5,6 +5,7 @@
             "disk_total": "Disco total",
             "disk_used": "Disco usado",
             "docker_version": "Versi\u00f3n de Docker",
+            "healthy": "Saludable",
             "host_os": "Sistema operativo host",
             "installed_addons": "Complementos instalados",
             "supervisor_api": "API del Supervisor",
