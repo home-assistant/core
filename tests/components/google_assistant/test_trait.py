@@ -1912,8 +1912,7 @@ async def test_openclose_cover_assumed_state(hass):
 
     assert trt.sync_attributes() == {"commandOnlyOpenClose": True}
 
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
+    assert trt.query_attributes() == {}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
