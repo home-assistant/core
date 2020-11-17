@@ -8,24 +8,20 @@ import aioshelly
 
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers import entity_registry
 
 from . import ShellyDeviceWrapper
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_remove_entity_by_domain(hass, domain, unique_id, config_entry_id):
-    """Remove entity by domain."""
-
+async def async_remove_shelly_entity(hass, domain, unique_id):
+    """Remove a Shelly entity."""
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
-    for entry in entity_registry.async_entries_for_config_entry(
-        entity_reg, config_entry_id
-    ):
-        if entry.domain == domain and entry.unique_id == unique_id:
-            entity_reg.async_remove(entry.entity_id)
-            _LOGGER.debug("Removed %s domain for %s", domain, entry.original_name)
-            break
+    entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
+    if entity_id:
+        _LOGGER.debug("Removing entity: %s", entity_id)
+        entity_reg.async_remove(entity_id)
 
 
 def temperature_unit(block_info: dict) -> str:

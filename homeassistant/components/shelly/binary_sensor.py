@@ -1,9 +1,12 @@
 """Binary sensor for Shelly."""
+import aioshelly
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
@@ -18,6 +21,17 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
+
+
+def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
+    """Return true if input button settings is set to a momentary type."""
+    button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
+
+    # In Shelly Dimmer (SHDM) the first channel set the button type for all channels
+    channel = min(int(block.channel or 0), len(button) - 1)
+
+    return button[channel]["btn_type"] in ["momentary", "momentary_on_release"]
+
 
 SENSORS = {
     ("device", "overtemp"): BlockAttributeDescription(
@@ -49,6 +63,21 @@ SENSORS = {
     ),
     ("sensor", "vibration"): BlockAttributeDescription(
         name="Vibration", device_class=DEVICE_CLASS_VIBRATION
+    ),
+    ("input", "input"): BlockAttributeDescription(
+        name="Input",
+        device_class=DEVICE_CLASS_POWER,
+        removal_condition=lambda s, b: is_momentary_input(s, b),
+    ),
+    ("relay", "input"): BlockAttributeDescription(
+        name="Input",
+        device_class=DEVICE_CLASS_POWER,
+        removal_condition=lambda s, b: is_momentary_input(s, b),
+    ),
+    ("device", "input"): BlockAttributeDescription(
+        name="Input",
+        device_class=DEVICE_CLASS_POWER,
+        removal_condition=lambda s, b: is_momentary_input(s, b),
     ),
 }
 
