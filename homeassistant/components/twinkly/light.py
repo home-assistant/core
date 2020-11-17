@@ -5,7 +5,6 @@ import logging
 from typing import Any, Dict, Optional
 
 from aiohttp import ClientError
-import twinkly_client
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,7 +12,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -36,12 +34,10 @@ async def async_setup_entry(
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
     uuid = config_entry.data[CONF_ENTRY_ID]
-    host = config_entry.data[CONF_ENTRY_HOST]
     name = config_entry.data[CONF_ENTRY_NAME]
     model = config_entry.data[CONF_ENTRY_MODEL]
 
-    client = twinkly_client.TwinklyClient(host, async_get_clientsession(hass))
-    entity = TwinklyLight(uuid, client, name, model, hass, config_entry)
+    entity = TwinklyLight(uuid, name, model, hass, config_entry)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -52,7 +48,6 @@ class TwinklyLight(LightEntity):
     def __init__(
         self,
         uuid: str,
-        client: twinkly_client.TwinklyClient,
         name: str,
         model: str,
         hass: HomeAssistantType,
@@ -60,7 +55,6 @@ class TwinklyLight(LightEntity):
     ):
         """Initialize a TwinklyLight entity."""
         self._id = uuid
-        self._client = client
         self._hass = hass
         self._conf = conf
 
@@ -70,11 +64,15 @@ class TwinklyLight(LightEntity):
         self.__name = name
         self.__model = model
 
+        self._client = hass.data.get(DOMAIN, {}).get(uuid)
+        if self._client is None:
+            raise ValueError(f"Client for {uuid} has not been configured.")
+
         # Set default state before any update
         self._is_on = False
         self._brightness = 0
         self._is_available = False
-        self._attributes = {ATTR_HOST: client.host}
+        self._attributes = {ATTR_HOST: self._client.host}
 
     @property
     def supported_features(self):
