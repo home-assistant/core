@@ -1,0 +1,6 @@
+blueprint:
+  domain: automation
+  name: Turn on Light on Motion
+
+trigger:
+  temp: data
