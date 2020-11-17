@@ -19,7 +19,12 @@ DEFAULT_GENDER = "female"
 def validate_lang(value):
     """Validate chosen gender or language."""
     lang = value[CONF_LANG]
-    gender = value[CONF_GENDER]
+    gender = value.get(CONF_GENDER)
+
+    if gender is None:
+        gender = value[CONF_GENDER] = next(
+            (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
+        )
 
     if (lang, gender) not in MAP_VOICE:
         raise vol.Invalid("Unsupported language and gender specified.")
@@ -31,7 +36,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_LANG, default=DEFAULT_LANG): str,
-            vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): str,
+            vol.Optional(CONF_GENDER): str,
         }
     ),
     validate_lang,
