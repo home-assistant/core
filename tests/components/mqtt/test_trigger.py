@@ -7,6 +7,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
