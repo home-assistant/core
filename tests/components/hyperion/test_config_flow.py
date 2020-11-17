@@ -31,7 +31,7 @@ from . import (
     TEST_INSTANCE,
     TEST_PORT,
     TEST_PORT_UI,
-    TEST_SERVER_ID,
+    TEST_SYSINFO_ID,
     TEST_TITLE,
     TEST_TOKEN,
     add_test_config_entry,
@@ -82,8 +82,8 @@ TEST_SSDP_SERVICE_INFO = {
     "modelName": "Hyperion",
     "modelNumber": "2.0.0-alpha.8",
     "modelURL": "https://www.hyperion-project.org",
-    "serialNumber": f"{TEST_SERVER_ID}",
-    "UDN": f"uuid:{TEST_SERVER_ID}",
+    "serialNumber": f"{TEST_SYSINFO_ID}",
+    "UDN": f"uuid:{TEST_SYSINFO_ID}",
     "ports": {
         "jsonServer": f"{TEST_PORT}",
         "sslServer": "8092",
@@ -100,7 +100,7 @@ TEST_SSDP_SERVICE_INFO = {
             "url": "img/hyperion/ssdp_icon.png",
         }
     },
-    "ssdp_usn": f"uuid:{TEST_SERVER_ID}",
+    "ssdp_usn": f"uuid:{TEST_SYSINFO_ID}",
     "ssdp_ext": "",
     "ssdp_server": "Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8",
 }
@@ -111,7 +111,7 @@ async def _create_mock_entry(hass: HomeAssistantType) -> MockConfigEntry:
     entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
-        unique_id=TEST_SERVER_ID,
+        unique_id=TEST_SYSINFO_ID,
         title=TEST_TITLE,
         data={
             "host": TEST_HOST,
@@ -237,7 +237,7 @@ async def test_user_confirm_id_error(hass: HomeAssistantType) -> None:
     result = await _init_flow(hass)
 
     client = create_mock_client()
-    client.async_id = AsyncMock(return_value=None)
+    client.async_sysinfo_id = AsyncMock(return_value=None)
 
     # Confirmation sync_client_connect fails.
     with patch(

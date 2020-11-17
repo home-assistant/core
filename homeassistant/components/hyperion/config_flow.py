@@ -396,7 +396,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         async with self._create_client() as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
-            hyperion_id = await hyperion_client.async_id()
+            hyperion_id = await hyperion_client.async_sysinfo_id()
 
         if not hyperion_id:
             return self.async_abort(reason="no_id")

@@ -5,6 +5,7 @@ import logging
 from typing import Any, Optional, Tuple
 
 from hyperion import client, const as hyperion_const
+from pkg_resources import parse_version
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +15,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import CONF_ON_UNLOAD, CONF_ROOT_CLIENT, DOMAIN, SIGNAL_INSTANCES_UPDATED
+from .const import (
+    CONF_ON_UNLOAD,
+    CONF_ROOT_CLIENT,
+    DOMAIN,
+    HYPERION_RELEASES_URL,
+    HYPERION_VERSION_WARN_CUTOFF,
+    SIGNAL_INSTANCES_UPDATED,
+)
 
 PLATFORMS = [LIGHT_DOMAIN]
 
@@ -96,6 +104,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     if not hyperion_client:
         raise ConfigEntryNotReady
+    version = await hyperion_client.async_sysinfo_version()
+    if version is not None:
+        try:
+            if parse_version(version) < parse_version(HYPERION_VERSION_WARN_CUTOFF):
+                _LOGGER.warning(
+                    "Using a Hyperion server version < %s is not recommended -- "
+                    "some features may be unavailable or may not function correctly. "
+                    "Please consider upgrading: %s",
+                    HYPERION_VERSION_WARN_CUTOFF,
+                    HYPERION_RELEASES_URL,
+                )
+        except ValueError:
+            pass
 
     hyperion_client.set_callbacks(
         {
@@ -157,5 +178,5 @@ async def async_unload_entry(
         for func in config_data[CONF_ON_UNLOAD]:
             func()
         root_client = config_data[CONF_ROOT_CLIENT]
-        await root_client.async_client_connect()
+        await root_client.async_client_disconnect()
     return unload_ok

@@ -134,7 +134,7 @@ async def async_setup_platform(
     hyperion_client = await async_create_connect_hyperion_client(host, port)
     if not hyperion_client:
         raise PlatformNotReady
-    hyperion_id = await hyperion_client.async_id()
+    hyperion_id = await hyperion_client.async_sysinfo_id()
     if not hyperion_id:
         raise PlatformNotReady
 
