@@ -1,12 +1,17 @@
 """API for Microsoft Teams Presence bound to Home Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
+import logging
 
 from aiohttp import ClientSession
+from hagraph.api.auth.manager import AuthenticationManager
+from hagraph.api.auth.models import OAuth2TokenResponse
 
 from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
 
-class AsyncConfigEntryAuth(my_pypi_package.AbstractAuth):
+_LOGGER = logging.getLogger(__name__)
+
+class AsyncConfigEntryAuth(AuthenticationManager):
     """Provide Microsoft Teams Presence authentication tied to an OAuth2 based config entry."""
 
     def __init__(
@@ -17,10 +22,27 @@ class AsyncConfigEntryAuth(my_pypi_package.AbstractAuth):
         """Initialize Microsoft Teams Presence auth."""
         super().__init__(websession)
         self._oauth_session = oauth_session
+        self.oauth = self._get_oauth_token()
 
-    async def async_get_access_token(self) -> str:
+    async def refresh_tokens(self) -> None:
         """Return a valid access token."""
+        Logger.critical("checking valid_token")
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
+            self.oauth = self._get_oauth_token()
 
-        return self._oauth_session.token["access_token"]
+        # This will skip the OAuth refresh and only refresh User and XSTS tokens
+
+        Logger.critical("refreshing tokens")
+        await super().refresh_tokens()
+
+    def _get_oauth_token(self) -> OAuth2TokenResponse:
+        tokens = {**self._oauth_session.token}
+
+        _LOGGER.critical(tokens)
+
+        issued = tokens["expires_at"] - tokens["expires_in"]
+        del tokens["expires_at"]
+        token_response = OAuth2TokenResponse.parse_obj(tokens)
+        token_response.issued = utc_from_timestamp(issued)
+        return token_response
