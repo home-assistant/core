@@ -1,0 +1,2 @@
+reboot:
+  description: Sends command to reboot obihai device
