@@ -119,12 +119,10 @@ class IncidentsSensor(RestoreEntity):
     @callback
     def coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            not self._coordinator.incident_data
-            or "body" not in self._coordinator.incident_data
-        ):
+        data = self._coordinator.websocket.incident_data()
+        if not data or "body" not in data:
             return
 
-        self._state = self._coordinator.incident_data["body"]
-        self._state_attributes = self._coordinator.incident_data
+        self._state = data["body"]
+        self._state_attributes = data
         self.async_write_ha_state()
