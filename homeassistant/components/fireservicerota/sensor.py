@@ -1,8 +1,8 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
