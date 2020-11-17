@@ -27,11 +27,13 @@ def validate_lang(value):
     return value
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): str,
-        vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): str,
-    },
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_LANG, default=DEFAULT_LANG): str,
+            vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): str,
+        }
+    ),
     validate_lang,
 )
 
