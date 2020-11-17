@@ -5,7 +5,6 @@ import asyncio
 from plugwise.exceptions import XMLDataMissingError
 
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.components.plugwise.gateway import async_unload_entry_gw
 from homeassistant.config_entries import (
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
