@@ -1,30 +1,59 @@
 """Config flow for jellyfin integration."""
 import logging
+import uuid
+import socket
 
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from jellyfin_apiclient_python import Jellyfin
+from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
+
+from .const import (  # pylint:disable=unused-import
+    DOMAIN,
+    USER_APP_NAME,
+    USER_AGENT,
+    CLIENT_VERSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+STEP_USER_DATA_SCHEMA = vol.Schema({"url": str, "username": str, "password": str})
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host):
+class JellyfinHub:
+    def __init__(self):
         """Initialize."""
-        self.host = host
+        self.jellyfin = Jellyfin()
+        self.setup_client()
 
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
+    def setup_client(self):
+        client = self.jellyfin.get_client()
+
+        player_name = socket.gethostname()
+        client_uuid = str(uuid.uuid4())
+
+        client.config.data["app.default"] = True
+        client.config.app(USER_APP_NAME, CLIENT_VERSION, player_name, client_uuid)
+        client.config.data["http.user_agent"] = USER_AGENT
+        client.config.data["auth.ssl"] = True
+
+    def authenticate(self, url, username, password) -> bool:
+        client = self.jellyfin.get_client()
+
+        state = client.auth.connect_to_address(url)
+        if state["State"] != CONNECTION_STATE["ServerSignIn"]:
+            _LOGGER.exception(
+                "Unable to connect to: %s. Connection State: %s", url, state["State"]
+            )
+            raise CannotConnect
+
+        response = client.auth.login(url, username, password)
+        if "AccessToken" not in response:
+            raise InvalidAuth
+
         return True
 
 
@@ -41,26 +70,20 @@ async def validate_input(hass: core.HomeAssistant, data):
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    hub = JellyfinHub()
 
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+    await hass.async_add_executor_job(
+        hub.authenticate, data["url"], data["username"], data["password"]
+    )
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": "default"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for jellyfin."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
