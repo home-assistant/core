@@ -55,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 class AmcrestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Amcrest config flow."""
 
-    VERSION = 2
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
@@ -93,7 +93,8 @@ class AmcrestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
 
-                serial_number = device.serial_number.rstrip("\r\n")
+                serial_number = device.serial_number
+                # serial_number = serial_number.rstrip("\r\n")
 
                 await self.async_set_unique_id(serial_number)
 
@@ -115,7 +116,7 @@ class AmcrestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self._create_entry()
 
             except LoginError:
-                errors["base"] = "faulty_credentials"
+                errors["base"] = "invalid_auth"
 
             except AmcrestError:
                 errors["base"] = "device_unavailable"

@@ -107,28 +107,31 @@ async def async_setup(hass, config):
 
     # Import from yaml if exist
     conf = config.get(DOMAIN)
-    if conf is not None:
-        for entry in conf:
-            # Only import if we haven't before.
-            config_entry = _async_find_matching_config_entry(hass)
-            if not config_entry:
-                if CONF_NAME not in entry:
-                    entry.update({CONF_NAME: DEFAULT_NAME})
-                if CONF_PORT not in entry:
-                    entry.update({CONF_PORT: DEFAULT_PORT})
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                    )
+    if conf is None:
+        return True
+
+    for entry in conf:
+        # Only import if we haven't before.
+        config_entry = _async_find_matching_config_entry(hass, entry[CONF_HOST])
+        if not config_entry:
+            entry.setdefault(CONF_NAME, DEFAULT_NAME + " " + entry[CONF_HOST])
+            entry.setdefault(CONF_PORT, DEFAULT_PORT)
+            _LOGGER.debug(
+                "Start import from configuration.yaml for host: %s", entry[CONF_HOST]
+            )
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
                 )
+            )
 
     return True
 
 
 @callback
-def _async_find_matching_config_entry(hass):
+def _async_find_matching_config_entry(hass, host):
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.source == config_entries.SOURCE_IMPORT:
+        if entry.source == config_entries.SOURCE_IMPORT and entry.data["host"] == host:
             return entry
 
 
@@ -154,9 +157,7 @@ async def async_setup_entry(hass, config_entry):
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )
     resolution = config_entry.options.get(CONF_RESOLUTION, DEFAULT_RESOLUTION)
-    _LOGGER.debug("read config entry resolution : %s", resolution)
     binary_sensors = config_entry.options.get(CONF_BINARY_SENSORS, [])
-    _LOGGER.debug("read binarey_sensor: %s", binary_sensors)
     sensors = config_entry.options.get(CONF_SENSORS, [])
     stream_source = config_entry.options.get(CONF_STREAM_SOURCE, DEFAULT_STREAM_SOURCE)
     control_light = config_entry.options.get(CONF_CONTROL_LIGHT, True)
@@ -185,9 +186,7 @@ async def async_setup_entry(hass, config_entry):
         hass.config_entries.async_forward_entry_setup(config_entry, CAMERA)
     )
 
-    event_codes = dict()
-    event_codes["binary_sensors"] = []
-    event_codes["events"] = []
+    event_codes = {"binary_sensors": [], "events": []}
 
     if binary_sensors:
         hass.async_create_task(
