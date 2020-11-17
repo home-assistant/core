@@ -369,7 +369,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if not unique_id:
-            return self.async_abort("cannot_connect")
+            return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
         self._abort_if_unique_id_configured()
