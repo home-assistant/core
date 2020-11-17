@@ -263,7 +263,7 @@ denonavr==0.9.5
 devolo-home-control-api==0.16.0
 
 # homeassistant.components.directv
-directv==0.3.0
+directv==0.4.0
 
 # homeassistant.components.updater
 distro==1.5.0
