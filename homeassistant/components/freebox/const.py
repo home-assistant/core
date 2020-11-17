@@ -17,7 +17,7 @@ APP_DESC = {
     "app_version": "0.106",
     "device_name": socket.gethostname(),
 }
-API_VERSION = "v6"
+API_VERSION = "v8"
 
 PLATFORMS = ["device_tracker", "sensor", "switch"]
 
