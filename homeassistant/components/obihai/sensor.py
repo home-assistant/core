@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not success:
             _LOGGER.error("Failed to reboot")
 
-    hass.services.register('obihai', 'reboot', _reboot)
+    hass.services.register("obihai", "reboot", _reboot)
 
     serial = pyobihai.get_device_serial()
 
