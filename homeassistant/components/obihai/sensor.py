@@ -47,7 +47,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not login:
         _LOGGER.error("Invalid credentials")
         return
-
+    
+    """Define and register reboot service"""
+    def _reboot(call):
+        success = pyobihai.call_reboot()
+        if not success:
+            _LOGGER.error("Failed to reboot")
+    hass.services.register('obihai', 'reboot', _reboot)
+    
     serial = pyobihai.get_device_serial()
 
     services = pyobihai.get_state()
