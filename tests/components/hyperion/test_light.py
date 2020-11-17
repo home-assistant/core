@@ -688,7 +688,7 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     assert entry
 
     await hass.config_entries.async_unload(entry.entry_id)
-    assert client.async_client_disconnect.called
+    assert client.async_client_disconnect.call_count == 2
 
 
 async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:

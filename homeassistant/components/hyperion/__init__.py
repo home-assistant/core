@@ -178,5 +178,5 @@ async def async_unload_entry(
         for func in config_data[CONF_ON_UNLOAD]:
             func()
         root_client = config_data[CONF_ROOT_CLIENT]
-        await root_client.async_client_connect()
+        await root_client.async_client_disconnect()
     return unload_ok
