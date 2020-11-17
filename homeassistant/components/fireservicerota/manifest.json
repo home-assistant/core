@@ -3,6 +3,6 @@
   "name": "FireServiceRota",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fireservicerota",
-  "requirements": ["pyfireservicerota==0.0.39"],
+  "requirements": ["pyfireservicerota==0.0.40"],
   "codeowners": ["@cyberjunky"]
 }
