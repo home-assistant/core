@@ -67,17 +67,20 @@ SENSORS = {
     ("input", "input"): BlockAttributeDescription(
         name="Input",
         device_class=DEVICE_CLASS_POWER,
-        removal_condition=lambda s, b: is_momentary_input(s, b),
+        default_enabled=False,
+        removal_condition=is_momentary_input,
     ),
     ("relay", "input"): BlockAttributeDescription(
         name="Input",
         device_class=DEVICE_CLASS_POWER,
-        removal_condition=lambda s, b: is_momentary_input(s, b),
+        default_enabled=False,
+        removal_condition=is_momentary_input,
     ),
     ("device", "input"): BlockAttributeDescription(
         name="Input",
         device_class=DEVICE_CLASS_POWER,
-        removal_condition=lambda s, b: is_momentary_input(s, b),
+        default_enabled=False,
+        removal_condition=is_momentary_input,
     ),
 }
 
