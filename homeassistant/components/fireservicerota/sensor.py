@@ -55,7 +55,7 @@ class IncidentsSensor(RestoreEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
+        """Return the unique ID of the sensor."""
         return self._unique_id
 
     @property
@@ -99,7 +99,7 @@ class IncidentsSensor(RestoreEntity):
         return attr
 
     async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
+        """Run when about to be added to hass."""
         await super().async_added_to_hass()
 
         state = await self.async_get_last_state()
