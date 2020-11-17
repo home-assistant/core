@@ -279,6 +279,7 @@ homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core @emontnemery
 homeassistant/components/msteams/* @peroyvind
+homeassistant/components/msteams_presence/* @jlweston
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
