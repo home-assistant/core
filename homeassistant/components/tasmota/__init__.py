@@ -40,6 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistantType, config: dict):
     """Set up the Tasmota component."""
+    if "mqtt" not in hass.config.components:
+        _LOGGER.error("MQTT integration is not set up")
+        return False
     return True
 
 

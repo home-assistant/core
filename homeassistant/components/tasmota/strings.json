@@ -13,6 +13,7 @@
       }
     },
     "abort": {
+      "mqtt_required": "The MQTT integration is not set up",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {

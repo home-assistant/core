@@ -46,6 +46,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        if "mqtt" not in self.hass.config.components:
+            return self.async_abort(reason="mqtt_required")
+
         if self.show_advanced_options:
             return await self.async_step_config()
         return await self.async_step_confirm()
