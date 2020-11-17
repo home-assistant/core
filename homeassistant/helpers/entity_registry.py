@@ -53,9 +53,10 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 DISABLED_CONFIG_ENTRY = "config_entry"
+DISABLED_DEVICE = "device"
 DISABLED_HASS = "hass"
-DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
+DISABLED_USER = "user"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -89,10 +90,11 @@ class RegistryEntry:
         default=None,
         validator=attr.validators.in_(
             (
-                DISABLED_HASS,
-                DISABLED_USER,
-                DISABLED_INTEGRATION,
                 DISABLED_CONFIG_ENTRY,
+                DISABLED_DEVICE,
+                DISABLED_HASS,
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
                 None,
             )
         ),
@@ -299,20 +301,21 @@ class EntityRegistry:
             entities = async_entries_for_device(self, event.data["device_id"])
             for entity in entities:
                 self.async_remove(entity.entity_id)
+            return
 
-        if event.data["action"] == "update":
-            device_registry = (
-                await self.hass.helpers.device_registry.async_get_registry()
+        if event.data["action"] != "update":
+            return
+
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = device_registry.async_get(event.data["device_id"])
+        if not device.disabled:
+            return
+
+        entities = async_entries_for_device(self, event.data["device_id"])
+        for entity in entities:
+            self.async_update_entity(  # type: ignore
+                entity.entity_id, disabled_by=DISABLED_DEVICE
             )
-            device = device_registry.async_get(event.data["device_id"])
-            if not device.disabled:
-                return
-
-            entities = async_entries_for_device(self, event.data["device_id"])
-            for entity in entities:
-                self.async_update_entity(  # type: ignore
-                    entity.entity_id, disabled_by=device.disabled_by
-                )
 
     @callback
     def async_update_entity(

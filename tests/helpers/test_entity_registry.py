@@ -735,3 +735,4 @@ async def test_disable_device_disables_entities(hass, registry):
 
     entry = registry.async_get(entry.entity_id)
     assert entry.disabled
+    assert entry.disabled_by == "device"
