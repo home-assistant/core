@@ -1557,14 +1557,11 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
         response = {}
 
-        if domain == cover.DOMAIN:
-            # When it's an assumed state, we will return that querying state
-            # is not supported.
-            if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                raise SmartHomeError(
-                    ERR_NOT_SUPPORTED, "Querying state is not supported"
-                )
+        # When it's an assumed state, we will return empty state
+        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+            return response
 
+        if domain == cover.DOMAIN:
             if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "Querying state is not supported"
