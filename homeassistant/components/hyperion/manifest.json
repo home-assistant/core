@@ -7,8 +7,7 @@
   "domain": "hyperion",
   "name": "Hyperion",
   "requirements": [
-    "hyperion-py==0.5.0",
-    "semver==2.13.0"
+    "hyperion-py==0.6.0"
   ],
   "ssdp": [
     {

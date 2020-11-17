@@ -5,7 +5,7 @@ import logging
 from typing import Any, Optional, Tuple
 
 from hyperion import client, const as hyperion_const
-from semver import VersionInfo
+from pkg_resources import parse_version
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -107,9 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     version = await hyperion_client.async_sysinfo_version()
     if version is not None:
         try:
-            if VersionInfo.parse(version) < VersionInfo.parse(
-                HYPERION_VERSION_WARN_CUTOFF
-            ):
+            if parse_version(version) < parse_version(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
                     "Using a Hyperion server version < %s is not recommended -- "
                     "some features may be unavailable or may not function correctly. "

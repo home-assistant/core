@@ -790,7 +790,7 @@ huawei-lte-api==1.4.12
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.5.0
+hyperion-py==0.6.0
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -1991,9 +1991,6 @@ schiene==0.23
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
-
-# homeassistant.components.hyperion
-semver==2.13.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.4.6
