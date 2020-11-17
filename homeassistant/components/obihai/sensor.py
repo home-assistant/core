@@ -49,6 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     """Define and register reboot service"""
+
     def _reboot(call):
         success = pyobihai.call_reboot()
         if not success:
