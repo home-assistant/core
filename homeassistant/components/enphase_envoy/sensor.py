@@ -21,8 +21,10 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +129,6 @@ async def async_setup_platform(
                 for inverter in inverters:
                     entities.append(
                         Envoy(
-                            envoy_reader,
                             condition,
                             f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
@@ -150,7 +151,6 @@ async def async_setup_platform(
         else:
             entities.append(
                 Envoy(
-                    envoy_reader,
                     condition,
                     f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
@@ -165,19 +165,18 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class Envoy(Entity):
+class Envoy(CoordinatorEntity, Entity):
     """Envoy entity."""
 
-    def __init__(self, envoy_reader, sensor_type, name, unit, coordinator):
+    def __init__(self, sensor_type, name, unit, coordinator):
         """Initialize Envoy entity."""
-        self._envoy_reader = envoy_reader
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
         self._state = None
         self._last_reported = None
 
-        self.coordinator = coordinator
+        super().__init__(coordinator)
 
     @property
     def name(self):
@@ -223,7 +222,6 @@ class Envoy(Entity):
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    @Throttle(MIN_SCAN_INTERVAL)
     async def async_update(self):
         """Update the energy production data."""
 
@@ -237,7 +235,7 @@ class Envoy(Entity):
                 _LOGGER.debug("Updating: %s - %s", self._type, self._state)
             else:
                 _LOGGER.debug(
-                    "Sensor %s isInstance(int) was %s.  Returning None for state.",
+                    "Data for sensor %s is not a number: %s. Returning None.",
                     self._type,
                     isinstance(self.coordinator.data.get(self._type), int),
                 )
@@ -259,10 +257,8 @@ class Envoy(Entity):
                 )
             else:
                 _LOGGER.debug(
-                    "Data inverter (%s) isInstance(dict) was %s.  Using previous state: %s",
+                    "Data from inverter %s received an unsupported format: %s. Using: %s",
                     serial_number,
                     isinstance(self.coordinator.data.get("inverters_production"), dict),
                     self._state,
                 )
-        else:
-            _LOGGER.error("Update loop - API returned invalid data!")
