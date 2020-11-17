@@ -1521,8 +1521,6 @@ class OpenCloseTrait(_Trait):
     name = TRAIT_OPENCLOSE
     commands = [COMMAND_OPENCLOSE]
 
-    override_position = None
-
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
@@ -1548,6 +1546,10 @@ class OpenCloseTrait(_Trait):
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
+
+        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+            response["commandOnlyOpenClose"] = True
+
         return response
 
     def query_attributes(self):
@@ -1555,25 +1557,20 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
         response = {}
 
-        if self.override_position is not None:
-            response["openPercent"] = self.override_position
+        # When it's an assumed state, we will return empty state
+        # This shouldn't happen because we set `commandOnlyOpenClose`
+        # but Google still queries. Erroring here will cause device
+        # to show up offline.
+        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+            return response
 
-        elif domain == cover.DOMAIN:
-            # When it's an assumed state, we will return that querying state
-            # is not supported.
-            if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                raise SmartHomeError(
-                    ERR_NOT_SUPPORTED, "Querying state is not supported"
-                )
-
+        if domain == cover.DOMAIN:
             if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "Querying state is not supported"
                 )
 
-            position = self.override_position or self.state.attributes.get(
-                cover.ATTR_CURRENT_POSITION
-            )
+            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
 
             if position is not None:
                 response["openPercent"] = position
@@ -1625,12 +1622,6 @@ class OpenCloseTrait(_Trait):
             await self.hass.services.async_call(
                 cover.DOMAIN, service, svc_params, blocking=True, context=data.context
             )
-
-            if (
-                self.state.attributes.get(ATTR_ASSUMED_STATE)
-                or self.state.state == STATE_UNKNOWN
-            ):
-                self.override_position = params["openPercent"]
 
 
 @register_trait
