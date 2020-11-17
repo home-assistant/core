@@ -3,10 +3,7 @@
   "name": "Microsoft Teams Presence",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/msteams_presence",
-  "requirements": ["ha-graphapi==0.0.2"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
+  "requirements": ["ha-graphapi==0.0.8"],
   "dependencies": [
     "http"
   ],

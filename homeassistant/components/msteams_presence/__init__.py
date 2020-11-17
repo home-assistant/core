@@ -1,9 +1,10 @@
 """The Microsoft Teams Presence integration."""
 import asyncio
+import logging
 
 import voluptuous as vol
-from hagraphapi.client import GraphApiClient
-from hagraphapi.provider.presence.models import Presence
+from hagraph.api.client import GraphApiClient
+from hagraph.api.provider.presence.models import PresenceResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -18,8 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import api, config_flow
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
-logging.warning(OAUTH2_AUTHORIZE)
-logging.warning(OAUTH2_TOKEN)
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,11 +40,15 @@ PLATFORMS = ["sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Microsoft Teams Presence component."""
-    _LOGGER.debug("async setup")
     hass.data[DOMAIN] = {}
 
+    _LOGGER.critical(hass.data[DOMAIN])
+    _LOGGER.critical(config[DOMAIN])
+    _LOGGER.critical(OAUTH2_AUTHORIZE)
+    _LOGGER.critical(OAUTH2_TOKEN)
+
     if DOMAIN not in config:
-        return False
+        return True
 
     config_flow.OAuth2FlowHandler.async_register_implementation(
         hass,
@@ -63,7 +67,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Microsoft Teams Presence from a config entry."""
-    _LOGGER.debug("async setup entry")
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
