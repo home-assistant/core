@@ -1,7 +1,7 @@
 """Support for the cloud for text to speech service."""
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import VOICE_MAP, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 CONF_GENDER = "gender"
 
-SUPPORT_LANGUAGES = list({key[0] for key in VOICE_MAP})
+SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
 
 DEFAULT_LANG = "en-US"
 DEFAULT_GENDER = "female"
@@ -21,7 +21,7 @@ def validate_lang(value):
     lang = value[CONF_LANG]
     gender = value[CONF_GENDER]
 
-    if (lang, gender) not in VOICE_MAP:
+    if (lang, gender) not in MAP_VOICE:
         raise vol.Invalid("Unsupported language and gender specified.")
 
     return value
