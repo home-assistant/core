@@ -3,12 +3,20 @@ import copy
 import json
 
 from homeassistant.components import websocket_api
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG
 
 from tests.async_mock import call
 from tests.common import MockConfigEntry, async_fire_mqtt_message
+
+
+async def test_missing_mqtt(hass, caplog):
+    """Test setup fails if MQTT is not setup."""
+    result = await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    assert not result
+    assert "MQTT integration is not set up" in caplog.text
 
 
 async def test_device_remove(

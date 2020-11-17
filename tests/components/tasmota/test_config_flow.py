@@ -106,6 +106,15 @@ async def test_user_setup_invalid_topic_prefix(hass, mqtt_mock):
     assert result["errors"]["base"] == "invalid_discovery_topic"
 
 
+async def test_user_setup_missing_mqtt(hass):
+    """Test abort if MQTT is not setup."""
+    result = await hass.config_entries.flow.async_init(
+        "tasmota", context={"source": "user", "show_advanced_options": True}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "mqtt_required"
+
+
 async def test_user_single_instance(hass, mqtt_mock):
     """Test we only allow a single config flow."""
     MockConfigEntry(domain="tasmota").add_to_hass(hass)
