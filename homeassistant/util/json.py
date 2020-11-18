@@ -3,8 +3,9 @@ from collections import deque
 import json
 import logging
 import os
-import tempfile
 from typing import Any, Callable, Dict, List, Optional, Type, Union
+
+import atomicwrites
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
@@ -60,35 +61,14 @@ def save_json(
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
-    tmp_filename = ""
-    filepath = os.path.dirname(filename)
     try:
-        # Modern versions of Python tempfile create this file with mode 0o600
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=filepath, delete=False
-        ) as fdesc:
-            fdesc.write(json_data)
-            # Follow advice of os.fsync() and flush first
-            fdesc.flush()
-            os.fsync(fdesc.fileno())
-            tmp_filename = fdesc.name
-        if not private:
-            os.chmod(tmp_filename, 0o644)
-        os.replace(tmp_filename, filename)
-        dirfd = os.open(filepath, os.O_RDONLY)
-        os.fsync(dirfd)
-        os.close(dirfd)
+        with atomicwrites.atomic_write(filename, overwrite=True) as fp:
+            fp.write(json_data)
+
+        os.chmod(filename, 0o600 if private else 0o644)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
         raise WriteError(error) from error
-    finally:
-        if os.path.exists(tmp_filename):
-            try:
-                os.remove(tmp_filename)
-            except OSError as err:
-                # If we are cleaning up then something else went wrong, so
-                # we should suppress likely follow-on errors in the cleanup
-                _LOGGER.error("JSON replacement cleanup failed: %s", err)
 
 
 def format_unserializable_data(data: Dict[str, Any]) -> str:

@@ -35,6 +35,7 @@ REQUIRES = [
     "aiohttp==3.7.1",
     "astral==1.10.1",
     "async_timeout==3.0.1",
+    "atomicwrites==1.4.0",
     "attrs==19.3.0",
     "bcrypt==3.1.7",
     "certifi>=2020.6.20",
