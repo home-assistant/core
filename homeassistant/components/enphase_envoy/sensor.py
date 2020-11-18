@@ -21,10 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,11 +87,9 @@ async def async_setup_platform(
                 try:
                     data = await envoy_reader.update()
                 except httpcore.ProtocolError as err:
-                    _LOGGER.error("Error communicating with API: %s", err)
-                    break
+                    raise UpdateFailed(f"Error communicating with API: {err}") from err
                 except httpcore.ConnectTimeout as err:
-                    _LOGGER.error("Timeout error with API: %s", err)
-                    break
+                    raise UpdateFailed(f"Timeout error with API: {err}") from err
 
                 _LOGGER.debug("Retrieved data from API: %s", data)
 
@@ -168,7 +166,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class Envoy(CoordinatorEntity, Entity):
+class Envoy(CoordinatorEntity):
     """Envoy entity."""
 
     def __init__(self, sensor_type, name, unit, coordinator):
@@ -176,8 +174,6 @@ class Envoy(CoordinatorEntity, Entity):
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
-        self._state = None
-        self._last_reported = None
 
         super().__init__(coordinator)
 
@@ -189,7 +185,36 @@ class Envoy(CoordinatorEntity, Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        if self._type != "inverters":
+            try:
+                value = self.coordinator.data.get(self._type)
+            except AttributeError:
+                _LOGGER.debug("Data for sensor %s is not a number.", self._type)
+                return
+
+            _LOGGER.debug("Updating: %s - %s", self._type, value)
+
+        elif self._type == "inverters":
+            serial_number = self._name.split(" ")[2]
+            try:
+                value = self.coordinator.data.get("inverters_production").get(
+                    serial_number
+                )[0]
+            except AttributeError:
+                _LOGGER.debug(
+                    "Data received from inverter %s was an unsupported format.",
+                    serial_number,
+                )
+                return
+
+            _LOGGER.debug(
+                "Updating: %s (%s) - %s.",
+                self._type,
+                serial_number,
+                value,
+            )
+
+        return value
 
     @property
     def unit_of_measurement(self):
@@ -205,62 +230,16 @@ class Envoy(CoordinatorEntity, Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._type == "inverters":
-            return {"last_reported": self._last_reported}
+            serial_number = self._name.split(" ")[2]
+            try:
+                value = self.coordinator.data.get("inverters_production").get(
+                    serial_number
+                )[1]
+                return {"last_reported": value}
+            except AttributeError:
+                _LOGGER.debug(
+                    "Data received from inverter for last reported time was an unsupported format."
+                )
+                return
 
         return None
-
-    @property
-    def should_poll(self):
-        """Poll to retrieve latest data from Envoy endpoint."""
-        return True
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the energy production data."""
-        if self.coordinator.data is None:
-            _LOGGER.debug("No data found!")
-            return
-
-        if self._type != "inverters":
-            if isinstance(self.coordinator.data.get(self._type), int):
-                self._state = self.coordinator.data.get(self._type)
-                _LOGGER.debug("Updating: %s - %s", self._type, self._state)
-            else:
-                _LOGGER.debug(
-                    "Data for sensor %s is not a number: %s. Returning None.",
-                    self._type,
-                    isinstance(self.coordinator.data.get(self._type), int),
-                )
-
-        elif self._type == "inverters":
-            serial_number = self._name.split(" ")[2]
-            if isinstance(self.coordinator.data.get("inverters_production"), dict):
-                self._state = self.coordinator.data.get("inverters_production").get(
-                    serial_number
-                )[0]
-                self._last_reported = self.coordinator.data.get(
-                    "inverters_production"
-                ).get(serial_number)[1]
-                _LOGGER.debug(
-                    "Updating: %s (%s) - %s.",
-                    self._type,
-                    serial_number,
-                    self._state,
-                )
-            else:
-                _LOGGER.debug(
-                    "Data from inverter %s received an unsupported format: %s. Using: %s",
-                    serial_number,
-                    isinstance(self.coordinator.data.get("inverters_production"), dict),
-                    self._state,
-                )
