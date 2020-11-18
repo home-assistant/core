@@ -61,7 +61,7 @@ def _get_measurement_rate(current_measurements: dict, source_type: str):
             return current_measurements[source_type]["measurement"]["rate"]
     else:
         _LOGGER.error(
-            f"Source type {source_type} not present in {current_measurements}"
+            "Source type %s not present in %s", source_type, current_measurements
         )
     return None
 
@@ -75,7 +75,7 @@ def _get_this_day_value(current_measurements: dict, source_type: str):
             return current_measurements[source_type]["thisDay"]["value"]
     else:
         _LOGGER.error(
-            f"Source type {source_type} not present in {current_measurements}"
+            "Source type %s not present in %s", source_type, current_measurements
         )
     return None
 
@@ -100,7 +100,7 @@ async def async_update_huisbaasje(huisbaasje):
                 for source_type in SOURCE_TYPES
             }
     except HuisbaasjeException as exception:
-        raise UpdateFailed(f"Error communicating with API: {exception}")
+        raise UpdateFailed(f"Error communicating with API: {exception}") from exception
 
 
 class HuisbaasjeSensor(Entity):
