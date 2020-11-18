@@ -92,3 +92,19 @@ def get_rest_value_from_path(status, device_class, path: str):
         _attribute_value = _attribute_value.split("/")[1].split("@")[0]
 
     return _attribute_value
+
+
+def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
+    """Return true if input button settings is set to a momentary type."""
+    button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
+
+    # Some devices has only one channel in settings
+    channel = min(int(block.channel or 0), len(button) - 1)
+
+    # Shelly L has two button settings in the first channel
+    if settings["device"]["type"] == "SHSW-L":
+        button_type = button[0]["btn" + str(channel + 1) + "_type"]
+    else:
+        button_type = button[channel]["btn_type"]
+
+    return button_type in ["momentary", "momentary_on_release"]
