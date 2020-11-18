@@ -329,7 +329,7 @@ async def test_device_update_listener(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry, _ = await device.setup_entry(hass)
+    _, mock_entry, _ = await device.setup_entry(hass)
     await hass.async_block_till_done()
 
     with device.patch_setup():

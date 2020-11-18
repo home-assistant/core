@@ -90,5 +90,8 @@ class BroadlinkDiscovery:
 
     @callback
     def update(self):
-        """Create config flows for new devices found."""
-        pass
+        """Listen for updates.
+
+        This method is only used to activate the update coordinator.
+        We do not need a listener because we create flows instantly.
+        """
