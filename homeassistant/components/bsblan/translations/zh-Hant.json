@@ -4,8 +4,7 @@
             "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "connection_error": "BSB-Lan \u8a2d\u5099\u9023\u7dda\u5931\u6557\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "flow_title": "BSB-Lan\uff1a{name}",
         "step": {
@@ -19,6 +18,5 @@
                 "title": "\u9023\u7dda\u81f3 BSB-Lan \u8a2d\u5099"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

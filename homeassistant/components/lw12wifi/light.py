@@ -113,7 +113,7 @@ class LW12WiFi(LightEntity):
         return True
 
     @property
-    def shoud_poll(self) -> bool:
+    def should_poll(self) -> bool:
         """Return False to not poll the state of this entity."""
         return False
 

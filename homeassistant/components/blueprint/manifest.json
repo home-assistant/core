@@ -1,0 +1,9 @@
+{
+  "domain": "blueprint",
+  "name": "Blueprint",
+  "documentation": "https://www.home-assistant.io/integrations/blueprint",
+  "codeowners": [
+    "@home-assistant/core"
+  ],
+  "quality_scale": "internal"
+}

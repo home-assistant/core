@@ -83,6 +83,7 @@ class RegistryEntry:
     name: Optional[str] = attr.ib(default=None)
     icon: Optional[str] = attr.ib(default=None)
     device_id: Optional[str] = attr.ib(default=None)
+    area_id: Optional[str] = attr.ib(default=None)
     config_entry_id: Optional[str] = attr.ib(default=None)
     disabled_by: Optional[str] = attr.ib(
         default=None,
@@ -204,6 +205,7 @@ class EntityRegistry:
         # Data that we want entry to have
         config_entry: Optional["ConfigEntry"] = None,
         device_id: Optional[str] = None,
+        area_id: Optional[str] = None,
         capabilities: Optional[Dict[str, Any]] = None,
         supported_features: Optional[int] = None,
         device_class: Optional[str] = None,
@@ -223,6 +225,7 @@ class EntityRegistry:
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
                 device_id=device_id or _UNDEF,
+                area_id=area_id or _UNDEF,
                 capabilities=capabilities or _UNDEF,
                 supported_features=supported_features or _UNDEF,
                 device_class=device_class or _UNDEF,
@@ -253,6 +256,7 @@ class EntityRegistry:
             entity_id=entity_id,
             config_entry_id=config_entry_id,
             device_id=device_id,
+            area_id=area_id,
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
@@ -302,6 +306,7 @@ class EntityRegistry:
         *,
         name=_UNDEF,
         icon=_UNDEF,
+        area_id=_UNDEF,
         new_entity_id=_UNDEF,
         new_unique_id=_UNDEF,
         disabled_by=_UNDEF,
@@ -313,6 +318,7 @@ class EntityRegistry:
                 entity_id,
                 name=name,
                 icon=icon,
+                area_id=area_id,
                 new_entity_id=new_entity_id,
                 new_unique_id=new_unique_id,
                 disabled_by=disabled_by,
@@ -329,6 +335,7 @@ class EntityRegistry:
         config_entry_id=_UNDEF,
         new_entity_id=_UNDEF,
         device_id=_UNDEF,
+        area_id=_UNDEF,
         new_unique_id=_UNDEF,
         disabled_by=_UNDEF,
         capabilities=_UNDEF,
@@ -348,6 +355,7 @@ class EntityRegistry:
             ("icon", icon),
             ("config_entry_id", config_entry_id),
             ("device_id", device_id),
+            ("area_id", area_id),
             ("disabled_by", disabled_by),
             ("capabilities", capabilities),
             ("supported_features", supported_features),
@@ -425,6 +433,7 @@ class EntityRegistry:
                     entity_id=entity["entity_id"],
                     config_entry_id=entity.get("config_entry_id"),
                     device_id=entity.get("device_id"),
+                    area_id=entity.get("area_id"),
                     unique_id=entity["unique_id"],
                     platform=entity["platform"],
                     name=entity.get("name"),
@@ -456,6 +465,7 @@ class EntityRegistry:
                 "entity_id": entry.entity_id,
                 "config_entry_id": entry.config_entry_id,
                 "device_id": entry.device_id,
+                "area_id": entry.area_id,
                 "unique_id": entry.unique_id,
                 "platform": entry.platform,
                 "name": entry.name,
@@ -482,6 +492,13 @@ class EntityRegistry:
             if config_entry == entry.config_entry_id
         ]:
             self.async_remove(entity_id)
+
+    @callback
+    def async_clear_area_id(self, area_id: str) -> None:
+        """Clear area id from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if area_id == entry.area_id:
+                self._async_update_entity(entity_id, area_id=None)  # type: ignore
 
     def _register_entry(self, entry: RegistryEntry) -> None:
         self.entities[entry.entity_id] = entry
@@ -519,6 +536,14 @@ def async_entries_for_device(
     return [
         entry for entry in registry.entities.values() if entry.device_id == device_id
     ]
+
+
+@callback
+def async_entries_for_area(
+    registry: EntityRegistry, area_id: str
+) -> List[RegistryEntry]:
+    """Return entries that match an area."""
+    return [entry for entry in registry.entities.values() if entry.area_id == area_id]
 
 
 @callback

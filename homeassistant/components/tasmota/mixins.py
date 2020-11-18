@@ -95,8 +95,7 @@ class TasmotaAvailability(TasmotaEntity):
     @callback
     def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
-        if available and not self._available:
-            self._tasmota_entity.poll_status()
+        self._tasmota_entity.poll_status()
         self._available = available
         self.async_write_ha_state()
 

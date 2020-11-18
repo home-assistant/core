@@ -94,8 +94,9 @@ SUPPORTED_VOICES = [
     "Conchita",
     "Lucia",  # Spanish European
     "Mia",  # Spanish Mexican
-    "Miguel",
+    "Miguel",  # Spanish US
     "Penelope",  # Spanish US
+    "Lupe",  # Spanish US
     "Astrid",  # Swedish
     "Filiz",  # Turkish
     "Gwyneth",  # Welsh

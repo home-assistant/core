@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
-from aiohttp import ClientError
+import requests
 from spotipy import Spotify, SpotifyException
 from yarl import URL
 
@@ -195,7 +195,7 @@ def spotify_exception_handler(func):
             result = func(self, *args, **kwargs)
             self.player_available = True
             return result
-        except (SpotifyException, ClientError):
+        except (SpotifyException, requests.RequestException):
             self.player_available = False
 
     return wrapper
@@ -218,7 +218,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._name = f"Spotify {name}"
         self._session = session
         self._spotify = spotify
-        self._scope_ok = set(session.token["scope"].split(" ")) == set(SPOTIFY_SCOPES)
+        self._scope_ok = set(session.token["scope"].split(" ")).issuperset(
+            SPOTIFY_SCOPES
+        )
 
         self._currently_playing: Optional[dict] = {}
         self._devices: Optional[List[dict]] = []
@@ -474,6 +476,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         """Implement the websocket media browsing helper."""
 
         if not self._scope_ok:
+            _LOGGER.debug(
+                "Spotify scopes are not set correctly, this can impact features such as media browsing"
+            )
             raise NotImplementedError
 
         if media_content_type in [None, "library"]:

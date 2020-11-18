@@ -4,8 +4,7 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "invalid_auth": "Invalid authentication",
-            "login": "Login error: please check your username & password"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {

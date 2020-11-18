@@ -79,6 +79,12 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=True,
+    ), patch(
+        "homeassistant.components.ovo_energy.async_setup",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.ovo_energy.async_setup_entry",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

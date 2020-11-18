@@ -51,11 +51,11 @@ async def test_form_and_auth(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Roon Labs Music Player"
     assert result2["data"] == {"host": "1.1.1.1", "api_key": "good_token"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -136,11 +136,11 @@ async def test_form_host_already_exists(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Roon Labs Music Player"
     assert result2["data"] == {"host": "1.1.1.1", "api_key": "good_token"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 2
 

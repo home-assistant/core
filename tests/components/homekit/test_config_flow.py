@@ -62,6 +62,7 @@ async def test_user_form(hass):
             result["flow_id"],
             {},
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result3["title"][:11] == "HASS Bridge"
@@ -77,7 +78,6 @@ async def test_user_form(hass):
         "name": bridge_name,
         "port": 12345,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -111,6 +111,7 @@ async def test_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_NAME: "othername", CONF_PORT: 56789},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "othername:56789"
@@ -118,7 +119,6 @@ async def test_import(hass):
         "name": "othername",
         "port": 56789,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 2
 
