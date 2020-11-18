@@ -93,7 +93,7 @@ BLUEPRINT_INSTANCE_FIELDS = vol.Schema(
         vol.Required(CONF_USE_BLUEPRINT): vol.Schema(
             {
                 vol.Required(CONF_PATH): vol.All(cv.path, validate_yaml_suffix),
-                vol.Required(CONF_INPUT): {str: cv.match_all},
+                vol.Required(CONF_INPUT, default=dict): {str: cv.match_all},
             }
         )
     },
