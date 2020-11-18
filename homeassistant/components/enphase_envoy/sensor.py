@@ -19,6 +19,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
@@ -122,7 +123,7 @@ async def async_setup_platform(
     entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-        if condition == "inverters":
+        if condition == "inverters" and coordinator.data is not None:
             inverters = coordinator.data.get("inverters_production")
             _LOGGER.debug("Inverter data: %s", inverters)
             if isinstance(inverters, dict):
@@ -148,7 +149,7 @@ async def async_setup_platform(
                 _LOGGER.error(
                     "Communication error with Enphase Envoy during setup. Inverter entities not added."
                 )
-        else:
+        elif coordinator.data is not None:
             entities.append(
                 Envoy(
                     condition,
@@ -162,6 +163,8 @@ async def async_setup_platform(
                 f"{name}{SENSORS[condition][0]})",
                 condition,
             )
+        else:
+            raise PlatformNotReady
     async_add_entities(entities)
 
 
@@ -224,7 +227,6 @@ class Envoy(CoordinatorEntity, Entity):
 
     async def async_update(self):
         """Update the energy production data."""
-
         if self.coordinator.data is None:
             _LOGGER.debug("No data found!")
             return
