@@ -167,7 +167,7 @@ class WebDavCalendarData:
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        vevent_list = await hass.async_add_job(
+        vevent_list = await hass.async_add_executor_job(
             self.calendar.date_search, start_date, end_date
         )
         event_list = []

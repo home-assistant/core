@@ -273,6 +273,16 @@ class DSMREntity(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
 
+    @property
+    def force_update(self):
+        """Force update."""
+        return True
+
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return False
+
     @staticmethod
     def translate_tariff(value, dsmr_version):
         """Convert 2/1 to normal/low depending on DSMR version."""
@@ -309,6 +319,16 @@ class DerivativeDSMREntity(DSMREntity):
     def state(self):
         """Return the calculated current hourly rate."""
         return self._state
+
+    @property
+    def force_update(self):
+        """Disable force update."""
+        return False
+
+    @property
+    def should_poll(self):
+        """Enable polling."""
+        return True
 
     async def async_update(self):
         """Recalculate hourly rate if timestamp has changed.

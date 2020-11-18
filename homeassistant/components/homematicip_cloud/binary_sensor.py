@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud binary sensor."""
-import logging
 from typing import Any, Dict
 
 from homematicip.aio.device import (
@@ -44,8 +43,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -128,9 +125,9 @@ async def async_setup_entry(
 
     for group in hap.home.groups:
         if isinstance(group, AsyncSecurityGroup):
-            entities.append(HomematicipSecuritySensorGroup(hap, group))
+            entities.append(HomematicipSecuritySensorGroup(hap, device=group))
         elif isinstance(group, AsyncSecurityZoneGroup):
-            entities.append(HomematicipSecurityZoneSensorGroup(hap, group))
+            entities.append(HomematicipSecurityZoneSensorGroup(hap, device=group))
 
     if entities:
         async_add_entities(entities)
@@ -361,7 +358,7 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize sunshine sensor."""
-        super().__init__(hap, device, "Sunshine")
+        super().__init__(hap, device, post="Sunshine")
 
     @property
     def device_class(self) -> str:
@@ -390,7 +387,7 @@ class HomematicipBatterySensor(HomematicipGenericEntity, BinarySensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize battery sensor."""
-        super().__init__(hap, device, "Battery")
+        super().__init__(hap, device, post="Battery")
 
     @property
     def device_class(self) -> str:
@@ -429,7 +426,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
     def __init__(self, hap: HomematicipHAP, device, post: str = "SecurityZone") -> None:
         """Initialize security zone group."""
         device.modelType = f"HmIP-{post}"
-        super().__init__(hap, device, post)
+        super().__init__(hap, device, post=post)
 
     @property
     def device_class(self) -> str:
@@ -485,7 +482,7 @@ class HomematicipSecuritySensorGroup(
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize security group."""
-        super().__init__(hap, device, "Sensors")
+        super().__init__(hap, device, post="Sensors")
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:

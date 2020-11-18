@@ -276,6 +276,14 @@ def get_audio_speed_name(speed):
 def has_root():
     if platform.machine() == "x86_64":
         return False
+
+    import subprocess
+
+    try:
+        subprocess.check_output("su -c echo", shell=True)  # nosec
+    except Exception as e:
+        _LOGGER.info("No access to root")
+        return False
     return True
 
 

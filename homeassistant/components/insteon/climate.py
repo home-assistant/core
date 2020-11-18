@@ -1,5 +1,4 @@
 """Support for Insteon thermostat."""
-import logging
 from typing import List, Optional
 
 from pyinsteon.constants import ThermostatMode
@@ -31,8 +30,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 COOLING = 1
 HEATING = 2

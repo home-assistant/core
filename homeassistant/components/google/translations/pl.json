@@ -1,0 +1,22 @@
+{   "title": "AIS Kalendarze Google",
+    "config": {
+        "step": {
+            "confirm": {
+                  "description": "###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\nTa integracja pozwala synchronizację zdarzeń pomiędzy Asystentem domowym a Twoimi kalendarzami Google.\n\n Czy chcesz skonfigurować integrację AIS Google Calendas?",
+                  "title": "AIS Kalendarze Google"
+             },
+            "oauth": {
+                "description": "Dostęp do kalendarzy wymaga autoryzacji. Kliknij **ZATWIERDŹ** by przejść do autoryzacji **Asystenta domowego**  \n\n ###### ![AIS logo](/static/icons/ais_google_calendar.png)",
+                "title": "Uwierzytelnianie urządzenia w Google"
+            }
+        },
+        "error": {
+          "oauth_error": "Niepoprawne dane oAuth",
+          "token_error": "Niepoprawny kod"
+        },
+        "abort": {
+            "abort_by_error": "Przerwano z powodu błędu:\n\n {error_info}",
+            "single_instance_allowed": "Masz już skonfigurowane AIS Kalendarze Google.\n\n Jeśli chcesz skonfigurować ponownie, to najpierw usuń bieżącą integrację."
+        }
+    }
+}

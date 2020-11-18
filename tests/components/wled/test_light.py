@@ -456,6 +456,7 @@ async def test_effect_service(
                 ATTR_EFFECT: "Rainbow",
                 ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
                 ATTR_INTENSITY: 200,
+                ATTR_PALETTE: "Tiamat",
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
             },
@@ -465,6 +466,7 @@ async def test_effect_service(
         light_mock.assert_called_once_with(
             effect="Rainbow",
             intensity=200,
+            palette="Tiamat",
             reverse=True,
             segment_id=0,
             speed=100,
@@ -510,6 +512,7 @@ async def test_effect_service(
             {
                 ATTR_EFFECT: "Rainbow",
                 ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
+                ATTR_PALETTE: "Tiamat",
                 ATTR_REVERSE: True,
                 ATTR_SPEED: 100,
             },
@@ -518,6 +521,7 @@ async def test_effect_service(
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
             effect="Rainbow",
+            palette="Tiamat",
             reverse=True,
             segment_id=0,
             speed=100,

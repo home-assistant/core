@@ -4,6 +4,8 @@ import pytest
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
+
 
 @pytest.fixture(autouse=True)
 async def setup_http(hass):
@@ -109,3 +111,60 @@ async def test_webhook_query(hass, aiohttp_client):
 
     assert len(events) == 1
     assert events[0].data["hello"] == "yo world"
+
+
+async def test_webhook_reload(hass, aiohttp_client):
+    """Test reloading a webhook."""
+    events = []
+
+    @callback
+    def store_event(event):
+        """Helepr to store events."""
+        events.append(event)
+
+    hass.bus.async_listen("test_success", store_event)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"platform": "webhook", "webhook_id": "post_webhook"},
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
+                },
+            }
+        },
+    )
+
+    client = await aiohttp_client(hass.http.app)
+
+    await client.post("/api/webhook/post_webhook", data={"hello": "world"})
+
+    assert len(events) == 1
+    assert events[0].data["hello"] == "yo world"
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            "automation": {
+                "trigger": {"platform": "webhook", "webhook_id": "post_webhook"},
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo2 {{ trigger.data.hello }}"},
+                },
+            }
+        },
+    ):
+        await hass.services.async_call(
+            "automation",
+            "reload",
+            blocking=True,
+        )
+
+    await client.post("/api/webhook/post_webhook", data={"hello": "world"})
+
+    assert len(events) == 2
+    assert events[1].data["hello"] == "yo2 world"

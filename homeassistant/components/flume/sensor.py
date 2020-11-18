@@ -16,8 +16,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     DEFAULT_NAME,
@@ -88,12 +91,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             http_session=http_session,
         )
 
-        flume_data = FlumeSensorData(flume_device)
+        coordinator = _create_flume_device_coordinator(hass, flume_device)
 
         for flume_query_sensor in FLUME_QUERIES_SENSOR.items():
             flume_entity_list.append(
                 FlumeSensor(
-                    flume_data,
+                    coordinator,
+                    flume_device,
                     flume_query_sensor,
                     f"{device_friendly_name} {flume_query_sensor[1]['friendly_name']}",
                     device_id,
@@ -104,17 +108,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(flume_entity_list)
 
 
-class FlumeSensor(Entity):
+class FlumeSensor(CoordinatorEntity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, flume_data, flume_query_sensor, name, device_id):
+    def __init__(self, coordinator, flume_device, flume_query_sensor, name, device_id):
         """Initialize the Flume sensor."""
-        self._flume_data = flume_data
+        super().__init__(coordinator)
+        self._flume_device = flume_device
         self._flume_query_sensor = flume_query_sensor
         self._name = name
         self._device_id = device_id
-        self._undo_track_sensor = None
-        self._available = self._flume_data.available
         self._state = None
 
     @property
@@ -135,7 +138,11 @@ class FlumeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        sensor_key = self._flume_query_sensor[0]
+        if sensor_key not in self._flume_device.values:
+            return None
+
+        return _format_state_value(self._flume_device.values[sensor_key])
 
     @property
     def unit_of_measurement(self):
@@ -144,63 +151,46 @@ class FlumeSensor(Entity):
         return self._flume_query_sensor[1]["unit_of_measurement"]
 
     @property
-    def available(self):
-        """Device is available."""
-        return self._available
-
-    @property
     def unique_id(self):
         """Flume query and Device unique ID."""
         return f"{self._flume_query_sensor[0]}_{self._device_id}"
 
-    def update(self):
-        """Get the latest data and updates the states."""
-
-        def format_state_value(value):
-            return round(value, 1) if isinstance(value, Number) else None
-
-        self._flume_data.update()
-        self._state = format_state_value(
-            self._flume_data.flume_device.values[self._flume_query_sensor[0]]
-        )
-        _LOGGER.debug(
-            "Updating sensor: '%s', value: '%s'",
-            self._name,
-            self._flume_data.flume_device.values[self._flume_query_sensor[0]],
-        )
-        self._available = self._flume_data.available
-
     async def async_added_to_hass(self):
         """Request an update when added."""
-        # We do ask for an update with async_add_entities()
+        await super().async_added_to_hass()
+        # We do not ask for an update with async_add_entities()
         # because it will update disabled entities
-        self.async_schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
 
 
-class FlumeSensorData:
-    """Get the latest data and update the states."""
+def _format_state_value(value):
+    return round(value, 1) if isinstance(value, Number) else None
 
-    def __init__(self, flume_device):
-        """Initialize the data object."""
-        self.flume_device = flume_device
-        self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+def _create_flume_device_coordinator(hass, flume_device):
+    """Create a data coordinator for the flume device."""
+
+    async def _async_update_data():
         """Get the latest data from the Flume."""
         _LOGGER.debug("Updating Flume data")
         try:
-            self.flume_device.update_force()
+            await hass.async_add_executor_job(flume_device.update_force)
         except Exception as ex:  # pylint: disable=broad-except
-            if self.available:
-                _LOGGER.error("Update of Flume data failed: %s", ex)
-            self.available = False
-            return
-        self.available = True
+            raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
             "Flume update details: %s",
             {
-                "values": self.flume_device.values,
-                "query_payload": self.flume_device.query_payload,
+                "values": flume_device.values,
+                "query_payload": flume_device.query_payload,
             },
         )
+
+    return DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=flume_device.device_id,
+        update_method=_async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=SCAN_INTERVAL,
+    )

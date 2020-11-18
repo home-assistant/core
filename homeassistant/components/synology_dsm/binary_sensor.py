@@ -67,7 +67,4 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_type)(self._device_id)
-        if attr is None:
-            return None
-        return attr
+        return getattr(self._api.storage, self.entity_type)(self._device_id)

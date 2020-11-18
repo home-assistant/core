@@ -39,6 +39,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.template import ResultWrapper
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
@@ -258,7 +259,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = None
             return
 
-        state = result.lower()
+        state = str(result).lower()
+
         if state in _VALID_STATES:
             if state in ("true", STATE_OPEN):
                 self._position = 100
@@ -302,8 +304,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         if state < 0 or state > 100:
             self._tilt_value = None
             _LOGGER.error(
-                "Tilt value must be between 0 and 100. Value was: %.2f",
-                state,
+                "Tilt value must be between 0 and 100. Value was: %.2f", state
             )
         else:
             self._tilt_value = state

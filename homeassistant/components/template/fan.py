@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.template import ResultWrapper
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
@@ -367,6 +368,8 @@ class TemplateFan(TemplateEntity, FanEntity):
     @callback
     def _update_speed(self, speed):
         # Validate speed
+        speed = str(speed)
+
         if speed in self._speed_list:
             self._speed = speed
         elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
@@ -388,8 +391,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False",
-                oscillating,
+                "Received invalid oscillating: %s. Expected: True/False", oscillating
             )
             self._oscillating = None
 

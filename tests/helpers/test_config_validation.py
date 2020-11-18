@@ -9,7 +9,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 
 from tests.async_mock import Mock, patch
 
@@ -365,7 +365,7 @@ def test_slug():
         schema(value)
 
 
-def test_string():
+def test_string(hass):
     """Test string validation."""
     schema = vol.Schema(cv.string)
 
@@ -380,6 +380,19 @@ def test_string():
 
     for value in (True, 1, "hello"):
         schema(value)
+
+    # Test template support
+    for text, native in (
+        ("[1, 2]", [1, 2]),
+        ("{1, 2}", {1, 2}),
+        ("(1, 2)", (1, 2)),
+        ('{"hello": True}', {"hello": True}),
+    ):
+        tpl = template.Template(text, hass)
+        result = tpl.async_render()
+        assert isinstance(result, template.ResultWrapper)
+        assert result == native
+        assert schema(result) == text
 
 
 def test_string_with_no_html():
@@ -568,6 +581,27 @@ def test_multi_select_in_serializer():
     assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
         "type": "multi_select",
         "options": {"paulus": "Paulus"},
+    }
+
+
+def test_boolean_in_serializer():
+    """Test boolean with custom_serializer."""
+    assert cv.custom_serializer(cv.boolean) == {
+        "type": "boolean",
+    }
+
+
+def test_string_in_serializer():
+    """Test string with custom_serializer."""
+    assert cv.custom_serializer(cv.string) == {
+        "type": "string",
+    }
+
+
+def test_positive_time_period_dict_in_serializer():
+    """Test positive_time_period_dict with custom_serializer."""
+    assert cv.custom_serializer(cv.positive_time_period_dict) == {
+        "type": "positive_time_period_dict",
     }
 
 

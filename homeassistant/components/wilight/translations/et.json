@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada WiLight'i {name} ?\n\n See toetab: {components}",
+                "title": ""
+            }
+        }
+    }
+}

@@ -1,6 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
-import logging
 from ssl import SSLContext
 import sys
 from typing import Any, Awaitable, Optional, Union, cast
@@ -17,8 +16,6 @@ from homeassistant.helpers.frame import warn_use
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"

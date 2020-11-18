@@ -5,6 +5,8 @@
         },
         "error": {
             "account_error": "L'authentification ne'st pas valide",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
             "session_error": "\u00c9chec de connexion",
             "unknown": "Erreur inattendue"
         },

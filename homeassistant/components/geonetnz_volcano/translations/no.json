@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert"
+        },
         "error": {
-            "identifier_exists": "Beliggenhet er allerede registrert"
+            "identifier_exists": "Plasseringen er allerede registrert"
         },
         "step": {
             "user": {

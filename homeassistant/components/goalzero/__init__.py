@@ -3,13 +3,11 @@ import asyncio
 import logging
 
 from goalzero import Yeti, exceptions
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -17,32 +15,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
-
-GOALZERO_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_HOST): cv.matches_regex(
-                r"\A(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2 \
-            [0-4][0-9]|[01]?[0-9][0-9]?)\Z"
-            ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        },
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [GOALZERO_SCHEMA]))},
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 PLATFORMS = ["binary_sensor"]
@@ -61,8 +36,6 @@ async def async_setup_entry(hass, entry):
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
 
-    _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
-
     session = async_get_clientsession(hass)
     api = Yeti(host, hass.loop, session)
     try:
@@ -76,7 +49,6 @@ async def async_setup_entry(hass, entry):
         try:
             await api.get_state()
         except exceptions.ConnectError as err:
-            _LOGGER.warning("Failed to update data from Yeti")
             raise UpdateFailed(f"Failed to communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
@@ -117,10 +89,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class YetiEntity(CoordinatorEntity):
     """Representation of a Goal Zero Yeti entity."""
 
-    def __init__(self, _api, coordinator, name, sensor_name, server_unique_id):
+    def __init__(self, api, coordinator, name, server_unique_id):
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
-        self.api = _api
+        self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None

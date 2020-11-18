@@ -17,7 +17,8 @@
             },
             "user": {
                 "data": {
-                    "password": "Passwuert"
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
                 }
             }
         }

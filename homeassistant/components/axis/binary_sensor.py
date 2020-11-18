@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if event.CLASS != CLASS_OUTPUT and not (
             event.CLASS == CLASS_LIGHT and event.TYPE == "Light"
         ):
-            async_add_entities([AxisBinarySensor(event, device)], True)
+            async_add_entities([AxisBinarySensor(event, device)])
 
     device.listeners.append(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)

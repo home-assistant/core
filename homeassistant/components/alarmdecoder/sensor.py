@@ -1,13 +1,9 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import SIGNAL_PANEL_MESSAGE
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

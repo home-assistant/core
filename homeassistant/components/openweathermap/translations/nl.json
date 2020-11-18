@@ -5,6 +5,7 @@
         },
         "error": {
             "auth": "API-sleutel is niet correct.",
+            "cannot_connect": "Kan geen verbinding maken",
             "connection": "Kan geen verbinding maken met OWM API"
         },
         "step": {

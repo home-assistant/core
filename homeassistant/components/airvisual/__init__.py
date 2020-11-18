@@ -12,7 +12,7 @@ from pyairvisual.errors import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -97,14 +97,12 @@ def async_get_geography_id(geography_dict):
 
 
 @callback
-def async_get_cloud_api_update_interval(hass, api_key):
+def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
     """Get a leveled scan interval for a particular cloud API key.
 
     This will shift based on the number of active consumers, thus keeping the user
     under the monthly API limit.
     """
-    num_consumers = len(async_get_cloud_coordinators_by_api_key(hass, api_key))
-
     # Assuming 10,000 calls per month and a "smallest possible month" of 28 days; note
     # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
     minutes_between_api_calls = ceil(1 / (8500 / 28 / 24 / 60 / num_consumers))
@@ -133,8 +131,16 @@ def async_get_cloud_coordinators_by_api_key(hass, api_key):
 @callback
 def async_sync_geo_coordinator_update_intervals(hass, api_key):
     """Sync the update interval for geography-based data coordinators (by API key)."""
-    update_interval = async_get_cloud_api_update_interval(hass, api_key)
-    for coordinator in async_get_cloud_coordinators_by_api_key(hass, api_key):
+    coordinators = async_get_cloud_coordinators_by_api_key(hass, api_key)
+
+    if not coordinators:
+        return
+
+    update_interval = async_get_cloud_api_update_interval(
+        hass, api_key, len(coordinators)
+    )
+
+    for coordinator in coordinators:
         LOGGER.debug(
             "Updating interval for coordinator: %s, %s",
             coordinator.name,
@@ -234,13 +240,26 @@ async def async_setup_entry(hass, config_entry):
             try:
                 return await api_coro
             except (InvalidKeyError, KeyExpiredError):
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                        data=config_entry.data,
+                matching_flows = [
+                    flow
+                    for flow in hass.config_entries.flow.async_progress()
+                    if flow["context"]["source"] == SOURCE_REAUTH
+                    and flow["context"]["unique_id"] == config_entry.unique_id
+                ]
+
+                if not matching_flows:
+                    hass.async_create_task(
+                        hass.config_entries.flow.async_init(
+                            DOMAIN,
+                            context={
+                                "source": SOURCE_REAUTH,
+                                "unique_id": config_entry.unique_id,
+                            },
+                            data=config_entry.data,
+                        )
                     )
-                )
+
+                return {}
             except AirVisualError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -262,7 +281,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
         # Only geography-based entries have options:
-        config_entry.add_update_listener(async_update_options)
+        config_entry.add_update_listener(async_reload_entry)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
 
@@ -356,10 +375,9 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-async def async_update_options(hass, config_entry):
+async def async_reload_entry(hass, config_entry):
     """Handle an options update."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
-    await coordinator.async_request_refresh()
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class AirVisualEntity(CoordinatorEntity):

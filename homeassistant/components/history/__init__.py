@@ -1,11 +1,11 @@
 """Provide pre-made queries on top of the recorder component."""
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
 import time
-from typing import Optional, cast
+from typing import Iterable, Optional, cast
 
 from aiohttp import web
 from sqlalchemy import and_, bindparam, func, not_, or_
@@ -33,6 +33,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -502,6 +503,13 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app["hass"]
 
+        if (
+            not include_start_time_state
+            and entity_ids
+            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+        ):
+            return self.json([])
+
         return cast(
             web.Response,
             await hass.async_add_executor_job(
@@ -658,6 +666,19 @@ class Filters:
 def _glob_to_like(glob_str):
     """Translate glob to sql."""
     return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+
+
+def _entities_may_have_state_changes_after(
+    hass: HomeAssistantType, entity_ids: Iterable, start_time: dt
+) -> bool:
+    """Check the state machine to see if entities have changed since start time."""
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+
+        if state is None or state.last_changed > start_time:
+            return True
+
+    return False
 
 
 class LazyState(State):

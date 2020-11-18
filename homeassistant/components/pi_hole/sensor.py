@@ -1,5 +1,4 @@
 """Support for getting statistical data from a Pi-hole system."""
-import logging
 
 from homeassistant.const import CONF_NAME
 
@@ -12,8 +11,6 @@ from .const import (
     SENSOR_DICT,
     SENSOR_LIST,
 )
-
-LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "pin": "PIN kood",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Valves eemal",
+                    "armed_home": "Valves kodus",
+                    "armed_night": "Valves \u00f6ine"
+                }
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "N\u00f5ua valvestamiseks PIN koodi"
+                }
+            }
+        }
+    }
+}

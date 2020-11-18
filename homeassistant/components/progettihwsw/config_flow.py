@@ -19,7 +19,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     same_entries = [
         True
         for entry in confs
-        if entry.data["host"] == data["host"] and entry.data["port"] == data["port"]
+        if entry.data.get("host") == data["host"]
+        and entry.data.get("port") == data["port"]
     ]
 
     if same_entries:

@@ -1,6 +1,6 @@
 """Test the Powerwall config flow."""
 
-from tesla_powerwall import APIChangedError, PowerwallUnreachableError
+from tesla_powerwall import MissingAttributeError, PowerwallUnreachableError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.powerwall.const import DOMAIN
@@ -99,7 +99,9 @@ async def test_form_wrong_version(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = _mock_powerwall_side_effect(site_info=APIChangedError(object, {}))
+    mock_powerwall = _mock_powerwall_side_effect(
+        site_info=MissingAttributeError({}, "")
+    )
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",

@@ -8,6 +8,9 @@
         "create_entry": {
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
         },
+        "error": {
+            "already_configured_account": "Account is al geconfigureerd"
+        },
         "step": {
             "pick_implementation": {
                 "title": "Kies Authenticatiemethode"

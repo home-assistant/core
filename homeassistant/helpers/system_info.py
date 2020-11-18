@@ -14,7 +14,7 @@ from .typing import HomeAssistantType
 async def async_get_system_info(hass: HomeAssistantType) -> Dict[str, Any]:
     """Return info about the system."""
     info_object = {
-        "installation_type": "Unknown",
+        "installation_type": "AIS HA",
         "version": current_version,
         "dev": "dev" in current_version,
         "hassio": hass.components.hassio.is_hassio(),
@@ -38,7 +38,7 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict[str, Any]:
     if info_object["docker"]:
         info_object["installation_type"] = "Home Assistant Container"
     elif is_virtual_env():
-        info_object["installation_type"] = "Home Assistant Core"
+        info_object["installation_type"] = "AIS HA"
 
     # Enrich with Supervisor information
     if hass.components.hassio.is_hassio():

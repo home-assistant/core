@@ -24,7 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
-    camera_devices = await hass.async_add_job(hass.data[nest.DATA_NEST].cameras)
+    camera_devices = await hass.async_add_executor_job(
+        hass.data[nest.DATA_NEST].cameras
+    )
     cameras = [NestCamera(structure, device) for structure, device in camera_devices]
     async_add_entities(cameras, True)
 

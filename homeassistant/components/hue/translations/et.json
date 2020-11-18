@@ -2,6 +2,9 @@
     "config": {
         "abort": {
             "all_configured": "K\u00f5ik Philips Hue sillad on juba konfigureeritud",
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendus nurjus",
             "discover_timeout": "Ei leia Philips Hue sildu",
             "no_bridges": "Philips Hue sildu ei avastatud",
             "unknown": "Ilmnes tundmatu viga"
@@ -15,10 +18,16 @@
                 "data": {
                     "host": ""
                 },
-                "title": "Valige Hue sild"
+                "title": "Vali Hue sild"
             },
             "link": {
-                "description": "Vajutage silla nuppu, et registreerida Philips Hue Home Assistant abil. \n\n ! [Nupu asukoht sillal] (/ static / images / config_philips_hue.jpg)"
+                "description": "Vajutage silla nuppu, et registreerida Philips Hue Home Assistant abil. \n\n ! [Nupu asukoht sillal] (/ static / images / config_philips_hue.jpg)",
+                "title": "\u00dchenda jaotusseade"
+            },
+            "manual": {
+                "data": {
+                    "host": ""
+                }
             }
         }
     },

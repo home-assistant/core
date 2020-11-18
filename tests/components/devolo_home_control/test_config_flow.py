@@ -66,7 +66,7 @@ async def test_form_invalid_credentials(hass):
             {"username": "test-username", "password": "test-password"},
         )
 
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_already_configured(hass):

@@ -47,6 +47,51 @@ class AuthorizationCallbackView(HomeAssistantView):
         # add the REAL_IP and FLOW_ID to Spotify Auth URL and redirect to Spotify for authentication
         if step_ip == "1":
             real_ip = request.url.host
+            #
+            if G_SPOTIFY_AUTH_URL is None:
+                try:
+                    import json
+
+                    import spotipy.oauth2
+
+                    from homeassistant.components import ais_cloud
+                    from homeassistant.components.ais_dom import ais_global
+
+                    from . import DEFAULT_CACHE_PATH
+
+                    aisCloud = ais_cloud.AisCloudWS(hass)
+                    json_ws_resp = await aisCloud.async_key("spotify_oauth")
+                    spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
+                    spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
+                    spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
+                    if "SPOTIFY_SCOPE_FULL" in json_ws_resp:
+                        spotify_scope = json_ws_resp["SPOTIFY_SCOPE_FULL"]
+                    else:
+                        spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
+                except Exception as e:
+                    _LOGGER.error("No spotify oauth info: " + str(e))
+                    return True
+
+                cache = hass.config.path(DEFAULT_CACHE_PATH)
+                gate_id = ais_global.get_sercure_android_id_dom()
+
+                j_state = json.dumps(
+                    {
+                        "gate_id": gate_id,
+                        "real_ip": "real_ip_place",
+                        "flow_id": "flow_id_place",
+                    }
+                )
+                oauth = spotipy.oauth2.SpotifyOAuth(
+                    spotify_client_id,
+                    spotify_client_secret,
+                    spotify_redirect_url,
+                    scope=spotify_scope,
+                    cache_path=cache,
+                    state=j_state,
+                )
+
+                setUrl(oauth.get_authorize_url())
             G_SPOTIFY_AUTH_URL = G_SPOTIFY_AUTH_URL.replace("real_ip_place", real_ip)
             G_SPOTIFY_AUTH_URL = G_SPOTIFY_AUTH_URL.replace("flow_id_place", flow_id)
             js_text = (

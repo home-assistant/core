@@ -403,7 +403,8 @@ class TestPilightCallrateThrottler(unittest.TestCase):
         for i in range(3):
             action(i)
 
-        assert runs == []
+        self.hass.block_till_done()
+        assert runs == [0]
 
         exp = []
         now = dt_util.utcnow()

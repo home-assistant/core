@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta drukarka jest ju\u017c skonfigurowana.",
-            "unsupported_model": "Ten model drukarki nie jest obs\u0142ugiwany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "unsupported_model": "Ten model drukarki nie jest obs\u0142ugiwany"
         },
         "error": {
-            "connection_error": "B\u0142\u0105d po\u0142\u0105czenia.",
-            "snmp_error": "Serwer SNMP wy\u0142\u0105czony lub drukarka nie jest obs\u0142ugiwana.",
-            "wrong_host": "Niepoprawna nazwa hosta lub adres IP drukarki."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "snmp_error": "Serwer SNMP wy\u0142\u0105czony lub drukarka nie jest obs\u0142ugiwana",
+            "wrong_host": "Niepoprawna nazwa hosta lub adres IP drukarki"
         },
         "flow_title": "Drukarka Brother: {model} {serial_number}",
         "step": {
@@ -22,7 +23,7 @@
                 "data": {
                     "type": "Typ drukarki"
                 },
-                "description": "Czy chcesz doda\u0107 drukark\u0119 Brother {model} o numerze seryjnym `{serial_number}` do Home Assistanta?",
+                "description": "Czy chcesz doda\u0107 drukark\u0119 Brother {model} o numerze seryjnym `{serial_number}` do Home Assistant?",
                 "title": "Wykryto drukark\u0119 Brother"
             }
         }

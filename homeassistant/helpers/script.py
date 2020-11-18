@@ -53,7 +53,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
+from homeassistant.core import (
+    SERVICE_CALL_LIMIT,
+    Context,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -789,7 +795,11 @@ class Script:
         self.name = name
         self.domain = domain
         self.running_description = running_description or f"{domain} script"
-        self.change_listener = change_listener
+        self._change_listener = change_listener
+        self._change_listener_job = (
+            None if change_listener is None else HassJob(change_listener)
+        )
+
         self.script_mode = script_mode
         self._set_logger(logger)
         self._log_exceptions = log_exceptions
@@ -812,6 +822,21 @@ class Script:
         if self._variables_dynamic:
             template.attach(hass, variables)
 
+    @property
+    def change_listener(self) -> Optional[Callable[..., Any]]:
+        """Return the change_listener."""
+        return self._change_listener
+
+    @change_listener.setter
+    def change_listener(self, change_listener: Callable[..., Any]) -> None:
+        """Update the change_listener."""
+        self._change_listener = change_listener
+        if (
+            self._change_listener_job is None
+            or change_listener != self._change_listener_job.target
+        ):
+            self._change_listener_job = HassJob(change_listener)
+
     def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
             self._logger = logger
@@ -830,8 +855,8 @@ class Script:
                 choose_data["default"].update_logger(self._logger)
 
     def _changed(self):
-        if self.change_listener:
-            self._hass.async_run_job(self.change_listener)
+        if self._change_listener_job:
+            self._hass.async_run_hass_job(self._change_listener_job)
 
     def _chain_change_listener(self, sub_script):
         if sub_script.is_running:

@@ -431,7 +431,7 @@ class EvoBroker:
                 return
 
         if refresh:
-            self.hass.helpers.event.async_call_later(1, self.async_update())
+            self.hass.helpers.event.async_call_later(1, self.async_update)
 
         return result
 

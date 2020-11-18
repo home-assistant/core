@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
             "faulty_credentials": "Niepoprawne uwierzytelnienie",
@@ -16,7 +16,7 @@
                     "port": "Port",
                     "site": "Identyfikator witryny",
                     "username": "Nazwa u\u017cytkownika",
-                    "verify_ssl": "Kontroler u\u017cywa prawid\u0142owego certyfikatu"
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "title": "Konfiguracja kontrolera UniFi"
             }
@@ -62,7 +62,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Stw\u00f3rz sensory wykorzystania przepustowo\u015bci przez klient\u00f3w sieciowych"
+                    "allow_bandwidth_sensors": "Sensory wykorzystania przepustowo\u015bci przez klient\u00f3w sieciowych",
+                    "allow_uptime_sensors": "Sensory czasu pracy dla klient\u00f3w sieciowych"
                 },
                 "description": "Konfiguracja sensora statystyk",
                 "title": "Opcje UniFi"

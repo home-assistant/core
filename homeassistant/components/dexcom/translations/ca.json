@@ -5,6 +5,8 @@
         },
         "error": {
             "account_error": "Autenticaci\u00f3 inv\u00e0lida",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "session_error": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },

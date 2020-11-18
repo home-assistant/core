@@ -5,6 +5,8 @@
         },
         "error": {
             "account_error": "Autenticazione non valida",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
             "session_error": "Impossibile connettersi",
             "unknown": "Errore imprevisto"
         },

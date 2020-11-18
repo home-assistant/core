@@ -4,6 +4,7 @@
             "already_configured": "Deze co\u00f6rdinaten of Node / Pro ID zijn al geregistreerd."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "general_error": "Er is een onbekende fout opgetreden.",
             "unable_to_connect": "Kan geen verbinding maken met Node / Pro-apparaat."
         },

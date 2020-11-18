@@ -5,7 +5,9 @@
         },
         "error": {
             "auth": "La cl\u00e9 API n'est pas correcte.",
-            "connection": "Impossible de se connecter \u00e0 l'API OWM"
+            "cannot_connect": "\u00c9chec de connexion",
+            "connection": "Impossible de se connecter \u00e0 l'API OWM",
+            "invalid_api_key": "Cl\u00e9 API invalide"
         },
         "step": {
             "user": {

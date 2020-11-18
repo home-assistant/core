@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import asyncio
-import logging
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
@@ -22,8 +21,6 @@ from ..const import (
     WARNING_DEVICE_STROBE_YES,
 )
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)

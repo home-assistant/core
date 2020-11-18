@@ -9,7 +9,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "site": "Site ID",
-          "verify_ssl": "Controller using proper certificate"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },

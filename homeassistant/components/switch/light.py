@@ -1,5 +1,4 @@
 """Light support for switch entities."""
-import logging
 from typing import Any, Callable, Optional, Sequence, cast
 
 import voluptuous as vol
@@ -24,8 +23,6 @@ from homeassistant.helpers.typing import (
 )
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Light Switch"
 

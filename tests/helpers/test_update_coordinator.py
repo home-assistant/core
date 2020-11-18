@@ -14,7 +14,7 @@ from homeassistant.util.dt import utcnow
 from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_crd(hass, update_interval):
@@ -28,7 +28,7 @@ def get_crd(hass, update_interval):
 
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
-        LOGGER,
+        _LOGGER,
         name="test",
         update_method=refresh,
         update_interval=update_interval,

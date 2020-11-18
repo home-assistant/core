@@ -54,7 +54,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if discovery[DISCOVERY_USN] == user_input["usn"]
             ]
             if not matching_discoveries:
-                return self.async_abort(reason="no_devices_discovered")
+                return self.async_abort(reason="no_devices_found")
 
             discovery = matching_discoveries[0]
             await self.async_set_unique_id(

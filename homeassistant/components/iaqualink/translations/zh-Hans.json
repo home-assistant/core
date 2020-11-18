@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "connection_failure": "\u65e0\u6cd5\u8fde\u63a5\u5230iAqualink\u3002\u68c0\u67e5\u60a8\u7684\u7528\u6237\u540d\u548c\u5bc6\u7801\u3002"
+        },
+        "step": {
+            "user": {
+                "description": "\u8bf7\u8f93\u5165\u60a8\u7684iAqualink\u5e10\u6237\u7684\u7528\u6237\u540d\u548c\u5bc6\u7801\u3002"
+            }
+        }
+    }
+}

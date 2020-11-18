@@ -1,6 +1,5 @@
 """Support for the Environment Canada radar imagery."""
 import datetime
-import logging
 
 from env_canada import ECRadar  # pylint: disable=import-error
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_UPDATED = "updated"
 
@@ -86,9 +83,7 @@ class ECCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
-
-        return attr
+        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.plex.const import DOMAIN
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .mock_classes import MockPlexAccount, MockPlexServer
+from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -43,8 +43,12 @@ def setup_plex_server(hass, entry, mock_plex_account, mock_websocket):
     async def _wrapper(**kwargs):
         """Wrap the fixture to allow passing arguments to the MockPlexServer instance."""
         config_entry = kwargs.get("config_entry", entry)
+        disable_gdm = kwargs.pop("disable_gdm", True)
         plex_server = MockPlexServer(**kwargs)
-        with patch("plexapi.server.PlexServer", return_value=plex_server):
+        with patch("plexapi.server.PlexServer", return_value=plex_server), patch(
+            "homeassistant.components.plex.GDM",
+            return_value=MockGDM(disabled=disable_gdm),
+        ):
             config_entry.add_to_hass(hass)
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()

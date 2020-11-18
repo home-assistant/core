@@ -1,6 +1,4 @@
 """Provides device automations for Philips Hue events."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
@@ -19,8 +17,6 @@ from homeassistant.const import (
 
 from . import DOMAIN
 from .hue_event import CONF_HUE_EVENT
-
-_LOGGER = logging.getLogger(__file__)
 
 CONF_SUBTYPE = "subtype"
 

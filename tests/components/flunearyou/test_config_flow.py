@@ -37,7 +37,7 @@ async def test_general_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
-        assert result["errors"] == {"base": "general_error"}
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_show_form(hass):

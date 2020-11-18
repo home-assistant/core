@@ -1,5 +1,4 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
-import logging
 from typing import Optional
 
 import voluptuous as vol
@@ -31,8 +30,6 @@ from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),

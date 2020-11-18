@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "all_configured": "No new Pulse hubs discovered."
+            "all_configured": "No new Pulse hubs discovered.",
+            "no_devices_found": "No devices found on the network"
         },
         "step": {
             "user": {

@@ -1,6 +1,4 @@
 """Platform for cover integration."""
-import logging
-
 from homeassistant.components.cover import (
     DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
@@ -13,8 +11,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

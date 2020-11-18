@@ -4,11 +4,14 @@ import asyncio
 
 from Plugwise_Smile.Smile import Smile
 
+from homeassistant.components.plugwise import DOMAIN
+from homeassistant.components.plugwise.gateway import async_unload_entry
 from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
 
+from tests.common import AsyncMock
 from tests.components.plugwise.common import async_init_integration
 
 
@@ -43,3 +46,12 @@ async def test_smile_adam_xmlerror(hass, mock_smile_adam):
     mock_smile_adam.full_update_device.side_effect = Smile.XMLDataMissingError
     entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_unload_entry(hass, mock_smile_adam):
+    """Test being able to unload an entry."""
+    entry = await async_init_integration(hass, mock_smile_adam)
+
+    mock_smile_adam.async_reset = AsyncMock(return_value=True)
+    assert await async_unload_entry(hass, entry)
+    assert not hass.data[DOMAIN]

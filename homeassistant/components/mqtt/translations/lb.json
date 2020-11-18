@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Ong\u00ebltege birth topic.",
             "bad_will": "Ong\u00ebltege will topic.",
-            "cannot_connect": "Kann sech net mam Broker verbannen."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "broker": {

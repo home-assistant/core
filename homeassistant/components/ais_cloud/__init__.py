@@ -665,6 +665,14 @@ class AisCloudWS:
             ws_resp = await web_session.get(rest_url, headers=self.cloud_ws_header)
             return await ws_resp.json()
 
+    async def async_delete_oauth(self, service):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        # TODO do the same for others like Spotify
+        rest_url = "http://powiedz.co/ords/dom/auth/" + service
+        with async_timeout.timeout(10):
+            ws_resp = await web_session.delete(rest_url, headers=self.cloud_ws_header)
+            return await ws_resp.json()
+
     def extract_media(self, url, local_extractor_version):
         rest_url = (
             self.url

@@ -1,14 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
+            "cannot_connect": "Impossibile connettersi",
             "connection": "Errore di connessione: controlla host, porta e SSL",
+            "invalid_auth": "Autenticazione non valida",
             "login": "Errore di accesso: si prega di controllare il nome utente e la password",
             "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
             "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso",
-            "unknown": "Errore sconosciuto: si prega di controllare i registri per ottenere maggiori dettagli"
+            "unknown": "Errore imprevisto"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -22,7 +24,7 @@
                 "data": {
                     "password": "Password",
                     "port": "Porta",
-                    "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
+                    "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente"
                 },
                 "description": "Vuoi impostare {name} ({host})?",
@@ -33,7 +35,7 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Porta",
-                    "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
+                    "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente"
                 },
                 "title": "Synology DSM"

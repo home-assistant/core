@@ -8,6 +8,7 @@
             "port_997_bind_error": "\u65e0\u6cd5\u7ed1\u5b9a\u7aef\u53e3 997\u3002"
         },
         "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
             "login_failed": "\u65e0\u6cd5\u4e0e PlayStation 4 \u914d\u5bf9\u3002\u8bf7\u786e\u8ba4 PIN \u662f\u5426\u6b63\u786e\u3002",
             "not_ready": "PlayStation 4 \u672a\u5f00\u673a\u6216\u672a\u8fde\u63a5\u5230\u7f51\u7edc\u3002"
         },

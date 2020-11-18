@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Kodi: {name}",
+        "flow_title": "",
         "step": {
             "credentials": {
                 "data": {
@@ -36,7 +36,7 @@
                 "data": {
                     "host": "Vert",
                     "port": "Port",
-                    "ssl": "Koble til via SSL"
+                    "ssl": "Bruker et SSL-sertifikat"
                 },
                 "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
             },

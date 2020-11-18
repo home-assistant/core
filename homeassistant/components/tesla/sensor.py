@@ -1,5 +1,4 @@
 """Support for the Tesla sensors."""
-import logging
 from typing import Optional
 
 from homeassistant.components.sensor import DEVICE_CLASSES
@@ -13,8 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util.distance import convert
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -226,7 +226,9 @@ def _get_external_url(
     # get ais url
     remote_access = hass.states.get("input_boolean.ais_remote_access").state
     if remote_access == "on":
-        return hass.states.get("camera.remote_access").state
+        import homeassistant.components.ais_dom.ais_global as ais_global
+
+        return "https://" + ais_global.get_sercure_android_id_dom() + ".paczka.pro"
     else:
         return "http://" + hass.states.get("sensor.internal_ip_address").state + ":8180"
 

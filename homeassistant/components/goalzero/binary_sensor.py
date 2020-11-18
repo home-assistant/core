@@ -30,14 +30,13 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
 
     def __init__(self, api, coordinator, name, sensor_name, server_unique_id):
         """Initialize a Goal Zero Yeti sensor."""
-        super().__init__(api, coordinator, name, sensor_name, server_unique_id)
+        super().__init__(api, coordinator, name, server_unique_id)
 
         self._condition = sensor_name
 
         variable_info = BINARY_SENSOR_DICT[sensor_name]
         self._condition_name = variable_info[0]
         self._icon = variable_info[2]
-        self.api = api
         self._device_class = variable_info[1]
 
     @property
@@ -55,6 +54,7 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
         """Return if the service is on."""
         if self.api.data:
             return self.api.data[self._condition] == 1
+        return False
 
     @property
     def icon(self):

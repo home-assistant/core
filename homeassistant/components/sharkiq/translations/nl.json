@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured_account": "Account is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "reauth": {
                 "data": {
@@ -9,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }
             }

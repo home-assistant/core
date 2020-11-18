@@ -30,6 +30,7 @@ ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 
 # #### Config ####
+CONF_HOMEKIT_MODE = "mode"
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
@@ -85,6 +86,12 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
 EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
+
+# #### HomeKit Modes ####
+HOMEKIT_MODE_ACCESSORY = "accessory"
+HOMEKIT_MODE_BRIDGE = "bridge"
+DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
+HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
@@ -283,4 +290,5 @@ CONFIG_OPTIONS = [
     CONF_AUTO_START,
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
+    CONF_HOMEKIT_MODE,
 ]

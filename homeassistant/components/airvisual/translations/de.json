@@ -25,6 +25,11 @@
                 "description": "\u00dcberwachen Sie eine pers\u00f6nliche AirVisual-Einheit. Das Passwort kann von der Benutzeroberfl\u00e4che des Ger\u00e4ts abgerufen werden.",
                 "title": "Konfigurieren Sie einen AirVisual Node/Pro"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Key"
+                }
+            },
             "user": {
                 "data": {
                     "cloud_api": "Geografische Position",

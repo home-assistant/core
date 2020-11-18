@@ -13,7 +13,7 @@ from .test_device import (
     setup_axis_integration,
 )
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import AsyncMock, patch
 
 EVENTS = [
     {
@@ -55,8 +55,10 @@ async def test_switches_with_port_cgi(hass):
     """Test that switches are loaded properly using port.cgi."""
     device = await setup_axis_integration(hass)
 
-    device.api.vapix.ports = {"0": Mock(), "1": Mock()}
+    device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
+    device.api.vapix.ports["0"].open = AsyncMock()
+    device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
     for event in EVENTS:
@@ -98,8 +100,10 @@ async def test_switches_with_port_management(hass):
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
         device = await setup_axis_integration(hass)
 
-    device.api.vapix.ports = {"0": Mock(), "1": Mock()}
+    device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
+    device.api.vapix.ports["0"].open = AsyncMock()
+    device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
     for event in EVENTS:

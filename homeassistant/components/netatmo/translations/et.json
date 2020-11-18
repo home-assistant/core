@@ -1,4 +1,15 @@
 {
+    "config": {
+        "abort": {
+            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            }
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

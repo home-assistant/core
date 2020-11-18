@@ -202,7 +202,7 @@ send_location:
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_message:
-  description: Edit a previusly sent message.
+  description: Edit a previously sent message.
   fields:
     message_id:
       description: id of the message to edit.
@@ -227,7 +227,7 @@ edit_message:
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_caption:
-  description: Edit the caption of a previusly sent message.
+  description: Edit the caption of a previously sent message.
   fields:
     message_id:
       description: id of the message to edit.
@@ -243,7 +243,7 @@ edit_caption:
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_replymarkup:
-  description: Edit the inline keyboard of a previusly sent message.
+  description: Edit the inline keyboard of a previously sent message.
   fields:
     message_id:
       description: id of the message to edit.

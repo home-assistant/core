@@ -45,7 +45,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             pass
 
         if len(hubs) == 0:
-            return self.async_abort(reason="all_configured")
+            return self.async_abort(reason="no_devices_found")
 
         if len(hubs) == 1:
             return await self.async_create(hubs[0])

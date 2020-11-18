@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "auth_failed": "Autenticaci\u00f3 inv\u00e0lida",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "conn_error": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "auth_failed": "Autenticaci\u00f3 inv\u00e0lida"
+            "auth_failed": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "flow_title": "Configuraci\u00f3 de Tuya",
         "step": {

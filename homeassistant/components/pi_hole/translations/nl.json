@@ -9,7 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "location": "Locatie"
+                    "location": "Locatie",
+                    "name": "Naam",
+                    "port": "Poort"
                 }
             }
         }

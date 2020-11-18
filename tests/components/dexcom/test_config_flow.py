@@ -57,7 +57,7 @@ async def test_form_account_error(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "account_error"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_session_error(hass):
@@ -76,7 +76,7 @@ async def test_form_session_error(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "session_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_error(hass):

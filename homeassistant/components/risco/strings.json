@@ -5,7 +5,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "pin": "Pin code"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },
@@ -24,8 +24,8 @@
         "title": "Configure options",
         "data": {
           "scan_interval": "How often to poll Risco (in seconds)",
-          "code_arm_required": "Require pin code to arm",
-          "code_disarm_required": "Require pin code to disarm"
+          "code_arm_required": "Require [%key:common::config_flow::data::pin%] to arm",
+          "code_disarm_required": "Require [%key:common::config_flow::data::pin%] to disarm"
         }
       },
       "risco_to_ha": {

@@ -1,6 +1,4 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -8,8 +6,6 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
-
-_LOGGER = logging.getLogger(__name__)
 
 ARM_TEMPERATURE = "temperature"
 ARM_HUMIDITY = "humidity"

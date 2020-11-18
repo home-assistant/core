@@ -2,9 +2,11 @@
 import asyncio
 import binascii
 from collections import OrderedDict
+import copy
 import logging
 
 import RFXtrx as rfxtrxmod
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,6 +28,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TIME_HOURS,
@@ -33,11 +36,22 @@ from homeassistant.const import (
     VOLT,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
+    CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
+    CONF_DEBUG,
+    CONF_FIRE_EVENT,
+    CONF_OFF_DELAY,
+    CONF_REMOVE_DEVICE,
+    CONF_SIGNAL_REPETITIONS,
+    DATA_CLEANUP_CALLBACKS,
+    DATA_LISTENER,
+    DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -47,12 +61,6 @@ DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
-CONF_FIRE_EVENT = "fire_event"
-CONF_DATA_BITS = "data_bits"
-CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_DEBUG = "debug"
-CONF_OFF_DELAY = "off_delay"
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 DATA_TYPES = OrderedDict(
@@ -83,13 +91,11 @@ DATA_TYPES = OrderedDict(
         ("Voltage", VOLT),
         ("Current", ELECTRICAL_CURRENT_AMPERE),
         ("Battery numeric", PERCENTAGE),
-        ("Rssi numeric", "dBm"),
+        ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
     ]
 )
 
 _LOGGER = logging.getLogger(__name__)
-DATA_RFXOBJECT = "rfxobject"
-DATA_LISTENER = "ha_stop"
 
 
 def _bytearray_string(data):
@@ -126,10 +132,10 @@ DEVICE_DATA_SCHEMA = vol.Schema(
 
 BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DEBUG): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
-    }
+    },
 )
 
 DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
@@ -139,7 +145,8 @@ PORT_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.All(cv.deprecated(CONF_DEBUG), vol.Any(DEVICE_SCHEMA, PORT_SCHEMA))},
+    extra=vol.ALLOW_EXTRA,
 )
 
 DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
@@ -154,7 +161,6 @@ async def async_setup(hass, config):
         CONF_HOST: config[DOMAIN].get(CONF_HOST),
         CONF_PORT: config[DOMAIN].get(CONF_PORT),
         CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
         CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
@@ -183,6 +189,8 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
+    hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
+
     await async_setup_internal(hass, entry)
 
     for domain in DOMAINS:
@@ -207,11 +215,16 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
 
+    for cleanup_callback in hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS]:
+        cleanup_callback()
+
     listener = hass.data[DOMAIN][DATA_LISTENER]
     listener()
 
     rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
     await hass.async_add_executor_job(rfx_object.close_connection)
+
+    hass.data.pop(DOMAIN)
 
     return True
 
@@ -223,18 +236,17 @@ def _create_rfx(config):
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
-            debug=config[CONF_DEBUG],
             transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
 
     return rfx
 
 
 def _get_device_lookup(devices):
     """Get a lookup structure for devices."""
-    lookup = dict()
+    lookup = {}
     for event_code, event_config in devices.items():
         event = get_rfx_object(event_code)
         if event is None:
@@ -251,7 +263,11 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    try:
+        async with async_timeout.timeout(5):
+            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
@@ -297,6 +313,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         config[CONF_DEVICE_ID] = device_id
 
         data = entry.data.copy()
+        data[CONF_DEVICES] = copy.deepcopy(entry.data[CONF_DEVICES])
         event_code = binascii.hexlify(event.data).decode("ASCII")
         data[CONF_DEVICES][event_code] = config
         hass.config_entries.async_update_entry(entry=entry, data=data)
@@ -419,6 +436,14 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
+def connect_auto_add(hass, entry_data, callback_fun):
+    """Connect to dispatcher for automatic add."""
+    if entry_data[CONF_AUTOMATIC_ADD]:
+        hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS].append(
+            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback_fun)
+        )
+
+
 class RfxtrxEntity(RestoreEntity):
     """Represents a Rfxtrx device.
 
@@ -441,6 +466,12 @@ class RfxtrxEntity(RestoreEntity):
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
+            )
+        )
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
             )
         )
 

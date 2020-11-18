@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Kas soovid lisada Volumio ('{name}') Home Assistanti?"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                }
+            }
+        }
+    }
+}

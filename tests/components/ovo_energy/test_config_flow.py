@@ -41,7 +41,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "authorization_error"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
@@ -64,7 +64,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:

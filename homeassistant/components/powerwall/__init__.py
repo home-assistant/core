@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from tesla_powerwall import APIChangedError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import MissingAttributeError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -72,9 +72,7 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
             # The old unique_id ended with the nomianal_system_engery_kWh so we can use that
             # to find the old base unique_id and extract the device_suffix.
             normalized_energy_index = (
-                len(parts)
-                - 1
-                - parts[::-1].index(str(site_info.nominal_system_energy_kWh))
+                len(parts) - 1 - parts[::-1].index(str(site_info.nominal_system_energy))
             )
             device_suffix = parts[normalized_energy_index + 1 :]
 
@@ -90,7 +88,9 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
 
 
-async def _async_handle_api_changed_error(hass: HomeAssistant, error: APIChangedError):
+async def _async_handle_api_changed_error(
+    hass: HomeAssistant, error: MissingAttributeError
+):
     # The error might include some important information about what exactly changed.
     _LOGGER.error(str(error))
     hass.components.persistent_notification.async_create(
@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except PowerwallUnreachableError as err:
         http_session.close()
         raise ConfigEntryNotReady from err
-    except APIChangedError as err:
+    except MissingAttributeError as err:
         http_session.close()
         await _async_handle_api_changed_error(hass, err)
         return False
@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 )
             except PowerwallUnreachableError as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
-            except APIChangedError as err:
+            except MissingAttributeError as err:
                 await _async_handle_api_changed_error(hass, err)
                 hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
                 # Returns the cached data. This data can also be None

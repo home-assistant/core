@@ -1,6 +1,4 @@
 """This platform provides support for sensor data from RainMachine."""
-import logging
-
 from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,8 +11,6 @@ from .const import (
     DOMAIN as RAINMACHINE_DOMAIN,
     SENSOR_UPDATE_TOPIC,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
 TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"

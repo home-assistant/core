@@ -16,7 +16,7 @@
                     "port": "\u901a\u8a0a\u57e0",
                     "site": "\u4f4d\u5740 ID",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
-                    "verify_ssl": "\u63a7\u5236\u5668\u4f7f\u7528\u9a57\u8b49"
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },
                 "title": "\u8a2d\u5b9a UniFi \u63a7\u5236\u5668"
             }

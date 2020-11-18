@@ -4,6 +4,7 @@
             "port_exists": "Deze poort is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_failed": "De velbus verbinding is mislukt.",
             "port_exists": "Deze poort is al geconfigureerd"
         },

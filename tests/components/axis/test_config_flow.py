@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_session_request
+from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_request
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -32,7 +32,7 @@ async def test_flow_manual_configuration(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -70,9 +70,7 @@ async def test_manual_configuration_update_configuration(hass):
     with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "axis.vapix.session_request", new=vapix_session_request
-    ):
+    ) as mock_setup_entry, patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -101,7 +99,7 @@ async def test_flow_fails_already_configured(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -139,11 +137,11 @@ async def test_flow_fails_faulty_credentials(hass):
             },
         )
 
-    assert result["errors"] == {"base": "faulty_credentials"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_fails_device_unavailable(hass):
-    """Test that config flow fails on device unavailable."""
+async def test_flow_fails_cannot_connect(hass):
+    """Test that config flow fails on cannot connect."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": "user"}
     )
@@ -165,7 +163,7 @@ async def test_flow_fails_device_unavailable(hass):
             },
         )
 
-    assert result["errors"] == {"base": "device_unavailable"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
@@ -188,7 +186,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -230,7 +228,7 @@ async def test_zeroconf_flow(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -294,9 +292,7 @@ async def test_zeroconf_flow_updated_configuration(hass):
     with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "axis.vapix.session_request", new=vapix_session_request
-    ):
+    ) as mock_setup_entry, patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data={

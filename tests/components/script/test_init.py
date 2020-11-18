@@ -705,4 +705,4 @@ async def test_script_variables(hass, caplog):
     await hass.services.async_call("script", "script3", {"break": 0}, blocking=True)
 
     assert len(mock_calls) == 4
-    assert mock_calls[3].data["value"] == "1"
+    assert mock_calls[3].data["value"] == 1

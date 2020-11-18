@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     HTTP_OK,
 )
-from homeassistant.core import CoreState, callback, split_entity_id
+from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry
 
 from .const import (
@@ -201,7 +201,6 @@ class CloudGoogleConfig(AbstractConfig):
 
         self._sync_on_started = True
 
-        @callback
         async def sync_google(_):
             """Sync entities to Google."""
             await self.async_sync_entities_all()

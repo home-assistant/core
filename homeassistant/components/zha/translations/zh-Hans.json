@@ -11,5 +11,13 @@
                 "title": "ZHA"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "turn_off": "\u5173\u95ed"
+        },
+        "trigger_type": {
+            "device_offline": "\u8bbe\u5907\u79bb\u7ebf"
+        }
     }
 }

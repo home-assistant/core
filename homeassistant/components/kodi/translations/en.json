@@ -36,7 +36,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Connect over SSL"
+                    "ssl": "Uses an SSL certificate"
                 },
                 "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services."
             },

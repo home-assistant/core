@@ -10,3 +10,9 @@ complete_item:
     name:
       description: The name of the item to mark as selected.
       example: Hello
+play_item:
+  description: Czytanie tekstu z aplikacji
+  fields:
+    item:
+      description: Numer pozycji do przeczytania.
+      example: 0

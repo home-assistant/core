@@ -200,7 +200,7 @@ UOM_ON_OFF = "2"
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
     BINARY_SENSOR: {
-        FILTER_UOM: [],
+        FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
             "BinaryAlarm",
@@ -282,7 +282,7 @@ NODE_FILTERS = {
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
     SWITCH: {
-        FILTER_UOM: [UOM_ON_OFF, "78"],
+        FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
             "AlertModuleArmed",
@@ -322,6 +322,7 @@ NODE_FILTERS = {
 
 UOM_FRIENDLY_NAME = {
     "1": "A",
+    UOM_ON_OFF: "",  # Binary, no unit
     "3": f"btu/{TIME_HOURS}",
     "4": TEMP_CELSIUS,
     "5": LENGTH_CENTIMETERS,

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller on juba seadistatud"
+        },
+        "error": {
+            "faulty_credentials": "Tuvastamine nurjus",
+            "service_unavailable": "\u00dchendamine nurjus",
+            "unknown_client_mac": "Sellel MAC-aadressil pole \u00fchtegi klienti saadaval"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "statistics_sensors": {
+                "data": {
+                    "allow_uptime_sensors": "V\u00f5rguklientide t\u00f6\u00f6soleku andurid"
+                }
+            }
+        }
+    }
+}

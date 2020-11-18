@@ -140,10 +140,10 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_2sa(user_input, errors)
         except SynologyDSMLoginInvalidException as ex:
             _LOGGER.error(ex)
-            errors[CONF_USERNAME] = "login"
+            errors[CONF_USERNAME] = "invalid_auth"
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
-            errors[CONF_HOST] = "connection"
+            errors[CONF_HOST] = "cannot_connect"
         except SynologyDSMException as ex:
             _LOGGER.error(ex)
             errors["base"] = "unknown"
@@ -275,7 +275,6 @@ def _login_and_fetch_syno_info(api, otp_code):
     if (
         not api.information.serial
         or api.utilisation.cpu_user_load is None
-        or not api.storage.disks_ids
         or not api.storage.volumes_ids
         or not api.network.macs
     ):

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "unknown": "Tundmatu viga",
+            "unknown_error": "Tundmatu viga",
+            "wrong_login": "Tuvastamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

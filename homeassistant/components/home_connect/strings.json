@@ -6,11 +6,11 @@
       }
     },
     "abort": {
-      "missing_configuration": "The Home Connect component is not configured. Please follow the documentation.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     },
     "create_entry": {
-      "default": "Successfully authenticated with Home Connect."
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   }
 }

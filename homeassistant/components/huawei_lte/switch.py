@@ -1,7 +1,7 @@
 """Support for Huawei LTE switches."""
 
 import logging
-from typing import Optional
+from typing import Any, Callable, List, Optional
 
 import attr
 
@@ -10,7 +10,10 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_DIALUP_MOBILE_DATASWITCH
@@ -18,10 +21,14 @@ from .const import DOMAIN, KEY_DIALUP_MOBILE_DATASWITCH
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    switches = []
+    switches: List[Entity] = []
 
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
@@ -40,30 +47,30 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
     def _turn(self, state: bool) -> None:
         raise NotImplementedError
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         self._turn(state=True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._turn(state=False)
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return device class."""
         return DEVICE_CLASS_SWITCH
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
         self.router.subscriptions[self.key].add(f"{SWITCH_DOMAIN}/{self.item}")
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
         self.router.subscriptions[self.key].remove(f"{SWITCH_DOMAIN}/{self.item}")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state."""
         try:
             value = self.router.data[self.key][self.item]
@@ -79,7 +86,7 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE mobile data switch device."""
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_DIALUP_MOBILE_DATASWITCH
         self.item = "dataswitch"
@@ -104,6 +111,6 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
         self.schedule_update_ha_state()
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return switch icon."""
         return "mdi:signal" if self.is_on else "mdi:signal-off"

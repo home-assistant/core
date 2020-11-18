@@ -12,11 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the ais ais environment."""
 
-    # Set up camera
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("camera", "ais_qrcode", {}, config)
-    )
-
     # Set up ais dom devices (RF codes)
     hass.async_create_task(
         hass.helpers.discovery.async_load_platform(
@@ -498,7 +493,6 @@ async def async_setup(hass, config):
                 "sensor.version_info",
                 "script.ais_update_system",
                 "input_boolean.ais_auto_update",
-                "camera.remote_access",
                 "input_boolean.ais_remote_access",
                 "sensor.ais_secure_android_id_dom",
                 "script.ais_cloud_sync",

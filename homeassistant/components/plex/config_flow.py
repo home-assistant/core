@@ -96,7 +96,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.token = None
         self.client_id = None
         self._manual = False
-        self._entry_id = None
 
     async def async_step_user(
         self, user_input=None, errors=None
@@ -230,12 +229,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             PLEX_SERVER_CONFIG: entry_config,
         }
 
-        await self.async_set_unique_id(server_id)
+        entry = await self.async_set_unique_id(server_id)
         if (
             self.context[CONF_SOURCE]  # pylint: disable=no-member
             == config_entries.SOURCE_REAUTH
         ):
-            entry = self.hass.config_entries.async_get_entry(self._entry_id)
             self.hass.config_entries.async_update_entry(entry, data=data)
             _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -291,6 +289,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
         self.hass.http.register_view(PlexAuthorizationCallbackView)
+        hass_url = get_url(self.hass)
+        headers = {"Origin": hass_url}
         payload = {
             "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
             "X-Plex-Version": X_PLEX_VERSION,
@@ -300,9 +300,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "X-Plex-Model": "Plex OAuth",
         }
         session = async_get_clientsession(self.hass)
-        self.plexauth = PlexAuth(payload, session)
+        self.plexauth = PlexAuth(payload, session, headers)
         await self.plexauth.initiate_auth()
-        forward_url = f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
+        forward_url = f"{hass_url}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
         auth_url = self.plexauth.auth_url(forward_url)
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
@@ -329,7 +329,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data):
         """Handle a reauthorization flow request."""
         self.current_login = dict(data)
-        self._entry_id = self.current_login.pop("config_entry_id")
         return await self.async_step_user()
 
 

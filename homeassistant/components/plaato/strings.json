@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "title": "Set up the Plaato Webhook",
-        "description": "Are you sure you want to set up the Plaato Airlock?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive messages from Plaato Airlock."
     },
     "create_entry": {

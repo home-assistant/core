@@ -55,7 +55,7 @@ async def test_form_invalid_auth(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "wrong_login"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_service_error(hass):
@@ -93,7 +93,7 @@ async def test_form_unknown_error(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown_error"}
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_import(hass):
