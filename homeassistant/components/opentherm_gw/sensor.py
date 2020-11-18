@@ -6,6 +6,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity_registry import async_get_registry
 
 from . import DOMAIN
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO, TRANSLATE_SOURCE
@@ -16,7 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the OpenTherm Gateway sensors."""
     sensors = []
+    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
+    ent_reg = await async_get_registry(hass)
     for var, info in SENSOR_INFO.items():
+        old_style_entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
+        )
+        old_ent = ent_reg.async_get(old_style_entity_id)
+        if old_ent and old_ent.config_entry_id == config_entry.entry_id:
+            ent_reg.async_remove(old_style_entity_id)
+
         device_class = info[0]
         unit = info[1]
         friendly_name_format = info[2]
@@ -24,9 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for source in status_sources:
             sensors.append(
                 OpenThermSensor(
-                    hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][
-                        config_entry.data[CONF_ID]
-                    ],
+                    gw_dev,
                     var,
                     source,
                     device_class,
