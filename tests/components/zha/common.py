@@ -86,6 +86,10 @@ def patch_cluster(cluster):
         result = []
         for attr_id in attributes:
             value = cluster.PLUGGED_ATTR_READS.get(attr_id)
+            if value is None:
+                # try converting attr_id to attr_name and lookup the plugs again
+                attr_name = cluster.attributes.get(attr_id)
+                value = attr_name and cluster.PLUGGED_ATTR_READS.get(attr_name[0])
             if value is not None:
                 result.append(
                     zcl_f.ReadAttributeRecord(
