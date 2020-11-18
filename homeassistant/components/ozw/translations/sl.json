@@ -2,6 +2,11 @@
     "config": {
         "abort": {
             "mqtt_required": "Integracija MQTT ni nastavljena"
+        },
+        "step": {
+            "on_supervisor": {
+                "title": "Izberite na\u010din povezave"
+            }
         }
     }
 }
