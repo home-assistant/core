@@ -11,4 +11,7 @@ USERNAME = "Home_Assistant"
 PASSWORD = "password"
 DEVICE_TOKEN = "Dév!cè_T0k€ñ"
 
+DISKS = ["sda", "sdb", "sdc"]
+VOLUMES = ["volume_1"]
+
 MACS = ["00-11-32-XX-XX-59", "00-11-32-XX-XX-5A"]

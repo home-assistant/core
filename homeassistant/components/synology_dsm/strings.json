@@ -10,8 +10,7 @@
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "filter_storage": "Filter disks and volumes to add"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "2sa": {
@@ -28,8 +27,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "filter_storage": "Filter disks and volumes to add"
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "filter_storage": {
@@ -57,7 +55,8 @@
       "init": {
         "data": {
           "scan_interval": "Minutes between scans",
-          "timeout": "Timeout (seconds)"
+          "timeout": "Timeout (seconds)",
+          "filter_storage": "Filter disks and volumes to add"
         }
       }
     }

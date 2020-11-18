@@ -14,6 +14,7 @@ from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_FILTER_STORAGE,
     CONF_VOLUMES,
+    DEFAULT_FILTER_STORAGE,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
@@ -21,6 +22,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    SYNO_API,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
@@ -39,6 +41,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .consts import (
     DEVICE_TOKEN,
+    DISKS,
     HOST,
     MACS,
     PASSWORD,
@@ -48,13 +51,11 @@ from .consts import (
     USE_SSL,
     USERNAME,
     VERIFY_SSL,
+    VOLUMES,
 )
 
 from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
-
-DISKS = ["sda", "sdb", "sdc"]
-VOLUMES = ["volume_1"]
 
 
 @pytest.fixture(name="service")
@@ -177,46 +178,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
-
-
-async def test_user_filter_storage(hass: HomeAssistantType, service: MagicMock):
-    """Test user config with filter for disks and volumes."""
-    # test with filter storage enabled
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: USE_SSL,
-            CONF_VERIFY_SSL: VERIFY_SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_FILTER_STORAGE: True,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "filter_storage"
-
-    # test with filter storage enabled and selection is done
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: USE_SSL,
-            CONF_VERIFY_SSL: VERIFY_SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_FILTER_STORAGE: True,
-            CONF_DISKS: DISKS,
-            CONF_VOLUMES: VOLUMES,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_DISKS] == DISKS
-    assert result["data"][CONF_VOLUMES] == VOLUMES
 
 
 async def test_user_2sa(hass: HomeAssistantType, service_2sa: MagicMock):
@@ -447,11 +408,12 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
             CONF_HOST: HOST,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_MAC: MACS,
+            CONF_MAC: MACS[0],
         },
         unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
+    hass.data[DOMAIN] = {config_entry.unique_id: {SYNO_API: service()}}
 
     assert config_entry.options == {}
 
@@ -459,7 +421,6 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    # Scan interval
     # Default
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -468,7 +429,9 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
     assert config_entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
+    assert config_entry.options[CONF_FILTER_STORAGE] == DEFAULT_FILTER_STORAGE
 
+    # Scan interval
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -478,3 +441,16 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
     assert config_entry.options[CONF_TIMEOUT] == 30
+    assert config_entry.options[CONF_FILTER_STORAGE] == DEFAULT_FILTER_STORAGE
+
+    # Storage filter
+    # Manual
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_FILTER_STORAGE: True},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options[CONF_FILTER_STORAGE]
+    assert config_entry.options[CONF_DISKS] == DISKS
+    assert config_entry.options[CONF_VOLUMES] == VOLUMES

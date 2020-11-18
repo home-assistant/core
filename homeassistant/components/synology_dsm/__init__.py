@@ -21,6 +21,7 @@ from synology_dsm.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -35,6 +36,7 @@ from homeassistant.core import ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -44,7 +46,9 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    CONF_FILTER_STORAGE,
     CONF_SERIAL,
+    CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -147,6 +151,25 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
 
+    # Consider if filter storage devices is true
+    if entry.options.get(CONF_FILTER_STORAGE):
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_DISKS: entry.options[CONF_DISKS],
+                CONF_VOLUMES: entry.options[CONF_VOLUMES],
+            },
+        )
+    else:
+        data = dict(entry.data)
+        data.pop(CONF_DISKS, None)
+        data.pop(CONF_VOLUMES, None)
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+        )
+
     # Continue setup
     api = SynoApi(hass, entry)
     try:
@@ -197,6 +220,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         entry_data[UNDO_UPDATE_LISTENER]()
         await entry_data[SYNO_API].async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
+        dev_reg = await async_get_registry(hass)
+        dev_reg.async_clear_config_entry(entry.entry_id)
 
     return unload_ok
 

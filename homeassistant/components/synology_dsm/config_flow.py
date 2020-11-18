@@ -40,6 +40,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
+    SYNO_API,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
 
@@ -72,10 +73,6 @@ def _ordered_shared_schema(schema_input):
         vol.Optional(
             CONF_VERIFY_SSL,
             default=schema_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-        ): bool,
-        vol.Optional(
-            CONF_FILTER_STORAGE,
-            default=schema_input.get(CONF_FILTER_STORAGE, DEFAULT_FILTER_STORAGE),
         ): bool,
     }
 
@@ -135,7 +132,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         use_ssl = user_input.get(CONF_SSL, DEFAULT_USE_SSL)
         verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         otp_code = user_input.get(CONF_OTP_CODE)
-        filter_storage = user_input.get(CONF_FILTER_STORAGE)
 
         if not port:
             if use_ssl is True:
@@ -177,9 +173,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.syno_info["serial"], raise_on_progress=False
         )
         self._abort_if_unique_id_configured()
-
-        if filter_storage and not user_input.get(CONF_VOLUMES):
-            return await self.async_step_filter_storage(user_input)
 
         config_data = {
             CONF_HOST: host,
@@ -244,31 +237,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
-    async def async_step_filter_storage(self, user_input):
-        """Select disks and volumes to add."""
-        if not self.saved_user_input:
-            self.saved_user_input = user_input
-
-        if not user_input.get(CONF_VOLUMES):
-            return self.async_show_form(
-                step_id="filter_storage",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_DISKS, default=self.syno_info.get(CONF_DISKS, [])
-                        ): cv.multi_select(self.syno_info.get(CONF_DISKS, [])),
-                        vol.Required(
-                            CONF_VOLUMES, default=self.syno_info[CONF_VOLUMES]
-                        ): cv.multi_select(self.syno_info[CONF_VOLUMES]),
-                    }
-                ),
-            )
-
-        user_input = {**self.saved_user_input, **user_input}
-        self.saved_user_input = {}
-
-        return await self.async_step_user(user_input)
-
     def _mac_already_configured(self, mac):
         """See if we already have configured a NAS with this MAC address."""
         existing_macs = [
@@ -291,6 +259,12 @@ class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        disks_ids = self.hass.data[DOMAIN][self.config_entry.unique_id][
+            SYNO_API
+        ].storage.disks_ids
+        volumes_ids = self.hass.data[DOMAIN][self.config_entry.unique_id][
+            SYNO_API
+        ].storage.volumes_ids
         data_schema = vol.Schema(
             {
                 vol.Optional(
@@ -305,6 +279,20 @@ class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
+                vol.Optional(
+                    CONF_FILTER_STORAGE,
+                    default=self.config_entry.options.get(
+                        CONF_FILTER_STORAGE, DEFAULT_FILTER_STORAGE
+                    ),
+                ): bool,
+                vol.Required(
+                    CONF_DISKS,
+                    default=self.config_entry.options.get(CONF_DISKS, disks_ids),
+                ): cv.multi_select(disks_ids),
+                vol.Required(
+                    CONF_VOLUMES,
+                    default=self.config_entry.options.get(CONF_VOLUMES, volumes_ids),
+                ): cv.multi_select(volumes_ids),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

@@ -24,8 +24,7 @@
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
                     "username": "Username",
-                    "verify_ssl": "Verify SSL certificate",
-                    "filter_storage": "Filter disks and volumes to add"
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Do you want to setup {name} ({host})?",
                 "title": "Synology DSM"
@@ -37,18 +36,9 @@
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
                     "username": "Username",
-                    "verify_ssl": "Verify SSL certificate",
-                    "filter_storage": "Filter disks and volumes to add"
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "title": "Synology DSM"
-            },
-            "filter_storage": {
-                "data": {
-                  "disks": "Disks",
-                  "volumes": "Volumes"
-                },
-                "description": "Select the disks and volumes you want to add",
-                "title": "Synology DSM: filter disks and volumes"
             }
         }
     },
@@ -57,7 +47,10 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutes between scans",
-                    "timeout": "Timeout (seconds)"
+                    "timeout": "Timeout (seconds)",
+                    "filter_storage": "Filter disks and volumes to add",
+                    "disks": "Disks",
+                    "volumes": "Volumes"
                 }
             }
         }
