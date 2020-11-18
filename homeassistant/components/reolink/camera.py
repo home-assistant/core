@@ -10,13 +10,14 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
+from .const import (
+    SERVICE_PTZ_CONTROL,
+    SERVICE_SET_SENSITIVITY,
+    SERVICE_SET_DAYNIGHT,
+)
 from .entity import ReolinkEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_PTZ_CONTROL = "ptz_control"
-SERVICE_SET_SENSITIVITY = "set_sensitivity"
-SERVICE_SET_DAYNIGHT = "set_daynight"
 
 
 @asyncio.coroutine

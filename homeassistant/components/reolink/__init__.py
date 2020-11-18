@@ -27,6 +27,9 @@ from .const import (
     COORDINATOR,
     DOMAIN,
     EVENT_DATA_RECEIVED,
+    SERVICE_PTZ_CONTROL,
+    SERVICE_SET_SENSITIVITY,
+    SERVICE_SET_DAYNIGHT,
 )
 
 SCAN_INTERVAL = timedelta(minutes=1)
@@ -59,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
     )
 
-    base.undo_update_listener = entry.add_update_listener(update_listener)
+    base.sync_functions.append(entry.add_update_listener(update_listener))
 
     if not await base.connect_api():
         return False
@@ -181,5 +184,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    if len(hass.data[DOMAIN]) == 0:
+        hass.services.async_remove(DOMAIN, SERVICE_PTZ_CONTROL)
+        hass.services.async_remove(DOMAIN, SERVICE_SET_DAYNIGHT)
+        hass.services.async_remove(DOMAIN, SERVICE_SET_SENSITIVITY)
 
     return unload_ok

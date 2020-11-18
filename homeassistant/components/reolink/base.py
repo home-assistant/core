@@ -23,7 +23,7 @@ class ReolinkBase:
         self._sman = None
         self._webhook_url = None
         self._hass = hass
-        self.undo_update_listener = None
+        self.sync_functions = list()
         self.motion_detection_state = True
         self.motion_off_delay = 60
 
@@ -101,4 +101,5 @@ class ReolinkBase:
         """Disconnect the APi and unsubscribe."""
         await self.disconnect_api()
         await self.unsubscribe()
-        self.undo_update_listener()
+        for func in self.sync_functions:
+            await hass.async_add_executor_job(func)
