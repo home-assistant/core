@@ -8,7 +8,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import DOMAIN
-from .const import BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW
+from .const import (
+    BINARY_SENSOR_INFO,
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    TRANSLATE_SOURCE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,14 +24,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for var, info in BINARY_SENSOR_INFO.items():
         device_class = info[0]
         friendly_name_format = info[1]
-        sensors.append(
-            OpenThermBinarySensor(
-                hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
-                var,
-                device_class,
-                friendly_name_format,
+        status_sources = info[2]
+        for source in status_sources:
+            sensors.append(
+                OpenThermBinarySensor(
+                    hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][
+                        config_entry.data[CONF_ID]
+                    ],
+                    var,
+                    source,
+                    device_class,
+                    friendly_name_format,
+                )
             )
-        )
 
     async_add_entities(sensors)
 
@@ -34,15 +44,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
-    def __init__(self, gw_dev, var, device_class, friendly_name_format):
+    def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
+            ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
         self._gateway = gw_dev
         self._var = var
+        self._source = source
         self._state = None
         self._device_class = device_class
+        if TRANSLATE_SOURCE[source] is not None:
+            friendly_name_format = (
+                f"{friendly_name_format} ({TRANSLATE_SOURCE[source]})"
+            )
         self._friendly_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
 
@@ -73,7 +88,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
-        state = status.get(self._var)
+        state = status[self._source].get(self._var)
         self._state = None if state is None else bool(state)
         self.async_write_ha_state()
 
@@ -96,7 +111,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._gateway.gw_id}-{self._var}"
+        return f"{self._gateway.gw_id}-{self._source}-{self._var}"
 
     @property
     def is_on(self):
