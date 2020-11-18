@@ -12,8 +12,8 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 from .const import (
     SERVICE_PTZ_CONTROL,
-    SERVICE_SET_SENSITIVITY,
     SERVICE_SET_DAYNIGHT,
+    SERVICE_SET_SENSITIVITY,
 )
 from .entity import ReolinkEntity
 

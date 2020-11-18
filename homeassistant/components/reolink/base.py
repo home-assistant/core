@@ -102,4 +102,4 @@ class ReolinkBase:
         await self.disconnect_api()
         await self.unsubscribe()
         for func in self.sync_functions:
-            await hass.async_add_executor_job(func)
+            await self._hass.async_add_executor_job(func)
