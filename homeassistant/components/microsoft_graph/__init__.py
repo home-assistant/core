@@ -113,6 +113,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return unload_ok
 
+
 @dataclass
 class PresenceData:
     """Microsoft Graph user presence data."""
@@ -120,6 +121,7 @@ class PresenceData:
     uuid: str
     availability: str
     activity: str
+
 
 @dataclass
 class GraphData:
@@ -154,10 +156,7 @@ class GraphUpdateCoordinator(DataUpdateCoordinator):
         me = await self.client.presence.get_presence()
         presence_data[me.id] = _build_presence_data(me)
 
-        _LOGGER.debug(
-            "Microsoft Graph presence_data: %s",
-            presence_data
-        )
+        _LOGGER.debug("Microsoft Graph presence_data: %s", presence_data)
 
         return GraphData(presence_data)
 
