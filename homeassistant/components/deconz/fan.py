@@ -108,9 +108,7 @@ class DeconzFan(DeconzDevice, FanEntity):
         if speed not in SPEEDS:
             raise ValueError(f"Unsupported speed {speed}")
 
-        data = {"speed": SPEEDS[speed]}
-
-        await self._device.async_set_state(data)
+        await self._device.set_speed(SPEEDS[speed])
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on fan."""

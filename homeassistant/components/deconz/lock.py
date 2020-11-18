@@ -46,14 +46,12 @@ class DeconzLock(DeconzDevice, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is on."""
-        return self._device.state
+        return self._device.is_locked
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""
-        data = {"on": True}
-        await self._device.async_set_state(data)
+        await self._device.lock()
 
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
-        data = {"on": False}
-        await self._device.async_set_state(data)
+        await self._device.unlock()
