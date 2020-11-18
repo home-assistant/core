@@ -373,7 +373,7 @@ guppy3==3.1.0
 ha-ffmpeg==2.0
 
 # homeassistant.components.microsoft_graph
-ha-graphapi==0.0.15
+ha-graphapi==0.0.17
 
 # homeassistant.components.hangouts
 hangups==0.4.11
