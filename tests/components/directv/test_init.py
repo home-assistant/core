@@ -6,20 +6,11 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.setup import async_setup_component
 
-from tests.components.directv import MOCK_CONFIG, mock_connection, setup_integration
+from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 # pylint: disable=redefined-outer-name
-
-
-async def test_setup(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the DirecTV setup from configuration."""
-    mock_connection(aioclient_mock)
-    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
 
 
 async def test_config_entry_not_ready(

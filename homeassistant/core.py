@@ -149,6 +149,52 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+@enum.unique
+class HassJobType(enum.Enum):
+    """Represent a job type."""
+
+    Coroutinefunction = 1
+    Callback = 2
+    Executor = 3
+
+
+class HassJob:
+    """Represent a job to be run later.
+
+    We check the callable type in advance
+    so we can avoid checking it every time
+    we run the job.
+    """
+
+    __slots__ = ("job_type", "target")
+
+    def __init__(self, target: Callable):
+        """Create a job object."""
+        if asyncio.iscoroutine(target):
+            raise ValueError("Coroutine not allowed to be passed to HassJob")
+
+        self.target = target
+        self.job_type = _get_callable_job_type(target)
+
+    def __repr__(self) -> str:
+        """Return the job."""
+        return f"<Job {self.job_type} {self.target}>"
+
+
+def _get_callable_job_type(target: Callable) -> HassJobType:
+    """Determine the job type from the callable."""
+    # Check for partials to properly determine if coroutine function
+    check_target = target
+    while isinstance(check_target, functools.partial):
+        check_target = check_target.func
+
+    if asyncio.iscoroutinefunction(check_target):
+        return HassJobType.Coroutinefunction
+    if is_callback(check_target):
+        return HassJobType.Callback
+    return HassJobType.Executor
+
+
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -211,12 +257,9 @@ class HomeAssistant:
         fire_coroutine_threadsafe(self.async_start(), self.loop)
 
         # Run forever
-        try:
-            # Block until stopped
-            _LOGGER.info("Starting Home Assistant core loop")
-            self.loop.run_forever()
-        finally:
-            self.loop.close()
+        # Block until stopped
+        _LOGGER.info("Starting Home Assistant core loop")
+        self.loop.run_forever()
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -306,24 +349,33 @@ class HomeAssistant:
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
-        task = None
+        if asyncio.iscoroutine(target):
+            return self.async_create_task(cast(Coroutine, target))
 
-        # Check for partials to properly determine if coroutine function
-        check_target = target
-        while isinstance(check_target, functools.partial):
-            check_target = check_target.func
+        return self.async_add_hass_job(HassJob(target), *args)
 
-        if asyncio.iscoroutine(check_target):
-            task = self.loop.create_task(target)  # type: ignore
-        elif asyncio.iscoroutinefunction(check_target):
-            task = self.loop.create_task(target(*args))
-        elif is_callback(check_target):
-            self.loop.call_soon(target, *args)
+    @callback
+    def async_add_hass_job(
+        self, hassjob: HassJob, *args: Any
+    ) -> Optional[asyncio.Future]:
+        """Add a HassJob from within the event loop.
+
+        This method must be run in the event loop.
+        hassjob: HassJob to call.
+        args: parameters for method to call.
+        """
+        if hassjob.job_type == HassJobType.Coroutinefunction:
+            task = self.loop.create_task(hassjob.target(*args))
+        elif hassjob.job_type == HassJobType.Callback:
+            self.loop.call_soon(hassjob.target, *args)
+            return None
         else:
-            task = self.loop.run_in_executor(None, target, *args)  # type: ignore
+            task = self.loop.run_in_executor(  # type: ignore
+                None, hassjob.target, *args
+            )
 
         # If a task is scheduled
-        if self._track_task and task is not None:
+        if self._track_task:
             self._pending_tasks.append(task)
 
         return task
@@ -367,6 +419,20 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
+    def async_run_hass_job(self, hassjob: HassJob, *args: Any) -> None:
+        """Run a HassJob from within the event loop.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+        """
+        if hassjob.job_type == HassJobType.Callback:
+            hassjob.target(*args)
+        else:
+            self.async_add_hass_job(hassjob, *args)
+
+    @callback
     def async_run_job(
         self, target: Callable[..., Union[None, Awaitable]], *args: Any
     ) -> None:
@@ -377,14 +443,11 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        if (
-            not asyncio.iscoroutine(target)
-            and not asyncio.iscoroutinefunction(target)
-            and is_callback(target)
-        ):
-            target(*args)
-        else:
-            self.async_add_job(target, *args)
+        if asyncio.iscoroutine(target):
+            self.async_create_task(cast(Coroutine, target))
+            return
+
+        self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
@@ -493,16 +556,11 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
             )
 
-        # Python 3.9+ and backported in runner.py
-        await self.loop.shutdown_default_executor()  # type: ignore
-
         self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
-        else:
-            self.loop.stop()
 
 
 @attr.s(slots=True, frozen=True)
@@ -511,7 +569,7 @@ class Context:
 
     user_id: str = attr.ib(default=None)
     parent_id: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
@@ -592,7 +650,7 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: Dict[str, List[Callable]] = {}
+        self._listeners: Dict[str, List[HassJob]] = {}
         self._hass = hass
 
     @callback
@@ -648,8 +706,8 @@ class EventBus:
         if not listeners:
             return
 
-        for func in listeners:
-            self._hass.async_add_job(func, event)
+        for job in listeners:
+            self._hass.async_add_hass_job(job, event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
@@ -676,14 +734,15 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if event_type in self._listeners:
-            self._listeners[event_type].append(listener)
-        else:
-            self._listeners[event_type] = [listener]
+        return self._async_listen_job(event_type, HassJob(listener))
+
+    @callback
+    def _async_listen_job(self, event_type: str, hassjob: HassJob) -> CALLBACK_TYPE:
+        self._listeners.setdefault(event_type, []).append(hassjob)
 
         def remove_listener() -> None:
             """Remove the listener."""
-            self._async_remove_listener(event_type, listener)
+            self._async_remove_listener(event_type, hassjob)
 
         return remove_listener
 
@@ -716,31 +775,36 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        job: Optional[HassJob] = None
 
         @callback
-        def onetime_listener(event: Event) -> None:
+        def _onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
-            if hasattr(onetime_listener, "run"):
+            nonlocal job
+            if hasattr(_onetime_listener, "run"):
                 return
             # Set variable so that we will never run twice.
             # Because the event bus loop might have async_fire queued multiple
             # times, its possible this listener may already be lined up
             # multiple times as well.
             # This will make sure the second time it does nothing.
-            setattr(onetime_listener, "run", True)
-            self._async_remove_listener(event_type, onetime_listener)
+            setattr(_onetime_listener, "run", True)
+            assert job is not None
+            self._async_remove_listener(event_type, job)
             self._hass.async_run_job(listener, event)
 
-        return self.async_listen(event_type, onetime_listener)
+        job = HassJob(_onetime_listener)
+
+        return self._async_listen_job(event_type, job)
 
     @callback
-    def _async_remove_listener(self, event_type: str, listener: Callable) -> None:
+    def _async_remove_listener(self, event_type: str, hassjob: HassJob) -> None:
         """Remove a listener of a specific event_type.
 
         This method must be run in the event loop.
         """
         try:
-            self._listeners[event_type].remove(listener)
+            self._listeners[event_type].remove(hassjob)
 
             # delete event_type list if empty
             if not self._listeners[event_type]:
@@ -748,7 +812,7 @@ class EventBus:
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.warning("Unable to remove unknown listener %s", listener)
+            _LOGGER.exception("Unable to remove unknown job listener %s", hassjob)
 
 
 class State:
@@ -901,6 +965,7 @@ class StateMachine:
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: Dict[str, State] = {}
+        self._reservations: Set[str] = set()
         self._bus = bus
         self._loop = loop
 
@@ -1008,6 +1073,9 @@ class StateMachine:
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
 
+        if entity_id in self._reservations:
+            self._reservations.remove(entity_id)
+
         if old_state is None:
             return False
 
@@ -1043,6 +1111,29 @@ class StateMachine:
             force_update,
             context,
         ).result()
+
+    @callback
+    def async_reserve(self, entity_id: str) -> None:
+        """Reserve a state in the state machine for an entity being added.
+
+        This must not fire an event when the state is reserved.
+
+        This avoids a race condition where multiple entities with the same
+        entity_id are added.
+        """
+        entity_id = entity_id.lower()
+        if entity_id in self._states or entity_id in self._reservations:
+            raise HomeAssistantError(
+                "async_reserve must not be called once the state is in the state machine."
+            )
+
+        self._reservations.add(entity_id)
+
+    @callback
+    def async_available(self, entity_id: str) -> bool:
+        """Check to see if an entity_id is available to be used."""
+        entity_id = entity_id.lower()
+        return entity_id not in self._states and entity_id not in self._reservations
 
     @callback
     def async_set(
@@ -1081,20 +1172,31 @@ class StateMachine:
         if context is None:
             context = Context()
 
-        state = State(entity_id, new_state, attributes, last_changed, None, context)
+        now = dt_util.utcnow()
+
+        state = State(
+            entity_id,
+            new_state,
+            attributes,
+            last_changed,
+            now,
+            context,
+            old_state is None,
+        )
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             EventOrigin.local,
             context,
+            time_fired=now,
         )
 
 
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["func", "schema", "is_callback", "is_coroutinefunction"]
+    __slots__ = ["job", "schema"]
 
     def __init__(
         self,
@@ -1103,13 +1205,8 @@ class Service:
         context: Optional[Context] = None,
     ) -> None:
         """Initialize a service."""
-        self.func = func
+        self.job = HassJob(func)
         self.schema = schema
-        # Properly detect wrapped functions
-        while isinstance(func, functools.partial):
-            func = func.func
-        self.is_callback = is_callback(func)
-        self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
 
 class ServiceCall:
@@ -1377,12 +1474,12 @@ class ServiceRegistry:
         self, handler: Service, service_call: ServiceCall
     ) -> None:
         """Execute a service."""
-        if handler.is_coroutinefunction:
-            await handler.func(service_call)
-        elif handler.is_callback:
-            handler.func(service_call)
+        if handler.job.job_type == HassJobType.Coroutinefunction:
+            await handler.job.target(service_call)
+        elif handler.job.job_type == HassJobType.Callback:
+            handler.job.target(service_call)
         else:
-            await self._hass.async_add_executor_job(handler.func, service_call)
+            await self._hass.async_add_executor_job(handler.job.target, service_call)
 
 
 class Config:
@@ -1426,6 +1523,9 @@ class Config:
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
+
+        # Use legacy template behavior
+        self.legacy_templates: bool = False
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.

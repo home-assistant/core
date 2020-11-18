@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "reauth_successful": "\u5b58\u53d6\u5bc6\u9470\u5df2\u6210\u529f\u66f4\u65b0",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {

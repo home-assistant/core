@@ -37,7 +37,13 @@ from homeassistant.const import (
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .helpers import trigger_plex_update
-from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer, MockResource
+from .mock_classes import (
+    MockGDM,
+    MockPlexAccount,
+    MockPlexClient,
+    MockPlexServer,
+    MockResource,
+)
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -434,10 +440,11 @@ async def test_option_flow_new_users_available(
     OPTIONS_OWNER_ONLY[MP_DOMAIN][CONF_MONITORED_USERS] = {"Owner": {"enabled": True}}
     entry.options = OPTIONS_OWNER_ONLY
 
-    mock_plex_server = await setup_plex_server(config_entry=entry)
+    mock_plex_server = await setup_plex_server(config_entry=entry, disable_gdm=False)
 
-    trigger_plex_update(mock_websocket)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.plex.server.PlexClient", new=MockPlexClient):
+        trigger_plex_update(mock_websocket)
+        await hass.async_block_till_done()
 
     server_id = mock_plex_server.machineIdentifier
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
@@ -640,7 +647,11 @@ async def test_manual_config(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
-    ), patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+    ), patch(
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
+    ), patch(
+        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
         )
@@ -674,7 +685,11 @@ async def test_manual_config_with_token(hass):
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()), patch(
         "plexapi.server.PlexServer", return_value=mock_plex_server
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
+    ), patch(
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
+    ), patch(
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )

@@ -1,7 +1,7 @@
 """Support for Huawei LTE binary sensors."""
 
 import logging
-from typing import List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import attr
 from huawei_lte_api.enums.cradle import ConnectionStatusEnum
@@ -10,8 +10,10 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -24,7 +26,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     entities: List[Entity] = []
@@ -75,11 +81,14 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntity, BinarySensorEntity):
         try:
             value = self.router.data[self.key][self.item]
         except KeyError:
+            value = None
             _LOGGER.debug("%s[%s] not in data", self.key, self.item)
+        if value is None:
+            self._raw_state = value
             self._available = False
-            return
-        self._available = True
-        self._raw_state = str(value)
+        else:
+            self._raw_state = str(value)
+            self._available = True
 
 
 CONNECTION_STATE_ATTRIBUTES = {
@@ -107,9 +116,10 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     @property
     def is_on(self) -> bool:
         """Return whether the binary sensor is on."""
-        return self._raw_state and int(self._raw_state) in (
-            ConnectionStatusEnum.CONNECTED,
-            ConnectionStatusEnum.DISCONNECTING,
+        return bool(
+            self._raw_state
+            and int(self._raw_state)
+            in (ConnectionStatusEnum.CONNECTED, ConnectionStatusEnum.DISCONNECTING)
         )
 
     @property
@@ -132,7 +142,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
         return True
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Get additional attributes related to connection status."""
         attributes = super().device_state_attributes
         if self._raw_state in CONNECTION_STATE_ATTRIBUTES:

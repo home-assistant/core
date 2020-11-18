@@ -1,6 +1,5 @@
 """Handle intents with scripts."""
 import copy
-import logging
 
 import voluptuous as vol
 
@@ -43,8 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -90,13 +87,14 @@ class ScriptIntentHandler(intent.IntentHandler):
 
         if speech is not None:
             response.async_set_speech(
-                speech[CONF_TEXT].async_render(slots), speech[CONF_TYPE]
+                speech[CONF_TEXT].async_render(slots, parse_result=False),
+                speech[CONF_TYPE],
             )
 
         if card is not None:
             response.async_set_card(
-                card[CONF_TITLE].async_render(slots),
-                card[CONF_CONTENT].async_render(slots),
+                card[CONF_TITLE].async_render(slots, parse_result=False),
+                card[CONF_CONTENT].async_render(slots, parse_result=False),
                 card[CONF_TYPE],
             )
 

@@ -1,6 +1,5 @@
 """Module to handle installing requirements."""
 import asyncio
-import logging
 import os
 from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
@@ -13,8 +12,8 @@ DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
-_LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+    "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }

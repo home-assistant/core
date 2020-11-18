@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "invalid_host": "Host fornito non valido",
-            "unknown": "Errore sconosciuto"
+            "invalid_host": "Nome host o indirizzo IP non valido",
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {

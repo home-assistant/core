@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Met Office DataPoint API-n\u00f8kkel",
+                    "api_key": "API-n\u00f8kkel",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad"
                 },

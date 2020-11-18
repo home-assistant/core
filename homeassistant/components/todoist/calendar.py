@@ -262,14 +262,13 @@ class TodoistProjectDevice(CalendarEventDevice):
             # No tasks, we don't REALLY need to show anything.
             return None
 
-        attributes = {}
-        attributes[DUE_TODAY] = self.data.event[DUE_TODAY]
-        attributes[OVERDUE] = self.data.event[OVERDUE]
-        attributes[ALL_TASKS] = self._cal_data[ALL_TASKS]
-        attributes[PRIORITY] = self.data.event[PRIORITY]
-        attributes[LABELS] = self.data.event[LABELS]
-
-        return attributes
+        return {
+            DUE_TODAY: self.data.event[DUE_TODAY],
+            OVERDUE: self.data.event[OVERDUE],
+            ALL_TASKS: self._cal_data[ALL_TASKS],
+            PRIORITY: self.data.event[PRIORITY],
+            LABELS: self.data.event[LABELS],
+        }
 
 
 class TodoistProjectData:

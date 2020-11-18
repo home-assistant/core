@@ -61,10 +61,17 @@ def mock_client_fixture(request):
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
+
+    def v2_call(body, precision):
+        data = {"bucket": DEFAULT_BUCKET, "record": body}
+
+        if precision is not None:
+            data["write_precision"] = precision
+
+        return call(**data)
+
     if request.param == influxdb.API_VERSION_2:
-        return lambda body, precision=None: call(
-            bucket=DEFAULT_BUCKET, record=body, write_precision=precision
-        )
+        return lambda body, precision=None: v2_call(body, precision)
     # pylint: disable=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
@@ -1047,6 +1054,79 @@ async def test_event_listener_component_override_measurement(
             entity_id=f"{comp['domain']}.{comp['id']}",
             object_id=comp["id"],
             attributes={},
+        )
+        event = MagicMock(data={"new_state": state}, time_fired=12345)
+        body = [
+            {
+                "measurement": comp["res"],
+                "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
+                "time": 12345,
+                "fields": {"value": 1},
+            }
+        ]
+        handler_method(event)
+        hass.data[influxdb.DOMAIN].block_till_done()
+
+        write_api = get_write_api(mock_client)
+        assert write_api.call_count == 1
+        assert write_api.call_args == get_mock_call(body)
+        write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_component_measurement_attr(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener with a different measurement_attr."""
+    config = {
+        "measurement_attr": "domain__device_class",
+        "component_config": {
+            "sensor.fake_humidity": {"override_measurement": "humidity"}
+        },
+        "component_config_glob": {
+            "binary_sensor.*motion": {"override_measurement": "motion"}
+        },
+        "component_config_domain": {"climate": {"override_measurement": "hvac"}},
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    test_components = [
+        {
+            "domain": "sensor",
+            "id": "fake_temperature",
+            "attrs": {"device_class": "humidity"},
+            "res": "sensor__humidity",
+        },
+        {"domain": "sensor", "id": "fake_humidity", "attrs": {}, "res": "humidity"},
+        {"domain": "binary_sensor", "id": "fake_motion", "attrs": {}, "res": "motion"},
+        {"domain": "climate", "id": "fake_thermostat", "attrs": {}, "res": "hvac"},
+        {"domain": "other", "id": "just_fake", "attrs": {}, "res": "other"},
+    ]
+    for comp in test_components:
+        state = MagicMock(
+            state=1,
+            domain=comp["domain"],
+            entity_id=f"{comp['domain']}.{comp['id']}",
+            object_id=comp["id"],
+            attributes=comp["attrs"],
         )
         event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [

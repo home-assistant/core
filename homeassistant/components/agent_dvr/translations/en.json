@@ -5,7 +5,7 @@
         },
         "error": {
             "already_in_progress": "Configuration flow is already in progress",
-            "device_unavailable": "Device is not available"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "Set up Agent DVR"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

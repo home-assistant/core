@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat."
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar amb l'amfitri\u00f3",
-            "name_exists": "El nom ja existeix",
-            "wrong_credentials": "Nom d'usuari o contrasenya incorrectes"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "name_exists": "Nom ja existeix"
         },
         "step": {
             "user": {

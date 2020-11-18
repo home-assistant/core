@@ -50,7 +50,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         '"(?P<IPv4Enabled>.*?)","(?P<IPv6Enabled>.*?)",'
         '"(?P<DeviceType>.*?)"'
     )
-    LOGIN_COOKIE = dict(Cookie="body:Language:portuguese:id=-1")
+    LOGIN_COOKIE = {"Cookie": "body:Language:portuguese:id=-1"}
 
     def __init__(self, config):
         """Initialize the scanner."""

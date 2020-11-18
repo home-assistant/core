@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "See riik on juba seadistatud."
+            "already_configured": "Teenus on juba seadistatud"
         },
         "step": {
             "user": {

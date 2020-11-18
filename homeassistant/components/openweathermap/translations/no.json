@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "OpenWeatherMap-integrasjon for disse koordinatene er allerede konfigurert."
+            "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "auth": "API-n\u00f8kkelen er ikke korrekt.",
-            "connection": "Kan ikke koble til OWM API"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenWeatherMap API-n\u00f8kkel",
+                    "api_key": "API-n\u00f8kkel",
                     "language": "Spr\u00e5k",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",

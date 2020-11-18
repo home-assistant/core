@@ -12,6 +12,7 @@ from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
 )
+from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import const
 
@@ -26,6 +27,9 @@ MINIMAL_MESSAGE_SCHEMA = vol.Schema(
 
 # Base schema to extend by message handlers
 BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({vol.Required("id"): cv.positive_int})
+
+IDEN_TEMPLATE = "__IDEN__"
+IDEN_JSON_TEMPLATE = '"__IDEN__"'
 
 
 def result_message(iden: int, result: Any = None) -> Dict:
@@ -43,12 +47,11 @@ def error_message(iden: int, code: str, message: str) -> Dict:
     }
 
 
-def event_message(iden: int, event: Any) -> Dict:
+def event_message(iden: JSON_TYPE, event: Any) -> Dict:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 
 
-@lru_cache(maxsize=128)
 def cached_event_message(iden: int, event: Event) -> str:
     """Return an event message.
 
@@ -58,7 +61,17 @@ def cached_event_message(iden: int, event: Event) -> str:
     all getting many of the same events (mostly state changed)
     we can avoid serializing the same data for each connection.
     """
-    return message_to_json(event_message(iden, event))
+    return _cached_event_message(event).replace(IDEN_JSON_TEMPLATE, str(iden), 1)
+
+
+@lru_cache(maxsize=128)
+def _cached_event_message(event: Event) -> str:
+    """Cache and serialize the event to json.
+
+    The IDEN_TEMPLATE is used which will be replaced
+    with the actual iden in cached_event_message
+    """
+    return message_to_json(event_message(IDEN_TEMPLATE, event))
 
 
 def message_to_json(message: Any) -> str:

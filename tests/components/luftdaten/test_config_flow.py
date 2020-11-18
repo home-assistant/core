@@ -19,7 +19,7 @@ async def test_duplicate_error(hass):
     flow.hass = hass
 
     result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_SENSOR_ID: "sensor_exists"}
+    assert result["errors"] == {CONF_SENSOR_ID: "already_configured"}
 
 
 async def test_communication_error(hass):

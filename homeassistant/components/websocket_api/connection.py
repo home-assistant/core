@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Hashable, Optional
 import voluptuous as vol
 
 from homeassistant.core import Context, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
 
@@ -118,6 +118,9 @@ class ActiveConnection:
         elif isinstance(err, asyncio.TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
+        elif isinstance(err, HomeAssistantError):
+            code = const.ERR_UNKNOWN_ERROR
+            err_message = str(err)
         else:
             code = const.ERR_UNKNOWN_ERROR
             err_message = "Unknown error"

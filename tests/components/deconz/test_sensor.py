@@ -1,8 +1,13 @@
 """deCONZ sensor platform tests."""
+
 from copy import deepcopy
 
-from homeassistant.components import deconz
-import homeassistant.components.sensor as sensor
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_CLIP_SENSOR,
+    DOMAIN as DECONZ_DOMAIN,
+)
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -84,11 +89,11 @@ async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
     assert (
         await async_setup_component(
-            hass, sensor.DOMAIN, {"sensor": {"platform": deconz.DOMAIN}}
+            hass, SENSOR_DOMAIN, {"sensor": {"platform": DECONZ_DOMAIN}}
         )
         is True
     )
-    assert deconz.DOMAIN not in hass.data
+    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_sensors(hass):
@@ -101,7 +106,8 @@ async def test_sensors(hass):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 5
 
@@ -157,7 +163,7 @@ async def test_sensors(hass):
 
     assert hass.states.get("sensor.switch_2_battery_level").state == "75"
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
@@ -166,9 +172,9 @@ async def test_allow_clip_sensors(hass):
     """Test that CLIP sensors can be allowed."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
+    config_entry = await setup_deconz_integration(
         hass,
-        options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
+        options={CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
 
@@ -178,7 +184,7 @@ async def test_allow_clip_sensors(hass):
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
@@ -188,7 +194,7 @@ async def test_allow_clip_sensors(hass):
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
@@ -198,7 +204,8 @@ async def test_allow_clip_sensors(hass):
 
 async def test_add_new_sensor(hass):
     """Test that adding a new sensor works."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
 
     state_added_event = {
@@ -219,7 +226,8 @@ async def test_add_battery_later(hass):
     """Test that a sensor without an initial battery state creates a battery sensor once state exist."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = {"1": deepcopy(SENSORS["3"])}
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     remote = gateway.api.sensors["1"]
 
     assert len(hass.states.async_all()) == 0
