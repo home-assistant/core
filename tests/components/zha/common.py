@@ -1,4 +1,5 @@
 """Common test objects."""
+import logging
 import time
 
 from zigpy.device import Device as zigpy_dev
@@ -14,6 +15,8 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
 
 from tests.async_mock import AsyncMock, Mock
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FakeEndpoint:
@@ -70,12 +73,37 @@ FakeEndpoint.remove_from_group = zigpy_ep.remove_from_group
 
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
+    cluster.PLUGGED_ATTR_READS = {}
+
+    async def _read_attribute_raw(attributes, *args, **kwargs):
+        LOGGER.debug(
+            "'%s' trying to read %s attrs. args: %s; kwargs: %s",
+            cluster.ep_attribute,
+            attributes,
+            args,
+            kwargs,
+        )
+        result = []
+        for attr_id in attributes:
+            value = cluster.PLUGGED_ATTR_READS.get(attr_id)
+            if value is not None:
+                result.append(
+                    zcl_f.ReadAttributeRecord(
+                        attr_id,
+                        zcl_f.Status.SUCCESS,
+                        zcl_f.TypeValue(python_type=None, value=value),
+                    )
+                )
+            else:
+                result.append(zcl_f.ReadAttributeRecord(attr_id, zcl_f.Status.FAILURE))
+        return (result,)
+
     cluster.bind = AsyncMock(return_value=[0])
     cluster.configure_reporting = AsyncMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.read_attributes = AsyncMock(return_value=[{}, {}])
-    cluster.read_attributes_raw = Mock()
+    cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
+    cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)
     cluster.unbind = AsyncMock(return_value=[0])
     cluster.write_attributes = AsyncMock(
         return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]]
