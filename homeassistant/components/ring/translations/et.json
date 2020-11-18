@@ -8,11 +8,18 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Kaheastmeline autentimiskood"
+                },
+                "title": "Kaheastmeline tuvastamine (2FA)"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": "Logi sisse Ringi kontoga"
             }
         }
     }

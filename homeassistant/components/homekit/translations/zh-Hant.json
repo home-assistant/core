@@ -35,13 +35,6 @@
                 "description": "\u6aa2\u67e5\u6240\u6709\u652f\u63f4\u539f\u751f H.264 \u4e32\u6d41\u4e4b\u651d\u5f71\u6a5f\u3002\u5047\u5982\u651d\u5f71\u6a5f\u4e0d\u652f\u63f4 H.264 \u4e32\u6d41\u3001\u7cfb\u7d71\u5c07\u6703\u91dd\u5c0d Homekit \u9032\u884c H.264 \u8f49\u78bc\u3002\u8f49\u78bc\u5c07\u9700\u8981\u4f7f\u7528 CPU \u9032\u884c\u904b\u7b97\u3001\u55ae\u6676\u7247\u96fb\u8166\u53ef\u80fd\u6703\u906d\u9047\u6548\u80fd\u554f\u984c\u3002",
                 "title": "\u9078\u64c7\u651d\u5f71\u6a5f\u7de8\u78bc\u3002"
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "\u6392\u9664\u5be6\u9ad4"
-                },
-                "description": "\u9078\u64c7\u4e0d\u9032\u884c\u6a4b\u63a5\u7684\u5be6\u9ad4\u3002",
-                "title": "\u65bc\u6240\u9078 Domain \u4e2d\u6240\u8981\u6392\u9664\u7684\u5be6\u9ad4"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "\u5be6\u9ad4",
@@ -63,6 +56,5 @@
                 "title": "\u8abf\u6574 HomeKit \u9078\u9805"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

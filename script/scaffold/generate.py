@@ -165,6 +165,7 @@ def _custom_tasks(template, info) -> None:
                 "abort": {
                     "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
                     "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+                    "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
                 },
                 "create_entry": {
                     "default": "[%key:common::config_flow::create_entry::authenticated%]"

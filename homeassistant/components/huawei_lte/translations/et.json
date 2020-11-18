@@ -2,15 +2,20 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba seadistatud",
-            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "not_huawei_lte": "Pole Huawei LTE seade"
         },
         "error": {
+            "connection_timeout": "\u00dchenduse ajal\u00f5pp",
             "incorrect_password": "Vale salas\u00f5na",
             "incorrect_username": "Vale kasutajanimi",
-            "incorrect_username_or_password": "Vale kasutajanimi v\u00f5i salas\u00f5na",
             "invalid_auth": "Tuvastamise viga",
+            "invalid_url": "Sobimatu URL",
+            "login_attempts_exceeded": "Sisselogimiskatsete arv on \u00fcletatud. Proovi hiljem uuesti",
+            "response_error": "Seade andis tuvastamatu t\u00f5rke",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
@@ -18,7 +23,19 @@
                     "url": "URL",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta seadmele juurdep\u00e4\u00e4su \u00fcksikasjad. Kasutajanime ja salas\u00f5na m\u00e4\u00e4ramine on valikuline kuid v\u00f5imaldab rohkemate sidumisfunktsioonide toetamist. Teisest k\u00fcljest v\u00f5ib volitatud \u00fchenduse kasutamine p\u00f5hjustada probleeme seadme veebiliidese ligip\u00e4\u00e4suga v\u00e4ljastpoolt Home assistant'i kui sidumine on aktiivne ja vastupidi."
+                "description": "Sisesta seadmele juurdep\u00e4\u00e4su \u00fcksikasjad. Kasutajanime ja salas\u00f5na m\u00e4\u00e4ramine on valikuline kuid v\u00f5imaldab rohkemate sidumisfunktsioonide toetamist. Teisest k\u00fcljest v\u00f5ib volitatud \u00fchenduse kasutamine p\u00f5hjustada probleeme seadme veebiliidese ligip\u00e4\u00e4suga v\u00e4ljastpoolt Home assistant'i kui sidumine on aktiivne ja vastupidi.",
+                "title": "Huawei LTE seadistamine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Teavitusteenuse nimi (muudatus n\u00f5uab taask\u00e4ivitamist)",
+                    "recipient": "SMS teavituse saajad",
+                    "track_new_devices": "Uute seadmete j\u00e4lgimine"
+                }
             }
         }
     }

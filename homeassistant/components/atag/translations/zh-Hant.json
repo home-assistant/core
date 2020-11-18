@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "connection_error": "\u9023\u7dda\u5931\u6557",
             "unauthorized": "\u914d\u5c0d\u906d\u62d2\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5099\u8a8d\u8b49\u8acb\u6c42"
         },
         "step": {
@@ -18,6 +17,5 @@
                 "title": "\u9023\u7dda\u81f3\u8a2d\u5099"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

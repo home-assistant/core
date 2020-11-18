@@ -1,5 +1,4 @@
 """Test fixtures for Tasmota component."""
-
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
@@ -17,6 +16,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture

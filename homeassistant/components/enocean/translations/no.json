@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "Ingen gyldig dongle funnet for denne banen"
         },
-        "flow_title": "ENOcean oppsett",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Angi banen til din ENOcean dongle"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -214,11 +214,11 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check Dockerfile
-        uses: docker://hadolint/hadolint:v1.18.0
+        uses: docker://hadolint/hadolint:v1.18.2
         with:
           args: hadolint Dockerfile
       - name: Check Dockerfile.dev
-        uses: docker://hadolint/hadolint:v1.18.0
+        uses: docker://hadolint/hadolint:v1.18.2
         with:
           args: hadolint Dockerfile.dev
 
@@ -590,7 +590,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -604,7 +605,8 @@ jobs:
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-
-      - name: Create full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
@@ -625,7 +627,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -659,7 +662,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -695,7 +699,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -755,7 +760,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:

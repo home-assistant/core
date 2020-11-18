@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat"
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "create_entry": {
+            "default": "Vaata [Neato documentation] ( {docs_url} )."
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat",
-            "unexpected_error": "Ootamatu t\u00f5rge",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
@@ -17,7 +17,9 @@
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi",
                     "vendor": "Tootja"
-                }
+                },
+                "description": "Vaata [Neato documentation] ( {docs_url} ).",
+                "title": "Neato konto teave"
             }
         }
     }

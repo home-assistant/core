@@ -4,6 +4,7 @@
             "user": {
                 "data": {
                     "password": "Passwort",
+                    "pin": "PIN Code",
                     "username": "Benutzername"
                 }
             }

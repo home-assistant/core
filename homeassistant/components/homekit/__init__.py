@@ -355,6 +355,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
     async def async_handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
+        tasks = []
         for entry_id in hass.data[DOMAIN]:
             if HOMEKIT not in hass.data[DOMAIN][entry_id]:
                 continue
@@ -368,7 +369,8 @@ def _async_register_events_and_services(hass: HomeAssistant):
                     "been stopped"
                 )
                 continue
-            await homekit.async_start()
+            tasks.append(homekit.async_start())
+        await asyncio.gather(*tasks)
 
     hass.services.async_register(
         DOMAIN, SERVICE_HOMEKIT_START, async_handle_homekit_service_start
@@ -505,7 +507,7 @@ class HomeKit:
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
-                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option",
+                "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
                 state.entity_id,
                 MAX_DEVICES,
             )
