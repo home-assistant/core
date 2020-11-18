@@ -14,18 +14,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
-    STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, StateType
-from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
 from .core.const import (
@@ -41,7 +38,6 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_STATE_ATTR,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .core.typing import ChannelType, ZhaDeviceType
@@ -108,23 +104,12 @@ class Sensor(ZhaEntity):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel: ChannelType = channels[0]
-        if self.SENSOR_ATTR is not None:
-            try:
-                self._state = self.formatter(self._channel.cluster[self.SENSOR_ATTR])
-            except KeyError:
-                # no cached value
-                pass
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        self._device_state_attributes.update(await self.async_state_attr_provider())
-
         self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
-        )
-        self.async_accept_signal(
-            self._channel, SIGNAL_STATE_ATTR, self.async_update_state_attribute
         )
 
     @property
@@ -140,28 +125,16 @@ class Sensor(ZhaEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the entity."""
-        if self._state is None:
+        assert self.SENSOR_ATTR is not None
+        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        if raw_state is None:
             return None
-        return self._state
+        return self.formatter(raw_state)
 
     @callback
     def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Handle state update from channel."""
-        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
-            return
-        if value is not None:
-            value = self.formatter(value)
-        self._state = value
         self.async_write_ha_state()
-
-    @callback
-    def async_restore_last_state(self, last_state: State) -> None:
-        """Restore previous state."""
-        self._state = last_state.state
-
-    async def async_state_attr_provider(self) -> Dict:
-        """Initialize device state attributes."""
-        return {}
 
     def formatter(self, value: int) -> Union[int, float]:
         """Numeric pass-through formatter."""
@@ -196,7 +169,8 @@ class Battery(Sensor):
         value = round(value / 2)
         return value
 
-    async def async_state_attr_provider(self) -> Dict[str, Any]:
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return device state attrs for battery sensors."""
         state_attrs = {}
         battery_size = self._channel.cluster.get("battery_size")
@@ -210,13 +184,6 @@ class Battery(Sensor):
             state_attrs["battery_voltage"] = round(battery_voltage / 10, 1)
         return state_attrs
 
-    @callback
-    def async_update_state_attribute(self, key: str, value: int) -> None:
-        """Update a single device state attribute."""
-        if key == "battery_voltage":
-            self._device_state_attributes[key] = round(value / 10, 1)
-            self.async_write_ha_state()
-
 
 @STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
@@ -224,7 +191,6 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
-    _divisor = 10
     _unit = POWER_WATT
 
     @property
@@ -306,14 +272,3 @@ class Temperature(Sensor):
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
     _unit = TEMP_CELSIUS
-
-    @callback
-    def async_restore_last_state(self, last_state: State) -> None:
-        """Restore previous state."""
-        if last_state.state == STATE_UNKNOWN:
-            return
-        if last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) != TEMP_CELSIUS:
-            ftemp = float(last_state.state)
-            self._state = round(fahrenheit_to_celsius(ftemp), 1)
-            return
-        self._state = last_state.state

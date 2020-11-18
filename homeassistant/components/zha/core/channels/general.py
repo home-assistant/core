@@ -17,7 +17,6 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
-    SIGNAL_STATE_ATTR,
     SIGNAL_UPDATE_DEVICE,
 )
 from .base import ChannelStatus, ClientChannel, ZigbeeChannel, parse_and_log_command
@@ -72,13 +71,6 @@ class BasicChannel(ZigbeeChannel):
         6: "Emergency mains and transfer switch",
     }
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
-        """Initialize BasicChannel."""
-        super().__init__(cluster, ch_pool)
-        self._power_source = None
-
     async def async_configure(self):
         """Configure this channel."""
         await super().async_configure()
@@ -87,16 +79,12 @@ class BasicChannel(ZigbeeChannel):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         if not self._ch_pool.skip_configuration or from_cache:
-            power_source = await self.get_attribute_value(
-                "power_source", from_cache=from_cache
-            )
-            if power_source is not None:
-                self._power_source = power_source
+            await self.get_attribute_value("power_source", from_cache=from_cache)
         await super().async_initialize(from_cache)
 
     def get_power_source(self):
         """Get the power source."""
-        return self._power_source
+        return self.cluster.get("power_source")
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
@@ -391,27 +379,6 @@ class PowerConfigurationChannel(ZigbeeChannel):
         {"attr": "battery_voltage", "config": REPORT_CONFIG_BATTERY_SAVE},
         {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
     )
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute updates on this cluster."""
-        attr = self._report_config[1].get("attr")
-        if isinstance(attr, str):
-            attr_id = self.cluster.attridx.get(attr)
-        else:
-            attr_id = attr
-        if attrid == attr_id:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                attrid,
-                self.cluster.attributes.get(attrid, [attrid])[0],
-                value,
-            )
-            return
-        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_STATE_ATTR}", attr_name, value
-        )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
