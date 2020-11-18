@@ -1,5 +1,4 @@
 """Common test objects."""
-import logging
 import time
 
 from zigpy.device import Device as zigpy_dev
@@ -15,8 +14,6 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
 
 from tests.async_mock import AsyncMock, Mock
-
-LOGGER = logging.getLogger(__name__)
 
 
 class FakeEndpoint:
@@ -76,13 +73,6 @@ def patch_cluster(cluster):
     cluster.PLUGGED_ATTR_READS = {}
 
     async def _read_attribute_raw(attributes, *args, **kwargs):
-        LOGGER.debug(
-            "'%s' trying to read %s attrs. args: %s; kwargs: %s",
-            cluster.ep_attribute,
-            attributes,
-            args,
-            kwargs,
-        )
         result = []
         for attr_id in attributes:
             value = cluster.PLUGGED_ATTR_READS.get(attr_id)
