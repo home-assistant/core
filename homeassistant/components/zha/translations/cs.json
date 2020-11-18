@@ -14,11 +14,15 @@
                 "title": "Nastaven\u00ed"
             },
             "user": {
+                "description": "Vyberte s\u00e9riov\u00fd port pro r\u00e1dio Zigbee",
                 "title": "ZHA"
             }
         }
     },
     "device_automation": {
+        "action_type": {
+            "warn": "Varovat"
+        },
         "trigger_subtype": {
             "both_buttons": "Ob\u011b tla\u010d\u00edtka",
             "button_1": "Prvn\u00ed tla\u010d\u00edtko",

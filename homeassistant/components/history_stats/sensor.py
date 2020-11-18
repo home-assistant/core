@@ -225,7 +225,7 @@ class HistoryStatsSensor(Entity):
             self.hass, start, end, str(self._entity_id)
         )
 
-        if self._entity_id not in history_list.keys():
+        if self._entity_id not in history_list:
             return
 
         # Get the first state

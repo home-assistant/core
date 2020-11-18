@@ -26,7 +26,7 @@ from .storage import async_setup_frontend_storage
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/home-assistant-polymer/issues/3336
+# https://github.com/home-assistant/frontend/issues/3336
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
 

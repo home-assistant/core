@@ -6,7 +6,6 @@
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
             "not_deconz_bridge": "To nie jest mostek deCONZ",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ",
             "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {
@@ -56,8 +55,8 @@
             "side_5": "strona 5",
             "side_6": "strona 6",
             "top_buttons": "g\u00f3rne przyciski",
-            "turn_off": "wy\u0142\u0105cz",
-            "turn_on": "w\u0142\u0105cz"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "remote_awakened": "urz\u0105dzenie si\u0119 obudzi",

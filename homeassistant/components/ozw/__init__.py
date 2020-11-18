@@ -20,6 +20,7 @@ from openzwavemqtt.models.value import OZWValue
 import voluptuous as vol
 
 from homeassistant.components import mqtt
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
@@ -27,6 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
 from .const import (
+    CONF_INTEGRATION_CREATED_ADDON,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
@@ -263,6 +265,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
+        return
+
+    try:
+        await hass.components.hassio.async_stop_addon("core_zwave")
+    except HassioAPIError as err:
+        _LOGGER.error("Failed to stop the OpenZWave add-on: %s", err)
+        return
+    try:
+        await hass.components.hassio.async_uninstall_addon("core_zwave")
+    except HassioAPIError as err:
+        _LOGGER.error("Failed to uninstall the OpenZWave add-on: %s", err)
 
 
 async def async_handle_remove_node(hass: HomeAssistant, node: OZWNode):

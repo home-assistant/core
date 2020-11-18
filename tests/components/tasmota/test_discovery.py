@@ -6,7 +6,7 @@ from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_4
+from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3
 
 from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
@@ -136,7 +136,7 @@ async def test_device_discover_deprecated(
     hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
 ):
     """Test setting up a device with deprecated discovery message."""
-    config = copy.deepcopy(DEFAULT_CONFIG_9_0_0_4)
+    config = copy.deepcopy(DEFAULT_CONFIG_9_0_0_3)
     mac = config["mac"]
 
     async_fire_mqtt_message(

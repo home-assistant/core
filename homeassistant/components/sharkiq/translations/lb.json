@@ -1,7 +1,10 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Feeler beim verbannen"
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich",
+            "unknown": "Onerwaarte Feeler"
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",

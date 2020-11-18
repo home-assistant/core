@@ -33,24 +33,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     all_devices = api.get_all_devices()
     for dev_id, device_properties in all_devices.items():
-        if device_properties["class"] != "heater_central":
-            continue
+        if device_properties["class"] == "heater_central":
+            data = api.get_device_data(dev_id)
 
-        data = api.get_device_data(dev_id)
-        for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
-            if binary_sensor not in data:
-                continue
+            for binary_sensor in BINARY_SENSOR_MAP:
+                if binary_sensor not in data:
+                    continue
 
-            entities.append(
-                PwBinarySensor(
-                    api,
-                    coordinator,
-                    device_properties["name"],
-                    binary_sensor,
-                    dev_id,
-                    device_properties["class"],
+                entities.append(
+                    PwBinarySensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        binary_sensor,
+                        device_properties["class"],
+                    )
                 )
-            )
 
     async_add_entities(entities, True)
 
@@ -58,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PwBinarySensor(SmileSensor, BinarySensorEntity):
     """Representation of a Plugwise binary_sensor."""
 
-    def __init__(self, api, coordinator, name, binary_sensor, dev_id, model):
+    def __init__(self, api, coordinator, name, dev_id, binary_sensor, model):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, binary_sensor)
 
@@ -73,11 +72,6 @@ class PwBinarySensor(SmileSensor, BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._is_on
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._icon
 
     @callback
     def _async_process_data(self):
@@ -95,16 +89,10 @@ class PwBinarySensor(SmileSensor, BinarySensorEntity):
 
         self._is_on = data[self._binary_sensor]
 
-        self._state = STATE_OFF
+        self._state = STATE_ON if self._is_on else STATE_OFF
         if self._binary_sensor == "dhw_state":
-            self._icon = FLOW_OFF_ICON
+            self._icon = FLOW_ON_ICON if self._is_on else FLOW_OFF_ICON
         if self._binary_sensor == "slave_boiler_state":
-            self._icon = IDLE_ICON
-        if self._is_on:
-            self._state = STATE_ON
-            if self._binary_sensor == "dhw_state":
-                self._icon = FLOW_ON_ICON
-            if self._binary_sensor == "slave_boiler_state":
-                self._icon = FLAME_ICON
+            self._icon = FLAME_ICON if self._is_on else IDLE_ICON
 
         self.async_write_ha_state()

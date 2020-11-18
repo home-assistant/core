@@ -6,8 +6,7 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "host_exists": "Za\u0159\u00edzen\u00ed VIZIO SmartCast se zadan\u00fdm hostitelem je ji\u017e nastaveno.",
-            "name_exists": "Za\u0159\u00edzen\u00ed VIZIO SmartCast se zadan\u00fdm hostitelem je ji\u017e nastaveno."
+            "existing_config_entry_found": "Za\u0159\u00edzen\u00ed VIZIO SmartCast se stejn\u00fdm s\u00e9riov\u00fdm \u010d\u00edslem ji\u017e bylo nastaveno. Chcete-li nastavit tuto polo\u017eku, mus\u00edte odstranit st\u00e1vaj\u00edc\u00ed polo\u017eku."
         },
         "step": {
             "pair_tv": {

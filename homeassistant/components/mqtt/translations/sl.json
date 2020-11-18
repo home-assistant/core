@@ -47,5 +47,27 @@
             "button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
             "button_triple_press": "Gumb \"{subtype}\" trikrat kliknjen"
         }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Povezava ni uspela"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Posrednik",
+                    "password": "Geslo",
+                    "port": "Vrata",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "Prosimo, vnesite podatke o povezavi do va\u0161ega MQTT posrednika."
+            },
+            "options": {
+                "data": {
+                    "discovery": "Omogo\u010di odkrivanje"
+                },
+                "description": "Izberite mo\u017enosti MQTT."
+            }
+        }
     }
 }

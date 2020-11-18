@@ -11,7 +11,18 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "E-post"
-                }
+                },
+                "title": "Seadista Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Kuva passiivsed paanid"
+                },
+                "title": "Seadista Tile"
             }
         }
     }

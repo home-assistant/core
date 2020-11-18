@@ -1,15 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u017de konfigurirano",
-            "invalid_credentials": "Neveljavne poverilnice"
+            "already_configured": "\u017de konfigurirano"
         },
         "create_entry": {
             "default": "Glejte [neato dokumentacija] ({docs_url})."
-        },
-        "error": {
-            "invalid_credentials": "Neveljavne poverilnice",
-            "unexpected_error": "Nepri\u010dakovana napaka"
         },
         "step": {
             "user": {
