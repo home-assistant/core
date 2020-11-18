@@ -6,15 +6,22 @@
                 "data": {
                     "password": "Password",
                     "username": "Username",
-                    "url": "URL"
+                    "url": "Website"
                 }
-            }
+            },
+            "reauth": {
+                "description": "Authentication tokens became invalid, login to recreate them.",
+                "data": {
+                  "password": "Password"
+                }
+              }
         },
         "error": {
             "invalid_auth": "Invalid authentication."
         },
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "create_entry": {
             "default": "Successfully authenticated"

@@ -12,13 +12,13 @@ from pyfireservicerota import (
 )
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, NOTIFICATION_AUTH_ID, NOTIFICATION_AUTH_TITLE, WSS_BWRURL
+from .const import DOMAIN, WSS_BWRURL
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -82,6 +82,7 @@ class FireServiceRotaOauth:
         self._entry = entry
 
         self._url = entry.data[CONF_URL]
+        self._username = entry.data[CONF_USERNAME]
         self._coordinator = coordinator
 
     async def async_refresh_tokens(self) -> bool:
@@ -96,12 +97,15 @@ class FireServiceRotaOauth:
                 self._coordinator.fsr.refresh_tokens
             )
         except (InvalidAuthError, InvalidTokenError):
-            _LOGGER.error("Error occurred while refreshing authentication tokens")
-
-            self._hass.components.persistent_notification.async_create(
-                "Cannot refresh tokens, you need to re-add this integration to generate new ones.",
-                title=NOTIFICATION_AUTH_TITLE,
-                notification_id=NOTIFICATION_AUTH_ID,
+            _LOGGER.error("Error refreshing tokens, triggered reauth workflow")
+            self._hass.add_job(
+                self._hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data={
+                        **self._entry.data,
+                    },
+                )
             )
 
             return False
@@ -112,6 +116,7 @@ class FireServiceRotaOauth:
             data={
                 "auth_implementation": DOMAIN,
                 CONF_URL: self._url,
+                CONF_USERNAME: self._username,
                 CONF_TOKEN: token_info,
             },
         )
