@@ -3,11 +3,7 @@
         "abort": {
             "already_configured": "Diese AVM FRITZ! Box ist bereits konfiguriert.",
             "already_in_progress": "Die Konfiguration der AVM FRITZ! Box ist bereits in Bearbeitung.",
-            "not_found": "Keine unterst\u00fctzte AVM FRITZ! Box im Netzwerk gefunden.",
             "not_supported": "Verbunden mit AVM FRITZ! Box, kann jedoch keine Smart Home-Ger\u00e4te steuern."
-        },
-        "error": {
-            "auth_failed": "Benutzername und/oder Passwort sind falsch."
         },
         "flow_title": "AVM FRITZ! Box: {name}",
         "step": {

@@ -5,8 +5,7 @@
         },
         "error": {
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "cannot_connect": "Tilkobling mislyktes",
-            "device_unavailable": "Enheten er ikke tilgjengelig"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "user": {
@@ -17,6 +16,5 @@
                 "title": "Konfigurere Agent DVR"
             }
         }
-    },
-    "title": ""
+    }
 }

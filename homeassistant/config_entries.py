@@ -89,6 +89,8 @@ CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
 
+RELOAD_AFTER_UPDATE_DELAY = 30
+
 
 class ConfigError(HomeAssistantError):
     """Error while configuring an account."""
@@ -1075,6 +1077,9 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         """
         flow = cast(OptionsFlow, flow)
 
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return result
+
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
             raise UnknownEntry(flow.handler)
@@ -1108,8 +1113,6 @@ class SystemOptions:
 
 class EntityRegistryDisabledHandler:
     """Handler to handle when entities related to config entries updating disabled_by."""
-
-    RELOAD_AFTER_UPDATE_DELAY = 30
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the handler."""
@@ -1167,7 +1170,7 @@ class EntityRegistryDisabledHandler:
             self._remove_call_later()
 
         self._remove_call_later = self.hass.helpers.event.async_call_later(
-            self.RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+            RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
     async def _handle_reload(self, _now: Any) -> None:

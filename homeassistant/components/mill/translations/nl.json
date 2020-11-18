@@ -1,8 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
         "step": {
             "user": {
                 "data": {
+                    "password": "Password",
                     "username": "Gebruikersnaam"
                 }
             }

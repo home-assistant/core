@@ -14,13 +14,16 @@
                 "data": {
                     "2fa": "2FA PIN"
                 },
+                "description": "",
                 "title": "Kaheastmeline autentimine"
             },
             "user": {
                 "data": {
+                    "authorization_code": "Autoriseerimiskood (vajalik k\u00e4sitsi autentimiseks)",
                     "email": "E-posti aadress",
                     "password": "Salas\u00f5na"
                 },
+                "description": "",
                 "title": "Google Hangoutsi sisselogimine"
             }
         }

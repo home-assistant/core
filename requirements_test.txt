@@ -10,7 +10,7 @@ coverage==5.3
 jsonpickle==1.4.1
 mock-open==1.4.0
 mypy==0.790
-pre-commit==2.7.1
+pre-commit==2.8.2
 pylint==2.6.0
 astroid==2.4.2
 pipdeptree==1.0.0
@@ -21,7 +21,7 @@ pytest-test-groups==1.0.3
 pytest-sugar==0.9.4
 pytest-timeout==1.4.2
 pytest-xdist==2.1.0
-pytest==6.0.2
+pytest==6.1.2
 requests_mock==1.8.0
 responses==0.12.0
 respx==0.14.0

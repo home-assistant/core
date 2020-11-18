@@ -2,7 +2,7 @@
   "domain": "devolo_home_control",
   "name": "devolo Home Control",
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
-  "requirements": ["devolo-home-control-api==0.15.1"],
+  "requirements": ["devolo-home-control-api==0.16.0"],
   "after_dependencies": ["zeroconf"],
   "config_flow": true,
   "codeowners": ["@2Fake", "@Shutgun"],

@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "UPnP / IGD on juba seadistatud",
             "incomplete_discovery": "Mittet\u00e4ielik avastamine",
-            "no_devices_discovered": "\u00dchtegi UPnP / IGD-d ei avastatud",
             "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi UPnP / IGD-seadet."
         },
         "error": {

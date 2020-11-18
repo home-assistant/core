@@ -4,7 +4,6 @@
             "already_configured": "Dette brugernavn er allerede i brug."
         },
         "error": {
-            "invalid_credentials": "Ugyldigt brugernavn eller adgangskode",
             "no_devices": "Ingen enheder fundet i konto"
         },
         "step": {

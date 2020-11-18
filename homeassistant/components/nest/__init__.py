@@ -96,7 +96,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor"]
+# Platforms for SDM API
+PLATFORMS = ["sensor", "camera", "climate"]
 
 # Services for the legacy API
 

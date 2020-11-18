@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "TelldusLive ass scho konfigur\u00e9iert",
+            "already_configured": "Service ass scho konfigur\u00e9iert",
             "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
-            "unknown": "Onbekannten Feeler opgetrueden"
+            "unknown": "Onerwaarte Feeler"
         },
         "error": {
-            "auth_error": "Feeler bei der Authentifikatioun, prob\u00e9iert w.e.g. nach emol"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "auth": {
