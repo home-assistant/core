@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 from hyperion import client, const as hyperion_const
 from pkg_resources import parse_version
@@ -34,13 +34,14 @@ _LOGGER = logging.getLogger(__name__)
 # unique_id is the server id returned from the Hyperion instance (a unique ID per
 # server).
 #
-# Each server connection may create multiple entities, 1 per "instance" on the Hyperion
-# server. The unique_id for each entity is <server id>_<instance #>, where <server_id>
-# will be the unique_id on the relevant config entry (as above).
+# Each server connection may create multiple entities. The unique_id for each entity is
+# <server id>_<instance #>_<name>, where <server_id> will be the unique_id on the
+# relevant config entry (as above), <instance #> will be the server instance # and
+# <name> will be a unique identifying key for each entity associated with this
+# server/instance (e.g. "light").
 #
 # The get_hyperion_unique_id method will create a per-entity unique id when given the
-# server id and the instance number. The split_hyperion_unique_id will reverse the
-# operation.
+# server id, an instance number and a name.
 
 # hass.data format
 # ================
@@ -53,18 +54,9 @@ _LOGGER = logging.getLogger(__name__)
 # }
 
 
-def get_hyperion_unique_id(server_id: str, instance: int) -> str:
+def get_hyperion_unique_id(server_id: str, instance: int, name: str) -> str:
     """Get a unique_id for a Hyperion instance."""
-    return f"{server_id}_{instance}"
-
-
-def split_hyperion_unique_id(unique_id: str) -> Optional[Tuple[str, int]]:
-    """Split a unique_id for a Hyperion instance."""
-    try:
-        server_id, instance = unique_id.rsplit("_", 1)
-        return server_id, int(instance)
-    except ValueError:
-        return None
+    return f"{server_id}_{instance}_{name}"
 
 
 def create_hyperion_client(

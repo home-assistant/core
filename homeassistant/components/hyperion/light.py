@@ -138,7 +138,7 @@ async def async_setup_platform(
     if not hyperion_id:
         raise PlatformNotReady
 
-    future_unique_id = get_hyperion_unique_id(hyperion_id, instance)
+    future_unique_id = get_hyperion_unique_id(hyperion_id, instance, LIGHT_DOMAIN)
 
     # Possibility 1: Already converted.
     # There is already a config entry with the unique id reporting by the
@@ -243,7 +243,7 @@ async def async_setup_entry(
             instance_id = instance.get(const.KEY_INSTANCE)
             if instance_id is None or not instance.get(const.KEY_RUNNING, False):
                 continue
-            unique_id = get_hyperion_unique_id(server_id, instance_id)
+            unique_id = get_hyperion_unique_id(server_id, instance_id, LIGHT_DOMAIN)
             desired_unique_ids.add(unique_id)
             if unique_id in current_entities:
                 continue
