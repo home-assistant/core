@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd"
         },
-        "flow_title": "Denon AVR Network Receiver: {naam}",
+        "flow_title": "Denon AVR Network Receiver: {name}",
         "step": {
             "confirm": {
                 "title": "Denon AVR Network Receivers"
