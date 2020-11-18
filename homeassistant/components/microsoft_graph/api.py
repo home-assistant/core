@@ -7,10 +7,6 @@ from hagraph.api.auth.manager import AbstractAuth
 from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
 
-# TODO the following two API examples are based on our suggested best practices
-# for libraries using OAuth2 with requests or aiohttp. Delete the one you won't use.
-# For more info see the docs at <insert url>.
-
 
 class ConfigEntryAuth(AbstractAuth):
     """Provide Microsoft Graph authentication tied to an OAuth2 based config entry."""
