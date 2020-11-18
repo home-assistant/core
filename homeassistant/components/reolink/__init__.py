@@ -101,6 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Update the configuration at the base entitiy."""
     base = hass.data[DOMAIN][entry.entry_id][BASE]
 
     await base.api.update_streaming_options(

@@ -32,7 +32,7 @@ set_sensitivity:
         all presets will be changed.
 
 set_daynight:
-  description: Set day and night parameter. 
+  description: Set day and night parameter.
   fields:
     entity_id:
       description: Name(s) of the Reolink camera entity for which the day and night value should be set.

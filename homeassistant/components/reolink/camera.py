@@ -157,11 +157,9 @@ class ReolinkCamera(ReolinkEntity, Camera):
         )
 
     async def set_sensitivity(self, sensitivity, **kwargs):
-        """Set the sensitivity to the camera.
-        The camera preset ID's on the GUI are always +1
-        """
+        """Set the sensitivity to the camera."""
         if "preset" in kwargs:
-            kwargs["preset"] += 1
+            kwargs["preset"] += 1  # The camera preset ID's on the GUI are always +1
         await self._base.api.set_sensitivity(value=sensitivity, **kwargs)
 
     async def set_daynight(self, mode):
@@ -169,9 +167,9 @@ class ReolinkCamera(ReolinkEntity, Camera):
         await self._base.api.set_daynight(value=self._daynight_modes[mode])
 
     async def async_enable_motion_detection(self):
-        """Predefined camera service implementation"""
+        """Predefined camera service implementation."""
         self._base.motion_detection_state = True
 
     async def async_disable_motion_detection(self):
-        """Predefined camera service implementation"""
+        """Predefined camera service implementation."""
         self._base.motion_detection_state = False

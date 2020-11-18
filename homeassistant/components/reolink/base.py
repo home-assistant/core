@@ -101,4 +101,4 @@ class ReolinkBase:
         """Disconnect the APi and unsubscribe."""
         await self.disconnect_api()
         await self.unsubscribe()
-        await self._hass.async_add_executor_job(self.undo_update_listener())
+        self.undo_update_listener()

@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .const import CONF_MOTION_OFF_DELAY, EVENT_DATA_RECEIVED
+from .const import EVENT_DATA_RECEIVED
 from .entity import ReolinkEntity
 
 _LOGGER = logging.getLogger(__name__)
