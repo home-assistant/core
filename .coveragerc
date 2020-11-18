@@ -42,7 +42,13 @@ omit =
     homeassistant/components/amazon_polly/tts.py
     homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/*
-    homeassistant/components/amcrest/*
+    homeassistant/components/amcrest/__init__.py
+    homeassistant/components/amcrest/amcrest_checker
+    homeassistant/components/amcrest/binary_sensor.py
+    homeassistant/components/amcrest/camera.py
+    homeassistant/components/amcrest/const.py
+    homeassistant/components/amcrest/helpers.py
+    homeassistant/components/amcrest/sensor.py
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
     homeassistant/components/anel_pwrctrl/switch.py

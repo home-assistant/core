@@ -1,58 +1,37 @@
 """Test Amcrest config flow."""
 from amcrest import AmcrestError, LoginError
-from homeassistant import data_entry_flow
-import pytest
-from homeassistant.components.amcrest.amcrest_checker import AmcrestChecker
 
-# from homeassistant import data_entry_flow
-# from homeassistant.components.amcrest import config_flow
+from homeassistant import data_entry_flow
+from homeassistant.components.amcrest.amcrest_checker import AmcrestChecker
 from homeassistant.components.amcrest.const import (
-    AUTHENTICATION_LIST,
-    CONF_BINARY_SENSOR_AUDIO_DETECTED,
-    CONF_BINARY_SENSOR_AUDIO_DETECTED_POLLED,
-    CONF_BINARY_SENSOR_MOTION_DETECTED,
-    CONF_BINARY_SENSOR_MOTION_DETECTED_POLLED,
-    CONF_BINARY_SENSOR_ONLINE,
     CONF_CONTROL_LIGHT,
     CONF_EVENTS,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RESOLUTION,
-    CONF_SENSOR_PTZ_PRESET,
-    CONF_SENSOR_SDCARD,
     CONF_STREAM_SOURCE,
     DEFAULT_AUTHENTICATION,
     DEFAULT_CONTROL_LIGHT,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_NAME,
-    DEFAULT_PORT,
     DEFAULT_RESOLUTION,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STREAM_SOURCE,
-    DEVICES,
     DOMAIN,
-    RESOLUTION_LIST,
-    STREAM_SOURCE_LIST,
 )
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_BINARY_SENSORS,
     CONF_HOST,
-    # CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_USERNAME,
-    CONF_AUTHENTICATION,
-    CONF_BINARY_SENSORS,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_USERNAME,
 )
 
-# from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_session_request
-
-# from tests.async_mock import patch
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-# from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_MAC = "ab:cd:ef:gh"
@@ -63,7 +42,6 @@ TEST_PASSWORD = "password"
 TEST_PORT = 80
 TEST_MODEL = "model5"
 TEST_SERIALNUMBER = "123456789"
-TEST_UNIQUE_ID = f"{TEST_NAME}-{TEST_SERIALNUMBER}"
 
 
 async def test_flow_manual_configuration(hass):
@@ -132,7 +110,7 @@ async def test_flow_fails_already_configured(hass):
     with patch(
         "homeassistant.components.amcrest.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
+    ), patch(
         "homeassistant.components.amcrest.config_flow.AmcrestChecker",
         new=AmcrestChecker,
     ) as mock_my_class:
