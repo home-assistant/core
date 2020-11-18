@@ -54,7 +54,10 @@ async def async_setup_entry(
 
 def _get_measurement_rate(current_measurements: dict, source_type: str):
     if source_type in current_measurements.keys():
-        if current_measurements[source_type]["measurement"]:
+        if (
+            "measurement" in current_measurements[source_type]
+            and current_measurements[source_type]["measurement"] is not None
+        ):
             return current_measurements[source_type]["measurement"]["rate"]
     else:
         _LOGGER.error(
@@ -65,7 +68,10 @@ def _get_measurement_rate(current_measurements: dict, source_type: str):
 
 def _get_this_day_value(current_measurements: dict, source_type: str):
     if source_type in current_measurements.keys():
-        if current_measurements[source_type]["thisDay"]:
+        if (
+            "thisDay" in current_measurements[source_type]
+            and current_measurements[source_type]["thisDay"] is not None
+        ):
             return current_measurements[source_type]["thisDay"]["value"]
     else:
         _LOGGER.error(
