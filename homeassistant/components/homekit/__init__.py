@@ -146,7 +146,7 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def _async_get_entries_by_name(hass, current_entries):
+def _async_get_entries_by_name(current_entries):
     """Return a dict of the entries by name."""
 
     # For backwards compat, its possible the first bridge is using the default
