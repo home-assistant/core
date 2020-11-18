@@ -1,4 +1,4 @@
-"""Tests for the intergation of a twinly device."""
+"""Tests for the integration of a twinly device."""
 
 from typing import Tuple
 
