@@ -93,8 +93,7 @@ class AmcrestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
 
-                serial_number = device.serial_number
-                # serial_number = serial_number.rstrip("\r\n")
+                serial_number = device.serial_number.rstrip("\r\n")
 
                 await self.async_set_unique_id(serial_number)
 
