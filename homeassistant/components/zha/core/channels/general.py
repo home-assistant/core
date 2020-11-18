@@ -167,6 +167,11 @@ class LevelControlChannel(ZigbeeChannel):
     CURRENT_LEVEL = 0
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
+    @property
+    def current_level(self) -> Optional[int]:
+        """Return cached value of the current_level attribute."""
+        return self.cluster.get("current_level")
+
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
@@ -247,6 +252,11 @@ class OnOffChannel(ZigbeeChannel):
         super().__init__(cluster, ch_pool)
         self._state = None
         self._off_listener = None
+
+    @property
+    def on_off(self) -> Optional[bool]:
+        """Return cached value of on/off attribute."""
+        return self.cluster.get("on_off")
 
     @callback
     def cluster_command(self, tsn, command_id, args):

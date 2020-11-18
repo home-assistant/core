@@ -46,13 +46,13 @@ async def test_user_form(hass):
             result["flow_id"],
             {"host": "1.2.3.4"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "AlexanderHD"
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -89,13 +89,13 @@ async def test_form_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={"host": "1.2.3.4"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "AlexanderHD"
     assert result["data"] == {
         "host": "1.2.3.4",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -141,13 +141,13 @@ async def test_form_homekit(hass):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "PowerViewHub"
     assert result2["data"] == {"host": "1.2.3.4"}
     assert result2["result"].unique_id == "ABC123"
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

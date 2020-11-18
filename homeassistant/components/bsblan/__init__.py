@@ -28,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bsblan = BSBLan(
         entry.data[CONF_HOST],
         passkey=entry.data[CONF_PASSKEY],
-        loop=hass.loop,
         port=entry.data[CONF_PORT],
         session=session,
     )

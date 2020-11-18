@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
             "credential_error": "Fout bij ophalen van inloggegevens.",
-            "devices_configured": "Alle gevonden apparaten zijn al geconfigureerd.",
             "no_devices_found": "Geen PlayStation 4 apparaten gevonden op het netwerk.",
             "port_987_bind_error": "Kon niet binden aan poort 987. Raadpleeg de [documentatie] (https://www.home-assistant.io/components/ps4/) voor meer informatie.",
             "port_997_bind_error": "Kon niet binden aan poort 997. Raadpleeg de [documentatie] (https://www.home-assistant.io/components/ps4/) voor aanvullende informatie."
@@ -10,8 +10,7 @@
         "error": {
             "credential_timeout": "Time-out van inlog service. Druk op Submit om opnieuw te starten.",
             "login_failed": "Kan niet koppelen met PlayStation 4. Controleer of de pincode juist is.",
-            "no_ipaddress": "Voer het IP-adres in van de PlayStation 4 die je wilt configureren.",
-            "not_ready": "PlayStation 4 staat niet aan of is niet verbonden met een netwerk."
+            "no_ipaddress": "Voer het IP-adres in van de PlayStation 4 die je wilt configureren."
         },
         "step": {
             "creds": {

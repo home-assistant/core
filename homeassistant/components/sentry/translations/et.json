@@ -1,15 +1,35 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry on juba h\u00e4\u00e4lestatud",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
+            "bad_dsn": "Kehtetu DSN",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": ""
+                },
+                "description": "Sisesta oma Sentry DSN",
                 "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Keskkonna valikuline nimi.",
+                    "event_custom_components": "S\u00fcndmuste saatmine kohandatud komponentidest",
+                    "event_handled": "K\u00e4ivitatud s\u00fcndmuste saatmine",
+                    "event_third_party_packages": "S\u00fcndmuste saatmine kolmanda osapoole pakettidest",
+                    "logging_event_level": "M\u00e4\u00e4ra Sentry s\u00fcndmuse logitase",
+                    "logging_level": "M\u00e4\u00e4ra Sentry andme\u00fchikute logitase",
+                    "tracing": "Luba j\u00f5udluse j\u00e4lgimine",
+                    "tracing_sample_rate": "J\u00e4lgimise sagedus: vahemikus 0,0 kuni 1,0 (1,0 = 100%)"
+                }
             }
         }
     }

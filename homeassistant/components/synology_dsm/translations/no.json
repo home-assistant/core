@@ -5,9 +5,7 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "connection": "Tilkoblingsfeil: Vennligst sjekk verten, porten og SSL",
             "invalid_auth": "Ugyldig godkjenning",
-            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt",
             "missing_data": "Manglende data: Vennligst pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon",
             "otp_failed": "Totrinnsgodkjenning mislyktes, pr\u00f8v p\u00e5 nytt med en ny passord",
             "unknown": "Uventet feil"
@@ -25,7 +23,8 @@
                     "password": "Passord",
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
-                    "username": "Brukernavn"
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "description": "Vil du konfigurere {name} ({host})?",
                 "title": ""
@@ -36,7 +35,8 @@
                     "password": "Passord",
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
-                    "username": "Brukernavn"
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": ""
             }

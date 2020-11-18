@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "ElkM1 z tym adresem jest ju\u017c skonfigurowany",
+            "address_already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane z tym adresem",
             "already_configured": "ElkM1 z tym prefiksem jest ju\u017c skonfigurowany"
         },
         "error": {
