@@ -1,7 +1,5 @@
 """Support for discovering Broadlink devices."""
-import asyncio
 from datetime import timedelta
-from functools import partial
 import logging
 
 import broadlink as blk
@@ -51,50 +49,46 @@ class BroadlinkDiscovery:
 
     async def async_discover(self):
         """Discover Broadlink devices on all available networks."""
-        broadcast_addrs = self.hass.data[DOMAIN].config["broadcast_addrs"]
-        tasks = [
-            self.hass.async_add_executor_job(
-                partial(blk.discover, timeout=self.timeout, discover_ip_address=addr)
-            )
-            for addr in broadcast_addrs
-        ]
-        results = [
-            result
-            for result in await asyncio.gather(*tasks, return_exceptions=True)
-            if not isinstance(result, Exception)
-        ]
-        return [device for devices in results for device in devices]
+        try:
+            await self.hass.async_add_executor_job(self.discover)
+        except OSError:
+            pass
 
-    @callback
-    def update(self):
-        """Create config flows for new devices found."""
-        devices = self.coordinator.data
-        if not (self.coordinator.last_update_success and devices):
-            return
-
-        entries = self.hass.config_entries.async_entries(DOMAIN)
+    def discover(self):
+        """Discover Broadlink devices on all available networks."""
+        hass = self.hass
+        timeout = self.timeout
+        broadcast_addrs = hass.data[DOMAIN].config["broadcast_addrs"]
+        entries = hass.config_entries.async_entries(DOMAIN)
         hosts_and_macs = {
             (get_ip_or_none(entry.data[CONF_HOST]), entry.data[CONF_MAC])
             for entry in entries
         }
-        for device in devices:
-            host, mac_addr = device.host[0], device.mac.hex()
-            if (host, mac_addr) in hosts_and_macs:
-                continue
 
-            if device.type not in SUPPORTED_TYPES:
-                continue
+        for addr in broadcast_addrs:
+            for device in blk.xdiscover(discover_ip_address=addr, timeout=timeout):
+                host, mac_addr = device.host[0], device.mac.hex()
+                if (host, mac_addr) in hosts_and_macs:
+                    continue
 
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                    data={
-                        CONF_HOST: device.host[0],
-                        CONF_MAC: device.mac.hex(),
-                        CONF_TYPE: device.devtype,
-                        CONF_NAME: device.name,
-                        CONF_LOCK: device.is_locked,
-                    },
+                if device.type not in SUPPORTED_TYPES:
+                    continue
+
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                        data={
+                            CONF_HOST: device.host[0],
+                            CONF_MAC: device.mac.hex(),
+                            CONF_TYPE: device.devtype,
+                            CONF_NAME: device.name,
+                            CONF_LOCK: device.is_locked,
+                        },
+                    )
                 )
-            )
+
+    @callback
+    def update(self):
+        """Create config flows for new devices found."""
+        pass
