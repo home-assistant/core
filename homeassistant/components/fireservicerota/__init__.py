@@ -207,7 +207,7 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
 
     async def async_availability_update(self) -> None:
         """Get the latest availability data."""
-        _LOGGER.debug("Updating avilability data")
+        _LOGGER.debug("Updating availability data")
 
         return await self.update_call(
             self.fsr.get_availability, str(self._hass.config.time_zone)
