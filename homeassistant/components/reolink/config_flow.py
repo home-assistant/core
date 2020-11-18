@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Reolink camera's."""
+    """Handle a config flow for Reolink camera device."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
