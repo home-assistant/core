@@ -5,7 +5,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "url": "Website"
+          "url": "[%key:common::config_flow::data::url]"
         }
       }
     },
