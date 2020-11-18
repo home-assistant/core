@@ -38,7 +38,9 @@ class EntitySelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            # Integration that provided the entity
             vol.Optional("integration"): str,
+            # Domain the entity belongs to
             vol.Optional("domain"): str,
         }
     )
@@ -50,8 +52,11 @@ class DeviceSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            # Integration linked to it with a config entry
             vol.Optional("integration"): str,
+            # Manufacturer of device
             vol.Optional("manufacturer"): str,
+            # Model of device
             vol.Optional("model"): str,
         }
     )

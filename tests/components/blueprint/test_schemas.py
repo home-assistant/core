@@ -31,6 +31,26 @@ _LOGGER = logging.getLogger(__name__)
                 },
             }
         },
+        # With selector
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "some_placeholder": {"selector": {"entity": {}}},
+                },
+            }
+        },
+        # With min version
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "homeassistant": {
+                    "min_version": "1000000.0.0",
+                },
+            }
+        },
     ),
 )
 def test_blueprint_schema(blueprint):
@@ -61,6 +81,16 @@ def test_blueprint_schema(blueprint):
                 "name": "Example name",
                 "domain": "automation",
                 "input": {"some_placeholder": {"non_existing": "bla"}},
+            }
+        },
+        # Invalid version
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "homeassistant": {
+                    "min_version": "1000000.invalid.0",
+                },
             }
         },
     ),

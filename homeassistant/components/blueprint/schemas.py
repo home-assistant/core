@@ -10,10 +10,32 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_BLUEPRINT,
     CONF_DESCRIPTION,
+    CONF_HOMEASSISTANT,
     CONF_INPUT,
+    CONF_MIN_VERSION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
 )
+
+
+def version_validator(value):
+    """Validate a Home Assistant version."""
+    if not isinstance(value, str):
+        raise vol.Invalid("Version needs to be a string")
+
+    parts = value.split(".")
+
+    if len(parts) != 3:
+        raise vol.Invalid("Version needs to be formatted as {major}.{minor}.{patch}")
+
+    try:
+        parts = [int(p) for p in parts]
+    except ValueError:
+        raise vol.Invalid(
+            "Major, minor and patch version needs to be an integer"
+        ) from None
+
+    return value
 
 
 @callback
@@ -43,6 +65,9 @@ BLUEPRINT_SCHEMA = vol.Schema(
                 vol.Required(CONF_NAME): str,
                 vol.Required(CONF_DOMAIN): str,
                 vol.Optional(CONF_SOURCE_URL): cv.url,
+                vol.Optional(CONF_HOMEASSISTANT): {
+                    vol.Optional(CONF_MIN_VERSION): version_validator
+                },
                 vol.Optional(CONF_INPUT, default=dict): {
                     str: vol.Any(
                         None,
