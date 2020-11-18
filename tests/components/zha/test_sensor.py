@@ -94,17 +94,37 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, test_func, report_count",
+    "cluster_id, test_func, report_count, read_plug",
     (
-        (measurement.RelativeHumidity.cluster_id, async_test_humidity, 1),
-        (measurement.TemperatureMeasurement.cluster_id, async_test_temperature, 1),
-        (measurement.PressureMeasurement.cluster_id, async_test_pressure, 1),
-        (measurement.IlluminanceMeasurement.cluster_id, async_test_illuminance, 1),
-        (smartenergy.Metering.cluster_id, async_test_metering, 1),
+        (measurement.RelativeHumidity.cluster_id, async_test_humidity, 1, None),
+        (
+            measurement.TemperatureMeasurement.cluster_id,
+            async_test_temperature,
+            1,
+            None,
+        ),
+        (measurement.PressureMeasurement.cluster_id, async_test_pressure, 1, None),
+        (
+            measurement.IlluminanceMeasurement.cluster_id,
+            async_test_illuminance,
+            1,
+            None,
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            async_test_metering,
+            1,
+            {
+                "demand_formatting": 0xF9,
+                "divisor": 1,
+                "multiplier": 1,
+            },
+        ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             async_test_electrical_measurement,
             1,
+            None,
         ),
     ),
 )
@@ -115,6 +135,7 @@ async def test_sensor(
     cluster_id,
     test_func,
     report_count,
+    read_plug,
 ):
     """Test zha sensor platform."""
 
@@ -128,6 +149,10 @@ async def test_sensor(
         }
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
+    if cluster_id == smartenergy.Metering.cluster_id:
+        # this one is mains powered
+        zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+    cluster.PLUGGED_ATTR_READS = read_plug
     zha_device = await zha_device_joined_restored(zigpy_device)
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
 
