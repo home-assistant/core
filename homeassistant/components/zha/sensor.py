@@ -79,7 +79,10 @@ async def async_setup_entry(
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            discovery.async_add_entities, async_add_entities, entities_to_create
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            update_before_add=False,
         ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
@@ -202,6 +205,9 @@ class Battery(Sensor):
         battery_quantity = self._channel.cluster.get("battery_quantity")
         if battery_quantity is not None:
             state_attrs["battery_quantity"] = battery_quantity
+        battery_voltage = self._channel.cluster.get("battery_voltage")
+        if battery_voltage is not None:
+            state_attrs["battery_voltage"] = round(battery_voltage / 10, 1)
         return state_attrs
 
     @callback
