@@ -18,7 +18,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .base import ReolinkBase
-from .const import BASE, COORDINATOR, DOMAIN, EVENT_DATA_RECEIVED
+from .const import (
+    BASE,
+    CONF_CHANNEL,
+    CONF_MOTION_OFF_DELAY,
+    CONF_PROTOCOL,
+    CONF_STREAM,
+    COORDINATOR,
+    DOMAIN,
+    EVENT_DATA_RECEIVED,
+)
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -49,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
+
+    base.undo_update_listener = entry.add_update_listener(update_listener)
 
     if not await base.connect_api():
         return False
@@ -87,6 +98,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, base.stop())
 
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    base = hass.data[DOMAIN][entry.entry_id][BASE]
+
+    await base.api.update_streaming_options(
+        entry.options[CONF_STREAM],
+        entry.options[CONF_PROTOCOL],
+        entry.options[CONF_CHANNEL],
+    )
+    base.motion_off_delay = entry.options[CONF_MOTION_OFF_DELAY]
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -130,11 +152,8 @@ async def register_webhook(hass, event_id):
     return webhook_id
 
 
-async def unregister_webhook(hass: HomeAssistant, entry: ConfigEntry):
+async def unregister_webhook(hass: HomeAssistant, event_id):
     """Unregister the webhook for motion events."""
-    base = hass.data[DOMAIN][entry.entry_id][BASE]
-    event_id = f"{EVENT_DATA_RECEIVED}-{base.api.mac_address.replace(':', '')}"
-
     handlers = hass.data["webhook"]
 
     for eid, info in handlers.items():
@@ -145,8 +164,11 @@ async def unregister_webhook(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    base = hass.data[DOMAIN][entry.entry_id][BASE]
 
-    await unregister_webhook(hass, entry)
+    event_id = f"{EVENT_DATA_RECEIVED}-{base.api.mac_address.replace(':', '')}"
+    await unregister_webhook(base, event_id)
+    await base.stop()
 
     unload_ok = all(
         await asyncio.gather(

@@ -28,8 +28,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(IRLightsSwitch(hass, config_entry))
         elif capability == "recording":
             devices.append(RecordingSwitch(hass, config_entry))
-        elif capability == "motionDetection":
-            devices.append(MotionDetectionSwitch(hass, config_entry))
         else:
             continue
 
@@ -221,53 +219,6 @@ class RecordingSwitch(ReolinkEntity, ToggleEntity):
     async def async_turn_off(self, **kwargs):
         """Disable recording."""
         await self._base.api.set_recording(False)
-        await self.request_refresh()
-
-
-class MotionDetectionSwitch(ReolinkEntity, ToggleEntity):
-    """An implementation of a Reolink IP camera motion detection switch."""
-
-    def __init__(self, hass, config):
-        """Initialize a Reolink camera."""
-        ReolinkEntity.__init__(self, hass, config)
-        ToggleEntity.__init__(self)
-
-    @property
-    def unique_id(self):
-        """Return Unique ID string."""
-        return f"reolink_motionDetectionSwitch_{self._base.api.mac_address}"
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return f"{self._base.api.name} motion detection"
-
-    @property
-    def is_on(self):
-        """Camera motion detection Status."""
-        return self._base.api.motion_detection_state
-
-    @property
-    def device_class(self):
-        """Device class of the switch."""
-        return DEVICE_CLASS_SWITCH
-
-    @property
-    def icon(self):
-        """Icon of the switch."""
-        if self.is_on:
-            return "mdi:motion-sensor"
-
-        return "mdi:motion-sensor-off"
-
-    async def async_turn_on(self, **kwargs):
-        """Enable motion detection."""
-        await self._base.api.set_motion_detection(True)
-        await self.request_refresh()
-
-    async def async_turn_off(self, **kwargs):
-        """Disable motion detection."""
-        await self._base.api.set_motion_detection(False)
         await self.request_refresh()
 
 

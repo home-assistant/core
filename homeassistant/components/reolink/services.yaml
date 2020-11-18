@@ -1,8 +1,8 @@
 ptz_control:
-  description: Execute a PTZ command
+  description: Execute a PTZ command.
   fields:
     entity_id:
-      description: Name of the Reolink camera entity to execute the command on.
+      description: Name(s) of the Reolink camera entity to execute the command on.
       example: 'camera.frontdoor'
     command:
       description: >-
@@ -11,8 +11,36 @@ ptz_control:
         RIGHT RIGHTDOWN RIGHTUP STOP TOPOS UP ZOOMDEC ZOOMINC
       example: LEFTUP
     preset:
-      description: In case of the command TOPOS. The available presets are listed as attribute on the camera.
+      description: (Optional) In case of the command TOPOS. The available presets are listed as attribute on the camera.
       example:
     speed:
-      description: Speed at which the movement takes place.
+      description: (Optional) Speed at which the movement takes place.
       example: 25
+
+set_sensitivity:
+  description: Set the motion detection sensitivity.
+  fields:
+    entity_id:
+      description: Name(s) of the Reolink camera entity for which the sensitivity value should be set.
+      example: 'camera.frontdoor'
+    sensitivity:
+      description: New sensitivity, value between 1 (low sensitivity) and 50 (high sensitivity)
+      example: 25
+    preset:
+      description: >-
+        (Optional) Set the sensitivity of a specific preset (time schedule). When no value is supplied,
+        all presets will be changed.
+
+set_daynight:
+  description: Set day and night parameter. 
+  fields:
+    entity_id:
+      description: Name(s) of the Reolink camera entity for which the day and night value should be set.
+      example: 'camera.frontdoor'
+    mode:
+      description: >-
+        The day and night mode parameter supports the following values:
+          AUTO: Auto switch between black & white mode
+          COLOR: Always record videos in color mode
+          BLACKANDWHITE: Always record videos in black & white mode
+      example: AUTO

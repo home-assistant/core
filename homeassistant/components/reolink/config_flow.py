@@ -9,7 +9,14 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .base import ReolinkBase
-from .const import BASE, CONF_CHANNEL, CONF_PROTOCOL, CONF_STREAM, DOMAIN
+from .const import (
+    BASE,
+    CONF_CHANNEL,
+    CONF_MOTION_OFF_DELAY,
+    CONF_PROTOCOL,
+    CONF_STREAM,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,31 +95,25 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
         """Manage the Reolink options."""
         self.base = self.hass.data[DOMAIN][self.config_entry.entry_id][BASE]
-        return await self.async_step_configure_stream()
 
-    async def async_step_configure_stream(self, user_input=None):
-        """Manage the Reolink devices options."""
         if user_input is not None:
-            self.options.update(user_input)
-            await self.base.api.update_streaming_options(
-                user_input[CONF_STREAM],
-                user_input[CONF_PROTOCOL],
-                user_input[CONF_CHANNEL],
-            )
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="configure_stream",
+            step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_STREAM, default=self.base.api.stream): vol.In(
+                    vol.Required(CONF_STREAM, default=self.base.api.stream): vol.In(
                         ["main", "sub"]
                     ),
-                    vol.Optional(CONF_PROTOCOL, default=self.base.api.protocol): vol.In(
+                    vol.Required(CONF_PROTOCOL, default=self.base.api.protocol): vol.In(
                         ["rtmp", "rtsp"]
                     ),
-                    vol.Optional(
+                    vol.Required(
                         CONF_CHANNEL, default=self.base.api.channel
+                    ): cv.positive_int,
+                    vol.Required(
+                        CONF_MOTION_OFF_DELAY, default=self.base.motion_off_delay
                     ): cv.positive_int,
                 }
             ),

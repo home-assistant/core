@@ -15,17 +15,35 @@ from .entity import ReolinkEntity
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PTZ_CONTROL = "ptz_control"
+SERVICE_SET_SENSITIVITY = "set_sensitivity"
+SERVICE_SET_DAYNIGHT = "set_daynight"
 
 
 @asyncio.coroutine
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up a Reolink IP Camera."""
 
+    platform = entity_platform.current_platform.get()
     camera = ReolinkCamera(hass, config_entry)
 
-    if camera.ptz_support:
-        platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SET_SENSITIVITY,
+        {
+            vol.Required("sensitivity"): cv.positive_int,
+            vol.Optional("preset"): cv.positive_int,
+        },
+        SERVICE_SET_SENSITIVITY,
+    )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_DAYNIGHT,
+        {
+            vol.Required("mode"): cv.string,
+        },
+        SERVICE_SET_DAYNIGHT,
+    )
+
+    if camera.ptz_support:
         platform.async_register_entity_service(
             SERVICE_PTZ_CONTROL,
             {
@@ -33,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                 vol.Optional("preset"): cv.positive_int,
                 vol.Optional("speed"): cv.positive_int,
             },
-            "ptz_control",
+            SERVICE_PTZ_CONTROL,
         )
 
     async_add_devices([camera])
@@ -67,6 +85,11 @@ class ReolinkCamera(ReolinkEntity, Camera):
             "ZOOMDEC": "ZoomDec",
             "ZOOMINC": "ZoomInc",
         }
+        self._daynight_modes = {
+            "AUTO": "Auto",
+            "COLOR": "Color",
+            "BLACKANDWHITE": "Black&White",
+        }
 
     @property
     def unique_id(self):
@@ -82,6 +105,15 @@ class ReolinkCamera(ReolinkEntity, Camera):
     def ptz_support(self):
         """Return whether the camera has PTZ support."""
         return self._base.api.ptz_support
+
+    @property
+    def state_attributes(self):
+        """Return the camera state attributes."""
+        attrs = {}
+        if self._base.api.ptz_support:
+            attrs["ptz_presets"] = self._base.api.ptz_presets
+
+        return attrs
 
     @property
     def supported_features(self):
@@ -123,3 +155,23 @@ class ReolinkCamera(ReolinkEntity, Camera):
         await self._base.api.set_ptz_command(
             command=self._ptz_commands[command], **kwargs
         )
+
+    async def set_sensitivity(self, sensitivity, **kwargs):
+        """Set the sensitivity to the camera.
+        The camera preset ID's on the GUI are always +1
+        """
+        if "preset" in kwargs:
+            kwargs["preset"] += 1
+        await self._base.api.set_sensitivity(value=sensitivity, **kwargs)
+
+    async def set_daynight(self, mode):
+        """Set the day and night mode to the camera."""
+        await self._base.api.set_daynight(value=self._daynight_modes[mode])
+
+    async def async_enable_motion_detection(self):
+        """Predefined camera service implementation"""
+        self._base.motion_detection_state = True
+
+    async def async_disable_motion_detection(self):
+        """Predefined camera service implementation"""
+        self._base.motion_detection_state = False

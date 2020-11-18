@@ -10,3 +10,4 @@ SESSION_RENEW_THRESHOLD = 300
 CONF_STREAM = "stream"
 CONF_PROTOCOL = "protocol"
 CONF_CHANNEL = "channel"
+CONF_MOTION_OFF_DELAY = "motion_off_delay"

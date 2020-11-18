@@ -1,10 +1,11 @@
 """This component provides support for Reolink motion events."""
 import asyncio
+import datetime
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .const import EVENT_DATA_RECEIVED
+from .const import CONF_MOTION_OFF_DELAY, EVENT_DATA_RECEIVED
 from .entity import ReolinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +28,8 @@ class MotionSensor(ReolinkEntity, BinarySensorEntity):
         ReolinkEntity.__init__(self, hass, config)
         BinarySensorEntity.__init__(self)
 
-        self._state = False
+        self._event_state = False
+        self._last_motion = datetime.datetime.now()
 
     @property
     def unique_id(self):
@@ -42,6 +44,21 @@ class MotionSensor(ReolinkEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the sensor."""
+        if not self._base.motion_detection_state:
+            self._state = False
+            return self._state
+
+        if self._event_state or self._base.motion_off_delay == 0:
+            self._state = self._event_state
+            return self._state
+
+        if (
+            datetime.datetime.now() - self._last_motion
+        ).total_seconds() < self._base.motion_off_delay:
+            self._state = True
+        else:
+            self._state = False
+
         return self._state
 
     @property
@@ -64,5 +81,17 @@ class MotionSensor(ReolinkEntity, BinarySensorEntity):
 
     async def handle_event(self, event):
         """Handle incoming webhook from Reolink for inbound messages and calls."""
-        self._state = event.data["IsMotion"]
+        if not self._base.motion_detection_state:
+            return
+
+        self._event_state = event.data["IsMotion"]
+        if self._event_state:
+            self._last_motion = datetime.datetime.now()
+        else:
+            if self._base.motion_off_delay > 0:
+                # self.async_schedule_update_ha_state()
+
+                # if not self._event_state and self._base.motion_off_delay > 0:
+                await asyncio.sleep(self._base.motion_off_delay)
+
         self.async_schedule_update_ha_state()

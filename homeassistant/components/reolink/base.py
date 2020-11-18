@@ -23,6 +23,9 @@ class ReolinkBase:
         self._sman = None
         self._webhook_url = None
         self._hass = hass
+        self.undo_update_listener = None
+        self.motion_detection_state = True
+        self.motion_off_delay = 60
 
     @property
     def event_id(self):
@@ -98,3 +101,4 @@ class ReolinkBase:
         """Disconnect the APi and unsubscribe."""
         await self.disconnect_api()
         await self.unsubscribe()
+        await self._hass.async_add_executor_job(self.undo_update_listener())

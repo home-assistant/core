@@ -21,11 +21,12 @@
     },
     "options": {
         "step": {
-            "configure_stream": {
+            "init": {
                 "data": {
                     "stream": "Stream",
                     "protocol": "Protocol",
-                    "channel": "Kanaal"
+                    "channel": "Kanaal",
+					"motion_off_delay": "Bewegingssensor uit vertraging (seconden)"
                 }
             }
         }
