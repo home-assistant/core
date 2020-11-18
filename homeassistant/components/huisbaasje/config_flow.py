@@ -5,9 +5,9 @@ from huisbaasje import Huisbaasje, HuisbaasjeConnectionException, HuisbaasjeExce
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,10 +35,11 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("Input for Huisbaasje is valid!")
 
             # Set user id as unique id
-            await self.async_set_unique_id(user_id)
+            existing_config_entry = await self.async_set_unique_id(user_id)
 
             # Abort if entry already exists
-            self._abort_if_unique_id_configured()
+            if existing_config_entry is not None:
+                return self.async_abort(reason="already_configured")
             if await self._entry_exists(user_id):
                 return self.async_abort(reason="already_configured")
 

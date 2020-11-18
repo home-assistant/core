@@ -4,33 +4,19 @@ import logging
 
 import async_timeout
 from huisbaasje import HuisbaasjeException
-from huisbaasje.const import (
-    SOURCE_TYPE_ELECTRICITY,
-    SOURCE_TYPE_ELECTRICITY_IN,
-    SOURCE_TYPE_ELECTRICITY_IN_LOW,
-    SOURCE_TYPE_ELECTRICITY_OUT,
-    SOURCE_TYPE_ELECTRICITY_OUT_LOW,
-    SOURCE_TYPE_GAS,
-)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ID,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DOMAIN,
-    FLOW_CUBIC_METERS_PER_HOUR,
     POLLING_INTERVAL,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
+    SENSORS_INFO,
     SOURCE_TYPES,
 )
 
@@ -61,69 +47,8 @@ async def async_setup_entry(
     await coordinator.async_refresh()
 
     async_add_entities(
-        [
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Electricity Rate",
-                device_class=DEVICE_CLASS_POWER,
-                source_type=SOURCE_TYPE_ELECTRICITY,
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Electricity In Rate",
-                device_class=DEVICE_CLASS_POWER,
-                source_type=SOURCE_TYPE_ELECTRICITY_IN,
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Electricity In Low Rate",
-                device_class=DEVICE_CLASS_POWER,
-                source_type=SOURCE_TYPE_ELECTRICITY_IN_LOW,
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Electricity Out Rate",
-                device_class=DEVICE_CLASS_POWER,
-                source_type=SOURCE_TYPE_ELECTRICITY_OUT,
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Electricity Out Low Rate",
-                device_class=DEVICE_CLASS_POWER,
-                source_type=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Electricity Today",
-                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                source_type=SOURCE_TYPE_ELECTRICITY,
-                sensor_type=SENSOR_TYPE_THIS_DAY,
-                icon="mdi:counter",
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Gas Rate",
-                unit_of_measurement=FLOW_CUBIC_METERS_PER_HOUR,
-                source_type=SOURCE_TYPE_GAS,
-                icon="mdi:fire",
-            ),
-            HuisbaasjeSensor(
-                coordinator,
-                user_id=user_id,
-                name="Gas Today",
-                unit_of_measurement=VOLUME_CUBIC_METERS,
-                source_type=SOURCE_TYPE_GAS,
-                sensor_type=SENSOR_TYPE_THIS_DAY,
-                icon="mdi:counter",
-            ),
-        ]
+        HuisbaasjeSensor(coordinator, user_id=user_id, **sensor_info)
+        for sensor_info in SENSORS_INFO
     )
 
 
@@ -132,8 +57,8 @@ def _get_measurement_rate(current_measurements: dict, source_type: str):
         if current_measurements[source_type]["measurement"]:
             return current_measurements[source_type]["measurement"]["rate"]
     else:
-        _LOGGER.warn(
-            f"Source type '{source_type}' not present in {current_measurements}"
+        _LOGGER.error(
+            f"Source type {source_type} not present in {current_measurements}"
         )
     return None
 
@@ -143,8 +68,8 @@ def _get_this_day_value(current_measurements: dict, source_type: str):
         if current_measurements[source_type]["thisDay"]:
             return current_measurements[source_type]["thisDay"]["value"]
     else:
-        _LOGGER.warn(
-            f"Source type '{source_type}' not present in {current_measurements}"
+        _LOGGER.error(
+            f"Source type {source_type} not present in {current_measurements}"
         )
     return None
 
@@ -185,6 +110,7 @@ class HuisbaasjeSensor(Entity):
         sensor_type: str = SENSOR_TYPE_RATE,
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
+        precision: int = 0,
     ):
         """Initialize the sensor."""
         self._user_id = user_id
@@ -195,6 +121,7 @@ class HuisbaasjeSensor(Entity):
         self._source_type = source_type
         self._sensor_type = sensor_type
         self._icon = icon
+        self._precision = precision
 
     @property
     def unique_id(self) -> str:
@@ -219,7 +146,12 @@ class HuisbaasjeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._coordinator.data[self._source_type][self._sensor_type]
+        if self._coordinator.data[self._source_type][self._sensor_type] is not None:
+            return round(
+                self._coordinator.data[self._source_type][self._sensor_type],
+                self._precision,
+            )
+        return None
 
     @property
     def unit_of_measurement(self) -> str:
