@@ -1,0 +1,15 @@
+{
+  "domain": "microsoft_graph",
+  "name": "Microsoft Graph",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/microsoft_graph",
+  "requirements": [
+    "ha-graphapi==0.0.17"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@jlweston"
+  ]
+}

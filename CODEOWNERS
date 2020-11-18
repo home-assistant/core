@@ -266,6 +266,7 @@ homeassistant/components/met/* @danielhiversen @thimic
 homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/metoffice/* @MrHarcombe
+homeassistant/components/microsoft_graph/* @jlweston
 homeassistant/components/miflora/* @danielhiversen @basnijholt
 homeassistant/components/mikrotik/* @engrbm87
 homeassistant/components/mill/* @danielhiversen
@@ -279,7 +280,6 @@ homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core @emontnemery
 homeassistant/components/msteams/* @peroyvind
-homeassistant/components/msteams_presence/* @jlweston
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
