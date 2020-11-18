@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry):
 
     if data.discovery is None:
         data.discovery = BroadlinkDiscovery(hass)
-        await data.discovery.async_setup()
+        hass.async_create_task(data.discovery.async_setup())
 
     device = BroadlinkDevice(hass, entry)
     return await device.async_setup()
