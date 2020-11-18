@@ -531,12 +531,8 @@ def _get_devices(hass, discovery_type, keys, interface):
             )
             for channel in channels:
                 channel_name = device.CHANNELS[channel].NAME
-                if key not in channel_name:
-                    channel_count = 1
-                else:
-                    channel_count = len(channels)
                 name = _create_ha_id(
-                    name=channel_name, channel=channel, param=param, count=channel_count
+                    name=device.NAME, channel=channel, param=param, count=len(channels)
                 )
                 unique_id = _create_ha_id(
                     name=key, channel=channel, param=param, count=len(channels)
