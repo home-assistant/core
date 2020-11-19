@@ -703,7 +703,7 @@ async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:
 async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None:
     """Test no warning on acceptable version."""
     client = create_mock_client()
-    client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.8")
+    client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.9")
     await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert "Please consider upgrading" not in caplog.text
