@@ -18,12 +18,14 @@ def validate_selector(config: Any) -> Dict:
 
     selector_type = list(config)[0]
 
-    seslector_class = SELECTORS.get(selector_type)
+    selector_class = SELECTORS.get(selector_type)
 
-    if seslector_class is None:
+    if selector_class is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    return cast(Dict, seslector_class.CONFIG_SCHEMA(config[selector_type]))
+    return {
+        selector_type: cast(Dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
+    }
 
 
 class Selector:
