@@ -1,4 +1,5 @@
 """Support for discovering Broadlink devices."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -49,44 +50,51 @@ class BroadlinkDiscovery:
 
     async def async_discover(self):
         """Discover Broadlink devices on all available networks."""
+        hass = self.hass
+        broadcast_addrs = hass.data[DOMAIN].config["broadcast_addrs"]
+        current_entries = hass.config_entries.async_entries(DOMAIN)
+
         try:
-            await self.hass.async_add_executor_job(self.discover)
+            await hass.async_add_executor_job(
+                self.discover, broadcast_addrs, current_entries
+            )
         except OSError:
             pass
 
-    def discover(self):
-        """Discover Broadlink devices on all available networks."""
-        hass = self.hass
-        timeout = self.timeout
-        broadcast_addrs = hass.data[DOMAIN].config["broadcast_addrs"]
-        entries = hass.config_entries.async_entries(DOMAIN)
-        hosts_and_macs = {
+    def discover(self, broadcast_addrs, current_entries):
+        """Discover Broadlink devices on the given networks, ignoring known devices."""
+        known_devices = {
             (get_ip_or_none(entry.data[CONF_HOST]), entry.data[CONF_MAC])
-            for entry in entries
+            for entry in current_entries
         }
-
         for addr in broadcast_addrs:
-            for device in blk.xdiscover(discover_ip_address=addr, timeout=timeout):
+            for device in blk.xdiscover(discover_ip_address=addr, timeout=self.timeout):
                 host, mac_addr = device.host[0], device.mac.hex()
-                if (host, mac_addr) in hosts_and_macs:
+                if (host, mac_addr) in known_devices:
                     continue
 
                 if device.type not in SUPPORTED_TYPES:
                     continue
 
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                        data={
-                            CONF_HOST: device.host[0],
-                            CONF_MAC: device.mac.hex(),
-                            CONF_TYPE: device.devtype,
-                            CONF_NAME: device.name,
-                            CONF_LOCK: device.is_locked,
-                        },
-                    )
-                )
+                self.create_flow(device)
+
+    def create_flow(self, device):
+        """Create a configuration flow for a new discovered device."""
+        hass = self.hass
+        asyncio.run_coroutine_threadsafe(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={
+                    CONF_HOST: device.host[0],
+                    CONF_MAC: device.mac.hex(),
+                    CONF_TYPE: device.devtype,
+                    CONF_NAME: device.name,
+                    CONF_LOCK: device.is_locked,
+                },
+            ),
+            hass.loop,
+        ).result()
 
     @callback
     def update(self):
