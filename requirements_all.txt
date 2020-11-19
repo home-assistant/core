@@ -172,7 +172,7 @@ aiofreepybox==0.0.8
 aioftp==0.12.0
 
 # homeassistant.components.guardian
-aioguardian==1.0.1
+aioguardian==1.0.4
 
 # homeassistant.components.harmony
 aioharmony==0.2.6
@@ -345,7 +345,7 @@ beautifulsoup4==4.9.1
 bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.12
+bimmer_connected==0.7.13
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -741,7 +741,7 @@ hass-nabucasa==0.37.2
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.30
+hatasmota==0.0.31
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
