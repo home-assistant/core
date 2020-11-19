@@ -741,7 +741,7 @@ hass-nabucasa==0.37.2
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.31
+hatasmota==0.0.32
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -1876,7 +1876,7 @@ pyversasense==0.0.6
 pyvesync==1.2.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.56
+pyvizio==0.1.57
 
 # homeassistant.components.velux
 pyvlx==0.2.18
@@ -2286,7 +2286,7 @@ withings-api==2.1.6
 wled==0.4.4
 
 # homeassistant.components.wolflink
-wolf_smartset==0.1.6
+wolf_smartset==0.1.8
 
 # homeassistant.components.xbee
 xbee-helper==0.0.7
