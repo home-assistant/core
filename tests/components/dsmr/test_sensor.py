@@ -14,7 +14,8 @@ from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
     VOLUME_CUBIC_METERS,
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
 )
@@ -87,7 +88,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal("0.243"), "unit": POWER_KILO_WATT}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
         GAS_METER_READING: MBusObject(
@@ -132,10 +133,8 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.power_consumption")
-    assert power_consumption.state == "0.0"
-    assert (
-        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    )
+    assert power_consumption.state == "243.0"
+    assert power_consumption.attributes.get("unit_of_measurement") == POWER_WATT
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get("sensor.power_tariff")
