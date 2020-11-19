@@ -37,7 +37,7 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
 )
-from .system_health import system_health_info as shi
+from .system_health import system_health_info  # NOQA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -247,8 +247,3 @@ def _register_panel(hass, url_path, mode, config, update):
         kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
-
-
-async def system_health_info(hass):
-    """Get info for the info page."""
-    return await shi(hass)
