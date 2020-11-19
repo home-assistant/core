@@ -1,4 +1,4 @@
-"""Xbox friends binary sensors."""
+"""Microsoft Graph sensors."""
 from functools import partial
 from typing import Dict, List
 
@@ -12,7 +12,7 @@ from . import GraphUpdateCoordinator
 from .base_sensor import GraphBaseSensorEntity
 from .const import DOMAIN
 
-SENSOR_ATTRIBUTES = ["availability", "activity"]
+MICROSOFT_TEAMS_ATTRIBUTES = ["availability", "activity"]
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
@@ -21,15 +21,22 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
         "coordinator"
     ]
 
-    update_friends = partial(async_update_friends, coordinator, {}, async_add_entities)
+    update_teams_presence = partial(
+        async_update_teams_presence, coordinator, {}, async_add_entities
+    )
 
-    unsub = coordinator.async_add_listener(update_friends)
+    unsub = coordinator.async_add_listener(update_teams_presence)
     hass.data[DOMAIN][config_entry.entry_id]["sensor_unsub"] = unsub
-    update_friends()
+    update_teams_presence()
 
 
-class GraphSensorEntity(GraphBaseSensorEntity):
+class TeamsPresenceSensorEntity(GraphBaseSensorEntity):
     """Representation of a Microsoft Graph presence state."""
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"ms_teams_{self.attribute}"
 
     @property
     def name(self) -> str:
@@ -37,7 +44,7 @@ class GraphSensorEntity(GraphBaseSensorEntity):
         if not self.data:
             return None
 
-        return " ".join([part.title() for part in self.attribute.split("_")])
+        return f"Microsoft Teams {' '.join([part.title() for part in self.attribute.split('_')])}"
 
     @property
     def state(self):
@@ -49,28 +56,28 @@ class GraphSensorEntity(GraphBaseSensorEntity):
 
 
 @callback
-def async_update_friends(
+def async_update_teams_presence(
     coordinator: GraphUpdateCoordinator,
-    current: Dict[str, List[GraphSensorEntity]],
+    current: Dict[str, List[TeamsPresenceSensorEntity]],
     async_add_entities,
 ) -> None:
-    """Update friends."""
+    """Update teams_presence."""
     new_ids = set(coordinator.data.presence)
     current_ids = set(current)
 
-    # Process new favorites, add them to Home Assistant
+    # Process new sensors, add them to Home Assistant
     new_entities = []
     for uuid in new_ids - current_ids:
         current[uuid] = [
-            GraphSensorEntity(coordinator, uuid, attribute)
-            for attribute in SENSOR_ATTRIBUTES
+            TeamsPresenceSensorEntity(coordinator, uuid, attribute)
+            for attribute in MICROSOFT_TEAMS_ATTRIBUTES
         ]
         new_entities = new_entities + current[uuid]
 
     if new_entities:
         async_add_entities(new_entities)
 
-    # Process deleted favorites, remove them from Home Assistant
+    # Process deleted sensors, remove them from Home Assistant
     for uuid in current_ids - new_ids:
         coordinator.hass.async_create_task(
             async_remove_entities(uuid, coordinator, current)
@@ -80,9 +87,9 @@ def async_update_friends(
 async def async_remove_entities(
     uuid: str,
     coordinator: GraphUpdateCoordinator,
-    current: Dict[str, GraphSensorEntity],
+    current: Dict[str, TeamsPresenceSensorEntity],
 ) -> None:
-    """Remove friend sensors from Home Assistant."""
+    """Remove sensors from Home Assistant."""
     registry = await async_get_entity_registry(coordinator.hass)
     entities = current[uuid]
     for entity in entities:
