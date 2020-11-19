@@ -64,8 +64,7 @@ def save_json(
     try:
         with atomicwrites.atomic_write(filename, overwrite=True) as fp:
             fp.write(json_data)
-
-        os.chmod(filename, 0o600 if private else 0o644)
+            os.chmod(fp, 0o600 if private else 0o644)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
         raise WriteError(error) from error
