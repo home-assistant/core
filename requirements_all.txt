@@ -684,7 +684,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.14
+google-nest-sdm==0.1.15
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -738,7 +738,7 @@ hass-nabucasa==0.38.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.31
+hatasmota==0.0.32
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -1070,7 +1070,7 @@ oru==0.1.11
 orvibo==1.1.1
 
 # homeassistant.components.ovo_energy
-ovoenergy==1.1.7
+ovoenergy==1.1.11
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1873,7 +1873,7 @@ pyversasense==0.0.6
 pyvesync==1.2.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.56
+pyvizio==0.1.57
 
 # homeassistant.components.velux
 pyvlx==0.2.18
@@ -2206,6 +2206,9 @@ twentemilieu==0.3.0
 # homeassistant.components.twilio
 twilio==6.32.0
 
+# homeassistant.components.twinkly
+twinkly-client==0.0.2
+
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
 
@@ -2283,7 +2286,7 @@ withings-api==2.1.6
 wled==0.4.4
 
 # homeassistant.components.wolflink
-wolf_smartset==0.1.6
+wolf_smartset==0.1.8
 
 # homeassistant.components.xbee
 xbee-helper==0.0.7
