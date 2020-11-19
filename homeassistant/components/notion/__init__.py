@@ -160,6 +160,9 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._state = None
         self._system_id = system_id
+        self._unique_id = (
+            f'{sensor_id}_{self.coordinator.data["tasks"][task_id]["task_type"]}'
+        )
         self.task_id = task_id
 
     @property
@@ -204,8 +207,7 @@ class NotionEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, unchanging string that represents this entity."""
-        task = self.coordinator.data["tasks"][self.task_id]
-        return f'{self._sensor_id}_{task["task_type"]}'
+        return self._unique_id
 
     async def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
