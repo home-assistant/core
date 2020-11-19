@@ -43,8 +43,6 @@ async def test_connection_state_changes(sleep, hc_init, hass):
     data._disconnected()
     await hass.async_block_till_done()
 
-    # TODO delay for remote
-
     assert hass.states.is_state(ENTITY_REMOTE, STATE_UNAVAILABLE)
     assert hass.states.is_state(ENTITY_WATCH_TV, STATE_UNAVAILABLE)
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_UNAVAILABLE)
