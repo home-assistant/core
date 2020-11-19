@@ -93,6 +93,17 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
         assert_state(hass, entity_id, "9.9", POWER_WATT)
 
 
+async def async_test_powerconfiguration(hass, cluster, entity_id):
+    """Test powerconfiguration/battery sensor."""
+    await send_attributes_report(hass, cluster, {33: 98})
+    assert_state(hass, entity_id, "49", "%")
+    assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.9
+    assert hass.states.get(entity_id).attributes["battery_quantity"] == 3
+    assert hass.states.get(entity_id).attributes["battery_size"] == "AAA"
+    await send_attributes_report(hass, cluster, {32: 20})
+    assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
+
+
 @pytest.mark.parametrize(
     "cluster_id, test_func, report_count, read_plug",
     (
@@ -125,6 +136,16 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
             async_test_electrical_measurement,
             1,
             None,
+        ),
+        (
+            general.PowerConfiguration.cluster_id,
+            async_test_powerconfiguration,
+            2,
+            {
+                "battery_size": 4,  # AAA
+                "battery_voltage": 29,
+                "battery_quantity": 3,
+            },
         ),
     ),
 )
