@@ -297,17 +297,20 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return f"{self.wrapper.mac}-{self.description.path}"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> dict:
         """Return the state attributes."""
 
         if self._attributes is None:
             return None
 
-        _description = self._attributes.get("description")
-        _attribute_value = get_rest_value_from_path(
-            self.wrapper.device.status,
-            self.description.device_class,
-            self._attributes.get("path"),
-        )
+        attributes = dict()
+        for attrib in self._attributes:
+            description = attrib.get("description")
+            attribute_value = get_rest_value_from_path(
+                self.wrapper.device.status,
+                self.description.device_class,
+                attrib.get("path"),
+            )
+            attributes[description] = attribute_value
 
-        return {_description: _attribute_value}
+        return attributes
