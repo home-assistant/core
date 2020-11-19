@@ -2,15 +2,12 @@
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_EXCLUDE,
-    CONF_SENSORS,
-)
+from homeassistant.const import CONF_ENTITY_ID, CONF_EXCLUDE, CONF_SENSORS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DATA_CONFIG, IZONE
-from .discovery import async_start_discovery_service, async_stop_discovery_service
+from .discovery import (async_start_discovery_service,
+                        async_stop_discovery_service)
 
 EXT_SENSOR_SCHEMA = vol.Schema(
     {
