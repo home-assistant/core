@@ -1,13 +1,13 @@
 """The Microsoft Graph integration."""
 import asyncio
 from dataclasses import dataclass
-from typing import Dict, Optional
 from datetime import timedelta
 import logging
+from typing import Dict
 
-import voluptuous as vol
 from hagraph.api.client import GraphApiClient
 from hagraph.api.provider.presence.models import PresenceResponse
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -18,11 +18,7 @@ from homeassistant.helpers import (
     config_validation as cv,
 )
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
