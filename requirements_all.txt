@@ -484,7 +484,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.5
+denonavr==0.9.6
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -1876,7 +1876,7 @@ pyversasense==0.0.6
 pyvesync==1.2.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.56
+pyvizio==0.1.57
 
 # homeassistant.components.velux
 pyvlx==0.2.18
@@ -2359,7 +2359,7 @@ zigpy-zigate==0.7.2
 zigpy-znp==0.2.2
 
 # homeassistant.components.zha
-zigpy==0.27.0
+zigpy==0.27.1
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
