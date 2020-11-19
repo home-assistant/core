@@ -123,6 +123,7 @@ FLOWS = [
     "kodi",
     "konnected",
     "kulersky",
+    "kostal_plenticore",
     "life360",
     "lifx",
     "litejet",
