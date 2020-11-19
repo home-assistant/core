@@ -24,10 +24,16 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 CONF_UUID = "uuid"
+CONF_FROM = "from"
+CONF_TO = "to"
+CONF_TLS = "tls"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Volkszaehler"
 DEFAULT_PORT = 80
+DEFAULT_TLS = False
+DEFAULT_FROM = ""
+DEFAULT_TO = ""
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -45,12 +51,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_FROM, default=DEFAULT_FROM): cv.string,
+        vol.Optional(CONF_TO, default=DEFAULT_TO): cv.string,
+        vol.Optional(CONF_TLS, default=DEFAULT_TLS): cv.boolean,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
     }
 )
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Volkszaehler sensors."""
@@ -59,11 +67,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config[CONF_NAME]
     port = config[CONF_PORT]
     uuid = config[CONF_UUID]
+    param_from = config[CONF_FROM]
+    param_to = config[CONF_TO]
+    tls = config[CONF_TLS]
     conditions = config[CONF_MONITORED_CONDITIONS]
 
     session = async_get_clientsession(hass)
     vz_api = VolkszaehlerData(
-        Volkszaehler(hass.loop, session, uuid, host=host, port=port)
+        Volkszaehler(hass.loop, session, uuid, host=host, port=port,tls=tls, param_from=param_from,param_to=param_to)
     )
 
     await vz_api.async_update()
