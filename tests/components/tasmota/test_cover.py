@@ -4,7 +4,8 @@ import json
 
 from hatasmota.utils import (
     get_topic_stat_result,
-    get_topic_tele_state,
+    get_topic_stat_status,
+    get_topic_tele_sensor,
     get_topic_tele_will,
 )
 
@@ -63,41 +64,95 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     )
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
+    # Periodic updates
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":54,"Direction":-1}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":54,"Direction":-1}}',
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closing"
     assert state.attributes["current_position"] == 54
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":100,"Direction":1}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":100,"Direction":1}}',
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "opening"
     assert state.attributes["current_position"] == 100
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":0,"Direction":0}}'
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"Shutter1":{"Position":0,"Direction":0}}'
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closed"
     assert state.attributes["current_position"] == 0
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":1,"Direction":0}}'
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"Shutter1":{"Position":1,"Direction":0}}'
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
     assert state.attributes["current_position"] == 1
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":100,"Direction":0}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":100,"Direction":0}}',
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
     assert state.attributes["current_position"] == 100
 
+    # State poll response
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":54,"Direction":-1}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "closing"
+    assert state.attributes["current_position"] == 54
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":1}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "opening"
+    assert state.attributes["current_position"] == 100
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":0,"Direction":0}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "closed"
+    assert state.attributes["current_position"] == 0
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":1,"Direction":0}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "open"
+    assert state.attributes["current_position"] == 1
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":0}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "open"
+    assert state.attributes["current_position"] == 100
+
+    # Command response
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/RESULT",
@@ -171,41 +226,95 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     )
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
+    # Periodic updates
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":54,"Direction":-1}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":54,"Direction":-1}}',
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "opening"
     assert state.attributes["current_position"] == 46
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":100,"Direction":1}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":100,"Direction":1}}',
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closing"
     assert state.attributes["current_position"] == 0
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":0,"Direction":0}}'
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"Shutter1":{"Position":0,"Direction":0}}'
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
     assert state.attributes["current_position"] == 100
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":99,"Direction":0}}'
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"Shutter1":{"Position":99,"Direction":0}}'
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
     assert state.attributes["current_position"] == 1
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/STATE", '{"Shutter1":{"Position":100,"Direction":0}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":100,"Direction":0}}',
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closed"
     assert state.attributes["current_position"] == 0
 
+    # State poll response
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":54,"Direction":-1}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "opening"
+    assert state.attributes["current_position"] == 46
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":1}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "closing"
+    assert state.attributes["current_position"] == 0
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":0,"Direction":0}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "open"
+    assert state.attributes["current_position"] == 100
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":99,"Direction":0}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "open"
+    assert state.attributes["current_position"] == 1
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":0}}}',
+    )
+    state = hass.states.get("cover.tasmota_cover_1")
+    assert state.state == "closed"
+    assert state.attributes["current_position"] == 0
+
+    # Command response
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/RESULT",
@@ -430,9 +539,9 @@ async def test_availability_poll_state(
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 3
     config["rl"][1] = 3
-    poll_topic = "tasmota_49A3BC/cmnd/STATE"
+    poll_topic = "tasmota_49A3BC/cmnd/STATUS"
     await help_test_availability_poll_state(
-        hass, mqtt_client_mock, mqtt_mock, cover.DOMAIN, config, poll_topic, ""
+        hass, mqtt_client_mock, mqtt_mock, cover.DOMAIN, config, poll_topic, "10"
     )
 
 
@@ -500,7 +609,8 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     config["rl"][1] = 3
     topics = [
         get_topic_stat_result(config),
-        get_topic_tele_state(config),
+        get_topic_tele_sensor(config),
+        get_topic_stat_status(config, 10),
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(

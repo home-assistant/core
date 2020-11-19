@@ -49,10 +49,10 @@ class TasmotaCover(
         )
 
     @callback
-    def state_updated(self, state, direction, position):
+    def state_updated(self, state, **kwargs):
         """Handle state updates."""
-        self._direction = direction
-        self._position = position
+        self._direction = kwargs["direction"]
+        self._position = kwargs["position"]
         self.async_write_ha_state()
 
     @property
