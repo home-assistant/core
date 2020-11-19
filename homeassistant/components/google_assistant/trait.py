@@ -1629,7 +1629,9 @@ class OpenCloseTrait(_Trait):
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
             else:
-                raise SmartHomeError(ERR_NOT_SUPPORTED, "No support for open close")
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED, "No support for partial open close"
+                )
 
             if (
                 should_verify
