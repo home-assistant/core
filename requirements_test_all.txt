@@ -103,7 +103,7 @@ aioflo==0.4.1
 aiofreepybox==0.0.8
 
 # homeassistant.components.guardian
-aioguardian==1.0.1
+aioguardian==1.0.4
 
 # homeassistant.components.harmony
 aioharmony==0.2.6
@@ -376,7 +376,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.2
 
 # homeassistant.components.tasmota
-hatasmota==0.0.30
+hatasmota==0.0.31
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
