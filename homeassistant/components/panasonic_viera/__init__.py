@@ -255,9 +255,13 @@ class Remote:
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
             self.available = False
-        except (TimeoutError, URLError, SOAPError, OSError):
+        except (SOAPError):
             self.state = STATE_OFF
             self.available = True
+            await self.async_create_remote_control()
+        except (TimeoutError, URLError, OSError):
+            self.state = STATE_OFF
+            self.available = self._on_action is not None
             await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
