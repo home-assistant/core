@@ -64,7 +64,10 @@ REST_SENSORS = {
         icon="mdi:update",
         default_enabled=False,
         path="update/has_update",
-        attributes={"description": "available version:", "path": "update/new_version"},
+        attributes=[
+            {"description": "latest_stable_version", "path": "update/new_version"},
+            {"description": "installed_version", "path": "update/old_version"},
+        ],
     ),
 }
 
