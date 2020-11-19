@@ -1,5 +1,4 @@
 """Support for discovering Broadlink devices."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -81,7 +80,7 @@ class BroadlinkDiscovery:
     def create_flow(self, device):
         """Create a configuration flow for a new discovered device."""
         hass = self.hass
-        asyncio.run_coroutine_threadsafe(
+        hass.add_job(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -92,9 +91,8 @@ class BroadlinkDiscovery:
                     CONF_NAME: device.name,
                     CONF_LOCK: device.is_locked,
                 },
-            ),
-            hass.loop,
-        ).result()
+            )
+        )
 
     @callback
     def update(self):
