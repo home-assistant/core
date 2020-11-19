@@ -908,7 +908,7 @@ pyvera==0.3.11
 pyvesync==1.2.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.56
+pyvizio==0.1.57
 
 # homeassistant.components.volumio
 pyvolumio==0.1.3
