@@ -6,6 +6,7 @@ import logging
 import threading
 
 from google_nest_sdm.event import EventCallback, EventMessage
+from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
 from nest.nest import APIError, AuthorizationError
@@ -25,6 +26,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -208,7 +210,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
     subscriber.set_update_callback(SignalUpdateCallback(hass))
-    asyncio.create_task(subscriber.start_async())
+
+    try:
+        await subscriber.start_async()
+    except GoogleNestException as err:
+        _LOGGER.error("Subscriber error: %s", err)
+        subscriber.stop_async()
+        raise ConfigEntryNotReady from err
+
+    try:
+        await subscriber.async_get_device_manager()
+    except GoogleNestException as err:
+        _LOGGER.error("Device Manager error: %s", err)
+        subscriber.stop_async()
+        raise ConfigEntryNotReady from err
+
     hass.data[DOMAIN][entry.entry_id] = subscriber
 
     for component in PLATFORMS:
