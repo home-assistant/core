@@ -20,6 +20,7 @@ MOCK_CONF = {
 MOCK_DATA = {
     "auth_implementation": DOMAIN,
     CONF_URL: MOCK_CONF[CONF_URL],
+    CONF_USERNAME: MOCK_CONF[CONF_USERNAME],
     "token": {
         "access_token": "test-access-token",
         "token_type": "Bearer",
@@ -99,6 +100,7 @@ async def test_step_user(hass):
         assert result["data"] == {
             "auth_implementation": "fireservicerota",
             CONF_URL: "www.brandweerrooster.nl",
+            CONF_USERNAME: "my@email.address",
             "token": {
                 "access_token": "test-access-token",
                 "token_type": "Bearer",
