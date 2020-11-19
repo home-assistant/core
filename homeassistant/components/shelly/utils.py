@@ -98,7 +98,7 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
 
-    # Shelly L has two button settings in the first channel
+    # Shelly 1L has two button settings in the first channel
     if settings["device"]["type"] == "SHSW-L":
         channel = int(block.channel or 0) + 1
         button_type = button[0].get("btn" + str(channel) + "_type")
