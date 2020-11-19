@@ -196,12 +196,13 @@ def patch_discovery(mock_discovery):
     """Patch device discovery."""
     broadcast_addrs = list(mock_discovery)
     devices = list(mock_discovery.values())
+    return_values = [iter(dev_list) for dev_list in devices]
 
     with patch(
         "homeassistant.components.broadlink.get_broadcast_addrs",
         return_value=broadcast_addrs,
     ), patch(
-        "homeassistant.components.broadlink.discovery.blk.discover",
-        side_effect=devices,
+        "homeassistant.components.broadlink.discovery.blk.xdiscover",
+        side_effect=return_values,
     ) as mock_discovery:
         yield mock_discovery
