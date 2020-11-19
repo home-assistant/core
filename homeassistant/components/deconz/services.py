@@ -139,50 +139,14 @@ async def async_refresh_devices_service(hass, data):
     if CONF_BRIDGE_ID in data:
         gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
 
-    groups = set(gateway.api.groups.keys())
-    lights = set(gateway.api.lights.keys())
-    scenes = set(gateway.api.scenes.keys())
-    sensors = set(gateway.api.sensors.keys())
-
     gateway.ignore_state_updates = True
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    gateway.async_add_device_callback(
-        NEW_GROUP,
-        [
-            group
-            for group_id, group in gateway.api.groups.items()
-            if group_id not in groups
-        ],
-    )
-
-    gateway.async_add_device_callback(
-        NEW_LIGHT,
-        [
-            light
-            for light_id, light in gateway.api.lights.items()
-            if light_id not in lights
-        ],
-    )
-
-    gateway.async_add_device_callback(
-        NEW_SCENE,
-        [
-            scene
-            for scene_id, scene in gateway.api.scenes.items()
-            if scene_id not in scenes
-        ],
-    )
-
-    gateway.async_add_device_callback(
-        NEW_SENSOR,
-        [
-            sensor
-            for sensor_id, sensor in gateway.api.sensors.items()
-            if sensor_id not in sensors
-        ],
-    )
+    gateway.async_add_device_callback(NEW_GROUP, list(gateway.api.groups.values()))
+    gateway.async_add_device_callback(NEW_LIGHT, list(gateway.api.lights.values()))
+    gateway.async_add_device_callback(NEW_SCENE, list(gateway.api.scenes.values()))
+    gateway.async_add_device_callback(NEW_SENSOR, list(gateway.api.sensors.values()))
 
 
 async def async_remove_orphaned_entries_service(hass, data):

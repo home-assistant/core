@@ -2,6 +2,6 @@
   "domain": "hikvision",
   "name": "Hikvision",
   "documentation": "https://www.home-assistant.io/integrations/hikvision",
-  "requirements": ["pyhik==0.2.7"],
+  "requirements": ["pyhik==0.2.8"],
   "codeowners": ["@mezz64"]
 }

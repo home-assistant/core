@@ -75,6 +75,8 @@ def mock_smile_adam():
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
 
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
@@ -117,6 +119,8 @@ def mock_smile_anna():
         smile_mock.return_value.smile_version = "4.0.15"
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
+
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
@@ -161,6 +165,8 @@ def mock_smile_p1():
         smile_mock.return_value.smile_type = "power"
         smile_mock.return_value.smile_hostname = "smile98765"
 
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
@@ -168,6 +174,39 @@ def mock_smile_p1():
 
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
             return_value=None
+        )
+
+        smile_mock.return_value.get_all_devices.return_value = _read_json(
+            chosen_env, "get_all_devices"
+        )
+        smile_mock.return_value.get_device_data.side_effect = partial(
+            _get_device_data, chosen_env
+        )
+
+        yield smile_mock.return_value
+
+
+@pytest.fixture(name="mock_stretch")
+def mock_stretch():
+    """Create a Mock Stretch environment for testing exceptions."""
+    chosen_env = "stretch_v31"
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
+        smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
+        smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
+        smile_mock.XMLDataMissingError = Smile.XMLDataMissingError
+
+        smile_mock.return_value.gateway_id = "259882df3c05415b99c2d962534ce820"
+        smile_mock.return_value.heater_id = None
+        smile_mock.return_value.smile_version = "3.1.11"
+        smile_mock.return_value.smile_type = "stretch"
+        smile_mock.return_value.smile_hostname = "stretch98765"
+
+        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
+        smile_mock.return_value.full_update_device.side_effect = AsyncMock(
+            return_value=True
+        )
+        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
+            return_value=True
         )
 
         smile_mock.return_value.get_all_devices.return_value = _read_json(

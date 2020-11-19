@@ -1,5 +1,5 @@
 """Test fixtures for Tasmota component."""
-
+from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
 from homeassistant import config_entries
@@ -16,6 +16,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture
@@ -43,6 +44,20 @@ def disable_debounce():
         yield
 
 
+@pytest.fixture
+def status_sensor_disabled():
+    """Fixture to allow overriding MQTT config."""
+    return True
+
+
+@pytest.fixture(autouse=True)
+def disable_status_sensor(status_sensor_disabled):
+    """Disable Tasmota status sensor."""
+    wraps = None if status_sensor_disabled else get_status_sensor_entities
+    with patch("hatasmota.discovery.get_status_sensor_entities", wraps=wraps):
+        yield
+
+
 async def setup_tasmota_helper(hass):
     """Set up Tasmota."""
     hass.config.components.add("tasmota")
@@ -57,6 +72,7 @@ async def setup_tasmota_helper(hass):
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert "tasmota" in hass.config.components
 

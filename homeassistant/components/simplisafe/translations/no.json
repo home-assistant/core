@@ -6,7 +6,7 @@
         },
         "error": {
             "identifier_exists": "Konto er allerede registrert",
-            "invalid_credentials": "Ugyldig legitimasjon",
+            "invalid_auth": "Ugyldig godkjenning",
             "still_awaiting_mfa": "Forventer fortsatt MFA-e-postklikk",
             "unknown": "Uventet feil"
         },

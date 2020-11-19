@@ -485,10 +485,10 @@ class MiroboVacuum(StateVacuumEntity):
             self.dnd_state = self._vacuum.dnd_status()
 
             self._available = True
-        except OSError as exc:
-            _LOGGER.error("Got OSError while fetching the state: %s", exc)
-        except DeviceException as exc:
-            _LOGGER.warning("Got exception while fetching the state: %s", exc)
+        except (OSError, DeviceException) as exc:
+            if self._available:
+                self._available = False
+                _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
         # Fetch timers separately, see #38285
         try:

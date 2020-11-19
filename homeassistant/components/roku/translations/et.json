@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "",
         "step": {
             "ssdp_confirm": {
                 "description": "Kas soovid seadistada {name}?",
@@ -15,7 +16,8 @@
             "user": {
                 "data": {
                     "host": ""
-                }
+                },
+                "description": "Sisesta oma Roku teave."
             }
         }
     }

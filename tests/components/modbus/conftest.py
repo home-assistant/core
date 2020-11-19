@@ -14,17 +14,18 @@ from homeassistant.const import CONF_PLATFORM, CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockModule, async_fire_time_changed, mock_integration
+from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture()
 def mock_hub(hass):
     """Mock hub."""
-    mock_integration(hass, MockModule(DOMAIN))
-    hub = mock.MagicMock()
-    hub.name = "hub"
-    hass.data[DOMAIN] = {DEFAULT_HUB: hub}
-    return hub
+    with patch("homeassistant.components.modbus.setup", return_value=True):
+        hub = mock.MagicMock()
+        hub.name = "hub"
+        hass.data[DOMAIN] = {DEFAULT_HUB: hub}
+        yield hub
 
 
 class ReadResult:
@@ -63,6 +64,8 @@ async def setup_base_test(
 
     entity_id = f"{entity_domain}.{sensor_name}"
     device = hass.states.get(entity_id)
+    if device is None:
+        pytest.fail("CONFIG failed, see output")
     return entity_id, now, device
 
 

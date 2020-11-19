@@ -41,6 +41,7 @@
             "invalid_event_code": "Neplatn\u00fd k\u00f3d ud\u00e1losti",
             "invalid_input_2262_off": "Neplatn\u00fd vstup pro vyp\u00ednac\u00ed p\u0159\u00edkaz",
             "invalid_input_2262_on": "Neplatn\u00fd vstup pro zap\u00ednac\u00ed p\u0159\u00edkaz",
+            "invalid_input_off_delay": "Neplatn\u00e1 hodnota pro zpo\u017ed\u011bn\u00ed vypnut\u00ed",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
@@ -49,17 +50,21 @@
                     "automatic_add": "Povolit automatick\u00e9 p\u0159id\u00e1n\u00ed",
                     "debug": "Povolit lad\u011bn\u00ed",
                     "device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete nastavit",
+                    "event_code": "Zadejte k\u00f3d ud\u00e1losti, kterou chcete p\u0159idat",
                     "remove_device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete odstranit"
                 },
                 "title": "Mo\u017enosti Rfxtrx"
             },
             "set_device_options": {
                 "data": {
-                    "replace_device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete vym\u011bnit"
+                    "fire_event": "Povolit ud\u00e1lost za\u0159\u00edzen\u00ed",
+                    "off_delay": "Zpo\u017ed\u011bn\u00ed vypnut\u00ed",
+                    "off_delay_enabled": "Povolit zpo\u017ed\u011bn\u00ed vypnut\u00ed",
+                    "replace_device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete vym\u011bnit",
+                    "signal_repetitions": "Po\u010det opakov\u00e1n\u00ed sign\u00e1lu"
                 },
                 "title": "Nastaven\u00ed mo\u017enost\u00ed za\u0159\u00edzen\u00ed"
             }
         }
-    },
-    "title": "Rfxtrx"
+    }
 }

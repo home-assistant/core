@@ -35,13 +35,6 @@
                 "description": "\u67e5\u627e\u6240\u6709\u652f\u6301\u539f\u751f H.264 \u63a8\u6d41\u7684\u6444\u50cf\u673a\u3002\u5982\u679c\u6444\u50cf\u673a\u8f93\u51fa\u7684\u4e0d\u662f H.264 \u6d41\uff0c\u7cfb\u7edf\u4f1a\u5c06\u89c6\u9891\u8f6c\u7801\u4e3a H.264 \u4ee5\u4f9b HomeKit \u4f7f\u7528\u3002\u8f6c\u7801\u9700\u8981\u9ad8\u6027\u80fd\u7684 CPU\uff0c\u56e0\u6b64\u5728\u5f00\u53d1\u677f\u8ba1\u7b97\u673a\u4e0a\u5f88\u96be\u5b8c\u6210\u3002",
                 "title": "\u8bf7\u9009\u62e9\u6444\u50cf\u673a\u7684\u89c6\u9891\u7f16\u7801\u3002"
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "\u8981\u6392\u9664\u7684\u5b9e\u4f53"
-                },
-                "description": "\u9009\u62e9\u4e0d\u9700\u8981\u6865\u63a5\u7684\u5b9e\u4f53\u3002",
-                "title": "\u5bf9\u9009\u62e9\u7684\u57df\u6392\u9664\u5b9e\u4f53"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "\u5b9e\u4f53",
@@ -63,6 +56,5 @@
                 "title": "\u8c03\u6574 HomeKit \u9009\u9879"
             }
         }
-    },
-    "title": "HomeKit \u6865\u63a5\u5668"
+    }
 }

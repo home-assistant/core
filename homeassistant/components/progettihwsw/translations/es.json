@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "unknown": "Error inesperado",
-            "wrong_info_relay_modes": "La selecci\u00f3n del modo de rel\u00e9 debe ser monoestable o biestable."
+            "unknown": "Error inesperado"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "Configurar tablero"
             }
         }
-    },
-    "title": "Automatizaci\u00f3n ProgettiHWSW"
+    }
 }

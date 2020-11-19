@@ -412,16 +412,21 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._available = True
             return
 
+        if isinstance(result, bool):
+            self._state = result
+            return
+
         state = str(result).lower()
         if state in _VALID_STATES:
             self._state = state in ("true", STATE_ON)
-        else:
-            _LOGGER.error(
-                "Received invalid light is_on state: %s. Expected: %s",
-                state,
-                ", ".join(_VALID_STATES),
-            )
-            self._state = None
+            return
+
+        _LOGGER.error(
+            "Received invalid light is_on state: %s. Expected: %s",
+            state,
+            ", ".join(_VALID_STATES),
+        )
+        self._state = None
 
     @callback
     def _update_temperature(self, render):

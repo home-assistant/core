@@ -65,7 +65,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.info("Awaiting confirmation of MFA email click")
             return await self.async_step_mfa()
         except InvalidCredentialsError:
-            errors = {"base": "invalid_credentials"}
+            errors = {"base": "invalid_auth"}
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
             errors = {"base": "unknown"}

@@ -7,7 +7,6 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "auth_error": "Godkjenningsfeil, vennligst pr\u00f8v igjen",
             "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "all_configured": "Geen nieuwe Pulse hubs ontdekt."
-        },
         "step": {
             "user": {
                 "data": {
@@ -11,6 +8,5 @@
                 "title": "Kies een hub om toe te voegen"
             }
         }
-    },
-    "title": "Rollease Acmeda Automate"
+    }
 }

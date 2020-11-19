@@ -24,6 +24,7 @@ from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
 from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture(name="mock_connection")
@@ -55,7 +56,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
     config_entry = MockConfigEntry(
         version=1,
         domain=HMIPC_DOMAIN,
-        title=HAPID,
+        title="Home Test SN",
         unique_id=HAPID,
         data=entry_data,
         source=SOURCE_IMPORT,

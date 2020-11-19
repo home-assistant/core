@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import voluptuous as vol
 from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
+from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
 from xbox.webapi.api.provider.people.models import (
     PeopleResponse,
@@ -220,14 +220,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
                     if catalog_result and catalog_result.products:
                         app_details = catalog_result.products[0]
             else:
-                if not current_state or not current_state.status.focus_app_aumid:
-                    id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
-                    catalog_result = (
-                        await self.client.catalog.get_product_from_alternate_id(
-                            HOME_APP_IDS[id_type], id_type
-                        )
-                    )
-                    app_details = catalog_result.products[0]
+                app_details = None
 
             new_console_data[console.id] = ConsoleData(
                 status=status, app_details=app_details
