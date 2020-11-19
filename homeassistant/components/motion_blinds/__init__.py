@@ -1,5 +1,5 @@
 """The motion_blinds component."""
-from asyncio import TimeoutError
+from asyncio import TimeoutError as AsyncioTimeoutError
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -43,8 +43,8 @@ async def async_setup_entry(
             await hass.async_add_executor_job(motion_gateway.Update)
             for blind in motion_gateway.device_list.values():
                 await hass.async_add_executor_job(blind.Update)
-        except timeout:
-            raise TimeoutError
+        except timeout as socket_timeout:
+            raise AsyncioTimeoutError from socket_timeout
 
     coordinator = DataUpdateCoordinator(
         hass,
