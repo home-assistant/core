@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry, entity, update_coordinator
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
-from .utils import get_entity_name, get_rest_value_from_path
+from .utils import async_remove_shelly_entity, get_entity_name, get_rest_value_from_path
 
 
 async def async_setup_entry_attribute_entities(
@@ -31,7 +31,17 @@ async def async_setup_entry_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            blocks.append((block, sensor_id, description))
+            # Filter and remove entities that according to settings should not create an entity
+            if description.removal_condition and description.removal_condition(
+                wrapper.device.settings, block
+            ):
+                domain = sensor_class.__module__.split(".")[-1]
+                unique_id = sensor_class(
+                    wrapper, block, sensor_id, description
+                ).unique_id
+                await async_remove_shelly_entity(hass, domain, unique_id)
+            else:
+                blocks.append((block, sensor_id, description))
 
     if not blocks:
         return
@@ -77,6 +87,8 @@ class BlockAttributeDescription:
     device_class: Optional[str] = None
     default_enabled: bool = True
     available: Optional[Callable[[aioshelly.Block], bool]] = None
+    # Callable (settings, block), return true if entity should be removed
+    removal_condition: Optional[Callable[[dict, aioshelly.Block], bool]] = None
     device_state_attributes: Optional[
         Callable[[aioshelly.Block], Optional[dict]]
     ] = None
