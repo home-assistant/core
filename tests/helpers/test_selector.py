@@ -14,6 +14,12 @@ def test_invalid_base_schema(schema):
         selector.validate_selector(schema)
 
 
+def test_validate_selector():
+    """Test return is the same as input."""
+    schema = {"device": {"manufacturer": "mock-manuf", "model": "mock-model"}}
+    assert schema == selector.validate_selector(schema)
+
+
 @pytest.mark.parametrize(
     "schema",
     (
@@ -40,5 +46,5 @@ def test_device_selector_schema(schema):
     ),
 )
 def test_entity_selector_schema(schema):
-    """Test device selector."""
+    """Test entity selector."""
     selector.validate_selector({"entity": schema})
