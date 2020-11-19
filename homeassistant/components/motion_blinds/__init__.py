@@ -1,6 +1,8 @@
 """The motion_blinds component."""
+from asyncio import TimeoutError
 from datetime import timedelta
 import logging
+from socket import timeout
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_KEY, CONF_HOST
@@ -37,15 +39,18 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
-        await hass.async_add_executor_job(motion_gateway.Update)
-        for blind in motion_gateway.device_list.values():
-            await hass.async_add_executor_job(blind.Update)
+        try:
+            await hass.async_add_executor_job(motion_gateway.Update)
+            for blind in motion_gateway.device_list.values():
+                await hass.async_add_executor_job(blind.Update)
+        except timeout:
+            raise TimeoutError
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
-        name="cover",
+        name=entry.title,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=10),
