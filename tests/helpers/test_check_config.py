@@ -133,3 +133,36 @@ async def test_bootstrap_error(hass, loop):
         # Only 1 error expected
         res.errors.pop(0)
         assert not res.errors
+
+
+async def test_automation_config_platform(hass):
+    """Test automation async config."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG
+        + """
+automation:
+  use_blueprint:
+    path: test_event_service.yaml
+    input:
+      trigger_event: blueprint_event
+      service_to_call: test.automation
+""",
+        hass.config.path(
+            "blueprints/automation/test_event_service.yaml"
+        ): """
+blueprint:
+  name: "Call service based on event"
+  domain: automation
+  input:
+    trigger_event:
+    service_to_call:
+trigger:
+  platform: event
+  event_type: !placeholder trigger_event
+action:
+  service: !placeholder service_to_call
+""",
+    }
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        assert len(res["automation"]) == 1
