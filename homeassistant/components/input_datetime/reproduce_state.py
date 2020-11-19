@@ -8,15 +8,7 @@ from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from . import (
-    ATTR_DATE,
-    ATTR_DATETIME,
-    ATTR_TIME,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
-    DOMAIN,
-    SERVICE_SET_DATETIME,
-)
+from . import ATTR_DATE, ATTR_DATETIME, ATTR_TIME, CONF_HAS_DATE, CONF_HAS_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +71,6 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service = SERVICE_SET_DATETIME
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     has_time = cur_state.attributes.get(CONF_HAS_TIME)
@@ -96,7 +87,7 @@ async def _async_reproduce_state(
         return
 
     await hass.services.async_call(
-        DOMAIN, service, service_data, context=context, blocking=True
+        DOMAIN, "set_datetime", service_data, context=context, blocking=True
     )
 
 
