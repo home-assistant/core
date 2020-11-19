@@ -29,6 +29,7 @@ from .const import (
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
+    CONF_ZONE,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
@@ -61,6 +62,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
             cv.time_period, cv.positive_timedelta
         ),
         vol.Optional(CONF_NEW_DEVICE_DEFAULTS, default={}): NEW_DEVICE_DEFAULTS_SCHEMA,
+        vol.Optional(CONF_ZONE): cv.string,
     }
 )
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)

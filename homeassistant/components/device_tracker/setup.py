@@ -16,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_SCAN_INTERVAL,
+    CONF_ZONE,
     DOMAIN,
     LOGGER,
     PLATFORM_TYPE_LEGACY,
@@ -140,6 +141,7 @@ def async_setup_scanner_platform(
     This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    location_name = config.get(CONF_ZONE, None)
     update_lock = asyncio.Lock()
     scanner.hass = hass
 
@@ -176,13 +178,16 @@ def async_setup_scanner_platform(
                 "mac": mac,
                 "host_name": host_name,
                 "source_type": SOURCE_TYPE_ROUTER,
+                "location_name": location_name,
                 "attributes": {
                     "scanner": scanner.__class__.__name__,
                     **extra_attributes,
                 },
             }
 
-            zone_home = hass.states.get(hass.components.zone.ENTITY_ID_HOME)
+            zone_home = hass.states.get(
+                hass.components.zone.ENTITY_ID_FORMAT.format(location_name)
+            ) or hass.states.get(hass.components.zone.ENTITY_ID_HOME)
             if zone_home:
                 kwargs["gps"] = [
                     zone_home.attributes[ATTR_LATITUDE],
