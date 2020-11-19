@@ -9,6 +9,7 @@ from homeassistant.components.twinkly.const import (
     CONF_ENTRY_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
+from homeassistant.components.twinkly.light import TwinklyLight
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -17,10 +18,29 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.twinkly import (
     TEST_HOST,
+    TEST_ID,
     TEST_MODEL,
     TEST_NAME_ORIGINAL,
     ClientMock,
 )
+
+
+async def test_missing_client(hass: HomeAssistant):
+    """Validate that if client has not been setup, it fails immediately in setup."""
+    try:
+        config_entry = MockConfigEntry(
+            data={
+                CONF_ENTRY_HOST: TEST_HOST,
+                CONF_ENTRY_ID: TEST_ID,
+                CONF_ENTRY_NAME: TEST_NAME_ORIGINAL,
+                CONF_ENTRY_MODEL: TEST_MODEL,
+            }
+        )
+        TwinklyLight(config_entry, hass)
+    except ValueError:
+        return
+
+    assert False
 
 
 async def test_initial_state(hass: HomeAssistant):

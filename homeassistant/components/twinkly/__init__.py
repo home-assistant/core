@@ -2,14 +2,11 @@
 
 import twinkly_client
 
-from homeassistant.components.twinkly.const import (
-    CONF_ENTRY_HOST,
-    CONF_ENTRY_ID,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import CONF_ENTRY_HOST, CONF_ENTRY_ID, DOMAIN
 
 
 async def async_setup(hass: HomeAssistantType, config: dict):

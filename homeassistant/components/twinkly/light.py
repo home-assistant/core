@@ -33,11 +33,8 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
-    uuid = config_entry.data[CONF_ENTRY_ID]
-    name = config_entry.data[CONF_ENTRY_NAME]
-    model = config_entry.data[CONF_ENTRY_MODEL]
 
-    entity = TwinklyLight(uuid, name, model, hass, config_entry)
+    entity = TwinklyLight(config_entry, hass)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -47,26 +44,23 @@ class TwinklyLight(LightEntity):
 
     def __init__(
         self,
-        uuid: str,
-        name: str,
-        model: str,
-        hass: HomeAssistantType,
         conf: ConfigEntry,
+        hass: HomeAssistantType,
     ):
         """Initialize a TwinklyLight entity."""
-        self._id = uuid
+        self._id = conf.data[CONF_ENTRY_ID]
         self._hass = hass
         self._conf = conf
 
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
-        self.__name = name
-        self.__model = model
+        self.__name = conf.data[CONF_ENTRY_NAME]
+        self.__model = conf.data[CONF_ENTRY_MODEL]
 
-        self._client = hass.data.get(DOMAIN, {}).get(uuid)
+        self._client = hass.data.get(DOMAIN, {}).get(self._id)
         if self._client is None:
-            raise ValueError(f"Client for {uuid} has not been configured.")
+            raise ValueError(f"Client for {self._id} has not been configured.")
 
         # Set default state before any update
         self._is_on = False
