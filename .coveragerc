@@ -504,7 +504,9 @@ omit =
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
     homeassistant/components/konnected/*
-    homeassistant/components/kostal_plenticore/*
+    homeassistant/components/kostal_plenticore/__init__.py
+    homeassistant/components/kostal_plenticore/const.py
+    homeassistant/components/kostal_plenticore/sensor.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/*

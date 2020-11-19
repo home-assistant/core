@@ -1,5 +1,5 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
-from asyncio.exceptions import TimeoutError as AsyncIOTimeoutError
+import asyncio
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_NAME, CONF_PASSWORD
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -27,9 +27,9 @@ DATA_SCHEMA = vol.Schema(
 @callback
 def configured_instances(hass):
     """Return a set of configured Kostal Plenticore HOSTS."""
-    return set(
+    return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 async def test_connection(hass: HomeAssistant, data) -> str:
@@ -77,9 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except PlenticoreAuthenticationException as ex:
                     self._errors[CONF_PASSWORD] = "invalid_auth"
                     _LOGGER.exception("Error response: %s", ex.msg)
-                except ClientError:
-                    self._errors[CONF_HOST] = "cannot_connect"
-                except AsyncIOTimeoutError:
+                except (ClientError, asyncio.TimeoutError):
                     self._errors[CONF_HOST] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Unexpected exception")

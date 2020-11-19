@@ -510,7 +510,7 @@ SENSOR_SETTINGS_DATA = [
     (
         "devices:local",
         "Battery:MinHomeComsumption",
-        "Battery min Home Comsumption",
+        "Battery min Home Consumption",
         {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
         "format_round",
     ),

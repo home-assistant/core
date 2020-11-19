@@ -99,7 +99,7 @@ async def test_already_configured(hass):
 
     with patch(
         "homeassistant.components.kostal_plenticore.config_flow.configured_instances",
-        return_value=set(["1.1.1.1"]),
+        return_value={"1.1.1.1"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

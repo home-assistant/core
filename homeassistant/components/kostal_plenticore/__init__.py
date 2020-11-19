@@ -149,7 +149,7 @@ class PlenticoreApi(DataUpdateCoordinator):
     async def _udpate_existing_data(self) -> None:
         data = await self._client.get_settings()
         self._existing_data_ids[SCOPE_SETTING] = {
-            m: set((y.id for y in x)) for m, x in data.items()
+            m: {y.id for y in x} for m, x in data.items()
         }
 
         data = await self._client.get_process_data()
