@@ -180,7 +180,6 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         # Register the callbacks
         self._setup_callbacks()
 
-        # TODO
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -283,9 +282,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._available = False
         # We're going to wait for 10 seconds before announcing we're
         # unavailable, this to allow a reconnection to happen.
-        _LOGGER.debug("pre sleep")
         await self.sleep(10)
-        _LOGGER.debug("past sleep")
 
         if not self._available:
             # Still disconnected. Let the state engine know.
