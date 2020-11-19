@@ -76,26 +76,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FireServiceRotaOauth:
     """Handle authentication tokens."""
 
-    def __init__(self, hass, entry, coordinator):
+    def __init__(self, hass, entry, fsr):
         """Initialize the oauth object."""
         self._hass = hass
         self._entry = entry
 
         self._url = entry.data[CONF_URL]
         self._username = entry.data[CONF_USERNAME]
-        self._coordinator = coordinator
+        self._fsr = fsr
 
     async def async_refresh_tokens(self) -> bool:
         """Refresh tokens and update config entry."""
         _LOGGER.debug("Refreshing authentication tokens after expiration")
-        self._coordinator.websocket.stop_listener()
-        self._coordinator.token_refresh_failure = True
-        self._coordinator.update_interval = None
 
         try:
             token_info = await self._hass.async_add_executor_job(
-                self._coordinator.fsr.refresh_tokens
+                self._fsr.refresh_tokens
             )
+
         except (InvalidAuthError, InvalidTokenError):
             _LOGGER.error("Error refreshing tokens, triggered reauth workflow")
             self._hass.add_job(
@@ -120,9 +118,6 @@ class FireServiceRotaOauth:
                 CONF_TOKEN: token_info,
             },
         )
-        self._coordinator.update_interval = MIN_TIME_BETWEEN_UPDATES
-        self._coordinator.token_refresh_failure = False
-        self._coordinator.websocket.start_listener()
 
         return True
 
@@ -190,11 +185,13 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
         self.incident_id = None
 
         self.fsr = FireServiceRota(base_url=self._url, token_info=self._tokens)
+
         self.oauth = FireServiceRotaOauth(
             self._hass,
             self._entry,
-            self,
+            self.fsr,
         )
+
         self.websocket = FireServiceRotaWebSocket(self._hass, self._entry)
 
     async def update_call(self, func, *args):
@@ -205,7 +202,15 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
         try:
             return await self._hass.async_add_executor_job(func, *args)
         except (ExpiredTokenError, InvalidTokenError):
+            self.websocket.stop_listener()
+            self.token_refresh_failure = True
+            self.update_interval = None
+
             if await self.oauth.async_refresh_tokens():
+                self.update_interval = MIN_TIME_BETWEEN_UPDATES
+                self.token_refresh_failure = False
+                self.websocket.start_listener()
+
                 return await self._hass.async_add_executor_job(func, *args)
 
     async def async_availability_update(self) -> None:
