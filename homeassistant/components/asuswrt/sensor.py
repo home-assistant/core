@@ -46,9 +46,6 @@ class AsuswrtSensor(Entity):
         """Initialize the sensor."""
         self._api = api
         self._state = None
-        self._devices = None
-        self._rates = None
-        self._speed = None
         self._connect_error = False
 
     @property
@@ -64,9 +61,7 @@ class AsuswrtSensor(Entity):
     async def async_update(self):
         """Fetch status from asuswrt."""
         try:
-            self._devices = await self._api.async_get_connected_devices()
-            self._rates = await self._api.async_get_bytes_total()
-            self._speed = await self._api.async_get_current_transfer_rates()
+            await self._get_data()
             if self._connect_error:
                 self._connect_error = False
                 _LOGGER.info("Reconnected to ASUS router for %s update", self.entity_id)
@@ -79,17 +74,25 @@ class AsuswrtSensor(Entity):
                     err,
                 )
 
+    async def _get_data(self):
+        """Get the data from the Asus router. Should be implemented by the subclasses."""
+        raise NotImplementedError()
+
 
 class AsuswrtDevicesSensor(AsuswrtSensor):
     """Representation of a asuswrt download speed sensor."""
 
     _name = "Asuswrt Devices Connected"
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
-        if self._devices:
-            self._state = len(self._devices)
+    def __init__(self, api: AsusWrt):
+        """Initialize the device sensor."""
+        super().__init__(api)
+        self._devices = None
+
+    async def _get_data(self):
+        """Obtain the connected devices and set the state to the number of connections."""
+        self._devices = await self._api.async_get_connected_devices()
+        self._state = len(self._devices)
 
 
 class AsuswrtRXSensor(AsuswrtSensor):
@@ -97,6 +100,11 @@ class AsuswrtRXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Download Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
+
+    def __init__(self, api: AsusWrt):
+        """Initialize the Rx sensor."""
+        super().__init__(api)
+        self._speed = None
 
     @property
     def icon(self):
@@ -108,9 +116,9 @@ class AsuswrtRXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
+    async def _get_data(self):
+        """Obtain the current download speed of the router."""
+        self._speed = await self._api.async_get_current_transfer_rates()
         if self._speed:
             self._state = round(self._speed[0] / 125000, 2)
 
@@ -121,6 +129,11 @@ class AsuswrtTXSensor(AsuswrtSensor):
     _name = "Asuswrt Upload Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
 
+    def __init__(self, api: AsusWrt):
+        """Initialize the Tx sensor."""
+        super().__init__(api)
+        self._speed = None
+
     @property
     def icon(self):
         """Return the icon."""
@@ -131,9 +144,9 @@ class AsuswrtTXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
+    async def _get_data(self):
+        """Obtain the current upload speed of the router."""
+        self._speed = await self._api.async_get_current_transfer_rates()
         if self._speed:
             self._state = round(self._speed[1] / 125000, 2)
 
@@ -143,6 +156,11 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Download"
     _unit = DATA_GIGABYTES
+
+    def __init__(self, api: AsusWrt):
+        """Initialize the total Rx sensor."""
+        super().__init__(api)
+        self._rates = None
 
     @property
     def icon(self):
@@ -154,9 +172,9 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
+    async def _get_data(self):
+        """Obtain the total download size of the router."""
+        self._rates = await self._api.async_get_bytes_total()
         if self._rates:
             self._state = round(self._rates[0] / 1000000000, 1)
 
@@ -166,6 +184,11 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload"
     _unit = DATA_GIGABYTES
+
+    def __init__(self, api: AsusWrt):
+        """Initialize the total Tx sensor."""
+        super().__init__(api)
+        self._rates = None
 
     @property
     def icon(self):
@@ -177,8 +200,8 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
+    async def _get_data(self):
+        """Obtain the total upload size of the router."""
+        self._rates = await self._api.async_get_bytes_total()
         if self._rates:
             self._state = round(self._rates[1] / 1000000000, 1)
