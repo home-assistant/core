@@ -149,8 +149,8 @@ class GraphUpdateCoordinator(DataUpdateCoordinator):
 
         # Update user presence
         presence_data = {}
-        me = await self.client.presence.get_presence()
-        presence_data[me.id] = _build_presence_data(me)
+        my_presence = await self.client.presence.get_presence()
+        presence_data[my_presence.id] = _build_presence_data(my_presence)
 
         _LOGGER.debug("Microsoft Graph presence_data: %s", presence_data)
 
