@@ -1,5 +1,5 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
-from asyncio.exceptions import TimeoutError as AsyncIOTimeoutError
+import asyncio
 
 from kostal.plenticore import PlenticoreAuthenticationException
 
@@ -77,7 +77,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.kostal_plenticore.config_flow.test_connection",
-        side_effect=AsyncIOTimeoutError(),
+        side_effect=asyncio.TimeoutError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
