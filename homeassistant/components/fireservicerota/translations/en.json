@@ -12,9 +12,9 @@
             "reauth": {
                 "description": "Authentication tokens became invalid, login to recreate them.",
                 "data": {
-                  "password": "Password"
+                    "password": "Password"
                 }
-              }
+            }
         },
         "error": {
             "invalid_auth": "Invalid authentication."
