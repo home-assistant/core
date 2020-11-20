@@ -27,6 +27,7 @@ from .const import (
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    INPUTS_EVENTS_DICT,
     POLLING_TIMEOUT_MULTIPLIER,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -34,6 +35,7 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
+from .utils import get_device_name, get_entity_name
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -52,11 +54,6 @@ async def get_coap_context(hass):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
 
     return context
-
-
-def get_device_name(device):
-    """Naming for device."""
-    return device.settings["name"] or device.settings["device"]["hostname"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -140,6 +137,46 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         self.device.subscribe_updates(self.async_set_updated_data)
 
+        self._async_remove_input_events_handler = self.async_add_listener(
+            self._async_input_events_handler
+        )
+        self._last_input_events_count = dict()
+
+    @callback
+    def _async_input_events_handler(self):
+        """Handle device input events."""
+        for block in self.device.blocks:
+            if "inputEvent" and "inputEventCnt" in block.sensor_ids:
+                channel = int(block.channel or 0) + 1
+                last_event_count = self._last_input_events_count.get(channel)
+                if last_event_count and last_event_count != block.inputEventCnt:
+                    _LOGGER.debug(
+                        "Shelly input event: device: %s, channel: %s, inputEvent: %s, inputEventCnt: %s",
+                        get_device_name(self.device),
+                        channel,
+                        block.inputEvent,
+                        block.inputEventCnt,
+                    )
+
+                    event_type = block.inputEvent
+                    if event_type != "":
+                        if event_type in INPUTS_EVENTS_DICT.keys():
+                            self.hass.bus.async_fire(
+                                "shelly.click",
+                                {
+                                    "entity_id": get_entity_name(self.device, block),
+                                    "click_type": INPUTS_EVENTS_DICT[event_type],
+                                },
+                            )
+                        else:
+                            _LOGGER.warning(
+                                "Shelly input event %s for device %s is not supported, please open issue",
+                                event_type,
+                                get_device_name(self.device),
+                            )
+
+                self._last_input_events_count[channel] = block.inputEventCnt
+
     async def _async_update_data(self):
         """Fetch data."""
         _LOGGER.debug("Polling Shelly Device - %s", self.name)
@@ -180,6 +217,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     def shutdown(self):
         """Shutdown the wrapper."""
         self.device.shutdown()
+        self._async_remove_input_events_handler()
 
 
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
