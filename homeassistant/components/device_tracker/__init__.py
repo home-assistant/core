@@ -10,7 +10,7 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, GPSType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
-from . import legacy, setup
+from . import legacy
 from .config_entry import (  # noqa: F401 pylint: disable=unused-import
     async_setup_entry,
     async_unload_entry,
@@ -126,7 +126,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the device tracker."""
     tracker = await legacy.get_tracker(hass, config)
 
-    legacy_platforms = await setup.async_extract_config(hass, config)
+    legacy_platforms = await legacy.async_extract_config(hass, config)
 
     setup_tasks = [
         legacy_platform.async_setup_legacy(hass, tracker)
@@ -138,7 +138,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     async def async_platform_discovered(p_type, info):
         """Load a platform."""
-        platform = await setup.async_create_platform_type(hass, config, p_type, {})
+        platform = await legacy.async_create_platform_type(hass, config, p_type, {})
 
         if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
             return
