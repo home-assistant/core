@@ -2,13 +2,14 @@
 from datetime import timedelta
 import logging
 
-from httpcore import ConnectError, ConnectTimeout
+from httpx import ConnectError, ConnectTimeout
 from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -103,7 +104,7 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
     try:
         fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
         return [param for param in fetched_parameters if param.name != "Reglertyp"]
-    except (ConnectError, ConnectTimeout) as exception:
-        raise UpdateFailed(f"Error communicating with API: {exception}") from exception
-    except InvalidAuth as exception:
-        raise UpdateFailed("Invalid authentication during update") from exception
+    except (ConnectError, ConnectTimeout, FetchFailed) as exception:
+        raise ConfigEntryNotReady(f"Error communicating with API: {exception}")
+    except InvalidAuth:
+        raise ConfigEntryNotReady("Invalid authentication during update")
