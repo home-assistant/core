@@ -32,9 +32,9 @@ class _SensorTypes(enum.Enum):
     def unit(self) -> Optional[str]:
         """Return a string with the unit of the sensortype."""
         if self in (_SensorTypes.UPLOAD, _SensorTypes.DOWNLOAD):
-            return DATA_RATE_MEGABITS_PER_SECOND
-        if self in (_SensorTypes.UPLOAD_SPEED, _SensorTypes.DOWNLOAD_SPEED):
             return DATA_GIGABYTES
+        if self in (_SensorTypes.UPLOAD_SPEED, _SensorTypes.DOWNLOAD_SPEED):
+            return DATA_RATE_MEGABITS_PER_SECOND
 
     @property
     def icon(self) -> Optional[str]:
@@ -43,6 +43,20 @@ class _SensorTypes(enum.Enum):
             return UPLOAD_ICON
         if self in (_SensorTypes.DOWNLOAD, _SensorTypes.DOWNLOAD_SPEED):
             return DOWNLOAD_ICON
+
+    @property
+    def sensor_name(self) -> str:
+        """Return the name of the sensor."""
+        if self is _SensorTypes.DEVICES:
+            return "Asuswrt Devices Connected"
+        if self is _SensorTypes.UPLOAD:
+            return "Asuswrt Upload"
+        if self is _SensorTypes.DOWNLOAD:
+            return "Asuswrt Download"
+        if self is _SensorTypes.UPLOAD_SPEED:
+            return "Asuswrt Upload Speed"
+        if self is _SensorTypes.DOWNLOAD_SPEED:
+            return "Asuswrt Download Speed"
 
     @property
     def is_speed(self) -> bool:
@@ -55,7 +69,7 @@ class _SensorTypes(enum.Enum):
         return self in (_SensorTypes.UPLOAD, _SensorTypes.DOWNLOAD)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the asuswrt sensors."""
     if discovery_info is None:
         return
@@ -75,7 +89,8 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         update_interval=timedelta(seconds=30),
     )
 
-    add_entities([AsuswrtSensor(coordinator, x) for x in sensors])
+    await coordinator.async_refresh()
+    async_add_entities([AsuswrtSensor(coordinator, x) for x in sensors])
 
 
 class AsuswrtDataHandler:
@@ -132,13 +147,12 @@ class AsuswrtSensor(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.coordinator.data:
-            return self.coordinator.data.get(self._type)
+        return self.coordinator.data.get(self._type)
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return "Asuswrt " + self._type.name.replace("_", " ").title()
+        return self._type.sensor_name
 
     @property
     def icon(self) -> Optional[str]:
