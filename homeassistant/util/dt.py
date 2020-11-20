@@ -4,16 +4,13 @@ import re
 from typing import Any, Dict, List, Optional, Union, cast
 
 import ciso8601
-import pytz
-import pytz.exceptions as pytzexceptions
-import pytz.tzinfo as pytzinfo
+from dateutil import tz
 
 from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-NATIVE_UTC = dt.timezone.utc
-UTC = pytz.utc
-DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
+UTC = dt.timezone.utc
+DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -34,7 +31,6 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """
     global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
-    # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
 
     DEFAULT_TIME_ZONE = time_zone
@@ -45,15 +41,12 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
 
     Async friendly.
     """
-    try:
-        return pytz.timezone(time_zone_str)
-    except pytzexceptions.UnknownTimeZoneError:
-        return None
+    return tz.gettz(time_zone_str)
 
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.now(NATIVE_UTC)
+    return dt.datetime.now(UTC)
 
 
 def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
@@ -69,7 +62,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     if dattim.tzinfo == UTC:
         return dattim
     if dattim.tzinfo is None:
-        dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
+        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
 
     return dattim.astimezone(UTC)
 
@@ -90,14 +83,14 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
     if dattim.tzinfo is None:
-        dattim = UTC.localize(dattim)
+        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
 
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
     """Return a UTC time from a timestamp."""
-    return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
+    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
 def start_of_local_day(
@@ -106,11 +99,9 @@ def start_of_local_day(
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date: dt.date = now().date()
-    elif isinstance(dt_or_d, dt.datetime):
+    else:
         date = dt_or_d.date()
-    return DEFAULT_TIME_ZONE.localize(  # type: ignore
-        dt.datetime.combine(date, dt.time())
-    )
+    return dt.datetime.combine(date, dt.time(), tzinfo=DEFAULT_TIME_ZONE)
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -315,7 +306,7 @@ def find_next_time_expression_time(
     # Now we need to handle timezones. We will make this datetime object
     # "naive" first and then re-convert it to the target timezone.
     # This is so that we can call pytz's localize and handle DST changes.
-    tzinfo: pytzinfo.DstTzInfo = UTC if result.tzinfo == NATIVE_UTC else result.tzinfo
+    tzinfo: pytzinfo.DstTzInfo = result.tzinfo
     result = result.replace(tzinfo=None)
 
     try:
