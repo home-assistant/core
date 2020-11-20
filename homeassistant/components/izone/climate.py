@@ -2,6 +2,8 @@
 import logging
 from typing import List, Optional
 
+from pizone import Controller, Zone
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -35,7 +37,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from pizone import Controller, Zone
 
 from .const import (
     DATA_CONFIG,
