@@ -35,6 +35,7 @@ class _SensorTypes(enum.Enum):
             return DATA_GIGABYTES
         if self in (_SensorTypes.UPLOAD_SPEED, _SensorTypes.DOWNLOAD_SPEED):
             return DATA_RATE_MEGABITS_PER_SECOND
+        return None
 
     @property
     def icon(self) -> Optional[str]:
@@ -43,9 +44,10 @@ class _SensorTypes(enum.Enum):
             return UPLOAD_ICON
         if self in (_SensorTypes.DOWNLOAD, _SensorTypes.DOWNLOAD_SPEED):
             return DOWNLOAD_ICON
+        return None
 
     @property
-    def sensor_name(self) -> str:
+    def sensor_name(self) -> Optional[str]:
         """Return the name of the sensor."""
         if self is _SensorTypes.DEVICES:
             return "Asuswrt Devices Connected"
@@ -57,6 +59,7 @@ class _SensorTypes(enum.Enum):
             return "Asuswrt Upload Speed"
         if self is _SensorTypes.DOWNLOAD_SPEED:
             return "Asuswrt Download Speed"
+        return None
 
     @property
     def is_speed(self) -> bool:
