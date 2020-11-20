@@ -65,9 +65,7 @@ async def test_sensors(hass: HomeAssistant, mock_device_tracker_conf):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
-        assert (
-            hass.states.get(f"{sensor.DOMAIN}.asuswrt_devices_connected").state == "3"
-        )
+        assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_devices").state == "3"
         assert (
             hass.states.get(f"{sensor.DOMAIN}.asuswrt_download_speed").state == "160.0"
         )
