@@ -68,6 +68,13 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_try_connect(host, location, tls, verify_tls)
+            except HoleError as ex:
+                _LOGGER.debug("Connection failed: %s", ex)
+                if is_import:
+                    _LOGGER.error("Failed to import: %s", ex)
+                    return self.async_abort(reason="cannot_connect")
+                errors["base"] = "cannot_connect"
+            else:
                 self._config = {
                     CONF_HOST: host,
                     CONF_NAME: name,
@@ -90,12 +97,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if statistics_only:
                     return self.async_create_entry(title=name, data=self._config)
                 return await self.async_step_api_key()
-            except HoleError as ex:
-                _LOGGER.debug("Connection failed: %s", ex)
-                if is_import:
-                    _LOGGER.error("Failed to import: %s", ex)
-                    return self.async_abort(reason="cannot_connect")
-                errors["base"] = "cannot_connect"
 
         user_input = user_input or {}
         return self.async_show_form(
