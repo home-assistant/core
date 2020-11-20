@@ -5,7 +5,14 @@ from datetime import datetime, timedelta
 import logging
 import threading
 
-from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.event import (
+    CameraMotionEvent,
+    CameraPersonEvent,
+    CameraSoundEvent,
+    DoorbellChimeEvent,
+    AsyncEventCallback,
+    EventMessage,
+)
 from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
@@ -54,6 +61,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
+NEST_EVENT = "nest_event"
+EVENT_TRAITS = [
+    DoorbellChimeEvent.NAME,
+    CameraMotionEvent.NAME,
+    CameraPersonEvent.NAME,
+    CameraSoundEvent.NAME,
+]
+
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -173,17 +188,16 @@ class SignalUpdateCallback(AsyncEventCallback):
         traits = event_message.resource_update_traits
         if traits:
             _LOGGER.debug("Trait update %s", traits.keys())
+            # This event triggered an update to a device that changed some
+            # properties which the DeviceManager should already have received.
+            # Send a signal to refresh state of all listening devices.
+            async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
         events = event_message.resource_update_events
         if events:
             _LOGGER.debug("Event Update %s", events.keys())
-
-        if not event_message.resource_update_traits:
-            # Note: Currently ignoring events like camera motion
-            return
-        # This event triggered an update to a device that changed some
-        # properties which the DeviceManager should already have received.
-        # Send a signal to refresh state of all listening devices.
-        async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
+            for (event, data) in events.items():
+                if event in EVENT_TRAITS:
+                    self._hass.bus.fire(NEST_EVENT, data)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
