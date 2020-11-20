@@ -81,10 +81,12 @@ async def async_setup_entry(
 
     sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
 
-    async_add_entities([sensor])
+    async_add_entities([sensor], False)
 
     # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update)
+    await hass.async_add_executor_job(
+        hass.bus.listen_once, EVENT_HOMEASSISTANT_START, lambda _: sensor.update
+    )
 
 
 def _get_location_from_attributes(state):
