@@ -96,6 +96,7 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
                 "name": "Call service based on event",
             },
         },
+        "validation_errors": None,
     }
 
 
