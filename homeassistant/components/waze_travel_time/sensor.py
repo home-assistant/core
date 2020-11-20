@@ -2,11 +2,11 @@
 from datetime import timedelta
 import logging
 import re
+from typing import Any, Callable, Dict, List, Optional
 
 import WazeRouteCalculator
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -14,89 +14,56 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from .const import (
+    ATTR_DESTINATION,
+    ATTR_DISTANCE,
+    ATTR_DURATION,
+    ATTR_ORIGIN,
+    ATTR_ROUTE,
+    ATTRIBUTION,
+    CONF_AVOID_FERRIES,
+    CONF_AVOID_SUBSCRIPTION_ROADS,
+    CONF_AVOID_TOLL_ROADS,
+    CONF_DESTINATION,
+    CONF_EXCL_FILTER,
+    CONF_INCL_FILTER,
+    CONF_ORIGIN,
+    CONF_REALTIME,
+    CONF_UNITS,
+    CONF_VEHICLE_TYPE,
+    ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DESTINATION = "destination"
-ATTR_DURATION = "duration"
-ATTR_DISTANCE = "distance"
-ATTR_ORIGIN = "origin"
-ATTR_ROUTE = "route"
-
-ATTRIBUTION = "Powered by Waze"
-
-CONF_DESTINATION = "destination"
-CONF_ORIGIN = "origin"
-CONF_INCL_FILTER = "incl_filter"
-CONF_EXCL_FILTER = "excl_filter"
-CONF_REALTIME = "realtime"
-CONF_UNITS = "units"
-CONF_VEHICLE_TYPE = "vehicle_type"
-CONF_AVOID_TOLL_ROADS = "avoid_toll_roads"
-CONF_AVOID_SUBSCRIPTION_ROADS = "avoid_subscription_roads"
-CONF_AVOID_FERRIES = "avoid_ferries"
-
-DEFAULT_NAME = "Waze Travel Time"
-DEFAULT_REALTIME = True
-DEFAULT_VEHICLE_TYPE = "car"
-DEFAULT_AVOID_TOLL_ROADS = False
-DEFAULT_AVOID_SUBSCRIPTION_ROADS = False
-DEFAULT_AVOID_FERRIES = False
-
-ICON = "mdi:car"
-
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
-
-REGIONS = ["US", "NA", "EU", "IL", "AU"]
-VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_REGION): vol.In(REGIONS),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_INCL_FILTER): cv.string,
-        vol.Optional(CONF_EXCL_FILTER): cv.string,
-        vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
-        vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): vol.In(
-            VEHICLE_TYPES
-        ),
-        vol.Optional(CONF_UNITS): vol.In(UNITS),
-        vol.Optional(
-            CONF_AVOID_TOLL_ROADS, default=DEFAULT_AVOID_TOLL_ROADS
-        ): cv.boolean,
-        vol.Optional(
-            CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
-        ): cv.boolean,
-        vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Waze travel time sensor platform."""
-    destination = config.get(CONF_DESTINATION)
-    name = config.get(CONF_NAME)
-    origin = config.get(CONF_ORIGIN)
-    region = config.get(CONF_REGION)
-    incl_filter = config.get(CONF_INCL_FILTER)
-    excl_filter = config.get(CONF_EXCL_FILTER)
-    realtime = config.get(CONF_REALTIME)
-    vehicle_type = config.get(CONF_VEHICLE_TYPE)
-    avoid_toll_roads = config.get(CONF_AVOID_TOLL_ROADS)
-    avoid_subscription_roads = config.get(CONF_AVOID_SUBSCRIPTION_ROADS)
-    avoid_ferries = config.get(CONF_AVOID_FERRIES)
-    units = config.get(CONF_UNITS, hass.config.units.name)
+def setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up a Waze travel time sensor entry."""
+    destination = config_entry.data[CONF_DESTINATION]
+    name = config_entry.data.get(CONF_NAME)
+    origin = config_entry.data[CONF_ORIGIN]
+    region = config_entry.data[CONF_REGION]
+    incl_filter = config_entry.data.get(CONF_INCL_FILTER)
+    excl_filter = config_entry.data.get(CONF_EXCL_FILTER)
+    realtime = config_entry.data.get(CONF_REALTIME)
+    vehicle_type = config_entry.data.get(CONF_VEHICLE_TYPE)
+    avoid_toll_roads = config_entry.data.get(CONF_AVOID_TOLL_ROADS)
+    avoid_subscription_roads = config_entry.data.get(CONF_AVOID_SUBSCRIPTION_ROADS)
+    avoid_ferries = config_entry.data.get(CONF_AVOID_FERRIES)
+    units = config_entry.data.get(CONF_UNITS, hass.config.units.name)
 
     data = WazeTravelTimeData(
         None,
@@ -112,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         avoid_ferries,
     )
 
-    sensor = WazeTravelTime(name, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
 
     add_entities([sensor])
 
@@ -129,8 +96,9 @@ def _get_location_from_attributes(state):
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, name, origin, destination, waze_data):
+    def __init__(self, unique_id, name, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
+        self._unique_id = unique_id
         self._name = name
         self._waze_data = waze_data
         self._state = None
@@ -248,6 +216,19 @@ class WazeTravelTime(Entity):
         self._waze_data.destination = self._resolve_zone(self._waze_data.destination)
 
         self._waze_data.update()
+
+    @property
+    def device_info(self) -> Optional[Dict[str, Any]]:
+        """Return device specific attributes."""
+        return {
+            "name": "Waze",
+            "entry_type": "service",
+        }
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID of entity."""
+        return self._unique_id
 
 
 class WazeTravelTimeData:
