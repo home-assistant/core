@@ -190,6 +190,7 @@ FLOWS = [
     "spider",
     "spotify",
     "squeezebox",
+    "srp_energy",
     "starline",
     "syncthru",
     "synology_dsm",
