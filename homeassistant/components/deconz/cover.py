@@ -18,10 +18,7 @@ from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up covers for deCONZ component.
-
-    Covers are based on the same device class as lights in deCONZ.
-    """
+    """Set up covers for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 

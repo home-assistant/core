@@ -32,10 +32,7 @@ def convert_speed(speed: int) -> str:
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
-    """Set up fans for deCONZ component.
-
-    Fans are based on the same device class as lights in deCONZ.
-    """
+    """Set up fans for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
