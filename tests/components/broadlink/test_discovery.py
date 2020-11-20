@@ -1,13 +1,15 @@
 """Tests for device discovery."""
+from datetime import timedelta
 import socket
 
 import pytest
 
-from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.util import dt
 
 from . import get_device
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 
 async def test_discovery_new_devices_single_netif(hass):
@@ -93,7 +95,7 @@ async def test_discovery_update_ip_address(hass):
         "homeassistant.components.broadlink.helpers.socket.gethostbyname",
         return_value=previous_host,
     ) as mock_host:
-        await hass.data[DOMAIN].discovery.coordinator.async_refresh()
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
     assert mock_host.call_count == 2
@@ -115,7 +117,7 @@ async def test_discovery_update_hostname(hass):
         "homeassistant.components.broadlink.helpers.socket.gethostbyname",
         side_effect=OSError(socket.EAI_NONAME, None),
     ) as mock_host:
-        await hass.data[DOMAIN].discovery.coordinator.async_refresh()
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
     assert mock_host.call_count == 2
@@ -134,7 +136,7 @@ async def test_discovery_do_not_change_hostname(hass):
         "homeassistant.components.broadlink.helpers.socket.gethostbyname",
         return_value=device.host,
     ) as mock_host:
-        await hass.data[DOMAIN].discovery.coordinator.async_refresh()
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
     assert mock_host.call_count == 1
@@ -154,7 +156,7 @@ async def test_discovery_ignore_os_error(hass):
         side_effect=OSError(),
     ) as mock_discovery:
         try:
-            await hass.data[DOMAIN].discovery.coordinator.async_refresh()
+            async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
             await hass.async_block_till_done()
         except OSError:
             pytest.fail("Device discovery propagated an OSError")
