@@ -46,10 +46,10 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-def setup_entry(
+async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up a Waze travel time sensor entry."""
     destination = config_entry.data[CONF_DESTINATION]
@@ -81,10 +81,10 @@ def setup_entry(
 
     sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
 
-    add_entities([sensor])
+    async_add_entities([sensor])
 
     # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update())
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update)
 
 
 def _get_location_from_attributes(state):
