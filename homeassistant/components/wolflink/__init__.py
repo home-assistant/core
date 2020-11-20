@@ -105,6 +105,8 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
         fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
         return [param for param in fetched_parameters if param.name != "Reglertyp"]
     except (ConnectError, ConnectTimeout, FetchFailed) as exception:
-        raise ConfigEntryNotReady(f"Error communicating with API: {exception}")
-    except InvalidAuth:
-        raise ConfigEntryNotReady("Invalid authentication during update")
+        raise ConfigEntryNotReady(
+            f"Error communicating with API: {exception}"
+        ) from exception
+    except InvalidAuth as exception:
+        raise ConfigEntryNotReady("Invalid authentication during update") from exception
