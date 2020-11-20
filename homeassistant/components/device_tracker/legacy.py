@@ -662,17 +662,17 @@ class Device(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {ATTR_SOURCE_TYPE: self.source_type}
+        attributes = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.gps:
-            attr[ATTR_LATITUDE] = self.gps[0]
-            attr[ATTR_LONGITUDE] = self.gps[1]
-            attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
+            attributes[ATTR_LATITUDE] = self.gps[0]
+            attributes[ATTR_LONGITUDE] = self.gps[1]
+            attributes[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery:
-            attr[ATTR_BATTERY] = self.battery
+            attributes[ATTR_BATTERY] = self.battery
 
-        return attr
+        return attributes
 
     @property
     def device_state_attributes(self):
