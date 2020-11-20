@@ -1830,7 +1830,7 @@ python-whois==0.7.3
 python-wink==1.10.5
 
 # homeassistant.components.awair
-python_awair==0.1.1
+python_awair==0.2.1
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.2.1

@@ -893,7 +893,7 @@ python-twitch-client==0.6.0
 python-velbus==2.1.1
 
 # homeassistant.components.awair
-python_awair==0.1.1
+python_awair==0.2.1
 
 # homeassistant.components.tile
 pytile==4.0.0
