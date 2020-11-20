@@ -46,7 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     wolf_client = WolfClient(username, password)
 
-    parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+    try:
+        parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+    except InvalidAuth:
+        _LOGGER.debug("Authentication failed")
+        return False
 
     async def async_update_data():
         """Update all stored entities for Wolf SmartSet."""
@@ -108,5 +112,3 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
         raise ConfigEntryNotReady(
             f"Error communicating with API: {exception}"
         ) from exception
-    except InvalidAuth as exception:
-        raise UpdateFailed("Invalid authentication during update") from exception
