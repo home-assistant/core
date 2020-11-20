@@ -25,7 +25,10 @@ from .utils import temperature_unit
 
 SENSORS = {
     ("device", "battery"): BlockAttributeDescription(
-        name="Battery", unit=PERCENTAGE, device_class=sensor.DEVICE_CLASS_BATTERY
+        name="Battery",
+        unit=PERCENTAGE,
+        device_class=sensor.DEVICE_CLASS_BATTERY,
+        removal_condition=lambda settings, _: settings.get("external_power") == 1,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -168,6 +171,7 @@ REST_SENSORS = {
     "uptime": RestAttributeDescription(
         name="Uptime",
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
+        default_enabled=False,
         path="uptime",
     ),
 }

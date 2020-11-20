@@ -42,6 +42,8 @@ FLOW_OFF_ICON = "mdi:water-pump-off"
 FLOW_ON_ICON = "mdi:water-pump"
 IDLE_ICON = "mdi:circle-off-outline"
 SWITCH_ICON = "mdi:electric-switch"
+NO_NOTIFICATION_ICON = "mdi:mailbox-outline"
+NOTIFICATION_ICON = "mdi:mailbox-up-outline"
 
 COORDINATOR = "coordinator"
 UNDO_UPDATE_LISTENER = "undo_update_listener"

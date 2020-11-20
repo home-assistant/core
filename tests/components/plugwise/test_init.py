@@ -5,13 +5,13 @@ import asyncio
 from Plugwise_Smile.Smile import Smile
 
 from homeassistant.components.plugwise import DOMAIN
-from homeassistant.components.plugwise.gateway import async_unload_entry
 from homeassistant.config_entries import (
+    ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
 
-from tests.common import AsyncMock
+from tests.common import AsyncMock, MockConfigEntry
 from tests.components.plugwise.common import async_init_integration
 
 
@@ -53,5 +53,17 @@ async def test_unload_entry(hass, mock_smile_adam):
     entry = await async_init_integration(hass, mock_smile_adam)
 
     mock_smile_adam.async_reset = AsyncMock(return_value=True)
-    assert await async_unload_entry(hass, entry)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ENTRY_STATE_NOT_LOADED
     assert not hass.data[DOMAIN]
+
+
+async def test_async_setup_entry_fail(hass):
+    """Test async_setup_entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ENTRY_STATE_SETUP_ERROR
