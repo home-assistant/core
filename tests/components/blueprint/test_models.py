@@ -71,7 +71,7 @@ def test_blueprint_properties(blueprint_1):
 
 
 def test_blueprint_update_metadata():
-    """Test properties."""
+    """Test update metadata."""
     bp = models.Blueprint(
         {
             "blueprint": {
@@ -83,6 +83,34 @@ def test_blueprint_update_metadata():
 
     bp.update_metadata(source_url="http://bla.com")
     assert bp.metadata["source_url"] == "http://bla.com"
+
+
+def test_blueprint_validate():
+    """Test validate blueprint."""
+    assert (
+        models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "Hello",
+                    "domain": "automation",
+                },
+            }
+        ).validate()
+        is None
+    )
+
+    assert (
+        models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "Hello",
+                    "domain": "automation",
+                    "homeassistant": {"min_version": "100000.0.0"},
+                },
+            }
+        ).validate()
+        == ["Requires at least Home Assistant 100000.0.0"]
+    )
 
 
 def test_blueprint_inputs(blueprint_1):
