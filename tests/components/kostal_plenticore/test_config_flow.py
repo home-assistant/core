@@ -1,6 +1,5 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 import asyncio
-import pytest
 
 from kostal.plenticore import PlenticoreAuthenticationException
 
@@ -8,7 +7,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.kostal_plenticore import config_flow
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import ANY, AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -22,15 +21,24 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient",
-        return_value=AsyncMock(),
-    ) as ApiClientMock, patch(
+        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+    ) as mock_api_class, patch(
         "homeassistant.components.kostal_plenticore.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        ApiClientMock().login = AsyncMock()
+        # mock of the context manager instance
+        mock_api_ctx = MagicMock()
+        mock_api_ctx.login = AsyncMock()
+
+        # mock of the return instance of PlenticoreApiClient
+        mock_api = MagicMock()
+        mock_api.__aenter__.return_value = mock_api_ctx
+        mock_api.__aexit__ = AsyncMock()
+
+        mock_api_class.return_value = mock_api
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -38,6 +46,11 @@ async def test_form(hass):
                 "password": "test-password",
             },
         )
+
+        mock_api_class.assert_called_once_with(ANY, "1.1.1.1")
+        mock_api.__aenter__.assert_called_once()
+        mock_api.__aexit__.assert_called_once()
+        mock_api_ctx.login.assert_called_once_with("test-password")
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Plenticore"
