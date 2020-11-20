@@ -139,7 +139,7 @@ class BroadlinkDevice:
         broadcast_addr = mock_api.host[0].split(".")
         broadcast_addr[3] = "255"
         broadcast_addr = ".".join(broadcast_addr)
-        return {broadcast_addr: [mock_api]}
+        return [(broadcast_addr, [mock_api])]
 
     def get_mock_api(self):
         """Return a mock device (API)."""
@@ -194,9 +194,8 @@ def get_device(name):
 @contextmanager
 def patch_discovery(mock_discovery):
     """Patch device discovery."""
-    broadcast_addrs = list(mock_discovery)
-    devices = list(mock_discovery.values())
-    return_values = [iter(dev_list) for dev_list in devices]
+    broadcast_addrs = [bd_addr for bd_addr, _ in mock_discovery]
+    return_values = [iter(dev_list) for _, dev_list in mock_discovery]
 
     with patch(
         "homeassistant.components.broadlink.get_broadcast_addrs",
