@@ -5,8 +5,10 @@ from kostal.plenticore import PlenticoreAuthenticationException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kostal_plenticore.const import DOMAIN
+from homeassistant.components.kostal_plenticore import config_flow
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -91,6 +93,28 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"host": "cannot_connect"}
 
 
+async def test_form_unexpected_error(hass):
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.kostal_plenticore.config_flow.test_connection",
+        side_effect=Exception(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_already_configured(hass):
     """Test we handle already configured error."""
     result = await hass.config_entries.flow.async_init(
@@ -111,3 +135,16 @@ async def test_already_configured(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+def test_configured_instances(hass):
+    """Test configured_instances returns all configured hosts."""
+    MockConfigEntry(
+        domain="kostal_plenticore",
+        data={"host": "2.2.2.2", "password": "foobar", "name": "xyz"},
+        unique_id="112233445566",
+    ).add_to_hass(hass)
+
+    result = config_flow.configured_instances(hass)
+
+    assert result == {"2.2.2.2"}
