@@ -8,13 +8,13 @@ from . import get_device
 from tests.async_mock import patch
 
 
-async def test_new_devices_discovered(hass):
-    """Test we create flows for new devices discovered."""
-    device = get_device("Office")
+async def test_discovery_new_devices_single_netif(hass):
+    """Test we create flows for new devices discovered (single network)."""
     devices = ["Entrance", "Bedroom", "Living Room", "Office"]
     mock_apis = [get_device(device).get_mock_api() for device in devices]
     results = [("192.168.0.255", mock_apis)]
 
+    device = get_device("Office")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
 
@@ -22,15 +22,15 @@ async def test_new_devices_discovered(hass):
     assert mock_init.call_count == len(devices) - 1
 
 
-async def test_setup_new_devices_discovered_mult_netifs(hass):
-    """Test we create config flows for new devices discovered in multiple networks."""
-    device = get_device("Office")
+async def test_discovery_new_devices_mult_netifs(hass):
+    """Test we create config flows for new devices discovered (multiple networks)."""
     devices_a = ["Entrance", "Bedroom", "Living Room", "Office"]
     devices_b = ["Garden", "Rooftop"]
     mock_apis_a = [get_device(device).get_mock_api() for device in devices_a]
     mock_apis_b = [get_device(device).get_mock_api() for device in devices_b]
     results = [("192.168.0.255", mock_apis_a), ("192.168.1.255", mock_apis_b)]
 
+    device = get_device("Office")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
 
@@ -38,11 +38,11 @@ async def test_setup_new_devices_discovered_mult_netifs(hass):
     assert mock_init.call_count == len(devices_a) + len(devices_b) - 1
 
 
-async def test_setup_no_devices_discovered(hass):
+async def test_discovery_no_devices(hass):
     """Test we do not create flows if no devices are discovered."""
-    device = get_device("Office")
     results = [("192.168.0.255", [])]
 
+    device = get_device("Office")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
 
@@ -50,15 +50,14 @@ async def test_setup_no_devices_discovered(hass):
     assert mock_init.call_count == 0
 
 
-async def test_setup_discover_already_known_host(hass):
-    """Test we do not create flows when known devices are discovered."""
+async def test_discovery_already_known_device(hass):
+    """Test we do not create a flow when a known device is discovered."""
     device_a = get_device("Living Room")
     mock_entry = device_a.get_mock_entry()
     mock_entry.add_to_hass(hass)
+    results = device_a.get_mock_discovery()
 
     device_b = get_device("Bedroom")
-    results = [("192.168.0.255", [device_a.get_mock_api(), device_b.get_mock_api()])]
-
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         *_, mock_discovery = await device_b.setup_entry(hass, mock_discovery=results)
 
@@ -66,10 +65,9 @@ async def test_setup_discover_already_known_host(hass):
     assert mock_init.call_count == 0
 
 
-async def test_setup_discover_update_ip_address(hass):
+async def test_discovery_update_ip_address(hass):
     """Test we update the entry when a known device is discovered with a different IP address."""
     device = get_device("Living Room")
-
     _, mock_entry, _ = await device.setup_entry(hass)
 
     previous_host = device.host
@@ -87,7 +85,7 @@ async def test_setup_discover_update_ip_address(hass):
     assert mock_entry.data["host"] == device.host
 
 
-async def test_setup_discover_update_hostname(hass):
+async def test_discovery_update_hostname(hass):
     """Test we update the entry when the hostname is no longer valid."""
     device = get_device("Living Room")
     results = device.get_mock_discovery()
@@ -109,7 +107,7 @@ async def test_setup_discover_update_hostname(hass):
     assert mock_entry.data["host"] == device.host
 
 
-async def test_setup_discover_do_not_change_hostname(hass):
+async def test_discovery_do_not_change_hostname(hass):
     """Test we do not update the entry if the hostname routes to the device."""
     device = get_device("Living Room")
     results = device.get_mock_discovery()
@@ -128,11 +126,13 @@ async def test_setup_discover_do_not_change_hostname(hass):
     assert mock_entry.data["host"] == "somethingthatworks"
 
 
-async def test_device_setup_do_not_rediscover(hass):
+async def test_discovery_run_once(hass):
     """Test we only run discovery once at startup."""
     devices = ["Entrance", "Bedroom", "Living Room", "Office"]
     num_calls = 0
+
     for device in map(get_device, devices):
         *_, mock_discovery = await device.setup_entry(hass)
         num_calls += mock_discovery.call_count
+
     assert num_calls == 1
