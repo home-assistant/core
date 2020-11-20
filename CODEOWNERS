@@ -376,7 +376,6 @@ homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
