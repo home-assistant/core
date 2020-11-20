@@ -16,6 +16,7 @@ from homeassistant.components.input_datetime import (
     CONF_ID,
     CONF_INITIAL,
     CONF_NAME,
+    CONFIG_SCHEMA,
     DEFAULT_TIME,
     DOMAIN,
     FMT_DATE,
@@ -108,16 +109,18 @@ async def async_set_timestamp(hass, entity_id, timestamp):
     )
 
 
-async def test_invalid_configs(hass):
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "config",
+    [
         None,
-        {},
         {"name with space": None},
         {"test_no_value": {"has_time": False, "has_date": False}},
-    ]
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    ],
+)
+def test_invalid_configs(config):
+    """Test config."""
+    with pytest.raises(vol.Invalid):
+        CONFIG_SCHEMA({DOMAIN: config})
 
 
 async def test_set_datetime(hass):
@@ -665,6 +668,11 @@ async def test_timestamp(hass):
                         "has_date": True,
                         "initial": "2020-12-13 10:00:00",
                     },
+                    "test_time_initial": {
+                        "has_time": True,
+                        "has_date": False,
+                        "initial": "10:00:00",
+                    },
                 }
             },
         )
@@ -692,6 +700,12 @@ async def test_timestamp(hass):
             ).strftime(FMT_DATETIME)
             == "2020-12-13 10:00:00"
         )
+
+        # Test initial time sets timestamp correctly.
+        state_time = hass.states.get("input_datetime.test_time_initial")
+        assert state_time is not None
+        assert state_time.state == "10:00:00"
+        assert state_time.attributes[ATTR_TIMESTAMP] == 10 * 60 * 60
 
     finally:
         dt_util.set_default_time_zone(ORIG_TIMEZONE)
