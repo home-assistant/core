@@ -1,8 +1,9 @@
 """Platform for the iZone AC."""
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_ENTITY_ID, CONF_EXCLUDE, CONF_SENSORS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DATA_CONFIG, IZONE
