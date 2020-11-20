@@ -32,24 +32,15 @@ def configured_instances(hass):
     }
 
 
-async def test_connection(hass: HomeAssistant, data) -> str:
+async def test_connection(hass: HomeAssistant, data) -> None:
     """Test the connection to the inverter.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
-
-    Returns the hostname and serial number
     """
 
     session = async_get_clientsession(hass)
     async with PlenticoreApiClient(session, data["host"]) as client:
         await client.login(data["password"])
-        settings = await client.get_setting_values(
-            {"scb:network": ["Hostname"], "devices:local": ["Properties:SerialNo"]}
-        )
-        device_hostname = settings["scb:network"]["Hostname"]
-        serial_no = settings["devices:local"]["Properties:SerialNo"]
-
-        return device_hostname, serial_no
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

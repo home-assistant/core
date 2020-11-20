@@ -22,7 +22,6 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.kostal_plenticore.config_flow.test_connection",
-        return_value=("scb", "123456789"),
     ), patch(
         "homeassistant.components.kostal_plenticore.async_setup", return_value=True
     ) as mock_setup, patch(
