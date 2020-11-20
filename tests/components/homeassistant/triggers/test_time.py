@@ -2,8 +2,10 @@
 from datetime import timedelta
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import automation, sensor
+from homeassistant.components.homeassistant.triggers import time
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -492,3 +494,30 @@ async def test_if_fires_using_at_sensor(hass, calls):
 
     # We should not have listened to anything
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    "conf",
+    [
+        {"platform": "time", "at": "input_datetime.bla"},
+        {"platform": "time", "at": "sensor.bla"},
+        {"platform": "time", "at": "12:34"},
+    ],
+)
+def test_schema_valid(conf):
+    """Make sure we don't accept number for 'at' value."""
+    time.TRIGGER_SCHEMA(conf)
+
+
+@pytest.mark.parametrize(
+    "conf",
+    [
+        {"platform": "time", "at": "binary_sensor.bla"},
+        {"platform": "time", "at": 745},
+        {"platform": "time", "at": "25:00"},
+    ],
+)
+def test_schema_invalid(conf):
+    """Make sure we don't accept number for 'at' value."""
+    with pytest.raises(vol.Invalid):
+        time.TRIGGER_SCHEMA(conf)
