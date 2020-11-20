@@ -839,7 +839,7 @@ async def test_device_class_cover(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {"discreteOnlyOpenClose": True},
                     "id": "cover.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
