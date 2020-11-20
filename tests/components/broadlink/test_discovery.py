@@ -1,6 +1,8 @@
 """Tests for device discovery."""
 import socket
 
+import pytest
+
 from homeassistant.components.broadlink.const import DOMAIN
 
 from . import get_device
@@ -65,6 +67,19 @@ async def test_discovery_already_known_device(hass):
     assert mock_init.call_count == 0
 
 
+async def test_discovery_unsupported_device(hass):
+    """Test we do not create a flow when an unsupported device is discovered."""
+    unsupported_device = get_device("Kitchen")
+    results = unsupported_device.get_mock_discovery()
+
+    device = get_device("Entrance")
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
+
+    assert mock_discovery.call_count == 1
+    assert mock_init.call_count == 0
+
+
 async def test_discovery_update_ip_address(hass):
     """Test we update the entry when a known device is discovered with a different IP address."""
     device = get_device("Living Room")
@@ -124,6 +139,28 @@ async def test_discovery_do_not_change_hostname(hass):
 
     assert mock_host.call_count == 1
     assert mock_entry.data["host"] == "somethingthatworks"
+
+
+async def test_discovery_ignore_os_error(hass):
+    """Test we do not propagate an OS error during a discovery."""
+    device = get_device("Living Room")
+    _, mock_entry, _ = await device.setup_entry(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
+        "homeassistant.components.broadlink.get_broadcast_addrs",
+        return_value=["192.168.31.0"],
+    ), patch(
+        "homeassistant.components.broadlink.discovery.blk.xdiscover",
+        side_effect=OSError(),
+    ) as mock_discovery:
+        try:
+            await hass.data[DOMAIN].discovery.coordinator.async_refresh()
+            await hass.async_block_till_done()
+        except OSError:
+            pytest.fail("Device discovery propagated an OSError")
+
+    assert mock_discovery.call_count == 1
+    assert mock_init.call_count == 0
 
 
 async def test_discovery_run_once(hass):
