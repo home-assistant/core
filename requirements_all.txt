@@ -511,7 +511,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.18
+dsmr_parser==0.23
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
