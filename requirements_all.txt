@@ -2098,6 +2098,9 @@ spotipy==2.16.1
 # homeassistant.components.sql
 sqlalchemy==1.3.20
 
+# homeassistant.components.srp_energy
+srpenergy==1.3.2
+
 # homeassistant.components.starline
 starline==0.1.3
 
