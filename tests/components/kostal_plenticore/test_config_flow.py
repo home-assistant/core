@@ -1,5 +1,6 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 import asyncio
+import pytest
 
 from kostal.plenticore import PlenticoreAuthenticationException
 
@@ -7,7 +8,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.kostal_plenticore import config_flow
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -21,13 +22,15 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.test_connection",
-    ), patch(
+        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient",
+        return_value=AsyncMock(),
+    ) as ApiClientMock, patch(
         "homeassistant.components.kostal_plenticore.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        ApiClientMock().login = AsyncMock()
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
