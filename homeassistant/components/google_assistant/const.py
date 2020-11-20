@@ -104,6 +104,7 @@ ERR_UNSUPPORTED_INPUT = "unsupportedInput"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"
+ERR_ALREADY_STOPPED = "alreadyStopped"
 
 ERR_CHALLENGE_NEEDED = "challengeNeeded"
 ERR_CHALLENGE_NOT_SETUP = "challengeFailedNotSetup"
