@@ -1,4 +1,5 @@
 """Support for Waze travel time sensor."""
+import asyncio
 from datetime import timedelta
 import logging
 import re
@@ -6,7 +7,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import WazeRouteCalculator
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -38,12 +40,38 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DOMAIN,
     ICON,
+    WAZE_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(WAZE_SCHEMA)
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Waze travel time sensor platform."""
+
+    asyncio.run_coroutine_threadsafe(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        ),
+        hass.loop,
+    )
+
+    _LOGGER.info(
+        "Your Waze configuration has been imported into the UI; "
+        "please remove it from configuration.yaml as support for it "
+        "will be removed in a future release."
+    )
+
+    return True
 
 
 async def async_setup_entry(
