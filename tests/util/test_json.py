@@ -4,6 +4,7 @@ from functools import partial
 from json import JSONEncoder, dumps
 import math
 import os
+import string
 import sys
 from tempfile import mkdtemp
 import unittest
@@ -27,6 +28,7 @@ TEST_JSON_B = {"a": "one", "B": 2}
 # Test data that can not be loaded as JSON
 TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 TMP_DIR = None
+COUNT = 0
 
 
 def setup():
@@ -42,16 +44,29 @@ def teardown():
     os.rmdir(TMP_DIR)
 
 
-def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, f"{leaf_name}.json")
+def _new_file():
+    """Return a new json file path each time."""
+    global COUNT
+    COUNT += 1
+    return os.path.join(TMP_DIR, f"test{COUNT}.json")
 
 
 def test_save_and_load():
     """Test saving and loading back."""
-    fname = _path_for("test1")
+    fname = _new_file()
     save_json(fname, TEST_JSON_A)
     data = load_json(fname)
     assert data == TEST_JSON_A
+
+
+def test_save_deterministic():
+    """Test saving saves the keys ordered."""
+    fname = _new_file()
+    save_json(fname, {letter: 0 for letter in string.ascii_lowercase})
+    with open(fname) as fil:
+        raw = fil.read()
+    order = [raw.index(letter) for letter in string.ascii_lowercase]
+    assert sorted(order) == order
 
 
 # Skipped on Windows
@@ -60,7 +75,7 @@ def test_save_and_load():
 )
 def test_save_and_load_private():
     """Test we can load private files and that they are protected."""
-    fname = _path_for("test2")
+    fname = _new_file()
     save_json(fname, TEST_JSON_A, private=True)
     data = load_json(fname)
     assert data == TEST_JSON_A
@@ -70,7 +85,7 @@ def test_save_and_load_private():
 
 def test_overwrite_and_reload():
     """Test that we can overwrite an existing file and read back."""
-    fname = _path_for("test3")
+    fname = _new_file()
     save_json(fname, TEST_JSON_A)
     save_json(fname, TEST_JSON_B)
     data = load_json(fname)
@@ -79,20 +94,21 @@ def test_overwrite_and_reload():
 
 def test_save_bad_data():
     """Test error from trying to save unserialisable data."""
+    fname = _new_file()
     with pytest.raises(SerializationError) as excinfo:
-        save_json("test4", {"hello": set()})
+        save_json(fname, {"hello": set()})
 
     assert (
-        "Failed to serialize to JSON: test4. Bad data at $.hello=set()(<class 'set'>"
+        f"Failed to serialize to JSON: {fname}. Bad data at $.hello=set()(<class 'set'>"
         in str(excinfo.value)
     )
 
 
 def test_load_bad_data():
     """Test error from trying to load unserialisable data."""
-    fname = _path_for("test5")
-    with open(fname, "w") as fh:
-        fh.write(TEST_BAD_SERIALIED)
+    fname = _new_file()
+    with open(fname, "w") as fil:
+        fil.write(TEST_BAD_SERIALIED)
     with pytest.raises(HomeAssistantError):
         load_json(fname)
 
@@ -107,7 +123,7 @@ def test_custom_encoder():
             """Mock JSON encode method."""
             return "9"
 
-    fname = _path_for("test6")
+    fname = _new_file()
     save_json(fname, Mock(), encoder=MockJSONEncoder)
     data = load_json(fname)
     assert data == "9"
