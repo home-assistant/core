@@ -1,5 +1,8 @@
 """Define constants for the OpenUV component."""
+import logging
+
 DOMAIN = "openuv"
+LOGGER = logging.getLogger(__package__)
 
 DATA_CLIENT = "data_client"
 DATA_LISTENER = "data_listener"
