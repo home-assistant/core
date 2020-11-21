@@ -559,7 +559,7 @@ env_canada==0.2.4
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.16.2
+envoy_reader==0.17.0
 
 # homeassistant.components.season
 ephem==3.7.7.0
