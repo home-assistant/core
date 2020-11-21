@@ -288,19 +288,12 @@ class DSMREntity(Entity):
     def state(self):
         """Return the state of sensor, if available, translate if needed."""
         value = self.get_dsmr_object_attr("value")
-        unit = self.get_dsmr_object_attr("unit")
 
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
         try:
-            if unit == POWER_KILO_WATT:
-                value = round(
-                    float(value) * 1000.0,
-                    self._config[CONF_PRECISION],
-                )
-            else:
-                value = round(float(value), self._config[CONF_PRECISION])
+            value = round(float(value), self._config[CONF_PRECISION])
         except TypeError:
             pass
 
@@ -312,12 +305,7 @@ class DSMREntity(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        unit = self.get_dsmr_object_attr("unit")
-
-        if unit == POWER_KILO_WATT:
-            return POWER_WATT
-
-        return unit
+        return self.get_dsmr_object_attr("unit")
 
     @property
     def unique_id(self) -> str:
@@ -360,6 +348,37 @@ class DSMREntity(Entity):
             return "low"
 
         return None
+
+
+class DSMRPowerEntity(DSMREntity):
+    """Entity handling power values from DSMR telegram."""
+
+    @property
+    def state(self):
+        """Return the state of sensor, if available, translate if needed."""
+        value = self.get_dsmr_object_attr("value")
+        unit = self.get_dsmr_object_attr("unit")
+
+        try:
+            if unit == POWER_KILO_WATT:
+                value = round(
+                    float(value) * 1000.0,
+                    self._config[CONF_PRECISION],
+                )
+            else:
+                value = round(float(value), self._config[CONF_PRECISION])
+        except TypeError:
+            pass
+
+        if value is not None:
+            return value
+
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return POWER_WATT
 
 
 class DerivativeDSMREntity(DSMREntity):
