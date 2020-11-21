@@ -258,7 +258,7 @@ async def async_setup_entry(
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, device_name, device_serial, obis, config, disable_default):
+    def __init__(self, name, device_name, device_serial, obis, config, enable_default):
         """Initialize entity."""
         self._name = name
         self._obis = obis
@@ -269,7 +269,7 @@ class DSMREntity(Entity):
         self._device_serial = device_serial
         self._unique_id = f"{device_serial}_{name}".replace(" ", "_")
 
-        self._disable_default = disable_default
+        self._enable_default = enable_default
 
     @callback
     def update_data(self, telegram):
@@ -373,7 +373,7 @@ class DSMREntity(Entity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._disable_default
+        return self._enable_default
 
 
 class DSMRPowerEntity(DSMREntity):
