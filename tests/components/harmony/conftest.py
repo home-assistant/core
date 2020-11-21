@@ -42,13 +42,13 @@ class FakeHarmonyClient:
         self._callbacks.connect(None)
         return AsyncMock(return_value=(True))
 
-    def get_activity_name(self, *args):
-        """Return the current activity."""
-        return self._activity_name
+    def get_activity_name(self, activity_id):
+        """Return the activity name with the given activity_id."""
+        return IDS_TO_ACTIVITIES.get(activity_id)
 
     async def start_activity(self, activity_id):
         """Update the current activity and call the appropriate callbacks."""
-        self._activity_name = IDS_TO_ACTIVITIES.get(activity_id)
+        self._activity_name = IDS_TO_ACTIVITIES.get(int(activity_id))
         activity_tuple = (activity_id, self._activity_name)
         self._callbacks.new_activity_starting(activity_tuple)
         self._callbacks.new_activity(activity_tuple)
@@ -67,8 +67,8 @@ class FakeHarmonyClient:
     def current_activity(self):
         """Return the current activity tuple."""
         return (
-            self.get_activity_id(self.get_activity_name()),
-            self.get_activity_name(),
+            self.get_activity_id(self._activity_name),
+            self._activity_name,
         )
 
     @property
