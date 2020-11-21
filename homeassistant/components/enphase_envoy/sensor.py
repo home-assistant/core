@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     ENERGY_WATT_HOUR,
     POWER_WATT,
@@ -47,6 +46,8 @@ SENSORS = {
     "inverters": ("Envoy Inverter", POWER_WATT),
 }
 
+SCAN_INTERVAL = timedelta(seconds=60)
+
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
@@ -61,7 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(list(SENSORS))]
         ),
         vol.Optional(CONF_NAME, default=""): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=60): cv.time_period,
     }
 )
 
@@ -75,7 +75,6 @@ async def async_setup_platform(
     name = config[CONF_NAME]
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    scan_interval = config[CONF_SCAN_INTERVAL]
 
     envoy_reader = EnvoyReader(ip_address, username, password)
 
@@ -113,7 +112,7 @@ async def async_setup_platform(
         _LOGGER,
         name="sensor",
         update_method=async_update_data,
-        update_interval=scan_interval,
+        update_interval=SCAN_INTERVAL,
     )
 
     await coordinator.async_refresh()
