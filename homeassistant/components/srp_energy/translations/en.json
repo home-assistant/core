@@ -5,17 +5,17 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "invalid_account": "Account ID should be a 9 digit number",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
                     "id": "Account Id",
-                    "username": "Username",
+                    "is_tou": "Is Time of Use Plan",
                     "password": "Password",
-                    "is_tou": "Is Time of Use Plan"
+                    "username": "Username"
                 }
             }
         }
