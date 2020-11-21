@@ -11,6 +11,7 @@
                 "data": {
                     "host": "Hostitel (nebo IP adresa) va\u0161eho za\u0159\u00edzen\u00ed Twinkly"
                 },
+                "description": "Nastavte sv\u016fj LED p\u00e1sek Twinkly",
                 "title": "Twinkly"
             }
         }
