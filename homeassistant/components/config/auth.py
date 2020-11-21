@@ -86,6 +86,7 @@ async def websocket_create(hass, connection, msg):
         vol.Required("type"): "config/auth/update",
         vol.Required("user_id"): str,
         vol.Optional("name"): str,
+        vol.Optional("is_active"): bool,
         vol.Optional("group_ids"): [str],
     }
 )
