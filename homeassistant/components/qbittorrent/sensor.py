@@ -1,22 +1,16 @@
 """Support for monitoring the qBittorrent API."""
-
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import logging
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
-
-from homeassistant.const import (
-    DATA_RATE_KILOBYTES_PER_SECOND,
-    STATE_IDLE,
-)
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, STATE_IDLE
 from homeassistant.helpers.entity import Entity
-from .wrapper_functions import get_main_data_client, retrieve_torrentdata
 
 from .const import (
     DATA_KEY_CLIENT,
     DATA_KEY_NAME,
+    DOMAIN,
     SENSOR_TYPE_ACTIVE_TORRENTS,
     SENSOR_TYPE_COMPLETED_TORRENTS,
     SENSOR_TYPE_CURRENT_STATUS,
@@ -29,8 +23,8 @@ from .const import (
     SENSOR_TYPE_TOTAL_TORRENTS,
     SENSOR_TYPE_UPLOAD_SPEED,
     TRIM_SIZE,
-    DOMAIN,
 )
+from .wrapper_functions import get_main_data_client, retrieve_torrentdata
 
 _LOGGER = logging.getLogger(__name__)
 

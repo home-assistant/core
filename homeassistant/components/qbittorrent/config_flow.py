@@ -7,9 +7,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from .wrapper_functions import create_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
+from .wrapper_functions import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
