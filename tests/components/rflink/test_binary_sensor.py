@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
+    CONF_TYPE,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
@@ -37,6 +38,7 @@ CONFIG = {
                 "off_delay": 30,
                 "force_update": True,
             },
+            "test3": {"name": "test3", CONF_TYPE: "inverted", "device_class": "lock"},
         },
     },
 }
@@ -177,3 +179,40 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_OFF
     assert len(events) == 3
+
+
+async def test_type_inverted(hass, monkeypatch):
+    """Inveret binary sensor will react to OFF signals."""
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
+
+    # Entities are OFF by default
+    assert hass.states.get("binary_sensor.test3").state == STATE_OFF
+
+    # allon command received
+    event_callback({"id": "test3", "command": "allon"})
+    await hass.async_block_till_done()
+
+    # allon signal is not expected to change the state
+    assert hass.states.get("binary_sensor.test3").state == STATE_OFF
+
+    # off command received
+    event_callback({"id": "test3", "command": "off"})
+    await hass.async_block_till_done()
+
+    # off signal will activate the sensor
+    assert hass.states.get("binary_sensor.test3").state == STATE_ON
+
+    # bad command received
+    event_callback({"id": "test3", "command": "this_is_not_a_binary_sensor_command"})
+    await hass.async_block_till_done()
+
+    # unrecognized signal is not expected to change the state
+    assert hass.states.get("binary_sensor.test3").state == STATE_ON
+
+    # on command received
+    event_callback({"id": "test3", "command": "on"})
+    await hass.async_block_till_done()
+
+    # on signal is  expected to switch off the sensor
+    assert hass.states.get("binary_sensor.test3").state == STATE_OFF
