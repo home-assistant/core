@@ -146,6 +146,14 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
+def _async_get_entries_by_name(current_entries):
+    """Return a dict of the entries by name."""
+
+    # For backwards compat, its possible the first bridge is using the default
+    # name.
+    return {entry.data.get(CONF_NAME, BRIDGE_NAME): entry for entry in current_entries}
+
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the HomeKit from yaml."""
     hass.data.setdefault(DOMAIN, {})
@@ -156,8 +164,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         return True
 
     current_entries = hass.config_entries.async_entries(DOMAIN)
-
-    entries_by_name = {entry.data[CONF_NAME]: entry for entry in current_entries}
+    entries_by_name = _async_get_entries_by_name(current_entries)
 
     for index, conf in enumerate(config[DOMAIN]):
         if _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
@@ -384,7 +391,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
             return
 
         current_entries = hass.config_entries.async_entries(DOMAIN)
-        entries_by_name = {entry.data[CONF_NAME]: entry for entry in current_entries}
+        entries_by_name = _async_get_entries_by_name(current_entries)
 
         for conf in config[DOMAIN]:
             _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf)
@@ -507,7 +514,7 @@ class HomeKit:
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
-                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option",
+                "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
                 state.entity_id,
                 MAX_DEVICES,
             )

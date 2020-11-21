@@ -15,7 +15,7 @@
                     "host": "Vert",
                     "security_code": "Sikkerhetskode"
                 },
-                "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din.",
+                "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din",
                 "title": "Angi sikkerhetskode"
             }
         }

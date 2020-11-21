@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroler jest ju\u017c skonfigurowany",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z kontrolerem za pomoc\u0105 adresu {base_url}"
         },
         "step": {

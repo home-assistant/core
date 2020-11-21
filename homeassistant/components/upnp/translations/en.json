@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Device is already configured",
             "incomplete_discovery": "Incomplete discovery",
-            "no_devices_discovered": "No UPnP/IGDs discovered",
             "no_devices_found": "No devices found on the network"
         },
         "flow_title": "UPnP/IGD: {name}",

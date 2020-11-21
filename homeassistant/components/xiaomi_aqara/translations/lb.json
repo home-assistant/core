@@ -10,14 +10,13 @@
             "invalid_host": "Ong\u00ebltege Numm oder IP Adress, kuck https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Ong\u00ebltege Netzwierk Interface",
             "invalid_key": "Ong\u00ebltegen Gateway Schl\u00ebssel",
-            "invalid_mac": "Ong\u00eblteg Mac Adresse",
-            "not_found_error": "D\u00e9i Gateway d\u00e9i duerch de Zeroconf entdeckt gouf konnt net lokalis\u00e9iert ginn, prob\u00e9ier d'IP vum Apparat op deem Home Assistant leeft als Interface ze benotzen"
+            "invalid_mac": "Ong\u00eblteg Mac Adresse"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP vun der Gateway"
+                    "select_ip": "IP Adresse"
                 },
                 "description": "Setup nach emol ausf\u00e9ieren fir eng zous\u00e4tzlech Gateway dob\u00e4i ze setzen",
                 "title": "Xiaomi Aqara Gateway auswielen mat der sech soll verbonne ginn"

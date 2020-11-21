@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PIN,
+    CONF_PORT,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -777,6 +778,35 @@ async def test_zeroconf_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_flow_with_port_in_host(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test entity is already configured during zeroconf setup when port is in host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        unique_id=UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    # Try rediscovering same device, this time with port already in host
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info[
+        CONF_HOST
+    ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Flow should abort because device is already setup
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_zeroconf_dupe_fail(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
@@ -824,6 +854,21 @@ async def test_zeroconf_ignore(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_zeroconf_no_unique_id(
+    hass: HomeAssistantType,
+    vizio_no_unique_id: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery aborts when unique_id is None."""
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_abort_when_ignored(

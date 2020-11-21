@@ -1,9 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "A fi\u00f3k m\u00e1r regisztr\u00e1lt",
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok"
-        },
         "step": {
             "user": {
                 "data": {
@@ -12,6 +8,15 @@
                     "port": "Port"
                 },
                 "title": "T\u00f6ltsd ki az adataid"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Alap\u00e9rtelmezett z\u00f3nafut\u00e1si id\u0151 (m\u00e1sodpercben)"
+                }
             }
         }
     }

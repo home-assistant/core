@@ -206,5 +206,5 @@ async def test_options_form(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_PRECISION] is None
+    assert result["data"][CONF_PRECISION] == 0.0
     assert result["data"][CONF_FLOOR_TEMP] is True

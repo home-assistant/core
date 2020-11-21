@@ -5,8 +5,7 @@
         },
         "error": {
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
-            "cannot_connect": "No se pudo conectar",
-            "device_unavailable": "El dispositivo no est\u00e1 disponible"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "user": {
@@ -17,6 +16,5 @@
                 "title": "Configurar el Agente de DVR"
             }
         }
-    },
-    "title": "Agente DVR"
+    }
 }
