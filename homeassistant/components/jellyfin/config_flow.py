@@ -35,13 +35,13 @@ class JellyfinHub:
         player_name = socket.gethostname()
         client_uuid = str(uuid.uuid4())
 
-        client.config.data["app.default"] = True
         client.config.app(USER_APP_NAME, CLIENT_VERSION, player_name, client_uuid)
-        client.config.data["http.user_agent"] = USER_AGENT
-        client.config.data["auth.ssl"] = True
+        client.config.http(USER_AGENT)
 
-    def authenticate(self, url, username, password) -> bool:
+    def authenticate(self, url: str, username: str, password: str) -> bool:
         client = self.jellyfin.get_client()
+
+        client.config.data["auth.ssl"] = True if url.startswith("https") else False
 
         state = client.auth.connect_to_address(url)
         if state["State"] != CONNECTION_STATE["ServerSignIn"]:
@@ -62,13 +62,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
 
     hub = JellyfinHub()
 
