@@ -1146,4 +1146,4 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.2.2
 
 # homeassistant.components.zha
-zigpy==0.27.1
+zigpy==0.28.0

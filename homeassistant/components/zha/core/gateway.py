@@ -82,7 +82,6 @@ from .device import (
     ZHADevice,
 )
 from .group import GroupMember, ZHAGroup
-from .patches import apply_application_controller_patch
 from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
 from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
@@ -155,7 +154,6 @@ class ZHAGateway:
             )
             raise ConfigEntryNotReady from exception
 
-        apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
@@ -507,13 +505,6 @@ class ZHAGateway:
         return zha_group
 
     @callback
-    def async_device_became_available(
-        self, sender, profile, cluster, src_ep, dst_ep, message
-    ):
-        """Handle tasks when a device becomes available."""
-        self.async_update_device(sender, available=True)
-
-    @callback
     def async_update_device(
         self, sender: zigpy_dev.Device, available: bool = True
     ) -> None:
@@ -638,6 +629,19 @@ class ZHAGateway:
         for unsubscribe in self._unsubs:
             unsubscribe()
         await self.application_controller.pre_shutdown()
+
+    def handle_message(
+        self,
+        sender: zigpy_dev.Device,
+        profile: int,
+        cluster: int,
+        src_ep: int,
+        dst_ep: int,
+        message: bytes,
+    ) -> None:
+        """Handle message from a device Event handler."""
+        if sender.ieee in self.devices and not self.devices[sender.ieee].available:
+            self.async_update_device(sender, available=True)
 
 
 @callback
