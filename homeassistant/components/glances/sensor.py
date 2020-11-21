@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif sensor_details[0] == "sensors":
                 # sensors will provide temp for different devices
                 for sensor in client.api.data[sensor_details[0]]:
-                    if sensor['type'] == sensor_type:
+                    if sensor["type"] == sensor_type:
                         dev.append(
                             GlancesSensor(
                                 client,
