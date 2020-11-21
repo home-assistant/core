@@ -8,7 +8,6 @@ from .const import (
     CONF_LIMIT,
     CONF_ORDER,
     DOMAIN,
-    STATE_ATTR_TORRENT_INFO,
     SUPPORTED_ORDER_MODES,
 )
 
@@ -190,5 +189,5 @@ def _torrents_info(torrents, order, statuses=None):
             info["eta"] = str(torrent.eta)
         except ValueError:
             pass
-        idx +=1
+        idx += 1
     return infos
