@@ -237,3 +237,19 @@ async def lock_msg_fixture(hass):
     message = MQTTMessage(topic=lock_json["topic"], payload=lock_json["payload"])
     message.encode()
     return message
+
+
+@pytest.fixture(name="stop_addon")
+def mock_install_addon():
+    """Mock stop add-on."""
+    with patch("homeassistant.components.hassio.async_stop_addon") as stop_addon:
+        yield stop_addon
+
+
+@pytest.fixture(name="uninstall_addon")
+def mock_uninstall_addon():
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.hassio.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon

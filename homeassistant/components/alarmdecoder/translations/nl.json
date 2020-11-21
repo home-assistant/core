@@ -7,8 +7,7 @@
             "default": "Succesvol verbonden met AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "service_unavailable": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "protocol": {

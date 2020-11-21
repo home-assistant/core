@@ -18,7 +18,8 @@
             },
             "user": {
                 "data": {
-                    "name": "Nimi"
+                    "name": "Nimi",
+                    "url": "Veebiliidese URL"
                 }
             }
         }

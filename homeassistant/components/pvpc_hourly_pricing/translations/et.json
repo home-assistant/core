@@ -6,8 +6,11 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Anduri nimi"
-                }
+                    "name": "Anduri nimi",
+                    "tariff": "Lepinguline tariif (1, 2 v\u00f5i 3 perioodi)"
+                },
+                "description": "See andur kasutab ametlikku API-d, et saada Hispaania [tunni hinnakujundus (PVPC)] (https://www.esios.ree.es/es/pvpc) elektri tunnihind.\n T\u00e4psema selgituse saamiseks k\u00fclasta [integratsioonidokumente] (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/) \n\n Vali lepinguline m\u00e4\u00e4r l\u00e4htudes arveldusperioodide arvust p\u00e4evas:\n - 1 periood: normaalne\n - 2 perioodi: v\u00e4hendatud (\u00f6\u00f6hind)\n - 3 perioodi: elektriauto (\u00f6\u00f6 hind 3 perioodi)",
+                "title": "Tariifivalik"
             }
         }
     }

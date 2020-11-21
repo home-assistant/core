@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "name_exists": "Name vorhanden",
-            "wrong_credentials": "Falsche Zugangsdaten"
+            "name_exists": "Name vorhanden"
         },
         "step": {
             "user": {

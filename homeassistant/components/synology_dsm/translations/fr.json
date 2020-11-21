@@ -5,9 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "connection": "Erreur de connexion: veuillez v\u00e9rifier votre h\u00f4te, port et SSL",
             "invalid_auth": "Authentification invalide",
-            "login": "Erreur de connexion: veuillez v\u00e9rifier votre nom d'utilisateur et votre mot de passe",
             "missing_data": "Donn\u00e9es manquantes: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration",
             "otp_failed": "\u00c9chec de l'authentification en deux \u00e9tapes, r\u00e9essayez avec un nouveau code d'acc\u00e8s",
             "unknown": "Erreur inconnue: veuillez consulter les journaux pour obtenir plus de d\u00e9tails"
@@ -25,7 +23,8 @@
                     "password": "Mot de passe",
                     "port": "Port",
                     "ssl": "Utilisez SSL/TLS pour vous connecter \u00e0 votre NAS",
-                    "username": "Nom d'utilisateur"
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "V\u00e9rifiez le certificat SSL"
                 },
                 "description": "Voulez-vous configurer {name} ({host})?",
                 "title": "Synology DSM"
@@ -36,7 +35,8 @@
                     "password": "Mot de passe",
                     "port": "Port",
                     "ssl": "Utilisez SSL/TLS pour vous connecter \u00e0 votre NAS",
-                    "username": "Nom d'utilisateur"
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "V\u00e9rifiez le certificat SSL"
                 },
                 "title": "Synology DSM"
             }

@@ -4,8 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Kan geen verbinding maken met BSB-Lan-apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
@@ -19,6 +18,5 @@
                 "title": "Maak verbinding met het BSB-Lan-apparaat"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

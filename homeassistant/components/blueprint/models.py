@@ -2,12 +2,13 @@
 import asyncio
 import logging
 import pathlib
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
+from pkg_resources import parse_version
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
@@ -16,7 +17,9 @@ from homeassistant.util import yaml
 from .const import (
     BLUEPRINT_FOLDER,
     CONF_BLUEPRINT,
+    CONF_HOMEASSISTANT,
     CONF_INPUT,
+    CONF_MIN_VERSION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
     DOMAIN,
@@ -24,6 +27,7 @@ from .const import (
 from .errors import (
     BlueprintException,
     FailedToLoad,
+    FileAlreadyExists,
     InvalidBlueprint,
     InvalidBlueprintInputs,
     MissingPlaceholder,
@@ -61,7 +65,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = self.placeholders - set(data[CONF_BLUEPRINT].get(CONF_INPUT, {}))
+        missing = self.placeholders - set(data[CONF_BLUEPRINT][CONF_INPUT])
 
         if missing:
             raise InvalidBlueprint(
@@ -85,6 +89,27 @@ class Blueprint:
         """Update metadata."""
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
+
+    def yaml(self) -> str:
+        """Dump blueprint as YAML."""
+        return yaml.dump(self.data)
+
+    @callback
+    def validate(self) -> Optional[List[str]]:
+        """Test if the Home Assistant installation supports this blueprint.
+
+        Return list of errors if not valid.
+        """
+        errors = []
+        metadata = self.metadata
+        min_version = metadata.get(CONF_HOMEASSISTANT, {}).get(CONF_MIN_VERSION)
+
+        if min_version is not None and parse_version(__version__) < parse_version(
+            min_version
+        ):
+            errors.append(f"Requires at least Home Assistant {min_version}")
+
+        return errors or None
 
 
 class BlueprintInputs:
@@ -229,3 +254,37 @@ class DomainBlueprints:
         inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
         return inputs
+
+    async def async_remove_blueprint(self, blueprint_path: str) -> None:
+        """Remove a blueprint file."""
+        path = pathlib.Path(
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
+        )
+
+        await self.hass.async_add_executor_job(path.unlink)
+        self._blueprints[blueprint_path] = None
+
+    def _create_file(self, blueprint: Blueprint, blueprint_path: str) -> None:
+        """Create blueprint file."""
+
+        path = pathlib.Path(
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
+        )
+        if path.exists():
+            raise FileAlreadyExists(self.domain, blueprint_path)
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(blueprint.yaml())
+
+    async def async_add_blueprint(
+        self, blueprint: Blueprint, blueprint_path: str
+    ) -> None:
+        """Add a blueprint."""
+        if not blueprint_path.endswith(".yaml"):
+            blueprint_path = f"{blueprint_path}.yaml"
+
+        await self.hass.async_add_executor_job(
+            self._create_file, blueprint, blueprint_path
+        )
+
+        self._blueprints[blueprint_path] = blueprint

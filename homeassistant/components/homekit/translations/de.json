@@ -29,11 +29,6 @@
                 },
                 "title": "W\u00e4hlen Sie den Kamera-Video-Codec."
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Auszuschlie\u00dfende Entit\u00e4ten"
-                }
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Entit\u00e4ten",
@@ -52,6 +47,5 @@
                 "title": "Passen Sie die HomeKit Bridge-Optionen an"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

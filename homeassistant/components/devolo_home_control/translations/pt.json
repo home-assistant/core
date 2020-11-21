@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "invalid_credentials": "Nome de utilizador ou palavra-passe incorretos"
-        },
         "step": {
             "user": {
                 "data": {

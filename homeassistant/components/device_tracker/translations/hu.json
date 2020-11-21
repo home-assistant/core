@@ -3,6 +3,10 @@
         "condition_type": {
             "is_home": "{entity_name} otthon van",
             "is_not_home": "{entity_name} nincs otthon"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} bel\u00e9pett a z\u00f3n\u00e1ba",
+            "leaves": "{entity_name} elhagyta a z\u00f3n\u00e1t"
         }
     },
     "state": {

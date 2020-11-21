@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Benotzt ee SSL Zertifikat",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
-                },
-                "title": "Mat Sonarr verbannen"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_TYPE
 
 from .const import CONF_TYPE_OWSERVER, DOMAIN, SENSOR_TYPE_SENSED
-from .onewire_entities import OneWireProxy
+from .onewire_entities import OneWireProxyEntity
 from .onewirehub import OneWireHub
 
 DEVICE_BINARY_SENSORS = {
@@ -109,7 +109,7 @@ def get_entities(onewirehub: OneWireHub):
                 os.path.split(device["path"])[0], device_sensor["path"]
             )
             entities.append(
-                OneWireBinarySensor(
+                OneWireProxyBinarySensor(
                     sensor_id,
                     device_file,
                     device_sensor["type"],
@@ -123,7 +123,7 @@ def get_entities(onewirehub: OneWireHub):
     return entities
 
 
-class OneWireBinarySensor(BinarySensorEntity, OneWireProxy):
+class OneWireProxyBinarySensor(OneWireProxyEntity, BinarySensorEntity):
     """Implementation of a 1-Wire binary sensor."""
 
     @property

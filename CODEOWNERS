@@ -48,6 +48,7 @@ homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
 homeassistant/components/august/* @bdraco
+homeassistant/components/aurora/* @djtimca
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
@@ -335,7 +336,7 @@ homeassistant/components/pi_hole/* @fabaff @johnluetke @shenxn
 homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @CoMPaTech @bouwew
+homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
@@ -360,6 +361,7 @@ homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
+homeassistant/components/recollect_waste/* @bachya
 homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
@@ -374,7 +376,6 @@ homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
@@ -422,6 +423,7 @@ homeassistant/components/splunk/* @Bre77
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
 homeassistant/components/squeezebox/* @rajlaud
+homeassistant/components/srp_energy/* @briglx
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
@@ -469,6 +471,7 @@ homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
 homeassistant/components/tuya/* @ollo69
 homeassistant/components/twentemilieu/* @frenck
+homeassistant/components/twinkly/* @dr1rrb
 homeassistant/components/ubee/* @mzdrale
 homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
@@ -516,7 +519,6 @@ homeassistant/components/yamaha_musiccast/* @jalmeroth
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
-homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
 homeassistant/components/zeroconf/* @bdraco
 homeassistant/components/zerproc/* @emlove

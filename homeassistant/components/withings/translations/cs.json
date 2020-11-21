@@ -9,8 +9,7 @@
             "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno pomoc\u00ed Withings."
         },
         "error": {
-            "already_configured": "\u00da\u010det je ji\u017e nastaven",
-            "already_configured_account": "\u00da\u010det je ji\u017e nastaven"
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "flow_title": "Withings: {profile}",
         "step": {

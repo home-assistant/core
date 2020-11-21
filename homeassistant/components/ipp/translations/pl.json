@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_upgrade": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105 z powodu konieczno\u015bci uaktualnienia po\u0142\u0105czenia",
             "ipp_error": "Wyst\u0105pi\u0142 b\u0142\u0105d IPP",
             "ipp_version_error": "Wersja IPP nieobs\u0142ugiwana przez drukark\u0119",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_upgrade": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105. Spr\u00f3buj ponownie z zaznaczon\u0105 opcj\u0105 SSL/TLS."
         },
         "flow_title": "Drukarka: {name}",

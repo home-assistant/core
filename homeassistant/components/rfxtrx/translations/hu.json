@@ -3,5 +3,15 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         }
+    },
+    "options": {
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "remove_device": "V\u00e1lassza ki a t\u00f6r\u00f6lni k\u00edv\u00e1nt eszk\u00f6zt"
+                },
+                "title": "Rfxtrx opci\u00f3k"
+            }
+        }
     }
 }

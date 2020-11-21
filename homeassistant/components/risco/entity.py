@@ -2,6 +2,11 @@
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
+def binary_sensor_unique_id(risco, zone_id):
+    """Return unique id for the binary sensor."""
+    return f"{risco.site_uuid}_zone_{zone_id}"
+
+
 class RiscoEntity(CoordinatorEntity):
     """Risco entity base class."""
 

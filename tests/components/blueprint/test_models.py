@@ -17,7 +17,10 @@ def blueprint_1():
             "blueprint": {
                 "name": "Hello",
                 "domain": "automation",
-                "input": {"test-placeholder": None},
+                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "input": {
+                    "test-placeholder": {"name": "Name", "description": "Description"}
+                },
             },
             "example": Placeholder("test-placeholder"),
         }
@@ -59,7 +62,8 @@ def test_blueprint_properties(blueprint_1):
     assert blueprint_1.metadata == {
         "name": "Hello",
         "domain": "automation",
-        "input": {"test-placeholder": None},
+        "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        "input": {"test-placeholder": {"name": "Name", "description": "Description"}},
     }
     assert blueprint_1.domain == "automation"
     assert blueprint_1.name == "Hello"
@@ -67,7 +71,7 @@ def test_blueprint_properties(blueprint_1):
 
 
 def test_blueprint_update_metadata():
-    """Test properties."""
+    """Test update metadata."""
     bp = models.Blueprint(
         {
             "blueprint": {
@@ -79,6 +83,34 @@ def test_blueprint_update_metadata():
 
     bp.update_metadata(source_url="http://bla.com")
     assert bp.metadata["source_url"] == "http://bla.com"
+
+
+def test_blueprint_validate():
+    """Test validate blueprint."""
+    assert (
+        models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "Hello",
+                    "domain": "automation",
+                },
+            }
+        ).validate()
+        is None
+    )
+
+    assert (
+        models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "Hello",
+                    "domain": "automation",
+                    "homeassistant": {"min_version": "100000.0.0"},
+                },
+            }
+        ).validate()
+        == ["Requires at least Home Assistant 100000.0.0"]
+    )
 
 
 def test_blueprint_inputs(blueprint_1):
@@ -152,3 +184,19 @@ async def test_domain_blueprints_inputs_from_config(domain_bps, blueprint_1):
         )
     assert inputs.blueprint is blueprint_1
     assert inputs.inputs == {"test-placeholder": None}
+
+
+async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1):
+    """Test DomainBlueprints.async_add_blueprint."""
+    with patch.object(domain_bps, "_create_file") as create_file_mock:
+        # Should add extension when not present.
+        await domain_bps.async_add_blueprint(blueprint_1, "something")
+        assert create_file_mock.call_args[0][1] == ("something.yaml")
+
+        await domain_bps.async_add_blueprint(blueprint_1, "something2.yaml")
+        assert create_file_mock.call_args[0][1] == ("something2.yaml")
+
+    # Should be in cache.
+    with patch.object(domain_bps, "_load_blueprint") as mock_load:
+        assert await domain_bps.async_get_blueprint("something.yaml") == blueprint_1
+        assert not mock_load.mock_calls

@@ -7,7 +7,7 @@
         "error": {
             "identifier_exists": "Konto on juba registreeritud",
             "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat",
+            "still_awaiting_mfa": "Ootan endiselt MFA e-posti klikki",
             "unknown": "Tundmatu viga"
         },
         "step": {
@@ -24,6 +24,7 @@
             },
             "user": {
                 "data": {
+                    "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)",
                     "password": "Salas\u00f5na",
                     "username": "E-post"
                 },
