@@ -26,11 +26,7 @@ ATTR_COUNTER = "counter"
 
 async def test_sensors(hass):
     """Test states of the sensors."""
-    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
-    with patch(
-        "homeassistant.components.brother.sensor.utcnow", return_value=test_time
-    ):
-        entry = await init_integration(hass, skip_setup=True)
+    entry = await init_integration(hass, skip_setup=True)
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -42,8 +38,10 @@ async def test_sensors(hass):
         suggested_object_id="hl_l2340dw_uptime",
         disabled_by=None,
     )
-
+    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
     with patch(
+        "homeassistant.components.brother.sensor.utcnow", return_value=test_time
+    ), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
