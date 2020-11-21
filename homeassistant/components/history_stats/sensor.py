@@ -62,9 +62,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_STATE): vol.Any(
-                cv.string, vol.All(cv.ensure_list, [cv.string])
-            ),
+            vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_START): cv.template,
             vol.Optional(CONF_END): cv.template,
             vol.Optional(CONF_DURATION): cv.time_period,
@@ -88,9 +86,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     duration = config.get(CONF_DURATION)
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
-
-    if isinstance(entity_states, str):
-        entity_states = [entity_states]
 
     for template in [start, end]:
         if template is not None:
