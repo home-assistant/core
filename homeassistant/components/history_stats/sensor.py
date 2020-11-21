@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_STATE): cv.string,
+            vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_START): cv.template,
             vol.Optional(CONF_END): cv.template,
             vol.Optional(CONF_DURATION): cv.time_period,
@@ -77,11 +77,10 @@ PLATFORM_SCHEMA = vol.All(
 # noinspection PyUnusedLocal
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     entity_id = config.get(CONF_ENTITY_ID)
-    entity_state = config.get(CONF_STATE)
+    entity_states = config.get(CONF_STATE)
     start = config.get(CONF_START)
     end = config.get(CONF_END)
     duration = config.get(CONF_DURATION)
@@ -95,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(
         [
             HistoryStatsSensor(
-                hass, entity_id, entity_state, start, end, duration, sensor_type, name
+                hass, entity_id, entity_states, start, end, duration, sensor_type, name
             )
         ]
     )
@@ -107,11 +106,11 @@ class HistoryStatsSensor(Entity):
     """Representation of a HistoryStats sensor."""
 
     def __init__(
-        self, hass, entity_id, entity_state, start, end, duration, sensor_type, name
+        self, hass, entity_id, entity_states, start, end, duration, sensor_type, name
     ):
         """Initialize the HistoryStats sensor."""
         self._entity_id = entity_id
-        self._entity_state = entity_state
+        self._entity_states = entity_states
         self._duration = duration
         self._start = start
         self._end = end
@@ -230,14 +229,14 @@ class HistoryStatsSensor(Entity):
 
         # Get the first state
         last_state = history.get_state(self.hass, start, self._entity_id)
-        last_state = last_state is not None and last_state == self._entity_state
+        last_state = last_state is not None and last_state in self._entity_states
         last_time = start_timestamp
         elapsed = 0
         count = 0
 
         # Make calculations
         for item in history_list.get(self._entity_id):
-            current_state = item.state == self._entity_state
+            current_state = item.state in self._entity_states
             current_time = item.last_changed.timestamp()
 
             if last_state:
