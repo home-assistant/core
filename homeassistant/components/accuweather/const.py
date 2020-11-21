@@ -1,4 +1,20 @@
 """Constants for AccuWeather integration."""
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -29,20 +45,20 @@ NAME = "AccuWeather"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 CONDITION_CLASSES = {
-    "clear-night": [33, 34, 37],
-    "cloudy": [7, 8, 38],
-    "exceptional": [24, 30, 31],
-    "fog": [11],
-    "hail": [25],
-    "lightning": [15],
-    "lightning-rainy": [16, 17, 41, 42],
-    "partlycloudy": [4, 6, 35, 36],
-    "pouring": [18],
-    "rainy": [12, 13, 14, 26, 39, 40],
-    "snowy": [19, 20, 21, 22, 23, 43, 44],
-    "snowy-rainy": [29],
-    "sunny": [1, 2, 3, 5],
-    "windy": [32],
+    ATTR_CONDITION_CLEAR_NIGHT: [33, 34, 37],
+    ATTR_CONDITION_CLOUDY: [7, 8, 38],
+    ATTR_CONDITION_EXCEPTIONAL: [24, 30, 31],
+    ATTR_CONDITION_FOG: [11],
+    ATTR_CONDITION_HAIL: [25],
+    ATTR_CONDITION_LIGHTNING: [15],
+    ATTR_CONDITION_LIGHTNING_RAINY: [16, 17, 41, 42],
+    ATTR_CONDITION_PARTLYCLOUDY: [4, 6, 35, 36],
+    ATTR_CONDITION_POURING: [18],
+    ATTR_CONDITION_RAINY: [12, 13, 14, 26, 39, 40],
+    ATTR_CONDITION_SNOWY: [19, 20, 21, 22, 23, 43, 44],
+    ATTR_CONDITION_SNOWY_RAINY: [29],
+    ATTR_CONDITION_SUNNY: [1, 2, 3, 5],
+    ATTR_CONDITION_WINDY: [32],
 }
 
 FORECAST_DAYS = [0, 1, 2, 3, 4]

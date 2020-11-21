@@ -2,12 +2,13 @@
 import asyncio
 import logging
 import pathlib
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
+from pkg_resources import parse_version
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
@@ -16,7 +17,9 @@ from homeassistant.util import yaml
 from .const import (
     BLUEPRINT_FOLDER,
     CONF_BLUEPRINT,
+    CONF_HOMEASSISTANT,
     CONF_INPUT,
+    CONF_MIN_VERSION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
     DOMAIN,
@@ -62,7 +65,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = self.placeholders - set(data[CONF_BLUEPRINT].get(CONF_INPUT, {}))
+        missing = self.placeholders - set(data[CONF_BLUEPRINT][CONF_INPUT])
 
         if missing:
             raise InvalidBlueprint(
@@ -90,6 +93,23 @@ class Blueprint:
     def yaml(self) -> str:
         """Dump blueprint as YAML."""
         return yaml.dump(self.data)
+
+    @callback
+    def validate(self) -> Optional[List[str]]:
+        """Test if the Home Assistant installation supports this blueprint.
+
+        Return list of errors if not valid.
+        """
+        errors = []
+        metadata = self.metadata
+        min_version = metadata.get(CONF_HOMEASSISTANT, {}).get(CONF_MIN_VERSION)
+
+        if min_version is not None and parse_version(__version__) < parse_version(
+            min_version
+        ):
+            errors.append(f"Requires at least Home Assistant {min_version}")
+
+        return errors or None
 
 
 class BlueprintInputs:

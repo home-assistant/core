@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Twinkly seadme host (v\u00f5i IP-aadress)"
+                },
+                "description": "Seadista oma Twinkly LED riba",
+                "title": ""
+            }
+        }
+    }
+}

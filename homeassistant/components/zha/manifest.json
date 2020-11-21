@@ -9,9 +9,9 @@
     "zha-quirks==0.0.46",
     "zigpy-cc==0.5.2",
     "zigpy-deconz==0.11.0",
-    "zigpy==0.27.0",
+    "zigpy==0.28.0",
     "zigpy-xbee==0.13.0",
-    "zigpy-zigate==0.7.2",
+    "zigpy-zigate==0.7.3",
     "zigpy-znp==0.2.2"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"]

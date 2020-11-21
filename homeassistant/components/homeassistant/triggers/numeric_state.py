@@ -63,7 +63,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="numeric_state"
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_id = config.get(CONF_ENTITY_ID)
+    entity_ids = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
@@ -78,29 +78,32 @@ async def async_attach_trigger(
     if value_template is not None:
         value_template.hass = hass
 
-    @callback
-    def check_numeric_state(entity, from_s, to_s):
-        """Return True if criteria are now met."""
-        if to_s is None:
-            return False
-
-        variables = {
+    def variables(entity_id):
+        """Return a dict with trigger variables."""
+        return {
             "trigger": {
                 "platform": "numeric_state",
-                "entity_id": entity,
+                "entity_id": entity_id,
                 "below": below,
                 "above": above,
                 "attribute": attribute,
             }
         }
+
+    @callback
+    def check_numeric_state(entity_id, from_s, to_s):
+        """Return True if criteria are now met."""
+        if to_s is None:
+            return False
+
         return condition.async_numeric_state(
-            hass, to_s, below, above, value_template, variables, attribute
+            hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
 
     @callback
     def state_automation_listener(event):
         """Listen for state changes and calls action."""
-        entity = event.data.get("entity_id")
+        entity_id = event.data.get("entity_id")
         from_s = event.data.get("old_state")
         to_s = event.data.get("new_state")
 
@@ -112,38 +115,29 @@ async def async_attach_trigger(
                 {
                     "trigger": {
                         "platform": platform_type,
-                        "entity_id": entity,
+                        "entity_id": entity_id,
                         "below": below,
                         "above": above,
                         "from_state": from_s,
                         "to_state": to_s,
-                        "for": time_delta if not time_delta else period[entity],
-                        "description": f"numeric state of {entity}",
+                        "for": time_delta if not time_delta else period[entity_id],
+                        "description": f"numeric state of {entity_id}",
                     }
                 },
                 to_s.context,
             )
 
-        matching = check_numeric_state(entity, from_s, to_s)
+        matching = check_numeric_state(entity_id, from_s, to_s)
 
         if not matching:
-            entities_triggered.discard(entity)
-        elif entity not in entities_triggered:
-            entities_triggered.add(entity)
+            entities_triggered.discard(entity_id)
+        elif entity_id not in entities_triggered:
+            entities_triggered.add(entity_id)
 
             if time_delta:
-                variables = {
-                    "trigger": {
-                        "platform": "numeric_state",
-                        "entity_id": entity,
-                        "below": below,
-                        "above": above,
-                    }
-                }
-
                 try:
-                    period[entity] = cv.positive_time_period(
-                        template.render_complex(time_delta, variables)
+                    period[entity_id] = cv.positive_time_period(
+                        template.render_complex(time_delta, variables(entity_id))
                     )
                 except (exceptions.TemplateError, vol.Invalid) as ex:
                     _LOGGER.error(
@@ -151,20 +145,20 @@ async def async_attach_trigger(
                         automation_info["name"],
                         ex,
                     )
-                    entities_triggered.discard(entity)
+                    entities_triggered.discard(entity_id)
                     return
 
-                unsub_track_same[entity] = async_track_same_state(
+                unsub_track_same[entity_id] = async_track_same_state(
                     hass,
-                    period[entity],
+                    period[entity_id],
                     call_action,
-                    entity_ids=entity,
+                    entity_ids=entity_id,
                     async_check_same_func=check_numeric_state,
                 )
             else:
                 call_action()
 
-    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_ids, state_automation_listener)
 
     @callback
     def async_remove():

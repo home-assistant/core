@@ -68,7 +68,6 @@ from .const import (
     ERR_ALREADY_ARMED,
     ERR_ALREADY_DISARMED,
     ERR_CHALLENGE_NOT_SETUP,
-    ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
@@ -120,6 +119,7 @@ COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
 COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
 COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
 COMMAND_OPENCLOSE = f"{PREFIX_COMMANDS}OpenClose"
+COMMAND_OPENCLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
 COMMAND_SET_VOLUME = f"{PREFIX_COMMANDS}setVolume"
 COMMAND_VOLUME_RELATIVE = f"{PREFIX_COMMANDS}volumeRelative"
 COMMAND_MUTE = f"{PREFIX_COMMANDS}mute"
@@ -1519,9 +1519,7 @@ class OpenCloseTrait(_Trait):
     )
 
     name = TRAIT_OPENCLOSE
-    commands = [COMMAND_OPENCLOSE]
-
-    override_position = None
+    commands = [COMMAND_OPENCLOSE, COMMAND_OPENCLOSE_RELATIVE]
 
     @staticmethod
     def supported(domain, features, device_class):
@@ -1545,9 +1543,24 @@ class OpenCloseTrait(_Trait):
     def sync_attributes(self):
         """Return opening direction."""
         response = {}
+        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
+        elif self.state.domain == cover.DOMAIN:
+            if features & cover.SUPPORT_SET_POSITION == 0:
+                response["discreteOnlyOpenClose"] = True
+
+                if (
+                    features & cover.SUPPORT_OPEN == 0
+                    and features & cover.SUPPORT_CLOSE == 0
+                ):
+                    response["queryOnlyOpenClose"] = True
+
+        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+            response["commandOnlyOpenClose"] = True
+
         return response
 
     def query_attributes(self):
@@ -1555,25 +1568,20 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
         response = {}
 
-        if self.override_position is not None:
-            response["openPercent"] = self.override_position
+        # When it's an assumed state, we will return empty state
+        # This shouldn't happen because we set `commandOnlyOpenClose`
+        # but Google still queries. Erroring here will cause device
+        # to show up offline.
+        if self.state.attributes.get(ATTR_ASSUMED_STATE):
+            return response
 
-        elif domain == cover.DOMAIN:
-            # When it's an assumed state, we will return that querying state
-            # is not supported.
-            if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                raise SmartHomeError(
-                    ERR_NOT_SUPPORTED, "Querying state is not supported"
-                )
-
+        if domain == cover.DOMAIN:
             if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "Querying state is not supported"
                 )
 
-            position = self.override_position or self.state.attributes.get(
-                cover.ATTR_CURRENT_POSITION
-            )
+            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
 
             if position is not None:
                 response["openPercent"] = position
@@ -1593,26 +1601,36 @@ class OpenCloseTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an Open, close, Set position command."""
         domain = self.state.domain
+        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if domain == cover.DOMAIN:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
+            should_verify = False
+            if command == COMMAND_OPENCLOSE_RELATIVE:
+                position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
+                if position is None:
+                    raise SmartHomeError(
+                        ERR_NOT_SUPPORTED,
+                        "Current position not know for relative command",
+                    )
+                position = max(0, min(100, position + params["openRelativePercent"]))
+            else:
+                position = params["openPercent"]
 
-            if params["openPercent"] == 0:
+            if features & cover.SUPPORT_SET_POSITION:
+                service = cover.SERVICE_SET_COVER_POSITION
+                if position > 0:
+                    should_verify = True
+                svc_params[cover.ATTR_POSITION] = position
+            elif position == 0:
                 service = cover.SERVICE_CLOSE_COVER
                 should_verify = False
-            elif params["openPercent"] == 100:
+            elif position == 100:
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
-            elif (
-                self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                & cover.SUPPORT_SET_POSITION
-            ):
-                service = cover.SERVICE_SET_COVER_POSITION
-                should_verify = True
-                svc_params[cover.ATTR_POSITION] = params["openPercent"]
             else:
                 raise SmartHomeError(
-                    ERR_FUNCTION_NOT_SUPPORTED, "Setting a position is not supported"
+                    ERR_NOT_SUPPORTED, "No support for partial open close"
                 )
 
             if (
@@ -1625,12 +1643,6 @@ class OpenCloseTrait(_Trait):
             await self.hass.services.async_call(
                 cover.DOMAIN, service, svc_params, blocking=True, context=data.context
             )
-
-            if (
-                self.state.attributes.get(ATTR_ASSUMED_STATE)
-                or self.state.state == STATE_UNKNOWN
-            ):
-                self.override_position = params["openPercent"]
 
 
 @register_trait

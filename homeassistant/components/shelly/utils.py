@@ -8,24 +8,20 @@ import aioshelly
 
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers import entity_registry
 
 from . import ShellyDeviceWrapper
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_remove_entity_by_domain(hass, domain, unique_id, config_entry_id):
-    """Remove entity by domain."""
-
+async def async_remove_shelly_entity(hass, domain, unique_id):
+    """Remove a Shelly entity."""
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
-    for entry in entity_registry.async_entries_for_config_entry(
-        entity_reg, config_entry_id
-    ):
-        if entry.domain == domain and entry.unique_id == unique_id:
-            entity_reg.async_remove(entry.entity_id)
-            _LOGGER.debug("Removed %s domain for %s", domain, entry.original_name)
-            break
+    entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
+    if entity_id:
+        _LOGGER.debug("Removing entity: %s", entity_id)
+        entity_reg.async_remove(entity_id)
 
 
 def temperature_unit(block_info: dict) -> str:
@@ -85,14 +81,30 @@ def get_rest_value_from_path(status, device_class, path: str):
     """Parser for REST path from device status."""
 
     if "/" not in path:
-        _attribute_value = status[path]
+        attribute_value = status[path]
     else:
-        _attribute_value = status[path.split("/")[0]][path.split("/")[1]]
+        attribute_value = status[path.split("/")[0]][path.split("/")[1]]
     if device_class == DEVICE_CLASS_TIMESTAMP:
-        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
-        _attribute_value = last_boot.replace(microsecond=0).isoformat()
+        last_boot = datetime.utcnow() - timedelta(seconds=attribute_value)
+        attribute_value = last_boot.replace(microsecond=0).isoformat()
 
     if "new_version" in path:
-        _attribute_value = _attribute_value.split("/")[1].split("@")[0]
+        attribute_value = attribute_value.split("/")[1].split("@")[0]
 
-    return _attribute_value
+    return attribute_value
+
+
+def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
+    """Return true if input button settings is set to a momentary type."""
+    button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
+
+    # Shelly 1L has two button settings in the first channel
+    if settings["device"]["type"] == "SHSW-L":
+        channel = int(block.channel or 0) + 1
+        button_type = button[0].get("btn" + str(channel) + "_type")
+    else:
+        # Some devices has only one channel in settings
+        channel = min(int(block.channel or 0), len(button) - 1)
+        button_type = button[channel].get("btn_type")
+
+    return button_type in ["momentary", "momentary_on_release"]
