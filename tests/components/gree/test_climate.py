@@ -56,12 +56,20 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import build_device_mock
+from .common import MockDiscovery, build_device_mock
 
 from tests.async_mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
+
+
+@pytest.fixture(autouse=True, name="discovery")
+def discovery_fixture(hass):
+    """Patch the discovery service."""
+    with patch("homeassistant.components.gree.Discovery") as mock:
+        mock.return_value = MockDiscovery([build_device_mock()])
+        yield mock
 
 
 @pytest.fixture
@@ -95,7 +103,7 @@ async def test_discovery_setup(hass, discovery, device):
         name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
     )
 
-    discovery.return_value = [MockDevice1.device_info, MockDevice2.device_info]
+    discovery.return_value = MockDiscovery([MockDevice1, MockDevice2])
     device.side_effect = [MockDevice1, MockDevice2]
 
     await async_setup_gree(hass)

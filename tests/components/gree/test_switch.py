@@ -16,9 +16,20 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from .common import MockDiscovery, build_device_mock
+
+from tests.async_mock import patch
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1_panel_light"
+
+
+@pytest.fixture(autouse=True, name="discovery")
+def discovery_fixture(hass):
+    """Patch the discovery service."""
+    with patch("homeassistant.components.gree.Discovery") as mock:
+        mock.return_value = MockDiscovery([build_device_mock()])
+        yield mock
 
 
 @pytest.fixture
@@ -34,7 +45,7 @@ async def async_setup_gree(hass):
     await hass.async_block_till_done()
 
 
-async def test_send_panel_light_on(hass, discovery, device, mock_now):
+async def test_send_panel_light_on(hass, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -50,7 +61,7 @@ async def test_send_panel_light_on(hass, discovery, device, mock_now):
     assert state.state == STATE_ON
 
 
-async def test_send_panel_light_on_device_timeout(hass, discovery, device, mock_now):
+async def test_send_panel_light_on_device_timeout(hass, device, mock_now):
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -68,7 +79,7 @@ async def test_send_panel_light_on_device_timeout(hass, discovery, device, mock_
     assert state.state == STATE_ON
 
 
-async def test_send_panel_light_off(hass, discovery, device, mock_now):
+async def test_send_panel_light_off(hass, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -84,7 +95,7 @@ async def test_send_panel_light_off(hass, discovery, device, mock_now):
     assert state.state == STATE_OFF
 
 
-async def test_send_panel_light_toggle(hass, discovery, device, mock_now):
+async def test_send_panel_light_toggle(hass, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -125,7 +136,7 @@ async def test_send_panel_light_toggle(hass, discovery, device, mock_now):
     assert state.state == STATE_ON
 
 
-async def test_panel_light_name(hass, discovery, device):
+async def test_panel_light_name(hass):
     """Test for name property."""
     await async_setup_gree(hass)
     state = hass.states.get(ENTITY_ID)

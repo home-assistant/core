@@ -1,5 +1,25 @@
 """Common helpers for gree test cases."""
+import asyncio
+
 from tests.async_mock import AsyncMock, Mock
+
+
+class MockDiscovery:
+    """Mock class replacing Gree device discovery."""
+
+    def __init__(self, mock_devices):
+        """Initialize the class."""
+        self._mock_devices = mock_devices
+
+    async def search_devices(self, async_callback=None):
+        """Search for devices, return mocked data."""
+        infos = [x.device_info for x in self._mock_devices]
+        tasks = (
+            [asyncio.create_task(async_callback(x)) for x in infos]
+            if async_callback
+            else None
+        )
+        return infos, tasks
 
 
 def build_device_info_mock(

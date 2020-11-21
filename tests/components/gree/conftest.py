@@ -1,27 +1,16 @@
 """Pytest module configuration."""
 import pytest
 
-from .common import build_device_info_mock, build_device_mock
+from .common import build_device_mock
 
-from tests.async_mock import AsyncMock, patch
-
-
-@pytest.fixture(name="discovery")
-def discovery_fixture():
-    """Patch the discovery service."""
-    with patch(
-        "homeassistant.components.gree.bridge.Discovery.search_devices",
-        new_callable=AsyncMock,
-        return_value=[build_device_info_mock()],
-    ) as mock:
-        yield mock
+from tests.async_mock import patch
 
 
-@pytest.fixture(name="device")
+@pytest.fixture(autouse=True, name="device")
 def device_fixture():
     """Path the device search and bind."""
     with patch(
-        "homeassistant.components.gree.bridge.Device",
+        "homeassistant.components.gree.Device",
         return_value=build_device_mock(),
     ) as mock:
         yield mock

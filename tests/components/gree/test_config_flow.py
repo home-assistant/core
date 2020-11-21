@@ -1,9 +1,23 @@
 """Tests for the Gree Integration."""
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 
+from .common import MockDiscovery, build_device_mock
 
-async def test_creating_entry_sets_up_climate(hass, discovery, device, setup):
+from tests.async_mock import patch
+
+
+@pytest.fixture(autouse=True, name="discovery")
+def discovery_fixture(hass):
+    """Patch the discovery service."""
+    with patch("homeassistant.components.gree.Discovery") as mock:
+        mock.return_value = MockDiscovery([build_device_mock()])
+        yield mock
+
+
+async def test_creating_entry_sets_up_climate(hass, setup):
     """Test setting up Gree creates the climate components."""
     result = await hass.config_entries.flow.async_init(
         GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}

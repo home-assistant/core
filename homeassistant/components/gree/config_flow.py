@@ -1,14 +1,16 @@
 """Config flow for Gree."""
+from greeclimate.discovery import Discovery
+
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
-from .bridge import DeviceHelper
-from .const import DOMAIN
+from .const import DISCOVERY_TIMEOUT, DOMAIN
 
 
 async def _async_has_devices(hass) -> bool:
     """Return if there are devices that can be discovered."""
-    devices = await DeviceHelper.find_devices()
+    gree_discovery = Discovery(DISCOVERY_TIMEOUT)
+    devices = await gree_discovery.search_devices()
     return len(devices) > 0
 
 

@@ -1,5 +1,10 @@
 """Constants for the Gree Climate integration."""
 
+COORDINATORS = "coordinators"
+
+DISCOVERY_TIMEOUT = 8
+DISPATCH_DEVICE_DISCOVERED = "gree_device_discovered"
+
 DOMAIN = "gree"
 COORDINATOR = "coordinator"
 
