@@ -7,12 +7,19 @@ import logging
 import aiohttp
 from defusedxml import ElementTree
 from netdisco import ssdp, util
+import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.generated.ssdp import SSDP as SSDP_INTEGRATIONS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp
 
+CONF_IGNORE = "ignore"
+
 DOMAIN = "ssdp"
+DOMAIN_CONFIG = "config"
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Attributes for accessing info from SSDP response
@@ -35,11 +42,30 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 
+SSDP_DEVICES = SSDP_INTEGRATIONS.keys()
+
+
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_IGNORE, default=[]): vol.All(
+                    cv.ensure_list, [vol.In(SSDP_DEVICES)]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
+
+    hass.data[DOMAIN] = {DOMAIN_CONFIG: config[DOMAIN]}
 
     async def initialize(_):
         scanner = Scanner(hass, await async_get_ssdp(hass))
@@ -106,9 +132,14 @@ class Scanner:
 
         tasks = []
 
+        domains_to_ignore = self.hass.data[DOMAIN][DOMAIN_CONFIG][CONF_IGNORE]
         for entry in entries_to_process:
             info, domains = self._process_entry(entry)
             for domain in domains:
+                if domain in domains_to_ignore:
+                    _LOGGER.debug("Ignoring domain: %s at %s", domain, entry.location)
+                    continue
+
                 _LOGGER.debug("Discovered %s at %s", domain, entry.location)
                 tasks.append(
                     self.hass.config_entries.flow.async_init(

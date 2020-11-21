@@ -12,6 +12,7 @@ from tests.common import mock_coro
 
 async def test_scan_match_st(hass, caplog):
     """Test matching based on ST."""
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: []}}
     scanner = ssdp.Scanner(hass, {"mock-domain": [{"st": "mock-st"}]})
 
     with patch(
@@ -56,6 +57,7 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
 </root>
     """,
     )
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: []}}
     scanner = ssdp.Scanner(hass, {"mock-domain": [{key: "Paulus"}]})
 
     with patch(
@@ -83,6 +85,7 @@ async def test_scan_not_all_present(hass, aioclient_mock):
 </root>
     """,
     )
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: []}}
     scanner = ssdp.Scanner(
         hass,
         {
@@ -119,6 +122,7 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 </root>
     """,
     )
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: []}}
     scanner = ssdp.Scanner(
         hass,
         {
@@ -146,6 +150,7 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
     """Test failing to fetch description."""
     aioclient_mock.get("http://1.1.1.1", exc=exc)
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: []}}
     scanner = ssdp.Scanner(hass, {})
 
     with patch(
@@ -163,6 +168,7 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
 <root>INVALIDXML
     """,
     )
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: []}}
     scanner = ssdp.Scanner(hass, {})
 
     with patch(
@@ -170,3 +176,26 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
         return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ):
         await scanner.async_scan(None)
+
+
+async def test_scan_match_st_ignored(hass, caplog):
+    """Test matching based on ST, but ignored."""
+    hass.data[ssdp.DOMAIN] = {ssdp.DOMAIN_CONFIG: {ssdp.CONF_IGNORE: ["mock-domain"]}}
+    scanner = ssdp.Scanner(hass, {"mock-domain": [{"st": "mock-st"}]})
+
+    with patch(
+        "netdisco.ssdp.scan",
+        return_value=[
+            Mock(
+                st="mock-st",
+                location=None,
+                values={"usn": "mock-usn", "server": "mock-server", "ext": ""},
+            )
+        ],
+    ), patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        await scanner.async_scan(None)
+
+    assert len(mock_init.mock_calls) == 0
+    assert "Failed to fetch ssdp data" not in caplog.text
