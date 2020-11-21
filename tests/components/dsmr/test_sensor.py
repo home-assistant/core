@@ -105,8 +105,12 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     mock_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.dsmr.sensor.DSMREntity.entity_registry_enabled_default",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -116,8 +120,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     entry = registry.async_get("sensor.power_consumption_watt")
     assert entry
-    assert entry.unique_id == "1234_Power_Consumption_(Watt)"
-    entry.disabled = False
+    assert entry.unique_id == "1234_Power_Consumption_watt"
 
     entry = registry.async_get("sensor.gas_consumption")
     assert entry
@@ -142,7 +145,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     assert power_consumption.attributes.get("unit_of_measurement") == POWER_KILO_WATT
 
     power_consumption_watt = hass.states.get("sensor.power_consumption_watt")
-    assert power_consumption_watt.state == "243"
+    assert power_consumption_watt.state == "243.0"
     assert power_consumption_watt.attributes.get("unit_of_measurement") == POWER_WATT
 
     # tariff should be translated in human readable and have no unit
@@ -191,7 +194,7 @@ async def test_derivative():
 
     config = {"platform": "dsmr"}
 
-    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config)
+    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config, True)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"
