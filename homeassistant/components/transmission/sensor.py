@@ -186,7 +186,7 @@ def _torrents_info(torrents, order, statuses=None):
             "id" + str(idx): torrent.id,
         }
         try:
-            info["eta"] = str(torrent.eta)
+            info["eta" + str(idx)] = str(torrent.eta)
         except ValueError:
             pass
         idx += 1
