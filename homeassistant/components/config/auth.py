@@ -112,6 +112,16 @@ async def websocket_update(hass, connection, msg):
         )
         return
 
+    if user.is_owner and msg["is_active"] is False:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "cannot_deactivate_owner",
+                "Unable to deactivate owners.",
+            )
+        )
+        return
+
     msg.pop("type")
     msg_id = msg.pop("id")
 
