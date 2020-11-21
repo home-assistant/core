@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.components.harmony.const import DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.remote import ATTR_ACTIVITY, DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from .conftest import FakeHarmonyClient
+from .conftest import ACTIVITIES_TO_IDS, FakeHarmonyClient
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
 
 from unittest.mock import patch
@@ -120,6 +120,32 @@ async def test_remote_toggles(_, hass):
         REMOTE_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
+    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
+    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+
+    # send new activity command, with activity name
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: "Play Music"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
+    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
+    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_ON)
+
+    # send new activity command, with activity id
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"]},
         blocking=True,
     )
     await hass.async_block_till_done()
