@@ -157,7 +157,7 @@ class HarmonyData:
                 _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
                 return
 
-            current_activity_id, current_activity_name = self.current_activity
+            _, current_activity_name = self.current_activity
             if current_activity_name == activity_name:
                 # Automations or HomeKit may turn the device on multiple times
                 # when the current activity is already active which will cause
