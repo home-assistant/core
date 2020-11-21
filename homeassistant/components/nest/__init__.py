@@ -61,7 +61,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
-NEST_UPDATE = "nest_update"
 NEST_EVENT = "nest_event"
 EVENT_TRAIT_MAP = {
     DoorbellChimeEvent.NAME: "DoorbellChime",
