@@ -31,7 +31,7 @@ ZWAVE_BATTERY_ICON = "mdi:zwave-test-battery"
 ZWAVE_POWER_DEVICE_ID = "zwave_power_device_id"
 ZWAVE_POWER_DEVICE_NAME = "Z-Wave Power Device"
 ZWAVE_POWER_DEVICE_AREA = "Z-Wave Power Area"
-ZWAVE_POWER_ENTITY = "sensor.zwave_power"
+ZWAVE_POWER_ENTITY = "binary_sensor.zwave_power"
 ZWAVE_POWER_UNIQUE_ID = "32-5678"
 ZWAVE_POWER_NAME = "Z-Wave Power"
 ZWAVE_POWER_ICON = "mdi:zwave-test-power"
@@ -154,7 +154,6 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
 
     migration_entity_map = {
         ZWAVE_BATTERY_ENTITY: "sensor.water_sensor_6_battery_level",
-        ZWAVE_POWER_ENTITY: "sensor.smart_plug_electric_w",
     }
 
     assert result["zwave_entity_ids"] == [
@@ -195,28 +194,26 @@ async def test_migrate_zwave(hass, migration_data, hass_ws_client, zwave_integra
 
     # check the entity registry migration
 
-    # these should have been migrated and no longer present under that id
+    # this should have been migrated and no longer present under that id
     assert not ent_reg.async_is_registered("sensor.water_sensor_6_battery_level")
-    assert not ent_reg.async_is_registered("sensor.smart_plug_electric_w")
 
-    # this one should not have been migrated and is still in the registry
+    # these should not have been migrated and is still in the registry
     assert ent_reg.async_is_registered(ZWAVE_SOURCE_ENTITY)
     source_entry = ent_reg.async_get(ZWAVE_SOURCE_ENTITY)
     assert source_entry.unique_id == ZWAVE_SOURCE_NODE_UNIQUE_ID
-
-    # these are the new entity_ids of the two ozw entities
-    assert ent_reg.async_is_registered(ZWAVE_BATTERY_ENTITY)
     assert ent_reg.async_is_registered(ZWAVE_POWER_ENTITY)
+    source_entry = ent_reg.async_get(ZWAVE_POWER_ENTITY)
+    assert source_entry.unique_id == ZWAVE_POWER_UNIQUE_ID
+    assert ent_reg.async_is_registered("sensor.smart_plug_electric_w")
+
+    # this is the new entity_id of the ozw entity
+    assert ent_reg.async_is_registered(ZWAVE_BATTERY_ENTITY)
 
     # check that the migrated entries have correct attributes
     battery_entry = ent_reg.async_get(ZWAVE_BATTERY_ENTITY)
     assert battery_entry.unique_id == "1-36-610271249"
     assert battery_entry.name == ZWAVE_BATTERY_NAME
     assert battery_entry.icon == ZWAVE_BATTERY_ICON
-    power_entry = ent_reg.async_get(ZWAVE_POWER_ENTITY)
-    assert power_entry.unique_id == "1-32-562950495305746"
-    assert power_entry.name == ZWAVE_POWER_NAME
-    assert power_entry.icon == ZWAVE_POWER_ICON
 
     # check that the zwave config entry has been removed
     assert not hass.config_entries.async_entries("zwave")
@@ -240,7 +237,6 @@ async def test_migrate_zwave_dry_run(
 
     migration_entity_map = {
         ZWAVE_BATTERY_ENTITY: "sensor.water_sensor_6_battery_level",
-        ZWAVE_POWER_ENTITY: "sensor.smart_plug_electric_w",
     }
 
     assert result["zwave_entity_ids"] == [

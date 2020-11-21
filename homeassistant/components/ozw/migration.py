@@ -123,9 +123,11 @@ def map_node_values(zwave_data, ozw_data):
             continue
 
         # Save the zwave_entry under the ozw entity_id to create the map.
-        migration_map["entity_entries"][
-            ozw_entry["entity_entry"].entity_id
-        ] = zwave_entry
+        # Check that the mapped entities have the same domain.
+        if zwave_entry["entity_entry"].domain == ozw_entry["entity_entry"].domain:
+            migration_map["entity_entries"][
+                ozw_entry["entity_entry"].entity_id
+            ] = zwave_entry
         migration_map["device_entries"][ozw_entry["device_id"]] = zwave_entry[
             "device_id"
         ]
