@@ -11,20 +11,23 @@ from homeassistant.util.dt import utcnow
 
 from .common import async_setup_sdm_platform
 
+from tests.common import async_capture_events
+
 DOMAIN = "nest"
-DEVICE_TYPE = "sdm.devices.types.DOORBELL"
 DEVICE_ID = "some-device-id"
-PLATFORM = "sensor"
+PLATFORM = "camera"
 NEST_EVENT = "nest_event"
+EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
+EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 
 
-async def async_setup_devices(hass, traits={}):
+async def async_setup_devices(hass, device_type, traits={}):
     """Set up the platform and prerequisites."""
     devices = {
-        "some-device-id": Device.MakeDevice(
+        DEVICE_ID: Device.MakeDevice(
             {
                 "name": DEVICE_ID,
-                "type": DEVICE_TYPE,
+                "type": device_type,
                 "traits": traits,
             },
             auth=None,
@@ -33,48 +36,180 @@ async def async_setup_devices(hass, traits={}):
     return await async_setup_sdm_platform(hass, PLATFORM, devices=devices)
 
 
-async def test_event_update_event(hass):
-    """Test a pubsub message received by subscriber to update temperature."""
-    subscriber = await async_setup_devices(
-        hass,
-        {
-            "sdm.devices.traits.Info": {
-                "customName": "Front",
-            },
-            "sdm.devices.traits.DoorbellChime": {},
+def create_device_traits(event_trait):
+    """Create fake traits for a device."""
+    return {
+        "sdm.devices.traits.Info": {
+            "customName": "Front",
         },
-    )
+        event_trait: {},
+        "sdm.devices.traits.CameraLiveStream": {
+            "maxVideoResolution": {
+                "width": 640,
+                "height": 480,
+            },
+            "videoCodecs": ["H264"],
+            "audioCodecs": ["AAC"],
+        },
+    }
 
-    count = 0
 
-    def handle_event(event):
-        nonlocal count
-        count += 1
-        assert "CjY5Y3VKaTZwR3o4Y19YbTVfMF..." == event.data.event_session_id
-        assert "FWWVQVUdGNUlTU2V4MGV2aTNXV..." == event.data.event_id
+def create_event(event_type, device_id=DEVICE_ID):
+    """Create an EventMessage for a single event type."""
+    events = {
+        event_type: {
+            "eventSessionId": EVENT_SESSION_ID,
+            "eventId": EVENT_ID,
+        },
+    }
+    return create_events(events=events, device_id=device_id)
 
-    hass.bus.async_listen("nest_event", handle_event)
 
-    assert count == 0
-
-    # Simulate a pubsub message received by the subscriber with a trait update
-    event = EventMessage(
+def create_events(events, device_id=DEVICE_ID):
+    """Create an EventMessage for events."""
+    return EventMessage(
         {
             "eventId": "some-event-id",
             "timestamp": utcnow().isoformat(timespec="seconds"),
             "resourceUpdate": {
-                "name": DEVICE_ID,
-                "events": {
-                    "sdm.devices.events.DoorbellChime.Chime": {
-                        "eventSessionId": "CjY5Y3VKaTZwR3o4Y19YbTVfMF...",
-                        "eventId": "FWWVQVUdGNUlTU2V4MGV2aTNXV...",
-                    },
-                },
+                "name": device_id,
+                "events": events,
             },
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+
+
+async def test_doorbell_chime_event(hass):
+    """Test a pubsub message for a doorbell event."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits("sdm.devices.traits.DoorbellChime"),
+    )
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("camera.front")
+    assert entry.unique_id == "some-device-id-camera"
+    assert entry.original_name == "Front"
+    assert entry.domain == "camera"
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(entry.device_id)
+    assert device.name == "Front"
+    assert device.model == "Doorbell"
+    assert device.identifiers == {("nest", DEVICE_ID)}
+
+    subscriber.receive_event(create_event("sdm.devices.events.DoorbellChime.Chime"))
     await hass.async_block_till_done()
 
-    assert count == 1
+    assert len(events) == 1
+    assert {
+        "device_id": DEVICE_ID,
+        "type": "DoorbellChime",
+    } == events[0].data
+
+
+async def test_camera_motion_event(hass):
+    """Test a pubsub message for a camera motion event."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.CAMERA",
+        create_device_traits("sdm.devices.traits.CameraMotion"),
+    )
+
+    subscriber.receive_event(create_event("sdm.devices.events.CameraMotion.Motion"))
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert {
+        "device_id": DEVICE_ID,
+        "type": "CameraMotion",
+    } == events[0].data
+
+
+async def test_camera_sound_event(hass):
+    """Test a pubsub message for a camera sound event."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.CAMERA",
+        create_device_traits("sdm.devices.traits.CameraSound"),
+    )
+
+    subscriber.receive_event(create_event("sdm.devices.events.CameraSound.Sound"))
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert {
+        "device_id": DEVICE_ID,
+        "type": "CameraSound",
+    } == events[0].data
+
+
+async def test_camera_person_event(hass):
+    """Test a pubsub message for a camera person event."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits("sdm.devices.traits.CameraEventImage"),
+    )
+
+    subscriber.receive_event(create_event("sdm.devices.events.CameraPerson.Person"))
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert {
+        "device_id": DEVICE_ID,
+        "type": "CameraPerson",
+    } == events[0].data
+
+
+async def test_camera_multiple_event(hass):
+    """Test a pubsub message for a camera person event."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits("sdm.devices.traits.CameraEventImage"),
+    )
+    event_map = {
+        "sdm.devices.events.CameraMotion.Motion": {
+            "eventSessionId": EVENT_SESSION_ID,
+            "eventId": EVENT_ID,
+        },
+        "sdm.devices.events.CameraPerson.Person": {
+            "eventSessionId": EVENT_SESSION_ID,
+            "eventId": EVENT_ID,
+        },
+    }
+
+    subscriber.receive_event(create_events(event_map))
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert {
+        "device_id": DEVICE_ID,
+        "type": "CameraMotion",
+    } == events[0].data
+    assert {
+        "device_id": DEVICE_ID,
+        "type": "CameraPerson",
+    } == events[1].data
+
+
+async def test_unknown_event(hass):
+    """Test a pubsub message for an unknown event type."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits("sdm.devices.traits.DoorbellChime"),
+    )
+    subscriber.receive_event(create_event("some-event-id"))
+    await hass.async_block_till_done()
+
+    assert len(events) == 0

@@ -61,13 +61,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
+NEST_UPDATE = "nest_update"
 NEST_EVENT = "nest_event"
-EVENT_TRAITS = [
-    DoorbellChimeEvent.NAME,
-    CameraMotionEvent.NAME,
-    CameraPersonEvent.NAME,
-    CameraSoundEvent.NAME,
-]
+EVENT_TRAIT_MAP = {
+    DoorbellChimeEvent.NAME: "DoorbellChime",
+    CameraMotionEvent.NAME: "CameraMotion",
+    CameraPersonEvent.NAME: "CameraPerson",
+    CameraSoundEvent.NAME: "CameraSound",
+}
 
 
 # Configuration for the legacy nest API
@@ -184,7 +185,16 @@ class SignalUpdateCallback(AsyncEventCallback):
 
     async def async_handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
-        _LOGGER.debug("Update %s @ %s", event_message.event_id, event_message.timestamp)
+        if not event_message.resource_update_name:
+            _LOGGER.debug("Event had no device_id; Skipping")
+            return
+        device_id = event_message.resource_update_name
+        _LOGGER.debug(
+            "Update %s @ %s for %s",
+            event_message.event_id,
+            event_message.timestamp,
+            device_id,
+        )
         traits = event_message.resource_update_traits
         if traits:
             _LOGGER.debug("Trait update %s", traits.keys())
@@ -195,9 +205,15 @@ class SignalUpdateCallback(AsyncEventCallback):
         events = event_message.resource_update_events
         if events:
             _LOGGER.debug("Event Update %s", events.keys())
-            for (event, data) in events.items():
-                if event in EVENT_TRAITS:
-                    self._hass.bus.fire(NEST_EVENT, data)
+            device_id = event_message.resource_update_name
+            for (event, event_detail) in events.items():
+                if event not in EVENT_TRAIT_MAP:
+                    continue
+                message = {
+                    "device_id": device_id,
+                    "type": EVENT_TRAIT_MAP[event],
+                }
+                self._hass.bus.async_fire(NEST_EVENT, message)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
