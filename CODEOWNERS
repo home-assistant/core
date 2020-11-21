@@ -336,7 +336,7 @@ homeassistant/components/pi_hole/* @fabaff @johnluetke @shenxn
 homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @CoMPaTech @bouwew
+homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
