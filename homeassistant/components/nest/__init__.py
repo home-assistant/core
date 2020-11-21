@@ -205,7 +205,7 @@ class SignalUpdateCallback(AsyncEventCallback):
         if events:
             _LOGGER.debug("Event Update %s", events.keys())
             device_id = event_message.resource_update_name
-            for (event, event_detail) in events.items():
+            for event in events.keys():
                 if event not in EVENT_TRAIT_MAP:
                     continue
                 message = {
