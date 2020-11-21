@@ -3,16 +3,19 @@ import asyncio
 from datetime import timedelta
 import itertools
 import logging
+from typing import Iterable, List, Mapping, Optional, Set, Tuple
 
 import aiohttp
 from defusedxml import ElementTree
 from netdisco import ssdp, util
+from netdisco.ssdp import UPNPEntry
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.generated.ssdp import SSDP as SSDP_INTEGRATIONS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import async_get_ssdp
 
 CONF_IGNORE = "ignore"
@@ -62,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
     hass.data[DOMAIN] = {DOMAIN_CONFIG: config[DOMAIN]}
@@ -77,7 +80,7 @@ async def async_setup(hass, config):
     return True
 
 
-def _run_ssdp_scans():
+def _run_ssdp_scans() -> Iterable[UPNPEntry]:
     _LOGGER.debug("Scanning")
     # Run 3 times as packets can get lost
     return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
@@ -86,14 +89,14 @@ def _run_ssdp_scans():
 class Scanner:
     """Class to manage SSDP scanning."""
 
-    def __init__(self, hass, integration_matchers):
+    def __init__(self, hass: HomeAssistantType, integration_matchers: Mapping) -> None:
         """Initialize class."""
         self.hass = hass
         self.seen = set()
-        self._integration_matchers = integration_matchers
-        self._description_cache = {}
+        self._integration_matchers: Mapping[str, Mapping] = integration_matchers
+        self._description_cache: Mapping[str, Mapping] = {}
 
-    async def async_scan(self, _):
+    async def async_scan(self, _) -> None:
         """Scan for new entries."""
         entries = await self.hass.async_add_executor_job(_run_ssdp_scans)
 
@@ -103,7 +106,7 @@ class Scanner:
         # so will never need a description twice.
         self._description_cache.clear()
 
-    async def _process_entries(self, entries):
+    async def _process_entries(self, entries: Iterable[UPNPEntry]) -> None:
         """Process SSDP entries."""
         entries_to_process = []
         unseen_locations = set()
@@ -150,7 +153,7 @@ class Scanner:
         if tasks:
             await asyncio.gather(*tasks)
 
-    async def _fetch_descriptions(self, locations):
+    async def _fetch_descriptions(self, locations: List[str]) -> None:
         """Fetch descriptions from locations."""
 
         for idx, result in enumerate(
@@ -169,7 +172,7 @@ class Scanner:
 
             self._description_cache[location] = result
 
-    def _process_entry(self, entry):
+    def _process_entry(self, entry: UPNPEntry) -> Tuple[Optional[Mapping], Set[str]]:
         """Process a single entry."""
 
         info = {"st": entry.st}
@@ -182,7 +185,7 @@ class Scanner:
             # we fetch it only once.
             info_req = self._description_cache.get(entry.location)
             if info_req is None:
-                return (None, [])
+                return (None, set())
 
             info.update(info_req)
 
@@ -195,9 +198,9 @@ class Scanner:
         if domains:
             return (info_from_entry(entry, info), domains)
 
-        return (None, [])
+        return (None, set())
 
-    async def _fetch_description(self, xml_location):
+    async def _fetch_description(self, xml_location: str) -> Mapping:
         """Fetch an XML description."""
         session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         try:
@@ -222,7 +225,7 @@ class Scanner:
         return util.etree_to_dict(tree).get("root", {}).get("device", {})
 
 
-def info_from_entry(entry, device_info):
+def info_from_entry(entry: UPNPEntry, device_info: Mapping) -> Mapping:
     """Get info from an entry."""
     info = {
         ATTR_SSDP_LOCATION: entry.location,
