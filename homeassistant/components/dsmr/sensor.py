@@ -119,20 +119,20 @@ async def async_setup_entry(
 
     # Generate device entities
     devices = [
-        DSMREntity(
-            name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, False
-        )
-        for name, obis in obis_mapping
-    ]
-
-    devices = [
         DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, True)
         for name, obis in obis_mapping
     ]
 
     devices += [
-        DSMRPowerEntity(
+        DSMREntity(
             name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, False
+        )
+        for name, obis in obis_power_mapping
+    ]
+
+    devices += [
+        DSMRPowerEntity(
+            name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, True
         )
         for name, obis in obis_power_mapping
     ]
@@ -154,7 +154,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
-                False,
+                True,
             ),
             DerivativeDSMREntity(
                 "Hourly Gas Consumption",
@@ -162,7 +162,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
-                False,
+                True,
             ),
         ]
 
@@ -378,6 +378,16 @@ class DSMREntity(Entity):
 
 class DSMRPowerEntity(DSMREntity):
     """Entity handling power values from DSMR telegram."""
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} (Watt)"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._unique_id}_watt"
 
     @property
     def state(self):
