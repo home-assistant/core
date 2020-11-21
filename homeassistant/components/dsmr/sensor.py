@@ -414,6 +414,11 @@ class DSMRPowerEntity(DSMREntity):
         """Return the unit of measurement of this entity."""
         return POWER_WATT
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
 
 class DerivativeDSMREntity(DSMREntity):
     """Calculated derivative for values where the DSMR doesn't offer one.
