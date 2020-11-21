@@ -282,7 +282,7 @@ async def async_get_ozw_migration_data(hass):
         if unique_id not in unique_entries:
             continue
         device_identifier, _ = node_device_id_and_name(
-            node.node_id, entity_values.primary.instance
+            node, entity_values.primary.instance
         )
         device_entry = dev_reg.async_get_device({device_identifier}, set())
         data_to_migrate[unique_id] = {
