@@ -114,6 +114,11 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     assert entry
     assert entry.unique_id == "1234_Power_Consumption"
 
+    entry = registry.async_get("sensor.power_consumption_watt")
+    assert entry
+    assert entry.unique_id == "1234_Power_Consumption_(Watt)"
+    entry.disabled = False
+
     entry = registry.async_get("sensor.gas_consumption")
     assert entry
     assert entry.unique_id == "5678_Gas_Consumption"
@@ -133,8 +138,12 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.power_consumption")
-    assert power_consumption.state == "243.0"
-    assert power_consumption.attributes.get("unit_of_measurement") == POWER_WATT
+    assert power_consumption.state == "0.243"
+    assert power_consumption.attributes.get("unit_of_measurement") == POWER_KILO_WATT
+
+    power_consumption_watt = hass.states.get("sensor.power_consumption_watt")
+    assert power_consumption_watt.state == "243"
+    assert power_consumption_watt.attributes.get("unit_of_measurement") == POWER_WATT
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get("sensor.power_tariff")
