@@ -51,7 +51,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
-MIN_SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
