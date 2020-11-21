@@ -25,9 +25,6 @@ Mastodon.py==1.5.1
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.4.0
 
-# homeassistant.components.plugwise
-Plugwise_Smile==1.6.0
-
 # homeassistant.components.essent
 PyEssent==0.14
 
@@ -206,7 +203,7 @@ aionotify==0.2.0
 aionotion==1.1.0
 
 # homeassistant.components.acmeda
-aiopulse==0.4.0
+aiopulse==0.4.2
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
@@ -339,7 +336,7 @@ batinfo==0.4.2
 beautifulsoup4==4.9.1
 
 # homeassistant.components.beewi_smartclim
-# beewi_smartclim==0.0.7
+# beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
 bellows==0.20.3
@@ -466,7 +463,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.1.0
+debugpy==1.2.0
 
 # homeassistant.components.decora
 # decora==0.6
@@ -496,7 +493,7 @@ directv==0.4.0
 discogs_client==2.3.0
 
 # homeassistant.components.discord
-discord.py==1.4.1
+discord.py==1.5.1
 
 # homeassistant.components.updater
 distro==1.5.0
@@ -511,7 +508,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.18
+dsmr_parser==0.23
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -1135,6 +1132,9 @@ plexauth==0.0.6
 
 # homeassistant.components.plex
 plexwebsocket==0.0.12
+
+# homeassistant.components.plugwise
+plugwise==0.8.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1827,7 +1827,7 @@ python-whois==0.7.3
 python-wink==1.10.5
 
 # homeassistant.components.awair
-python_awair==0.1.1
+python_awair==0.2.1
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.2.1
@@ -1957,7 +1957,7 @@ roonapi==0.0.25
 rova==0.1.0
 
 # homeassistant.components.rpi_power
-rpi-bad-power==0.0.3
+rpi-bad-power==0.1.0
 
 # homeassistant.components.rpi_rf
 # rpi-rf==0.9.7
@@ -1970,9 +1970,6 @@ russound_rio==0.1.7
 
 # homeassistant.components.yamaha
 rxv==0.6.0
-
-# homeassistant.components.salt
-saltbox==0.1.3
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -2094,6 +2091,9 @@ spotipy==2.16.1
 # homeassistant.components.recorder
 # homeassistant.components.sql
 sqlalchemy==1.3.20
+
+# homeassistant.components.srp_energy
+srpenergy==1.3.2
 
 # homeassistant.components.starline
 starline==0.1.3
@@ -2353,13 +2353,13 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.2
+zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2
 
 # homeassistant.components.zha
-zigpy==0.27.1
+zigpy==0.28.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
