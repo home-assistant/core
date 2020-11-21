@@ -46,7 +46,7 @@ class HarmonyActivitySwitch(SwitchEntity):
     @property
     def is_on(self):
         """Return if the current activity is the one for this switch."""
-        activity_id, activity_name = self._data.current_activity
+        _, activity_name = self._data.current_activity
         return activity_name == self._activity
 
     @property
