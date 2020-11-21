@@ -154,7 +154,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
             statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
-            STATE_ATTR_TORRENT_INFO: info,
+            info,
         }
 
     def update(self):
@@ -177,15 +177,18 @@ def _torrents_info(torrents, order, statuses=None):
     infos = {}
     torrents = _filter_torrents(torrents, statuses)
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
+    idx = 0
     for torrent in _filter_torrents(torrents, statuses):
-        info = infos[torrent.name] = {
-            "added_date": torrent.addedDate,
-            "percent_done": f"{torrent.percentDone * 100:.2f}",
-            "status": torrent.status,
-            "id": torrent.id,
+        info = infos[idx] = {
+            "name" + str(idx): torrent.name,
+            "added_date" + str(idx): torrent.addedDate,
+            "percent_done" + str(idx): f"{torrent.percentDone * 100:.2f}",
+            "status" + str(idx): torrent.status,
+            "id" + str(idx): torrent.id,
         }
         try:
             info["eta"] = str(torrent.eta)
         except ValueError:
             pass
+        idx +=1
     return infos
