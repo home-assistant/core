@@ -1057,7 +1057,6 @@ omit =
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
-    homeassistant/components/zha/core/patches.py
     homeassistant/components/zha/core/registries.py
     homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
