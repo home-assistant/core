@@ -114,10 +114,44 @@ async def async_setup_entry(
         ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3],
     ]
 
+    obis_power_mapping = [
+        ["Power Consumption (Watt)", obis_ref.CURRENT_ELECTRICITY_USAGE],
+        ["Power Production (Watt)", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
+        [
+            "Power Consumption Phase L1 (Watt)",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
+        ],
+        [
+            "Power Consumption Phase L2 (Watt)",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
+        ],
+        [
+            "Power Consumption Phase L3 (Watt)",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
+        ],
+        [
+            "Power Production Phase L1 (Watt)",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
+        ],
+        [
+            "Power Production Phase L2 (Watt)",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
+        ],
+        [
+            "Power Production Phase L3 (Watt)",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
+        ],
+    ]
+
     # Generate device entities
     devices = [
         DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
         for name, obis in obis_mapping
+    ]
+
+    devices += [
+        DSMRPowerEntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
+        for name, obis in obis_power_mapping
     ]
 
     # Protocol version specific obis
