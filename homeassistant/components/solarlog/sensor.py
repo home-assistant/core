@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the solarlog platform."""
     _LOGGER.warning(
-        "Configuration of the solarlog platform in configuration.yaml is deprecated in Home Assistant 0.119. Please remove entry from your configuration"
+        "Configuration of the solarlog platform in configuration.yaml is deprecated "
+        "in Home Assistant 0.119. Please remove entry from your configuration"
     )
-    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
