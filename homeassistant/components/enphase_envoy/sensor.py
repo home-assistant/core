@@ -46,8 +46,6 @@ SENSORS = {
     "inverters": ("Envoy Inverter", POWER_WATT),
 }
 
-SCAN_INTERVAL = timedelta(seconds=60)
-
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
