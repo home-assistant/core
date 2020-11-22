@@ -529,7 +529,6 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
-        self._is_playing_local_queue = None
         self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
@@ -740,12 +739,11 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
+        self._queue_position = None
         self._source_name = None
 
         update_position = new_status != self._status
         self._status = new_status
-
-        self._is_playing_local_queue = self.soco.is_playing_local_queue
 
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
@@ -849,7 +847,9 @@ class SonosEntity(MediaPlayerEntity):
 
         self._media_image_url = track_info.get("album_art")
 
-        self._queue_position = int(track_info.get("playlist_position")) - 1
+        playlist_position = int(track_info.get("playlist_position"))
+        if playlist_position > 0:
+            self._queue_position = playlist_position - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -1038,10 +1038,7 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def queue_position(self):
         """If playing local queue return the position in the queue else None."""
-        if self._is_playing_local_queue:
-            return self._queue_position
-
-        return None
+        return self._queue_position
 
     @property
     @soco_coordinator
