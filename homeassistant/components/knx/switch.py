@@ -35,3 +35,8 @@ class KNXSwitch(KnxEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         await self._device.set_off()
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self._device.state is None

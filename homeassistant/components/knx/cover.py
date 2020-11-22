@@ -5,6 +5,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
+    DEVICE_CLASSES,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -47,6 +48,8 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._device.device_class in DEVICE_CLASSES:
+            return self._device.device_class
         if self._device.supports_angle:
             return DEVICE_CLASS_BLIND
         return None
@@ -87,6 +90,11 @@ class KNXCover(KnxEntity, CoverEntity):
     def is_closing(self):
         """Return if the cover is closing or not."""
         return self._device.is_closing()
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self._device.current_position() is None
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
