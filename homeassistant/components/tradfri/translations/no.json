@@ -5,7 +5,7 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_key": "Kunne ikke registrere med gitt n\u00f8kkel. Hvis dette fortsetter, pr\u00f8v \u00e5 starte gatewayen p\u00e5 nytt.",
             "timeout": "Tidsavbrudd ved validering av kode."
         },
@@ -15,7 +15,7 @@
                     "host": "Vert",
                     "security_code": "Sikkerhetskode"
                 },
-                "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din.",
+                "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din",
                 "title": "Angi sikkerhetskode"
             }
         }

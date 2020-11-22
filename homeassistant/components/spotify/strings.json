@@ -5,7 +5,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "Re-authenticate with Spotify",
+        "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}"
       }
     },

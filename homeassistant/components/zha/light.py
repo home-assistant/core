@@ -328,6 +328,7 @@ class Light(BaseLight, ZhaEntity):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._state = bool(self._on_off_channel.on_off)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
@@ -340,20 +341,30 @@ class Light(BaseLight, ZhaEntity):
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
-            self._brightness = 0
+            self._brightness = self._level_channel.current_level
 
         if self._color_channel:
-            color_capabilities = self._color_channel.get_color_capabilities()
+            color_capabilities = self._color_channel.color_capabilities
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
+                self._color_temp = self._color_channel.color_temperature
 
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
-                self._hs_color = (0, 0)
+                curr_x = self._color_channel.current_x
+                curr_y = self._color_channel.current_y
+                if curr_x is not None and curr_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(curr_x / 65535), float(curr_y / 65535)
+                    )
+                else:
+                    self._hs_color = (0, 0)
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
+                if self._color_channel.color_loop_active == 1:
+                    self._effect = light.EFFECT_COLORLOOP
 
         if self._identify_channel:
             self._supported_features |= light.SUPPORT_FLASH
@@ -428,48 +439,34 @@ class Light(BaseLight, ZhaEntity):
             if level is not None:
                 self._brightness = level
         if self._color_channel:
-            attributes = []
-            color_capabilities = self._color_channel.get_color_capabilities()
-            if (
-                color_capabilities is not None
-                and color_capabilities & CAPABILITIES_COLOR_TEMP
-            ):
-                attributes.append("color_temperature")
-            if (
-                color_capabilities is not None
-                and color_capabilities & CAPABILITIES_COLOR_XY
-            ):
-                attributes.append("current_x")
-                attributes.append("current_y")
-            if (
-                color_capabilities is not None
-                and color_capabilities & CAPABILITIES_COLOR_LOOP
-            ):
-                attributes.append("color_loop_active")
+            attributes = [
+                "color_temperature",
+                "current_x",
+                "current_y",
+                "color_loop_active",
+            ]
 
             results = await self._color_channel.get_attributes(
                 attributes, from_cache=from_cache
             )
 
-            if (
-                "color_temperature" in results
-                and results["color_temperature"] is not None
-            ):
-                self._color_temp = results["color_temperature"]
+            color_temp = results.get("color_temperature")
+            if color_temp is not None:
+                self._color_temp = color_temp
 
-            color_x = results.get("color_x")
-            color_y = results.get("color_y")
+            color_x = results.get("current_x")
+            color_y = results.get("current_y")
             if color_x is not None and color_y is not None:
                 self._hs_color = color_util.color_xy_to_hs(
                     float(color_x / 65535), float(color_y / 65535)
                 )
-            if (
-                "color_loop_active" in results
-                and results["color_loop_active"] is not None
-            ):
-                color_loop_active = results["color_loop_active"]
+
+            color_loop_active = results.get("color_loop_active")
+            if color_loop_active is not None:
                 if color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
+                else:
+                    self._effect = None
 
     async def _refresh(self, time):
         """Call async_get_state at an interval."""

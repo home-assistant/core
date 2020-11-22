@@ -90,6 +90,17 @@ class GarminConnectData:
         self.client = client
         self.data = None
 
+    async def _get_combined_alarms_of_all_devices(self):
+        """Combine the list of active alarms from all garmin devices."""
+        alarms = []
+        devices = await self.hass.async_add_executor_job(self.client.get_devices)
+        for device in devices:
+            device_settings = await self.hass.async_add_executor_job(
+                self.client.get_device_settings, device["deviceId"]
+            )
+            alarms += device_settings["alarms"]
+        return alarms
+
     @Throttle(MIN_SCAN_INTERVAL)
     async def async_update(self):
         """Update data via library."""
@@ -99,6 +110,7 @@ class GarminConnectData:
             self.data = await self.hass.async_add_executor_job(
                 self.client.get_stats_and_body, today.isoformat()
             )
+            self.data["nextAlarm"] = await self._get_combined_alarms_of_all_devices()
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,

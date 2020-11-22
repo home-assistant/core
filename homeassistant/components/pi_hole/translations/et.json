@@ -9,8 +9,12 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API v\u00f5ti",
                     "host": "",
+                    "location": "Asukoht",
+                    "name": "Nimi",
                     "port": "",
+                    "ssl": "Kasuatb SSL serti",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }

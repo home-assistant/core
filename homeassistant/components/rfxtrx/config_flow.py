@@ -1,6 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
 import copy
-import logging
 import os
 
 import RFXtrx as rfxtrxmod
@@ -46,8 +45,6 @@ from .const import (
 from .cover import supported as cover_supported
 from .light import supported as light_supported
 from .switch import supported as switch_supported
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_EVENT_CODE = "event_code"
 CONF_MANUAL_PATH = "Enter Manually"
@@ -363,13 +360,17 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
         event_code = device_data[CONF_EVENT_CODE]
-        rfx_obj = get_rfx_object(event_code)
-        if (
-            rfx_obj.device.packettype == self._selected_device_object.device.packettype
-            and rfx_obj.device.subtype == self._selected_device_object.device.subtype
-            and self._selected_device_event_code != event_code
-        ):
-            return True
+
+        if event_code is not None:
+            rfx_obj = get_rfx_object(event_code)
+            if (
+                rfx_obj.device.packettype
+                == self._selected_device_object.device.packettype
+                and rfx_obj.device.subtype
+                == self._selected_device_object.device.subtype
+                and self._selected_device_event_code != event_code
+            ):
+                return True
 
         return False
 

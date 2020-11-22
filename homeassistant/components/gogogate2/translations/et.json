@@ -10,9 +10,12 @@
         "step": {
             "user": {
                 "data": {
+                    "ip_address": "IP aadress",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Esita vajalik teave allpool.",
+                "title": "GogoGate2 v\u00f5i iSmartGate'i seadistamine"
             }
         }
     }

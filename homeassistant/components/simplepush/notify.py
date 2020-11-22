@@ -1,6 +1,4 @@
 """Simplepush notification service."""
-import logging
-
 from simplepush import send, send_encrypted
 import voluptuous as vol
 
@@ -12,8 +10,6 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ENCRYPTED = "encrypted"
 

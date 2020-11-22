@@ -4,7 +4,7 @@
             "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "connection_error": "Impossibile connettersi",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_access_token": "Token di accesso non valido",
             "timeout": "Tempo scaduto per la connessione a Tibber"
         },
@@ -17,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

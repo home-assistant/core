@@ -1,13 +1,9 @@
 """Support for Tellstick switches using Tellstick Net."""
-import logging
-
 from homeassistant.components import switch, tellduslive
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

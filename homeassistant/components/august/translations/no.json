@@ -5,7 +5,7 @@
             "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },

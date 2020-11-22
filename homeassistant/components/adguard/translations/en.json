@@ -5,8 +5,7 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "connection_error": "Failed to connect."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "hassio_confirm": {

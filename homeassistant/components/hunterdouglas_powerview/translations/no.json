@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -19,6 +19,5 @@
                 "title": "Koble til PowerView-huben"
             }
         }
-    },
-    "title": "Hunter Douglas PowerView"
+    }
 }

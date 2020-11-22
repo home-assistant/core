@@ -1,6 +1,4 @@
 """Webhook tests for mobile_app."""
-import logging
-
 import pytest
 
 from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
@@ -15,8 +13,6 @@ from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE
 
 from tests.async_mock import patch
 from tests.common import async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def encrypt_payload(secret_key, payload):

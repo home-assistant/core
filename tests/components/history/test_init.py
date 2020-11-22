@@ -970,3 +970,41 @@ async def test_entity_ids_limit_via_api(hass, hass_client):
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_client):
+    """Test limiting history to entity_ids with skip_initial_state."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 0
+
+    when = dt_util.utcnow() - timedelta(minutes=1)
+    response = await client.get(
+        f"/api/history/period/{when.isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+    assert response_json[1][0]["entity_id"] == "light.cow"

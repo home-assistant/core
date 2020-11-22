@@ -469,3 +469,20 @@ def test_no_recursive_secrets(caplog):
     with patch_yaml_files(files):
         load_yaml_config_file(YAML_CONFIG_FILE)
     assert "attempt to load secret from within secrets file" in caplog.text
+
+
+def test_placeholder_class():
+    """Test placeholder class."""
+    placeholder = yaml_loader.Placeholder("hello")
+    placeholder2 = yaml_loader.Placeholder("hello")
+
+    assert placeholder.name == "hello"
+    assert placeholder == placeholder2
+
+    assert len({placeholder, placeholder2}) == 1
+
+
+def test_placeholder():
+    """Test loading placeholders."""
+    data = {"hello": yaml.Placeholder("test_name")}
+    assert yaml.parse_yaml(yaml.dump(data)) == data

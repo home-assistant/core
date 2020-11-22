@@ -4,10 +4,9 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
-            "name_exists": "Navn eksisterer allerede",
-            "wrong_credentials": "Feil brukernavn eller passord"
+            "name_exists": "Navn eksisterer allerede"
         },
         "step": {
             "user": {
@@ -15,7 +14,7 @@
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "title": "Oppsett av Transmission-klient"

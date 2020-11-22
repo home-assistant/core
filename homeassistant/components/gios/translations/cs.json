@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_sensors_data": "Neplatn\u00e1 data senzor\u016f pro tuto m\u011b\u0159ic\u00ed stanici.",
             "wrong_station_id": "ID m\u011b\u0159ic\u00ed stanice nen\u00ed spr\u00e1vn\u00e9."
         },
         "step": {

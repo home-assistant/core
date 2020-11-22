@@ -27,16 +27,15 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_HOURS,
     UV_INDEX,
     VOLT,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -49,6 +48,9 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
+    DATA_CLEANUP_CALLBACKS,
+    DATA_LISTENER,
+    DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -67,7 +69,7 @@ DATA_TYPES = OrderedDict(
         ("Humidity", PERCENTAGE),
         ("Barometer", PRESSURE_HPA),
         ("Wind direction", DEGREE),
-        ("Rain rate", f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"),
+        ("Rain rate", PRECIPITATION_MILLIMETERS_PER_HOUR),
         ("Energy usage", POWER_WATT),
         ("Total usage", ENERGY_KILO_WATT_HOUR),
         ("Sound", None),
@@ -93,8 +95,6 @@ DATA_TYPES = OrderedDict(
 )
 
 _LOGGER = logging.getLogger(__name__)
-DATA_RFXOBJECT = "rfxobject"
-DATA_LISTENER = "ha_stop"
 
 
 def _bytearray_string(data):
@@ -188,7 +188,16 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
-    await async_setup_internal(hass, entry)
+    hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
+
+    try:
+        await async_setup_internal(hass, entry)
+    except asyncio.TimeoutError:
+        # Library currently doesn't support reload
+        _LOGGER.error(
+            "Connection timeout: failed to receive response from RFXtrx device"
+        )
+        return False
 
     for domain in DOMAINS:
         hass.async_create_task(
@@ -212,11 +221,16 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
 
+    for cleanup_callback in hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS]:
+        cleanup_callback()
+
     listener = hass.data[DOMAIN][DATA_LISTENER]
     listener()
 
     rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
     await hass.async_add_executor_job(rfx_object.close_connection)
+
+    hass.data.pop(DOMAIN)
 
     return True
 
@@ -255,11 +269,8 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    try:
-        async with async_timeout.timeout(5):
-            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
+    async with async_timeout.timeout(30):
+        rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
@@ -426,6 +437,14 @@ def get_device_id(device, data_bits=None):
             id_string = masked_id.decode("ASCII")
 
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
+
+
+def connect_auto_add(hass, entry_data, callback_fun):
+    """Connect to dispatcher for automatic add."""
+    if entry_data[CONF_AUTOMATIC_ADD]:
+        hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS].append(
+            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback_fun)
+        )
 
 
 class RfxtrxEntity(RestoreEntity):

@@ -3,7 +3,7 @@ import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -26,6 +26,8 @@ from .const import (
     ATTR_MODEL_NUMBER,
     ATTR_REMOTE,
     ATTR_UDN,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
 
@@ -69,11 +71,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         self._device_info = device_info
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self):
         """Return the unique ID of the device."""
-        if self._device_info is not None:
-            return self._device_info[ATTR_UDN]
-        return None
+        if self._device_info is None:
+            return None
+        return self._device_info[ATTR_UDN]
 
     @property
     def device_info(self):
@@ -83,9 +85,16 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return {
             "name": self._name,
             "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info[ATTR_MANUFACTURER],
-            "model": self._device_info[ATTR_MODEL_NUMBER],
+            "manufacturer": self._device_info.get(
+                ATTR_MANUFACTURER, DEFAULT_MANUFACTURER
+            ),
+            "model": self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
         }
+
+    @property
+    def device_class(self):
+        """Return the device class of the device."""
+        return DEVICE_CLASS_TV
 
     @property
     def name(self):

@@ -24,6 +24,11 @@
             "link": {
                 "description": "Druk op de knop van de bridge om Philips Hue te registreren met Home Assistant.  \n\n![Locatie van de knop op bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                }
             }
         }
     },
@@ -44,8 +49,8 @@
             "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang drukken",
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
-            "remote_double_button_long_press": "Beide \"{subtype}\" vrijgegeven na lang indrukken",
-            "remote_double_button_short_press": "Beide \"{subtype}\" vrijgegeven"
+            "remote_double_button_long_press": "Beide \"{subtype}\" losgelaten na lang indrukken",
+            "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten"
         }
     }
 }

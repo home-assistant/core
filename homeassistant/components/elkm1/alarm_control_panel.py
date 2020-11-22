@@ -60,18 +60,9 @@ SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ElkM1 alarm platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-
     elk = elk_data["elk"]
-    areas_with_keypad = set()
-    for keypad in elk.keypads:
-        areas_with_keypad.add(keypad.area)
-
-    areas = []
-    for area in elk.areas:
-        if area.index in areas_with_keypad or elk_data["auto_configure"] is False:
-            areas.append(area)
-    create_elk_entities(elk_data, areas, "area", ElkArea, entities)
+    entities = []
+    create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
     platform = entity_platform.current_platform.get()

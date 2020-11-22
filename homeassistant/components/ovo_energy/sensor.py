@@ -1,6 +1,5 @@
 """Support for OVO Energy sensors."""
 from datetime import timedelta
-import logging
 
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
@@ -11,8 +10,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OVOEnergyDeviceEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
@@ -53,10 +50,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(
-        entities,
-        True,
-    )
+    async_add_entities(entities, True)
 
 
 class OVOEnergySensor(OVOEnergyDeviceEntity):

@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
-            "login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt",
             "send_verification_code": "Kunne ikke sende bekreftelseskode",
             "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden din, velg en tillitsenhet og start bekreftelsen p\u00e5 nytt"
         },
@@ -17,7 +16,7 @@
                     "password": "Passord"
                 },
                 "description": "Ditt tidligere angitte passord for {username} fungerer ikke lenger. Oppdater passordet ditt for \u00e5 fortsette \u00e5 bruke denne integrasjonen.",
-                "title": "iCloud-legitimasjon"
+                "title": "Bekreft integrering p\u00e5 nytt"
             },
             "trusted_device": {
                 "data": {

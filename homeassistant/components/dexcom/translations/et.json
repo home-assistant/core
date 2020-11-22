@@ -1,21 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Konto on juba seadistatud"
+            "already_configured": "Kasutaja on juba seadistatud"
         },
         "error": {
-            "account_error": "Tuvastamine nurjus",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
-            "session_error": "\u00dchendamine nurjus",
             "unknown": "Tundmatu viga"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
+                    "server": "",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Sisesta Dexcom Share'i volitused",
+                "title": "Seadista Dexcom'i sidumine"
             }
         }
     },

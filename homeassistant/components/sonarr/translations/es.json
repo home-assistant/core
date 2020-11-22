@@ -21,10 +21,9 @@
                     "base_path": "Ruta a la API",
                     "host": "Host",
                     "port": "Puerto",
-                    "ssl": "Sonarr usa un certificado SSL",
+                    "ssl": "Utiliza un certificado SSL",
                     "verify_ssl": "Verificar certificado SSL"
-                },
-                "title": "Conectar a Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

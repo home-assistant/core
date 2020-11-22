@@ -17,5 +17,15 @@
                 "title": "P\u0159ipojen\u00ed k Canary"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumenty p\u0159edan\u00e9 ffmpeg pro kamery",
+                    "timeout": "\u010casov\u00fd limit po\u017eadavku (v sekund\u00e1ch)"
+                }
+            }
+        }
     }
 }

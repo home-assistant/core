@@ -7,7 +7,7 @@
     "@swetoast"
   ],
   "requirements": [
-    "rpi-bad-power==0.0.3"
+    "rpi-bad-power==0.1.0"
   ],
   "config_flow": true
 }

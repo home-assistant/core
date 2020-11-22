@@ -4,8 +4,7 @@
             "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_credentials": "Credencials de Tile inv\u00e0lides."
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {

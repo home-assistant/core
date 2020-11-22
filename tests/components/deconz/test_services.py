@@ -5,9 +5,22 @@ from copy import deepcopy
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import deconz
-from homeassistant.components.deconz.const import CONF_BRIDGE_ID
+from homeassistant.components.deconz.const import (
+    CONF_BRIDGE_ID,
+    DOMAIN as DECONZ_DOMAIN,
+)
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.deconz.services import (
+    DECONZ_SERVICES,
+    SERVICE_CONFIGURE_DEVICE,
+    SERVICE_DATA,
+    SERVICE_DEVICE_REFRESH,
+    SERVICE_ENTITY,
+    SERVICE_FIELD,
+    SERVICE_REMOVE_ORPHANED_ENTRIES,
+    async_setup_services,
+    async_unload_services,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
@@ -62,33 +75,33 @@ SWITCH = {
 
 async def test_service_setup(hass):
     """Verify service setup works."""
-    assert deconz.services.DECONZ_SERVICES not in hass.data
+    assert DECONZ_SERVICES not in hass.data
     with patch(
         "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
     ) as async_register:
-        await deconz.services.async_setup_services(hass)
-        assert hass.data[deconz.services.DECONZ_SERVICES] is True
+        await async_setup_services(hass)
+        assert hass.data[DECONZ_SERVICES] is True
         assert async_register.call_count == 3
 
 
 async def test_service_setup_already_registered(hass):
     """Make sure that services are only registered once."""
-    hass.data[deconz.services.DECONZ_SERVICES] = True
+    hass.data[DECONZ_SERVICES] = True
     with patch(
         "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
     ) as async_register:
-        await deconz.services.async_setup_services(hass)
+        await async_setup_services(hass)
         async_register.assert_not_called()
 
 
 async def test_service_unload(hass):
     """Verify service unload works."""
-    hass.data[deconz.services.DECONZ_SERVICES] = True
+    hass.data[DECONZ_SERVICES] = True
     with patch(
         "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
     ) as async_remove:
-        await deconz.services.async_unload_services(hass)
-        assert hass.data[deconz.services.DECONZ_SERVICES] is False
+        await async_unload_services(hass)
+        assert hass.data[DECONZ_SERVICES] is False
         assert async_remove.call_count == 3
 
 
@@ -97,8 +110,8 @@ async def test_service_unload_not_registered(hass):
     with patch(
         "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
     ) as async_remove:
-        await deconz.services.async_unload_services(hass)
-        assert deconz.services.DECONZ_SERVICES not in hass.data
+        await async_unload_services(hass)
+        assert DECONZ_SERVICES not in hass.data
         async_remove.assert_not_called()
 
 
@@ -107,14 +120,14 @@ async def test_configure_service_with_field(hass):
     await setup_deconz_integration(hass)
 
     data = {
-        deconz.services.SERVICE_FIELD: "/light/2",
+        SERVICE_FIELD: "/light/2",
         CONF_BRIDGE_ID: BRIDGEID,
-        deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
+        SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
     with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
-            deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
+            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
         put_state.assert_called_with(
@@ -129,13 +142,13 @@ async def test_configure_service_with_entity(hass):
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
-        deconz.services.SERVICE_ENTITY: "light.test",
-        deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
+        SERVICE_ENTITY: "light.test",
+        SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
     with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
-            deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
+            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
         put_state.assert_called_with(
@@ -150,14 +163,14 @@ async def test_configure_service_with_entity_and_field(hass):
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
-        deconz.services.SERVICE_ENTITY: "light.test",
-        deconz.services.SERVICE_FIELD: "/state",
-        deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
+        SERVICE_ENTITY: "light.test",
+        SERVICE_FIELD: "/state",
+        SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
     with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
-            deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
+            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
         put_state.assert_called_with(
@@ -169,11 +182,11 @@ async def test_configure_service_with_faulty_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
     await setup_deconz_integration(hass)
 
-    data = {deconz.services.SERVICE_FIELD: "light/2", deconz.services.SERVICE_DATA: {}}
+    data = {SERVICE_FIELD: "light/2", SERVICE_DATA: {}}
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
+            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
 
@@ -183,13 +196,13 @@ async def test_configure_service_with_faulty_entity(hass):
     await setup_deconz_integration(hass)
 
     data = {
-        deconz.services.SERVICE_ENTITY: "light.nonexisting",
-        deconz.services.SERVICE_DATA: {},
+        SERVICE_ENTITY: "light.nonexisting",
+        SERVICE_DATA: {},
     }
 
     with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
-            deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
+            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
         put_state.assert_not_called()
@@ -207,7 +220,7 @@ async def test_service_refresh_devices(hass):
         return_value={"groups": GROUP, "lights": LIGHT, "sensors": SENSOR},
     ):
         await hass.services.async_call(
-            deconz.DOMAIN, deconz.services.SERVICE_DEVICE_REFRESH, service_data=data
+            DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data=data
         )
         await hass.async_block_till_done()
 
@@ -241,13 +254,13 @@ async def test_remove_orphaned_entries_service(hass):
                 if config_entry.entry_id in entry.config_entries
             ]
         )
-        == 4  # Gateway, light, switch and orphan
+        == 5  # Host, gateway, light, switch and orphan
     )
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
-        deconz.DOMAIN,
+        DECONZ_DOMAIN,
         "12345",
         suggested_object_id="Orphaned sensor",
         config_entry=config_entry,
@@ -260,8 +273,8 @@ async def test_remove_orphaned_entries_service(hass):
     )
 
     await hass.services.async_call(
-        deconz.DOMAIN,
-        deconz.services.SERVICE_REMOVE_ORPHANED_ENTRIES,
+        DECONZ_DOMAIN,
+        SERVICE_REMOVE_ORPHANED_ENTRIES,
         service_data=data,
     )
     await hass.async_block_till_done()
@@ -274,7 +287,7 @@ async def test_remove_orphaned_entries_service(hass):
                 if config_entry.entry_id in entry.config_entries
             ]
         )
-        == 3  # Gateway, light and switch
+        == 4  # Host, gateway, light and switch
     )
 
     assert (

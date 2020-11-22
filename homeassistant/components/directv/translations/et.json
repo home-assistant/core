@@ -7,7 +7,11 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "DirecTV: {name}",
         "step": {
+            "ssdp_confirm": {
+                "description": "Kas seadistada {name}?"
+            },
             "user": {
                 "data": {
                     "host": ""
