@@ -80,6 +80,7 @@ ATTR_QR_CODE = "qr_code"
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
+SERVICE_RECONFIGURE_DEVICE = "reconfigure_device"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
 SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
@@ -890,6 +891,21 @@ def async_load_api(hass):
 
     hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]
+    )
+
+    async def reconfigure_device(service):
+        """Reconfigure ZHA device (heal device)."""
+        ieee = service.data[ATTR_IEEE]
+        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        zha_device = zha_gateway.get_device(ieee)
+        _LOGGER.info("Reconfiguring device %s", ieee)
+        await zha_device.async_configure()
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_RECONFIGURE_DEVICE,
+        reconfigure_device,
+        schema=SERVICE_SCHEMAS[IEEE_SERVICE],
     )
 
     async def set_zigbee_cluster_attributes(service):
