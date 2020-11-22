@@ -8,7 +8,6 @@ from datetime import timedelta
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
-    CONF_TYPE,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
@@ -38,7 +37,7 @@ CONFIG = {
                 "off_delay": 30,
                 "force_update": True,
             },
-            "test3": {"name": "test3", CONF_TYPE: "inverted", "device_class": "lock"},
+            "test3": {"name": "test3", "inverted": True, "device_class": "lock"},
         },
     },
 }
