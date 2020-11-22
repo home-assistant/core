@@ -1,9 +1,10 @@
 """Test the Automate Pulse Hub v2 config flow."""
+from unittest.mock import Mock
+
 from homeassistant import config_entries, setup
 from homeassistant.components.automate.const import DOMAIN
 
 from tests.async_mock import patch
-from unittest.mock import Mock
 
 
 def mock_Hub(testfunc=None):
