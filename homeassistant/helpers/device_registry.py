@@ -37,6 +37,7 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
 
@@ -82,6 +83,7 @@ class DeviceEntry:
         default=None,
         validator=attr.validators.in_(
             (
+                DISABLED_INTEGRATION,
                 DISABLED_USER,
                 None,
             )
