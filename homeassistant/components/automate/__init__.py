@@ -9,12 +9,10 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .hub import PulseHub
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 PLATFORMS = ["cover", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Automate Pulse Hub v2 component."""
     hass.data.setdefault(DOMAIN, {})
     return True
