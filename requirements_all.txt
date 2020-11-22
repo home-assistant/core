@@ -2282,7 +2282,7 @@ twilio==6.32.0
 uEagle==0.0.2
 
 # homeassistant.components.ultrasync
-ultrasync==0.9.0
+ultrasync==0.9.1
 
 # homeassistant.components.unifiled
 unifiled==0.11
