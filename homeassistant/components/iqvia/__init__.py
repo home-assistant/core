@@ -155,6 +155,9 @@ class IQVIAEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            return
+
         self.update_from_latest_data()
         self.async_write_ha_state()
 
