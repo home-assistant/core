@@ -49,7 +49,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._errors[CONF_SITE_ID] = "site_not_active"
                 return False
         except KeyError:
-            self._errors[CONF_SITE_ID] = "api_failure"
+            self._errors[CONF_SITE_ID] = "invalid_api_key"
             return False
         return True
 
@@ -59,7 +59,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
             if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
-                self._errors[CONF_SITE_ID] = "site_exists"
+                self._errors[CONF_SITE_ID] = "already_configured"
             else:
                 site = user_input[CONF_SITE_ID]
                 api = user_input[CONF_API_KEY]
@@ -94,5 +94,5 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
         if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
-            return self.async_abort(reason="site_exists")
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
