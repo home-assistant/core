@@ -41,13 +41,12 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api = solaredge.Solaredge(api_key)
         try:
             response = api.get_details(site_id)
-        except (ConnectTimeout, HTTPError):
-            self._errors[CONF_SITE_ID] = "could_not_connect"
-            return False
-        try:
             if response["details"]["status"].lower() != "active":
                 self._errors[CONF_SITE_ID] = "site_not_active"
                 return False
+        except (ConnectTimeout, HTTPError):
+            self._errors[CONF_SITE_ID] = "could_not_connect"
+            return False
         except KeyError:
             self._errors[CONF_SITE_ID] = "invalid_api_key"
             return False
