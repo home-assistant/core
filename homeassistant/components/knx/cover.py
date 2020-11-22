@@ -91,11 +91,6 @@ class KNXCover(KnxEntity, CoverEntity):
         """Return if the cover is closing or not."""
         return self._device.is_closing()
 
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self._device.current_position() is None
-
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         await self._device.set_down()
