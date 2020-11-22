@@ -1,9 +1,22 @@
 """Test the Automate Pulse Hub v2 config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.automate.config_flow import CannotConnect
 from homeassistant.components.automate.const import DOMAIN
 
 from tests.async_mock import patch
+from unittest.mock import Mock
+
+
+def mock_Hub(testfunc=None):
+    Hub = Mock()
+    Hub.name = "Name of the device"
+
+    async def hub_test():
+        if testfunc:
+            testfunc()
+
+    Hub.test = hub_test
+
+    return Hub
 
 
 async def test_form(hass):
@@ -15,10 +28,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.automate.config_flow.validate_input",
-        return_value={"title": "Name of the device"},
-    ), patch(
+    with patch("aiopulse2.Hub", return_value=mock_Hub()), patch(
         "homeassistant.components.automate.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.automate.async_setup_entry",
@@ -47,10 +57,10 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.automate.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
+    def raise_error():
+        raise ConnectionRefusedError
+
+    with patch("aiopulse2.Hub", return_value=mock_Hub(raise_error)):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

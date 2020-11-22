@@ -4,24 +4,13 @@ import logging
 import aiopulse2
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
-
-
-async def validate_input(hass: core.HomeAssistant, data) -> dict:
-    """Validate the user input allows us to connect to the hub.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    Broken out into it's own function to facilitate tests.
-    """
-    hub = aiopulse2.Hub(data["host"])
-    await hub.test()
-    return {"title": hub.name}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,7 +24,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                hub = aiopulse2.Hub(user_input["host"])
+                await hub.test()
+                info = {"title": hub.name}
+
                 return self.async_create_entry(title=info["title"], data=user_input)
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "cannot_connect"
@@ -43,7 +35,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
