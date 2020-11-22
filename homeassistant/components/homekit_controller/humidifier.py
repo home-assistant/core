@@ -1,12 +1,11 @@
 """Support for HomeKit Controller humidifier."""
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    ATTR_HUMIDITY,
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
     MODE_AUTO,
@@ -280,29 +279,6 @@ class VocolincFlowerbud(HomeKitEntity, HumidifierEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
-
-    @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
-        data = {
-            ATTR_HUMIDITY: self.service.value(
-                CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
-            )
-            * 20,
-        }
-
-        if not self.is_on:
-            data[ATTR_HUMIDITY] = 0
-
-        return data
-
-    @property
-    def available_modes(self) -> Optional[List[str]]:
-        """Return a list of available modes.
-
-        Requires SUPPORT_MODES.
-        """
-        return []
 
     @property
     def target_humidity(self) -> Optional[int]:
