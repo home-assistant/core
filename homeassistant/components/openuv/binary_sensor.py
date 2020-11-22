@@ -5,7 +5,7 @@ from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import OpenUvEntity
 from .const import (
-    DATA_OPENUV_CLIENT,
+    DATA_CLIENT,
     DATA_PROTECTION_WINDOW,
     DOMAIN,
     LOGGER,
@@ -22,7 +22,7 @@ BINARY_SENSORS = {TYPE_PROTECTION_WINDOW: ("Protection Window", "mdi:sunglasses"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up an OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
+    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     binary_sensors = []
     for kind, attrs in BINARY_SENSORS.items():
