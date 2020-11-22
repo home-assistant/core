@@ -559,7 +559,7 @@ env_canada==0.2.4
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.16.2
+envoy_reader==0.17.0
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -2027,7 +2027,7 @@ skybellpy==0.6.1
 slackclient==2.5.0
 
 # homeassistant.components.sleepiq
-sleepyq==0.7
+sleepyq==0.8.1
 
 # homeassistant.components.xmpp
 slixmpp==1.5.2
