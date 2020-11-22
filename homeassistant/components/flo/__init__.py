@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT, DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -30,10 +30,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up flo from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = {}
     session = async_get_clientsession(hass)
+    hass.data[DOMAIN][entry.entry_id] = {}
     try:
-        hass.data[DOMAIN][entry.entry_id]["client"] = client = await async_get_api(
+        hass.data[DOMAIN][entry.entry_id][CLIENT] = client = await async_get_api(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
     except RequestError as err:
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Flo user information with locations: %s", user_info)
 
-    hass.data[DOMAIN]["devices"] = devices = [
+    hass.data[DOMAIN][entry.entry_id]["devices"] = devices = [
         FloDeviceDataUpdateCoordinator(hass, client, location["id"], device["id"])
         for location in user_info["locations"]
         for device in location["devices"]

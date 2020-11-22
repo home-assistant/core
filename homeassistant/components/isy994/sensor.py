@@ -15,11 +15,12 @@ from .const import (
     ISY994_VARIABLES,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
+    UOM_INDEX,
+    UOM_ON_OFF,
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
 from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
-from .services import async_setup_device_services
 
 
 async def async_setup_entry(
@@ -40,7 +41,6 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, SENSOR, devices)
     async_add_entities(devices)
-    async_setup_device_services(hass)
 
 
 class ISYSensorEntity(ISYNodeEntity):
@@ -60,6 +60,9 @@ class ISYSensorEntity(ISYNodeEntity):
         if isy_states:
             return isy_states
 
+        if uom in [UOM_ON_OFF, UOM_INDEX]:
+            return uom
+
         return UOM_FRIENDLY_NAME.get(uom)
 
     @property
@@ -76,6 +79,9 @@ class ISYSensorEntity(ISYNodeEntity):
         if isinstance(uom, dict):
             return uom.get(value, value)
 
+        if uom in [UOM_INDEX, UOM_ON_OFF]:
+            return self._node.formatted
+
         # Handle ISY precision and rounding
         value = convert_isy_value_to_hass(value, uom, self._node.prec)
 
@@ -90,7 +96,7 @@ class ISYSensorEntity(ISYNodeEntity):
         """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
         # Check if this is a known index pair UOM
-        if isinstance(raw_units, dict):
+        if isinstance(raw_units, dict) or raw_units in [UOM_ON_OFF, UOM_INDEX]:
             return None
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
             return self.hass.config.units.temperature_unit
@@ -108,12 +114,16 @@ class ISYSensorVariableEntity(ISYEntity):
     @property
     def state(self):
         """Return the state of the variable."""
-        return self._node.status
+        return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
 
     @property
     def device_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
-        return {"init_value": int(self._node.init)}
+        return {
+            "init_value": convert_isy_value_to_hass(
+                self._node.init, "", self._node.prec
+            )
+        }
 
     @property
     def icon(self):

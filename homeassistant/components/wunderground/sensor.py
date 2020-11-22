@@ -23,11 +23,13 @@ from homeassistant.const import (
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
+    PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -391,7 +393,7 @@ SENSOR_TYPES = {
         "Precipitation 1hr", "precip_1hr_in", "mdi:umbrella", LENGTH_INCHES
     ),
     "precip_1hr_metric": WUCurrentConditionsSensorConfig(
-        "Precipitation 1hr", "precip_1hr_metric", "mdi:umbrella", "mm"
+        "Precipitation 1hr", "precip_1hr_metric", "mdi:umbrella", LENGTH_MILLIMETERS
     ),
     "precip_1hr_string": WUCurrentConditionsSensorConfig(
         "Precipitation 1hr", "precip_1hr_string", "mdi:umbrella"
@@ -400,13 +402,13 @@ SENSOR_TYPES = {
         "Precipitation Today", "precip_today_in", "mdi:umbrella", LENGTH_INCHES
     ),
     "precip_today_metric": WUCurrentConditionsSensorConfig(
-        "Precipitation Today", "precip_today_metric", "mdi:umbrella", "mm"
+        "Precipitation Today", "precip_today_metric", "mdi:umbrella", LENGTH_MILLIMETERS
     ),
     "precip_today_string": WUCurrentConditionsSensorConfig(
         "Precipitation Today", "precip_today_string", "mdi:umbrella"
     ),
     "pressure_in": WUCurrentConditionsSensorConfig(
-        "Pressure", "pressure_in", "mdi:gauge", "inHg", device_class="pressure"
+        "Pressure", "pressure_in", "mdi:gauge", PRESSURE_INHG, device_class="pressure"
     ),
     "pressure_mb": WUCurrentConditionsSensorConfig(
         "Pressure", "pressure_mb", "mdi:gauge", "mb", device_class="pressure"
@@ -418,7 +420,7 @@ SENSOR_TYPES = {
         "Relative Humidity",
         "conditions",
         value=lambda wu: int(wu.data["current_observation"]["relative_humidity"][:-1]),
-        unit_of_measurement=UNIT_PERCENTAGE,
+        unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
         device_class="humidity",
     ),
@@ -878,16 +880,36 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
     ),
     "precip_1d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity Today", 0, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity Today",
+        0,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_2d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity Tomorrow", 1, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity Tomorrow",
+        1,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_3d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity in 3 Days", 2, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity in 3 Days",
+        2,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_4d_mm": WUDailySimpleForecastSensorConfig(
-        "Precipitation Intensity in 4 Days", 3, "qpf_allday", "mm", "mm", "mdi:umbrella"
+        "Precipitation Intensity in 4 Days",
+        3,
+        "qpf_allday",
+        LENGTH_MILLIMETERS,
+        LENGTH_MILLIMETERS,
+        "mdi:umbrella",
     ),
     "precip_1d_in": WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Today",
@@ -926,7 +948,7 @@ SENSOR_TYPES = {
         0,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
     "precip_2d": WUDailySimpleForecastSensorConfig(
@@ -934,7 +956,7 @@ SENSOR_TYPES = {
         1,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
     "precip_3d": WUDailySimpleForecastSensorConfig(
@@ -942,7 +964,7 @@ SENSOR_TYPES = {
         2,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
     "precip_4d": WUDailySimpleForecastSensorConfig(
@@ -950,7 +972,7 @@ SENSOR_TYPES = {
         3,
         "pop",
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:umbrella",
     ),
 }

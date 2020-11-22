@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "pin": "PIN-code",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Ingeschakeld weg",
+                    "armed_custom_bypass": "Ingeschakeld met overbrugging(en)",
+                    "armed_home": "Ingeschakeld thuis",
+                    "armed_night": "Ingeschakeld nacht"
+                }
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "Pincode vereist om in te schakelen",
+                    "code_disarm_required": "Pincode vereist om uit te schakelen"
+                },
+                "title": "Configureer opties"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Groep A",
+                    "B": "Groep B",
+                    "C": "Groep C",
+                    "D": "Groep D"
+                }
+            }
+        }
+    }
+}

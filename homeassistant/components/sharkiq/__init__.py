@@ -10,15 +10,12 @@ from sharkiqpy import (
     SharkIqNotAuthedError,
     get_ayla_api,
 )
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import API_TIMEOUT, COMPONENTS, DOMAIN, LOGGER
+from .const import _LOGGER, API_TIMEOUT, COMPONENTS, DOMAIN
 from .update_coordinator import SharkIqUpdateCoordinator
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
@@ -28,21 +25,20 @@ class CannotConnect(exceptions.HomeAssistantError):
 async def async_setup(hass, config):
     """Set up the sharkiq environment."""
     hass.data.setdefault(DOMAIN, {})
-    if DOMAIN not in config:
-        return True
+    return True
 
 
 async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
         with async_timeout.timeout(API_TIMEOUT):
-            LOGGER.debug("Initialize connection to Ayla networks API")
+            _LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except SharkIqAuthError as exc:
-        LOGGER.error("Authentication error connecting to Shark IQ api", exc_info=exc)
+    except SharkIqAuthError:
+        _LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
     except asyncio.TimeoutError as exc:
-        LOGGER.error("Timeout expired", exc_info=exc)
+        _LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 
     return True
@@ -64,7 +60,7 @@ async def async_setup_entry(hass, config_entry):
 
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join([d.name for d in shark_vacs])
-    LOGGER.debug("Found %d Shark IQ device(s): %s", len(device_names), device_names)
+    _LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
 
     await coordinator.async_refresh()
@@ -84,13 +80,12 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
-    LOGGER.debug("Disconnecting from Ayla Api")
+    _LOGGER.debug("Disconnecting from Ayla Api")
     with async_timeout.timeout(5):
         try:
             await coordinator.ayla_api.async_sign_out()
         except (SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError):
             pass
-    return True
 
 
 async def async_update_options(hass, config_entry):

@@ -21,15 +21,19 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .aiohttp_client import async_get_clientsession
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
+
+CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 
 class AbstractOAuth2Implementation(ABC):
@@ -77,6 +81,8 @@ class AbstractOAuth2Implementation(ABC):
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token and update expires info."""
         new_token = await self._async_refresh_token(token)
+        # Force int for non-compliant oauth2 providers
+        new_token["expires_in"] = int(new_token["expires_in"])
         new_token["expires_at"] = time.time() + new_token["expires_in"]
         return new_token
 
@@ -227,7 +233,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "implementation", default=list(implementations.keys())[0]
+                        "implementation", default=list(implementations)[0]
                     ): vol.In({key: impl.name for key, impl in implementations.items()})
                 }
             ),
@@ -247,6 +253,13 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                 url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
+        except NoURLAvailableError:
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
+                },
+            )
 
         url = str(URL(url).update_query(self.extra_authorize_data))
 
@@ -257,6 +270,12 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> Dict[str, Any]:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
+        # Force int for non-compliant oauth2 providers
+        try:
+            token["expires_in"] = int(token["expires_in"])
+        except ValueError as err:
+            _LOGGER.warning("Error converting expires_in to int: %s", err)
+            return self.async_abort(reason="oauth_error")
         token["expires_at"] = time.time() + token["expires_in"]
 
         self.logger.info("Successfully authenticated")
@@ -285,6 +304,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return await self.async_step_pick_implementation()
 
     async_step_user = async_step_pick_implementation
+    async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
     async_step_homekit = async_step_discovery
@@ -417,7 +437,10 @@ class OAuth2Session:
     @property
     def valid_token(self) -> bool:
         """Return if token is still valid."""
-        return cast(float, self.token["expires_at"]) > time.time()
+        return (
+            cast(float, self.token["expires_at"])
+            > time.time() + CLOCK_OUT_OF_SYNC_MAX_SEC
+        )
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""

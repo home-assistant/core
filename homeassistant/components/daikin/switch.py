@@ -1,11 +1,7 @@
 """Support for Daikin AirBase zones."""
-import logging
-
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN as DAIKIN_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 ZONE_ICON = "mdi:home-circle"
 

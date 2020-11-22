@@ -103,7 +103,7 @@ class SwissPublicTransportSensor(Entity):
             self._opendata.connections[0]["departure"]
         ) - dt_util.as_local(dt_util.utcnow())
 
-        attr = {
+        return {
             ATTR_TRAIN_NUMBER: self._opendata.connections[0]["number"],
             ATTR_PLATFORM: self._opendata.connections[0]["platform"],
             ATTR_TRANSFERS: self._opendata.connections[0]["transfers"],
@@ -116,7 +116,6 @@ class SwissPublicTransportSensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
-        return attr
 
     @property
     def icon(self):

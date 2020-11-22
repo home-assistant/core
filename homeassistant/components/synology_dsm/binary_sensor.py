@@ -1,10 +1,7 @@
 """Support for Synology DSM binary sensors."""
 from typing import Dict
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -15,9 +12,8 @@ from .const import (
     SECURITY_BINARY_SENSORS,
     STORAGE_DISK_BINARY_SENSORS,
     SYNO_API,
+    UPGRADE_BINARY_SENSORS,
 )
-
-DEFAULT_DEVICE_CLASS = DEVICE_CLASS_SAFETY
 
 
 async def async_setup_entry(
@@ -32,6 +28,13 @@ async def async_setup_entry(
             api, sensor_type, SECURITY_BINARY_SENSORS[sensor_type]
         )
         for sensor_type in SECURITY_BINARY_SENSORS
+    ]
+
+    entities += [
+        SynoDSMUpgradeBinarySensor(
+            api, sensor_type, UPGRADE_BINARY_SENSORS[sensor_type]
+        )
+        for sensor_type in UPGRADE_BINARY_SENSORS
     ]
 
     # Handle all disks
@@ -72,12 +75,18 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_type)(self._device_id)
-        if attr is None:
-            return None
-        return attr
+        return getattr(self._api.storage, self.entity_type)(self._device_id)
+
+
+class SynoDSMUpgradeBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+    """Representation a Synology Upgrade binary sensor."""
 
     @property
-    def device_class(self):
-        """Return the device class of this binary sensor."""
-        return DEFAULT_DEVICE_CLASS
+    def is_on(self) -> bool:
+        """Return the state."""
+        return getattr(self._api.upgrade, self.entity_type)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self._api.upgrade)

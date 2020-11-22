@@ -1,5 +1,6 @@
 """Data update coordinator for shark iq vacuums."""
 
+import asyncio
 from typing import Dict, List, Set
 
 from async_timeout import timeout
@@ -15,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import _LOGGER, API_TIMEOUT, DOMAIN, UPDATE_INTERVAL
 
 
 class SharkIqUpdateCoordinator(DataUpdateCoordinator):
@@ -30,13 +31,13 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Set up the SharkIqUpdateCoordinator class."""
         self.ayla_api = ayla_api
-        self.shark_vacs: Dict[SharkIqVacuum] = {
+        self.shark_vacs: Dict[str, SharkIqVacuum] = {
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }
         self._config_entry = config_entry
         self._online_dsns = set()
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     @property
     def online_dsns(self) -> Set[str]:
@@ -51,7 +52,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_vacuum(sharkiq: SharkIqVacuum) -> None:
         """Asynchronously update the data for a single vacuum."""
         dsn = sharkiq.serial_number
-        LOGGER.info("Updating sharkiq data for device DSN %s", dsn)
+        _LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
         with timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
@@ -65,15 +66,15 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                 if v["connection_status"] == "Online" and v["dsn"] in self.shark_vacs
             }
 
-            LOGGER.info("Updating sharkiq data")
-            for dsn in self._online_dsns:
-                await self._async_update_vacuum(self.shark_vacs[dsn])
+            _LOGGER.debug("Updating sharkiq data")
+            online_vacs = (self.shark_vacs[dsn] for dsn in self.online_dsns)
+            await asyncio.gather(*[self._async_update_vacuum(v) for v in online_vacs])
         except (
             SharkIqAuthError,
             SharkIqNotAuthedError,
             SharkIqAuthExpiringError,
         ) as err:
-            LOGGER.exception("Bad auth state", exc_info=err)
+            _LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
             flow_context = {
                 "source": "reauth",
                 "unique_id": self._config_entry.unique_id,
@@ -86,6 +87,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             ]
 
             if not matching_flows:
+                _LOGGER.debug("Re-initializing flows.  Attempting re-auth")
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
                         DOMAIN,
@@ -93,10 +95,12 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                         data=self._config_entry.data,
                     )
                 )
+            else:
+                _LOGGER.debug("Matching flow found")
 
             raise UpdateFailed(err) from err
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected error updating SharkIQ", exc_info=err)
+            _LOGGER.exception("Unexpected error updating SharkIQ")
             raise UpdateFailed(err) from err
 
         return True

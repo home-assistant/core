@@ -1,18 +1,18 @@
 {
   "title": "HomeKit Controller",
   "config": {
-    "flow_title": "HomeKit Accessory: {name}",
+    "flow_title": "{name} via HomeKit Accessory Protocol",
     "step": {
       "user": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "Select the device you want to pair with",
+        "title": "Device selection",
+        "description": "HomeKit Controller communicates over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Select the device you want to pair with:",
         "data": {
           "device": "Device"
         }
       },
       "pair": {
-        "title": "Pair with HomeKit Accessory",
-        "description": "Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory",
+        "title": "Pair with a device via HomeKit Accessory Protocol",
+        "description": "HomeKit Controller communicates with {name} over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
         "data": {
           "pairing_code": "Pairing Code"
         }
@@ -44,7 +44,28 @@
       "already_configured": "Accessory is already configured with this controller.",
       "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
       "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
-      "already_in_progress": "Config flow for device is already in progress."
+      "invalid_properties": "Invalid properties announced by device.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "single_press": "\"{subtype}\" pressed",
+      "double_press": "\"{subtype}\" pressed twice",
+      "long_press": "\"{subtype}\" pressed and held"
+    },
+    "trigger_subtype": {
+      "doorbell": "Doorbell",
+      "button1": "Button 1",
+      "button2": "Button 2",
+      "button3": "Button 3",
+      "button4": "Button 4",
+      "button5": "Button 5",
+      "button6": "Button 6",
+      "button7": "Button 7",
+      "button8": "Button 8",
+      "button9": "Button 9",
+      "button10": "Button 10"
     }
   }
 }

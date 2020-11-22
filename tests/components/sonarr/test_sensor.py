@@ -4,11 +4,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sonarr.const import (
-    CONF_BASE_PATH,
-    CONF_UPCOMING_DAYS,
-    DOMAIN,
-)
+from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,38 +12,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed
-from tests.components.sonarr import (
-    MOCK_SENSOR_CONFIG,
-    mock_connection,
-    setup_integration,
-)
+from tests.components.sonarr import mock_connection, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
-
-
-async def test_import_from_sensor_component(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test import from sensor platform."""
-    mock_connection(aioclient_mock)
-    assert await async_setup_component(
-        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: MOCK_SENSOR_CONFIG}
-    )
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    assert entries[0].data[CONF_BASE_PATH] == "/api"
-    assert entries[0].options[CONF_UPCOMING_DAYS] == 3
-
-    assert hass.states.get(UPCOMING_ENTITY_ID)
 
 
 async def test_sensors(

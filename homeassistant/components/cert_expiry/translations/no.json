@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne verts- og portkombinasjonen er allerede konfigurert",
+            "already_configured": "Tjenesten er allerede konfigurert",
             "import_failed": "Import fra config mislyktes"
         },
         "error": {
@@ -13,7 +13,8 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "name": "Sertifikatets navn"
+                    "name": "Sertifikatets navn",
+                    "port": "Port"
                 },
                 "title": "Definer sertifikatet som skal testes"
             }

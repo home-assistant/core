@@ -67,7 +67,7 @@ class Device:
         """Create UPnP/IGD device."""
         # build async_upnp_client requester
         session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True)
+        requester = AiohttpSessionRequester(session, True, 10)
 
         # create async_upnp_client device
         factory = UpnpFactory(requester, disable_state_variable_validation=True)

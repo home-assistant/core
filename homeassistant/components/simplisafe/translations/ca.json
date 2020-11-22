@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Aquest compte SimpliSafe ja est\u00e0 en \u00fas.",
-            "reauth_successful": "Reautenticaci\u00f3 amb SimpliSafe exitosa."
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "identifier_exists": "Aquest compte ja est\u00e0 registrat",
-            "invalid_credentials": "Credencials inv\u00e0lides",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "still_awaiting_mfa": "Esperant clic de l'enlla\u00e7 del correu MFA",
             "unknown": "Error inesperat"
         },
@@ -20,7 +20,7 @@
                     "password": "Contrasenya"
                 },
                 "description": "El token d'acc\u00e9s ha caducat o ha estat revocat. Introdueix la teva contrasenya per tornar a vincular el compte.",
-                "title": "Torna a vincular un compte SimpliSafe"
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {
                 "data": {

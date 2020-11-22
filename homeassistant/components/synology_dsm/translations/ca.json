@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "connection": "Error de connexi\u00f3: comprova l'amfitri\u00f3, la contrasenya i l'SSL",
-            "login": "Error d'inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "missing_data": "Falten dades: torna-ho a provar m\u00e9s tard o prova una altra configuraci\u00f3 diferent",
             "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi",
-            "unknown": "Error desconegut: consulta els registres per a m\u00e9s detalls."
+            "unknown": "Error inesperat"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -22,8 +22,9 @@
                 "data": {
                     "password": "Contrasenya",
                     "port": "Port",
-                    "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
-                    "username": "Nom d'usuari"
+                    "ssl": "Utilitza un certificat SSL",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "description": "Vols configurar {name} ({host})?",
                 "title": "Synology DSM"
@@ -33,8 +34,9 @@
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
                     "port": "Port",
-                    "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
-                    "username": "Nom d'usuari"
+                    "ssl": "Utilitza un certificat SSL",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "title": "Synology DSM"
             }
@@ -44,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minuts entre escanejos"
+                    "scan_interval": "Minuts entre escanejos",
+                    "timeout": "Temps d'espera (segons)"
                 }
             }
         }

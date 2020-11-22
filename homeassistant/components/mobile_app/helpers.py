@@ -7,7 +7,7 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_BAD_REQUEST, HTTP_OK
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -94,7 +94,7 @@ def registration_context(registration: Dict) -> Context:
 def empty_okay_response(headers: Dict = None, status: int = HTTP_OK) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
-        text="{}", status=status, content_type="application/json", headers=headers
+        text="{}", status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 
@@ -161,7 +161,7 @@ def webhook_response(
         data = json.dumps({"encrypted": True, "encrypted_data": enc_data})
 
     return Response(
-        text=data, status=status, content_type="application/json", headers=headers
+        text=data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 

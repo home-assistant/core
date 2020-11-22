@@ -16,9 +16,11 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
@@ -27,6 +29,7 @@ from .const import (
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
+    DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
@@ -294,6 +297,12 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_POE_CLIENTS,
                         default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
                     ): bool,
+                    vol.Optional(
+                        CONF_DPI_RESTRICTIONS,
+                        default=self.options.get(
+                            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
+                        ),
+                    ): bool,
                 }
             ),
             errors=errors,
@@ -312,7 +321,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
                         default=self.controller.option_allow_bandwidth_sensors,
-                    ): bool
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_UPTIME_SENSORS,
+                        default=self.controller.option_allow_uptime_sensors,
+                    ): bool,
                 }
             ),
         )

@@ -796,7 +796,7 @@ async def test_effect(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("effect") == "none"
+    assert state.attributes.get("effect") is None
 
     await common.async_turn_on(hass, "light.test", effect="rainbow")
 
@@ -942,7 +942,7 @@ async def test_brightness_scale(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("brightness") is None
 
     # Turn on the light with brightness
     async_fire_mqtt_message(

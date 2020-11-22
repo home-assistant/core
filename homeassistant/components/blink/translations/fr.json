@@ -4,6 +4,8 @@
             "already_configured": "P\u00e9riph\u00e9rique d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_access_token": "Jeton d'acc\u00e8s non valide",
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },

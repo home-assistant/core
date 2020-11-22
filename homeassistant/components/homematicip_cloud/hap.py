@@ -34,7 +34,7 @@ class HomematicipAuth:
             self.auth = await self.get_auth(
                 self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
             )
-            return True
+            return self.auth is not None
         except HmipcConnectionError:
             return False
 
@@ -63,7 +63,7 @@ class HomematicipAuth:
                 auth.pin = pin
             await auth.connectionRequest("HomeAssistant")
         except HmipConnectionError:
-            return False
+            return None
         return auth
 
 
@@ -240,8 +240,9 @@ class HomematicipHAP:
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
 
         home.name = name
-        home.label = "Access Point"
-        home.modelType = "HmIP-HAP"
+        # Use the title of the config entry as title for the home.
+        home.label = self.config_entry.title
+        home.modelType = "HomematicIP Cloud Home"
 
         home.set_auth_token(authtoken)
         try:

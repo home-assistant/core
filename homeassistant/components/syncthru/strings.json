@@ -18,7 +18,7 @@
       },
       "user": {
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "url": "Web interface URL"
         }
       }

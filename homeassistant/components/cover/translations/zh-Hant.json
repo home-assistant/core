@@ -10,9 +10,9 @@
             "stop": "\u505c\u6b62 {entity_name}"
         },
         "condition_type": {
-            "is_closed": "{entity_name}\u5df2\u95dc\u9589",
+            "is_closed": "{entity_name}\u70ba\u95dc\u9589",
             "is_closing": "{entity_name}\u6b63\u5728\u95dc\u9589",
-            "is_open": "{entity_name}\u5df2\u958b\u555f",
+            "is_open": "{entity_name}\u70ba\u958b\u555f",
             "is_opening": "{entity_name}\u6b63\u5728\u958b\u555f",
             "is_position": "\u76ee\u524d{entity_name}\u4f4d\u7f6e\u70ba",
             "is_tilt_position": "\u76ee\u524d{entity_name}\u6a19\u984c\u4f4d\u7f6e\u70ba"

@@ -1,6 +1,5 @@
 """Support for Panasonic Blu-ray players."""
 from datetime import timedelta
-import logging
 
 from panacotta import PanasonicBD
 import voluptuous as vol
@@ -22,8 +21,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Panasonic Blu-Ray"
 

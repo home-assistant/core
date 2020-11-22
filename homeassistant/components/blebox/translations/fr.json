@@ -6,7 +6,8 @@
         },
         "error": {
             "cannot_connect": "Impossible de connecter le p\u00e9riph\u00e9rique BleBox. (V\u00e9rifiez les journaux pour les erreurs.)",
-            "unknown": "Erreur inconnue lors de la connexion au p\u00e9riph\u00e9rique BleBox. (V\u00e9rifiez les journaux pour les erreurs.)"
+            "unknown": "Erreur inconnue lors de la connexion au p\u00e9riph\u00e9rique BleBox. (V\u00e9rifiez les journaux pour les erreurs.)",
+            "unsupported_version": "L'appareil BleBox a un micrologiciel obsol\u00e8te. Veuillez d'abord le mettre \u00e0 jour."
         },
         "flow_title": "P\u00e9riph\u00e9rique Blebox: {name} ({host)}",
         "step": {

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Ingen nye Pulse-hub oppdaget."
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
         },
         "step": {
             "user": {
                 "data": {
-                    "id": "Verts-ID"
+                    "id": "Vert ID"
                 },
                 "title": "Velg en hub du vil legge til"
             }

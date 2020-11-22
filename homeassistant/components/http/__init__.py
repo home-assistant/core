@@ -345,7 +345,7 @@ class HomeAssistantHTTP:
 
         view.register(self.app, self.app.router)
 
-    def register_redirect(self, url, redirect_to):
+    def register_redirect(self, url, redirect_to, *, redirect_exc=HTTPMovedPermanently):
         """Register a redirect with the server.
 
         If given this must be either a string or callable. In case of a
@@ -357,7 +357,7 @@ class HomeAssistantHTTP:
 
         async def redirect(request):
             """Redirect to location."""
-            raise HTTPMovedPermanently(redirect_to)
+            raise redirect_exc(redirect_to)
 
         self.app.router.add_route("GET", url, redirect)
 
@@ -432,6 +432,8 @@ class HomeAssistantHTTP:
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", self.server_port, error
             )
+
+        _LOGGER.info("Now listening on port %d", self.server_port)
 
     async def stop(self):
         """Stop the aiohttp server."""

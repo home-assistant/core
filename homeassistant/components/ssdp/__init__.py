@@ -1,6 +1,7 @@
 """The SSDP integration."""
 import asyncio
 from datetime import timedelta
+import itertools
 import logging
 
 import aiohttp
@@ -17,16 +18,22 @@ SCAN_INTERVAL = timedelta(seconds=60)
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
+ATTR_SSDP_USN = "ssdp_usn"
+ATTR_SSDP_EXT = "ssdp_ext"
+ATTR_SSDP_SERVER = "ssdp_server"
 # Attributes for accessing info from retrieved UPnP device description
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
 ATTR_UPNP_MANUFACTURER = "manufacturer"
 ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
+ATTR_UPNP_MODEL_DESCRIPTION = "modelDescription"
 ATTR_UPNP_MODEL_NAME = "modelName"
 ATTR_UPNP_MODEL_NUMBER = "modelNumber"
-ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+ATTR_UPNP_MODEL_URL = "modelURL"
 ATTR_UPNP_SERIAL = "serialNumber"
 ATTR_UPNP_UDN = "UDN"
+ATTR_UPNP_UPC = "UPC"
+ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +51,12 @@ async def async_setup(hass, config):
     return True
 
 
+def _run_ssdp_scans():
+    _LOGGER.debug("Scanning")
+    # Run 3 times as packets can get lost
+    return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -56,11 +69,9 @@ class Scanner:
 
     async def async_scan(self, _):
         """Scan for new entries."""
-        _LOGGER.debug("Scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            entries = await self.hass.async_add_executor_job(ssdp.scan)
-            await self._process_entries(entries)
+        entries = await self.hass.async_add_executor_job(_run_ssdp_scans)
+
+        await self._process_entries(entries)
 
         # We clear the cache after each run. We track discovered entries
         # so will never need a description twice.
@@ -68,7 +79,8 @@ class Scanner:
 
     async def _process_entries(self, entries):
         """Process SSDP entries."""
-        tasks = []
+        entries_to_process = []
+        unseen_locations = set()
 
         for entry in entries:
             key = (entry.st, entry.location)
@@ -78,21 +90,24 @@ class Scanner:
 
             self.seen.add(key)
 
-            tasks.append(self._process_entry(entry))
+            entries_to_process.append(entry)
 
-        if not tasks:
+            if (
+                entry.location is not None
+                and entry.location not in self._description_cache
+            ):
+                unseen_locations.add(entry.location)
+
+        if not entries_to_process:
             return
 
-        to_load = [
-            result for result in await asyncio.gather(*tasks) if result is not None
-        ]
-
-        if not to_load:
-            return
+        if unseen_locations:
+            await self._fetch_descriptions(list(unseen_locations))
 
         tasks = []
 
-        for entry, info, domains in to_load:
+        for entry in entries_to_process:
+            info, domains = self._process_entry(entry)
             for domain in domains:
                 _LOGGER.debug("Discovered %s at %s", domain, entry.location)
                 tasks.append(
@@ -101,25 +116,44 @@ class Scanner:
                     )
                 )
 
-        await asyncio.wait(tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
 
-    async def _process_entry(self, entry):
+    async def _fetch_descriptions(self, locations):
+        """Fetch descriptions from locations."""
+
+        for idx, result in enumerate(
+            await asyncio.gather(
+                *[self._fetch_description(location) for location in locations],
+                return_exceptions=True,
+            )
+        ):
+            location = locations[idx]
+
+            if isinstance(result, Exception):
+                _LOGGER.exception(
+                    "Failed to fetch ssdp data from: %s", location, exc_info=result
+                )
+                continue
+
+            self._description_cache[location] = result
+
+    def _process_entry(self, entry):
         """Process a single entry."""
 
         info = {"st": entry.st}
+        for key in "usn", "ext", "server":
+            if key in entry.values:
+                info[key] = entry.values[key]
 
         if entry.location:
-
             # Multiple entries usually share same location. Make sure
             # we fetch it only once.
             info_req = self._description_cache.get(entry.location)
-
             if info_req is None:
-                info_req = self._description_cache[
-                    entry.location
-                ] = self.hass.async_create_task(self._fetch_description(entry.location))
+                return (None, [])
 
-            info.update(await info_req)
+            info.update(info_req)
 
         domains = set()
         for domain, matchers in self._integration_matchers.items():
@@ -128,9 +162,9 @@ class Scanner:
                     domains.add(domain)
 
         if domains:
-            return (entry, info_from_entry(entry, info), domains)
+            return (info_from_entry(entry, info), domains)
 
-        return None
+        return (None, [])
 
     async def _fetch_description(self, xml_location):
         """Fetch an XML description."""
@@ -165,5 +199,12 @@ def info_from_entry(entry, device_info):
     }
     if device_info:
         info.update(device_info)
+        info.pop("st", None)
+        if "usn" in info:
+            info[ATTR_SSDP_USN] = info.pop("usn")
+        if "ext" in info:
+            info[ATTR_SSDP_EXT] = info.pop("ext")
+        if "server" in info:
+            info[ATTR_SSDP_SERVER] = info.pop("server")
 
     return info

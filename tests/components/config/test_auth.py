@@ -34,7 +34,9 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
 
     owner.credentials.append(
         auth_models.Credentials(
-            auth_provider_type="homeassistant", auth_provider_id=None, data={}
+            auth_provider_type="homeassistant",
+            auth_provider_id=None,
+            data={"username": "test-owner"},
         )
     )
 
@@ -58,6 +60,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     assert len(data) == 4
     assert data[0] == {
         "id": hass_admin_user.id,
+        "username": None,
         "name": "Mock User",
         "is_owner": False,
         "is_active": True,
@@ -67,6 +70,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[1] == {
         "id": owner.id,
+        "username": "test-owner",
         "name": "Test Owner",
         "is_owner": True,
         "is_active": True,
@@ -76,6 +80,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[2] == {
         "id": system.id,
+        "username": None,
         "name": "Test Hass.io",
         "is_owner": False,
         "is_active": True,
@@ -85,6 +90,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[3] == {
         "id": inactive.id,
+        "username": None,
         "name": "Inactive User",
         "is_owner": False,
         "is_active": False,

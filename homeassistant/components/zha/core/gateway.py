@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry as get_ent_reg,
 )
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -81,7 +82,6 @@ from .device import (
     ZHADevice,
 )
 from .group import GroupMember, ZHAGroup
-from .patches import apply_application_controller_patch
 from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
 from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
@@ -117,6 +117,7 @@ class ZHAGateway:
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
         self._config_entry = config_entry
+        self._unsubs = []
 
     async def async_initialize(self):
         """Initialize controller and connect radio."""
@@ -153,7 +154,6 @@ class ZHAGateway:
             )
             raise ConfigEntryNotReady from exception
 
-        apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
@@ -186,6 +186,13 @@ class ZHAGateway:
                 "available" if zha_device.available else "unavailable",
                 delta_msg,
             )
+        # update the last seen time for devices every 10 minutes to avoid thrashing
+        # writes and shutdown issues where storage isn't updated
+        self._unsubs.append(
+            async_track_time_interval(
+                self._hass, self.async_update_device_storage, timedelta(minutes=10)
+            )
+        )
 
     @callback
     def async_load_groups(self) -> None:
@@ -498,13 +505,6 @@ class ZHAGateway:
         return zha_group
 
     @callback
-    def async_device_became_available(
-        self, sender, profile, cluster, src_ep, dst_ep, message
-    ):
-        """Handle tasks when a device becomes available."""
-        self.async_update_device(sender, available=True)
-
-    @callback
     def async_update_device(
         self, sender: zigpy_dev.Device, available: bool = True
     ) -> None:
@@ -515,7 +515,7 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
 
-    async def async_update_device_storage(self):
+    async def async_update_device_storage(self, *_):
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
@@ -626,7 +626,22 @@ class ZHAGateway:
     async def shutdown(self):
         """Stop ZHA Controller Application."""
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
-        await self.application_controller.shutdown()
+        for unsubscribe in self._unsubs:
+            unsubscribe()
+        await self.application_controller.pre_shutdown()
+
+    def handle_message(
+        self,
+        sender: zigpy_dev.Device,
+        profile: int,
+        cluster: int,
+        src_ep: int,
+        dst_ep: int,
+        message: bytes,
+    ) -> None:
+        """Handle message from a device Event handler."""
+        if sender.ieee in self.devices and not self.devices[sender.ieee].available:
+            self.async_update_device(sender, available=True)
 
 
 @callback

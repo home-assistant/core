@@ -114,13 +114,14 @@ class TestHelpersEntity:
         assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
-async def test_warn_slow_update(hass):
+async def test_warn_slow_update(hass, caplog):
     """Warn we log when entity update takes a long time."""
     update_call = False
 
     async def async_update():
         """Mock async update."""
         nonlocal update_call
+        await asyncio.sleep(0.00001)
         update_call = True
 
     mock_entity = entity.Entity()
@@ -128,22 +129,16 @@ async def test_warn_slow_update(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later") as mock_call:
+    fast_update_time = 0.0000001
+
+    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
         await mock_entity.async_update_ha_state(True)
-        assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
-
-        timeout, logger_method = mock_call.mock_calls[0][1][:2]
-
-        assert timeout == entity.SLOW_UPDATE_WARNING
-        assert logger_method == entity._LOGGER.warning
-
-        assert mock_call().cancel.called
-
+        assert str(fast_update_time) in caplog.text
+        assert mock_entity.entity_id in caplog.text
         assert update_call
 
 
-async def test_warn_slow_update_with_exception(hass):
+async def test_warn_slow_update_with_exception(hass, caplog):
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
@@ -151,6 +146,7 @@ async def test_warn_slow_update_with_exception(hass):
         """Mock async update."""
         nonlocal update_call
         update_call = True
+        await asyncio.sleep(0.00001)
         raise AssertionError("Fake update error")
 
     mock_entity = entity.Entity()
@@ -158,28 +154,23 @@ async def test_warn_slow_update_with_exception(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later") as mock_call:
+    fast_update_time = 0.0000001
+
+    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
         await mock_entity.async_update_ha_state(True)
-        assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
-
-        timeout, logger_method = mock_call.mock_calls[0][1][:2]
-
-        assert timeout == entity.SLOW_UPDATE_WARNING
-        assert logger_method == entity._LOGGER.warning
-
-        assert mock_call().cancel.called
-
+        assert str(fast_update_time) in caplog.text
+        assert mock_entity.entity_id in caplog.text
         assert update_call
 
 
-async def test_warn_slow_device_update_disabled(hass):
+async def test_warn_slow_device_update_disabled(hass, caplog):
     """Disable slow update warning with async_device_update."""
     update_call = False
 
     async def async_update():
         """Mock async update."""
         nonlocal update_call
+        await asyncio.sleep(0.00001)
         update_call = True
 
     mock_entity = entity.Entity()
@@ -187,10 +178,12 @@ async def test_warn_slow_device_update_disabled(hass):
     mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, "call_later") as mock_call:
-        await mock_entity.async_device_update(warning=False)
+    fast_update_time = 0.0000001
 
-        assert not mock_call.called
+    with patch.object(entity, "SLOW_UPDATE_WARNING", fast_update_time):
+        await mock_entity.async_device_update(warning=False)
+        assert str(fast_update_time) not in caplog.text
+        assert mock_entity.entity_id not in caplog.text
         assert update_call
 
 
@@ -671,7 +664,7 @@ async def test_warn_slow_write_state(hass, caplog):
         "Updating state for comp_test.test_entity "
         "(<class 'homeassistant.helpers.entity.Entity'>) "
         "took 10.000 seconds. Please create a bug report at "
-        "https://github.com/home-assistant/home-assistant/issues?"
+        "https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 

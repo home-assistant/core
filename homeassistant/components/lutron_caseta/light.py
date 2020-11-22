@@ -1,10 +1,13 @@
 """Support for Lutron Caseta lights."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_TRANSITION,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_TRANSITION,
     LightEntity,
 )
 
@@ -47,21 +50,31 @@ class LutronCasetaLight(LutronCasetaDevice, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def brightness(self):
         """Return the brightness of the light."""
         return to_hass_level(self._device["current_state"])
 
+    async def _set_brightness(self, brightness, **kwargs):
+        args = {}
+        if ATTR_TRANSITION in kwargs:
+            args["fade_time"] = timedelta(seconds=kwargs[ATTR_TRANSITION])
+
+        await self._smartbridge.set_value(
+            self.device_id, to_lutron_level(brightness), **args
+        )
+
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._smartbridge.set_value(self.device_id, to_lutron_level(brightness))
+        brightness = kwargs.pop(ATTR_BRIGHTNESS, 255)
+
+        await self._set_brightness(brightness, **kwargs)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self._smartbridge.set_value(self.device_id, 0)
+        await self._set_brightness(0, **kwargs)
 
     @property
     def is_on(self):

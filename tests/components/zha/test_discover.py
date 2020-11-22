@@ -4,6 +4,7 @@ import re
 from unittest import mock
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.quirks
 import zigpy.types
 import zigpy.zcl.clusters.closures
@@ -112,6 +113,7 @@ async def test_devices(
                 0,
                 expect_reply=True,
                 manufacturer=None,
+                tries=1,
                 tsn=None,
             )
 
@@ -163,9 +165,9 @@ def test_discover_entities(m1, m2):
 @pytest.mark.parametrize(
     "device_type, component, hit",
     [
-        (0x0100, zha_const.LIGHT, True),
-        (0x0108, zha_const.SWITCH, True),
-        (0x0051, zha_const.SWITCH, True),
+        (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, zha_const.LIGHT, True),
+        (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, zha_const.SWITCH, True),
+        (zigpy.profiles.zha.DeviceType.SMART_PLUG, zha_const.SWITCH, True),
         (0xFFFF, None, False),
     ],
 )
@@ -379,7 +381,7 @@ async def test_device_override(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "device_type": 258,
+                "device_type": zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
                 "endpoint_id": 1,
                 "in_clusters": [0, 3, 4, 5, 6, 8, 768, 2821, 64513],
                 "out_clusters": [25],

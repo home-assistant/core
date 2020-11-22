@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "unsupported_firmware": "Seade kasutab toetuseta p\u00fcsivara versiooni."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "",
+        "step": {
+            "confirm_discovery": {
+                "description": "Kas soovid seadistada {model} saidil {host} ?\n\n Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadmel nuppu."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadme nuppu."
+            }
+        }
+    }
+}

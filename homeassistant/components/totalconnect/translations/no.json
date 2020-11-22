@@ -4,14 +4,15 @@
             "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"
-                }
+                },
+                "title": ""
             }
         }
     }

@@ -1,6 +1,4 @@
 """Config flow to configure the GeoNet NZ Volcano integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,8 +15,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -61,7 +57,7 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
         if identifier in configured_instances(self.hass):
-            return await self._show_form({"base": "identifier_exists"})
+            return await self._show_form({"base": "already_configured"})
 
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL

@@ -1,17 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Elgato Key Light-enheten er allerede konfigurert.",
-            "connection_error": "Kunne ikke koble til Elgato Key Light-enheten."
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "connection_error": "Kunne ikke koble til Elgato Key Light-enheten."
+            "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "Elgato Key Light: {serial_number}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert"
+                    "host": "Vert",
+                    "port": "Port"
                 },
                 "description": "Sett opp Elgato Key Light for \u00e5 integrere med Home Assistant."
             },

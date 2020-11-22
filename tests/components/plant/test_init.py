@@ -8,6 +8,7 @@ import homeassistant.components.plant as plant
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
+    LIGHT_LUX,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
@@ -187,17 +188,17 @@ async def test_brightness_history(hass):
     assert await async_setup_component(
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
     )
-    hass.states.async_set(BRIGHTNESS_ENTITY, 100, {ATTR_UNIT_OF_MEASUREMENT: "lux"})
+    hass.states.async_set(BRIGHTNESS_ENTITY, 100, {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX})
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
     assert STATE_PROBLEM == state.state
 
-    hass.states.async_set(BRIGHTNESS_ENTITY, 600, {ATTR_UNIT_OF_MEASUREMENT: "lux"})
+    hass.states.async_set(BRIGHTNESS_ENTITY, 600, {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX})
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
     assert STATE_OK == state.state
 
-    hass.states.async_set(BRIGHTNESS_ENTITY, 100, {ATTR_UNIT_OF_MEASUREMENT: "lux"})
+    hass.states.async_set(BRIGHTNESS_ENTITY, 100, {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX})
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
     assert STATE_OK == state.state

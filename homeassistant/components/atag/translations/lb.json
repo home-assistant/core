@@ -1,22 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebsen Apparat ass schonn am Home Assistant dob\u00e4igesat ginn"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "connection_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "unauthorized": "Kopplung verweigert, iwwerpr\u00e9if den Apparat fir auth request"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "E-Mail (Optionell)",
+                    "email": "E-Mail",
                     "host": "Apparat",
                     "port": "Port"
                 },
                 "title": "Mam Apparat verbannen"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

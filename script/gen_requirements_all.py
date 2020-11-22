@@ -23,11 +23,12 @@ COMMENT_REQUIREMENTS = (
     "bme680",
     "credstash",
     "decora",
-    "env_canada",
+    "decora_wifi",
     "envirophat",
     "evdev",
     "face_recognition",
     "i2csense",
+    "nuimo",
     "opencv-python-headless",
     "py_noaa",
     "pybluez",
@@ -66,6 +67,10 @@ urllib3>=1.24.3
 
 # Constrain httplib2 to protect against CVE-2020-11078
 httplib2>=0.18.0
+
+# gRPC 1.32+ currently causes issues on ARMv7, see:
+# https://github.com/home-assistant/core/issues/40148
+grpcio==1.31.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

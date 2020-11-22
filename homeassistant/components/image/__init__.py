@@ -11,6 +11,7 @@ from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
+from homeassistant.components.http.static import CACHE_HEADERS
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -197,7 +198,8 @@ class ImageServeView(HomeAssistantView):
                     )
 
         return web.FileResponse(
-            target_file, headers={hdrs.CONTENT_TYPE: image_info["content_type"]}
+            target_file,
+            headers={**CACHE_HEADERS, hdrs.CONTENT_TYPE: image_info["content_type"]},
         )
 
 

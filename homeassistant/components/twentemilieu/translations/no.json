@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Adressen er allerede satt opp."
+            "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "connection_error": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_address": "Adresse ble ikke funnet i Twente Milieu tjenesteomr\u00e5de."
         },
         "step": {
@@ -14,7 +14,8 @@
                     "house_number": "Husnummer",
                     "post_code": "Postnummer"
                 },
-                "description": "Sett opp Twente Milieu som gir informasjon om innsamling av avfall p\u00e5 adressen din."
+                "description": "Sett opp Twente Milieu som gir informasjon om innsamling av avfall p\u00e5 adressen din.",
+                "title": ""
             }
         }
     }

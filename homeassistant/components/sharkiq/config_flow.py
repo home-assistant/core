@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN, LOGGER  # pylint:disable=unused-import
+from .const import _LOGGER, DOMAIN  # pylint:disable=unused-import
 
 SHARKIQ_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -28,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         with async_timeout.timeout(10):
-            LOGGER.debug("Initialize connection to Ayla networks API")
+            _LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except (asyncio.TimeoutError, aiohttp.ClientError) as errors:
         raise CannotConnect from errors
@@ -50,17 +50,16 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         info = None
 
-        if user_input is not None:
-            # noinspection PyBroadException
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+        # noinspection PyBroadException
+        try:
+            info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
         return info, errors
 
     async def async_step_user(self, user_input: Optional[Dict] = None):
@@ -69,6 +68,8 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             info, errors = await self._async_validate_input(user_input)
             if info:
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

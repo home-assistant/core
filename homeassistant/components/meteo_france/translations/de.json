@@ -4,7 +4,16 @@
             "already_configured": "Stadt bereits konfiguriert",
             "unknown": "Unbekannter Fehler: Bitte versuchen Sie es sp\u00e4ter erneut"
         },
+        "error": {
+            "empty": "Kein Ergebnis bei der Stadtsuche: Bitte \u00fcberpr\u00fcfe das Stadtfeld"
+        },
         "step": {
+            "cities": {
+                "data": {
+                    "city": "Stadt"
+                },
+                "description": "W\u00e4hle deine Stadt aus der Liste"
+            },
             "user": {
                 "data": {
                     "city": "Stadt"
