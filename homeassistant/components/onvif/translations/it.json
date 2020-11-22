@@ -35,7 +35,8 @@
                 "data": {
                     "host": "Host",
                     "name": "Nome",
-                    "port": "Porta"
+                    "port": "Porta",
+                    "ffmpeg_snapshot": "Usa FFMpeg per foto"
                 },
                 "title": "Configurare il dispositivo ONVIF"
             },

@@ -24,6 +24,7 @@ from homeassistant.core import callback
 # pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
+    CONF_FFMPEG_SNAPSHOT,
     CONF_RTSP_TRANSPORT,
     DEFAULT_ARGUMENTS,
     DEFAULT_PORT,
@@ -158,6 +159,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_FFMPEG_SNAPSHOT, default=False): bool,
                 }
             ),
         )

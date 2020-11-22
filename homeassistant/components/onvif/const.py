@@ -14,6 +14,7 @@ DEFAULT_ARGUMENTS = "-pred 1"
 CONF_DEVICE_ID = "deviceid"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
 CONF_SNAPSHOT_AUTH = "snapshot_auth"
+CONF_FFMPEG_SNAPSHOT = "ffmpeg_snapshot"
 
 RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
 

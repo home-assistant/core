@@ -11,6 +11,7 @@ from tests.common import MockConfigEntry
 URN = "urn:uuid:123456789"
 NAME = "TestCamera"
 HOST = "1.2.3.4"
+FFMPEG_SNAPSHOT = True
 PORT = 80
 USERNAME = "admin"
 PASSWORD = "12345"
@@ -379,6 +380,7 @@ async def test_flow_manual_entry(hass):
                 config_flow.CONF_NAME: NAME,
                 config_flow.CONF_HOST: HOST,
                 config_flow.CONF_PORT: PORT,
+                config_flow.CONF_FFMPEG_SNAPSHOT: FFMPEG_SNAPSHOT,
             },
         )
 
@@ -408,6 +410,7 @@ async def test_flow_manual_entry(hass):
             config_flow.CONF_NAME: NAME,
             config_flow.CONF_HOST: HOST,
             config_flow.CONF_PORT: PORT,
+            config_flow.CONF_FFMPEG_SNAPSHOT: FFMPEG_SNAPSHOT,
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }

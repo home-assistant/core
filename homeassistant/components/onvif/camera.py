@@ -23,6 +23,7 @@ from .const import (
     ATTR_SPEED,
     ATTR_TILT,
     ATTR_ZOOM,
+    CONF_FFMPEG_SNAPSHOT,
     CONF_RTSP_TRANSPORT,
     CONF_SNAPSHOT_AUTH,
     CONTINUOUS_MOVE,
@@ -87,6 +88,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self.stream_options[CONF_RTSP_TRANSPORT] = device.config_entry.options.get(
             CONF_RTSP_TRANSPORT
         )
+        self.ffmpeg_snapshot = device.config_entry.data[CONF_FFMPEG_SNAPSHOT]
         self._basic_auth = (
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
@@ -123,7 +125,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Return a still image response from the camera."""
         image = None
 
-        if self.device.capabilities.snapshot:
+        if self.device.capabilities.snapshot and not self.ffmpeg_snapshot:
             try:
                 image = await self.device.device.get_snapshot(
                     self.profile.token, self._basic_auth
@@ -156,8 +158,19 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
         stream = CameraMjpeg(ffmpeg_manager.binary, loop=self.hass.loop)
 
+        ffmpeg_input = self._stream_uri
+        if self._stream_uri[:7] == "rtsp://":
+            ffmpeg_input = " ".join(
+                [
+                    "-rtsp_transport",
+                    self.stream_options[CONF_RTSP_TRANSPORT],
+                    "-i",
+                    self._stream_uri,
+                ]
+            )
+
         await stream.open_camera(
-            self._stream_uri,
+            ffmpeg_input,
             extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
         )
 
