@@ -94,6 +94,10 @@ GOOGLE_SCHEMA = {
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
+}
+
+GOOGLE_IMPORT_SCHEMA = {
+    **GOOGLE_SCHEMA,
     vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
 }
 

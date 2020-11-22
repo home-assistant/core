@@ -13,7 +13,6 @@ from homeassistant.components.google_travel_time.const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
-    CONF_TRAVEL_MODE,
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
@@ -92,7 +91,6 @@ async def test_all_fields(hass):
                 CONF_ORIGIN: "location1",
                 CONF_DESTINATION: "location2",
                 CONF_NAME: "test_name",
-                CONF_TRAVEL_MODE: "driving",
             },
         )
         await hass.async_block_till_done()
@@ -120,7 +118,6 @@ async def test_all_fields(hass):
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "location2",
         CONF_NAME: "test_name",
-        CONF_TRAVEL_MODE: "driving",
         CONF_OPTIONS: {
             CONF_MODE: "driving",
             CONF_LANGUAGE: "en",

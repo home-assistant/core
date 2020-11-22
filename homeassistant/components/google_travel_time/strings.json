@@ -3,20 +3,30 @@
   "config": {
     "step": {
       "user": {
+        "description": "When specifying the origin and destination, you can supply one or more locations separated by the pipe character, in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "Origin",
+          "destination": "Destination",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "options": {
+        "description": "You can either specify Departure Time or Arrival Time, but not both",
+        "data": {
+          "mode": "Travel Mode",
+          "language": "Language",
+          "departure_time": "Departure Time",
+          "arrival_time":  "Arrival Time",
+          "avoid": "Avoid",
+          "transit_mode": "Transit Mode",
+          "transit_routing_preference": "Transit Routing Preference",
+          "units": "Units"
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

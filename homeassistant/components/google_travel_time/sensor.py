@@ -7,7 +7,6 @@ from typing import Callable, List
 import googlemaps
 import voluptuous as vol
 
-from homeassistant.components.google_travel_time.const import GOOGLE_SCHEMA
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -35,6 +34,7 @@ from .const import (
     CONF_TRAVEL_MODE,
     DEFAULT_NAME,
     DOMAIN,
+    GOOGLE_IMPORT_SCHEMA,
     GOOGLE_OPTIONS_SCHEMA,
 )
 
@@ -44,7 +44,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        **GOOGLE_SCHEMA,
+        **GOOGLE_IMPORT_SCHEMA,
         vol.Optional(CONF_OPTIONS, default={CONF_MODE: "driving"}): vol.All(
             dict,
             vol.Schema(GOOGLE_OPTIONS_SCHEMA),
