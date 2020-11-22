@@ -181,3 +181,55 @@ async def test_dupe_id(hass):
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result2["reason"] == "already_configured"
+
+
+async def test_import_flow(hass):
+    """Test import_flow."""
+    with patch(
+        "homeassistant.components.google_travel_time.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.google_travel_time.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_API_KEY: "api_key",
+                CONF_ORIGIN: "location1",
+                CONF_DESTINATION: "location2",
+                CONF_NAME: "test_name",
+                CONF_OPTIONS: {
+                    CONF_MODE: "driving",
+                    CONF_LANGUAGE: "en",
+                    CONF_AVOID: "tolls",
+                    CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+                    CONF_ARRIVAL_TIME: "test",
+                    CONF_TRAFFIC_MODEL: "best_guess",
+                    CONF_TRANSIT_MODE: "train",
+                    CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test_name"
+    assert result["data"] == {
+        CONF_API_KEY: "api_key",
+        CONF_ORIGIN: "location1",
+        CONF_DESTINATION: "location2",
+        CONF_NAME: "test_name",
+        CONF_OPTIONS: {
+            CONF_MODE: "driving",
+            CONF_LANGUAGE: "en",
+            CONF_AVOID: "tolls",
+            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_ARRIVAL_TIME: "test",
+            CONF_TRAFFIC_MODEL: "best_guess",
+            CONF_TRANSIT_MODE: "train",
+            CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        },
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
