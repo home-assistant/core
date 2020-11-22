@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
@@ -494,6 +495,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PREVIOUS_TRACK
                 | SUPPORT_NEXT_TRACK
                 | SUPPORT_STOP
+                | SUPPORT_SEEK
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
@@ -556,6 +558,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
+
+    def media_seek(self, position):
+        """Send the seek command."""
+        if self.device and "playback" in self._device_protocol_capabilities:
+            self.device.seekTo(position * 1000, self._active_media_plexapi_type)
 
     def media_next_track(self):
         """Send next track command."""
