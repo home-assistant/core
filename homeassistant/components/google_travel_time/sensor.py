@@ -1,11 +1,15 @@
 """Support for Google travel time sensors."""
+import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import Callable, List
 
 import googlemaps
 import voluptuous as vol
 
+from homeassistant.components.google_travel_time.const import GOOGLE_SCHEMA
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -16,106 +20,34 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTRIBUTION,
+    CONF_ARRIVAL_TIME,
+    CONF_DEPARTURE_TIME,
+    CONF_DESTINATION,
+    CONF_OPTIONS,
+    CONF_ORIGIN,
+    CONF_TRAVEL_MODE,
+    DEFAULT_NAME,
+    DOMAIN,
+    GOOGLE_OPTIONS_SCHEMA,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Powered by Google"
-
-CONF_DESTINATION = "destination"
-CONF_OPTIONS = "options"
-CONF_ORIGIN = "origin"
-CONF_TRAVEL_MODE = "travel_mode"
-
-DEFAULT_NAME = "Google Travel Time"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-ALL_LANGUAGES = [
-    "ar",
-    "bg",
-    "bn",
-    "ca",
-    "cs",
-    "da",
-    "de",
-    "el",
-    "en",
-    "es",
-    "eu",
-    "fa",
-    "fi",
-    "fr",
-    "gl",
-    "gu",
-    "hi",
-    "hr",
-    "hu",
-    "id",
-    "it",
-    "iw",
-    "ja",
-    "kn",
-    "ko",
-    "lt",
-    "lv",
-    "ml",
-    "mr",
-    "nl",
-    "no",
-    "pl",
-    "pt",
-    "pt-BR",
-    "pt-PT",
-    "ro",
-    "ru",
-    "sk",
-    "sl",
-    "sr",
-    "sv",
-    "ta",
-    "te",
-    "th",
-    "tl",
-    "tr",
-    "uk",
-    "vi",
-    "zh-CN",
-    "zh-TW",
-]
-
-AVOID = ["tolls", "highways", "ferries", "indoor"]
-TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
-TRANSPORT_TYPE = ["bus", "subway", "train", "tram", "rail"]
-TRAVEL_MODE = ["driving", "walking", "bicycling", "transit"]
-TRAVEL_MODEL = ["best_guess", "pessimistic", "optimistic"]
-UNITS = ["metric", "imperial"]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
+        **GOOGLE_SCHEMA,
         vol.Optional(CONF_OPTIONS, default={CONF_MODE: "driving"}): vol.All(
             dict,
-            vol.Schema(
-                {
-                    vol.Optional(CONF_MODE, default="driving"): vol.In(TRAVEL_MODE),
-                    vol.Optional("language"): vol.In(ALL_LANGUAGES),
-                    vol.Optional("avoid"): vol.In(AVOID),
-                    vol.Optional("units"): vol.In(UNITS),
-                    vol.Exclusive("arrival_time", "time"): cv.string,
-                    vol.Exclusive("departure_time", "time"): cv.string,
-                    vol.Optional("traffic_model"): vol.In(TRAVEL_MODEL),
-                    vol.Optional("transit_mode"): vol.In(TRANSPORT_TYPE),
-                    vol.Optional("transit_routing_preference"): vol.In(TRANSIT_PREFS),
-                }
-            ),
+            vol.Schema(GOOGLE_OPTIONS_SCHEMA),
         ),
     }
 )
@@ -134,8 +66,12 @@ def convert_time_to_utc(timestr):
     return dt_util.as_timestamp(combined)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up the Google travel time platform."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up a Google travel time sensor entry."""
 
     def run_setup(event):
         """
@@ -144,12 +80,12 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         This allows any entities to be created already
         """
         hass.data.setdefault(DATA_KEY, [])
-        options = config.get(CONF_OPTIONS)
+        options = config_entry.data.get(CONF_OPTIONS)
 
         if options.get("units") is None:
             options["units"] = hass.config.units.name
 
-        travel_mode = config.get(CONF_TRAVEL_MODE)
+        travel_mode = config_entry.data.get(CONF_TRAVEL_MODE)
         mode = options.get(CONF_MODE)
 
         if travel_mode is not None:
@@ -163,10 +99,10 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         titled_mode = options.get(CONF_MODE).title()
         formatted_name = f"{DEFAULT_NAME} - {titled_mode}"
-        name = config.get(CONF_NAME, formatted_name)
-        api_key = config.get(CONF_API_KEY)
-        origin = config.get(CONF_ORIGIN)
-        destination = config.get(CONF_DESTINATION)
+        name = config_entry.data.get(CONF_NAME, formatted_name)
+        api_key = config_entry.data.get(CONF_API_KEY)
+        origin = config_entry.data.get(CONF_ORIGIN)
+        destination = config_entry.data.get(CONF_DESTINATION)
 
         sensor = GoogleTravelTimeSensor(
             hass, name, api_key, origin, destination, options
@@ -174,10 +110,32 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         hass.data[DATA_KEY].append(sensor)
 
         if sensor.valid_api_connection:
-            add_entities_callback([sensor])
+            async_add_entities([sensor], True)
 
     # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+    await hass.async_add_executor_job(
+        hass.bus.listen_once, EVENT_HOMEASSISTANT_START, run_setup
+    )
+
+
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+    """Set up the Google travel time platform."""
+    asyncio.run_coroutine_threadsafe(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        ),
+        hass.loop,
+    )
+
+    _LOGGER.info(
+        "Your Google travel time configuration has been imported into the UI; "
+        "please remove it from configuration.yaml as support for it will be "
+        "removed in a future release."
+    )
+
+    return True
 
 
 class GoogleTravelTimeSensor(Entity):
@@ -258,19 +216,19 @@ class GoogleTravelTimeSensor(Entity):
     def update(self):
         """Get the latest data from Google."""
         options_copy = self._options.copy()
-        dtime = options_copy.get("departure_time")
-        atime = options_copy.get("arrival_time")
+        dtime = options_copy.get(CONF_DEPARTURE_TIME)
+        atime = options_copy.get(CONF_ARRIVAL_TIME)
         if dtime is not None and ":" in dtime:
-            options_copy["departure_time"] = convert_time_to_utc(dtime)
+            options_copy[CONF_DEPARTURE_TIME] = convert_time_to_utc(dtime)
         elif dtime is not None:
-            options_copy["departure_time"] = dtime
+            options_copy[CONF_DEPARTURE_TIME] = dtime
         elif atime is None:
-            options_copy["departure_time"] = "now"
+            options_copy[CONF_DEPARTURE_TIME] = "now"
 
         if atime is not None and ":" in atime:
-            options_copy["arrival_time"] = convert_time_to_utc(atime)
+            options_copy[CONF_ARRIVAL_TIME] = convert_time_to_utc(atime)
         elif atime is not None:
-            options_copy["arrival_time"] = atime
+            options_copy[CONF_ARRIVAL_TIME] = atime
 
         # Convert device_trackers to google friendly location
         if hasattr(self, "_origin_entity_id"):

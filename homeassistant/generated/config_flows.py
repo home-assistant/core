@@ -80,6 +80,7 @@ FLOWS = [
     "glances",
     "goalzero",
     "gogogate2",
+    "google_travel_time",
     "gpslogger",
     "gree",
     "griddy",
