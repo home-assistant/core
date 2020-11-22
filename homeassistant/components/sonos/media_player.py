@@ -724,8 +724,13 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
-        transport_info = self.soco.get_current_transport_info()
-        new_status = transport_info.get("current_transport_state")
+        variables = event and event.variables
+
+        if variables:
+            new_status = variables["transport_state"]
+        else:
+            transport_info = self.soco.get_current_transport_info()
+            new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
         if new_status == "TRANSITIONING":
@@ -760,7 +765,6 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_title = track_info.get("title")
 
                 if self.soco.is_radio_uri(track_info["uri"]):
-                    variables = event and event.variables
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
