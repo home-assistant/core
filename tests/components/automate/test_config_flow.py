@@ -8,6 +8,7 @@ from tests.async_mock import patch
 
 
 def mock_Hub(testfunc=None):
+    """Mock aiopulse2.Hub."""
     Hub = Mock()
     Hub.name = "Name of the device"
 
