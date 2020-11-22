@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "host": "",
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Sisesta oma Daikin AC IP aadress.\nPane t\u00e4hele, et API v\u00f5ti ja Salas\u00f5na kasutavad ainult seadmed BRP072Cxx ja SKYFi.",
+                "title": "Seadista Daikin AC"
+            }
+        }
+    }
+}

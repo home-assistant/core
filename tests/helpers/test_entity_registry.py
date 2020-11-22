@@ -154,6 +154,7 @@ async def test_loading_saving_data(hass, registry):
         "hue",
         "5678",
         device_id="mock-dev-id",
+        area_id="mock-area-id",
         config_entry=mock_config,
         capabilities={"max": 100},
         supported_features=5,
@@ -182,6 +183,7 @@ async def test_loading_saving_data(hass, registry):
     assert orig_entry2 == new_entry2
 
     assert new_entry2.device_id == "mock-dev-id"
+    assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.disabled_by == entity_registry.DISABLED_HASS
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.supported_features == 5
@@ -328,6 +330,19 @@ async def test_removing_config_entry_id(hass, registry, update_events):
     assert update_events[0]["entity_id"] == entry.entity_id
     assert update_events[1]["action"] == "remove"
     assert update_events[1]["entity_id"] == entry.entity_id
+
+
+async def test_removing_area_id(registry):
+    """Make sure we can clear area id."""
+    entry = registry.async_get_or_create("light", "hue", "5678")
+
+    entry_w_area = registry.async_update_entity(entry.entity_id, area_id="12345A")
+
+    registry.async_clear_area_id("12345A")
+    entry_wo_area = registry.async_get(entry.entity_id)
+
+    assert not entry_wo_area.area_id
+    assert entry_w_area != entry_wo_area
 
 
 async def test_migration(hass):

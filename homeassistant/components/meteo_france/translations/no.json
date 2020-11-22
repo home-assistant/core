@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Byen er allerede konfigurert",
-            "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere"
+            "already_configured": "Plasseringen er allerede konfigurert",
+            "unknown": "Uventet feil"
         },
         "error": {
             "empty": "Ingen resultater i bys\u00f8k: vennligst sjekk byfeltet"
@@ -13,13 +13,14 @@
                     "city": "By"
                 },
                 "description": "Velg din by fra listen",
-                "title": "M\u00e9t\u00e9o-France"
+                "title": ""
             },
             "user": {
                 "data": {
                     "city": "By"
                 },
-                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn"
+                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn",
+                "title": ""
             }
         }
     },

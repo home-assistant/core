@@ -9,7 +9,7 @@ from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     ConnectionClosedError,
-    DeviceOfflineError,
+    NetworkTimeoutError,
 )
 
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
@@ -74,6 +74,7 @@ class BroadlinkDevice:
             name=config.title,
         )
         api.timeout = config.data[CONF_TIMEOUT]
+        self.api = api
 
         try:
             await self.hass.async_add_executor_job(api.auth)
@@ -82,7 +83,7 @@ class BroadlinkDevice:
             await self._async_handle_auth_error()
             return False
 
-        except (DeviceOfflineError, OSError) as err:
+        except (NetworkTimeoutError, OSError) as err:
             raise ConfigEntryNotReady from err
 
         except BroadlinkException as err:
@@ -91,7 +92,6 @@ class BroadlinkDevice:
             )
             return False
 
-        self.api = api
         self.authorized = True
 
         update_manager = get_update_manager(self)
@@ -165,8 +165,12 @@ class BroadlinkDevice:
         self.authorized = False
 
         _LOGGER.error(
-            "The device at %s is locked for authentication. Follow the configuration flow to unlock it",
-            self.config.data[CONF_HOST],
+            "%s (%s at %s) is locked. Click Configuration in the sidebar, "
+            "click Integrations, click Configure on the device and follow "
+            "the instructions to unlock it",
+            self.name,
+            self.api.model,
+            self.api.host[0],
         )
 
         self.hass.async_create_task(

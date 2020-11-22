@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga",
+            "name_exists": "Nimi on juba olemas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Seadista Transmission'i klient"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Piirang",
+                    "order": "J\u00e4rjekord",
+                    "scan_interval": "V\u00e4rskendussagedus"
+                },
+                "title": "Seadista Transmission'i valikud"
+            }
+        }
+    }
+}

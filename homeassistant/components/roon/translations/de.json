@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "duplicate_entry": "Dieser Host wurde bereits hinzugef\u00fcgt."
+        }
+    }
+}

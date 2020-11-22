@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo ONVIF \u00e8 gi\u00e0 configurato.",
-            "already_in_progress": "Il flusso di configurazione per il dispositivo ONVIF \u00e8 gi\u00e0 in corso.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_h264": "Non c'erano flussi H264 disponibili.  Controllare la configurazione del profilo sul dispositivo.",
             "no_mac": "Impossibile configurare l'ID univoco per il dispositivo ONVIF.",
             "onvif_error": "Errore durante la configurazione del dispositivo ONVIF.  Controllare i registri per ulteriori informazioni."
         },
         "error": {
-            "connection_failed": "Impossibile connettersi al servizio ONVIF con le credenziali fornite."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "auth": {

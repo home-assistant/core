@@ -70,6 +70,4 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
             InvalidSensorsData,
         ) as error:
             raise UpdateFailed(error) from error
-        if not self.gios.data:
-            raise UpdateFailed("Invalid sensors data")
         return self.gios.data

@@ -14,7 +14,7 @@
                     "location": "Posizione",
                     "name": "Nome",
                     "port": "Porta",
-                    "ssl": "Utilizzare SSL",
+                    "ssl": "Utilizza un certificato SSL",
                     "verify_ssl": "Verificare il certificato SSL"
                 }
             }

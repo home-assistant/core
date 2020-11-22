@@ -9,9 +9,11 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from . import XiaomiDevice
@@ -21,10 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
-    "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
-    "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+    "lux": [LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "pressure": [PRESSURE_HPA, None, DEVICE_CLASS_PRESSURE],
     "bed_activity": ["μm", None, None],
     "load_power": [POWER_WATT, None, DEVICE_CLASS_POWER],
 }
@@ -86,8 +88,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.warning("Unmapped Device Model")
 
     # Set up battery sensors
+    seen_sids = set()  # Set of device sids that are already seen
     for devices in gateway.devices.values():
         for device in devices:
+            if device["sid"] in seen_sids:
+                continue
+            seen_sids.add(device["sid"])
             if device["model"] in BATTERY_MODELS:
                 entities.append(
                     XiaomiBatterySensor(device, "Battery", gateway, config_entry)
@@ -171,7 +177,7 @@ class XiaomiBatterySensor(XiaomiDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_class(self):

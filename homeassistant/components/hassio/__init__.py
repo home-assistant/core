@@ -24,7 +24,7 @@ from homeassistant.util.dt import utcnow
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .discovery import async_setup_discovery_view
-from .handler import HassIO, HassioAPIError
+from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
 
@@ -42,9 +42,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-DATA_INFO = "hassio_info"
-DATA_HOST_INFO = "hassio_host_info"
 DATA_CORE_INFO = "hassio_core_info"
+DATA_HOST_INFO = "hassio_host_info"
+DATA_INFO = "hassio_info"
+DATA_OS_INFO = "hassio_os_info"
+DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -127,18 +129,75 @@ MAP_SERVICE_API = {
 
 
 @bind_hass
-async def async_get_addon_info(hass: HomeAssistantType, addon_id: str) -> dict:
+async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
     """Return add-on info.
-
-    The addon_id is a snakecased concatenation of the 'repository' value
-    found in the add-on info and the 'slug' value found in the add-on config.json.
-    In the add-on info the addon_id is called 'slug'.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
-    result = await hassio.get_addon_info(addon_id)
-    return result["data"]
+    return await hassio.get_addon_info(slug)
+
+
+@bind_hass
+@api_data
+async def async_install_addon(hass: HomeAssistantType, slug: str) -> dict:
+    """Install add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/install"
+    return await hassio.send_command(command, timeout=None)
+
+
+@bind_hass
+@api_data
+async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
+    """Uninstall add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/uninstall"
+    return await hassio.send_command(command)
+
+
+@bind_hass
+@api_data
+async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
+    """Start add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/start"
+    return await hassio.send_command(command, timeout=60)
+
+
+@bind_hass
+@api_data
+async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
+    """Stop add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/stop"
+    return await hassio.send_command(command)
+
+
+@bind_hass
+@api_data
+async def async_set_addon_options(
+    hass: HomeAssistantType, slug: str, options: dict
+) -> dict:
+    """Set add-on options.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/options"
+    return await hassio.send_command(command, payload=options)
 
 
 @callback
@@ -159,6 +218,26 @@ def get_host_info(hass):
     Async friendly.
     """
     return hass.data.get(DATA_HOST_INFO)
+
+
+@callback
+@bind_hass
+def get_supervisor_info(hass):
+    """Return Supervisor information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_SUPERVISOR_INFO)
+
+
+@callback
+@bind_hass
+def get_os_info(hass):
+    """Return OS information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_OS_INFO)
 
 
 @callback
@@ -301,6 +380,8 @@ async def async_setup(hass, config):
             hass.data[DATA_INFO] = await hassio.get_info()
             hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
             hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
+            hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
+            hass.data[DATA_OS_INFO] = await hassio.get_os_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 

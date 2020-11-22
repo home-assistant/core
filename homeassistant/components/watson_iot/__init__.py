@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -165,6 +166,7 @@ class WatsonIOTThread(threading.Thread):
         self.shutdown = False
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
+    @callback
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Watson IoT."""
         item = (time.monotonic(), event)

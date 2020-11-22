@@ -1,5 +1,4 @@
 """Support for Homekit device discovery."""
-import logging
 from typing import Any, Dict
 
 import aiohomekit
@@ -17,10 +16,8 @@ from homeassistant.helpers.entity import Entity
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES
+from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def escape_characteristic_name(char_name):
@@ -40,6 +37,8 @@ class HomeKitEntity(Entity):
         self.setup()
 
         self._signals = []
+
+        super().__init__()
 
     @property
     def accessory(self) -> Accessory:
@@ -174,6 +173,16 @@ class HomeKitEntity(Entity):
         raise NotImplementedError
 
 
+class AccessoryEntity(HomeKitEntity):
+    """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        return f"homekit-{serial}-aid:{self._aid}"
+
+
 async def async_setup_entry(hass, entry):
     """Set up a HomeKit connection on a config entry."""
     conn = HKDevice(hass, entry, entry.data)
@@ -200,6 +209,7 @@ async def async_setup(hass, config):
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     hass.data[CONTROLLER] = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
     hass.data[KNOWN_DEVICES] = {}
+    hass.data[TRIGGERS] = {}
 
     return True
 

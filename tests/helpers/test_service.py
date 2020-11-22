@@ -105,11 +105,31 @@ def area_mock(hass):
         },
     )
 
+    entity_in_own_area = ent_reg.RegistryEntry(
+        entity_id="light.in_own_area",
+        unique_id="in-own-area-id",
+        platform="test",
+        area_id="own-area",
+    )
     entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
+    )
+    entity_in_other_area = ent_reg.RegistryEntry(
+        entity_id="light.in_other_area",
+        unique_id="in-other-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        area_id="other-area",
+    )
+    entity_assigned_to_area = ent_reg.RegistryEntry(
+        entity_id="light.assigned_to_area",
+        unique_id="assigned-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        area_id="test-area",
     )
     entity_no_area = ent_reg.RegistryEntry(
         entity_id="light.no_area",
@@ -126,7 +146,10 @@ def area_mock(hass):
     mock_registry(
         hass,
         {
+            entity_in_own_area.entity_id: entity_in_own_area,
             entity_in_area.entity_id: entity_in_area,
+            entity_in_other_area.entity_id: entity_in_other_area,
+            entity_assigned_to_area.entity_id: entity_assigned_to_area,
             entity_no_area.entity_id: entity_no_area,
             entity_diff_area.entity_id: entity_diff_area,
         },
@@ -267,6 +290,8 @@ async def test_extract_entity_ids(hass):
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await hass.components.group.Group.async_create_group(
         hass, "test", ["light.Ceiling", "light.Kitchen"]
     )
@@ -296,15 +321,25 @@ async def test_extract_entity_ids(hass):
 
 async def test_extract_entity_ids_from_area(hass, area_mock):
     """Test extract_entity_ids method with areas."""
+    call = ha.ServiceCall("light", "turn_on", {"area_id": "own-area"})
+
+    assert {
+        "light.in_own_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
     call = ha.ServiceCall("light", "turn_on", {"area_id": "test-area"})
 
-    assert {"light.in_area"} == await service.async_extract_entity_ids(hass, call)
+    assert {
+        "light.in_area",
+        "light.assigned_to_area",
+    } == await service.async_extract_entity_ids(hass, call)
 
     call = ha.ServiceCall("light", "turn_on", {"area_id": ["test-area", "diff-area"]})
 
     assert {
         "light.in_area",
         "light.diff_area",
+        "light.assigned_to_area",
     } == await service.async_extract_entity_ids(hass, call)
 
     assert (

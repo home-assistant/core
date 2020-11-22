@@ -1,11 +1,10 @@
 """Support for monitoring a Smappee appliance binary sensor."""
-import logging
-
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_PRESENCE,
+    BinarySensorEntity,
+)
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_PREFIX = "Appliance"
 PRESENCE_PREFIX = "Presence"
@@ -58,7 +57,7 @@ class SmappeePresence(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "presence"
+        return DEVICE_CLASS_PRESENCE
 
     @property
     def unique_id(
@@ -68,7 +67,7 @@ class SmappeePresence(BinarySensorEntity):
         return (
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-"
-            f"presence"
+            f"{DEVICE_CLASS_PRESENCE}"
         )
 
     @property

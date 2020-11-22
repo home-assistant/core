@@ -2,12 +2,7 @@
 from datetime import timedelta
 import json
 
-from homeassistant.components.accuweather.const import (
-    ATTRIBUTION,
-    CONCENTRATION_PARTS_PER_CUBIC_METER,
-    DOMAIN,
-    LENGTH_MILIMETERS,
-)
+from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -15,13 +10,15 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_PARTS_PER_CUBIC_METER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_METERS,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TIME_HOURS,
-    UNIT_PERCENTAGE,
     UV_INDEX,
 )
 from homeassistant.setup import async_setup_component
@@ -52,7 +49,7 @@ async def test_sensor_without_forecast(hass):
     assert state
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILIMETERS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILLIMETERS
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-rainy"
     assert state.attributes.get("type") is None
 
@@ -136,7 +133,7 @@ async def test_sensor_with_forecast(hass):
     assert state.state == "40"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-lightning"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.home_thunderstorm_probability_day_0d")
     assert entry
@@ -147,7 +144,7 @@ async def test_sensor_with_forecast(hass):
     assert state.state == "40"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-lightning"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.home_thunderstorm_probability_night_0d")
     assert entry
@@ -334,7 +331,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "10"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-cloudy"
 
     entry = registry.async_get("sensor.home_cloud_cover")
@@ -400,7 +397,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "58"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-cloudy"
 
     entry = registry.async_get("sensor.home_cloud_cover_day_0d")
@@ -411,7 +408,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "65"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-cloudy"
 
     entry = registry.async_get("sensor.home_cloud_cover_night_0d")

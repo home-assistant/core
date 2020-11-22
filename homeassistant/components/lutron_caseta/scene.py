@@ -1,12 +1,9 @@
 """Support for Lutron Caseta scenes."""
-import logging
 from typing import Any
 
 from homeassistant.components.scene import Scene
 
 from . import DOMAIN as CASETA_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -43,4 +40,4 @@ class LutronCasetaScene(Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._bridge.activate_scene(self._scene_id)
+        await self._bridge.activate_scene(self._scene_id)

@@ -1,8 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
         "error": {
-            "identifier_exists": "\u00da\u010det je ji\u017e zaregistrov\u00e1n",
-            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
             "user": {
@@ -12,6 +14,13 @@
                     "port": "Port"
                 },
                 "title": "Vypl\u0148te va\u0161e \u00fadaje"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Nastaven\u00ed RainMachine"
             }
         }
     }

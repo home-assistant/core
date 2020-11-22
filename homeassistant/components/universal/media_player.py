@@ -1,6 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 from copy import copy
-import logging
 
 import voluptuous as vol
 
@@ -71,10 +70,9 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVE_CHILD = "active_child"
 ATTR_DATA = "data"
@@ -144,22 +142,31 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Subscribe to children and template state changes."""
 
         @callback
-        def _async_on_dependency_update(*_):
+        def _async_on_dependency_update(event):
             """Update ha state when dependencies update."""
+            self.async_set_context(event.context)
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def _async_on_template_update(event, template, last_result, result):
+        def _async_on_template_update(event, updates):
             """Update ha state when dependencies update."""
+            result = updates.pop().result
+
             if isinstance(result, TemplateError):
                 self._state_template_result = None
             else:
                 self._state_template_result = result
+
+            if event:
+                self.async_set_context(event.context)
+
             self.async_schedule_update_ha_state(True)
 
         if self._state_template is not None:
-            result = self.hass.helpers.event.async_track_template_result(
-                self._state_template, _async_on_template_update
+            result = async_track_template_result(
+                self.hass,
+                [TrackTemplate(self._state_template, None)],
+                _async_on_template_update,
             )
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())

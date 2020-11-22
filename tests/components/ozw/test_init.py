@@ -1,5 +1,6 @@
 """Test integration initialization."""
 from homeassistant import config_entries
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
 
 from .common import setup_ozw
@@ -60,3 +61,70 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     assert len(hass.states.async_entity_ids("switch")) == 1
     for record in caplog.records:
         assert record.levelname != "ERROR"
+
+
+async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
+    """Test remove the config entry."""
+    # test successful remove without created add-on
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave",
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={"integration_created_addon": False},
+    )
+    entry.add_to_hass(hass)
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+    # test successful remove with created add-on
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave",
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={"integration_created_addon": True},
+    )
+    entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    stop_addon.call_count == 1
+    uninstall_addon.call_count == 1
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    stop_addon.reset_mock()
+    uninstall_addon.reset_mock()
+
+    # test add-on stop failure
+    entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    stop_addon.side_effect = HassioAPIError()
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    stop_addon.call_count == 1
+    uninstall_addon.call_count == 0
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert "Failed to stop the OpenZWave add-on" in caplog.text
+    stop_addon.side_effect = None
+    stop_addon.reset_mock()
+    uninstall_addon.reset_mock()
+
+    # test add-on uninstall failure
+    entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    uninstall_addon.side_effect = HassioAPIError()
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    stop_addon.call_count == 1
+    uninstall_addon.call_count == 1
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert "Failed to uninstall the OpenZWave add-on" in caplog.text

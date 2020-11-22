@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "reauth": {
+                "description": "A(z) {project_url} hiteles\u00edt\u00e9se nem siker\u00fclt. K\u00e9rj\u00fck, adja meg jelenlegi hiteles\u00edt\u0151 adatait."
+            }
+        }
+    }
+}

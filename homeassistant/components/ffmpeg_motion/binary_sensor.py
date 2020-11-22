@@ -1,10 +1,12 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
-import logging
-
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.components.ffmpeg import (
     CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE,
@@ -15,8 +17,6 @@ from homeassistant.components.ffmpeg import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_RESET = "reset"
 CONF_CHANGES = "changes"
@@ -119,4 +119,4 @@ class FFmpegMotion(FFmpegBinarySensor):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return "motion"
+        return DEVICE_CLASS_MOTION

@@ -32,7 +32,6 @@ ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"
 ATTR_USERNAME = "username"
-ATTR_USERNAME = "username"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
 
@@ -119,7 +118,7 @@ def _async_templatize_blocks(hass, value):
         }
 
     tmpl = template.Template(value, hass=hass)
-    return tmpl.async_render()
+    return tmpl.async_render(parse_result=False)
 
 
 class SlackNotificationService(BaseNotificationService):
@@ -202,22 +201,24 @@ class SlackNotificationService(BaseNotificationService):
         self, targets, message, title, blocks, username, icon
     ):
         """Send a text-only message."""
-        if self._icon.lower().startswith(("http://", "https://")):
-            icon_type = "url"
-        else:
-            icon_type = "emoji"
+        message_dict = {
+            "blocks": blocks,
+            "link_names": True,
+            "text": message,
+            "username": username,
+        }
+
+        icon = icon or self._icon
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
+                icon_type = "url"
+            else:
+                icon_type = "emoji"
+
+            message_dict[f"icon_{icon_type}"] = icon
 
         tasks = {
-            target: self._client.chat_postMessage(
-                **{
-                    "blocks": blocks,
-                    "channel": target,
-                    "link_names": True,
-                    "text": message,
-                    "username": username,
-                    f"icon_{icon_type}": icon,
-                }
-            )
+            target: self._client.chat_postMessage(**message_dict, channel=target)
             for target in targets
         }
 

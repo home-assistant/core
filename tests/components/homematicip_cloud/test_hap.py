@@ -175,9 +175,7 @@ async def test_auth_create_exception(hass, simple_mock_auth):
         "homeassistant.components.homematicip_cloud.hap.AsyncAuth",
         return_value=simple_mock_auth,
     ):
-        assert await hmip_auth.async_setup()
-        await hass.async_block_till_done()
-        assert not hmip_auth.auth
+        assert not await hmip_auth.async_setup()
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.AsyncAuth",

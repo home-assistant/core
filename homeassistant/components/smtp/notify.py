@@ -26,7 +26,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the mail notification service."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
         config.get(CONF_SERVER),
         config.get(CONF_PORT),

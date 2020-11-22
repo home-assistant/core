@@ -91,7 +91,7 @@ async def test_flow_entry_already_exists(hass):
     )
 
     assert result["type"] == "form"
-    assert result["errors"]["name"] == "name_exists"
+    assert result["errors"]["name"] == "already_configured"
 
 
 async def test_onboarding_step(hass):

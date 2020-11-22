@@ -102,6 +102,10 @@ class BondFan(BondEntity, FanEntity):
         """Set the desired speed for the fan."""
         _LOGGER.debug("async_set_speed called with speed %s", speed)
 
+        if speed == SPEED_OFF:
+            await self.async_turn_off()
+            return
+
         max_speed = self._device.props.get("max_speed", 3)
         if speed == SPEED_LOW:
             bond_speed = 1
@@ -116,7 +120,7 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
-        _LOGGER.debug("async_turn_on called with speed %s", speed)
+        _LOGGER.debug("Fan async_turn_on called with speed %s", speed)
 
         if speed is not None:
             if speed == SPEED_OFF:

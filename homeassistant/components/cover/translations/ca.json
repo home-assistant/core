@@ -10,7 +10,7 @@
             "stop": "Atura {entity_name}"
         },
         "condition_type": {
-            "is_closed": "{entity_name} est\u00e0 tancat/da",
+            "is_closed": "{entity_name} est\u00e0 tancat/ada",
             "is_closing": "{entity_name} est\u00e0 tancant-se",
             "is_open": "{entity_name} est\u00e0 obert/a",
             "is_opening": "{entity_name} s'est\u00e0 obrint",
@@ -18,7 +18,7 @@
             "is_tilt_position": "La inclinaci\u00f3 actual de {entity_name} \u00e9s"
         },
         "trigger_type": {
-            "closed": "{entity_name} tancat/da",
+            "closed": "{entity_name} tancat/ada",
             "closing": "{entity_name} tancant-se",
             "opened": "{entity_name} s'ha obert",
             "opening": "{entity_name} obrint-se",
@@ -28,7 +28,7 @@
     },
     "state": {
         "_": {
-            "closed": "Tancat/da",
+            "closed": "Tancat/ada",
             "closing": "Tancant",
             "open": "Obert/a",
             "opening": "Obrint",

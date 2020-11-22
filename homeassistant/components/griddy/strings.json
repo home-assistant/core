@@ -1,8 +1,8 @@
 {
   "config": {
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
@@ -11,6 +11,6 @@
         "title": "Setup your Griddy Load Zone"
       }
     },
-    "abort": { "already_configured": "This Load Zone is already configured" }
+    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_location%]" }
   }
 }

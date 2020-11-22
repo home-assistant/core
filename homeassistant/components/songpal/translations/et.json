@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "not_songpal_device": "Pole Songpal seade"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "Sony Songpal {name} ( {host} )",
+        "step": {
+            "init": {
+                "description": "Kas soovite seadistada {name}({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "L\u00f5pppunkt"
+                }
+            }
+        }
+    }
+}

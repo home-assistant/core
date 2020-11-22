@@ -9,7 +9,7 @@ import requests
 from homeassistant import const, setup
 from homeassistant.components import emulated_hue
 from homeassistant.components.emulated_hue import upnp
-from homeassistant.const import HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
 
 from tests.common import get_test_home_assistant, get_test_instance_port
 
@@ -167,7 +167,7 @@ MX:3
         )
 
         assert result.status_code == HTTP_OK
-        assert "application/json" in result.headers["content-type"]
+        assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
         resp_json = result.json()
         success_json = resp_json[0]
@@ -186,7 +186,7 @@ MX:3
         )
 
         assert result.status_code == HTTP_OK
-        assert "application/json" in result.headers["content-type"]
+        assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
         resp_json = result.json()
         assert len(resp_json) == 1

@@ -38,6 +38,27 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
+async def test_hmip_home_cloud_connection_sensor(hass, default_mock_hap_factory):
+    """Test HomematicipCloudConnectionSensor."""
+    entity_id = "binary_sensor.cloud_connection"
+    entity_name = "Cloud Connection"
+    device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_ON
+
+    await async_manipulate_test_data(hass, mock_hap.home, "connected", False)
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+
+
 async def test_hmip_acceleration_sensor(hass, default_mock_hap_factory):
     """Test HomematicipAccelerationSensor."""
     entity_id = "binary_sensor.garagentor"
@@ -56,6 +77,42 @@ async def test_hmip_acceleration_sensor(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION] == "VERTICAL"
     assert (
         ha_state.attributes[ATTR_ACCELERATION_SENSOR_SENSITIVITY] == "SENSOR_RANGE_4G"
+    )
+    assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE] == 45
+    service_call_counter = len(hmip_device.mock_calls)
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "accelerationSensorTriggered", False
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+    assert len(hmip_device.mock_calls) == service_call_counter + 1
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "accelerationSensorTriggered", True
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+    assert len(hmip_device.mock_calls) == service_call_counter + 2
+
+
+async def test_hmip_tilt_vibration_sensor(hass, default_mock_hap_factory):
+    """Test HomematicipTiltVibrationSensor."""
+    entity_id = "binary_sensor.garage_neigungs_und_erschutterungssensor"
+    entity_name = "Garage Neigungs- und Erschütterungssensor"
+    device_model = "HmIP-STV"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_MODE] == "FLAT_DECT"
+    assert (
+        ha_state.attributes[ATTR_ACCELERATION_SENSOR_SENSITIVITY] == "SENSOR_RANGE_2G"
     )
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE] == 45
     service_call_counter = len(hmip_device.mock_calls)
@@ -481,3 +538,28 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap_factory):
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hmip_wired_multi_contact_interface(hass, default_mock_hap_factory):
+    """Test HomematicipMultiContactInterface."""
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    device_model = "HmIPW-DRI32"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wired Eingangsmodul – 32-fach"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", WindowState.OPEN, channel=5
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", None, channel=5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF

@@ -16,9 +16,12 @@ from .const import (
     ATTR_PERSONS,
     ATTR_PSEUDO,
     CAMERA_LIGHT_MODES,
+    DATA_CAMERAS,
+    DATA_EVENTS,
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
+    EVENT_TYPE_LIGHT_MODE,
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
     MANUFACTURER,
@@ -143,12 +146,13 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._sd_status = None
         self._alim_status = None
         self._is_local = None
+        self._light_state = None
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
             self._listeners.append(
                 async_dispatcher_connect(
                     self.hass,
@@ -156,6 +160,8 @@ class NetatmoCamera(NetatmoBase, Camera):
                     self.handle_event,
                 )
             )
+
+        self.hass.data[DOMAIN][DATA_CAMERAS][self._id] = self._device_name
 
     @callback
     def handle_event(self, event):
@@ -172,6 +178,8 @@ class NetatmoCamera(NetatmoBase, Camera):
             elif data["push_type"] in ["NACamera-on", "NACamera-connection"]:
                 self.is_streaming = True
                 self._status = "on"
+            elif data["push_type"] == "NOC-light_mode":
+                self._light_state = data["sub_type"]
 
             self.async_write_ha_state()
             return
@@ -215,6 +223,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             "is_local": self._is_local,
             "vpn_url": self._vpnurl,
             "local_url": self._localurl,
+            "light_state": self._light_state,
         }
 
     @property
@@ -274,6 +283,30 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._alim_status = camera.get("alim_status")
         self._is_local = camera.get("is_local")
         self.is_streaming = bool(self._status == "on")
+
+        if self._model == "NACamera":  # Smart Indoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.events.get(self._id, {})
+            )
+        elif self._model == "NOC":  # Smart Outdoor Camera
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.outdoor_events.get(self._id, {})
+            )
+
+    def process_events(self, events):
+        """Add meta data to events."""
+        for event in events.values():
+            if "video_id" not in event:
+                continue
+            if self._is_local:
+                event[
+                    "media_url"
+                ] = f"{self._localurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+            else:
+                event[
+                    "media_url"
+                ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
+        return events
 
     def _service_set_persons_home(self, **kwargs):
         """Service to change current home schedule."""

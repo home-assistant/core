@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONTROLLER, DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
+from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -74,6 +75,9 @@ class HKDevice:
         self.config_num = 0
 
         self.entity_map = Accessories()
+
+        # A list of callbacks that turn HK accessories into entities
+        self.accessory_factories = []
 
         # A list of callbacks that turn HK service metadata into entities
         self.listeners = []
@@ -237,6 +241,9 @@ class HKDevice:
 
         await self.async_create_devices()
 
+        # Load any triggers for this config entry
+        await async_setup_triggers_for_entry(self.hass, self.config_entry)
+
         self.add_entities()
 
         if self.watchable_characteristics:
@@ -285,29 +292,42 @@ class HKDevice:
 
         return True
 
+    def add_accessory_factory(self, add_entities_cb):
+        """Add a callback to run when discovering new entities for accessories."""
+        self.accessory_factories.append(add_entities_cb)
+        self._add_new_entities_for_accessory([add_entities_cb])
+
+    def _add_new_entities_for_accessory(self, handlers):
+        for accessory in self.entity_map.accessories:
+            for handler in handlers:
+                if (accessory.aid, None) in self.entities:
+                    continue
+                if handler(accessory):
+                    self.entities.append((accessory.aid, None))
+                    break
+
     def add_listener(self, add_entities_cb):
-        """Add a callback to run when discovering new entities."""
+        """Add a callback to run when discovering new entities for services."""
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])
 
     def add_entities(self):
         """Process the entity map and create HA entities."""
         self._add_new_entities(self.listeners)
+        self._add_new_entities_for_accessory(self.accessory_factories)
 
     def _add_new_entities(self, callbacks):
-        for accessory in self.accessories:
-            aid = accessory["aid"]
-            for service in accessory["services"]:
-                iid = service["iid"]
-                stype = ServicesTypes.get_short(service["type"].upper())
-                service["stype"] = stype
+        for accessory in self.entity_map.accessories:
+            aid = accessory.aid
+            for service in accessory.services:
+                iid = service.iid
 
                 if (aid, iid) in self.entities:
                     # Don't add the same entity again
                     continue
 
                 for listener in callbacks:
-                    if listener(aid, service):
+                    if listener(service):
                         self.entities.append((aid, iid))
                         break
 
@@ -376,6 +396,9 @@ class HKDevice:
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
         self.available = True
+
+        # Process any stateless events (via device_triggers)
+        async_fire_triggers(self, new_values_dict)
 
         for (aid, cid), value in new_values_dict.items():
             accessory = self.current_state.setdefault(aid, {})

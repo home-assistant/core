@@ -109,10 +109,10 @@ async def test_import(hass, mock_daikin):
 @pytest.mark.parametrize(
     "s_effect,reason",
     [
-        (asyncio.TimeoutError, "device_timeout"),
-        (HTTPForbidden, "forbidden"),
-        (ClientError, "device_fail"),
-        (Exception, "device_fail"),
+        (asyncio.TimeoutError, "cannot_connect"),
+        (HTTPForbidden, "invalid_auth"),
+        (ClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 async def test_device_abort(hass, mock_daikin, s_effect, reason):

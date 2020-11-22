@@ -112,6 +112,7 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         MP_DOMAIN,

@@ -14,6 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
@@ -66,15 +67,10 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         self._hvac_modes = supported_modes
         self._info = info
 
-    def _refresh_from_coordinator(self):
+    @callback
+    def _handle_coordinator_update(self):
         self._unit = self.coordinator.data[self._unit_id]
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._refresh_from_coordinator)
-        )
+        super()._handle_coordinator_update()
 
     @property
     def device_info(self):

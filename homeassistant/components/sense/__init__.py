@@ -110,6 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     sense_devices_data = SenseDevicesData()
     try:
         sense_discovered_devices = await gateway.get_discovered_device_data()
+        await gateway.update_realtime()
     except SENSE_TIMEOUT_EXCEPTIONS as err:
         raise ConfigEntryNotReady from err
 

@@ -180,10 +180,12 @@ class MatchRule:
         """
         weight = 0
         if self.models:
-            weight += 401 - len(self.models)
+            weight += 401 - (1 if callable(self.models) else len(self.models))
 
         if self.manufacturers:
-            weight += 301 - len(self.manufacturers)
+            weight += 301 - (
+                1 if callable(self.manufacturers) else len(self.manufacturers)
+            )
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)

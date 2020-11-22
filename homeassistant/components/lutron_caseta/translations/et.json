@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "import_failed": {
+                "description": "Silla (host: {host} ) seadistamine configuration.yaml kirje teabest nurjus.",
+                "title": "Cas\u00e9ta Bridge seadete importimine nurjus."
+            }
+        }
+    }
+}

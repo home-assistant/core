@@ -11,6 +11,11 @@
         "step": {
             "init": {
                 "description": "Voulez-vous configurer {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Terminaison"
+                }
             }
         }
     }
