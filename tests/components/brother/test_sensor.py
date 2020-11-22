@@ -2,7 +2,8 @@
 from datetime import datetime, timedelta
 import json
 
-from homeassistant.components.brother.const import UNIT_PAGES
+from homeassistant.components.brother.const import DOMAIN, UNIT_PAGES
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -25,13 +26,27 @@ ATTR_COUNTER = "counter"
 
 async def test_sensors(hass):
     """Test states of the sensors."""
+    entry = await init_integration(hass, skip_setup=True)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    # Pre-create registry entries for disabled by default sensors
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "0123456789_uptime",
+        suggested_object_id="hl_l2340dw_uptime",
+        disabled_by=None,
+    )
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
     with patch(
         "homeassistant.components.brother.sensor.utcnow", return_value=test_time
+    ), patch(
+        "brother.Brother._get_data",
+        return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
-        await init_integration(hass)
-
-    registry = await hass.helpers.entity_registry.async_get_registry()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.hl_l2340dw_status")
     assert state
@@ -222,6 +237,21 @@ async def test_sensors(hass):
     entry = registry.async_get("sensor.hl_l2340dw_uptime")
     assert entry
     assert entry.unique_id == "0123456789_uptime"
+
+
+async def test_disabled_by_default_sensors(hass):
+    """Test the disabled by default Brother sensors."""
+    await init_integration(hass)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    state = hass.states.get("sensor.hl_l2340dw_uptime")
+    assert state is None
+
+    entry = registry.async_get("sensor.hl_l2340dw_uptime")
+    assert entry
+    assert entry.unique_id == "0123456789_uptime"
+    assert entry.disabled
+    assert entry.disabled_by == "integration"
 
 
 async def test_availability(hass):
