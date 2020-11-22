@@ -350,11 +350,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         entities = []
 
-        if service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD):
-            entities.append(HomeKitHumidifier(conn, info))
+        if service.has(CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL):
+            entities.append(VocolincFlowerbud(conn, info))
+        else:
+            if service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD):
+                entities.append(HomeKitHumidifier(conn, info))
 
-        if service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD):
-            entities.append(HomeKitDehumidifier(conn, info))
+            if service.has(
+                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+            ):
+                entities.append(HomeKitDehumidifier(conn, info))
 
         async_add_entities(entities, True)
 
