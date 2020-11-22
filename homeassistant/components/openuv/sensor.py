@@ -76,7 +76,7 @@ SENSORS = {
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a Nest sensor based on a config entry."""
+    """Set up a OpenUV sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
