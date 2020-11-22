@@ -84,7 +84,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._device.is_tripped
+        return self._device.state
 
     @property
     def device_class(self):
