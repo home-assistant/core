@@ -947,8 +947,9 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_content(self, event=None):
         """Update information about available content."""
-        self._set_favorites()
-        self.schedule_update_ha_state()
+        if event and "favorites_update_id" in event.variables:
+            self._set_favorites()
+            self.schedule_update_ha_state()
 
     @property
     def volume_level(self):
