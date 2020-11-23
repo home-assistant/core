@@ -79,31 +79,22 @@ async def async_setup_platform(
     async def async_update_data():
         """Fetch data from API endpoint."""
         async with async_timeout.timeout(30):
-            i = 0
-            while i < 3:
-                try:
-                    data = await envoy_reader.update()
-                except httpcore.ProtocolError as err:
-                    raise UpdateFailed(f"Error communicating with API: {err}") from err
-                except httpcore.ConnectTimeout as err:
-                    raise UpdateFailed(f"Timeout error with API: {err}") from err
+            try:
+                data = await envoy_reader.update()
+            except httpcore.ProtocolError as err:
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
+            except httpcore.ConnectTimeout as err:
+                raise UpdateFailed(f"Timeout error with API: {err}") from err
 
-                _LOGGER.debug("Retrieved data from API: %s", data)
+            _LOGGER.debug("Retrieved data from API: %s", data)
 
-                if "can't handle event type ConnectionClosed" in str(
-                    data.get("inverters_production")
-                ):
-                    _LOGGER.debug("Retry polling Envoy.  Previous attempt failed.")
-                    i += 1
-                else:
-                    _LOGGER.debug("Returning API data.")
-                    return data
+            if "can't handle event type ConnectionClosed" in str(
+                data.get("inverters_production")
+            ):
+                raise UpdateFailed("Inverter updated failed")
 
-            # After 3 communication errors log the message and wait
-            # for the next polling cycle
-            _LOGGER.warning(
-                "Communication error with Enphase Envoy.  Will retrieve data on the next poll."
-            )
+            _LOGGER.debug("Returning API data.")
+            return data
 
     coordinator = DataUpdateCoordinator(
         homeassistant,
