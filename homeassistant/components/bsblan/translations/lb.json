@@ -4,7 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "connection_error": "Feeler beim verbannen mam BSB-Lan Apparat."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "flow_title": "BSB-LAN: {name}",
         "step": {
@@ -18,6 +18,5 @@
                 "title": "Mam BSB-Lan Apparat verbannen"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

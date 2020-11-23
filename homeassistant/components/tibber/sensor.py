@@ -6,6 +6,7 @@ from random import randrange
 
 import aiohttp
 
+from homeassistant.components.sensor import DEVICE_CLASS_POWER
 from homeassistant.const import POWER_WATT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
@@ -16,7 +17,6 @@ from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
-ICON_RT = "mdi:power-plug"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
@@ -113,7 +113,7 @@ class TibberSensorElPrice(TibberSensor):
         if (
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 12 * 3600 + self._spread_load_constant
+            < 5 * 3600 + self._spread_load_constant
             or not self._is_available
         ):
             _LOGGER.debug("Asking for new data")
@@ -222,11 +222,6 @@ class TibberSensorRT(TibberSensor):
         return False
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON_RT
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return POWER_WATT
@@ -235,3 +230,8 @@ class TibberSensorRT(TibberSensor):
     def unique_id(self):
         """Return a unique ID."""
         return f"{self.device_id}_rt_consumption"
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_POWER

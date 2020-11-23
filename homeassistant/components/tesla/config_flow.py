@@ -62,7 +62,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={CONF_USERNAME: "already_configured_account"},
+                errors={CONF_USERNAME: "already_configured"},
                 description_placeholders={},
             )
 

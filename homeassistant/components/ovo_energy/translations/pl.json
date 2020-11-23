@@ -2,10 +2,18 @@
     "config": {
         "error": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
-            "authorization_error": "B\u0142\u0105d autoryzacji. Sprawd\u017a swoje po\u015bwiadczenia.",
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Uwierzytelnianie dla OVO Energy nie powiod\u0142o si\u0119. Wprowad\u017a aktualne dane uwierzytelniaj\u0105ce.",
+                "title": "Ponowne uwierzytelnianie"
+            },
             "user": {
                 "data": {
                     "password": "Has\u0142o",

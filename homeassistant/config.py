@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_INTERNAL_URL,
     CONF_LATITUDE,
+    CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
     CONF_MEDIA_DIRS,
     CONF_NAME,
@@ -224,6 +225,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         ),
         # pylint: disable=no-value-for-parameter
         vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
+        vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
     }
 )
 
@@ -488,7 +490,6 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
-            CONF_MEDIA_DIRS,
         ]
     ):
         hac.config_source = SOURCE_YAML
@@ -501,6 +502,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_INTERNAL_URL, "internal_url"),
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
+        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -748,8 +750,14 @@ async def async_process_component_config(
     config_validator = None
     try:
         config_validator = integration.get_platform("config")
-    except ImportError:
-        pass
+    except ImportError as err:
+        # Filter out import error of the config platform.
+        # If the config platform contains bad imports, make sure
+        # that still fails.
+        if err.name != f"{integration.pkg_path}.config":
+            _LOGGER.error("Error importing config platform %s: %s", domain, err)
+            return None
+
     if config_validator is not None and hasattr(
         config_validator, "async_validate_config"
     ):
@@ -894,7 +902,7 @@ def async_notify_setup_error(
         part = f"[{name}]({link})" if link else name
         message += f" - {part}\n"
 
-    message += "\nPlease check your config."
+    message += "\nPlease check your config and [logs](/config/logs)."
 
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"

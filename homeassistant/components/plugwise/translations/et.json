@@ -1,14 +1,31 @@
 {
     "config": {
-        "error": {
-            "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
-            "unknown": "Ootamatu t\u00f5rge"
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
         },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
-                    "port": "Smile pordi number"
-                }
+                    "flow_type": "\u00dchenduse t\u00fc\u00fcp"
+                },
+                "description": "Toode:",
+                "title": "Plugwise t\u00fc\u00fcp"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP aadress",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile kasutajanimi"
+                },
+                "description": "Palun sisesta:",
+                "title": "Loo \u00fchendus Smile-ga"
             }
         }
     },

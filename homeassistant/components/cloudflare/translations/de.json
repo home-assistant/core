@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_zone": "Ung\u00fcltige Zone"
+        },
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Datens\u00e4tze"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Token"
+                },
+                "title": "Mit Cloudflare verbinden"
+            }
+        }
+    }
+}

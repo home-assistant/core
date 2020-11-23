@@ -79,7 +79,7 @@ SENSOR_TYPES = {
         True,
     ],
     "process": ["Process", " ", CPU_ICON, None, True],
-    "processor_use": ["Processor use", PERCENTAGE, CPU_ICON, None, False],
+    "processor_use": ["Processor use (percent)", PERCENTAGE, CPU_ICON, None, False],
     "processor_temperature": [
         "Processor temperature",
         TEMP_CELSIUS,

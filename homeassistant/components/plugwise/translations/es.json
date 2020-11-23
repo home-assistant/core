@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este Smile ya est\u00e1 configurado"
+            "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "error": {
             "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntelo de nuevo.",
@@ -12,11 +12,19 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Direcci\u00f3n IP de Smile",
-                    "password": "ID Smile",
-                    "port": "N\u00famero de puerto de Smile"
+                    "flow_type": "Tipo de conexi\u00f3n"
                 },
                 "description": "Detalles",
+                "title": "Conectarse a Smile"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "Direcci\u00f3n IP",
+                    "password": "ID Smile",
+                    "port": "Puerto",
+                    "username": "Nombre de usuario Smile"
+                },
+                "description": "Por favor introduce:",
                 "title": "Conectarse a Smile"
             }
         }

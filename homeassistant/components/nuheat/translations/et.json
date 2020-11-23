@@ -1,8 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
         "error": {
             "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
+            "invalid_auth": "Tuvastamine nurjus",
+            "invalid_thermostat": "Termostaadi seerianumber on vale.",
             "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "serial_number": "Termostaadi seerianumber.",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Pead hankima oma termostaadi numbrilise seerianumbri v\u00f5i ID logides sisse aadressile https://MyNuHeat.com ja valides oma termostaadi (d).",
+                "title": "\u00dchendu NuHeat'iga"
+            }
         }
     }
 }

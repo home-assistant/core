@@ -1,13 +1,10 @@
 """Support for LiteJet scenes."""
-import logging
 from typing import Any
 
 from homeassistant.components import litejet
 from homeassistant.components.scene import Scene
 
 ATTR_NUMBER = "number"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

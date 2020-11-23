@@ -217,7 +217,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         _LOGGER.debug("Raw data update: %s", self._shade.raw_data)
         position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
         if ATTR_POSITION1 in position_data:
-            self._current_cover_position = position_data[ATTR_POSITION1]
+            self._current_cover_position = int(position_data[ATTR_POSITION1])
         self._is_opening = False
         self._is_closing = False
 

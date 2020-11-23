@@ -206,29 +206,29 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
+        assert self.hass
         errors = {}
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
-            unique_id = await VizioAsync.get_unique_id(
-                user_input[CONF_HOST],
-                user_input[CONF_DEVICE_CLASS],
-                session=async_get_clientsession(self.hass, False),
-            )
-
-            if not unique_id:
-                errors[CONF_HOST] = "cannot_connect"
-            else:
-                # Set unique ID and abort if a flow with the same unique ID is already in progress
-                existing_entry = await self.async_set_unique_id(
-                    unique_id=unique_id, raise_on_progress=True
+            if self.unique_id is None:
+                unique_id = await VizioAsync.get_unique_id(
+                    user_input[CONF_HOST],
+                    user_input[CONF_DEVICE_CLASS],
+                    session=async_get_clientsession(self.hass, False),
                 )
-                # If device was discovered, abort if existing entry found, otherwise display an error
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-                if self.context["source"] == SOURCE_ZEROCONF:
-                    self._abort_if_unique_id_configured()
-                elif existing_entry:
+
+                # Check if unique ID was found, set unique ID, and abort if a flow with
+                # the same unique ID is already in progress
+                if not unique_id:
+                    errors[CONF_HOST] = "cannot_connect"
+                elif (
+                    await self.async_set_unique_id(
+                        unique_id=unique_id, raise_on_progress=True
+                    )
+                    is not None
+                ):
                     errors[CONF_HOST] = "existing_config_entry_found"
 
             if not errors:
@@ -346,10 +346,13 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
+        assert self.hass
 
-        discovery_info[
-            CONF_HOST
-        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        # If host already has port, no need to add it again
+        if ":" not in discovery_info[CONF_HOST]:
+            discovery_info[
+                CONF_HOST
+            ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
@@ -359,6 +362,19 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovery_info[CONF_DEVICE_CLASS] = await async_guess_device_type(
             discovery_info[CONF_HOST]
         )
+
+        # Set unique ID early for discovery flow so we can abort if needed
+        unique_id = await VizioAsync.get_unique_id(
+            discovery_info[CONF_HOST],
+            discovery_info[CONF_DEVICE_CLASS],
+            session=async_get_clientsession(self.hass, False),
+        )
+
+        if not unique_id:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
+        self._abort_if_unique_id_configured()
 
         # Form must be shown after discovery so user can confirm/update configuration
         # before ConfigEntry creation.

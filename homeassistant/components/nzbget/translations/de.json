@@ -9,7 +9,8 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Mit NZBGet verbinden"
             }
         }
     },

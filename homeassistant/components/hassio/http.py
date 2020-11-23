@@ -65,6 +65,7 @@ class HassIOView(HomeAssistantView):
 
         return await self._command_proxy(path, request)
 
+    delete = _handle
     get = _handle
     post = _handle
 
@@ -110,7 +111,7 @@ class HassIOView(HomeAssistantView):
                 )
 
             # Stream response
-            response = web.StreamResponse(status=client.status)
+            response = web.StreamResponse(status=client.status, headers=client.headers)
             response.content_type = client.content_type
 
             await response.prepare(request)

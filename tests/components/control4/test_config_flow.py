@@ -75,6 +75,7 @@ async def test_form(hass):
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "control4_model_00AA00AA00AA"
@@ -84,7 +85,6 @@ async def test_form(hass):
         CONF_PASSWORD: "test-password",
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

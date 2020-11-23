@@ -80,13 +80,17 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
             output = {}
             if item.get(CONF_TITLE) is not None:
                 if isinstance(item.get(CONF_TITLE), template.Template):
-                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render()
+                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
 
             if item.get(CONF_TEXT) is not None:
                 if isinstance(item.get(CONF_TEXT), template.Template):
-                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render()
+                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
 
@@ -97,13 +101,17 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
 
             if item.get(CONF_AUDIO) is not None:
                 if isinstance(item.get(CONF_AUDIO), template.Template):
-                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render()
+                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
 
             if item.get(CONF_DISPLAY_URL) is not None:
                 if isinstance(item.get(CONF_DISPLAY_URL), template.Template):
-                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render()
+                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
 

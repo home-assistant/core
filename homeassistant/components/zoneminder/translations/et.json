@@ -25,7 +25,7 @@
                     "path_zms": "ZMS-i aadress",
                     "ssl": "Kasutage ZoneMinderiga \u00fchenduse loomiseks SSL-i",
                     "username": "Kasutajanimi",
-                    "verify_ssl": "Kontrollige SSL-sertifikaati"
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
                 "title": "Lisa ZoneMinderi server."
             }

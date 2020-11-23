@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "name_exists": "Navnet findes allerede"
-        },
         "step": {
             "user": {
                 "data": {

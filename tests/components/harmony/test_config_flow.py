@@ -56,11 +56,11 @@ async def test_user_form(hass):
             result["flow_id"],
             {"host": "1.2.3.4", "name": "friend"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "friend"
     assert result2["data"] == {"host": "1.2.3.4", "name": "friend"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -90,6 +90,7 @@ async def test_form_import(hass):
                 "unique_id": "555234534543",
             },
         )
+        await hass.async_block_till_done()
 
     assert result["result"].unique_id == "555234534543"
     assert result["type"] == "create_entry"
@@ -103,7 +104,6 @@ async def test_form_import(hass):
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
     # used a fallback when they are not in options
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -147,11 +147,11 @@ async def test_form_ssdp(hass):
             result["flow_id"],
             {},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Harmony Hub"
     assert result2["data"] == {"host": "192.168.1.12", "name": "Harmony Hub"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

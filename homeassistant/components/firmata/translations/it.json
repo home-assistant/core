@@ -2,10 +2,6 @@
     "config": {
         "abort": {
             "cannot_connect": "Impossibile connettersi"
-        },
-        "step": {
-            "one": "uno",
-            "other": "altri"
         }
     }
 }

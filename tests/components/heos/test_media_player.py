@@ -120,6 +120,7 @@ async def test_updates_from_signals(hass, config_entry, config, controller, favo
         const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
+
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_PLAYING
 
@@ -227,6 +228,7 @@ async def test_updates_from_players_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
     await event.wait()
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_PLAYING
 
 
