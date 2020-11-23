@@ -110,6 +110,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     def __init__(self, hass, entry, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
+        self.device_id = None
         sleep_mode = device.settings.get("sleep_mode")
 
         if sleep_mode:
