@@ -44,7 +44,7 @@ frontend:
 config:
 
 http:
-   server_port: 8180
+  server_port: 8180
 
 # AIS Service for AI
 # Allows you to issue voice commands
