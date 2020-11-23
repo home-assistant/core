@@ -171,6 +171,11 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
         return DEVICE_CLASS_SIGNAL_STRENGTH
 
     @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._device.RSSI
