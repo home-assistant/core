@@ -1,27 +1,25 @@
 add_download:
   description: Download a magnet link on the Qbittorrent server.
   fields:
-    server_url:
-      description: The URL of a Qbittorrent server.
-      example: "http://Qbittorrent_Server:8080"
     magnet_link:
-      description: The Magnet link you want to download.
+      description: The Magnet link you want to download (required).
       example: "magnet:?xt=urn:ed2k:xxxxxxxx"
+    server_url:
+      description: The URL of a Qbittorrent server (optional).
+      example: "http://Qbittorrent_Server:8080"
     download_path:
       description: The path whereto you want to download (optional).
-      example: "c:\testing\testtest"
+      example: "c:&#92;testing&#92;testtest"
 
 remove_download:
-  description: Remove the download from the seedlist.
+  description: remove a torrent from the Qbittorrent server.
   fields:
-    server_name:
-      description: Name of a Plex server if multiple Plex servers configured.
-      example: "My Plex Server"
-    library_name:
-      description: Name of the Plex library to refresh.
-      example: "TV Shows"
-
-
-vol.Optional("download_path"): str,
-        vol.Required("server_url"): str,
-        vol.Required("magnet_link"): str,
+    torrent_hash:
+      description: The torrent hash you want to remove (required).
+      example: "xxxxxxxxxxxxxxx"
+    server_url:
+      description: The URL of a Qbittorrent server (optional).
+      example: "http://Qbittorrent_Server:8080"
+    delete_permanent:
+      description: Remove file from disk (bool) (optional).
+      example: "True or False"
