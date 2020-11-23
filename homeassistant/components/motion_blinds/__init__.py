@@ -38,7 +38,7 @@ async def async_setup_entry(
     motion_gateway = connect_gateway_class.gateway_device
 
     def update_gateway():
-        """Wrapper to call all updates in one async_add_executor_job"""
+        """Call all updates using one async_add_executor_job."""
         motion_gateway.Update()
         for blind in motion_gateway.device_list.values():
             blind.Update()
