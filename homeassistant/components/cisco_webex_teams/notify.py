@@ -9,7 +9,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_TOKEN, CONF_EMAIL
+from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
