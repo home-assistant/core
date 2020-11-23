@@ -6,6 +6,11 @@
             "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passord",
