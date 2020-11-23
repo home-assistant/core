@@ -68,7 +68,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._device.is_open is False
+        return not self._device.is_open
 
     @property
     def device_class(self):

@@ -42,6 +42,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
+    other_light_resource_types = CONTROLLER + COVER_TYPES + LOCK_TYPES + SWITCH_TYPES
+
     @callback
     def async_add_light(lights):
         """Add light from deCONZ."""
@@ -49,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
             if (
-                light.type not in CONTROLLER + COVER_TYPES + LOCK_TYPES + SWITCH_TYPES
+                light.type not in other_light_resource_types
                 and light.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLight(light, gateway))
