@@ -22,25 +22,6 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Transports Metropolitans de Barcelona - tmb.cat"
-
-"""
-sensor:
-- platform: tmb
-  app_id: !secret tmb_app_id
-  app_key: !secret tmb_app_key
-  stops:
-    - line: V25
-      stop: 3258
-  routes:
-    - name: From home to work
-      from:
-        latitude: 41.3755204
-        longitude: 2.1498870
-      to:
-        latitude: 41.3878951
-        longitude: 2.1308587
-"""
-
 ATTR_BUS_STOP = "stop"
 ATTR_DESCRIPTION = "description"
 ATTR_IN_TRANSIT = "time in transit"
