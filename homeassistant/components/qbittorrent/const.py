@@ -24,3 +24,6 @@ DOMAIN = DEFAULT_NAME
 DATA_KEY_CLIENT = "client"
 DATA_KEY_COORDINATOR = "coordinator"
 DATA_KEY_NAME = "name"
+
+SERVICE_ADD_DOWNLOAD = "add_download"
+SERVICE_REMOVE_DOWNLOAD = "remove_download"

@@ -3,7 +3,7 @@ import logging
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
-
+from .services import async_setup_services
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +36,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Qbittorrent component."""
     # Make sure coordinator is initialized.
     hass.data.setdefault(DOMAIN, {})
+    await async_setup_services(hass)
+
     return True
 
 
@@ -50,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_PASSWORD],
         )
     except LoginRequired:
-        _LOGGER.error("Invalid authentication")
+        _LOGGER.error("Intvalid authentication")
         return
     except RequestException as err:
         _LOGGER.error("Connection failed")
@@ -71,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
     )
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][entry.data[CONF_URL]] = {
         DATA_KEY_CLIENT: client,
         DATA_KEY_COORDINATOR: coordinator,
         DATA_KEY_NAME: name,

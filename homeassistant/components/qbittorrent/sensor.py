@@ -4,7 +4,11 @@ import logging
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, STATE_IDLE
+from homeassistant.const import (
+    DATA_RATE_KILOBYTES_PER_SECOND,
+    STATE_IDLE,
+    CONF_URL,
+)
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -46,7 +50,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the qBittorrent sensor."""
 
-    qbit_data = hass.data[DOMAIN][entry.entry_id]
+    qbit_data = hass.data[DOMAIN][entry.data[CONF_URL]]
     name = qbit_data[DATA_KEY_NAME]
     variables = SENSOR_TYPES
     sensors = [

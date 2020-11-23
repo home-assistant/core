@@ -1,0 +1,27 @@
+add_download:
+  description: Download a magnet link on the Qbittorrent server.
+  fields:
+    server_url:
+      description: The URL of a Qbittorrent server.
+      example: "http://Qbittorrent_Server:8080"
+    magnet_link:
+      description: The Magnet link you want to download.
+      example: "magnet:?xt=urn:ed2k:xxxxxxxx"
+    download_path:
+      description: The path whereto you want to download (optional).
+      example: "c:\testing\testtest"
+
+remove_download:
+  description: Remove the download from the seedlist.
+  fields:
+    server_name:
+      description: Name of a Plex server if multiple Plex servers configured.
+      example: "My Plex Server"
+    library_name:
+      description: Name of the Plex library to refresh.
+      example: "TV Shows"
+
+
+vol.Optional("download_path"): str,
+        vol.Required("server_url"): str,
+        vol.Required("magnet_link"): str,
