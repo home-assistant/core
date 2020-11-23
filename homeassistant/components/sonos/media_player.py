@@ -9,7 +9,13 @@ import urllib.parse
 import async_timeout
 import pysonos
 from pysonos import alarms
-from pysonos.core import PLAY_MODE_BY_MEANING, PLAY_MODES
+from pysonos.core import (
+    PLAY_MODE_BY_MEANING,
+    PLAY_MODES,
+    PLAYING_LINE_IN,
+    PLAYING_RADIO,
+    PLAYING_TV,
+)
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -750,9 +756,12 @@ class SonosEntity(MediaPlayerEntity):
         update_position = new_status != self._status
         self._status = new_status
 
-        if self.soco.is_playing_tv:
+        track_uri = variables["current_track_uri"] if variables else None
+        whats_playing = self.soco.whats_playing(track_uri)
+
+        if whats_playing == PLAYING_TV:
             self.update_media_linein(SOURCE_TV)
-        elif self.soco.is_playing_line_in:
+        elif whats_playing == PLAYING_LINE_IN:
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
@@ -764,7 +773,7 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_album_name = track_info.get("album")
                 self._media_title = track_info.get("title")
 
-                if self.soco.is_radio_uri(track_info["uri"]):
+                if whats_playing == PLAYING_RADIO:
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
