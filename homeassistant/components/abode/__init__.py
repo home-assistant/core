@@ -4,12 +4,12 @@ from copy import deepcopy
 from functools import partial
 
 from abodepy import Abode
-from abodepy.exceptions import AbodeException
+from abodepy.exceptions import AbodeAuthenticationException, AbodeException
 import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
@@ -117,6 +117,15 @@ async def async_setup_entry(hass, config_entry):
             Abode, username, password, True, True, True, cache
         )
         hass.data[DOMAIN] = AbodeSystem(abode, polling)
+
+    except AbodeAuthenticationException as ex:
+        LOGGER.error("Invalid credentials: %s", str(ex))
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data=config_entry,
+        )
+        return False
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Abode: %s", str(ex))
