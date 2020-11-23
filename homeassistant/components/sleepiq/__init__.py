@@ -22,7 +22,6 @@ from .const import (
     SLEEP_NUMBER,
 )
 
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ class SleepIQData:
     def set_new_sleep_number(self, bed_name: str, side: str, sleep_number):
         """Change the sleep number on a side to a new value."""
 
-        # Sanity check: Sleep number has to be between 1-100.        
+        # Sanity check: Sleep number has to be between 1-100.
         if 0 < int(sleep_number) <= 100 and int(sleep_number) % 5 == 0:
             self._set_sleep_number(bed_name, side, int(sleep_number))
         else:
@@ -132,11 +131,7 @@ class SleepIQData:
             # Just use the side we specified.
             sides_to_set = [side]
 
-<<<<<<< HEAD
         for bed_id, bed_obj in list(self.beds.items()):
-=======
-        for bed_id, bed_obj in self.beds.items():
->>>>>>> Add support to set sleep numer
             # If no bed name is specified, set on all beds.
             # Otherwise, ensure we only set on beds with the correct name.
             if not bed_name or bed_name == bed_obj.name.lower():
@@ -151,12 +146,7 @@ class SleepIQData:
                     _LOGGER.debug(debug_msg)
 
                     # Actually set the Sleep Number.
-<<<<<<< HEAD
                     self._client.set_sleepnumber(bed_side, num, bed_id)
-
-=======
-                    self._client.set_sleepnumber(bed_id, bed_side, num)
->>>>>>> Add support to set sleep numer
 
 
 class SleepIQSensor(Entity):
