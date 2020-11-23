@@ -15,6 +15,7 @@ from .const import (
     ATTR_DRUM_COUNTER,
     ATTR_DRUM_REMAINING_LIFE,
     ATTR_DRUM_REMAINING_PAGES,
+    ATTR_ENABLED,
     ATTR_ICON,
     ATTR_LABEL,
     ATTR_MAGENTA_DRUM_COUNTER,
@@ -139,4 +140,4 @@ class BrotherPrinterSensor(CoordinatorEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        return True
+        return SENSOR_TYPES[self.kind][ATTR_ENABLED]

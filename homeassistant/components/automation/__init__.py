@@ -163,6 +163,9 @@ async def async_setup(hass, config):
     """Set up the automation."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
+    # To register the automation blueprints
+    async_get_blueprints(hass)
+
     await _async_process_config(hass, config, component)
 
     async def trigger_service_handler(entity, service_call):

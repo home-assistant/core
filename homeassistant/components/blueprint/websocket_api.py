@@ -85,6 +85,7 @@ async def ws_import_blueprint(hass, connection, msg):
             "blueprint": {
                 "metadata": imported_blueprint.blueprint.metadata,
             },
+            "validation_errors": imported_blueprint.blueprint.validate(),
         },
     )
 

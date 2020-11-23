@@ -75,14 +75,12 @@ class DeconzSiren(DeconzDevice, SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._device.alert == "lselect"
+        return self._device.is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
-        data = {"alert": "lselect"}
-        await self._device.async_set_state(data)
+        await self._device.turn_on()
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
-        data = {"alert": "none"}
-        await self._device.async_set_state(data)
+        await self._device.turn_off()

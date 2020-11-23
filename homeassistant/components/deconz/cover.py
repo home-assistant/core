@@ -18,10 +18,7 @@ from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up covers for deCONZ component.
-
-    Covers are based on the same device class as lights in deCONZ.
-    """
+    """Set up covers for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
@@ -66,12 +63,12 @@ class DeconzCover(DeconzDevice, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return 100 - int(self._device.brightness / 254 * 100)
+        return 100 - self._device.position
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._device.state
+        return not self._device.is_open
 
     @property
     def device_class(self):
@@ -88,26 +85,16 @@ class DeconzCover(DeconzDevice, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
-        data = {"on": False}
-
-        if position < 100:
-            data["on"] = True
-            data["bri"] = 254 - int(position / 100 * 254)
-
-        await self._device.async_set_state(data)
+        await self._device.set_position(kwargs[ATTR_POSITION])
 
     async def async_open_cover(self, **kwargs):
         """Open cover."""
-        data = {ATTR_POSITION: 100}
-        await self.async_set_cover_position(**data)
+        await self._device.open()
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        data = {ATTR_POSITION: 0}
-        await self.async_set_cover_position(**data)
+        await self._device.close()
 
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
-        data = {"bri_inc": 0}
-        await self._device.async_set_state(data)
+        await self._device.stop()

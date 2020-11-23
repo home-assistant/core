@@ -749,7 +749,6 @@ omit =
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/*
     homeassistant/components/saj/sensor.py
-    homeassistant/components/salt/device_tracker.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
     homeassistant/components/scrape/sensor.py
@@ -1058,7 +1057,6 @@ omit =
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
-    homeassistant/components/zha/core/patches.py
     homeassistant/components/zha/core/registries.py
     homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
