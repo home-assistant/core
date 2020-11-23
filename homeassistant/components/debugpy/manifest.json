@@ -2,7 +2,7 @@
   "domain": "debugpy",
   "name": "Remote Python Debugger",
   "documentation": "https://www.home-assistant.io/integrations/debugpy",
-  "requirements": ["debugpy==1.1.0"],
+  "requirements": ["debugpy==1.2.0"],
   "codeowners": ["@frenck"],
   "quality_scale": "internal"
 }
