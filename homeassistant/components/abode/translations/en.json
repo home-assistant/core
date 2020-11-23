@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "reauth_successful": "Reauthorization successful."
+            "reauth_successful": "Re-authentication was successful",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -10,20 +10,20 @@
             "invalid_mfa_code": "Invalid MFA code"
         },
         "step": {
-            "user": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "MFA code"
+                },
+                "title": "MFA is required"
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Password",
                     "username": "Email"
                 },
                 "title": "Fill in your Abode login information"
             },
-            "mfa": {
-                "data": {
-                    "mfa_code": "MFA Code"
-                },
-                "title": "MFA required"
-            },
-            "reauth_confirm": {
+            "user": {
                 "data": {
                     "password": "Password",
                     "username": "Email"

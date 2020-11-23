@@ -11,7 +11,7 @@
       "mfa": {
         "title": "MFA is required",
         "data": {
-          "mfa_code": "[%key:common::config_flow::data::mfa_code%]"
+          "mfa_code": "MFA code"
         }
       },
       "reauth_confirm": {
@@ -25,7 +25,7 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_mfa_code": "[%key:common::config_flow::error::invalid_mfa_code%]"
+      "invalid_mfa_code": "Invalid MFA code"
 
     },
     "abort": {
