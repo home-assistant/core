@@ -131,7 +131,7 @@ class SleepIQData:
             # Just use the side we specified.
             sides_to_set = [side]
 
-        for bed_id, bed_obj in self.beds.items():
+        for bed_id, bed_obj in list(self.beds.items()):
             # If no bed name is specified, set on all beds.
             # Otherwise, ensure we only set on beds with the correct name.
             if not bed_name or bed_name == bed_obj.name.lower():
@@ -146,7 +146,7 @@ class SleepIQData:
                     _LOGGER.debug(debug_msg)
 
                     # Actually set the Sleep Number.
-                    self._client.set_sleepnumber(bed_id, bed_side, num)
+                    self._client.set_sleepnumber(bed_side, num, bed_id)
 
 
 class SleepIQSensor(Entity):

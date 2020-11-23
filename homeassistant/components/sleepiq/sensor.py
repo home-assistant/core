@@ -14,7 +14,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data.update()
 
     dev = []
-    for bed_id, bed in data.beds.items():
+    for bed_id, bed in list(data.beds.items()):
         for side in SIDES:
             if getattr(bed, side) is not None:
                 dev.append(SleepNumberSensor(data, bed_id, side))
