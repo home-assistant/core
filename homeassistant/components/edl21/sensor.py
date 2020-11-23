@@ -119,7 +119,7 @@ class EDL21:
 
         electricity_id = None
         for telegram in message_body.get("valList", []):
-            if telegram.get("objName") == "1-0:0.0.9*255":
+            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
                 electricity_id = telegram.get("value")
                 break
 
