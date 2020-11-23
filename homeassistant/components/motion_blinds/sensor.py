@@ -89,9 +89,7 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
-        attributes[ATTR_BATTERY_VOLTAGE] = self._blind.battery_voltage
-        return attributes
+        return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
 
 
 class MotionTDBUBatterySensor(MotionBatterySensor):
