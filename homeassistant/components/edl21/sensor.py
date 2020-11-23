@@ -77,14 +77,26 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:16.7.0*255": "Sum active instantaneous power",
+        # C=31: Active amperage L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:31.7.0*255": "L1 active instantaneous amperage",
         # C=36: Active power L1
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:36.7.0*255": "L1 active instantaneous power",
+        # C=51: Active amperage L2
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:51.7.0*255": "L2 active instantaneous amperage",
         # C=56: Active power L2
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:56.7.0*255": "L2 active instantaneous power",
+        # C=71: Active amperage L3
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:71.7.0*255": "L3 active instantaneous amperage",
         # C=76: Active power L3
         # D=7: Instantaneous value
         # E=0: Total
