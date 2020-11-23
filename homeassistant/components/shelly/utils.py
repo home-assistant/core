@@ -46,7 +46,11 @@ def get_entity_name(
     if block:
         channels = None
         if block.type == "input":
-            channels = device.shelly.get("num_inputs")
+            # Shelly Dimmer/1L has two input channels and missing "num_inputs"
+            if device.settings["device"]["type"] in ["SHDM-1", "SHDM-2", "SHSW-L"]:
+                channels = 2
+            else:
+                channels = device.shelly.get("num_inputs")
         elif block.type == "emeter":
             channels = device.shelly.get("num_emeters")
         elif block.type in ["relay", "light"]:
@@ -70,13 +74,6 @@ def get_entity_name(
                 entity_name = (
                     f"{get_device_name(device)} channel {chr(int(block.channel)+base)}"
                 )
-
-        # Shelly Dimmer has two input channels and missing "num_inputs"
-        if (
-            device.settings["device"]["type"] in ["SHDM-1", "SHDM-2"]
-            and block.type == "input"
-        ):
-            entity_name = f"{entity_name} channel {int(block.channel)+1}"
 
     if description:
         entity_name = f"{entity_name} {description}"
