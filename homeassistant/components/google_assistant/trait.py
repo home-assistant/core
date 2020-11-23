@@ -597,17 +597,14 @@ class StartStopTrait(_Trait):
             }
 
         if domain == cover.DOMAIN:
-            return {
-                "isRunning": state == cover.STATE_CLOSING
-                or state == cover.STATE_OPENING
-            }
+            return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
 
     async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
             return await self._execute_vacuum(command, data, params, challenge)
-        elif domain == cover.DOMAIN:
+        if domain == cover.DOMAIN:
             return await self._execute_cover(command, data, params, challenge)
 
     async def _execute_vacuum(self, command, data, params, challenge):
