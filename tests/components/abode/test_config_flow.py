@@ -7,7 +7,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import Mock, MockConfigEntry
 
 CONF_POLLING = "polling"
 
@@ -140,3 +140,41 @@ async def test_step_mfa(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "mfa"
+
+
+async def test_step_reauth(hass):
+    """Test the reauth flow."""
+    conf = Mock()
+    conf.data = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
+    conf.entry_id = "abc123"
+
+    flow = config_flow.AbodeFlowHandler()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth_confirm"
+    ) as mock_async_step_reauth_confirm:
+
+        await flow.async_step_reauth(conf)
+
+        mock_async_step_reauth_confirm.assert_called()
+
+
+async def test_step_reauth_confirm(hass):
+    """Test the reauth_confirm flow."""
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
+
+    flow = config_flow.AbodeFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_reauth_confirm()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_login"
+    ) as mock_async_step_login:
+
+        await flow.async_step_reauth_confirm(conf)
+
+        mock_async_step_login.assert_called_once()
