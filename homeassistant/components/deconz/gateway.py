@@ -171,7 +171,7 @@ class DeconzGateway:
             raise ConfigEntryNotReady from err
 
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error connecting with deCONZ gateway: %s", err)
+            LOGGER.error("Error connecting with deCONZ gateway: %s", err, exc_info=True)
             return False
 
         for component in SUPPORTED_PLATFORMS:
