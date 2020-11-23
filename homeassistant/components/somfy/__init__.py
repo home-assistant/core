@@ -164,12 +164,12 @@ class SomfyEntity(CoordinatorEntity, Entity):
         return self.coordinator.data[self._id]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id base on the id returned by Somfy."""
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self.device.name
 
@@ -188,13 +188,18 @@ class SomfyEntity(CoordinatorEntity, Entity):
             "manufacturer": "Somfy",
         }
 
-    def has_capability(self, capability):
+    def has_capability(self, capability: str) -> bool:
         """Test if device has a capability."""
         capabilities = self.device.capabilities
         return bool([c for c in capabilities if c.name == capability])
 
+    def has_state(self, state: str) -> bool:
+        """Test if device has a state."""
+        states = self.device.states
+        return bool([c for c in states if c.name == state])
+
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return if the device has an assumed state."""
         return not bool(self.device.states)
 
