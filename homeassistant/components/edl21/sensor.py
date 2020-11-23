@@ -81,11 +81,11 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:36.7.0*255": "L1 active instantaneous power",
-        # C=56: Active power L1
+        # C=56: Active power L2
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:56.7.0*255": "L2 active instantaneous power",
-        # C=76: Active power L1
+        # C=76: Active power L3
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:76.7.0*255": "L3 active instantaneous power",
