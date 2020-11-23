@@ -69,7 +69,7 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
     @property
     def name(self):
         """Return the name of the blind battery sensor."""
-        return f"{self._blind.blind_type}-battery-{self._blind.mac}"
+        return f"{self._blind.blind_type}-battery-{self._blind.mac[12:]}"
 
     @property
     def unit_of_measurement(self):
@@ -113,7 +113,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
     @property
     def name(self):
         """Return the name of the blind battery sensor."""
-        return f"{self._blind.blind_type}-{self._motor}-battery-{self._blind.mac}"
+        return f"{self._blind.blind_type}-{self._motor}-battery-{self._blind.mac[12:]}"
 
     @property
     def state(self):
@@ -158,7 +158,7 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
         """Return the name of the blind signal strength sensor."""
         if self._device_type == TYPE_GATEWAY:
             return "Motion gateway signal strength"
-        return f"{self._device.blind_type} signal strength - {self._device.mac}"
+        return f"{self._device.blind_type} signal strength - {self._device.mac[12:]}"
 
     @property
     def unit_of_measurement(self):
