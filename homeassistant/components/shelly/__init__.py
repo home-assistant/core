@@ -35,7 +35,6 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
-from .utils import get_device_name, get_entity_name
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -146,36 +145,36 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     def _async_input_events_handler(self):
         """Handle device input events."""
         for block in self.device.blocks:
-            if "inputEvent" and "inputEventCnt" in block.sensor_ids:
-                channel = int(block.channel or 0) + 1
-                last_event_count = self._last_input_events_count.get(channel)
-                if last_event_count and last_event_count != block.inputEventCnt:
-                    _LOGGER.debug(
-                        "Shelly input event: device: %s, channel: %s, inputEvent: %s, inputEventCnt: %s",
-                        get_device_name(self.device),
-                        channel,
-                        block.inputEvent,
-                        block.inputEventCnt,
-                    )
+            if (
+                "inputEvent" not in block.sensor_ids
+                or "inputEventCnt" not in block.sensor_ids
+            ):
+                continue
 
-                    event_type = block.inputEvent
-                    if event_type != "":
-                        if event_type in INPUTS_EVENTS_DICT.keys():
-                            self.hass.bus.async_fire(
-                                "shelly.click",
-                                {
-                                    "entity_id": get_entity_name(self.device, block),
-                                    "click_type": INPUTS_EVENTS_DICT[event_type],
-                                },
-                            )
-                        else:
-                            _LOGGER.warning(
-                                "Shelly input event %s for device %s is not supported, please open issue",
-                                event_type,
-                                get_device_name(self.device),
-                            )
+            channel = int(block.channel or 0) + 1
+            event_type = block.inputEvent
+            last_event_count = self._last_input_events_count.get(channel)
+            self._last_input_events_count[channel] = block.inputEventCnt
 
-                self._last_input_events_count[channel] = block.inputEventCnt
+            if last_event_count == block.inputEventCnt or event_type == "":
+                continue
+
+            if event_type in INPUTS_EVENTS_DICT:
+                self.hass.bus.async_fire(
+                    "shelly.click",
+                    {
+                        "device_id": self.device_id,
+                        "device": self.device.settings["device"]["hostname"],
+                        "channel": channel,
+                        "click_type": INPUTS_EVENTS_DICT[event_type],
+                    },
+                )
+            else:
+                _LOGGER.warning(
+                    "Shelly input event %s for device %s is not supported, please open issue",
+                    event_type,
+                    self.name,
+                )
 
     async def _async_update_data(self):
         """Fetch data."""
@@ -203,7 +202,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Set up the wrapper."""
         dev_reg = await device_registry.async_get_registry(self.hass)
         model_type = self.device.settings["device"]["type"]
-        dev_reg.async_get_or_create(
+        entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
@@ -213,6 +212,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             model=aioshelly.MODEL_NAMES.get(model_type, model_type),
             sw_version=self.device.settings["fw"],
         )
+        self.device_id = entry.id
 
     def shutdown(self):
         """Shutdown the wrapper."""
@@ -238,7 +238,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         """Fetch data."""
         try:
             async with async_timeout.timeout(5):
-                _LOGGER.debug("REST update for %s", get_device_name(self.device))
+                _LOGGER.debug("REST update for %s", self.name)
                 return await self.device.update_status()
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
