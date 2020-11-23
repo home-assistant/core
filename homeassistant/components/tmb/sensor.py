@@ -204,10 +204,10 @@ class TMBPlannerSensor(Entity):
         self._unit = TIME_MINUTES
         self._name = name
         self._attr_description = None
-        self._attr_durationInSeconds = None
-        self._attr_transitTime = None
-        self._attr_waitingTime = None
-        self._attr_walkDistance = None
+        self._attr_duration_in_seconds = None
+        self._attr_transit_time = None
+        self._attr_waiting_time = None
+        self._attr_walk_distance = None
         self._attr_transfers = None
         self._state = None
 
@@ -243,10 +243,10 @@ class TMBPlannerSensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_NAME: self._name,
             ATTR_DESCRIPTION: self._attr_description,
-            ATTR_SECONDS: self._attr_durationInSeconds,
-            ATTR_IN_TRANSIT: self._attr_transitTime,
-            ATTR_WAITING: self._attr_waitingTime,
-            ATTR_WALK_DISTANCE: self._attr_walkDistance,
+            ATTR_SECONDS: self._attr_duration_in_seconds,
+            ATTR_IN_TRANSIT: self._attr_transit_time,
+            ATTR_WAITING: self._attr_waiting_time,
+            ATTR_WALK_DISTANCE: self._attr_walk_distance,
             ATTR_TRANSFERS: self._attr_transfers,
         }
 
@@ -259,10 +259,10 @@ class TMBPlannerSensor(Entity):
             )
             self._state = plan["durationInMinutes"]
             self._attr_description = plan["description"]
-            self._attr_durationInSeconds = plan["durationInSeconds"]
-            self._attr_transitTime = plan["transitTime"]
-            self._attr_waitingTime = plan["waitingTime"]
-            self._attr_walkDistance = plan["walkDistance"]
+            self._attr_duration_in_seconds = plan["durationInSeconds"]
+            self._attr_transit_time = plan["transitTime"]
+            self._attr_waiting_time = plan["waitingTime"]
+            self._attr_walk_distance = plan["walkDistance"]
             self._attr_transfers = plan["transfers"]
 
         except HTTPError:
