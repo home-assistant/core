@@ -253,13 +253,17 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)
 
-        def _get_thumbnail_url(media_content_type, media_content_id, media_image_id=None):
+        def _get_thumbnail_url(
+            media_content_type, media_content_id, media_image_id=None
+        ):
             if is_internal:
                 if media_content_type == MEDIA_TYPE_APP and media_content_id:
                     return self.coordinator.roku.app_icon_url(media_content_id)
                 return None
 
-            return self.get_browse_image_url(media_content_type, media_content_id, media_image_id)
+            return self.get_browse_image_url(
+                media_content_type, media_content_id, media_image_id
+            )
 
         if media_content_type in [None, "library"]:
             return library_payload(self.coordinator, _get_thumbnail_url)
