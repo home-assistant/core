@@ -8,15 +8,15 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_SHUTTER,
-    CoverEntity,
-    SUPPORT_SET_POSITION,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
-    SUPPORT_SET_TILT_POSITION,
     SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
     SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverEntity,
 )
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
