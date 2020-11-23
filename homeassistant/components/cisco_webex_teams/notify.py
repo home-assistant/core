@@ -9,13 +9,12 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, CONF_EMAIL
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ROOM_ID = "room_id"
-CONF_EMAIL = "email"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -30,22 +29,22 @@ def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
 
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
-    room = None
-    email = None
+    room = config.get(CONF_ROOM_ID)
+    email = config.get(CONF_EMAIL)
 
     try:
         # Validate the token & room_id
-        if CONF_ROOM_ID in config.keys():
-            client.rooms.get(config[CONF_ROOM_ID])
-            room = config[CONF_ROOM_ID]
-        if CONF_EMAIL in config.keys():
-            email = config[CONF_EMAIL]
+        if room is not None:
+            client.rooms.get(room)
+        else:  # there is no room id -> just check if the token is valid.
+            client.people.me()
+
     except exceptions.ApiError as error:
         _LOGGER.error(error)
         return None
 
     if not room and not email:
-        _LOGGER.error("Please specify either room_id or email")
+        _LOGGER.error("Please specify room_id and/or email address")
         return None
 
     return CiscoWebexTeamsNotificationService(client, room, email)
