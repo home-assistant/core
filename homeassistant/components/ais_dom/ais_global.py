@@ -2,6 +2,7 @@
 Support for functionality to cache some data for AI-Speaker.
 """
 import logging
+import os
 import platform
 import socket
 
@@ -89,6 +90,7 @@ G_MODEL_SONOFF_T11 = "sonoff_t11"
 G_MODEL_SONOFF_T12 = "sonoff_t12"
 G_MODEL_SONOFF_T13 = "sonoff_t13"
 #
+G_AIS_SECURE_ANDROID_DOM_FOLDER = "/data/data/pl.sviete.dom/files/home/AIS/.dom"
 G_AIS_SECURE_ANDROID_ID_DOM = None
 G_AIS_SECURE_ANDROID_ID_DOM_FILE = (
     "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_secure_android_id_dom"
@@ -159,6 +161,9 @@ def get_sercure_android_id_dom():
 
     # get dom_id from file
     try:
+        # add the dir .dom is not exits
+        if not os.path.exists(G_AIS_SECURE_ANDROID_DOM_FOLDER):
+            os.makedirs(G_AIS_SECURE_ANDROID_DOM_FOLDER)
         with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE) as fptr:
             dom_id = fptr.read().replace("\n", "")
             if dom_id.startswith("dom-"):

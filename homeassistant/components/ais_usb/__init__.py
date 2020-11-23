@@ -18,10 +18,7 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
 
-G_ZIGBEE_DEVICES_ID = [
-    "0451:16a8",  # CC2531
-    "1cf1:0030"  # Conbee2
-]
+G_ZIGBEE_DEVICES_ID = ["0451:16a8", "1cf1:0030"]  # CC2531  # Conbee2
 G_ZWAVE_ID = "0658:0200"
 G_AIS_REMOTE_ID = "0c45:5102"
 # ignore internal devices
@@ -332,6 +329,8 @@ async def async_setup(hass, config):
 
     async def ls_flash_drives(call):
         ais_usb_flash_drives = [ais_global.G_EMPTY_OPTION]
+        if not os.path.exists(ais_global.G_REMOTE_DRIVES_DOM_PATH):
+            os.makedirs(ais_global.G_REMOTE_DRIVES_DOM_PATH)
         dirs = os.listdir(ais_global.G_REMOTE_DRIVES_DOM_PATH)
         for d in dirs:
             ais_usb_flash_drives.append(d)
