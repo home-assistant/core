@@ -2,6 +2,8 @@
   "domain": "netgear",
   "name": "NETGEAR",
   "documentation": "https://www.home-assistant.io/integrations/netgear",
-  "requirements": ["pynetgear==0.6.1"],
-  "codeowners": []
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": ["pynetgear==0.7.0"],
+  "config_flow": true
 }
