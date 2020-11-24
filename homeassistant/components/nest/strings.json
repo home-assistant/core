@@ -25,7 +25,7 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "authorize_url_fail": "Unknown error generating an authorize url.",
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     },
     "create_entry": {
