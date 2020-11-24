@@ -1,5 +1,4 @@
 """Support for Google travel time sensors."""
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Callable, List
@@ -97,12 +96,12 @@ async def async_setup_entry(
             if mode is None:
                 options[CONF_MODE] = travel_mode
 
-        titled_mode = options.get(CONF_MODE).title()
-        formatted_name = f"{DEFAULT_NAME} - {titled_mode}"
-        name = config_entry.data.get(CONF_NAME, formatted_name)
         api_key = config_entry.data.get(CONF_API_KEY)
         origin = config_entry.data.get(CONF_ORIGIN)
         destination = config_entry.data.get(CONF_DESTINATION)
+        name = config_entry.data.get(
+            CONF_NAME, f"{DEFAULT_NAME}: {origin} -> {destination}"
+        )
 
         sensor = GoogleTravelTimeSensor(
             hass, name, api_key, origin, destination, options
@@ -113,20 +112,17 @@ async def async_setup_entry(
             async_add_entities([sensor], True)
 
     # Wait until start event is sent to load this component.
-    await hass.async_add_executor_job(
-        hass.bus.listen_once, EVENT_HOMEASSISTANT_START, run_setup
-    )
+    await hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+async def async_setup_platform(
+    hass, config, add_entities_callback, discovery_info=None
+):
     """Set up the Google travel time platform."""
-    asyncio.run_coroutine_threadsafe(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        ),
-        hass.loop,
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
 
     _LOGGER.info(

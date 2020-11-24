@@ -58,7 +58,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[CONF_OPTIONS] = self._options
 
             return self.async_create_entry(
-                title=self._data.get(CONF_NAME, DEFAULT_NAME), data=self._data
+                title=(
+                    f"{self._data.get(CONF_NAME, DEFAULT_NAME)}: "
+                    f"{self._data[CONF_ORIGIN]} -> {self._data[CONF_DESTINATION]}"
+                ),
+                data=self._data,
             )
 
         return self.async_show_form(
