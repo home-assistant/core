@@ -101,7 +101,9 @@ async def test_doorbell_chime_event(hass):
     assert device.model == "Doorbell"
     assert device.identifiers == {("nest", DEVICE_ID)}
 
-    subscriber.receive_event(create_event("sdm.devices.events.DoorbellChime.Chime"))
+    await subscriber.async_receive_event(
+        create_event("sdm.devices.events.DoorbellChime.Chime")
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -120,7 +122,9 @@ async def test_camera_motion_event(hass):
         create_device_traits("sdm.devices.traits.CameraMotion"),
     )
 
-    subscriber.receive_event(create_event("sdm.devices.events.CameraMotion.Motion"))
+    await subscriber.async_receive_event(
+        create_event("sdm.devices.events.CameraMotion.Motion")
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -139,7 +143,9 @@ async def test_camera_sound_event(hass):
         create_device_traits("sdm.devices.traits.CameraSound"),
     )
 
-    subscriber.receive_event(create_event("sdm.devices.events.CameraSound.Sound"))
+    await subscriber.async_receive_event(
+        create_event("sdm.devices.events.CameraSound.Sound")
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -158,7 +164,9 @@ async def test_camera_person_event(hass):
         create_device_traits("sdm.devices.traits.CameraEventImage"),
     )
 
-    subscriber.receive_event(create_event("sdm.devices.events.CameraPerson.Person"))
+    await subscriber.async_receive_event(
+        create_event("sdm.devices.events.CameraPerson.Person")
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -187,7 +195,7 @@ async def test_camera_multiple_event(hass):
         },
     }
 
-    subscriber.receive_event(create_events(event_map))
+    await subscriber.async_receive_event(create_events(event_map))
     await hass.async_block_till_done()
 
     assert len(events) == 2
@@ -209,7 +217,7 @@ async def test_unknown_event(hass):
         "sdm.devices.types.DOORBELL",
         create_device_traits("sdm.devices.traits.DoorbellChime"),
     )
-    subscriber.receive_event(create_event("some-event-id"))
+    await subscriber.async_receive_event(create_event("some-event-id"))
     await hass.async_block_till_done()
 
     assert len(events) == 0
