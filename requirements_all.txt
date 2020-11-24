@@ -2102,7 +2102,7 @@ sqlalchemy==1.3.20
 srpenergy==1.3.2
 
 # homeassistant.components.starline
-starline==0.1.4
+starline==0.1.5
 
 # homeassistant.components.starlingbank
 starlingbank==3.2
