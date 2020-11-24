@@ -11,6 +11,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MOUNT_DIR, CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS
 
+DEVICE_COUPLERS = {
+    # Family : [branches]
+    "1F": ["aux", "main"]
+}
+
 
 class OneWireHub:
     """Hub to communicate with SysBus or OWServer."""
@@ -62,17 +67,23 @@ class OneWireHub:
                 )
         return self.devices
 
-    def _discover_devices_owserver(self):
+    def _discover_devices_owserver(self, path="/"):
         """Discover all owserver devices."""
         devices = []
-        for device_path in self.owproxy.dir():
-            devices.append(
-                {
-                    "path": device_path,
-                    "family": self.owproxy.read(f"{device_path}family").decode(),
-                    "type": self.owproxy.read(f"{device_path}type").decode(),
-                }
-            )
+        for device_path in self.owproxy.dir(path):
+            device_family = self.owproxy.read(f"{device_path}family").decode()
+            device_type = self.owproxy.read(f"{device_path}type").decode()
+            if device_family == "1F":
+                for branch in DEVICE_COUPLERS[device_family]:
+                    devices += self._discover_devices_owserver(f"{device_path}{branch}")
+            else:
+                devices.append(
+                    {
+                        "path": device_path,
+                        "family": device_family,
+                        "type": device_type,
+                    }
+                )
         return devices
 
 

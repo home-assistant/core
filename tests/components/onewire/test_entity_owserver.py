@@ -179,6 +179,18 @@ MOCK_DEVICE_SENSORS = {
             },
         ],
     },
+    "1F.111111111111": {
+        "inject_reads": [
+            b"DS2409",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "1F.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2409",
+            "name": "1F.111111111111",
+        },
+        SENSOR_DOMAIN: [],
+    },
     "22.111111111111": {
         "inject_reads": [
             b"DS1822",  # read device type
