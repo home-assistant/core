@@ -7,17 +7,17 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
     DeviceScanner,
+    PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_EXCLUDE,
-    CONF_PASSWORD,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -146,6 +146,7 @@ class NetgearDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Retrieve latest information from the Netgear router.
+		
         Returns boolean if scanning successful.
         """
         _LOGGER.debug("Scanning")
@@ -162,6 +163,7 @@ class NetgearDeviceScanner(DeviceScanner):
 
     def get_attached_devices(self):
         """List attached devices with pynetgear.
+		
         The v2 method takes more time and is more heavy on the router
         so we only use it if we need connected AP info.
         """
