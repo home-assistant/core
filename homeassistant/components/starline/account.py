@@ -102,7 +102,7 @@ class StarlineAccount:
 
     def set_update_obd_interval(self, interval: int) -> None:
         """Set StarLine API OBD update interval."""
-        LOGGER.debug("Setting OBD update interval: %ds", interval)
+        _LOGGER.debug("Setting OBD update interval: %ds", interval)
         self._update_obd_interval = interval
         if self._unsubscribe_auto_obd_updater is not None:
             self._unsubscribe_auto_obd_updater()
