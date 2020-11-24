@@ -7,5 +7,3 @@ DOMAIN = "abode"
 ATTRIBUTION = "Data provided by goabode.com"
 
 DEFAULT_CACHEDB = "abodepy_cache.pickle"
-
-HTTP_MFA_REQUIRED = 32

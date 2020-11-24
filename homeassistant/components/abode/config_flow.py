@@ -1,18 +1,14 @@
 """Config flow for the Abode Security System component."""
 from abodepy import Abode
 from abodepy.exceptions import AbodeException
+from abodepy.helpers.errors import MFA_CODE_REQUIRED
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
 
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_CACHEDB,
-    DOMAIN,
-    HTTP_MFA_REQUIRED,
-    LOGGER,
-)
+from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER  # pylint: disable=unused-import
 
 CONF_POLLING = "polling"
 CONF_MFA = "mfa_code"
@@ -71,7 +67,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
-            if ex.errcode == HTTP_MFA_REQUIRED:
+            if ex.errcode == MFA_CODE_REQUIRED[0]:
                 return await self.async_step_mfa()
 
             LOGGER.error("Unable to connect to Abode: %s", str(ex))
