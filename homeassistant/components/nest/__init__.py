@@ -211,7 +211,7 @@ class SignalUpdateCallback(AsyncEventCallback):
             if not device_entry:
                 _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
                 return
-            for event in events.keys():
+            for event in events:
                 if event not in EVENT_TRAIT_MAP:
                     continue
                 message = {
