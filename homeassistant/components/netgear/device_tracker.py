@@ -13,27 +13,29 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_EXCLUDE,
-    CONF_HOST,
     CONF_PASSWORD,
+    CONF_HOST,
+    CONF_USERNAME,
     CONF_PORT,
     CONF_SSL,
-    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_LOG_V2 = "force_login_v2"
 CONF_APS = "accesspoints"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=""): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HOST, default=""): cv.string,
+        vol.Optional(CONF_USERNAME, default=""): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_LOG_V2, default=False): cv.boolean,
         vol.Optional(CONF_APS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
@@ -42,16 +44,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Validate the configuration and returns a Netgear scanner."""
     info = config[DOMAIN]
-    host = info[CONF_HOST]
-    ssl = info[CONF_SSL]
-    username = info[CONF_USERNAME]
-    password = info[CONF_PASSWORD]
-    port = info.get(CONF_PORT)
     devices = info[CONF_DEVICES]
     excluded_devices = info[CONF_EXCLUDE]
+    password = info[CONF_PASSWORD]
+    host = info[CONF_HOST]
+    username = info[CONF_USERNAME]
+    port = info.get(CONF_PORT)
+    ssl = info[CONF_SSL]
+    force_login_v2 = info[CONF_LOG_V2]
     accesspoints = info[CONF_APS]
 
-    api = Netgear(password, host, username, port, ssl)
+    api = Netgear(password, host, username, port, ssl, None, force_login_v2)
     scanner = NetgearDeviceScanner(api, devices, excluded_devices, accesspoints)
 
     _LOGGER.debug("Logging in")
@@ -143,7 +146,6 @@ class NetgearDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Retrieve latest information from the Netgear router.
-
         Returns boolean if scanning successful.
         """
         _LOGGER.debug("Scanning")
@@ -160,7 +162,6 @@ class NetgearDeviceScanner(DeviceScanner):
 
     def get_attached_devices(self):
         """List attached devices with pynetgear.
-
         The v2 method takes more time and is more heavy on the router
         so we only use it if we need connected AP info.
         """
