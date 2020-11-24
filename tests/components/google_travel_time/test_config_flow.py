@@ -59,7 +59,7 @@ async def test_minimum_fields(hass):
         await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == DEFAULT_NAME
+    assert result3["title"] == f"{DEFAULT_NAME}: location1 -> location2"
     assert result3["data"] == {
         CONF_API_KEY: "api_key",
         CONF_ORIGIN: "location1",
