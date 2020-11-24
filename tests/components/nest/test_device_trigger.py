@@ -4,6 +4,9 @@ from google_nest_sdm.event import EventMessage
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.nest import DOMAIN, NEST_EVENT
 from homeassistant.setup import async_setup_component
 
@@ -160,6 +163,36 @@ async def test_multiple_devices(hass):
         "type": "doorbell_chime",
         "device_id": entry2.device_id,
     } == triggers[0]
+
+
+async def test_triggers_for_invalid_device_id(hass):
+    """Get triggers for a device not found in the API."""
+    camera = make_camera(
+        device_id=DEVICE_ID,
+        traits={
+            "sdm.devices.traits.CameraMotion": {},
+            "sdm.devices.traits.CameraPerson": {},
+        },
+    )
+    await async_setup_camera(hass, {DEVICE_ID: camera})
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entry = device_registry.async_get_device(
+        {("nest", DEVICE_ID)}, connections={}
+    )
+    assert device_entry is not None
+
+    # Create an additional device that does not exist.  Fetching supported
+    # triggers for an unknown device will fail.
+    assert len(device_entry.config_entries) == 1
+    config_entry_id = next(iter(device_entry.config_entries))
+    device_entry_2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_id, identifiers={(DOMAIN, "some-unknown-nest-id")}
+    )
+    assert device_entry_2 is not None
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_get_device_automations(hass, "trigger", device_entry_2.id)
 
 
 async def test_no_triggers(hass):
