@@ -5,7 +5,14 @@ from datetime import datetime, timedelta
 import logging
 import threading
 
-from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.event import (
+    AsyncEventCallback,
+    CameraMotionEvent,
+    CameraPersonEvent,
+    CameraSoundEvent,
+    DoorbellChimeEvent,
+    EventMessage,
+)
 from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
@@ -54,6 +61,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
+NEST_EVENT = "nest_event"
+EVENT_TRAIT_MAP = {
+    DoorbellChimeEvent.NAME: "DoorbellChime",
+    CameraMotionEvent.NAME: "CameraMotion",
+    CameraPersonEvent.NAME: "CameraPerson",
+    CameraSoundEvent.NAME: "CameraSound",
+}
+
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -169,21 +184,35 @@ class SignalUpdateCallback(AsyncEventCallback):
 
     async def async_handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
-        _LOGGER.debug("Update %s @ %s", event_message.event_id, event_message.timestamp)
+        if not event_message.resource_update_name:
+            _LOGGER.debug("Ignoring event with no device_id")
+            return
+        device_id = event_message.resource_update_name
+        _LOGGER.debug("Update for %s @ %s", device_id, event_message.timestamp)
         traits = event_message.resource_update_traits
         if traits:
             _LOGGER.debug("Trait update %s", traits.keys())
+            # This event triggered an update to a device that changed some
+            # properties which the DeviceManager should already have received.
+            # Send a signal to refresh state of all listening devices.
+            async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
         events = event_message.resource_update_events
-        if events:
-            _LOGGER.debug("Event Update %s", events.keys())
-
-        if not event_message.resource_update_traits:
-            # Note: Currently ignoring events like camera motion
+        if not events:
             return
-        # This event triggered an update to a device that changed some
-        # properties which the DeviceManager should already have received.
-        # Send a signal to refresh state of all listening devices.
-        async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
+        _LOGGER.debug("Event Update %s", events.keys())
+        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        if not device_entry:
+            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
+            return
+        for event in events:
+            if event not in EVENT_TRAIT_MAP:
+                continue
+            message = {
+                "device_id": device_entry.id,
+                "type": EVENT_TRAIT_MAP[event],
+            }
+            self._hass.bus.async_fire(NEST_EVENT, message)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
