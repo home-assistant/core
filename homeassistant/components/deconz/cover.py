@@ -85,7 +85,8 @@ class DeconzCover(DeconzDevice, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        await self._device.set_position(kwargs[ATTR_POSITION])
+        position = 100 - kwargs[ATTR_POSITION]
+        await self._device.set_position(position)
 
     async def async_open_cover(self, **kwargs):
         """Open cover."""

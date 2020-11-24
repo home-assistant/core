@@ -47,7 +47,7 @@ COVERS = {
         "id": "deconz old brightness cover id",
         "name": "deconz old brightness cover",
         "type": "Level controllable output",
-        "state": {"bri": 255, "on": False, "reachable": True},
+        "state": {"bri": 254, "on": False, "reachable": True},
         "modelid": "Not zigbee spec",
         "uniqueid": "00:00:00:00:00:00:00:03-00",
     },
@@ -55,7 +55,7 @@ COVERS = {
         "id": "Window covering controller id",
         "name": "Window covering controller",
         "type": "Window covering controller",
-        "state": {"bri": 254, "on": True, "reachable": True},
+        "state": {"bri": 253, "on": True, "reachable": True},
         "modelid": "Motor controller",
         "uniqueid": "00:00:00:00:00:00:00:04-00",
     },
@@ -147,11 +147,11 @@ async def test_cover(hass):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.window_covering_device", ATTR_POSITION: 50},
+            {ATTR_ENTITY_ID: "cover.window_covering_device", ATTR_POSITION: 40},
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/2/state", json={"lift": 50})
+        set_callback.assert_called_with("put", "/lights/2/state", json={"lift": 60})
 
     # Service stop cover movement
 
@@ -207,11 +207,11 @@ async def test_cover(hass):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 50},
+            {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 40},
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"bri": 127})
+        set_callback.assert_called_with("put", "/lights/1/state", json={"bri": 152})
 
     # Service stop cover movement
 
