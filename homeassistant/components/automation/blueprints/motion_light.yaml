@@ -1,0 +1,17 @@
+blueprint:
+  name: Light on when motion sensor activated
+  domain: automation
+  input:
+    motion_entity:
+    light_entity:
+trigger:
+  platform: state
+  entity_id: !placeholder motion_entity
+  from: "off"
+  to: "on"
+action:
+  - service: light.turn_on
+    entity_id: !placeholder light_entity
+  - delay: 120
+  - service: light.turn_off
+    entity_id: !placeholder light_entity

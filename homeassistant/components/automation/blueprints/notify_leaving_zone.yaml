@@ -1,0 +1,16 @@
+blueprint:
+  name: Send notification when leaving a zone
+  domain: automation
+  input:
+    device_tracker_entity:
+    zone_entity:
+    notify_service:
+    notification_message:
+trigger:
+  platform: state
+  entity_id: !placeholder device_tracker_entity
+  from: !placeholder zone_entity
+  to: not_home
+action:
+  - service: !placeholder notify_service
+    message: !placeholder notification_message

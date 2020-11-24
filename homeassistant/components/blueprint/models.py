@@ -11,7 +11,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant import loader
 from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, __version__
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
 from homeassistant.util import yaml
@@ -300,7 +300,8 @@ class DomainBlueprints:
                 return
 
             shutil.copytree(
-                integration.file_path / BLUEPRINT_FOLDER, self.blueprint_folder
+                integration.file_path / BLUEPRINT_FOLDER,
+                self.blueprint_folder / HA_DOMAIN,
             )
 
         await self.hass.async_add_executor_job(populate)
