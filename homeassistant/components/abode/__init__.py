@@ -123,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
         await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH},
-            data=config_entry,
+            data=config_entry.data,
         )
         return False
 

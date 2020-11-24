@@ -35,7 +35,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = None
         self._password = None
         self._polling = None
-        self._entry_id = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -131,7 +130,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             # Force reload the Abode config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._entry_id)
+                self.hass.config_entries.async_reload(self._username)
             )
 
             return self.async_abort(reason="reauth_successful")
@@ -140,9 +139,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, config):
         """Handle flow for reauthorization."""
-        if config:
-            self._username = config.data[CONF_USERNAME]
-            self._entry_id = config.entry_id
+        self._username = config[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 
