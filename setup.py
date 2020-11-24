@@ -36,7 +36,7 @@ REQUIRES = [
     "astral==1.10.1",
     "async_timeout==3.0.1",
     "attrs==19.3.0",
-    # "bcrypt==3.1.7",
+    "bcrypt==3.1.7",
     "certifi>=2020.6.20",
     "ciso8601==2.1.3",
     "httpx==0.16.1",
