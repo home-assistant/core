@@ -1,5 +1,4 @@
 """Support for Waze travel time sensor."""
-import asyncio
 from datetime import timedelta
 import logging
 import re
@@ -40,6 +39,7 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_NAME,
     DOMAIN,
     ICON,
     WAZE_SCHEMA,
@@ -53,16 +53,13 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(WAZE_SCHEMA)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
 
-    asyncio.run_coroutine_threadsafe(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        ),
-        hass.loop,
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
 
     _LOGGER.info(
@@ -81,8 +78,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Waze travel time sensor entry."""
     destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.data.get(CONF_NAME)
     origin = config_entry.data[CONF_ORIGIN]
+    name = config_entry.data.get(
+        CONF_NAME,
+        f"{DEFAULT_NAME}: {origin} -> {destination}",
+    )
     region = config_entry.data[CONF_REGION]
     incl_filter = config_entry.data.get(CONF_INCL_FILTER)
     excl_filter = config_entry.data.get(CONF_EXCL_FILTER)
@@ -112,9 +112,7 @@ async def async_setup_entry(
     async_add_entities([sensor], False)
 
     # Wait until start event is sent to load this component.
-    await hass.async_add_executor_job(
-        hass.bus.listen_once, EVENT_HOMEASSISTANT_START, lambda _: sensor.update
-    )
+    await hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update)
 
 
 def _get_location_from_attributes(state):
