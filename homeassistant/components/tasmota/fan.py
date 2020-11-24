@@ -18,12 +18,7 @@ HA_TO_TASMOTA_SPEED_MAP = {
     fan.SPEED_HIGH: tasmota_const.FAN_SPEED_HIGH,
 }
 
-TASMOTA_TO_HA_SPEED_MAP = {
-    tasmota_const.FAN_SPEED_OFF: fan.SPEED_OFF,
-    tasmota_const.FAN_SPEED_LOW: fan.SPEED_LOW,
-    tasmota_const.FAN_SPEED_MEDIUM: fan.SPEED_MEDIUM,
-    tasmota_const.FAN_SPEED_HIGH: fan.SPEED_HIGH,
-}
+TASMOTA_TO_HA_SPEED_MAP = {v: k for k, v in HA_TO_TASMOTA_SPEED_MAP.items()}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -69,7 +64,7 @@ class TasmotaFan(
     @property
     def speed_list(self):
         """Get the list of available speeds."""
-        return [fan.SPEED_OFF, fan.SPEED_LOW, fan.SPEED_MEDIUM, fan.SPEED_HIGH]
+        return list(HA_TO_TASMOTA_SPEED_MAP.keys())
 
     @property
     def supported_features(self):
