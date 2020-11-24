@@ -13,10 +13,10 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
-                    "site": "Nettsted-ID",
+                    "port": "Port",
+                    "site": "Nettsted ID",
                     "username": "Brukernavn",
-                    "verify_ssl": "Kontroller bruker riktig sertifikat"
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Sett opp UniFi kontroller"
             }
@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Nettverkskontrollerte klienter",
+                    "dpi_restrictions": "Tillat kontroll av DPI-begrensningsgrupper",
                     "poe_clients": "Tillat POE-kontroll av klienter"
                 },
                 "description": "Konfigurere klient-kontroller\n\nOpprette brytere for serienumre du \u00f8nsker \u00e5 kontrollere tilgang til nettverk for.",
@@ -54,13 +55,14 @@
                 "data": {
                     "block_client": "Nettverkskontrollerte klienter",
                     "track_clients": "Spor nettverksklienter",
-                    "track_devices": "Spor nettverksenheter (Ubiquiti enheter)"
+                    "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)"
                 },
                 "description": "Konfigurer UniFi-integrasjon"
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter"
+                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter",
+                    "allow_uptime_sensors": "Oppetidssensorer for nettverksklienter"
                 },
                 "description": "Konfigurer statistikk sensorer",
                 "title": "UniFi-alternativ 3/3"

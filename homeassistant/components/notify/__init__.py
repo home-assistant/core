@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
+import homeassistant.components.persistent_notification as pn
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -36,6 +37,7 @@ ATTR_TITLE_DEFAULT = "Home Assistant"
 DOMAIN = "notify"
 
 SERVICE_NOTIFY = "notify"
+SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICES = "notify_services"
 
@@ -50,6 +52,13 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TITLE): cv.template,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_DATA): dict,
+    }
+)
+
+PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGE): cv.template,
+        vol.Optional(ATTR_TITLE): cv.template,
     }
 )
 
@@ -114,7 +123,7 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        await self.hass.async_add_job(partial(self.send_message, message, **kwargs))  # type: ignore
+        await self.hass.async_add_executor_job(partial(self.send_message, message, **kwargs))  # type: ignore
 
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
@@ -124,7 +133,7 @@ class BaseNotificationService:
 
         if title:
             title.hass = self.hass
-            kwargs[ATTR_TITLE] = title.async_render()
+            kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
 
         if self._registered_targets.get(service.service) is not None:
             kwargs[ATTR_TARGET] = [self._registered_targets[service.service]]
@@ -132,7 +141,7 @@ class BaseNotificationService:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
         message.hass = self.hass
-        kwargs[ATTR_MESSAGE] = message.async_render()
+        kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
         kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
 
         await self.async_send_message(**kwargs)
@@ -215,6 +224,22 @@ async def async_setup(hass, config):
     """Set up the notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
 
+    async def persistent_notification(service: ServiceCall) -> None:
+        """Send notification via the built-in persistsent_notify integration."""
+        payload = {}
+        message = service.data[ATTR_MESSAGE]
+        message.hass = hass
+        payload[ATTR_MESSAGE] = message.async_render(parse_result=False)
+
+        title = service.data.get(ATTR_TITLE)
+        if title:
+            title.hass = hass
+            payload[ATTR_TITLE] = title.async_render(parse_result=False)
+
+        await hass.services.async_call(
+            pn.DOMAIN, pn.SERVICE_CREATE, payload, blocking=True
+        )
+
     async def async_setup_platform(
         integration_name, p_config=None, discovery_info=None
     ):
@@ -238,7 +263,7 @@ async def async_setup(hass, config):
                     hass, p_config, discovery_info
                 )
             elif hasattr(platform, "get_service"):
-                notify_service = await hass.async_add_job(
+                notify_service = await hass.async_add_executor_job(
                     platform.get_service, hass, p_config, discovery_info
                 )
             else:
@@ -273,6 +298,13 @@ async def async_setup(hass, config):
         hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
         return True
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PERSISTENT_NOTIFICATION,
+        persistent_notification,
+        schema=PERSISTENT_NOTIFICATION_SERVICE_SCHEMA,
+    )
 
     setup_tasks = [
         async_setup_platform(integration_name, p_config)

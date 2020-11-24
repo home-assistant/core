@@ -3,10 +3,11 @@
         "abort": {
             "already_configured_device": "Device is already configured",
             "already_configured_local_device": "Local device(s) is already configured. Please remove those first before configuring a cloud device.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
-            "connection_error": "Failed to connect to Smappee device.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "cannot_connect": "Failed to connect",
             "invalid_mdns": "Unsupported device for the Smappee integration.",
-            "missing_configuration": "The component is not configured. Please follow the documentation."
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
         },
         "flow_title": "Smappee: {name}",
         "step": {

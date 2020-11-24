@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -127,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         status = await hass.async_add_executor_job(device.ready)
         info = await hass.async_add_executor_job(device.info)
     except urllib.error.HTTPError as err:
-        if err.code == 401:
+        if err.code == HTTP_UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
@@ -357,7 +358,9 @@ class DoorBirdRequestView(HomeAssistantView):
         device = get_doorstation_by_token(hass, token)
 
         if device is None:
-            return web.Response(status=401, text="Invalid token provided.")
+            return web.Response(
+                status=HTTP_UNAUTHORIZED, text="Invalid token provided."
+            )
 
         if device:
             event_data = device.get_event_data()

@@ -22,6 +22,7 @@ async def test_climate(
     """Test function."""
     vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
@@ -34,7 +35,7 @@ async def test_climate(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == HVAC_MODE_OFF
 
@@ -131,6 +132,7 @@ async def test_climate_f(
     """Test function."""
     vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
@@ -148,7 +150,7 @@ async def test_climate_f(
             devices=(vera_device,), setup_callback=setup_callback
         ),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     await hass.services.async_call(
         "climate",

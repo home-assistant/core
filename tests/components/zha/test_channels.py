@@ -3,6 +3,7 @@ import asyncio
 from unittest import mock
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.types as t
 import zigpy.zcl.clusters
 
@@ -14,6 +15,7 @@ import homeassistant.components.zha.core.registries as registries
 from .common import get_zha_gateway, make_zcl_header
 
 import tests.async_mock
+from tests.common import async_capture_events
 
 
 @pytest.fixture
@@ -286,7 +288,11 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     """Test EndpointChannels adding all channels."""
     zha_device = zha_device_mock(
         {
-            1: {"in_clusters": [0, 1, 6, 8], "out_clusters": [], "device_type": 0x0000},
+            1: {
+                "in_clusters": [0, 1, 6, 8],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            },
             2: {
                 "in_clusters": [0, 1, 6, 8, 768],
                 "out_clusters": [],
@@ -446,10 +452,7 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     checkin_mock = tests.async_mock.AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-
-    events = []
-    hass.bus.async_listen("zha_event", lambda x: events.append(x))
-    await hass.async_block_till_done()
+    events = async_capture_events(hass, "zha_event")
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -470,3 +473,4 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["args"][1] is mock.sentinel.args2
     assert data["args"][2] is mock.sentinel.args3
     assert data["unique_id"] == "00:11:22:33:44:55:66:77:1:0x0020"
+    assert data["device_id"] == poll_control_device.device_id

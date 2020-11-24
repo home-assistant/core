@@ -17,16 +17,17 @@ async def async_setup_entry(
     """Get all light devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_switch_devices:
-        for multi_level_switch in device.multi_level_switch_property.values():
-            if multi_level_switch.switch_type == "dimmer":
-                entities.append(
-                    DevoloLightDeviceEntity(
-                        homecontrol=hass.data[DOMAIN]["homecontrol"],
-                        device_instance=device,
-                        element_uid=multi_level_switch.element_uid,
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.multi_level_switch_devices:
+            for multi_level_switch in device.multi_level_switch_property.values():
+                if multi_level_switch.switch_type == "dimmer":
+                    entities.append(
+                        DevoloLightDeviceEntity(
+                            homecontrol=gateway,
+                            device_instance=device,
+                            element_uid=multi_level_switch.element_uid,
+                        )
                     )
-                )
 
     async_add_entities(entities, False)
 
@@ -77,4 +78,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
-        self._multi_level_switch_property.set(0)
+        if self._binary_switch_property is not None:
+            self._binary_switch_property.set(False)
+        else:
+            self._multi_level_switch_property.set(0)

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP jest ju\u017c skonfigurowane.",
-            "already_in_progress": "Konfiguracja ESP jest ju\u017c w toku."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku"
         },
         "error": {
-            "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z ESP. Upewnij si\u0119, \u017ce Tw\u00f3j plik YAML zawiera lini\u0119 'api:'.",
-            "invalid_password": "Nieprawid\u0142owe has\u0142o!",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z ESP. Upewnij si\u0119, \u017ce Tw\u00f3j plik YAML zawiera lini\u0119 'api:'.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "resolve_error": "Nie mo\u017cna rozpozna\u0107 adresu ESP. Je\u015bli ten b\u0142\u0105d b\u0119dzie si\u0119 powtarza\u0142, nale\u017cy ustawi\u0107 statyczny adres IP: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
@@ -18,7 +18,7 @@
                 "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {name}."
             },
             "discovery_confirm": {
-                "description": "Czy chcesz doda\u0107 w\u0119ze\u0142 ESPHome `{name}` do Home Assistant?",
+                "description": "Czy chcesz doda\u0107 w\u0119ze\u0142 ESPHome `{name}` do Home Assistanta?",
                 "title": "Znaleziono w\u0119ze\u0142 ESPHome"
             },
             "user": {

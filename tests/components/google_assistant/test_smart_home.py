@@ -839,7 +839,7 @@ async def test_device_class_cover(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {"discreteOnlyOpenClose": True},
                     "id": "cover.demo_sensor",
                     "name": {"name": "Demo Sensor"},
                     "traits": ["action.devices.traits.OpenClose"],
@@ -976,6 +976,7 @@ async def test_trait_execute_adding_query_data(hass):
                     "states": {
                         "online": True,
                         "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
+                        "cameraStreamReceiverAppId": "B12CE3CA",
                     },
                 }
             ]

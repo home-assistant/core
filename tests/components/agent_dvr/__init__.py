@@ -1,7 +1,7 @@
 """Tests for the agent_dvr component."""
 
 from homeassistant.components.agent_dvr.const import DOMAIN, SERVER_URL
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -18,12 +18,12 @@ async def init_integration(
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getStatus",
         text=load_fixture("agent_dvr/status.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getObjects",
         text=load_fixture("agent_dvr/objects.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     entry = MockConfigEntry(
         domain=DOMAIN,

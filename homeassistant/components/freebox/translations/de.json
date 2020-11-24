@@ -4,7 +4,7 @@
             "already_configured": "Host bereits konfiguriert"
         },
         "error": {
-            "connection_failed": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "register_failed": "Registrieren fehlgeschlagen, bitte versuche es erneut",
             "unknown": "Unbekannter Fehler: Bitte versuchen Sie es sp\u00e4ter erneut"
         },

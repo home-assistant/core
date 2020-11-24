@@ -369,6 +369,36 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.config_source == SOURCE_STORAGE
 
 
+async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_storage):
+    """Test loading core and YAML config onto hass object."""
+    hass_storage["core.config"] = {
+        "data": {
+            "elevation": 10,
+            "latitude": 55,
+            "location_name": "Home",
+            "longitude": 13,
+            "time_zone": "Europe/Copenhagen",
+            "unit_system": "metric",
+        },
+        "key": "core.config",
+        "version": 1,
+    }
+    await config_util.async_process_ha_core_config(
+        hass, {"media_dirs": {"mymedia": "/usr"}, "allowlist_external_dirs": "/etc"}
+    )
+
+    assert hass.config.latitude == 55
+    assert hass.config.longitude == 13
+    assert hass.config.elevation == 10
+    assert hass.config.location_name == "Home"
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert len(hass.config.allowlist_external_dirs) == 3
+    assert "/etc" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"mymedia": "/usr"}
+    assert hass.config.config_source == SOURCE_STORAGE
+
+
 async def test_updating_configuration(hass, hass_storage):
     """Test updating configuration stores the new configuration."""
     core_data = {
@@ -440,6 +470,8 @@ async def test_loading_configuration(hass):
             "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
         },
     )
 
@@ -453,7 +485,10 @@ async def test_loading_configuration(hass):
     assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
+    assert "/usr" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.legacy_templates is True
 
 
 async def test_loading_configuration_temperature_unit(hass):
@@ -481,6 +516,22 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
+
+
+async def test_loading_configuration_default_media_dirs_docker(hass):
+    """Test loading core config onto hass object."""
+    with patch("homeassistant.config.is_docker_env", return_value=True):
+        await config_util.async_process_ha_core_config(
+            hass,
+            {
+                "name": "Huis",
+            },
+        )
+
+    assert hass.config.location_name == "Huis"
+    assert len(hass.config.allowlist_external_dirs) == 2
+    assert "/media" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"local": "/media"}
 
 
 async def test_loading_configuration_from_packages(hass):
@@ -1012,6 +1063,30 @@ async def test_component_config_exceptions(hass, caplog):
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
             in caplog.text
         )
+
+    # get_platform("config") raising
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {}},
+            integration=Mock(
+                pkg_path="homeassistant.components.test_domain",
+                domain="test_domain",
+                get_platform=Mock(
+                    side_effect=ImportError(
+                        "ModuleNotFoundError: No module named 'not_installed_something'",
+                        name="not_installed_something",
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert (
+        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

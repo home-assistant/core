@@ -82,7 +82,7 @@ class EcobeeSensor(Entity):
                     _LOGGER.error(
                         "Model number for ecobee thermostat %s not recognized. "
                         "Please visit this link and provide the following information: "
-                        "https://github.com/home-assistant/home-assistant/issues/27172 "
+                        "https://github.com/home-assistant/core/issues/27172 "
                         "Unrecognized model number: %s",
                         thermostat["name"],
                         thermostat["modelNumber"],
@@ -108,7 +108,11 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN, "unknown"]:
+        if self._state in [
+            ECOBEE_STATE_CALIBRATING,
+            ECOBEE_STATE_UNKNOWN,
+            "unknown",
+        ]:
             return None
 
         if self.type == "temperature":

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Echec de connexion",
             "invalid_auth": "Authentification invalide",
+            "old_firmware": "Ancien micrologiciel non pris en charge sur l'appareil Bond - veuillez mettre \u00e0 niveau avant de continuer",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "Bond : {bond_id} ({h\u00f4te})",

@@ -240,8 +240,9 @@ class HomematicipHAP:
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
 
         home.name = name
-        home.label = "Access Point"
-        home.modelType = "HmIP-HAP"
+        # Use the title of the config entry as title for the home.
+        home.label = self.config_entry.title
+        home.modelType = "HomematicIP Cloud Home"
 
         home.set_auth_token(authtoken)
         try:

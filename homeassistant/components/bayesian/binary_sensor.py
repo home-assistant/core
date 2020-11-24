@@ -182,6 +182,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             entity = event.data.get("entity_id")
 
             self.current_observations.update(self._record_entity_observations(entity))
+            self.async_set_context(event.context)
             self._recalculate_and_write_state()
 
         self.async_on_remove(
@@ -220,6 +221,8 @@ class BayesianBinarySensor(BinarySensorEntity):
                     obs_entry = None
                 self.current_observations[obs["id"]] = obs_entry
 
+            if event:
+                self.async_set_context(event.context)
             self._recalculate_and_write_state()
 
         for template in self.observations_by_template:

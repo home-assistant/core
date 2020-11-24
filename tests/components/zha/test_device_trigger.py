@@ -3,6 +3,7 @@ from datetime import timedelta
 import time
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
@@ -58,7 +59,7 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
             1: {
                 "in_clusters": [general.Basic.cluster_id],
                 "out_clusters": [general.OnOff.cluster_id],
-                "device_type": 0,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )

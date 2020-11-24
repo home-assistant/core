@@ -4,9 +4,10 @@
             "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_configured_local_device": "L'apparecchio o gli apparecchi locali sono gi\u00e0 configurati. Si prega di rimuoverli prima di configurare un dispositivo cloud.",
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
-            "connection_error": "Impossibile connettersi al dispositivo Smappee.",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_mdns": "Dispositivo non supportato per l'integrazione Smappee.",
-            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione."
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
         },
         "flow_title": "Smappee: {name}",
         "step": {
@@ -23,7 +24,7 @@
                 "description": "Immettere l'host per avviare l'integrazione locale di Smappee"
             },
             "pick_implementation": {
-                "title": "Scegliere il metodo di autenticazione"
+                "title": "Scegli il metodo di autenticazione"
             },
             "zeroconf_confirm": {
                 "description": "Vuoi aggiungere il dispositivo Smappee con numero di serie `{serialnumber}` a Home Assistant?",

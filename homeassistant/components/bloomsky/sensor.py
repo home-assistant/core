@@ -1,12 +1,13 @@
 """Support the sensor of a BloomSky weather station."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
     PERCENTAGE,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -14,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
-
-LOGGER = logging.getLogger(__name__)
 
 # These are the available sensors
 SENSOR_TYPES = [
@@ -31,8 +30,8 @@ SENSOR_TYPES = [
 SENSOR_UNITS_IMPERIAL = {
     "Temperature": TEMP_FAHRENHEIT,
     "Humidity": PERCENTAGE,
-    "Pressure": "inHg",
-    "Luminance": "cd/m²",
+    "Pressure": PRESSURE_INHG,
+    "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
 
@@ -40,8 +39,8 @@ SENSOR_UNITS_IMPERIAL = {
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
     "Humidity": PERCENTAGE,
-    "Pressure": "mbar",
-    "Luminance": "cd/m²",
+    "Pressure": PRESSURE_MBAR,
+    "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
 

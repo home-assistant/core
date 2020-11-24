@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Home Assistantiga sidumiseks avage mobiilirakendus. \u00dchilduvate rakenduste loendi leiate jaotisest [dokumendid] ( {apps_url} )."
+        },
+        "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada mobiilirakenduse sidumist?"
+            }
+        }
+    }
+}

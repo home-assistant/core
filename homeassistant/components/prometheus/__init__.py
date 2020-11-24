@@ -19,7 +19,9 @@ from homeassistant.components.humidifier.const import (
     ATTR_MODE,
 )
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_TEXT_PLAIN,
@@ -234,7 +236,7 @@ class PrometheusMetrics:
         return {
             "entity": state.entity_id,
             "domain": state.domain,
-            "friendly_name": state.attributes.get("friendly_name"),
+            "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
         }
 
     def _battery(self, state):
@@ -245,7 +247,7 @@ class PrometheusMetrics:
                 "Battery level as a percentage of its capacity",
             )
             try:
-                value = float(state.attributes["battery_level"])
+                value = float(state.attributes[ATTR_BATTERY_LEVEL])
                 metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass

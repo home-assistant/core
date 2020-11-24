@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
@@ -95,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PhilipsTVMediaPlayer(MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    def __init__(self, tv, name, on_script):
+    def __init__(self, tv: PhilipsTV, name: str, on_script: Script):
         """Initialize the Philips TV."""
         self._tv = tv
         self._name = name
@@ -192,7 +193,7 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
     def turn_on(self):
         """Turn on the device."""
         if self._on_script:
-            self._on_script.run()
+            self._on_script.run(context=self._context)
             self._update_soon(DELAY_ACTION_ON)
 
     def turn_off(self):
@@ -289,7 +290,7 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
 
         return BrowseMedia(
             title="Channels",
-            media_class=MEDIA_CLASS_CHANNEL,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type=MEDIA_TYPE_CHANNELS,
             can_play=False,

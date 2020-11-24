@@ -1,6 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 from copy import copy
-import logging
 
 import voluptuous as vol
 
@@ -75,8 +74,6 @@ from homeassistant.helpers.event import TrackTemplate, async_track_template_resu
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_ACTIVE_CHILD = "active_child"
 ATTR_DATA = "data"
 
@@ -145,8 +142,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Subscribe to children and template state changes."""
 
         @callback
-        def _async_on_dependency_update(*_):
+        def _async_on_dependency_update(event):
             """Update ha state when dependencies update."""
+            self.async_set_context(event.context)
             self.async_schedule_update_ha_state(True)
 
         @callback
@@ -158,6 +156,10 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                 self._state_template_result = None
             else:
                 self._state_template_result = result
+
+            if event:
+                self.async_set_context(event.context)
+
             self.async_schedule_update_ha_state(True)
 
         if self._state_template is not None:

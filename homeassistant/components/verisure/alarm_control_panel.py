@@ -55,7 +55,7 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
         giid = hub.config.get(CONF_GIID)
         if giid is not None:
             aliass = {i["giid"]: i["alias"] for i in hub.session.installations}
-            if giid in aliass.keys():
+            if giid in aliass:
                 return "{} alarm".format(aliass[giid])
 
             _LOGGER.error("Verisure installation giid not found: %s", giid)

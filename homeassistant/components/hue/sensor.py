@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -41,7 +42,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_ILLUMINANCE
-    unit_of_measurement = "lx"
+    unit_of_measurement = LIGHT_LUX
 
     @property
     def state(self):

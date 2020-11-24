@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
@@ -494,6 +495,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PREVIOUS_TRACK
                 | SUPPORT_NEXT_TRACK
                 | SUPPORT_STOP
+                | SUPPORT_SEEK
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
@@ -557,6 +559,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
 
+    def media_seek(self, position):
+        """Send the seek command."""
+        if self.device and "playback" in self._device_protocol_capabilities:
+            self.device.seekTo(position * 1000, self._active_media_plexapi_type)
+
     def media_next_track(self):
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
@@ -597,15 +604,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        attr = {
+        return {
             "media_content_rating": self._media_content_rating,
             "session_username": self.username,
             "media_library_name": self._app_name,
             "summary": self.media_summary,
             "player_source": self.player_source,
         }
-
-        return attr
 
     @property
     def device_info(self):

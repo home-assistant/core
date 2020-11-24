@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u6865\u63a5\u5668\u5df2\u914d\u7f6e\u5b8c\u6210",
-            "no_bridges": "\u6ca1\u6709\u53d1\u73b0 deCONZ \u7684\u6865\u63a5\u8bbe\u5907",
-            "one_instance_only": "\u7ec4\u4ef6\u53ea\u652f\u6301\u4e00\u4e2a deCONZ \u5b9e\u4f8b"
+            "no_bridges": "\u6ca1\u6709\u53d1\u73b0 deCONZ \u7684\u6865\u63a5\u8bbe\u5907"
         },
         "error": {
             "no_key": "\u65e0\u6cd5\u83b7\u53d6 API \u5bc6\u94a5"
@@ -22,7 +21,8 @@
             "side_3": "\u7b2c 3 \u9762",
             "side_4": "\u7b2c 4 \u9762",
             "side_5": "\u7b2c 5 \u9762",
-            "side_6": "\u7b2c 6 \u9762"
+            "side_6": "\u7b2c 6 \u9762",
+            "turn_off": "\u5173\u95ed"
         },
         "trigger_type": {
             "remote_awakened": "\u8bbe\u5907\u5524\u9192",

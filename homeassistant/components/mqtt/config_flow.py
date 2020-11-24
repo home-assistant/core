@@ -24,6 +24,7 @@ from .const import (
     CONF_BROKER,
     CONF_DISCOVERY,
     CONF_WILL_MESSAGE,
+    DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
@@ -162,6 +163,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
+        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
@@ -178,20 +180,22 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             errors["base"] = "cannot_connect"
 
         fields = OrderedDict()
-        fields[vol.Required(CONF_BROKER, default=current_config[CONF_BROKER])] = str
-        fields[vol.Required(CONF_PORT, default=current_config[CONF_PORT])] = vol.Coerce(
-            int
-        )
+        current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
+        current_port = current_config.get(CONF_PORT, yaml_config.get(CONF_PORT))
+        current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
+        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+        fields[vol.Required(CONF_BROKER, default=current_broker)] = str
+        fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
         fields[
             vol.Optional(
                 CONF_USERNAME,
-                description={"suggested_value": current_config.get(CONF_USERNAME)},
+                description={"suggested_value": current_user},
             )
         ] = str
         fields[
             vol.Optional(
                 CONF_PASSWORD,
-                description={"suggested_value": current_config.get(CONF_PASSWORD)},
+                description={"suggested_value": current_pass},
             )
         ] = str
 
@@ -205,6 +209,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
+        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
         options_config = {}
         if user_input is not None:
             bad_birth = False
@@ -253,16 +258,24 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 )
                 return self.async_create_entry(title="", data=None)
 
-        birth = {**DEFAULT_BIRTH, **current_config.get(CONF_BIRTH_MESSAGE, {})}
-        will = {**DEFAULT_WILL, **current_config.get(CONF_WILL_MESSAGE, {})}
+        birth = {
+            **DEFAULT_BIRTH,
+            **current_config.get(
+                CONF_BIRTH_MESSAGE, yaml_config.get(CONF_BIRTH_MESSAGE, {})
+            ),
+        }
+        will = {
+            **DEFAULT_WILL,
+            **current_config.get(
+                CONF_WILL_MESSAGE, yaml_config.get(CONF_WILL_MESSAGE, {})
+            ),
+        }
+        discovery = current_config.get(
+            CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        )
 
         fields = OrderedDict()
-        fields[
-            vol.Optional(
-                CONF_DISCOVERY,
-                default=current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
-            )
-        ] = bool
+        fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[

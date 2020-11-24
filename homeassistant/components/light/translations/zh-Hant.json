@@ -9,8 +9,8 @@
             "turn_on": "\u958b\u555f{entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name}\u5df2\u95dc\u9589",
-            "is_on": "{entity_name}\u5df2\u958b\u555f"
+            "is_off": "{entity_name}\u70ba\u95dc\u9589",
+            "is_on": "{entity_name}j\u70ba\u958b\u555f"
         },
         "trigger_type": {
             "turned_off": "{entity_name}\u5df2\u95dc\u9589",

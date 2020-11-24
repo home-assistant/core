@@ -6,7 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -37,6 +39,7 @@ from .const import (
     SCHEDULE_TYPE_FIXED,
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
+    SERVICE_START_MULTIPLE_ZONES,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -56,38 +59,88 @@ from .webhooks import (
     SUBTYPE_SLEEP_MODE_OFF,
     SUBTYPE_SLEEP_MODE_ON,
     SUBTYPE_ZONE_COMPLETED,
+    SUBTYPE_ZONE_PAUSED,
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DURATION = "duration"
+ATTR_ID = "id"
 ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_SCHEDULE_TYPE = "Type"
+ATTR_SORT_ORDER = "sortOrder"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
 ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_TYPE = "Type"
 
+START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_DURATION): cv.ensure_list_csv,
+    }
+)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio switches."""
+    zone_entities = []
     has_flex_sched = False
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
     for entity in entities:
+        if isinstance(entity, RachioZone):
+            zone_entities.append(entity)
         if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
             has_flex_sched = True
-            break
 
     async_add_entities(entities)
     _LOGGER.info("%d Rachio switch(es) added", len(entities))
 
-    platform = entity_platform.current_platform.get()
+    def start_multiple(service):
+        """Service to start multiple zones in sequence."""
+        zones_list = []
+        person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        duration = iter(service.data[ATTR_DURATION])
+        default_time = service.data[ATTR_DURATION][0]
+        entity_to_zone_id = {
+            entity.entity_id: entity.zone_id for entity in zone_entities
+        }
+
+        for (count, data) in enumerate(entity_id):
+            if data in entity_to_zone_id:
+                # Time can be passed as a list per zone,
+                # or one time for all zones
+                time = int(next(duration, default_time)) * 60
+                zones_list.append(
+                    {
+                        ATTR_ID: entity_to_zone_id.get(data),
+                        ATTR_DURATION: time,
+                        ATTR_SORT_ORDER: count,
+                    }
+                )
+
+        if len(zones_list) != 0:
+            person.start_multiple_zones(zones_list)
+            _LOGGER.debug("Starting zone(s) %s", entity_id)
+        else:
+            raise HomeAssistantError("No matching zones found in given entity_ids")
+
+    hass.services.async_register(
+        DOMAIN_RACHIO,
+        SERVICE_START_MULTIPLE_ZONES,
+        start_multiple,
+        schema=START_MULTIPLE_ZONES_SCHEMA,
+    )
+
     if has_flex_sched:
+        platform = entity_platform.current_platform.get()
         platform.async_register_entity_service(
             SERVICE_SET_ZONE_MOISTURE,
             {vol.Required(ATTR_PERCENT): cv.positive_int},
@@ -178,11 +231,11 @@ class RachioStandbySwitch(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Put the controller in standby mode."""
-        self._controller.rachio.device.off(self._controller.controller_id)
+        self._controller.rachio.device.turn_off(self._controller.controller_id)
 
     def turn_off(self, **kwargs) -> None:
         """Resume controller functionality."""
-        self._controller.rachio.device.on(self._controller.controller_id)
+        self._controller.rachio.device.turn_on(self._controller.controller_id)
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
@@ -249,12 +302,12 @@ class RachioRainDelay(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Activate a 24 hour rain delay on the controller."""
-        self._controller.rachio.device.rainDelay(self._controller.controller_id, 86400)
+        self._controller.rachio.device.rain_delay(self._controller.controller_id, 86400)
         _LOGGER.debug("Starting rain delay for 24 hours")
 
     def turn_off(self, **kwargs) -> None:
         """Resume controller functionality."""
-        self._controller.rachio.device.rainDelay(self._controller.controller_id, 0)
+        self._controller.rachio.device.rain_delay(self._controller.controller_id, 0)
         _LOGGER.debug("Canceling rain delay")
 
     async def async_added_to_hass(self):
@@ -288,7 +341,7 @@ class RachioZone(RachioSwitch):
 
     def __init__(self, person, controller, data, current_schedule):
         """Initialize a new Rachio Zone."""
-        self._id = data[KEY_ID]
+        self.id = data[KEY_ID]
         self._zone_name = data[KEY_NAME]
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
@@ -308,7 +361,7 @@ class RachioZone(RachioSwitch):
     @property
     def zone_id(self) -> str:
         """How the Rachio API refers to the zone."""
-        return self._id
+        return self.id
 
     @property
     def name(self) -> str:
@@ -380,7 +433,7 @@ class RachioZone(RachioSwitch):
     def set_moisture_percent(self, percent) -> None:
         """Set the zone moisture percent."""
         _LOGGER.debug("Setting %s moisture to %s percent", self._zone_name, percent)
-        self._controller.rachio.zone.setMoisturePercent(self._id, percent / 100)
+        self._controller.rachio.zone.set_moisture_percent(self.id, percent / 100)
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -392,7 +445,11 @@ class RachioZone(RachioSwitch):
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
-        elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED, SUBTYPE_ZONE_COMPLETED]:
+        elif args[0][KEY_SUBTYPE] in [
+            SUBTYPE_ZONE_STOPPED,
+            SUBTYPE_ZONE_COMPLETED,
+            SUBTYPE_ZONE_PAUSED,
+        ]:
             self._state = False
 
         self.async_write_ha_state()

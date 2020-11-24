@@ -2,7 +2,12 @@
 
 import logging
 
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CURRENCY_EURO,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -106,7 +111,7 @@ class FuelPriceSensor(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return unit of measurement."""
-        return "€"
+        return CURRENCY_EURO
 
     @property
     def state(self):

@@ -1,5 +1,4 @@
 """The spotify integration."""
-import logging
 
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
@@ -24,8 +23,6 @@ from .const import (
     DOMAIN,
     SPOTIFY_SCOPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -50,6 +50,6 @@ class KiraRemote(Entity):
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to a device."""
-        return await self.hass.async_add_job(
+        return await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )

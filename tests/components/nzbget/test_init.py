@@ -38,7 +38,7 @@ async def test_import_from_yaml(hass) -> None:
     assert entries[0].data[CONF_PORT] == 6789
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, nzbget_api):
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 

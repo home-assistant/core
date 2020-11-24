@@ -94,7 +94,7 @@ async def async_unload_entry(
         and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
         for entry in hass.config_entries.async_entries(DOMAIN)
     ):
-        hass.data[DOMAIN].pop(CONF_APPS)
+        hass.data[DOMAIN].pop(CONF_APPS, None)
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)

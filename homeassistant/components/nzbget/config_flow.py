@@ -38,8 +38,8 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """
     nzbget_api = NZBGetAPI(
         data[CONF_HOST],
-        data[CONF_USERNAME] if data[CONF_USERNAME] != "" else None,
-        data[CONF_PASSWORD] if data[CONF_PASSWORD] != "" else None,
+        data.get(CONF_USERNAME),
+        data.get(CONF_PASSWORD),
         data[CONF_SSL],
         data[CONF_VERIFY_SSL],
         data[CONF_PORT],

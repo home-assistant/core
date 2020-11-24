@@ -21,7 +21,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .aiohttp_client import async_get_clientsession
 
@@ -32,6 +32,8 @@ DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
+
+CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 
 class AbstractOAuth2Implementation(ABC):
@@ -231,7 +233,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "implementation", default=list(implementations.keys())[0]
+                        "implementation", default=list(implementations)[0]
                     ): vol.In({key: impl.name for key, impl in implementations.items()})
                 }
             ),
@@ -251,6 +253,13 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                 url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
+        except NoURLAvailableError:
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
+                },
+            )
 
         url = str(URL(url).update_query(self.extra_authorize_data))
 
@@ -295,6 +304,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return await self.async_step_pick_implementation()
 
     async_step_user = async_step_pick_implementation
+    async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
     async_step_homekit = async_step_discovery
@@ -427,7 +437,10 @@ class OAuth2Session:
     @property
     def valid_token(self) -> bool:
         """Return if token is still valid."""
-        return cast(float, self.token["expires_at"]) > time.time()
+        return (
+            cast(float, self.token["expires_at"])
+            > time.time() + CLOCK_OUT_OF_SYNC_MAX_SEC
+        )
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""

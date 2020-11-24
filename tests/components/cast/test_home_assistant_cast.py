@@ -1,4 +1,5 @@
 """Test Home Assistant Cast."""
+
 from homeassistant.components.cast import home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 
@@ -6,7 +7,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 
-async def test_service_show_view(hass):
+async def test_service_show_view(hass, mock_zeroconf):
     """Test we don't set app id in prod."""
     await async_process_ha_core_config(
         hass,
@@ -33,7 +34,7 @@ async def test_service_show_view(hass):
     assert url_path is None
 
 
-async def test_service_show_view_dashboard(hass):
+async def test_service_show_view_dashboard(hass, mock_zeroconf):
     """Test casting a specific dashboard."""
     await async_process_ha_core_config(
         hass,
@@ -60,7 +61,7 @@ async def test_service_show_view_dashboard(hass):
     assert url_path == "mock-dashboard"
 
 
-async def test_use_cloud_url(hass):
+async def test_use_cloud_url(hass, mock_zeroconf):
     """Test that we fall back to cloud url."""
     await async_process_ha_core_config(
         hass,

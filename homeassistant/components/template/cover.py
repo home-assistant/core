@@ -29,7 +29,9 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
@@ -42,7 +44,14 @@ from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
+_VALID_STATES = [
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    "true",
+    "false",
+]
 
 CONF_COVERS = "covers"
 
@@ -249,7 +258,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = None
             return
 
-        state = result.lower()
+        state = str(result).lower()
+
         if state in _VALID_STATES:
             if state in ("true", STATE_OPEN):
                 self._position = 100

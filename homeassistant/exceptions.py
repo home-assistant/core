@@ -1,8 +1,6 @@
 """The exceptions used by Home Assistant."""
 from typing import TYPE_CHECKING, Optional
 
-import jinja2
-
 if TYPE_CHECKING:
     from .core import Context  # noqa: F401 pylint: disable=unused-import
 
@@ -22,7 +20,7 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: jinja2.TemplateError) -> None:
+    def __init__(self, exception: Exception) -> None:
         """Init the error."""
         super().__init__(f"{exception.__class__.__name__}: {exception}")
 

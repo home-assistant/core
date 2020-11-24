@@ -1,9 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_internet_accessible": "Va\u0161 Home Assistant mora biti dostopek prek interneta, da boste lahko prejemali IFTTT sporo\u010dila.",
-            "one_instance_allowed": "Potrebna je samo ena instanca."
-        },
         "create_entry": {
             "default": "\u010ce \u017eelite poslati dogodke Home Assistant-u, boste morali uporabiti akcijo \u00bbNaredi spletno zahtevo\u00ab iz orodja [IFTTT Webhook applet] ( {applet_url} ). \n\n Izpolnite naslednje podatke: \n\n - URL: ` {webhook_url} ` \n - Metoda: POST \n - Vrsta vsebine: application/json \n\n Poglejte si [dokumentacijo] ( {docs_url} ) o tem, kako konfigurirati avtomatizacijo za obdelavo dohodnih podatkov."
         },

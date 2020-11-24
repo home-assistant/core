@@ -1,14 +1,28 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "connection_aborted": "\u00dchendus nurjus",
+            "unknown": "Tundmatu viga"
+        },
         "error": {
-            "invalid_sgtin_or_pin": "Vale PIN, palun proovige uuesti"
+            "invalid_sgtin_or_pin": "Vale PIN, palun proovi uuesti",
+            "press_the_button": "Palun vajuta sinist nuppu.",
+            "register_failed": "Registreerimine nurjus, proovi uuesti.",
+            "timeout_button": "Sinise nupu vajutamise ajal\u00f5pp, proovi uuesti."
         },
         "step": {
             "init": {
                 "data": {
                     "hapid": "P\u00e4\u00e4supunkti ID (SGTIN)",
-                    "pin": "PIN-kood (valikuline)"
-                }
+                    "name": "Nimi (valikuline, kasutatakse k\u00f5igi seadmete nime eesliitena)",
+                    "pin": "PIN kood (valikuline)"
+                },
+                "title": "Vali HomematicIP p\u00e4\u00e4supunkt"
+            },
+            "link": {
+                "description": "HomematicIP registreerimiseks Home Assistanti abil vajuta p\u00e4\u00e4supunkti sinist nuppu ja nuppu Esita.\n\n ![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Lingi p\u00e4\u00e4supunkt"
             }
         }
     }

@@ -1,13 +1,12 @@
 """The tests for the MQTT automation."""
-from unittest import mock
-
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
-from tests.components.automation import common
 
 
 @pytest.fixture
@@ -44,11 +43,15 @@ async def test_if_fires_on_topic_match(hass, calls):
 
     async_fire_mqtt_message(hass, "test-topic", '{ "hello": "world" }')
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert 'mqtt - test-topic - { "hello": "world" } - world' == calls[0].data["some"]
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
     async_fire_mqtt_message(hass, "test-topic", "test_payload")
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -111,9 +114,7 @@ async def test_encoding_default(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with(
-        "test-topic", mock.ANY, 0, "utf-8"
-    )
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
 
 
 async def test_encoding_custom(hass, calls, mqtt_mock):
@@ -129,4 +130,4 @@ async def test_encoding_custom(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", mock.ANY, 0, None)
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)

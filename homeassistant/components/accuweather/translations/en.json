@@ -14,7 +14,7 @@
                     "api_key": "API Key",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "name": "Name of the integration"
+                    "name": "Name"
                 },
                 "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/accuweather/\n\nSome sensors are not enabled by default. You can enable them in the entity registry after the integration configuration.\nWeather forecast is not enabled by default. You can enable it in the integration options.",
                 "title": "AccuWeather"

@@ -1,10 +1,15 @@
 """Common code for tests."""
-
+from enum import Enum
 from typing import Callable, Dict, NamedTuple, Tuple
 
 import pyvera as pv
 
-from homeassistant.components.vera.const import CONF_CONTROLLER, DOMAIN
+from homeassistant import config_entries
+from homeassistant.components.vera.const import (
+    CONF_CONTROLLER,
+    CONF_LEGACY_UNIQUE_ID,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -24,7 +29,15 @@ class ControllerData(NamedTuple):
 class ComponentData(NamedTuple):
     """Test data about the vera component."""
 
-    controller_data: ControllerData
+    controller_data: Tuple[ControllerData]
+
+
+class ConfigSource(Enum):
+    """Source of configuration."""
+
+    FILE = "file"
+    CONFIG_FLOW = "config_flow"
+    CONFIG_ENTRY = "config_entry"
 
 
 class ControllerConfig(NamedTuple):
@@ -32,31 +45,34 @@ class ControllerConfig(NamedTuple):
 
     config: Dict
     options: Dict
-    config_from_file: bool
+    config_source: ConfigSource
     serial_number: str
     devices: Tuple[pv.VeraDevice, ...]
     scenes: Tuple[pv.VeraScene, ...]
     setup_callback: SetupCallback
+    legacy_entity_unique_id: bool
 
 
 def new_simple_controller_config(
     config: dict = None,
     options: dict = None,
-    config_from_file=False,
+    config_source=ConfigSource.CONFIG_FLOW,
     serial_number="1111",
     devices: Tuple[pv.VeraDevice, ...] = (),
     scenes: Tuple[pv.VeraScene, ...] = (),
     setup_callback: SetupCallback = None,
+    legacy_entity_unique_id=False,
 ) -> ControllerConfig:
     """Create simple contorller config."""
     return ControllerConfig(
         config=config or {CONF_CONTROLLER: "http://127.0.0.1:123"},
         options=options,
-        config_from_file=config_from_file,
+        config_source=config_source,
         serial_number=serial_number,
         devices=devices,
         scenes=scenes,
         setup_callback=setup_callback,
+        legacy_entity_unique_id=legacy_entity_unique_id,
     )
 
 
@@ -68,13 +84,37 @@ class ComponentFactory:
         self.vera_controller_class_mock = vera_controller_class_mock
 
     async def configure_component(
-        self, hass: HomeAssistant, controller_config: ControllerConfig
+        self,
+        hass: HomeAssistant,
+        controller_config: ControllerConfig = None,
+        controller_configs: Tuple[ControllerConfig] = (),
     ) -> ComponentData:
+        """Configure the component with multiple specific mock data."""
+        configs = list(controller_configs)
+
+        if controller_config:
+            configs.append(controller_config)
+
+        return ComponentData(
+            controller_data=tuple(
+                [
+                    await self._configure_component(hass, controller_config)
+                    for controller_config in configs
+                ]
+            )
+        )
+
+    async def _configure_component(
+        self, hass: HomeAssistant, controller_config: ControllerConfig
+    ) -> ControllerData:
         """Configure the component with specific mock data."""
         component_config = {
             **(controller_config.config or {}),
             **(controller_config.options or {}),
         }
+
+        if controller_config.legacy_entity_unique_id:
+            component_config[CONF_LEGACY_UNIQUE_ID] = True
 
         controller = MagicMock(spec=pv.VeraController)  # type: pv.VeraController
         controller.base_url = component_config.get(CONF_CONTROLLER)
@@ -101,7 +141,7 @@ class ComponentFactory:
         hass_config = {}
 
         # Setup component through config file import.
-        if controller_config.config_from_file:
+        if controller_config.config_source == ConfigSource.FILE:
             hass_config[DOMAIN] = component_config
 
         # Setup Home Assistant.
@@ -109,9 +149,21 @@ class ComponentFactory:
         await hass.async_block_till_done()
 
         # Setup component through config flow.
-        if not controller_config.config_from_file:
+        if controller_config.config_source == ConfigSource.CONFIG_FLOW:
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_USER},
+                data=component_config,
+            )
+            await hass.async_block_till_done()
+
+        # Setup component directly from config entry.
+        if controller_config.config_source == ConfigSource.CONFIG_ENTRY:
             entry = MockConfigEntry(
-                domain=DOMAIN, data=component_config, options={}, unique_id="12345"
+                domain=DOMAIN,
+                data=controller_config.config,
+                options=controller_config.options,
+                unique_id="12345",
             )
             entry.add_to_hass(hass)
 
@@ -124,8 +176,4 @@ class ComponentFactory:
             else None
         )
 
-        return ComponentData(
-            controller_data=ControllerData(
-                controller=controller, update_callback=update_callback
-            )
-        )
+        return ControllerData(controller=controller, update_callback=update_callback)

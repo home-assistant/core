@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kon niet verbinden",
+            "not_supported": "Apparaat wordt niet ondersteund",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name} ({model} bij {host})",
+        "step": {
+            "finish": {
+                "data": {
+                    "name": "Naam"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Verbinding maken met het apparaat"
+            }
+        }
+    }
+}

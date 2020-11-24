@@ -1,4 +1,6 @@
 """Test Local Media Source."""
+import ast
+
 import pytest
 
 from homeassistant.components import media_source
@@ -7,6 +9,8 @@ from homeassistant.components.media_source.models import PlayMedia
 from homeassistant.components.netatmo import DATA_CAMERAS, DATA_EVENTS, DOMAIN
 from homeassistant.setup import async_setup_component
 
+from tests.common import load_fixture
+
 
 async def test_async_browse_media(hass):
     """Test browse media."""
@@ -14,32 +18,14 @@ async def test_async_browse_media(hass):
 
     # Prepare cached Netatmo event date
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_EVENTS] = {
-        "12:34:56:78:90:ab": {
-            1599152672: {
-                "id": "12345",
-                "time": 1599152672,
-                "camera_id": "12:34:56:78:90:ab",
-                "snapshot": {
-                    "url": "https://netatmocameraimage",
-                },
-                "video_id": "98765",
-                "video_status": "available",
-                "message": "<b>Paulus</b> seen",
-                "media_url": "http:///files/high/index.m3u8",
-            },
-            1599152673: {
-                "id": "12346",
-                "time": 1599152673,
-                "camera_id": "12:34:56:78:90:ab",
-                "snapshot": {
-                    "url": "https://netatmocameraimage",
-                },
-                "message": "<b>Tobias</b> seen",
-            },
-        }
+    hass.data[DOMAIN][DATA_EVENTS] = ast.literal_eval(
+        load_fixture("netatmo/events.txt")
+    )
+
+    hass.data[DOMAIN][DATA_CAMERAS] = {
+        "12:34:56:78:90:ab": "MyCamera",
+        "12:34:56:78:90:ac": "MyOutdoorCamera",
     }
-    hass.data[DOMAIN][DATA_CAMERAS] = {"12:34:56:78:90:ab": "MyCamera"}
 
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()

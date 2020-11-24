@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'integrazione di OpenWeatherMap per queste coordinate \u00e8 gi\u00e0 configurata."
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "auth": "La chiave API non \u00e8 corretta.",
-            "connection": "Impossibile connettersi all'API OWM"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_api_key": "Chiave API non valida"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chiave API OpenWeatherMap",
+                    "api_key": "Chiave API",
                     "language": "Lingua",
                     "latitude": "Latitudine",
                     "longitude": "Logitudine",

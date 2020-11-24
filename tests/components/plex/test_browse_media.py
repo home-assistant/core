@@ -3,39 +3,16 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )
-from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, DOMAIN
+from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER
 from homeassistant.components.plex.media_browser import SPECIAL_METHODS
 from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS
+from .const import DEFAULT_DATA
 from .helpers import trigger_plex_update
-from .mock_classes import MockPlexAccount, MockPlexServer
-
-from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
-async def test_browse_media(hass, hass_ws_client):
+async def test_browse_media(hass, hass_ws_client, mock_plex_server, mock_websocket):
     """Test getting Plex clients from plex.tv."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-    mock_plex_account = MockPlexAccount()
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
-    ), patch(
-        "homeassistant.components.plex.PlexWebsocket", autospec=True
-    ) as mock_websocket:
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     websocket_client = await hass_ws_client(hass)
 
     trigger_plex_update(mock_websocket)

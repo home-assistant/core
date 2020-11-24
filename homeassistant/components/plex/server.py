@@ -4,6 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
+from plexapi.client import PlexClient
 from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
@@ -32,6 +33,8 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -62,9 +65,12 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, hass, server_config, known_server_id=None, options=None):
+    def __init__(
+        self, hass, server_config, known_server_id=None, options=None, entry_id=None
+    ):
         """Initialize a Plex server instance."""
         self.hass = hass
+        self.entry_id = entry_id
         self._plex_account = None
         self._plex_server = None
         self._created_clients = set()
@@ -81,7 +87,7 @@ class PlexServer:
         self._owner_username = None
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
-        self._plextv_device_cache = {}
+        self._client_device_cache = {}
         self._use_plex_tv = self._token is not None
         self._version = None
         self.async_update_platforms = Debouncer(
@@ -270,6 +276,12 @@ class PlexServer:
             devices, sessions, plextv_clients = await self.hass.async_add_executor_job(
                 self._fetch_platform_data
             )
+        except plexapi.exceptions.Unauthorized:
+            _LOGGER.debug(
+                "Token has expired for '%s', reloading integration", self.friendly_name
+            )
+            await self.hass.config_entries.async_reload(self.entry_id)
+            return
         except (
             plexapi.exceptions.BadRequest,
             requests.exceptions.RequestException,
@@ -312,13 +324,33 @@ class PlexServer:
         for device in devices:
             process_device("PMS", device)
 
+        def connect_to_client(source, baseurl, machine_identifier, name="Unknown"):
+            """Connect to a Plex client and return a PlexClient instance."""
+            try:
+                client = PlexClient(
+                    server=self._plex_server,
+                    baseurl=baseurl,
+                    token=self._plex_server.createToken(),
+                )
+            except requests.exceptions.ConnectionError:
+                _LOGGER.error(
+                    "Direct client connection failed, will try again: %s (%s)",
+                    name,
+                    baseurl,
+                )
+            except Unauthorized:
+                _LOGGER.error(
+                    "Direct client connection unauthorized, ignoring: %s (%s)",
+                    name,
+                    baseurl,
+                )
+                self._client_device_cache[machine_identifier] = None
+            else:
+                self._client_device_cache[client.machineIdentifier] = client
+                process_device(source, client)
+
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
-            client_id = resource.clientIdentifier
-            if client_id in self._plextv_device_cache:
-                return self._plextv_device_cache[client_id]
-
-            client = None
             try:
                 client = resource.connect(timeout=3)
                 _LOGGER.debug("plex.tv resource connection successful: %s", client)
@@ -326,17 +358,33 @@ class PlexServer:
                 _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
+                self._client_device_cache[client.machineIdentifier] = client
+                process_device("plex.tv", client)
 
-            self._plextv_device_cache[client_id] = client
-            return client
+        def connect_new_clients():
+            """Create connections to newly discovered clients."""
+            for gdm_entry in self.hass.data[DOMAIN][GDM_SCANNER].entries:
+                machine_identifier = gdm_entry["data"]["Resource-Identifier"]
+                if machine_identifier in self._client_device_cache:
+                    client = self._client_device_cache[machine_identifier]
+                    if client is not None:
+                        process_device("GDM", client)
+                elif machine_identifier not in available_clients:
+                    baseurl = (
+                        f"http://{gdm_entry['from'][0]}:{gdm_entry['data']['Port']}"
+                    )
+                    name = gdm_entry["data"]["Name"]
+                    connect_to_client("GDM", baseurl, machine_identifier, name)
 
-        for plextv_client in plextv_clients:
-            if plextv_client.clientIdentifier not in available_clients:
-                device = await self.hass.async_add_executor_job(
-                    connect_to_resource, plextv_client
-                )
-                if device:
-                    process_device("plex.tv", device)
+            for plextv_client in plextv_clients:
+                if plextv_client.clientIdentifier in self._client_device_cache:
+                    client = self._client_device_cache[plextv_client.clientIdentifier]
+                    if client is not None:
+                        process_device("plex.tv", client)
+                elif plextv_client.clientIdentifier not in available_clients:
+                    connect_to_resource(plextv_client)
+
+        await self.hass.async_add_executor_job(connect_new_clients)
 
         for session in sessions:
             if session.TYPE == "photo":
@@ -376,7 +424,7 @@ class PlexServer:
         for client_id in idle_clients:
             self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
-            self._plextv_device_cache.pop(client_id, None)
+            self._client_device_cache.pop(client_id, None)
 
         if new_entity_configs:
             async_dispatcher_send(

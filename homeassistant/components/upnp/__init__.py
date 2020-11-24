@@ -56,7 +56,9 @@ async def async_discover_and_construct(
             filtered = [di for di in discovery_infos if di[DISCOVERY_ST] == st]
         if not filtered:
             _LOGGER.warning(
-                'Wanted UPnP/IGD device with UDN "%s" not found, aborting', udn
+                'Wanted UPnP/IGD device with UDN/ST "%s"/"%s" not found, aborting',
+                udn,
+                st,
             )
             return None
 
@@ -104,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     """Set up UPnP/IGD device from a config entry."""
     _LOGGER.debug("async_setup_entry, config_entry: %s", config_entry.data)
 
-    # discover and construct
+    # Discover and construct.
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
     st = config_entry.data.get(CONFIG_ENTRY_ST)  # pylint: disable=invalid-name
     try:
@@ -116,11 +118,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
         raise ConfigEntryNotReady
 
-    # Save device
+    # Save device.
     hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
 
-    # Ensure entry has proper unique_id.
-    if config_entry.unique_id != device.unique_id:
+    # Ensure entry has a unique_id.
+    if not config_entry.unique_id:
         hass.config_entries.async_update_entry(
             entry=config_entry,
             unique_id=device.unique_id,

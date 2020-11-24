@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo WLED \u00e8 gi\u00e0 configurato.",
-            "connection_error": "Impossibile connettersi al dispositivo WLED."
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "connection_error": "Impossibile connettersi al dispositivo WLED."
+            "cannot_connect": "Impossibile connettersi"
         },
         "flow_title": "WLED: {name}",
         "step": {
