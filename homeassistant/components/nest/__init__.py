@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 import threading
 
-from google_nest_sdm.event import EventCallback, EventMessage
+from google_nest_sdm.event import AsyncEventCallback, EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
@@ -160,14 +160,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-class SignalUpdateCallback(EventCallback):
+class SignalUpdateCallback(AsyncEventCallback):
     """An EventCallback invoked when new events arrive from subscriber."""
 
     def __init__(self, hass: HomeAssistant):
         """Initialize EventCallback."""
         self._hass = hass
 
-    def handle_event(self, event_message: EventMessage):
+    async def async_handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
         _LOGGER.debug("Update %s @ %s", event_message.event_id, event_message.timestamp)
         traits = event_message.resource_update_traits
