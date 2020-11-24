@@ -1,4 +1,4 @@
-"""Support for Blinkstick lights."""
+"""Support for Blinkstick Square lights."""
 from blinkstick import blinkstick
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ CONF_SERIAL = "serial"
 
 CONF_INDEX = "index"
 
-DEFAULT_NAME = "Blinkstick"
+DEFAULT_NAME = "Blinkstick Square"
 
 DEFAULT_INDEX = 0
 
@@ -101,7 +101,9 @@ class BlinkStickLight(LightEntity):
         rgb_color = color_util.color_hsv_to_RGB(
             self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100
         )
-        self._stick.set_color(red=rgb_color[0], green=rgb_color[1], blue=rgb_color[2], index=self._index)
+        self._stick.set_color(
+            red=rgb_color[0], green=rgb_color[1], blue=rgb_color[2], index=self._index
+        )
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
