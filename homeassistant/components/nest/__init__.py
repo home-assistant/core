@@ -188,12 +188,7 @@ class SignalUpdateCallback(AsyncEventCallback):
             _LOGGER.debug("Ignoring event with no device_id")
             return
         device_id = event_message.resource_update_name
-        _LOGGER.debug(
-            "Update %s @ %s for %s",
-            event_message.event_id,
-            event_message.timestamp,
-            device_id,
-        )
+        _LOGGER.debug("Update for %s @ %s", device_id, event_message.timestamp)
         traits = event_message.resource_update_traits
         if traits:
             _LOGGER.debug("Trait update %s", traits.keys())
@@ -202,23 +197,22 @@ class SignalUpdateCallback(AsyncEventCallback):
             # Send a signal to refresh state of all listening devices.
             async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
         events = event_message.resource_update_events
-        if events:
-            _LOGGER.debug("Event Update %s", events.keys())
-            device_registry = (
-                await self._hass.helpers.device_registry.async_get_registry()
-            )
-            device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
-            if not device_entry:
-                _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
-                return
-            for event in events.keys():
-                if event not in EVENT_TRAIT_MAP:
-                    continue
-                message = {
-                    "device_id": device_entry.id,
-                    "type": EVENT_TRAIT_MAP[event],
-                }
-                self._hass.bus.async_fire(NEST_EVENT, message)
+        if not events:
+            return
+        _LOGGER.debug("Event Update %s", events.keys())
+        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        if not device_entry:
+            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
+            return
+        for event in events:
+            if event not in EVENT_TRAIT_MAP:
+                continue
+            message = {
+                "device_id": device_entry.id,
+                "type": EVENT_TRAIT_MAP[event],
+            }
+            self._hass.bus.async_fire(NEST_EVENT, message)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):

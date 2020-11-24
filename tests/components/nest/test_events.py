@@ -108,10 +108,10 @@ async def test_doorbell_chime_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert {
+    assert events[0].data == {
         "device_id": entry.device_id,
         "type": "DoorbellChime",
-    } == events[0].data
+    }
 
 
 async def test_camera_motion_event(hass):
@@ -132,10 +132,10 @@ async def test_camera_motion_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert {
+    assert events[0].data == {
         "device_id": entry.device_id,
         "type": "CameraMotion",
-    } == events[0].data
+    }
 
 
 async def test_camera_sound_event(hass):
@@ -156,10 +156,10 @@ async def test_camera_sound_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert {
+    assert events[0].data == {
         "device_id": entry.device_id,
         "type": "CameraSound",
-    } == events[0].data
+    }
 
 
 async def test_camera_person_event(hass):
@@ -180,10 +180,10 @@ async def test_camera_person_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert {
+    assert events[0].data == {
         "device_id": entry.device_id,
         "type": "CameraPerson",
-    } == events[0].data
+    }
 
 
 async def test_camera_multiple_event(hass):
@@ -213,14 +213,14 @@ async def test_camera_multiple_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 2
-    assert {
+    assert events[0].data == {
         "device_id": entry.device_id,
         "type": "CameraMotion",
-    } == events[0].data
-    assert {
+    }
+    assert events[1].data == {
         "device_id": entry.device_id,
         "type": "CameraPerson",
-    } == events[1].data
+    }
 
 
 async def test_unknown_event(hass):
