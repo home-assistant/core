@@ -6,11 +6,11 @@ import logging
 import threading
 
 from google_nest_sdm.event import (
+    AsyncEventCallback,
     CameraMotionEvent,
     CameraPersonEvent,
     CameraSoundEvent,
     DoorbellChimeEvent,
-    AsyncEventCallback,
     EventMessage,
 )
 from google_nest_sdm.exceptions import GoogleNestException
@@ -185,7 +185,7 @@ class SignalUpdateCallback(AsyncEventCallback):
     async def async_handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
         if not event_message.resource_update_name:
-            _LOGGER.debug("Event had no device_id; Skipping")
+            _LOGGER.debug("Ignoring event with no device_id")
             return
         device_id = event_message.resource_update_name
         _LOGGER.debug(
@@ -204,12 +204,18 @@ class SignalUpdateCallback(AsyncEventCallback):
         events = event_message.resource_update_events
         if events:
             _LOGGER.debug("Event Update %s", events.keys())
-            device_id = event_message.resource_update_name
+            device_registry = (
+                await self._hass.helpers.device_registry.async_get_registry()
+            )
+            device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+            if not device_entry:
+                _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
+                return
             for event in events.keys():
                 if event not in EVENT_TRAIT_MAP:
                     continue
                 message = {
-                    "device_id": device_id,
+                    "device_id": device_entry.id,
                     "type": EVENT_TRAIT_MAP[event],
                 }
                 self._hass.bus.async_fire(NEST_EVENT, message)

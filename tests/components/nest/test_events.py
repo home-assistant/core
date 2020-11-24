@@ -91,6 +91,7 @@ async def test_doorbell_chime_event(hass):
 
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("camera.front")
+    assert entry is not None
     assert entry.unique_id == "some-device-id-camera"
     assert entry.original_name == "Front"
     assert entry.domain == "camera"
@@ -108,7 +109,7 @@ async def test_doorbell_chime_event(hass):
 
     assert len(events) == 1
     assert {
-        "device_id": DEVICE_ID,
+        "device_id": entry.device_id,
         "type": "DoorbellChime",
     } == events[0].data
 
@@ -121,6 +122,9 @@ async def test_camera_motion_event(hass):
         "sdm.devices.types.CAMERA",
         create_device_traits("sdm.devices.traits.CameraMotion"),
     )
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("camera.front")
+    assert entry is not None
 
     await subscriber.async_receive_event(
         create_event("sdm.devices.events.CameraMotion.Motion")
@@ -129,7 +133,7 @@ async def test_camera_motion_event(hass):
 
     assert len(events) == 1
     assert {
-        "device_id": DEVICE_ID,
+        "device_id": entry.device_id,
         "type": "CameraMotion",
     } == events[0].data
 
@@ -142,6 +146,9 @@ async def test_camera_sound_event(hass):
         "sdm.devices.types.CAMERA",
         create_device_traits("sdm.devices.traits.CameraSound"),
     )
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("camera.front")
+    assert entry is not None
 
     await subscriber.async_receive_event(
         create_event("sdm.devices.events.CameraSound.Sound")
@@ -150,7 +157,7 @@ async def test_camera_sound_event(hass):
 
     assert len(events) == 1
     assert {
-        "device_id": DEVICE_ID,
+        "device_id": entry.device_id,
         "type": "CameraSound",
     } == events[0].data
 
@@ -163,6 +170,9 @@ async def test_camera_person_event(hass):
         "sdm.devices.types.DOORBELL",
         create_device_traits("sdm.devices.traits.CameraEventImage"),
     )
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("camera.front")
+    assert entry is not None
 
     await subscriber.async_receive_event(
         create_event("sdm.devices.events.CameraPerson.Person")
@@ -171,7 +181,7 @@ async def test_camera_person_event(hass):
 
     assert len(events) == 1
     assert {
-        "device_id": DEVICE_ID,
+        "device_id": entry.device_id,
         "type": "CameraPerson",
     } == events[0].data
 
@@ -184,6 +194,10 @@ async def test_camera_multiple_event(hass):
         "sdm.devices.types.DOORBELL",
         create_device_traits("sdm.devices.traits.CameraEventImage"),
     )
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("camera.front")
+    assert entry is not None
+
     event_map = {
         "sdm.devices.events.CameraMotion.Motion": {
             "eventSessionId": EVENT_SESSION_ID,
@@ -200,11 +214,11 @@ async def test_camera_multiple_event(hass):
 
     assert len(events) == 2
     assert {
-        "device_id": DEVICE_ID,
+        "device_id": entry.device_id,
         "type": "CameraMotion",
     } == events[0].data
     assert {
-        "device_id": DEVICE_ID,
+        "device_id": entry.device_id,
         "type": "CameraPerson",
     } == events[1].data
 
