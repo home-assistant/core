@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -67,6 +68,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         if self._device.tilt is not None:
             self._features |= SUPPORT_OPEN_TILT
             self._features |= SUPPORT_CLOSE_TILT
+            self._features |= SUPPORT_STOP_TILT
             self._features |= SUPPORT_SET_TILT_POSITION
 
     @property
@@ -127,3 +129,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     async def async_close_cover_tilt(self, **kwargs):
         """Close cover tilt."""
         await self._device.set_position(tilt=100)
+
+    async def async_stop_cover_tilt(self, **kwargs):
+        """Stop cover tilt."""
+        await self._device.stop()

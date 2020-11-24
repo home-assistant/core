@@ -14,6 +14,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
 )
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
@@ -317,3 +318,15 @@ async def test_tilt_cover(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 100})
+
+    # Service stop cover movement
+
+    with patch.object(covering_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER_TILT,
+            {ATTR_ENTITY_ID: "cover.covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/0/state", json={"stop": True})
