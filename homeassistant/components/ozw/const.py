@@ -12,6 +12,7 @@ DOMAIN = "ozw"
 DATA_UNSUBSCRIBE = "unsubscribe"
 
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
+CONF_USE_ADDON = "use_addon"
 
 PLATFORMS = [
     BINARY_SENSOR_DOMAIN,

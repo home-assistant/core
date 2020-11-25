@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_INTEGRATION_CREATED_ADDON
+from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,6 @@ CONF_ADDON_DEVICE = "device"
 CONF_ADDON_NETWORK_KEY = "network_key"
 CONF_NETWORK_KEY = "network_key"
 CONF_USB_PATH = "usb_path"
-CONF_USE_ADDON = "use_addon"
 TITLE = "OpenZWave"
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=False): bool})

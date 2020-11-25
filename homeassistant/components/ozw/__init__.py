@@ -17,11 +17,13 @@ from openzwavemqtt.const import (
 )
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
+from openzwavemqtt.util.mqtt_client import MQTTClient
 import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -29,6 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const
 from .const import (
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_USE_ADDON,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
@@ -50,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
+DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -69,12 +73,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data_nodes = {}
     data_values = {}
     removed_nodes = []
+    manager_options = {"topic_prefix": f"{TOPIC_OPENZWAVE}/"}
 
-    @callback
-    def send_message(topic, payload):
-        mqtt.async_publish(hass, topic, json.dumps(payload))
+    if entry.data.get(CONF_USE_ADDON):
+        # Do not use MQTT integration. Use own MQTT client.
+        client = MQTTClient("localhost")
+        manager_options["send_message"] = client.send_message
 
-    options = OZWOptions(send_message=send_message, topic_prefix=f"{TOPIC_OPENZWAVE}/")
+    else:
+
+        @callback
+        def send_message(topic, payload):
+            mqtt.async_publish(hass, topic, json.dumps(payload))
+
+        manager_options["send_message"] = send_message
+
+    options = OZWOptions(**manager_options)
     manager = OZWManager(options)
 
     hass.data[DOMAIN][MANAGER] = manager
@@ -234,11 +248,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 for component in PLATFORMS
             ]
         )
-        ozw_data[DATA_UNSUBSCRIBE].append(
-            await mqtt.async_subscribe(
-                hass, f"{TOPIC_OPENZWAVE}/#", async_receive_message
+        if entry.data.get(CONF_USE_ADDON):
+            client.add_manager(manager)
+            mqtt_client_task = asyncio.create_task(client.start_client())
+
+            async def async_stop_mqtt_client(event=None, unsubscribe=False):
+                """Stop the mqtt client."""
+                if unsubscribe:
+                    await client.unsubscribe_manager()
+                mqtt_client_task.cancel()
+                await mqtt_client_task
+
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client)
+            ozw_data[DATA_STOP_MQTT_CLIENT] = async_stop_mqtt_client
+
+        else:
+            ozw_data[DATA_UNSUBSCRIBE].append(
+                await mqtt.async_subscribe(
+                    hass, f"{manager.options.topic_prefix}#", async_receive_message
+                )
             )
-        )
 
     hass.async_create_task(start_platforms())
 
@@ -262,6 +291,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # unsubscribe all listeners
     for unsubscribe_listener in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
         unsubscribe_listener()
+
+    if entry.data.get(CONF_USE_ADDON):
+        stop_mqtt_client = hass.data[DOMAIN][entry.entry_id][DATA_STOP_MQTT_CLIENT]
+        await stop_mqtt_client(unsubscribe=True)
+
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
