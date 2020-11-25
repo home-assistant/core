@@ -66,20 +66,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     nest_device_id = await async_get_nest_device_id(hass, device_id)
     if not nest_device_id:
         raise InvalidDeviceAutomationConfig(f"Device not found {device_id}")
-
-    # Create all supported event triggers for every entity for this device
-    triggers = []
     trigger_types = await async_get_device_trigger_types(hass, nest_device_id)
-    for trigger_type in trigger_types:
-        triggers.append(
-            {
-                CONF_PLATFORM: DEVICE,
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: trigger_type,
-            }
-        )
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: DEVICE,
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: trigger_type,
+        }
+        for trigger_type in trigger_types
+    ]
 
 
 async def async_attach_trigger(
