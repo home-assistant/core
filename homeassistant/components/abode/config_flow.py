@@ -31,10 +31,10 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_MFA): str,
         }
 
-        self._abode = None
         self._username = None
         self._password = None
         self._polling = None
+        self._cache = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -54,15 +54,18 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_login(self, step_id):
         """Handle Abode login."""
+        self._cache = self.hass.config.path(DEFAULT_CACHEDB)
         errors = {}
-        cache = self.hass.config.path(DEFAULT_CACHEDB)
 
         try:
-            self._abode = Abode(
-                self._username, self._password, False, False, False, cache
+            abode = Abode(
+                auto_login=False,
+                get_devices=False,
+                get_automations=False,
+                cache_path=self._cache,
             )
             await self.hass.async_add_executor_job(
-                self._abode.login, self._username, self._password
+                abode.login, self._username, self._password
             )
 
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
@@ -100,8 +103,15 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             mfa_code = user_input[CONF_MFA]
+            abode = Abode(
+                auto_login=False,
+                get_devices=False,
+                get_automations=False,
+                cache_path=self._cache,
+            )
+
             await self.hass.async_add_executor_job(
-                self._abode.login, self._username, self._password, mfa_code
+                abode.login, self._username, self._password, mfa_code
             )
 
         except AbodeException as ex:
@@ -126,11 +136,12 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_finish(self, user_input=None):
         """Handle creating the config entry."""
         existing_entry = await self.async_set_unique_id(self._username)
+
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             # Force reload the Abode config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._username)
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
 
             return self.async_abort(reason="reauth_successful")

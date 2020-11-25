@@ -1,11 +1,17 @@
 """Tests for the Abode config flow."""
-from abodepy.exceptions import AbodeAuthenticationException
+from abodepy.exceptions import AbodeException, AbodeAuthenticationException
+from abodepy.helpers.errors import MFA_CODE_REQUIRED
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -60,7 +66,7 @@ async def test_invalid_credentials(hass):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((400, "auth error")),
+        side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "auth error")),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {"base": "invalid_auth"}
@@ -133,7 +139,7 @@ async def test_step_mfa(hass):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((32, "mfa required")),
+        side_effect=AbodeAuthenticationException(MFA_CODE_REQUIRED),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -141,6 +147,31 @@ async def test_step_mfa(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "mfa"
+
+    with patch(
+        "homeassistant.components.abode.config_flow.Abode",
+        side_effect=AbodeException((HTTP_BAD_REQUEST, "invalid mfa")),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"mfa_code": "123456"}
+        )
+
+        assert result["errors"] == {"base": "invalid_mfa_code"}
+
+    with patch("homeassistant.components.abode.config_flow.Abode"), patch(
+        "abodepy.UTILS"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"mfa_code": "123456"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "user@email.com"
+        assert result["data"] == {
+            CONF_USERNAME: "user@email.com",
+            CONF_PASSWORD: "password",
+            CONF_POLLING: False,
+        }
 
 
 async def test_step_reauth(hass):
