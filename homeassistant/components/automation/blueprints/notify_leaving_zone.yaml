@@ -1,7 +1,7 @@
 blueprint:
+  name: Send notification when a person leaves a zone
   domain: automation
-  name: Send notification when leaving a zone
-  description: This automation will send you a notification when a person leaves a specific zone.
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/notify_leaving_zone.yaml
   input:
     person_entity:
       name: Person

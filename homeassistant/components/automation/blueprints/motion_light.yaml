@@ -1,6 +1,7 @@
 blueprint:
   name: Motion-activated Light
   domain: automation
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
   input:
     motion_entity:
       name: Motion Sensor
