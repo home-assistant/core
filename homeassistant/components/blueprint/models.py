@@ -81,8 +81,8 @@ class Blueprint:
         return self.data[CONF_BLUEPRINT][CONF_NAME]
 
     @property
-    def input(self) -> dict:
-        """Return blueprint input."""
+    def inputs(self) -> dict:
+        """Return blueprint inputs."""
         return self.data[CONF_BLUEPRINT][CONF_INPUT]
 
     @property
@@ -140,7 +140,7 @@ class BlueprintInputs:
         inputs_with_default = dict(self.inputs)
 
         for input in no_input:
-            blueprint_input = self.blueprint.input[input]
+            blueprint_input = self.blueprint.inputs[input]
             if isinstance(blueprint_input, dict):
                 inputs_with_default[input] = blueprint_input.get("default")
 
@@ -153,7 +153,7 @@ class BlueprintInputs:
         missing = set()
 
         for input in no_input:
-            blueprint_input = self.blueprint.input[input]
+            blueprint_input = self.blueprint.inputs[input]
             if (
                 not isinstance(blueprint_input, dict)
                 or "default" not in blueprint_input
