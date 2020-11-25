@@ -23,8 +23,8 @@
                 "data": {
                     "host": "Device"
                 },
-                "description": "We found {num_devices} new devices. Select a device to configure.",
-                "title": "Choose a device"
+                "description": "We found {num_devices} new devices. Choose one to configure.",
+                "title": "Select a device"
             },
             "finish": {
                 "data": {
