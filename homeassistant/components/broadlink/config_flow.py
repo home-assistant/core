@@ -170,10 +170,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             except OSError as err:
                 if err.errno == errno.ENETUNREACH:
-                    reason = "cannot_connect"
+                    errors["base"] = "cannot_connect"
                     err_msg = str(err)
                 else:
-                    reason = "unknown"
+                    errors["base"] = "unknown"
                     err_msg = str(err)
 
             else:
@@ -187,19 +187,19 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not devices:
             if not errors:
-                reason = "no_devices_found"
+                errors["base"] = "no_devices_found"
                 err_msg = "No devices found"
 
             _LOGGER.error("Failed to discover devices: %s", err_msg)
-            return self.async_abort(reason=reason)
+            return self.async_abort(reason=errors["base"])
+
+        if errors:
+            _LOGGER.debug("Error during device discovery: %s", err_msg)
 
         if len(devices) == 1:
             return await self.async_step_user(
                 user_input={CONF_HOST: devices[0].host[0]}
             )
-
-        if errors:
-            _LOGGER.debug("Error during device discovery: %s", err_msg)
 
         data_schema = {
             vol.Required(CONF_HOST): vol.In(
