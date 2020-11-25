@@ -32,25 +32,29 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Gree Climate from a config entry."""
 
+    device_infos = []
+
     async def async_device_found(device_info: DeviceInfo):
         """Initialize and bind discovered devices."""
-        device = Device(device_info)
-        try:
-            await device.bind()
-        except DeviceNotBoundError:
-            _LOGGER.error("Unable to bind to gree device: %s", device_info)
-        except DeviceTimeoutError:
-            _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
-        else:
-            _LOGGER.info(
-                "Adding Gree device at %s:%i (%s)",
-                device.device_info.ip,
-                device.device_info.port,
-                device.device_info.name,
-            )
-            coordo = DeviceDataUpdateCoordinator(hass, device)
-            await coordo.async_refresh()
-            return coordo
+        if device_info not in device_infos:
+            device_infos.append(device_info)
+            device = Device(device_info)
+            try:
+                await device.bind()
+            except DeviceNotBoundError:
+                _LOGGER.error("Unable to bind to gree device: %s", device_info)
+            except DeviceTimeoutError:
+                _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
+            else:
+                _LOGGER.info(
+                    "Adding Gree device at %s:%i (%s)",
+                    device.device_info.ip,
+                    device.device_info.port,
+                    device.device_info.name,
+                )
+                coordo = DeviceDataUpdateCoordinator(hass, device)
+                await coordo.async_refresh()
+                return coordo
 
     # First we'll grab as many devices as we can find on the network
     # it's necessary to bind static devices anyway
