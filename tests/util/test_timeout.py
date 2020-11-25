@@ -308,3 +308,18 @@ async def test_simple_zone_timeout_freeze_without_timeout_exeption():
                 pass
 
             await asyncio.sleep(0.4)
+
+
+async def test_simple_zone_timeout_zone_with_timeout_exeption():
+    """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
+    timeout = TimeoutManager()
+
+    with pytest.raises(asyncio.TimeoutError):
+        async with timeout.async_timeout(0.1):
+            try:
+                async with timeout.async_timeout(0.3, "test"):
+                    raise RuntimeError()
+            except RuntimeError:
+                pass
+
+            await asyncio.sleep(0.3)
