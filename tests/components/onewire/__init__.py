@@ -48,9 +48,8 @@ async def setup_onewire_owserver_integration(hass):
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
-            CONF_PORT: "1234",
+            CONF_PORT: 1234,
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",
@@ -74,12 +73,11 @@ async def setup_onewire_patched_owserver_integration(hass):
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
-            CONF_PORT: "1234",
+            CONF_PORT: 1234,
             CONF_NAMES: {
                 "10.111111111111": "My DS18B20",
             },
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",

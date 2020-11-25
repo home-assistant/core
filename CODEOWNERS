@@ -132,6 +132,7 @@ homeassistant/components/emoncms/* @borpin
 homeassistant/components/emulated_kasa/* @kbickar
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
+homeassistant/components/enphase_envoy/* @gtdiehl
 homeassistant/components/entur_public_transport/* @hfurubotten
 homeassistant/components/environment_canada/* @michaeldavie
 homeassistant/components/ephember/* @ttroy50
@@ -276,6 +277,7 @@ homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/modbus/* @adamchengtkc @janiversen @vzahradnik
 homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
+homeassistant/components/motion_blinds/* @starkillerOG
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core @emontnemery
 homeassistant/components/msteams/* @peroyvind
@@ -336,7 +338,7 @@ homeassistant/components/pi_hole/* @fabaff @johnluetke @shenxn
 homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @CoMPaTech @bouwew
+homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
@@ -376,7 +378,6 @@ homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
@@ -424,6 +425,7 @@ homeassistant/components/splunk/* @Bre77
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
 homeassistant/components/squeezebox/* @rajlaud
+homeassistant/components/srp_energy/* @briglx
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm

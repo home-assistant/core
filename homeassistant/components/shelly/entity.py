@@ -116,7 +116,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper, block)
+        self._name = get_entity_name(wrapper.device, block)
 
     @property
     def name(self):
@@ -182,7 +182,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-        self._name = get_entity_name(wrapper, block, self.description.name)
+        self._name = get_entity_name(wrapper.device, block, self.description.name)
 
     @property
     def unique_id(self):
@@ -255,7 +255,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.description = description
 
         self._unit = self.description.unit
-        self._name = get_entity_name(wrapper, None, self.description.name)
+        self._name = get_entity_name(wrapper.device, None, self.description.name)
         self.path = self.description.path
         self._attributes = self.description.attributes
 

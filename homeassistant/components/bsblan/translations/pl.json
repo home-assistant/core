@@ -14,7 +14,7 @@
                     "passkey": "Ci\u0105g klucza dost\u0119pu",
                     "port": "Port"
                 },
-                "description": "Konfiguracja urz\u0105dzenia BSB-LAN w celu integracji z Home Assistant.",
+                "description": "Konfiguracja urz\u0105dzenia BSB-LAN w celu integracji z Home Assistantem.",
                 "title": "Po\u0142\u0105czenie z urz\u0105dzeniem BSB-Lan"
             }
         }
