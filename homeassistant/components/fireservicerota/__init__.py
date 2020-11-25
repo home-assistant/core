@@ -216,10 +216,8 @@ class FireServiceRotaClient:
         except (ExpiredTokenError, InvalidTokenError):
             self.websocket.stop_listener()
             self.token_refresh_failure = True
-            self.update_interval = None
 
             if await self.oauth.async_refresh_tokens():
-                self.update_interval = MIN_TIME_BETWEEN_UPDATES
                 self.token_refresh_failure = False
                 self.websocket.start_listener()
 
