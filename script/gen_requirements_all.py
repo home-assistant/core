@@ -45,7 +45,6 @@ COMMENT_REQUIREMENTS = (
     "tensorflow",
     "tf-models-official",
     "VL53L1X2",
-    "sleepyq",
 )
 
 IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
