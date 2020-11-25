@@ -1,4 +1,6 @@
 """Tests for the Abode module."""
+from abodepy.exceptions import AbodeAuthenticationException
+
 from homeassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
     SERVICE_CAPTURE_IMAGE,
@@ -6,6 +8,7 @@ from homeassistant.components.abode import (
     SERVICE_TRIGGER_AUTOMATION,
 )
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.const import HTTP_BAD_REQUEST
 
 from .common import setup_platform
 
@@ -41,3 +44,16 @@ async def test_unload_entry(hass):
         assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_SETTINGS)
         assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_CAPTURE_IMAGE)
         assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_TRIGGER_AUTOMATION)
+
+
+async def test_invalid_credentials(hass):
+    """Test Abode credentials changing."""
+    with patch(
+        "homeassistant.components.abode.Abode",
+        side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "auth error")),
+    ), patch(
+        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth"
+    ) as mock_async_step_reauth:
+        await setup_platform(hass, ALARM_DOMAIN)
+
+        mock_async_step_reauth.assert_called_once()

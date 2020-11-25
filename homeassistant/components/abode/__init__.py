@@ -110,16 +110,15 @@ async def async_setup_entry(hass, config_entry):
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
     polling = config_entry.data.get(CONF_POLLING)
+    cache = hass.config.path(DEFAULT_CACHEDB)
 
     try:
-        cache = hass.config.path(DEFAULT_CACHEDB)
         abode = await hass.async_add_executor_job(
             Abode, username, password, True, True, True, cache
         )
-        hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
     except AbodeAuthenticationException as ex:
-        LOGGER.error("Invalid credentials: %s", str(ex))
+        LOGGER.error("Invalid credentials: %s", ex)
         await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH},
@@ -128,8 +127,10 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
-        LOGGER.error("Unable to connect to Abode: %s", str(ex))
+        LOGGER.error("Unable to connect to Abode: %s", ex)
         raise ConfigEntryNotReady from ex
+
+    hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
     for platform in ABODE_PLATFORMS:
         hass.async_create_task(

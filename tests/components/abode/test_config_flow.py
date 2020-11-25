@@ -1,5 +1,5 @@
 """Tests for the Abode config flow."""
-from abodepy.exceptions import AbodeException, AbodeAuthenticationException
+from abodepy.exceptions import AbodeAuthenticationException, AbodeException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
 
 from homeassistant import data_entry_flow
