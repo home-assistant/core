@@ -21,7 +21,7 @@ async def async_setup_entry(
     """Set up FireServiceRota binary sensor based on a config entry."""
     coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
 
-    async_add_entities([ResponseBinarySensor(coordinator, entry)], True)
+    async_add_entities([ResponseBinarySensor(coordinator, entry)])
 
 
 class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
@@ -29,9 +29,8 @@ class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry):
         """Initialize."""
-        self._coordinator = coordinator
         super().__init__(coordinator)
-        self._unique_id = entry.unique_id
+        self._unique_id = f"{entry.unique_id}_Duty"
 
         self._state = None
 
@@ -48,12 +47,7 @@ class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this binary sensor."""
-        return f"{self._unique_id}_Duty"
-
-    @property
-    def is_on(self) -> str:
-        """Return the status of the binary sensor."""
-        return self._state
+        return self._unique_id
 
     @property
     def should_poll(self) -> bool:
@@ -61,12 +55,12 @@ class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
         return False
 
     @property
-    def state(self) -> str:
+    def is_on(self) -> str:
         """Return the state of the binary sensor."""
-        if not self._coordinator.data:
+        if not self.coordinator.data:
             return
 
-        availability_data = self._coordinator.data
+        availability_data = self.coordinator.data
         if "available" in availability_data:
             state = availability_data["available"]
             if state:
@@ -83,21 +77,23 @@ class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
     def device_state_attributes(self):
         """Return available attributes for binary sensor."""
         attr = {}
-        if not self._coordinator.data:
+        if not self.coordinator.data:
             return attr
 
-        data = self._coordinator.data
-        for value in (
-            "start_time",
-            "end_time",
-            "available",
-            "active",
-            "assigned_function_ids",
-            "skill_ids",
-            "type",
-            "assigned_function",
-        ):
-            if data.get(value):
-                attr[value] = data[value]
+        data = self.coordinator.data
+        attr = {
+            key: data[key]
+            for key in (
+                "start_time",
+                "end_time",
+                "available",
+                "active",
+                "assigned_function_ids",
+                "skill_ids",
+                "type",
+                "assigned_function",
+            )
+            if key in data
+        }
 
         return attr
