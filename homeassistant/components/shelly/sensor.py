@@ -158,6 +158,12 @@ SENSORS = {
             "Operational hours": round(block.totalWorkTime / 3600, 1)
         },
     ),
+    ("adc", "adc"): BlockAttributeDescription(
+        name="ADC",
+        unit=VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+    ),
 }
 
 REST_SENSORS = {
