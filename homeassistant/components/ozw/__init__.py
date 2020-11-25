@@ -35,7 +35,6 @@ from .const import (
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
-    OPTIONS,
     PLATFORMS,
     TOPIC_OPENZWAVE,
 )
@@ -53,7 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
-DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
+DATA_MQTT_CLIENT = "ozw_mqtt_client"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -77,8 +76,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if entry.data.get(CONF_USE_ADDON):
         # Do not use MQTT integration. Use own MQTT client.
-        client = MQTTClient("localhost")
-        manager_options["send_message"] = client.send_message
+        mqtt_client = MQTTClient("localhost")
+        manager_options["send_message"] = mqtt_client.send_message
+        ozw_data[DATA_MQTT_CLIENT] = mqtt_client
 
     else:
 
@@ -92,7 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     manager = OZWManager(options)
 
     hass.data[DOMAIN][MANAGER] = manager
-    hass.data[DOMAIN][OPTIONS] = options
 
     @callback
     def async_node_added(node):
@@ -249,18 +248,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
         if entry.data.get(CONF_USE_ADDON):
-            client.add_manager(manager)
-            mqtt_client_task = asyncio.create_task(client.start_client())
+            mqtt_client.add_manager(manager)
+            mqtt_client_task = asyncio.create_task(mqtt_client.start_client())
 
-            async def async_stop_mqtt_client(event=None, unsubscribe=False):
-                """Stop the mqtt client."""
-                if unsubscribe:
-                    await client.unsubscribe_manager()
+            async def async_stop_mqtt_client(event=None):
+                """Stop the mqtt client.
+
+                Do not unsubscribe the manager topic.
+                """
                 mqtt_client_task.cancel()
                 await mqtt_client_task
 
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client)
-            ozw_data[DATA_STOP_MQTT_CLIENT] = async_stop_mqtt_client
 
         else:
             ozw_data[DATA_UNSUBSCRIBE].append(
@@ -293,8 +292,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         unsubscribe_listener()
 
     if entry.data.get(CONF_USE_ADDON):
-        stop_mqtt_client = hass.data[DOMAIN][entry.entry_id][DATA_STOP_MQTT_CLIENT]
-        await stop_mqtt_client(unsubscribe=True)
+        mqtt_client = hass.data[DOMAIN][entry.entry_id][DATA_MQTT_CLIENT]
+        manager = hass.data[DOMAIN][MANAGER]
+        await mqtt_client.remove_manager(manager)
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
