@@ -194,6 +194,7 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
         self.websocket = FireServiceRotaWebSocket(self._hass, self._entry)
 
     async def setup(self) -> None:
+    """Set up the coordinator."""
         await self._hass.async_add_executor_job(self.websocket.start_listener)
 
     async def update_call(self, func, *args):
