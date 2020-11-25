@@ -3,7 +3,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, CONF_SELECTOR
+from homeassistant.const import (
+    CONF_DEFAULT,
+    CONF_DOMAIN,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_SELECTOR,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -54,6 +60,7 @@ BLUEPRINT_INPUT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): str,
         vol.Optional(CONF_DESCRIPTION): str,
+        vol.Optional(CONF_DEFAULT): cv.match_all,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
