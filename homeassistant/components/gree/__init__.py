@@ -9,7 +9,6 @@ from greeclimate.device import (
     DeviceTimeoutError,
 )
 from greeclimate.discovery import Discovery
-from pizone.discovery import DISCOVERY_TIMEOUT
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -17,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .bridge import DeviceDataUpdateCoordinator
-from .const import COORDINATORS, DOMAIN
+from .const import COORDINATORS, DISCOVERY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

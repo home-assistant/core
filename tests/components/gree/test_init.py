@@ -19,7 +19,7 @@ def discovery_fixture(hass):
         yield mock
 
 
-async def test_setup_simple(hass, discovery, device):
+async def test_setup_simple(hass):
     """Test gree integration is setup."""
     await async_setup_component(hass, GREE_DOMAIN, {})
     await hass.async_block_till_done()
@@ -28,7 +28,7 @@ async def test_setup_simple(hass, discovery, device):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_unload_config_entry(hass, discovery, device):
+async def test_unload_config_entry(hass):
     """Test that the async_unload_entry works."""
     # As we have currently no configuration, we just to pass the domain here.
     entry = MockConfigEntry(domain=GREE_DOMAIN)

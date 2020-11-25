@@ -10,7 +10,7 @@ from .const import DISCOVERY_TIMEOUT, DOMAIN
 async def _async_has_devices(hass) -> bool:
     """Return if there are devices that can be discovered."""
     gree_discovery = Discovery(DISCOVERY_TIMEOUT)
-    devices = await gree_discovery.search_devices()
+    devices, _ = await gree_discovery.search_devices()
     return len(devices) > 0
 
 
