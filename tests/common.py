@@ -9,6 +9,7 @@ from io import StringIO
 import json
 import logging
 import os
+import pathlib
 import threading
 import time
 import uuid
@@ -704,6 +705,9 @@ def patch_yaml_files(files_dict, endswith=True):
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
+        if isinstance(fname, pathlib.Path):
+            fname = str(fname)
+
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
