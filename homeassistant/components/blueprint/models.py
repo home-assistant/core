@@ -147,10 +147,10 @@ class BlueprintInputs:
 
         inputs_with_default = dict(self.inputs)
 
-        for input in no_input:
-            blueprint_input = self.blueprint.inputs[input]
+        for inp in no_input:
+            blueprint_input = self.blueprint.inputs[inp]
             if isinstance(blueprint_input, dict) and CONF_DEFAULT in blueprint_input:
-                inputs_with_default[input] = blueprint_input[CONF_DEFAULT]
+                inputs_with_default[inp] = blueprint_input[CONF_DEFAULT]
 
         return inputs_with_default
 
