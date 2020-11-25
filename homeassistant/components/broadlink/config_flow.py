@@ -10,6 +10,7 @@ from broadlink.exceptions import (
     BroadlinkException,
     NetworkTimeoutError,
 )
+import psutil
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -23,7 +24,7 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
     DOMAINS_AND_TYPES,
 )
-from .helpers import format_mac
+from .helpers import format_mac, get_broadcast_addrs, is_broadcast_addr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,8 +71,13 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            host = user_input.get(CONF_HOST)
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+
+            if not host or is_broadcast_addr(host):
+                return await self.async_step_discover(
+                    {CONF_HOST: host, CONF_TIMEOUT: timeout}
+                )
 
             try:
                 hello = partial(blk.hello, host, DEFAULT_PORT, timeout)
@@ -121,13 +127,92 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=errors["base"])
 
         data_schema = {
-            vol.Required(CONF_HOST): str,
+            vol.Optional(CONF_HOST): str,
             vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         }
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(data_schema),
             errors=errors,
+        )
+
+    async def async_step_discover(self, user_input=None):
+        """Discover devices on the given networks.
+
+        If the host is empty or 255.255.255.255, discover devices on all
+        available networks.
+        """
+        host = user_input.get(CONF_HOST)
+        timeout = user_input.get(CONF_TIMEOUT)
+        errors = {}
+
+        if not host or host == "255.255.255.255":
+            nics = await self.hass.async_add_executor_job(psutil.net_if_addrs)
+            broadcast_addrs = get_broadcast_addrs(nics)
+
+        elif is_broadcast_addr(host):
+            broadcast_addrs = [host]
+
+        else:
+            return await self.async_step_user(user_input={CONF_HOST: host})
+
+        devices = []
+        already_configured = self._async_current_ids(False)
+        in_progress = [
+            progress["context"].get("unique_id")
+            for progress in self._async_in_progress()
+        ]
+
+        for addr in broadcast_addrs:
+            discover = partial(blk.discover, discover_ip_address=addr, timeout=timeout)
+            try:
+                new_devices = await self.hass.async_add_executor_job(discover)
+
+            except OSError as err:
+                if err.errno == errno.ENETUNREACH:
+                    reason = "cannot_connect"
+                    err_msg = str(err)
+                else:
+                    reason = "unknown"
+                    err_msg = str(err)
+
+            else:
+                new_devices = [
+                    device
+                    for device in new_devices
+                    if device.mac.hex() not in already_configured
+                    and device.mac.hex() not in in_progress
+                ]
+                devices.extend(new_devices)
+
+        if not devices:
+            if not errors:
+                reason = "no_devices_found"
+                err_msg = "No devices found"
+
+            _LOGGER.error("Failed to discover devices: %s", err_msg)
+            return self.async_abort(reason=reason)
+
+        if len(devices) == 1:
+            return await self.async_step_user(
+                user_input={CONF_HOST: devices[0].host[0]}
+            )
+
+        if errors:
+            _LOGGER.debug("Error during device discovery: %s", err_msg)
+
+        data_schema = {
+            vol.Required(CONF_HOST): vol.In(
+                {device.host[0]: str(device) for device in devices}
+            ),
+        }
+        return self.async_show_form(
+            step_id="discover",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
+            description_placeholders={
+                "num_devices": len(devices),
+            },
         )
 
     async def async_step_auth(self):

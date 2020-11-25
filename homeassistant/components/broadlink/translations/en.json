@@ -5,6 +5,7 @@
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect",
             "invalid_host": "Invalid hostname or IP address",
+            "no_devices_found": "No devices found",
             "not_supported": "Device not supported",
             "unknown": "Unexpected error"
         },
@@ -18,11 +19,18 @@
             "auth": {
                 "title": "Authenticate to the device"
             },
+            "discover": {
+                "data": {
+                    "host": "Device"
+                },
+                "description": "We found {num_devices} new devices. Select a device to configure.",
+                "title": "Choose a device"
+            },
             "finish": {
                 "data": {
                     "name": "Name"
                 },
-                "title": "Choose a name for the device"
+                "title": "Enter a name for the device"
             },
             "reset": {
                 "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Click on the device.\n3. Click `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock.",
@@ -40,6 +48,7 @@
                     "host": "Host",
                     "timeout": "Timeout"
                 },
+                "description": "Enter the hostname or IP address of the Broadlink device to configure. You can also leave the host empty to discover devices.",
                 "title": "Connect to the device"
             }
         }

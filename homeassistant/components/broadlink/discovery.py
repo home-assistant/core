@@ -57,8 +57,8 @@ class BroadlinkDiscovery:
             await hass.async_add_executor_job(
                 self.discover, broadcast_addrs, current_entries
             )
-        except OSError:
-            pass
+        except OSError as err:
+            _LOGGER.debug("Error during device discovery: %s", err)
 
     def discover(self, broadcast_addrs, current_entries):
         """Discover Broadlink devices on the given networks, ignoring known devices."""

@@ -1,5 +1,6 @@
 """Helper functions for the Broadlink integration."""
 from base64 import b64decode
+from ipaddress import IPv4Address
 import socket
 
 from homeassistant import config_entries
@@ -70,3 +71,15 @@ def get_broadcast_addrs(nics):
             and addr.netmask == "255.255.255.0"
         )
     ]
+
+
+def is_broadcast_addr(address):
+    """Return True if the address is a valid IPv4 broadcast address."""
+    try:
+        ip_addr = IPv4Address(address)
+    except ValueError:
+        return False
+
+    if ip_addr.packed[3] == 255:
+        return True
+    return False
