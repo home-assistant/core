@@ -38,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     coordinator = FireServiceRotaCoordinator(hass, entry)
+    await coordinator.setup()
     await coordinator.async_availability_update()
 
     if coordinator.token_refresh_failure:
@@ -133,8 +134,6 @@ class FireServiceRotaWebSocket:
         self._fsr_incidents = FireServiceRotaIncidents(on_incident=self._on_incident)
         self._incident_data = None
 
-        self.start_listener()
-
     def _construct_url(self) -> str:
         """Return URL with latest access token."""
         return WSS_BWRURL.format(
@@ -193,6 +192,9 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
         )
 
         self.websocket = FireServiceRotaWebSocket(self._hass, self._entry)
+
+    async def setup(self) -> None:
+        await self._hass.async_add_executor_job(self.websocket.start_listener)
 
     async def update_call(self, func, *args):
         """Perform update call and return data."""
