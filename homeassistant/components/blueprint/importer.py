@@ -159,7 +159,7 @@ async def fetch_blueprint_from_github_url(
     blueprint = Blueprint(data)
 
     parsed_import_url = yarl.URL(import_url)
-    suggested_filename = f"{parsed_import_url.parts[1]}-{parsed_import_url.parts[-1]}"
+    suggested_filename = f"{parsed_import_url.parts[1]}/{parsed_import_url.parts[-1]}"
     if suggested_filename.endswith(".yaml"):
         suggested_filename = suggested_filename[:-5]
 

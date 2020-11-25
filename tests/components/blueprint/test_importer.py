@@ -135,3 +135,4 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
         "service_to_call",
         "trigger_event",
     }
+    assert imported_blueprint.suggested_filename == "balloob/motion_light"
