@@ -1,16 +1,34 @@
 blueprint:
-  name: Send notification when leaving a zone
   domain: automation
+  name: Send notification when leaving a zone
+  description: This automation will send you a notification when a person leaves a specific zone.
   input:
-    device_tracker_entity:
+    person_entity:
+      name: Person
+      selector:
+        entity:
+          domain: person
     zone_entity:
+      name: Zone
+      selector:
+        entity:
+          domain: person
     notify_service:
-    notification_message:
+      selector:
+        notify:
+
 trigger:
   platform: state
-  entity_id: !placeholder device_tracker_entity
-  from: !placeholder zone_entity
-  to: not_home
+  entity_id: !placeholder person_entity
+
+variables:
+  zone_entity: !placeholder zone_entity
+
+condition:
+  condition: template
+  value_template: "{{ trigger.from_state.state == states[zone_entity].name and trigger.to_state.state != states[zone_entity].name }}"
+
 action:
   - service: !placeholder notify_service
-    message: !placeholder notification_message
+    data:
+      message: "{{ trigger.to_state.name }} has left {{ states[zone_entity].name }}"
