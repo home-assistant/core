@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from homeassistant.components import automation
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
@@ -15,7 +14,7 @@ async def setup_bp(hass):
     assert await async_setup_component(hass, "blueprint", {})
 
     # Trigger registration of automation blueprints
-    automation.async_get_blueprints(hass)
+    await async_setup_component(hass, "automation", {})
 
 
 async def test_list_blueprints(hass, hass_ws_client):
@@ -96,6 +95,7 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
                 "name": "Call service based on event",
             },
         },
+        "validation_errors": None,
     }
 
 

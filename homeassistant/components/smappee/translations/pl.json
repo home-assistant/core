@@ -15,7 +15,7 @@
                 "data": {
                     "environment": "\u015arodowisko"
                 },
-                "description": "Skonfiguruj Smappee, aby zintegrowa\u0107 go z Home Assistant."
+                "description": "Skonfiguruj Smappee, aby zintegrowa\u0107 go z Home Assistantem."
             },
             "local": {
                 "data": {
@@ -27,7 +27,7 @@
                 "title": "Wybierz metod\u0119 uwierzytelniania"
             },
             "zeroconf_confirm": {
-                "description": "Czy chcesz doda\u0107 do Home Assistant urz\u0105dzenie Smappee o numerze seryjnym `{serialnumber}`?",
+                "description": "Czy chcesz doda\u0107 do Home Assistanta urz\u0105dzenie Smappee o numerze seryjnym `{serialnumber}`?",
                 "title": "Wykryto urz\u0105dzenie Smappee"
             }
         }

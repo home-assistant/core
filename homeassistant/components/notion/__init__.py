@@ -1,7 +1,6 @@
 """Support for Notion."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
@@ -21,9 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_COORDINATOR, DOMAIN, LOGGER
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -56,10 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
         )
     except InvalidCredentialsError:
-        _LOGGER.error("Invalid username and/or password")
+        LOGGER.error("Invalid username and/or password")
         return False
     except NotionError as err:
-        _LOGGER.error("Config entry failed: %s", err)
+        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     async def async_update():
@@ -94,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.entry_id
     ] = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name=entry.data[CONF_USERNAME],
         update_interval=DEFAULT_SCAN_INTERVAL,
         update_method=async_update,
@@ -163,14 +160,17 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._state = None
         self._system_id = system_id
-        self._task_id = task_id
+        self._unique_id = (
+            f'{sensor_id}_{self.coordinator.data["tasks"][task_id]["task_type"]}'
+        )
+        self.task_id = task_id
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
             self.coordinator.last_update_success
-            and self._task_id in self.coordinator.data["tasks"]
+            and self.task_id in self.coordinator.data["tasks"]
         )
 
     @property
@@ -207,8 +207,7 @@ class NotionEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, unchanging string that represents this entity."""
-        task = self.coordinator.data["tasks"][self._task_id]
-        return f'{self._sensor_id}_{task["task_type"]}'
+        return self._unique_id
 
     async def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
@@ -249,8 +248,10 @@ class NotionEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Respond to a DataUpdateCoordinator update."""
-        self.hass.async_create_task(self._async_update_bridge_id())
-        self._async_update_from_latest_data()
+        if self.task_id in self.coordinator.data["tasks"]:
+            self.hass.async_create_task(self._async_update_bridge_id())
+            self._async_update_from_latest_data()
+
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):

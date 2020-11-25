@@ -23,6 +23,10 @@ def validate_selector(config: Any) -> Dict:
     if selector_class is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
+    # Seletors can be empty
+    if config[selector_type] is None:
+        return {selector_type: {}}
+
     return {
         selector_type: cast(Dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
     }
@@ -40,8 +44,12 @@ class EntitySelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            # Integration that provided the entity
             vol.Optional("integration"): str,
+            # Domain the entity belongs to
             vol.Optional("domain"): str,
+            # Device class of the entity
+            vol.Optional("device_class"): str,
         }
     )
 
@@ -52,8 +60,11 @@ class DeviceSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
+            # Integration linked to it with a config entry
             vol.Optional("integration"): str,
+            # Manufacturer of device
             vol.Optional("manufacturer"): str,
+            # Model of device
             vol.Optional("model"): str,
         }
     )

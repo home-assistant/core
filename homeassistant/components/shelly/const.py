@@ -22,3 +22,13 @@ UPDATE_PERIOD_MULTIPLIER = 2.2
 
 # Shelly Air - Maximum work hours before lamp replacement
 SHAIR_MAX_WORK_HOURS = 9000
+
+# Map Shelly input events
+INPUTS_EVENTS_DICT = {
+    "S": "single",
+    "SS": "double",
+    "SSS": "triple",
+    "L": "long",
+    "SL": "single_long",
+    "LS": "long_single",
+}
