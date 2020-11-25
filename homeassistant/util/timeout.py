@@ -56,7 +56,7 @@ class _GlobalFreezeContext:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
-        return True
+        return None
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -124,7 +124,7 @@ class _ZoneFreezeContext:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
-        return True
+        return None
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -346,6 +346,10 @@ class _ZoneTimeoutManager:
         self._zone: str = zone
         self._tasks: List[_ZoneTaskContext] = []
         self._freezes: List[_ZoneFreezeContext] = []
+
+    def __repr__(self) -> str:
+        """Representation of a zone."""
+        return f"<{self.name}: {len(self._tasks)} / {len(self._freezes)}>"
 
     @property
     def name(self) -> str:
