@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -13,10 +13,16 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Uptime"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_UNIT_OF_MEASUREMENT, invalidation_version="0.119"),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="days"): vol.All(
+                cv.string, vol.In(["minutes", "hours", "days", "seconds"])
+            ),
+        }
+    ),
 )
 
 
@@ -33,8 +39,7 @@ class UptimeSensor(Entity):
     def __init__(self, name):
         """Initialize the uptime sensor."""
         self._name = name
-        self.initial = dt_util.now().isoformat()
-        self._state = None
+        self._state = dt_util.now().isoformat()
 
     @property
     def name(self):
@@ -53,4 +58,4 @@ class UptimeSensor(Entity):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        self._state = self.initial
+        return self._state
