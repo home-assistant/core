@@ -68,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
-    hass.data[DOMAIN] = {DOMAIN_CONFIG: config[DOMAIN]}
+    hass.data[DOMAIN] = {DOMAIN_CONFIG: config.get(DOMAIN, {})}
 
     async def initialize(_):
         scanner = Scanner(hass, await async_get_ssdp(hass))
