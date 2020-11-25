@@ -1,5 +1,4 @@
 """Platform to retrieve uptime for Home Assistant."""
-import logging
 
 import voluptuous as vol
 
@@ -9,12 +8,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_NAME = "Uptime"
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_UNIT_OF_MEASUREMENT, invalidation_version="0.119"),
+    cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -56,6 +53,7 @@ class UptimeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self):
-        """Update the state of the sensor."""
-        return self._state
+    @property
+    def should_poll(self) -> bool:
+        """Disable polling for this entity."""
+        return False
