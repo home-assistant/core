@@ -41,7 +41,7 @@ async def async_construct_device(hass: HomeAssistantType, udn: str, st: str) -> 
     _LOGGER.debug("Constructing device: %s::%s", udn, st)
 
     discoveries = [
-        await Device.async_supplement_discovery(hass, discovery)
+        discovery
         for discovery in await Device.async_discover(hass)
         if discovery[DISCOVERY_UDN] == udn and discovery[DISCOVERY_ST] == st
     ]
