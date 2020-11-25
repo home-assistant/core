@@ -63,7 +63,7 @@ class ReolinkCamera(ReolinkEntity, Camera):
         Camera.__init__(self)
 
         self._hass = hass
-        self._manager = self._hass.data[DATA_FFMPEG]
+        self._ffmpeg = self._hass.data[DATA_FFMPEG]
         self._last_image = None
         self._ptz_commands = {
             "AUTO": "Auto",
@@ -125,7 +125,7 @@ class ReolinkCamera(ReolinkEntity, Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         stream_source = await self.stream_source()
 
-        stream = CameraMjpeg(self._manager.binary, loop=self._hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(stream_source)
 
         try:
@@ -134,7 +134,7 @@ class ReolinkCamera(ReolinkEntity, Camera):
                 self._hass,
                 request,
                 stream_reader,
-                self._manager.ffmpeg_stream_content_type,
+                self._ffmpeg.ffmpeg_stream_content_type,
             )
         finally:
             await stream.close()
