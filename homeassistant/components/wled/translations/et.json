@@ -16,7 +16,7 @@
                 "description": "Seadista WLED-i sidumine Home Assistantiga."
             },
             "zeroconf_confirm": {
-                "description": "Kas soovid lisada WLED {nimi} Home Assistanti?",
+                "description": "Kas soovid lisada WLED {name} Home Assistanti?",
                 "title": "Leitud WLED seade"
             }
         }

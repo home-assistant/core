@@ -6,12 +6,13 @@ from typing import Optional
 
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
+from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
-import requests
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
@@ -32,7 +33,10 @@ async def async_setup_sdm_entry(
     """Set up the cameras."""
 
     subscriber = hass.data[DOMAIN][entry.entry_id]
-    device_manager = await subscriber.async_get_device_manager()
+    try:
+        device_manager = await subscriber.async_get_device_manager()
+    except GoogleNestException as err:
+        raise PlatformNotReady from err
 
     # Fetch initial data so we have data when entities subscribe.
 
@@ -130,7 +134,7 @@ class NestCamera(Camera):
         self._stream_refresh_unsub = None
         try:
             self._stream = await self._stream.extend_rtsp_stream()
-        except requests.HTTPError as err:
+        except GoogleNestException as err:
             _LOGGER.debug("Failed to extend stream: %s", err)
             # Next attempt to catch a url will get a new one
             self._stream = None

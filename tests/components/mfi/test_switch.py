@@ -31,7 +31,10 @@ async def test_setup_adds_proper_devices(hass):
         "homeassistant.components.mfi.switch.MfiSwitch", side_effect=mfi.MfiSwitch
     ) as mock_switch:
         ports = {
-            i: mock.MagicMock(model=model) for i, model in enumerate(mfi.SWITCH_MODELS)
+            i: mock.MagicMock(
+                model=model, label=f"Port {i}", output=False, data={}, ident=f"abcd-{i}"
+            )
+            for i, model in enumerate(mfi.SWITCH_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notaswitch")
         print(ports["bad"].model)

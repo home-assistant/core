@@ -122,6 +122,9 @@
             "off": "Normaal",
             "on": "Heet"
         },
+        "light": {
+            "on": "Licht gedetecteerd"
+        },
         "lock": {
             "off": "Vergrendeld",
             "on": "Ontgrendeld"

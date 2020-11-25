@@ -97,7 +97,8 @@ async def test_setup_adds_proper_devices(hass):
         "homeassistant.components.mfi.sensor.MfiSensor", side_effect=mfi.MfiSensor
     ) as mock_sensor:
         ports = {
-            i: mock.MagicMock(model=model) for i, model in enumerate(mfi.SENSOR_MODELS)
+            i: mock.MagicMock(model=model, label=f"Port {i}", value=0)
+            for i, model in enumerate(mfi.SENSOR_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notasensor")
         mock_client.return_value.get_devices.return_value = [

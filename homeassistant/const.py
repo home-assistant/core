@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 118
+MINOR_VERSION = 119
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -154,6 +154,7 @@ CONF_RGB = "rgb"
 CONF_ROOM = "room"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_SCENE = "scene"
+CONF_SELECTOR = "selector"
 CONF_SENDER = "sender"
 CONF_SENSORS = "sensors"
 CONF_SENSOR_TYPE = "sensor_type"

@@ -3,7 +3,8 @@
         "info": {
             "dashboards": "Dashboards",
             "mode": "Mode",
-            "resources": "Resources"
+            "resources": "Resources",
+            "views": "Views"
         }
     }
 }

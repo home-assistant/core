@@ -4,60 +4,12 @@ from typing import Any, Callable, Optional, Union
 
 import aioshelly
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity, update_coordinator
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
-from .utils import get_entity_name, get_rest_value_from_path
-
-
-def temperature_unit(block_info: dict) -> str:
-    """Detect temperature unit."""
-    if block_info[aioshelly.BLOCK_VALUE_UNIT] == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
-
-
-def shelly_naming(self, block, entity_type: str):
-    """Naming for switch and sensors."""
-
-    entity_name = self.wrapper.name
-    if not block:
-        return f"{entity_name} {self.description.name}"
-
-    channels = 0
-    mode = block.type + "s"
-    if "num_outputs" in self.wrapper.device.shelly:
-        channels = self.wrapper.device.shelly["num_outputs"]
-        if (
-            self.wrapper.model in ["SHSW-21", "SHSW-25"]
-            and self.wrapper.device.settings["mode"] == "roller"
-        ):
-            channels = 1
-        if block.type == "emeter" and "num_emeters" in self.wrapper.device.shelly:
-            channels = self.wrapper.device.shelly["num_emeters"]
-    if channels > 1 and block.type != "device":
-        # Shelly EM (SHEM) with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
-        if "name" in self.wrapper.device.settings[mode][int(block.channel)]:
-            entity_name = self.wrapper.device.settings[mode][int(block.channel)]["name"]
-        else:
-            entity_name = None
-        if not entity_name:
-            if self.wrapper.model == "SHEM-3":
-                base = ord("A")
-            else:
-                base = ord("1")
-            entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
-
-    if entity_type == "switch":
-        return entity_name
-
-    if entity_type == "sensor":
-        return f"{entity_name} {self.description.name}"
-
-    raise ValueError
+from .utils import async_remove_shelly_entity, get_entity_name, get_rest_value_from_path
 
 
 async def async_setup_entry_attribute_entities(
@@ -79,7 +31,17 @@ async def async_setup_entry_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            blocks.append((block, sensor_id, description))
+            # Filter and remove entities that according to settings should not create an entity
+            if description.removal_condition and description.removal_condition(
+                wrapper.device.settings, block
+            ):
+                domain = sensor_class.__module__.split(".")[-1]
+                unique_id = sensor_class(
+                    wrapper, block, sensor_id, description
+                ).unique_id
+                await async_remove_shelly_entity(hass, domain, unique_id)
+            else:
+                blocks.append((block, sensor_id, description))
 
     if not blocks:
         return
@@ -119,11 +81,14 @@ class BlockAttributeDescription:
 
     name: str
     # Callable = lambda attr_info: unit
+    icon: Optional[str] = None
     unit: Union[None, str, Callable[[dict], str]] = None
     value: Callable[[Any], Any] = lambda val: val
     device_class: Optional[str] = None
     default_enabled: bool = True
     available: Optional[Callable[[aioshelly.Block], bool]] = None
+    # Callable (settings, block), return true if entity should be removed
+    removal_condition: Optional[Callable[[dict, aioshelly.Block], bool]] = None
     device_state_attributes: Optional[
         Callable[[aioshelly.Block], Optional[dict]]
     ] = None
@@ -151,7 +116,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper, block)
+        self._name = get_entity_name(wrapper.device, block)
 
     @property
     def name(self):
@@ -217,7 +182,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-        self._name = shelly_naming(self, block, "sensor")
+        self._name = get_entity_name(wrapper.device, block, self.description.name)
 
     @property
     def unique_id(self):
@@ -255,6 +220,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.device_class
 
     @property
+    def icon(self):
+        """Icon of sensor."""
+        return self.description.icon
+
+    @property
     def available(self):
         """Available."""
         available = super().available
@@ -285,7 +255,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.description = description
 
         self._unit = self.description.unit
-        self._name = shelly_naming(self, None, "sensor")
+        self._name = get_entity_name(wrapper.device, None, self.description.name)
         self.path = self.description.path
         self._attributes = self.description.attributes
 
@@ -339,17 +309,20 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return f"{self.wrapper.mac}-{self.description.path}"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> dict:
         """Return the state attributes."""
 
         if self._attributes is None:
             return None
 
-        _description = self._attributes.get("description")
-        _attribute_value = get_rest_value_from_path(
-            self.wrapper.device.status,
-            self.description.device_class,
-            self._attributes.get("path"),
-        )
+        attributes = dict()
+        for attrib in self._attributes:
+            description = attrib.get("description")
+            attribute_value = get_rest_value_from_path(
+                self.wrapper.device.status,
+                self.description.device_class,
+                attrib.get("path"),
+            )
+            attributes[description] = attribute_value
 
-        return {_description: _attribute_value}
+        return attributes

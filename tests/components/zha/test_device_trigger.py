@@ -19,6 +19,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 ON = 1
 OFF = 0

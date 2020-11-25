@@ -12,6 +12,7 @@ from homeassistant.const import (
     VOLT,
 )
 
+from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -24,7 +25,10 @@ from .utils import temperature_unit
 
 SENSORS = {
     ("device", "battery"): BlockAttributeDescription(
-        name="Battery", unit=PERCENTAGE, device_class=sensor.DEVICE_CLASS_BATTERY
+        name="Battery",
+        unit=PERCENTAGE,
+        device_class=sensor.DEVICE_CLASS_BATTERY,
+        removal_condition=lambda settings, _: settings.get("external_power") == 1,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -123,6 +127,7 @@ SENSORS = {
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
         value=lambda value: value,
+        icon="mdi:gauge",
         # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
         available=lambda block: block.sensorOp == "normal",
     ),
@@ -143,7 +148,22 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("relay", "totalWorkTime"): BlockAttributeDescription(
+        name="Lamp life",
+        unit=PERCENTAGE,
+        icon="mdi:progress-wrench",
+        value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
+        device_state_attributes=lambda block: {
+            "Operational hours": round(block.totalWorkTime / 3600, 1)
+        },
+    ),
+    ("adc", "adc"): BlockAttributeDescription(
+        name="ADC",
+        unit=VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+    ),
 }
 
 REST_SENSORS = {
@@ -157,6 +177,7 @@ REST_SENSORS = {
     "uptime": RestAttributeDescription(
         name="Uptime",
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
+        default_enabled=False,
         path="uptime",
     ),
 }
