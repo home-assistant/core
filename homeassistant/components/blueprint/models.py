@@ -8,7 +8,13 @@ from pkg_resources import parse_version
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, __version__
+from homeassistant.const import (
+    CONF_DEFAULT,
+    CONF_DOMAIN,
+    CONF_NAME,
+    CONF_PATH,
+    __version__,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
@@ -141,24 +147,14 @@ class BlueprintInputs:
 
         for input in no_input:
             blueprint_input = self.blueprint.inputs[input]
-            if isinstance(blueprint_input, dict):
-                inputs_with_default[input] = blueprint_input.get("default")
+            if isinstance(blueprint_input, dict) and CONF_DEFAULT in blueprint_input:
+                inputs_with_default[input] = blueprint_input[CONF_DEFAULT]
 
         return inputs_with_default
 
     def validate(self) -> None:
         """Validate the inputs."""
-        no_input = self.blueprint.placeholders - set(self.inputs)
-
-        missing = set()
-
-        for input in no_input:
-            blueprint_input = self.blueprint.inputs[input]
-            if (
-                not isinstance(blueprint_input, dict)
-                or "default" not in blueprint_input
-            ):
-                missing.add(input)
+        missing = self.blueprint.placeholders - set(self.inputs_with_default)
 
         if missing:
             raise MissingPlaceholder(
