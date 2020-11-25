@@ -1,5 +1,5 @@
 """Tests for the Abode config flow."""
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
+from abodepy.exceptions import AbodeAuthenticationException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
 
 from homeassistant import data_entry_flow
@@ -150,7 +150,7 @@ async def test_step_mfa(hass):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeException((HTTP_BAD_REQUEST, "invalid mfa")),
+        side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "invalid mfa")),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"mfa_code": "123456"}
