@@ -41,7 +41,7 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id for the device."""
-        return self._mac
+        return f"{self._mac}-panel-light"
 
     @property
     def icon(self) -> Optional[str]:
