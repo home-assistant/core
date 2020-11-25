@@ -19,13 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, WSS_BWRURL
+from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN, WSS_BWRURL
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_PLATFORMS = {BINARYSENSOR_DOMAIN, SENSOR_DOMAIN}
+SUPPORTED_PLATFORMS = {SENSOR_DOMAIN, BINARYSENSOR_DOMAIN}
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -38,14 +38,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FireServiceRota from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    coordinator = FireServiceRotaCoordinator(hass, entry)
-    await coordinator.setup()
-    await coordinator.async_availability_update()
 
-    if coordinator.token_refresh_failure:
+    client = FireServiceRotaClient(hass, entry)
+    await client.setup()
+
+    if client.token_refresh_failure:
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    async def async_update_data():
+        return await client.async_update()
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="duty binary sensor",
+        update_method=async_update_data,
+        update_interval=MIN_TIME_BETWEEN_UPDATES,
+    )
+
+    await coordinator.async_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_COORDINATOR: coordinator,
+    }
 
     for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
@@ -162,21 +178,13 @@ class FireServiceRotaWebSocket:
         self._fsr_incidents.stop()
 
 
-class FireServiceRotaCoordinator(DataUpdateCoordinator):
+class FireServiceRotaClient:
     """Getting the latest data from fireservicerota."""
 
     def __init__(self, hass, entry):
         """Initialize the data object."""
         self._hass = hass
         self._entry = entry
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=self.async_availability_update,
-            update_interval=MIN_TIME_BETWEEN_UPDATES,
-        )
 
         self._url = entry.data[CONF_URL]
         self._tokens = entry.data[CONF_TOKEN]
@@ -195,7 +203,7 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
         self.websocket = FireServiceRotaWebSocket(self._hass, self._entry)
 
     async def setup(self) -> None:
-        """Set up the coordinator."""
+        """Set up the data client."""
         await self._hass.async_add_executor_job(self.websocket.start_listener)
 
     async def update_call(self, func, *args):
@@ -217,13 +225,14 @@ class FireServiceRotaCoordinator(DataUpdateCoordinator):
 
                 return await self._hass.async_add_executor_job(func, *args)
 
-    async def async_availability_update(self) -> None:
+    async def async_update(self) -> object:
         """Get the latest availability data."""
-        _LOGGER.debug("Updating availability data")
-
-        return await self.update_call(
+        data = await self.update_call(
             self.fsr.get_availability, str(self._hass.config.time_zone)
         )
+
+        _LOGGER.debug("Updated availability data: %s", data)
+        return data
 
     async def async_response_update(self) -> object:
         """Get the latest incident response data."""

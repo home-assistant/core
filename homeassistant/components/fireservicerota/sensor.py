@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,17 +16,17 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
-    coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
+    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
 
-    async_add_entities([IncidentsSensor(coordinator)])
+    async_add_entities([IncidentsSensor(client)])
 
 
 class IncidentsSensor(RestoreEntity):
     """Representation of FireServiceRota incidents sensor."""
 
-    def __init__(self, coordinator):
+    def __init__(self, client):
         """Initialize."""
-        self._coordinator = coordinator
+        self._coordinator = client
         self._entry_id = self._coordinator._entry.entry_id
         self._unique_id = f"{self._coordinator._entry.unique_id}_Incidents"
         self._state = None
@@ -112,13 +112,13 @@ class IncidentsSensor(RestoreEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
-                self.coordinator_update,
+                self.client_update,
             )
         )
 
     @callback
-    def coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def client_update(self) -> None:
+        """Handle updated data from the data client."""
         data = self._coordinator.websocket.incident_data()
         if not data or "body" not in data:
             return

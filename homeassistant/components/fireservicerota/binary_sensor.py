@@ -3,14 +3,13 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +18,15 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota binary sensor based on a config entry."""
-    coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
+
+    coordinator: DataUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
+        entry.entry_id
+    ][DATA_COORDINATOR]
 
     async_add_entities([ResponseBinarySensor(coordinator, entry)])
 
 
-class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
+class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an FireServiceRota sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry):
@@ -50,25 +52,16 @@ class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
         return self._unique_id
 
     @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def is_on(self) -> str:
+    def is_on(self):
         """Return the state of the binary sensor."""
         if not self.coordinator.data:
             return
 
-        availability_data = self.coordinator.data
-        if "available" in availability_data:
-            state = availability_data["available"]
-            if state:
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
+        data = self.coordinator.data
+        if "available" in data and data["available"]:
+            self._state = True
         else:
-            self._state = STATE_OFF
+            self._state = False
 
         _LOGGER.debug("Set state of entity 'Duty Binary Sensor' to '%s'", self._state)
         return self._state
@@ -96,4 +89,5 @@ class ResponseBinarySensor(BinarySensorEntity, CoordinatorEntity):
             if key in data
         }
 
+        _LOGGER.debug("Set attributes of entity 'Duty Binary Sensor' to '%s'", attr)
         return attr
