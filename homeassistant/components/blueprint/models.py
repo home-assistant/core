@@ -10,7 +10,13 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import loader
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH, __version__
+from homeassistant.const import (
+    CONF_DEFAULT,
+    CONF_DOMAIN,
+    CONF_NAME,
+    CONF_PATH,
+    __version__,
+)
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
@@ -83,6 +89,11 @@ class Blueprint:
         return self.data[CONF_BLUEPRINT][CONF_NAME]
 
     @property
+    def inputs(self) -> dict:
+        """Return blueprint inputs."""
+        return self.data[CONF_BLUEPRINT][CONF_INPUT]
+
+    @property
     def metadata(self) -> dict:
         """Return blueprint metadata."""
         return self.data[CONF_BLUEPRINT]
@@ -129,9 +140,23 @@ class BlueprintInputs:
         """Return the inputs."""
         return self.config_with_inputs[CONF_USE_BLUEPRINT][CONF_INPUT]
 
+    @property
+    def inputs_with_default(self):
+        """Return the inputs and fallback to defaults."""
+        no_input = self.blueprint.placeholders - set(self.inputs)
+
+        inputs_with_default = dict(self.inputs)
+
+        for inp in no_input:
+            blueprint_input = self.blueprint.inputs[inp]
+            if isinstance(blueprint_input, dict) and CONF_DEFAULT in blueprint_input:
+                inputs_with_default[inp] = blueprint_input[CONF_DEFAULT]
+
+        return inputs_with_default
+
     def validate(self) -> None:
         """Validate the inputs."""
-        missing = self.blueprint.placeholders - set(self.inputs)
+        missing = self.blueprint.placeholders - set(self.inputs_with_default)
 
         if missing:
             raise MissingPlaceholder(
@@ -144,7 +169,9 @@ class BlueprintInputs:
     @callback
     def async_substitute(self) -> dict:
         """Get the blueprint value with the inputs substituted."""
-        processed = placeholder.substitute(self.blueprint.data, self.inputs)
+        processed = placeholder.substitute(
+            self.blueprint.data, self.inputs_with_default
+        )
         combined = {**self.config_with_inputs, **processed}
         # From config_with_inputs
         combined.pop(CONF_USE_BLUEPRINT)
