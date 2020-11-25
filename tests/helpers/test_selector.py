@@ -6,7 +6,25 @@ from homeassistant.helpers import selector
 
 
 @pytest.mark.parametrize(
-    "schema", ({}, {"non_existing": {}}, {"device": {}, "entity": {}})
+    "schema",
+    (
+        {"device": None},
+        {"entity": None},
+    ),
+)
+def test_valid_base_schema(schema):
+    """Test base schema validation."""
+    selector.validate_selector(schema)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {},
+        {"non_existing": {}},
+        # Two keys
+        {"device": {}, "entity": {}},
+    ),
 )
 def test_invalid_base_schema(schema):
     """Test base schema validation."""
