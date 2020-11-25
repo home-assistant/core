@@ -42,14 +42,8 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            abode = Abode(
-                auto_login=False,
-                get_devices=False,
-                get_automations=False,
-                cache_path=self._cache,
-            )
             await self.hass.async_add_executor_job(
-                abode.login, self._username, self._password
+                Abode, self._username, self._password, True, False, False, self._cache
             )
 
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
@@ -109,22 +103,22 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_mfa(self, user_input=None):
         """Handle multi-factor authentication (MFA) with Abode."""
-        errors = {}
-
         if user_input is None:
             return self.async_show_form(
                 step_id="mfa", data_schema=vol.Schema(self.mfa_data_schema)
             )
 
+        errors = {}
+        mfa_code = user_input[CONF_MFA]
+
         try:
-            mfa_code = user_input[CONF_MFA]
+            # Create instance to access login method for passing MFA code
             abode = Abode(
                 auto_login=False,
                 get_devices=False,
                 get_automations=False,
                 cache_path=self._cache,
             )
-
             await self.hass.async_add_executor_job(
                 abode.login, self._username, self._password, mfa_code
             )
