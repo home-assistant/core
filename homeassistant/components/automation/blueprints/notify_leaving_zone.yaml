@@ -22,12 +22,13 @@ trigger:
 
 variables:
   zone_entity: !placeholder zone_entity
+  zone_state: "{{ states[zone_entity].name }}"
 
 condition:
   condition: template
-  value_template: "{{ trigger.from_state.state == states[zone_entity].name and trigger.to_state.state != states[zone_entity].name }}"
+  value_template: "{{ trigger.from_state.state == zone_state and trigger.to_state.state != zone_state }}"
 
 action:
   - service: !placeholder notify_service
     data:
-      message: "{{ trigger.to_state.name }} has left {{ states[zone_entity].name }}"
+      message: "{{ trigger.to_state.name }} has left {{ zone_state }}"
