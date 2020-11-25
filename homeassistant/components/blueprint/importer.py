@@ -125,7 +125,9 @@ def _extract_blueprint_from_community_topic(
     if blueprint is None:
         return None
 
-    return ImportedBlueprint(url, topic["slug"], block_content, blueprint)
+    return ImportedBlueprint(
+        url, f'{post["username"]}/{topic["slug"]}', block_content, blueprint
+    )
 
 
 async def fetch_blueprint_from_community_post(
@@ -170,7 +172,9 @@ async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlu
     """Get a blueprint from a url."""
     for func in (fetch_blueprint_from_community_post, fetch_blueprint_from_github_url):
         try:
-            return await func(hass, url)
+            bp = await func(hass, url)
+            bp.blueprint.update_metadata(source_url=url)
+            return bp
         except ValueError:
             pass
 
