@@ -37,6 +37,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Broadlink flow."""
+        self.data = {}
         self.device = None
 
     async def async_set_device(self, device, raise_on_progress=True):
@@ -154,7 +155,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             broadcast_addrs = [host]
 
         else:
-            return await self.async_step_user(user_input={CONF_HOST: host})
+            user_input[CONF_TIMEOUT] = self.data.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+            return await self.async_step_user(user_input=user_input)
 
         devices = []
         already_configured = self._async_current_ids(False)
@@ -197,9 +199,12 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Error during device discovery: %s", err_msg)
 
         if len(devices) == 1:
+            device = devices[0]
             return await self.async_step_user(
-                user_input={CONF_HOST: devices[0].host[0]}
+                user_input={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
             )
+
+        self.data[CONF_TIMEOUT] = timeout
 
         data_schema = {
             vol.Required(CONF_HOST): vol.In(
