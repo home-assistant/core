@@ -81,6 +81,11 @@ class Blueprint:
         return self.data[CONF_BLUEPRINT][CONF_NAME]
 
     @property
+    def input(self) -> dict:
+        """Return blueprint input."""
+        return self.data[CONF_BLUEPRINT][CONF_INPUT]
+
+    @property
     def metadata(self) -> dict:
         """Return blueprint metadata."""
         return self.data[CONF_BLUEPRINT]
@@ -127,9 +132,33 @@ class BlueprintInputs:
         """Return the inputs."""
         return self.config_with_inputs[CONF_USE_BLUEPRINT][CONF_INPUT]
 
+    @property
+    def inputs_with_default(self):
+        """Return the inputs and fallback to defaults."""
+        no_input = self.blueprint.placeholders - set(self.inputs)
+
+        inputs_with_default = dict(self.inputs)
+
+        for input in no_input:
+            blueprint_input = self.blueprint.input[input]
+            if isinstance(blueprint_input, dict):
+                inputs_with_default[input] = blueprint_input.get("default")
+
+        return inputs_with_default
+
     def validate(self) -> None:
         """Validate the inputs."""
-        missing = self.blueprint.placeholders - set(self.inputs)
+        no_input = self.blueprint.placeholders - set(self.inputs)
+
+        missing = set()
+
+        for input in no_input:
+            blueprint_input = self.blueprint.input[input]
+            if (
+                not isinstance(blueprint_input, dict)
+                or "default" not in blueprint_input
+            ):
+                missing.add(input)
 
         if missing:
             raise MissingPlaceholder(
@@ -142,7 +171,9 @@ class BlueprintInputs:
     @callback
     def async_substitute(self) -> dict:
         """Get the blueprint value with the inputs substituted."""
-        processed = placeholder.substitute(self.blueprint.data, self.inputs)
+        processed = placeholder.substitute(
+            self.blueprint.data, self.inputs_with_default
+        )
         combined = {**self.config_with_inputs, **processed}
         # From config_with_inputs
         combined.pop(CONF_USE_BLUEPRINT)
