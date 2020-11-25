@@ -58,6 +58,7 @@ FLOWS = [
     "enocean",
     "epson",
     "esphome",
+    "fireservicerota",
     "flick_electric",
     "flo",
     "flume",
