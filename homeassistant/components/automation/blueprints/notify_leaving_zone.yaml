@@ -12,7 +12,7 @@ blueprint:
       name: Zone
       selector:
         entity:
-          domain: person
+          domain: zone
     notify_service:
       name: The notify service to use
 
