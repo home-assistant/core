@@ -3,11 +3,12 @@ from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
+from homeassistant.components.abode.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
 from tests.async_mock import patch
-from tests.common import Mock, MockConfigEntry
+from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"
 
@@ -29,7 +30,7 @@ async def test_one_config_allowed(hass):
     flow.hass = hass
 
     MockConfigEntry(
-        domain="abode",
+        domain=DOMAIN,
         data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
     ).add_to_hass(hass)
 
@@ -94,7 +95,7 @@ async def test_step_import(hass):
         "abodepy.UTILS"
     ):
         result = await hass.config_entries.flow.async_init(
-            "abode", context={"source": SOURCE_IMPORT}, data=conf
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "user@email.com"
@@ -114,7 +115,7 @@ async def test_step_user(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            "abode", context={"source": SOURCE_USER}, data=conf
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -135,7 +136,7 @@ async def test_step_mfa(hass):
         side_effect=AbodeAuthenticationException((32, "mfa required")),
     ):
         result = await hass.config_entries.flow.async_init(
-            "abode", context={"source": SOURCE_USER}, data=conf
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -144,37 +145,33 @@ async def test_step_mfa(hass):
 
 async def test_step_reauth(hass):
     """Test the reauth flow."""
-    conf = Mock()
-    conf.data = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
-    conf.entry_id = "abc123"
-
-    flow = config_flow.AbodeFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth_confirm"
-    ) as mock_async_step_reauth_confirm:
-
-        await flow.async_step_reauth(conf)
-
-        mock_async_step_reauth_confirm.assert_called()
-
-
-async def test_step_reauth_confirm(hass):
-    """Test the reauth_confirm flow."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
-    flow = config_flow.AbodeFlowHandler()
-    flow.hass = hass
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="user@email.com",
+        data=conf,
+    ).add_to_hass(hass)
 
-    result = await flow.async_step_reauth_confirm()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth_confirm"
+    with patch("homeassistant.components.abode.config_flow.Abode"), patch(
+        "abodepy.UTILS"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth"},
+            data=conf,
+        )
 
-    with patch(
-        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_login"
-    ) as mock_async_step_login:
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
 
-        await flow.async_step_reauth_confirm(conf)
+        with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=conf,
+            )
 
-        mock_async_step_login.assert_called_once()
+            assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+            assert result["reason"] == "reauth_successful"
+
+        assert len(hass.config_entries.async_entries()) == 1
