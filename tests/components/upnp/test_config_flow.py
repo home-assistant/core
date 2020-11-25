@@ -46,6 +46,8 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
     ), patch.object(
+        Device, "async_discover", AsyncMock(return_value=discoveries)
+    ), patch.object(
         Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
     ):
         # Discovered via step ssdp.
