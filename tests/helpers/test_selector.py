@@ -10,7 +10,6 @@ from homeassistant.helpers import selector
     (
         {"device": None},
         {"entity": None},
-        {"notify": None},
     ),
 )
 def test_valid_base_schema(schema):

@@ -68,10 +68,3 @@ class DeviceSelector(Selector):
             vol.Optional("model"): str,
         }
     )
-
-
-@SELECTORS.register("notify")
-class NotifySelector(Selector):
-    """Selector of a notification service."""
-
-    CONFIG_SCHEMA = vol.Schema({})
