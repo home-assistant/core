@@ -63,6 +63,7 @@ BLUEPRINT_SCHEMA = vol.Schema(
         vol.Required(CONF_BLUEPRINT): vol.Schema(
             {
                 vol.Required(CONF_NAME): str,
+                vol.Optional(CONF_DESCRIPTION): str,
                 vol.Required(CONF_DOMAIN): str,
                 vol.Optional(CONF_SOURCE_URL): cv.url,
                 vol.Optional(CONF_HOMEASSISTANT): {
