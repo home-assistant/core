@@ -2053,7 +2053,7 @@ skybellpy==0.6.3
 slackclient==2.5.0
 
 # homeassistant.components.sleepiq
-# sleepyq==0.8.1
+sleepyq==0.8.1
 
 # homeassistant.components.xmpp
 slixmpp==1.7.0
