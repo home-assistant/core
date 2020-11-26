@@ -80,6 +80,7 @@ SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
 # Usage of YAML for configuration of the Hyperion component is deprecated.
 PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.118"),
     cv.deprecated(CONF_HOST, invalidation_version="0.120"),
     cv.deprecated(CONF_PORT, invalidation_version="0.120"),
     cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.118"),
