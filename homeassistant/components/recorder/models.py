@@ -116,6 +116,8 @@ class States(Base):  # type: ignore
     old_state = relationship(
         "States",
         remote_side=[state_id],
+        uselist=False,
+        single_parent=True,
         cascade="save-update,merge,delete,delete-orphan",
     )
 
