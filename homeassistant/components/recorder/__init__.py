@@ -532,8 +532,6 @@ class Recorder(threading.Thread):
             # out from under us because they
             # did keep_days=0
             _LOGGER.debug("done looking for objects in session to cleanup")
-            self.event_session.rollback()
-            _LOGGER.debug("did rollback")
             _LOGGER.debug("looking for objects in session to cleanup")
             for obj in self.event_session:
                 _LOGGER.debug("obj in event_session: %s", obj)
