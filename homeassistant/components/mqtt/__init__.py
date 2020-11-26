@@ -944,7 +944,7 @@ class MQTT:
                 )
 
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
-            self.hass.loop.create_task(publish_birth_message(birth_message))
+            self.hass.add_job(publish_birth_message(birth_message))
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
