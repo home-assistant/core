@@ -21,6 +21,8 @@ from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_WIDTH = "width"
+ATTR_ABSOLUTE_POSITION = "absolute_position"
 
 POSITION_DEVICE_MAP = {
     BlindType.RollerBlind: DEVICE_CLASS_SHADE,
@@ -82,6 +84,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     TDBU_DEVICE_MAP[blind.type],
                     config_entry,
                     "Bottom",
+                )
+            )
+            entities.append(
+                MotionTDBUDevice(
+                    coordinator,
+                    blind,
+                    TDBU_DEVICE_MAP[blind.type],
+                    config_entry,
+                    "Combined",
                 )
             )
 
@@ -205,7 +216,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         self._motor = motor
         self._motor_key = motor[0]
 
-        if self._motor not in ["Bottom", "Top"]:
+        if self._motor not in ["Bottom", "Top", "Combined"]:
             _LOGGER.error("Unknown motor '%s'", self._motor)
 
     @property
@@ -225,10 +236,10 @@ class MotionTDBUDevice(MotionPositionDevice):
 
         None is unknown, 0 is open, 100 is closed.
         """
-        if self._blind.position is None:
+        if self._blind.scaled_position is None:
             return None
 
-        return 100 - self._blind.position[self._motor_key]
+        return 100 - self._blind.scaled_position[self._motor_key]
 
     @property
     def is_closed(self):
@@ -236,7 +247,20 @@ class MotionTDBUDevice(MotionPositionDevice):
         if self._blind.position is None:
             return None
 
+        if self._motor == "Combined":
+            return self._blind.width == 100
+
         return self._blind.position[self._motor_key] == 100
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if self._blind.position is not None:
+            attributes[ATTR_ABSOLUTE_POSITION] = 100 - self._blind.position[self._motor_key]
+        if self._blind.width is not None:
+            attributes[ATTR_WIDTH] = self._blind.width
+        return attributes
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -249,7 +273,7 @@ class MotionTDBUDevice(MotionPositionDevice):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        self._blind.Set_position(100 - position, motor=self._motor_key)
+        self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
