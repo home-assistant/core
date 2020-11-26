@@ -139,6 +139,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.match_all: {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Optional(CONF_JSONPORT, default=DEFAULT_JSONPORT): cv.port,
                         vol.Optional(
                             CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
@@ -235,6 +236,7 @@ def setup(hass, config):
         remotes[sname] = {
             "ip": sconfig.get(CONF_HOST),
             "port": sconfig[CONF_PORT],
+            "jsonport": rconfig.get(CONF_JSONPORT),
             "username": sconfig.get(CONF_USERNAME),
             "password": sconfig.get(CONF_PASSWORD),
             "connect": False,
