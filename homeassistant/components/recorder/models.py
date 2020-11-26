@@ -107,7 +107,9 @@ class States(Base):  # type: ignore
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     old_state_id = Column(Integer, ForeignKey("states.state_id"))
-    event = relationship("Events", uselist=False)
+    event = relationship(
+        "Events", uselist=False, cascade="save-update,merge,delete,delete-orphan"
+    )
     old_state = relationship("States", remote_side=[state_id])
 
     __table_args__ = (
