@@ -192,7 +192,7 @@ class EntityComponent:
         self,
         name: str,
         schema: Union[Dict[str, Any], vol.Schema],
-        func: str,
+        func: Union[str, Callable[..., Any]],
         required_features: Optional[List[int]] = None,
     ) -> None:
         """Register an entity service."""
