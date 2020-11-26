@@ -516,7 +516,7 @@ class Recorder(threading.Thread):
                 self._pending_expunge = []
             self.event_session.commit()
         except exc.IntegrityError as err:
-            _LOGGER.error("Error executing query: %s", err)
+            _LOGGER.error("Integrity error while executing query: %s", err)
             self.event_session.rollback()
             # It likely means the state was deleted
             # out from under us
