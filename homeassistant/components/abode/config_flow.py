@@ -33,7 +33,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._cache = None
         self._mfa_code = None
         self._password = None
-        self._polling = None
+        self._polling = False
         self._username = None
 
     async def _async_abode_login(self, step_id):
@@ -101,7 +101,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(
                 existing_entry, data=config_data
             )
-            # Force reload the Abode config entry otherwise devices will remain unavailable
+            # Reload the Abode config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
@@ -122,7 +122,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        self._polling = user_input.get(CONF_POLLING, False)
 
         return await self._async_abode_login(step_id="user")
 
@@ -164,7 +163,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
-            LOGGER.warning("Only one configuration of abode is allowed.")
+            LOGGER.warning("Already configured. Only a single configuration possible.")
             return self.async_abort(reason="single_instance_allowed")
+
+        self._polling = import_config.get(CONF_POLLING, False)
 
         return await self.async_step_user(import_config)
