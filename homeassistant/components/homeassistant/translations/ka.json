@@ -3,6 +3,7 @@
         "info": {
             "arch": "\u10de\u10e0\u10dd\u10ea\u10d4\u10e1\u10dd\u10e0\u10d8\u10e1 \u10d0\u10e0\u10e5\u10d8\u10e2\u10d4\u10e5\u10e2\u10e3\u10e0\u10d0",
             "chassis": "\u10e8\u10d0\u10e1\u10d8",
+            "dev": "\u10e8\u10d4\u10db\u10e3\u10e8\u10d0\u10d5\u10d4\u10d1\u10d0",
             "docker": "Docker",
             "docker_version": "Docker",
             "hassio": "Supervisor",
