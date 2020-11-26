@@ -102,11 +102,13 @@ class States(Base):  # type: ignore
     entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
-    event_id = Column(Integer, ForeignKey("events.event_id"), index=True)
+    event_id = Column(
+        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
+    )
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(Integer, ForeignKey("states.state_id"))
+    old_state_id = Column(Integer, ForeignKey("states.state_id", ondelete="SET NULL"))
     event = relationship(
         "Events",
         uselist=False,
@@ -116,9 +118,6 @@ class States(Base):  # type: ignore
     old_state = relationship(
         "States",
         remote_side=[state_id],
-        uselist=False,
-        single_parent=True,
-        cascade="save-update,merge,delete,delete-orphan",
     )
 
     __table_args__ = (
