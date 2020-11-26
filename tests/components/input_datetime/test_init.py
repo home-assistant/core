@@ -624,7 +624,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert resp["success"]
 
     state = hass.states.get(input_entity_id)
-    assert state.state == "1991-01-02 1:02:03"
+    assert state.state == "1991-01-02 01:02:03"
     assert state.attributes[ATTR_FRIENDLY_NAME] == "New DateTime"
     assert state.attributes[ATTR_EDITABLE]
 
@@ -680,12 +680,12 @@ async def test_timestamp(hass):
         # initial has been converted to the set timezone
         state_with_tz = hass.states.get("input_datetime.test_datetime_initial_with_tz")
         assert state_with_tz is not None
-        assert state_with_tz.state == "2020-12-13 1:00:00"
+        assert state_with_tz.state == "2020-12-13 01:00:00"
         assert (
             dt_util.as_local(
                 dt_util.utc_from_timestamp(state_with_tz.attributes[ATTR_TIMESTAMP])
             ).strftime(FMT_DATETIME)
-            == "2020-12-13 1:00:00"
+            == "2020-12-13 01:00:00"
         )
 
         # initial has been interpreted as being part of set timezone

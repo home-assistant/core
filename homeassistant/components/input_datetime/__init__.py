@@ -40,7 +40,7 @@ ATTR_DATETIME = "datetime"
 ATTR_TIMESTAMP = "timestamp"
 
 FMT_DATE = "%Y-%m-%d"
-FMT_TIME = "%-H:%M:%S"
+FMT_TIME = "%H:%M:%S"
 FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 
 
