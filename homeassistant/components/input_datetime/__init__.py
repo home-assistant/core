@@ -220,7 +220,7 @@ class InputDatetime(RestoreEntity):
             time = dt_util.parse_time(initial)
             current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
 
-        # If the user passsed in an initial value with a timezone, convert it to right tz
+        # If the user passed in an initial value with a timezone, convert it to right tz
         if current_datetime.tzinfo is not None:
             self._current_datetime = current_datetime.astimezone(
                 dt_util.DEFAULT_TIME_ZONE
