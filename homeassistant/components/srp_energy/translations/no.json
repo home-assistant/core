@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "id": "Konto ID",
+                    "is_tou": "Er Time of Use Plan",
                     "password": "Passord",
                     "username": "Brukernavn"
                 }

@@ -1,10 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "site_exists": "Aquest site_id ja est\u00e0 configurat"
         },
         "error": {
-            "site_exists": "Aquest site_id ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "could_not_connect": "No s'ha pogut connectar amb l'API de Solaredge",
+            "invalid_api_key": "Clau API inv\u00e0lida",
+            "site_exists": "Aquest site_id ja est\u00e0 configurat",
+            "site_not_active": "El lloc web no est\u00e0 actiu"
         },
         "step": {
             "user": {
