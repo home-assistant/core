@@ -203,8 +203,8 @@ async def test_domain_blueprints_get_blueprint_errors(hass, domain_bps):
 
     with patch(
         "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
-    ):
-        assert await domain_bps.async_get_blueprint("non-existing-path") is None
+    ), pytest.raises(errors.FailedToLoad):
+        await domain_bps.async_get_blueprint("non-existing-path")
 
 
 async def test_domain_blueprints_caching(domain_bps):
