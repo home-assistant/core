@@ -36,7 +36,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
@@ -287,7 +287,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def preset_mode(self) -> Optional[str]:

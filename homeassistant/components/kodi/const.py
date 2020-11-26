@@ -6,7 +6,6 @@ CONF_WS_PORT = "ws_port"
 DATA_CONNECTION = "connection"
 DATA_KODI = "kodi"
 DATA_REMOVE_LISTENER = "remove_listener"
-DATA_VERSION = "version"
 
 DEFAULT_PORT = 8080
 DEFAULT_SSL = False

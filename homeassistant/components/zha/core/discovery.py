@@ -39,12 +39,13 @@ async def async_add_entities(
             Tuple[str, zha_typing.ZhaDeviceType, List[zha_typing.ChannelType]],
         ]
     ],
+    update_before_add: bool = True,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
     to_add = [ent_cls(*args) for ent_cls, args in entities]
-    _async_add_entities(to_add, update_before_add=True)
+    _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 
 

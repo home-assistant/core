@@ -10,10 +10,12 @@
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
                     "host": "",
+                    "name": "Seadme nimi",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },

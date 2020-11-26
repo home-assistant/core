@@ -3,8 +3,7 @@
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert.",
             "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang.",
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen mam Guardian Apparat."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {
@@ -18,6 +17,5 @@
                 "description": "Soll d\u00ebsen Guardian Apparat konfigur\u00e9iert ginn?"
             }
         }
-    },
-    "title": "Elexa Guardian"
+    }
 }

@@ -2,8 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Gjeldende {entity_name} batteriniv\u00e5",
-            "is_current": "Gjeldende {entity_name} gjeldende",
-            "is_energy": "Gjeldende {entity_name} energi",
+            "is_current": "Gjeldende {entity_name} str\u00f8m",
+            "is_energy": "Gjeldende {entity_name} effekt",
             "is_humidity": "Gjeldende {entity_name} fuktighet",
             "is_illuminance": "Gjeldende {entity_name} belysningsstyrke",
             "is_power": "Gjeldende {entity_name}-effekt",
@@ -13,12 +13,12 @@
             "is_temperature": "Gjeldende {entity_name} temperatur",
             "is_timestamp": "Gjeldende {entity_name} tidsstempel",
             "is_value": "Gjeldende {entity_name} verdi",
-            "is_voltage": "Gjeldende spenning p\u00e5 {entity_name}"
+            "is_voltage": "Gjeldende {entity_name} spenning"
         },
         "trigger_type": {
             "battery_level": "{entity_name} batteriniv\u00e5 endres",
             "current": "{entity_name} gjeldende endringer",
-            "energy": "{entity_name} energiendringer",
+            "energy": "{entity_name} effektendringer",
             "humidity": "{entity_name} fuktighets endringer",
             "illuminance": "{entity_name} belysningsstyrke endringer",
             "power": "{entity_name} effektendringer",

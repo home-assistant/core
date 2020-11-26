@@ -8,7 +8,7 @@ effect:
       description: Name or ID of the WLED light effect.
       example: "Rainbow"
     intensity:
-      description: Intensity of the effect
+      description: Intensity of the effect. Number between 0 and 255.
       example: 100
     palette:
       description: Name or ID of the WLED light palette.

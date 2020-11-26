@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert",
-                    "ip_address": "IP adresse"
+                    "host": "Vert"
                 },
                 "description": "Hvis du lar verten st\u00e5 tom, brukes automatisk oppdagelse til \u00e5 finne enheter"
             }
@@ -35,6 +34,5 @@
                 "description": "Hvis du lar modellen v\u00e6re tom, blir den automatisk oppdaget."
             }
         }
-    },
-    "title": ""
+    }
 }

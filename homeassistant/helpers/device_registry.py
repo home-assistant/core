@@ -37,6 +37,9 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_INTEGRATION = "integration"
+DISABLED_USER = "user"
+
 
 @attr.s(slots=True, frozen=True)
 class DeletedDeviceEntry:
@@ -47,12 +50,12 @@ class DeletedDeviceEntry:
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
-    def to_device_entry(self):
+    def to_device_entry(self, config_entry_id, connections, identifiers):
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
+            config_entries={config_entry_id},
+            connections=self.connections & connections,
+            identifiers=self.identifiers & identifiers,
             id=self.id,
             is_new=True,
         )
@@ -76,6 +79,21 @@ class DeviceEntry:
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    disabled_by: Optional[str] = attr.ib(
+        default=None,
+        validator=attr.validators.in_(
+            (
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
+                None,
+            )
+        ),
+    )
+
+    @property
+    def disabled(self) -> bool:
+        """Return if entry is disabled."""
+        return self.disabled_by is not None
 
 
 def format_mac(mac: str) -> str:
@@ -215,6 +233,8 @@ class DeviceRegistry:
         sw_version=_UNDEF,
         entry_type=_UNDEF,
         via_device=None,
+        # To disable a device if it gets created
+        disabled_by=_UNDEF,
     ):
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
@@ -236,7 +256,9 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
         if default_manufacturer is not _UNDEF and device.manufacturer is None:
@@ -265,6 +287,7 @@ class DeviceRegistry:
             name=name,
             sw_version=sw_version,
             entry_type=entry_type,
+            disabled_by=disabled_by,
         )
 
     @callback
@@ -281,6 +304,7 @@ class DeviceRegistry:
         sw_version=_UNDEF,
         via_device_id=_UNDEF,
         remove_config_entry_id=_UNDEF,
+        disabled_by=_UNDEF,
     ):
         """Update properties of a device."""
         return self._async_update_device(
@@ -294,6 +318,7 @@ class DeviceRegistry:
             sw_version=sw_version,
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
+            disabled_by=disabled_by,
         )
 
     @callback
@@ -314,6 +339,7 @@ class DeviceRegistry:
         via_device_id=_UNDEF,
         area_id=_UNDEF,
         name_by_user=_UNDEF,
+        disabled_by=_UNDEF,
     ):
         """Update device attributes."""
         old = self.devices[device_id]
@@ -338,7 +364,7 @@ class DeviceRegistry:
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
 
         for attr_name, value in (
@@ -360,6 +386,7 @@ class DeviceRegistry:
             ("sw_version", sw_version),
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
+            ("disabled_by", disabled_by),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -438,6 +465,8 @@ class DeviceRegistry:
                     # Introduced in 0.87
                     area_id=device.get("area_id"),
                     name_by_user=device.get("name_by_user"),
+                    # Introduced in 0.119
+                    disabled_by=device.get("disabled_by"),
                 )
             # Introduced in 0.111
             for device in data.get("deleted_devices", []):
@@ -476,6 +505,7 @@ class DeviceRegistry:
                 "via_device_id": entry.via_device_id,
                 "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
+                "disabled_by": entry.disabled_by,
             }
             for entry in self.devices.values()
         ]

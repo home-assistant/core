@@ -1,7 +1,7 @@
 """Representation of a deCONZ remote."""
 from pydeconz.sensor import Switch
 
-from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
+from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
@@ -93,6 +93,9 @@ class DeconzEvent(DeconzBase):
             CONF_UNIQUE_ID: self.serial,
             CONF_EVENT: self._device.state,
         }
+
+        if self.device_id:
+            data[CONF_DEVICE_ID] = self.device_id
 
         if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture

@@ -123,6 +123,32 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             result.add_error(f"Component error: {domain} - {ex}")
             continue
 
+        # Check if the integration has a custom config validator
+        config_validator = None
+        try:
+            config_validator = integration.get_platform("config")
+        except ImportError as err:
+            # Filter out import error of the config platform.
+            # If the config platform contains bad imports, make sure
+            # that still fails.
+            if err.name != f"{integration.pkg_path}.config":
+                result.add_error(f"Error importing config platform {domain}: {err}")
+                continue
+
+        if config_validator is not None and hasattr(
+            config_validator, "async_validate_config"
+        ):
+            try:
+                return await config_validator.async_validate_config(  # type: ignore
+                    hass, config
+                )
+            except (vol.Invalid, HomeAssistantError) as ex:
+                _comp_error(ex, domain, config)
+                continue
+            except Exception:  # pylint: disable=broad-except
+                result.add_error("Unknown error calling %s config validator", domain)
+                continue
+
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:
             try:

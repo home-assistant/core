@@ -17,14 +17,29 @@ from homeassistant.util.color import (
 )
 
 from . import ShellyDeviceWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
+from .utils import async_remove_shelly_entity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up lights for device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
-    blocks = [block for block in wrapper.device.blocks if block.type == "light"]
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][COAP]
+
+    blocks = []
+    for block in wrapper.device.blocks:
+        if block.type == "light":
+            blocks.append(block)
+        elif block.type == "relay":
+            appliance_type = wrapper.device.settings["relays"][int(block.channel)].get(
+                "appliance_type"
+            )
+            if appliance_type and appliance_type.lower() == "light":
+                blocks.append(block)
+                unique_id = (
+                    f'{wrapper.device.shelly["mac"]}-{block.type}_{block.channel}'
+                )
+                await async_remove_shelly_entity(hass, "switch", unique_id)
 
     if not blocks:
         return

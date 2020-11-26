@@ -1,0 +1,34 @@
+blueprint:
+  name: Send notification when a person leaves a zone
+  domain: automation
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/notify_leaving_zone.yaml
+  input:
+    person_entity:
+      name: Person
+      selector:
+        entity:
+          domain: person
+    zone_entity:
+      name: Zone
+      selector:
+        entity:
+          domain: zone
+    notify_service:
+      name: The notify service to use
+
+trigger:
+  platform: state
+  entity_id: !placeholder person_entity
+
+variables:
+  zone_entity: !placeholder zone_entity
+  zone_state: "{{ states[zone_entity].name }}"
+
+condition:
+  condition: template
+  value_template: "{{ trigger.from_state.state == zone_state and trigger.to_state.state != zone_state }}"
+
+action:
+  - service: !placeholder notify_service
+    data:
+      message: "{{ trigger.to_state.name }} has left {{ zone_state }}"

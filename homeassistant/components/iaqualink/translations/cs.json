@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "M\u016f\u017eete nastavit pouze jedno p\u0159ipojen\u00ed iAqualink.",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_failure": "Nelze se p\u0159ipojit k iAqualink. Zkontrolujte sv\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no a heslo."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "user": {

@@ -7,7 +7,6 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "auth_error": "Errore di autenticazione, riprovare",
             "invalid_auth": "Autenticazione non valida"
         },
         "step": {
