@@ -25,7 +25,7 @@ STRETCH = "stretch"
 USB = "usb"
 
 PLATFORMS_GATEWAY = ["binary_sensor", "climate", "sensor", "switch"]
-PLATFORMS_USB = ["binary_sensor", "sensor", "switch"]
+PLATFORMS_USB = ["switch"]
 SENSOR_PLATFORMS = ["sensor", "switch"]
 PW_TYPE = "plugwise_type"
 
