@@ -41,7 +41,6 @@ COMMUNITY_TOPIC_SCHEMA = vol.Schema(
 class ImportedBlueprint:
     """Imported blueprint."""
 
-    url: str
     suggested_filename: str
     raw_data: str
     blueprint: Blueprint
@@ -125,7 +124,9 @@ def _extract_blueprint_from_community_topic(
     if blueprint is None:
         return None
 
-    return ImportedBlueprint(url, topic["slug"], block_content, blueprint)
+    return ImportedBlueprint(
+        f'{post["username"]}/{topic["slug"]}', block_content, blueprint
+    )
 
 
 async def fetch_blueprint_from_community_post(
@@ -159,18 +160,20 @@ async def fetch_blueprint_from_github_url(
     blueprint = Blueprint(data)
 
     parsed_import_url = yarl.URL(import_url)
-    suggested_filename = f"{parsed_import_url.parts[1]}-{parsed_import_url.parts[-1]}"
+    suggested_filename = f"{parsed_import_url.parts[1]}/{parsed_import_url.parts[-1]}"
     if suggested_filename.endswith(".yaml"):
         suggested_filename = suggested_filename[:-5]
 
-    return ImportedBlueprint(url, suggested_filename, raw_yaml, blueprint)
+    return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
 
 
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
     """Get a blueprint from a url."""
     for func in (fetch_blueprint_from_community_post, fetch_blueprint_from_github_url):
         try:
-            return await func(hass, url)
+            imported_bp = await func(hass, url)
+            imported_bp.blueprint.update_metadata(source_url=url)
+            return imported_bp
         except ValueError:
             pass
 
