@@ -88,7 +88,7 @@ class ArloCam(Camera):
             _LOGGER.error(error_msg)
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(video.video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:

@@ -4,9 +4,7 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "identifier_exists": "Konto jest ju\u017c skonfigurowane",
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {

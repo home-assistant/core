@@ -3,7 +3,7 @@ from typing import Optional
 
 import zigpy.zcl.clusters.lighting as lighting
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import ClientChannel, ZigbeeChannel
 
@@ -32,15 +32,19 @@ class ColorChannel(ZigbeeChannel):
         {"attr": "current_y", "config": REPORT_CONFIG_DEFAULT},
         {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
     )
+    MAX_MIREDS: int = 500
+    MIN_MIREDS: int = 153
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
-        """Initialize ColorChannel."""
-        super().__init__(cluster, ch_pool)
-        self._color_capabilities = None
-        self._min_mireds = 153
-        self._max_mireds = 500
+    @property
+    def color_capabilities(self) -> int:
+        """Return color capabilities of the light."""
+        try:
+            return self.cluster["color_capabilities"]
+        except KeyError:
+            pass
+        if self.cluster.get("color_temperature") is not None:
+            return self.CAPABILITIES_COLOR_XY | self.CAPABILITIES_COLOR_TEMP
+        return self.CAPABILITIES_COLOR_XY
 
     @property
     def color_loop_active(self) -> Optional[int]:
@@ -65,49 +69,30 @@ class ColorChannel(ZigbeeChannel):
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this channel supports."""
-        return self.cluster.get("color_temp_physical_min", self._min_mireds)
+        return self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this channel supports."""
-        return self.cluster.get("color_temp_physical_max", self._max_mireds)
+        return self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
 
-    def get_color_capabilities(self):
-        """Return the color capabilities."""
-        return self._color_capabilities
-
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Configure channel."""
         await self.fetch_color_capabilities(False)
         await super().async_configure()
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.fetch_color_capabilities(True)
-        attributes = ["color_temperature", "current_x", "current_y"]
-        await self.get_attributes(attributes, from_cache=from_cache)
+        await super().async_initialize(from_cache)
 
-    async def fetch_color_capabilities(self, from_cache):
+    async def fetch_color_capabilities(self, from_cache: bool) -> None:
         """Get the color configuration."""
         attributes = [
             "color_temp_physical_min",
             "color_temp_physical_max",
             "color_capabilities",
+            "color_temperature",
         ]
-        results = await self.get_attributes(attributes, from_cache=from_cache)
-        capabilities = results.get("color_capabilities")
-
-        if capabilities is None:
-            # ZCL Version 4 devices don't support the color_capabilities
-            # attribute. In this version XY support is mandatory, but we
-            # need to probe to determine if the device supports color
-            # temperature.
-            capabilities = self.CAPABILITIES_COLOR_XY
-            result = await self.get_attribute_value(
-                "color_temperature", from_cache=from_cache
-            )
-
-            if result is not None and result is not self.UNSUPPORTED_ATTRIBUTE:
-                capabilities |= self.CAPABILITIES_COLOR_TEMP
-        self._color_capabilities = capabilities
-        await super().async_initialize(from_cache)
+        # just populates the cache, if not already done
+        await self.get_attributes(attributes, from_cache=from_cache)

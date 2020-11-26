@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd"
         },
-        "flow_title": "Advantage Air instellen",
         "step": {
             "user": {
                 "data": {
@@ -13,6 +12,5 @@
                 "title": "Verbind"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

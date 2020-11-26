@@ -16,8 +16,7 @@
                     "port": "Poort",
                     "ssl": "Maakt gebruik van een SSL-certificaat",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
-                },
-                "title": "Maak verbinding met Sonarr"
+                }
             }
         }
     }

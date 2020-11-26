@@ -7,7 +7,6 @@
         "error": {
             "connection_error": "Nelze se p\u0159ipojit k ESP. Zkontrolujte, zda va\u0161e YAML konfigurace obsahuje \u0159\u00e1dek 'api:'.",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_password": "Neplatn\u00e9 heslo",
             "resolve_error": "Nelze naj\u00edt IP adresu uzlu ESP. Pokud tato chyba p\u0159etrv\u00e1v\u00e1, nastavte statickou adresu IP: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

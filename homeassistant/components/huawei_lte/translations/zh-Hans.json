@@ -1,9 +1,7 @@
 {
     "config": {
         "error": {
-            "connection_failed": "\u8fde\u63a5\u5931\u8d25",
-            "incorrect_username": "\u7528\u6237\u540d\u9519\u8bef",
-            "incorrect_username_or_password": "\u7528\u6237\u540d\u6216\u5bc6\u7801\u9519\u8bef"
+            "incorrect_username": "\u7528\u6237\u540d\u9519\u8bef"
         }
     }
 }

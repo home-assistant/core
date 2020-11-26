@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "IP Adress"
+                    "host": "Host"
                 },
                 "description": "Falls Host eidel gelass g\u00ebtt, g\u00ebtt eng automatesch Sich gestart"
             }
@@ -35,6 +34,5 @@
                 "description": "Falls Modell eidel gelass g\u00ebtt, g\u00ebtt et automatesch erkannt."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

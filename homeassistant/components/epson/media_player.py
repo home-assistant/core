@@ -17,6 +17,7 @@ from epson_projector.const import (
     POWER,
     SOURCE,
     SOURCE_LIST,
+    STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE,
     TURN_OFF,
     TURN_ON,
     VOL_DOWN,
@@ -36,14 +37,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -84,7 +78,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
         SERVICE_SELECT_CMODE,
     )
-    return True
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -103,6 +96,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         """Initialize entity to control Epson projector."""
         self._name = name
         self._projector = projector
+        self._available = False
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self._source = None
@@ -114,8 +108,10 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         """Update state of device."""
         power_state = await self._projector.get_property(POWER)
         _LOGGER.debug("Projector status: %s", power_state)
-        if not power_state:
+        if not power_state or power_state == EPSON_STATE_UNAVAILABLE:
+            self._available = False
             return
+        self._available = True
         if power_state == EPSON_CODES[POWER]:
             self._state = STATE_ON
             self._source_list = list(DEFAULT_SOURCES.values())
@@ -128,8 +124,6 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                 self._volume = volume
         elif power_state == BUSY:
             self._state = STATE_ON
-        elif power_state == STATE_UNAVAILABLE:
-            self._state = STATE_UNAVAILABLE
         else:
             self._state = STATE_OFF
 
@@ -147,6 +141,11 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def available(self):
+        """Return if projector is available."""
+        return self._available
 
     @property
     def supported_features(self):

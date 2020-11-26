@@ -13,7 +13,7 @@ from yeelight import (
     TemperatureTransition,
     transitions,
 )
-from yeelight.flow import Flow
+from yeelight.flow import Action, Flow
 from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.light import (
@@ -51,10 +51,19 @@ from homeassistant.components.yeelight import (
 from homeassistant.components.yeelight.light import (
     ATTR_MINUTES,
     ATTR_MODE,
+    EFFECT_CANDLE_FLICKER,
+    EFFECT_DATE_NIGHT,
     EFFECT_DISCO,
     EFFECT_FACEBOOK,
     EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_HAPPY_BIRTHDAY,
+    EFFECT_HOME,
+    EFFECT_MOVIE,
+    EFFECT_NIGHT_MODE,
+    EFFECT_ROMANCE,
     EFFECT_STOP,
+    EFFECT_SUNRISE,
+    EFFECT_SUNSET,
     EFFECT_TWITTER,
     EFFECT_WHATSAPP,
     SERVICE_SET_AUTO_DELAY_OFF_SCENE,
@@ -569,6 +578,96 @@ async def test_effects(hass: HomeAssistant):
         EFFECT_WHATSAPP: Flow(count=2, transitions=transitions.pulse(37, 211, 102)),
         EFFECT_FACEBOOK: Flow(count=2, transitions=transitions.pulse(59, 89, 152)),
         EFFECT_TWITTER: Flow(count=2, transitions=transitions.pulse(0, 172, 237)),
+        EFFECT_HOME: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                TemperatureTransition(degrees=3200, duration=500, brightness=80)
+            ],
+        ),
+        EFFECT_NIGHT_MODE: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[RGBTransition(0xFF, 0x99, 0x00, duration=500, brightness=1)],
+        ),
+        EFFECT_DATE_NIGHT: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[RGBTransition(0xFF, 0x66, 0x00, duration=500, brightness=50)],
+        ),
+        EFFECT_MOVIE: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                RGBTransition(
+                    red=0x14, green=0x14, blue=0x32, duration=500, brightness=50
+                )
+            ],
+        ),
+        EFFECT_SUNRISE: Flow(
+            count=1,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0xFF, green=0x4D, blue=0x00, duration=50, brightness=1
+                ),
+                TemperatureTransition(degrees=1700, duration=360000, brightness=10),
+                TemperatureTransition(degrees=2700, duration=540000, brightness=100),
+            ],
+        ),
+        EFFECT_SUNSET: Flow(
+            count=1,
+            action=Action.off,
+            transitions=[
+                TemperatureTransition(degrees=2700, duration=50, brightness=10),
+                TemperatureTransition(degrees=1700, duration=180000, brightness=5),
+                RGBTransition(
+                    red=0xFF, green=0x4C, blue=0x00, duration=420000, brightness=1
+                ),
+            ],
+        ),
+        EFFECT_ROMANCE: Flow(
+            count=0,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0x59, green=0x15, blue=0x6D, duration=4000, brightness=1
+                ),
+                RGBTransition(
+                    red=0x66, green=0x14, blue=0x2A, duration=4000, brightness=1
+                ),
+            ],
+        ),
+        EFFECT_HAPPY_BIRTHDAY: Flow(
+            count=0,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0xDC, green=0x50, blue=0x19, duration=1996, brightness=80
+                ),
+                RGBTransition(
+                    red=0xDC, green=0x78, blue=0x1E, duration=1996, brightness=80
+                ),
+                RGBTransition(
+                    red=0xAA, green=0x32, blue=0x14, duration=1996, brightness=80
+                ),
+            ],
+        ),
+        EFFECT_CANDLE_FLICKER: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                TemperatureTransition(degrees=2700, duration=800, brightness=50),
+                TemperatureTransition(degrees=2700, duration=800, brightness=30),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=80),
+                TemperatureTransition(degrees=2700, duration=800, brightness=60),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=90),
+                TemperatureTransition(degrees=2700, duration=2400, brightness=50),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=80),
+                TemperatureTransition(degrees=2700, duration=800, brightness=60),
+                TemperatureTransition(degrees=2700, duration=400, brightness=70),
+            ],
+        ),
     }
 
     for name, target in effects.items():

@@ -23,3 +23,6 @@ MAX_TIMESTAMP_GAP = 10000  # seconds - anything from 10 to 50000 is probably rea
 
 MAX_MISSING_DTS = 6  # Number of packets missing DTS to allow
 STREAM_TIMEOUT = 30  # Timeout for reading stream
+
+STREAM_RESTART_INCREMENT = 10  # Increase wait_timeout by this amount each retry
+STREAM_RESTART_RESET_TIME = 300  # Reset wait_timeout after this many seconds

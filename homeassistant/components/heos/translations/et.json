@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Saad seadistada ainult \u00fche Heosi \u00fchenduse kuna see toetab k\u00f5iki v\u00f5rgus olevaid seadmeid.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_failure": "M\u00e4\u00e4ratud hostiga ei saa \u00fchendust luua."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "user": {

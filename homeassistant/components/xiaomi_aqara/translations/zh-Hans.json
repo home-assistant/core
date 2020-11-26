@@ -10,8 +10,7 @@
             "invalid_host": "IP \u5730\u5740\u65e0\u6548\u3002\u8bf7\u53c2\u9605 https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "\u7f51\u7edc\u63a5\u53e3\u65e0\u6548",
             "invalid_key": "\u7f51\u5173 key \u65e0\u6548",
-            "invalid_mac": "MAC \u5730\u5740\u65e0\u6548",
-            "not_found_error": "Zeroconf \u53d1\u73b0\u7684\u7f51\u5173\u65e0\u6cd5\u5b9a\u4f4d\uff0c\u56e0\u6b64\u65e0\u6cd5\u83b7\u5f97\u5fc5\u8981\u4fe1\u606f\u3002\u8bf7\u5c1d\u8bd5\u4f7f\u7528\u8fd0\u884c HomeAssistant \u7684\u8bbe\u5907 IP \u4f5c\u4e3a\u63a5\u53e3"
+            "invalid_mac": "MAC \u5730\u5740\u65e0\u6548"
         },
         "flow_title": "\u5c0f\u7c73 Aqara \u7f51\u5173\uff1a{name}",
         "step": {

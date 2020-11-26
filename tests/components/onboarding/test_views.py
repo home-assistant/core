@@ -73,6 +73,12 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_host_info",
         return_value={},
     ), patch(
+        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        return_value={},
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_os_info",
+        return_value={},
+    ), patch(
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(

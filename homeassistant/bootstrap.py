@@ -15,11 +15,7 @@ import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    REQUIRED_NEXT_PYTHON_DATE,
-    REQUIRED_NEXT_PYTHON_VER,
-)
+from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
@@ -28,6 +24,7 @@ from homeassistant.setup import (
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
+from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -48,6 +45,8 @@ STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
+
+MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -139,11 +138,9 @@ async def async_setup_hass(
         _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
-        hass.async_track_tasks()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
         with contextlib.suppress(asyncio.TimeoutError):
             async with hass.timeout.async_timeout(10):
-                await hass.async_block_till_done()
+                await hass.async_stop()
 
         safe_mode = True
         old_config = hass.config
@@ -442,7 +439,8 @@ async def _async_set_up_integrations(
 
         integrations_to_process = [
             int_or_exc
-            for int_or_exc in await asyncio.gather(
+            for int_or_exc in await gather_with_concurrency(
+                loader.MAX_LOAD_CONCURRENTLY,
                 *(
                     loader.async_get_integration(hass, domain)
                     for domain in old_to_resolve
@@ -530,7 +528,7 @@ async def _async_set_up_integrations(
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Enables after dependencies
-    async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
+    async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)

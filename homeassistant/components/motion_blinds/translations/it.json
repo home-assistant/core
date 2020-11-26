@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "connection_error": "Impossibile connettersi"
+        },
+        "flow_title": "Tende Motion",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "host": "Indirizzo IP"
+                },
+                "description": "Avrai bisogno della chiave API di 16 caratteri, consulta https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key per le istruzioni",
+                "title": "Tende Motion"
+            }
+        }
+    }
+}
