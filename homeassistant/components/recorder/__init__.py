@@ -531,15 +531,17 @@ class Recorder(threading.Thread):
             # It likely means the state was deleted
             # out from under us because they
             # did keep_days=0
+            _LOGGER.debug("done looking for objects in session to cleanup")
+            self.event_session.rollback()
+            _LOGGER.debug("did rollback")
             _LOGGER.debug("looking for objects in session to cleanup")
             for obj in self.event_session:
                 _LOGGER.debug("obj in event_session: %s", obj)
                 if isinstance(obj, States):
                     obj.old_state_id = None
                     obj.old_state = None
-            _LOGGER.debug("done looking for objects in session to cleanup")
-            self.event_session.rollback()
-            _LOGGER.debug("did rollback")
+
+            _LOGGER.debug("second commit attempt")
             self._commit_event_session_inner()
             _LOGGER.debug("success on second attempt")
 
