@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Prehod je \u017ee konfiguriran",
-            "id_exists": "ID prehoda \u017ee obstaja",
-            "serial_error": "Napaka pri povezovanju z napravo",
-            "timeout": "Poskus povezave je potekel"
+            "id_exists": "ID prehoda \u017ee obstaja"
         },
         "step": {
             "init": {

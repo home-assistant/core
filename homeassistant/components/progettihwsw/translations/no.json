@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uventet feil",
-            "wrong_info_relay_modes": "Valg av rel\u00e9modus m\u00e5 v\u00e6re monostable eller bistable."
+            "unknown": "Uventet feil"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "Definere tavle"
             }
         }
-    },
-    "title": "ProgettiHWSW automatisering"
+    }
 }

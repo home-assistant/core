@@ -28,29 +28,30 @@ async def async_setup_entry(
     """Get all binary sensor and multi level sensor devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].binary_sensor_devices:
-        for binary_sensor in device.binary_sensor_property:
-            entities.append(
-                DevoloBinaryDeviceEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
-                    device_instance=device,
-                    element_uid=binary_sensor,
-                )
-            )
-    for device in hass.data[DOMAIN]["homecontrol"].devices.values():
-        if hasattr(device, "remote_control_property"):
-            for remote in device.remote_control_property:
-                for index in range(
-                    1, device.remote_control_property[remote].key_count + 1
-                ):
-                    entities.append(
-                        DevoloRemoteControl(
-                            homecontrol=hass.data[DOMAIN]["homecontrol"],
-                            device_instance=device,
-                            element_uid=remote,
-                            key=index,
-                        )
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.binary_sensor_devices:
+            for binary_sensor in device.binary_sensor_property:
+                entities.append(
+                    DevoloBinaryDeviceEntity(
+                        homecontrol=gateway,
+                        device_instance=device,
+                        element_uid=binary_sensor,
                     )
+                )
+        for device in gateway.devices.values():
+            if hasattr(device, "remote_control_property"):
+                for remote in device.remote_control_property:
+                    for index in range(
+                        1, device.remote_control_property[remote].key_count + 1
+                    ):
+                        entities.append(
+                            DevoloRemoteControl(
+                                homecontrol=gateway,
+                                device_instance=device,
+                                element_uid=remote,
+                                key=index,
+                            )
+                        )
     async_add_entities(entities, False)
 
 

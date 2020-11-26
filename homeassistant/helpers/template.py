@@ -11,7 +11,7 @@ import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Dict, Generator, Iterable, List, Optional, Type, Union
+from typing import Any, Dict, Generator, Iterable, Optional, Type, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -27,13 +27,11 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
-    MATCH_ALL,
     STATE_UNKNOWN,
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, location as loc_helper
-from homeassistant.helpers.frame import report
+from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -50,13 +48,9 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 
-_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
-_RE_GET_ENTITIES = re.compile(
-    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
-    re.I | re.M,
-)
-
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
+# Match "simple" ints and floats. -1.0, 1, +5, 5.0
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -182,59 +176,6 @@ RESULT_WRAPPERS: Dict[Type, Type] = {
     kls: gen_result_wrapper(kls) for kls in (list, dict, set)
 }
 RESULT_WRAPPERS[tuple] = TupleWrapper
-
-
-def extract_entities(
-    hass: HomeAssistantType,
-    template: Optional[str],
-    variables: TemplateVarsType = None,
-) -> Union[str, List[str]]:
-    """Extract all entities for state_changed listener from template string."""
-
-    report(
-        "called template.extract_entities. Please use event.async_track_template_result instead as it can accurately handle watching entities"
-    )
-
-    if template is None or not is_template_string(template):
-        return []
-
-    if _RE_NONE_ENTITIES.search(template):
-        return MATCH_ALL
-
-    extraction_final = []
-
-    for result in _RE_GET_ENTITIES.finditer(template):
-        if (
-            result.group("entity_id") == "trigger.entity_id"
-            and variables
-            and "trigger" in variables
-            and "entity_id" in variables["trigger"]
-        ):
-            extraction_final.append(variables["trigger"]["entity_id"])
-        elif result.group("entity_id"):
-            if result.group("func") == "expand":
-                for entity in expand(hass, result.group("entity_id")):
-                    extraction_final.append(entity.entity_id)
-
-            extraction_final.append(result.group("entity_id"))
-        elif result.group("domain_inner") or result.group("domain_outer"):
-            extraction_final.extend(
-                hass.states.async_entity_ids(
-                    result.group("domain_inner") or result.group("domain_outer")
-                )
-            )
-
-        if (
-            variables
-            and result.group("variable") in variables
-            and isinstance(variables[result.group("variable")], str)
-            and valid_entity_id(variables[result.group("variable")])
-        ):
-            extraction_final.append(variables[result.group("variable")])
-
-    if extraction_final:
-        return list(set(extraction_final))
-    return MATCH_ALL
 
 
 def _true(arg: Any) -> bool:
@@ -370,15 +311,6 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
 
-    def extract_entities(
-        self, variables: TemplateVarsType = None
-    ) -> Union[str, List[str]]:
-        """Extract all entities for state_changed listener."""
-        if self.is_static:
-            return []
-
-        return extract_entities(self.hass, self.template, variables)
-
     def render(
         self,
         variables: TemplateVarsType = None,
@@ -443,7 +375,19 @@ class Template:
             # render, by not returning right here. The evaluation of strings
             # resulting in strings impacts quotes, to avoid unexpected
             # output; use the original render instead of the evaluated one.
-            if not isinstance(result, str):
+            # Complex and scientific values are also unexpected. Filter them out.
+            if (
+                # Filter out string and complex numbers
+                not isinstance(result, (str, complex))
+                and (
+                    # Pass if not numeric and not a boolean
+                    not isinstance(result, (int, float))
+                    # Or it's a boolean (inherit from int)
+                    or isinstance(result, bool)
+                    # Or if it's a digit
+                    or _IS_NUMERIC.match(render_result) is not None
+                )
+            ):
                 return result
         except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
@@ -861,6 +805,11 @@ def result_as_boolean(template_result: Optional[str]) -> bool:
 
     """
     try:
+        # Import here, not at top-level to avoid circular import
+        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+            config_validation as cv,
+        )
+
         return cv.boolean(template_result)
     except vol.Invalid:
         return False

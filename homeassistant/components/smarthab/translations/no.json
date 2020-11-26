@@ -3,9 +3,7 @@
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
             "service": "Feil under fors\u00f8k p\u00e5 \u00e5 n\u00e5 SmartHab. Tjenesten kan v\u00e6re nede. Sjekk tilkoblingen din.",
-            "unknown": "Uventet feil",
-            "unknown_error": "Uventet feil",
-            "wrong_login": "Ugyldig godkjenning"
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

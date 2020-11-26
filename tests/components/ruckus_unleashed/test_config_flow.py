@@ -39,11 +39,11 @@ async def test_form(hass):
             result["flow_id"],
             CONFIG,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == DEFAULT_TITLE
     assert result2["data"] == CONFIG
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

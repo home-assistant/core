@@ -12,7 +12,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API v\u00f5ti"
+                    "api_key": "API v\u00f5ti",
+                    "url": ""
                 },
                 "description": "- URL: NightScout eksemplari aadress. St: https://myhomeassistant.duckdns.org:5423\n - API v\u00f5ti (valikuline): kasutage ainult siis kui teie eksemplar on kaitstud (auth_default_roles! = readable).",
                 "title": "Sisesta oma Nightscouti serveri teave."

@@ -16,6 +16,7 @@ from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_coro
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "\u6b64\u6574\u5408\u76ee\u524d\u50c5\u652f\u63f4\u4e00\u7d44 ecobee \u8a2d\u5099\u3002",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {
