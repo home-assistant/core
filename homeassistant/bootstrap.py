@@ -534,7 +534,7 @@ async def _async_set_up_integrations(
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Enables after dependencies
-    async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
+    async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)

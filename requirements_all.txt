@@ -303,7 +303,7 @@ aurorapy==0.2.6
 av==8.0.2
 
 # homeassistant.components.avea
-# avea==1.5
+# avea==1.5.1
 
 # homeassistant.components.avion
 # avion==0.10
@@ -2353,7 +2353,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.2
+zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2
