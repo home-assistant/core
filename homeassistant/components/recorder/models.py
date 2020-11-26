@@ -103,7 +103,7 @@ class States(Base):  # type: ignore
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(
-        Integer, ForeignKey("events.event_id", ondelete="SET NULL"), index=True
+        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
