@@ -48,6 +48,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVED,
     SIGNAL_INSTANCES_UPDATED,
     SOURCE_IMPORT,
+    TYPE_HYPERION_LIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,7 +139,9 @@ async def async_setup_platform(
     if not hyperion_id:
         raise PlatformNotReady
 
-    future_unique_id = get_hyperion_unique_id(hyperion_id, instance)
+    future_unique_id = get_hyperion_unique_id(
+        hyperion_id, instance, TYPE_HYPERION_LIGHT
+    )
 
     # Possibility 1: Already converted.
     # There is already a config entry with the unique id reporting by the
@@ -227,7 +230,7 @@ async def async_setup_entry(
 
     async def async_instances_to_entities_raw(instances: List[Dict[str, Any]]) -> None:
         registry = await async_get_registry(hass)
-        entities_to_add: List[Hyperion] = []
+        entities_to_add: List[HyperionLight] = []
         desired_unique_ids: Set[str] = set()
         server_id = cast(str, config_entry.unique_id)
 
@@ -243,7 +246,9 @@ async def async_setup_entry(
             instance_id = instance.get(const.KEY_INSTANCE)
             if instance_id is None or not instance.get(const.KEY_RUNNING, False):
                 continue
-            unique_id = get_hyperion_unique_id(server_id, instance_id)
+            unique_id = get_hyperion_unique_id(
+                server_id, instance_id, TYPE_HYPERION_LIGHT
+            )
             desired_unique_ids.add(unique_id)
             if unique_id in current_entities:
                 continue
@@ -254,7 +259,7 @@ async def async_setup_entry(
                 continue
             current_entities.add(unique_id)
             entities_to_add.append(
-                Hyperion(
+                HyperionLight(
                     unique_id,
                     instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME),
                     config_entry.options,
@@ -289,7 +294,7 @@ async def async_setup_entry(
     return True
 
 
-class Hyperion(LightEntity):
+class HyperionLight(LightEntity):
     """Representation of a Hyperion remote."""
 
     def __init__(

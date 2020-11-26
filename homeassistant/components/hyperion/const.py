@@ -18,5 +18,7 @@ SIGNAL_INSTANCE_REMOVED = f"{DOMAIN}_instance_removed_signal." "{}"
 
 SOURCE_IMPORT = "import"
 
-HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.8"
+HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.9"
 HYPERION_RELEASES_URL = "https://github.com/hyperion-project/hyperion.ng/releases"
+
+TYPE_HYPERION_LIGHT = "hyperion_light"

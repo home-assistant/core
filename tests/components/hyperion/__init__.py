@@ -5,7 +5,6 @@ import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
 
-from asynctest import CoroutineMock, Mock, patch
 from hyperion import const
 
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
@@ -14,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
 from tests.common import MockConfigEntry
 
 TEST_HOST = "test"
@@ -75,9 +75,9 @@ def create_mock_client() -> Mock:
     """Create a mock Hyperion client."""
     mock_client = AsyncContextManagerMock()
     # pylint: disable=attribute-defined-outside-init
-    mock_client.async_client_connect = CoroutineMock(return_value=True)
-    mock_client.async_client_disconnect = CoroutineMock(return_value=True)
-    mock_client.async_is_auth_required = CoroutineMock(
+    mock_client.async_client_connect = AsyncMock(return_value=True)
+    mock_client.async_client_disconnect = AsyncMock(return_value=True)
+    mock_client.async_is_auth_required = AsyncMock(
         return_value={
             "command": "authorize-tokenRequired",
             "info": {"required": False},
@@ -85,12 +85,12 @@ def create_mock_client() -> Mock:
             "tan": 1,
         }
     )
-    mock_client.async_login = CoroutineMock(
+    mock_client.async_login = AsyncMock(
         return_value={"command": "authorize-login", "success": True, "tan": 0}
     )
 
-    mock_client.async_sysinfo_id = CoroutineMock(return_value=TEST_SYSINFO_ID)
-    mock_client.async_sysinfo_version = CoroutineMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_sysinfo_id = AsyncMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_ID)
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.instances = [
