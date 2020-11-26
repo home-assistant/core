@@ -150,11 +150,15 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config)
                 continue
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 logging.getLogger(__name__).exception(
                     "Unexpected error validating config"
                 )
-                result.add_error(f"Unknown error calling {domain} config validator")
+                result.add_error(
+                    f"Unexpected error calling config validator: {err}",
+                    domain,
+                    config.get(domain),
+                )
                 continue
 
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
