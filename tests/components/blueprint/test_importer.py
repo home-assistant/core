@@ -56,7 +56,6 @@ def test_extract_blueprint_from_community_topic(community_post):
         "http://example.com", json.loads(community_post)
     )
     assert imported_blueprint is not None
-    assert imported_blueprint.url == "http://example.com"
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.placeholders == {
         "service_to_call",
@@ -79,7 +78,7 @@ def test_extract_blueprint_from_community_topic_invalid_yaml():
         )
 
 
-def test__extract_blueprint_from_community_topic_wrong_lang():
+def test_extract_blueprint_from_community_topic_wrong_lang():
     """Test extracting blueprint with invalid YAML."""
     assert (
         importer._extract_blueprint_from_community_topic(
@@ -110,6 +109,11 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
         "service_to_call",
         "trigger_event",
     }
+    assert imported_blueprint.suggested_filename == "balloob/test-topic"
+    assert (
+        imported_blueprint.blueprint.metadata["source_url"]
+        == "https://community.home-assistant.io/t/test-topic/123/2"
+    )
 
 
 @pytest.mark.parametrize(
@@ -135,3 +139,5 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
         "service_to_call",
         "trigger_event",
     }
+    assert imported_blueprint.suggested_filename == "balloob/motion_light"
+    assert imported_blueprint.blueprint.metadata["source_url"] == url
