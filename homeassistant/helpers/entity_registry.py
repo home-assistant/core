@@ -559,8 +559,7 @@ def async_entries_for_device(
         entry
         for entry in registry.entities.values()
         if entry.device_id == device_id
-        and not entry.disabled_by
-        or include_disabled_entities
+        and (not entry.disabled_by or include_disabled_entities)
     ]
 
 
