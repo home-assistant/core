@@ -113,7 +113,11 @@ class States(Base):  # type: ignore
         single_parent=True,
         cascade="save-update,merge,delete,delete-orphan",
     )
-    old_state = relationship("States", remote_side=[state_id])
+    old_state = relationship(
+        "States",
+        remote_side=[state_id],
+        cascade="save-update,merge,delete,delete-orphan",
+    )
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
