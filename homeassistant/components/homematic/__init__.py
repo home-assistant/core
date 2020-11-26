@@ -236,7 +236,7 @@ def setup(hass, config):
         remotes[sname] = {
             "ip": sconfig.get(CONF_HOST),
             "port": sconfig[CONF_PORT],
-            "jsonport": rconfig.get(CONF_JSONPORT),
+            "jsonport": sconfig.get(CONF_JSONPORT),
             "username": sconfig.get(CONF_USERNAME),
             "password": sconfig.get(CONF_PASSWORD),
             "connect": False,
