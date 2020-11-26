@@ -2,6 +2,7 @@
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 
 DOMAIN = "broadlink"
 
@@ -9,6 +10,7 @@ DOMAINS_AND_TYPES = (
     (REMOTE_DOMAIN, ("RM2", "RM4")),
     (SENSOR_DOMAIN, ("A1", "RM2", "RM4")),
     (SWITCH_DOMAIN, ("BG1", "MP1", "RM2", "RM4", "SP1", "SP2", "SP4", "SP4B")),
+    (CLIMATE_DOMAIN, ("Hysen heating controller",)),
 )
 
 DEFAULT_PORT = 80
