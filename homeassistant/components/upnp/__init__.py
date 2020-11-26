@@ -38,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_construct_device(hass: HomeAssistantType, udn: str, st: str) -> Device:
     """Discovery devices and construct a Device for one."""
+    # pylint: disable=invalid-name
     _LOGGER.debug("Constructing device: %s::%s", udn, st)
 
     discoveries = [

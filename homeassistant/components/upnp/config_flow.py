@@ -27,6 +27,16 @@ from .const import (
 from .device import Device
 
 
+def discovery_info_to_discovery(discovery_info: Mapping) -> Mapping:
+    """Convert a SSDP-discovery to 'our' discovery."""
+    return {
+        DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
+        DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
+        DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
+        DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
+    }
+
+
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
@@ -161,7 +171,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="incomplete_discovery")
 
         # Convert to something we understand/speak.
-        discovery = self._discovery_info_to_discovery(discovery_info)
+        discovery = discovery_info_to_discovery(discovery_info)
 
         # Ensure not already configuring/configured.
         discovery = await Device.async_supplement_discovery(self.hass, discovery)
@@ -198,15 +208,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.OptionsFlow:
         """Define the config flow to handle options."""
         return UpnpOptionsFlowHandler(config_entry)
-
-    def _discovery_info_to_discovery(self, discovery_info: Mapping) -> Mapping:
-        """Convert a SSDP-discovery to 'our' discovery."""
-        return {
-            DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
-            DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
-            DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
-            DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
-        }
 
     async def _async_create_entry_from_discovery(
         self,
