@@ -71,6 +71,22 @@ class DeviceSelector(Selector):
     )
 
 
+@SELECTORS.register("area")
+class AreaSelector(Selector):
+    """Selector of a single area."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            # Area hass to contain entities provided by this integration
+            vol.Optional("integration"): str,
+            # Area has to contain entities of this domain
+            vol.Optional("domain"): str,
+            # Area has to contain entities of this device class
+            vol.Optional("device_class"): str,
+        }
+    )
+
+
 @SELECTORS.register("number")
 class NumberSelector(Selector):
     """Selector of a numeric value."""
@@ -95,13 +111,8 @@ class BooleanSelector(Selector):
     CONFIG_SCHEMA = vol.Schema({})
 
 
-@SELECTORS.register("datetime")
-class DateTimeSelector(Selector):
-    """Selector of a date and or time value."""
+@SELECTORS.register("time")
+class TimeSelector(Selector):
+    """Selector of a time value."""
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("has_date", default=False): bool,
-            vol.Optional("has_time", default=False): bool,
-        }
-    )
+    CONFIG_SCHEMA = vol.Schema({})
