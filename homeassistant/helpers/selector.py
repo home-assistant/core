@@ -70,7 +70,7 @@ class DeviceSelector(Selector):
             # Device has to contain entities matching this selector
             vol.Optional(
                 "entity"
-            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=E1101
+            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=no-member
         }
     )
 
@@ -84,7 +84,7 @@ class AreaSelector(Selector):
             # Area has to contain entities matching this selector
             vol.Optional(
                 "entity"
-            ): EntitySelector.CONFIG_SCHEMA  # pylint: disable=E1101
+            ): EntitySelector.CONFIG_SCHEMA  # pylint: disable=no-member
         }
     )
 
