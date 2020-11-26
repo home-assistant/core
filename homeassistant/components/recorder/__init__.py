@@ -525,7 +525,6 @@ class Recorder(threading.Thread):
                 "Integrity error while executing query (old state likely purged): %s",
                 err,
             )
-            self.event_session.rollback()
             # It likely means the state was deleted
             # out from under us because they
             # did keep_days=0
@@ -534,6 +533,7 @@ class Recorder(threading.Thread):
                 if isinstance(obj, States):
                     obj.old_state_id = None
                     obj.old_state = None
+            self.event_session.rollback()
             self._commit_event_session_inner()
 
     def _commit_event_session_inner(self):
