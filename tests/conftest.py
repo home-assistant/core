@@ -7,6 +7,7 @@ import ssl
 import threading
 
 from aiohttp.test_utils import make_mocked_request
+import multidict
 import pytest
 import requests_mock as _requests_mock
 
@@ -22,7 +23,7 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import event
+from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
@@ -277,7 +278,7 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
-def current_request(hass):
+def current_request():
     """Mock current request."""
     with patch("homeassistant.components.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
@@ -288,6 +289,16 @@ def current_request(hass):
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context
+
+
+@pytest.fixture
+def current_request_with_host(current_request):
+    """Mock current request with a host header."""
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
+    )
 
 
 @pytest.fixture

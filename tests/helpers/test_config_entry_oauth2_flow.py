@@ -3,7 +3,6 @@ import asyncio
 import logging
 import time
 
-import multidict
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -146,15 +145,14 @@ async def test_abort_if_no_url_available(hass, flow_handler, local_impl):
 
 
 async def test_abort_if_oauth_error(
-    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
+    hass,
+    flow_handler,
+    local_impl,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
 ):
     """Check bad oauth token."""
-    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
-    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
-    current_request.get.return_value = current_request.get.return_value.clone(
-        headers=new_headers
-    )
-
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -267,15 +265,14 @@ async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl)
 
 
 async def test_full_flow(
-    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
+    hass,
+    flow_handler,
+    local_impl,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
 ):
     """Check full flow."""
-    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
-    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
-    current_request.get.return_value = current_request.get.return_value.clone(
-        headers=new_headers
-    )
-
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
