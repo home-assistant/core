@@ -519,6 +519,9 @@ class Recorder(threading.Thread):
 
     def _commit_event_session_handle_old_state_purged(self):
         try:
+            for obj in self.event_session:
+                _LOGGER.debug("BEFORE COMMIT obj in event_session: %s", obj)
+
             self._commit_event_session_inner()
         except exc.IntegrityError as err:
             _LOGGER.debug(
