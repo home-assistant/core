@@ -96,8 +96,6 @@ TODAY_ENERGY_SENSOR_ID = "power_con_today"
 MOTION_SENSOR_ID = "motion"
 
 ATTR_MAC_ADDRESS = "mac"
-SERVICE_DEVICE_ADD = "device_add"
-SERVICE_DEVICE_REMOVE = "device_remove"
 
 # Sensor types
 USB_SENSORS = {

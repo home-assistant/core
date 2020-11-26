@@ -26,8 +26,6 @@ from .const import (
     DOMAIN,
     PLATFORMS_USB,
     PW_TYPE,
-    SERVICE_DEVICE_ADD,
-    SERVICE_DEVICE_REMOVE,
     STICK,
     UNDO_UPDATE_LISTENER,
     USB,
@@ -102,23 +100,6 @@ async def async_setup_entry_usb(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.data[DOMAIN][config_entry.entry_id][
         UNDO_UPDATE_LISTENER
     ] = config_entry.add_update_listener(_async_update_listener)
-
-    async def device_add(service):
-        """Manually add device to Plugwise zigbee network."""
-        stick.node_join(service.data[ATTR_MAC_ADDRESS])
-
-    async def device_remove(service):
-        """Manually remove device from Plugwise zigbee network."""
-        stick.node_unjoin(service.data[ATTR_MAC_ADDRESS])
-
-    service_device_schema = vol.Schema({vol.Required(ATTR_MAC_ADDRESS): cv.string})
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_DEVICE_ADD, device_add, service_device_schema
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DEVICE_REMOVE, device_remove, service_device_schema
-    )
 
     return True
 
