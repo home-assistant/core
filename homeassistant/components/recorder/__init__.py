@@ -532,6 +532,7 @@ class Recorder(threading.Thread):
             for obj in self.event_session:
                 if isinstance(obj, States):
                     obj.old_state_id = None
+                    obj.old_state = None
             self._commit_event_session_inner()
 
     def _commit_event_session_inner(self):
