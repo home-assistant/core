@@ -1,5 +1,5 @@
 """Test the iRobot Roomba config flow."""
-from roomba import RoombaConnectionError
+from roombapy import RoombaConnectionError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.roomba.const import (
