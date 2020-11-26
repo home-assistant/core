@@ -86,7 +86,6 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
     assert msg["success"]
     assert msg["result"] == {
         "suggested_filename": "balloob/motion_light",
-        "url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         "raw_data": raw_data,
         "blueprint": {
             "metadata": {

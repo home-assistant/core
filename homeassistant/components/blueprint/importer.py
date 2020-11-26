@@ -41,7 +41,6 @@ COMMUNITY_TOPIC_SCHEMA = vol.Schema(
 class ImportedBlueprint:
     """Imported blueprint."""
 
-    url: str
     suggested_filename: str
     raw_data: str
     blueprint: Blueprint
@@ -126,7 +125,7 @@ def _extract_blueprint_from_community_topic(
         return None
 
     return ImportedBlueprint(
-        url, f'{post["username"]}/{topic["slug"]}', block_content, blueprint
+        f'{post["username"]}/{topic["slug"]}', block_content, blueprint
     )
 
 
@@ -165,7 +164,7 @@ async def fetch_blueprint_from_github_url(
     if suggested_filename.endswith(".yaml"):
         suggested_filename = suggested_filename[:-5]
 
-    return ImportedBlueprint(url, suggested_filename, raw_yaml, blueprint)
+    return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
 
 
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
