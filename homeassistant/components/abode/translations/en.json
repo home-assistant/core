@@ -12,9 +12,9 @@
         "step": {
             "mfa": {
                 "data": {
-                    "mfa_code": "MFA code"
+                    "mfa_code": "MFA code (6-digits)"
                 },
-                "title": "MFA is required"
+                "title": "Enter your MFA code for Abode"
             },
             "reauth_confirm": {
                 "data": {

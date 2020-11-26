@@ -10,8 +10,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
 
 from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER  # pylint: disable=unused-import
 
-CONF_POLLING = "polling"
 CONF_MFA = "mfa_code"
+CONF_POLLING = "polling"
 
 
 class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
