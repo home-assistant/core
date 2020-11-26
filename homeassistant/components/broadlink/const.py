@@ -1,8 +1,8 @@
 """Constants for the Broadlink integration."""
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 
 DOMAIN = "broadlink"
 

@@ -2,20 +2,18 @@
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
-from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
-from homeassistant.helpers import config_validation as cv
-
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    CURRENT_HVAC_IDLE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
