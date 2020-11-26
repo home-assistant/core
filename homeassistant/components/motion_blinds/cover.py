@@ -257,7 +257,9 @@ class MotionTDBUDevice(MotionPositionDevice):
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.position is not None:
-            attributes[ATTR_ABSOLUTE_POSITION] = 100 - self._blind.position[self._motor_key]
+            attributes[ATTR_ABSOLUTE_POSITION] = (
+                100 - self._blind.position[self._motor_key]
+            )
         if self._blind.width is not None:
             attributes[ATTR_WIDTH] = self._blind.width
         return attributes
