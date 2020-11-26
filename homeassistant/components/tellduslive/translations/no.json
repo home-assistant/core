@@ -4,7 +4,8 @@
             "already_configured": "Tjenesten er allerede konfigurert",
             "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
             "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
-            "unknown": "Uventet feil"
+            "unknown": "Uventet feil",
+            "unknown_authorize_url_generation": "Ukjent feil ved generering av autoriseringsadresse."
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning"
