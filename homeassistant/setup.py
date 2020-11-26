@@ -196,6 +196,8 @@ async def _async_setup_component(
         )
 
     try:
+        if domain == "cloud":
+            raise ValueError("forced to fail")
         if hasattr(component, "async_setup"):
             task = component.async_setup(hass, processed_config)  # type: ignore
         elif hasattr(component, "setup"):
