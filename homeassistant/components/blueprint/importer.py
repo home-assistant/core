@@ -172,9 +172,9 @@ async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlu
     """Get a blueprint from a url."""
     for func in (fetch_blueprint_from_community_post, fetch_blueprint_from_github_url):
         try:
-            bp = await func(hass, url)
-            bp.blueprint.update_metadata(source_url=url)
-            return bp
+            imported_bp = await func(hass, url)
+            imported_bp.blueprint.update_metadata(source_url=url)
+            return imported_bp
         except ValueError:
             pass
 
