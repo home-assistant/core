@@ -24,7 +24,7 @@ def validate_selector(config: Any) -> Dict:
     if selector_class is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    # Seletors can be empty
+    # Selectors can be empty
     if config[selector_type] is None:
         return {selector_type: {}}
 
@@ -67,8 +67,19 @@ class DeviceSelector(Selector):
             vol.Optional("manufacturer"): str,
             # Model of device
             vol.Optional("model"): str,
+            # Device has to contain entities matching this selector
+            vol.Optional(
+                "entity"
+            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=no-member
         }
     )
+
+
+@SELECTORS.register("area")
+class AreaSelector(Selector):
+    """Selector of a single area."""
+
+    CONFIG_SCHEMA = vol.Schema({})
 
 
 @SELECTORS.register("number")
@@ -95,13 +106,8 @@ class BooleanSelector(Selector):
     CONFIG_SCHEMA = vol.Schema({})
 
 
-@SELECTORS.register("datetime")
-class DateTimeSelector(Selector):
-    """Selector of a date and or time value."""
+@SELECTORS.register("time")
+class TimeSelector(Selector):
+    """Selector of a time value."""
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("has_date", default=False): bool,
-            vol.Optional("has_time", default=False): bool,
-        }
-    )
+    CONFIG_SCHEMA = vol.Schema({})
