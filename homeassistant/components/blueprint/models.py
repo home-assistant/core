@@ -212,7 +212,13 @@ class DomainBlueprints:
         """Load a blueprint."""
         try:
             blueprint_data = yaml.load_yaml(self.blueprint_folder / blueprint_path)
-        except (HomeAssistantError, FileNotFoundError) as err:
+        except FileNotFoundError as err:
+            raise FailedToLoad(
+                self.domain,
+                blueprint_path,
+                FileNotFoundError(f"Unable to find {blueprint_path}"),
+            ) from err
+        except HomeAssistantError as err:
             raise FailedToLoad(self.domain, blueprint_path, err) from err
 
         return Blueprint(
@@ -251,13 +257,25 @@ class DomainBlueprints:
 
     async def async_get_blueprint(self, blueprint_path: str) -> Blueprint:
         """Get a blueprint."""
+
+        def load_from_cache():
+            """Load blueprint from cache."""
+            blueprint = self._blueprints[blueprint_path]
+            if blueprint is None:
+                raise FailedToLoad(
+                    self.domain,
+                    blueprint_path,
+                    FileNotFoundError(f"Unable to find {blueprint_path}"),
+                )
+            return blueprint
+
         if blueprint_path in self._blueprints:
-            return self._blueprints[blueprint_path]
+            return load_from_cache()
 
         async with self._load_lock:
             # Check it again
             if blueprint_path in self._blueprints:
-                return self._blueprints[blueprint_path]
+                return load_from_cache()
 
             try:
                 blueprint = await self.hass.async_add_executor_job(
