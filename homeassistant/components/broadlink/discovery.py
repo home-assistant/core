@@ -53,12 +53,9 @@ class BroadlinkDiscovery:
         broadcast_addrs = hass.data[DOMAIN].config["broadcast_addrs"]
         current_entries = hass.config_entries.async_entries(DOMAIN)
 
-        try:
-            await hass.async_add_executor_job(
-                self.discover, broadcast_addrs, current_entries
-            )
-        except OSError as err:
-            _LOGGER.debug("Error during device discovery: %s", err)
+        await hass.async_add_executor_job(
+            self.discover, broadcast_addrs, current_entries
+        )
 
     def discover(self, broadcast_addrs, current_entries):
         """Discover Broadlink devices on the given networks, ignoring known devices."""
@@ -67,15 +64,21 @@ class BroadlinkDiscovery:
             for entry in current_entries
         }
         for addr in broadcast_addrs:
-            for device in blk.xdiscover(discover_ip_address=addr, timeout=self.timeout):
-                host, mac_addr = device.host[0], device.mac.hex()
-                if (host, mac_addr) in known_devices:
-                    continue
+            try:
+                for device in blk.xdiscover(
+                    discover_ip_address=addr, timeout=self.timeout
+                ):
+                    host, mac_addr = device.host[0], device.mac.hex()
+                    if (host, mac_addr) in known_devices:
+                        continue
 
-                if device.type not in SUPPORTED_TYPES:
-                    continue
+                    if device.type not in SUPPORTED_TYPES:
+                        continue
 
-                self.create_flow(device)
+                    self.create_flow(device)
+
+            except OSError as err:
+                _LOGGER.debug("Error during device discovery: %s", err)
 
     def create_flow(self, device):
         """Create a configuration flow for a new discovered device."""
