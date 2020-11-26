@@ -79,14 +79,7 @@ class DeviceSelector(Selector):
 class AreaSelector(Selector):
     """Selector of a single area."""
 
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            # Area has to contain entities matching this selector
-            vol.Optional(
-                "entity"
-            ): EntitySelector.CONFIG_SCHEMA  # pylint: disable=no-member
-        }
-    )
+    CONFIG_SCHEMA = vol.Schema({})
 
 
 @SELECTORS.register("number")

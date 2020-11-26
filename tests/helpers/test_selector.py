@@ -79,20 +79,7 @@ def test_entity_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
-    (
-        {},
-        {"entity": {"integration": "zha"}},
-        {"entity": {"domain": "light"}},
-        {"entity": {"device_class": "motion"}},
-        {"entity": {"integration": "zha", "domain": "light"}},
-        {
-            "entity": {
-                "integration": "zha",
-                "domain": "binary_sensor",
-                "device_class": "motion",
-            }
-        },
-    ),
+    ({},),
 )
 def test_area_selector_schema(schema):
     """Test area selector."""
