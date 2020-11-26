@@ -10,7 +10,7 @@ from homeassistant.components.hyperion import (
     get_hyperion_unique_id,
     light as hyperion_light,
 )
-from homeassistant.components.hyperion.const import DOMAIN
+from homeassistant.components.hyperion.const import DOMAIN, TYPE_HYPERION_LIGHT
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -121,7 +121,7 @@ async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
     # The unique_id should have been updated in the registry (rather than the one
     # specified above).
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SYSINFO_ID, 0, LIGHT_DOMAIN
+        TEST_SYSINFO_ID, 0, TYPE_HYPERION_LIGHT
     )
     assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
 
@@ -139,7 +139,7 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
     # Assistant should this combination, but verify correct behavior for defense in
     # depth.
 
-    new_unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, 0, LIGHT_DOMAIN)
+    new_unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, 0, TYPE_HYPERION_LIGHT)
     entity_id_to_preserve = "light.magic_entity"
 
     # Add a pre-existing registry entry.
@@ -183,7 +183,7 @@ async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     # The unique_id should have been updated in the registry (rather than the one
     # specified above).
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SYSINFO_ID, 0, LIGHT_DOMAIN
+        TEST_SYSINFO_ID, 0, TYPE_HYPERION_LIGHT
     )
 
     # There should be a config entry with the correct server unique_id.
