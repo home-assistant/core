@@ -249,7 +249,7 @@ class DomainBlueprints:
         async with self._load_lock:
             return await self.hass.async_add_executor_job(self._load_blueprints)
 
-    async def async_get_blueprint(self, blueprint_path: str) -> Blueprint:
+    async def async_get_blueprint(self, blueprint_path: str) -> Optional[Blueprint]:
         """Get a blueprint."""
         if blueprint_path in self._blueprints:
             return self._blueprints[blueprint_path]
@@ -283,6 +283,12 @@ class DomainBlueprints:
 
         bp_conf = config_with_blueprint[CONF_USE_BLUEPRINT]
         blueprint = await self.async_get_blueprint(bp_conf[CONF_PATH])
+        if blueprint is None:
+            raise FailedToLoad(
+                self.domain,
+                bp_conf[CONF_PATH],
+                FileNotFoundError(f"Unable to find {bp_conf[CONF_PATH]}"),
+            )
         inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
         return inputs

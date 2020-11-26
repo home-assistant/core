@@ -1,5 +1,6 @@
 """Helper to check the configuration file."""
 from collections import OrderedDict
+import logging
 import os
 from typing import List, NamedTuple, Optional
 
@@ -148,7 +149,10 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config)
             except Exception:  # pylint: disable=broad-except
-                result.add_error("Unknown error calling %s config validator", domain)
+                logging.getLogger(__name__).exception(
+                    "Unexpected error validating config"
+                )
+                result.add_error(f"Unknown error calling {domain} config validator")
             finally:
                 continue
 
