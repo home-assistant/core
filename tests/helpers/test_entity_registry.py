@@ -9,7 +9,12 @@ from homeassistant.helpers import entity_registry
 
 import tests.async_mock
 from tests.async_mock import patch
-from tests.common import MockConfigEntry, flush_store, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    flush_store,
+    mock_device_registry,
+    mock_registry,
+)
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
@@ -677,3 +682,57 @@ async def test_async_get_device_class_lookup(hass):
             ("sensor", "battery"): "sensor.vacuum_battery",
         },
     }
+
+
+async def test_remove_device_removes_entities(hass, registry):
+    """Test that we remove entities tied to a device."""
+    device_registry = mock_device_registry(hass)
+    config_entry = MockConfigEntry(domain="light")
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    assert registry.async_is_registered(entry.entity_id)
+
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+
+    assert not registry.async_is_registered(entry.entity_id)
+
+
+async def test_disable_device_disables_entities(hass, registry):
+    """Test that we remove entities tied to a device."""
+    device_registry = mock_device_registry(hass)
+    config_entry = MockConfigEntry(domain="light")
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    assert not entry.disabled
+
+    device_registry.async_update_device(device_entry.id, disabled_by="user")
+    await hass.async_block_till_done()
+
+    entry = registry.async_get(entry.entity_id)
+    assert entry.disabled
+    assert entry.disabled_by == "device"
