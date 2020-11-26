@@ -26,15 +26,15 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
         }
-
         self.mfa_data_schema = {
             vol.Required(CONF_MFA): str,
         }
 
-        self._username = None
+        self._cache = None
+        self._mfa_code = None
         self._password = None
         self._polling = None
-        self._cache = None
+        self._username = None
 
     async def _async_abode_login(self, step_id):
         """Handle login with Abode."""
@@ -54,6 +54,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if ex.errcode == HTTP_BAD_REQUEST:
                 errors = {"base": "invalid_auth"}
+
             else:
                 errors = {"base": "cannot_connect"}
 
@@ -62,20 +63,44 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=step_id, data_schema=vol.Schema(self.data_schema), errors=errors
             )
 
-        return await self._async_create_entry(
-            {
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_POLLING: self._polling,
-            }
-        )
+        return await self._async_create_entry()
 
-    async def _async_create_entry(self, user_input):
+    async def _async_abode_mfa_login(self):
+        """Handle multi-factor authentication (MFA) login with Abode."""
+        try:
+            # Create instance to access login method for passing MFA code
+            abode = Abode(
+                auto_login=False,
+                get_devices=False,
+                get_automations=False,
+                cache_path=self._cache,
+            )
+            await self.hass.async_add_executor_job(
+                abode.login, self._username, self._password, self._mfa_code
+            )
+
+        except AbodeAuthenticationException:
+            return self.async_show_form(
+                step_id="mfa",
+                data_schema=vol.Schema(self.mfa_data_schema),
+                errors={"base": "invalid_mfa_code"},
+            )
+
+        return await self._async_create_entry()
+
+    async def _async_create_entry(self):
         """Create the config entry."""
+        config_data = {
+            CONF_USERNAME: self._username,
+            CONF_PASSWORD: self._password,
+            CONF_POLLING: self._polling,
+        }
         existing_entry = await self.async_set_unique_id(self._username)
 
         if existing_entry:
-            self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            self.hass.config_entries.async_update_entry(
+                existing_entry, data=config_data
+            )
             # Force reload the Abode config entry otherwise devices will remain unavailable
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -83,7 +108,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="reauth_successful")
 
-        return self.async_create_entry(title=self._username, data=user_input)
+        return self.async_create_entry(title=self._username, data=config_data)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -102,45 +127,15 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._async_abode_login(step_id="user")
 
     async def async_step_mfa(self, user_input=None):
-        """Handle multi-factor authentication (MFA) with Abode."""
+        """Handle a multi-factor authentication (MFA) flow."""
         if user_input is None:
             return self.async_show_form(
                 step_id="mfa", data_schema=vol.Schema(self.mfa_data_schema)
             )
 
-        errors = {}
-        mfa_code = user_input[CONF_MFA]
+        self._mfa_code = user_input[CONF_MFA]
 
-        try:
-            # Create instance to access login method for passing MFA code
-            abode = Abode(
-                auto_login=False,
-                get_devices=False,
-                get_automations=False,
-                cache_path=self._cache,
-            )
-            await self.hass.async_add_executor_job(
-                abode.login, self._username, self._password, mfa_code
-            )
-
-        except AbodeAuthenticationException as ex:
-            LOGGER.error("Invalid MFA code: %s", ex)
-            errors = {"base": "invalid_mfa_code"}
-
-        if errors:
-            return self.async_show_form(
-                step_id="mfa",
-                data_schema=vol.Schema(self.mfa_data_schema),
-                errors=errors,
-            )
-
-        return await self._async_create_entry(
-            {
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_POLLING: self._polling,
-            }
-        )
+        return await self._async_abode_mfa_login()
 
     async def async_step_reauth(self, config):
         """Handle reauthorization request from Abode."""
