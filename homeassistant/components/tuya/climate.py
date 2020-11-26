@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
+    PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
@@ -159,6 +160,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         """Return the precision of the system."""
         if self._tuya.has_decimal():
             return PRECISION_TENTHS
+        elif self._tuya.has_halves():
+            return PRECISION_HALVES
         return PRECISION_WHOLE
 
     @property
