@@ -527,9 +527,9 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_add_job(partial(getattr(entity, func), **data))  # type: ignore
+        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore
     else:
-        result = hass.async_add_job(func, entity, data)
+        result = hass.async_run_job(func, entity, data)
 
     # Guard because callback functions do not return a task when passed to async_add_job.
     if result is not None:
