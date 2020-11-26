@@ -178,6 +178,7 @@ class BroadlinkSP4UpdateManager(BroadlinkUpdateManager):
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
 
+
 class BroadlinkHysenUpdateManager(BroadlinkUpdateManager):
     """Maneges updates for Broadlink Hysen heating controller."""
 
