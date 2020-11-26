@@ -530,6 +530,7 @@ class Recorder(threading.Thread):
             # out from under us because they
             # did keep_days=0
             for obj in self.event_session:
+                _LOGGER.debug("obj in event_session: %s")
                 if isinstance(obj, States):
                     obj.old_state_id = None
                     obj.old_state = None
