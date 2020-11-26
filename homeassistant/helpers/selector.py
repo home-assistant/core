@@ -24,7 +24,7 @@ def validate_selector(config: Any) -> Dict:
     if selector_class is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    # Seletors can be empty
+    # Selectors can be empty
     if config[selector_type] is None:
         return {selector_type: {}}
 
@@ -67,6 +67,10 @@ class DeviceSelector(Selector):
             vol.Optional("manufacturer"): str,
             # Model of device
             vol.Optional("model"): str,
+            # Device has to contain entities matching this selector
+            vol.Optional(
+                "entity"
+            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=E1101
         }
     )
 
@@ -77,12 +81,10 @@ class AreaSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            # Area hass to contain entities provided by this integration
-            vol.Optional("integration"): str,
-            # Area has to contain entities of this domain
-            vol.Optional("domain"): str,
-            # Area has to contain entities of this device class
-            vol.Optional("device_class"): str,
+            # Area has to contain entities matching this selector
+            vol.Optional(
+                "entity"
+            ): EntitySelector.CONFIG_SCHEMA  # pylint: disable=E1101
         }
     )
 

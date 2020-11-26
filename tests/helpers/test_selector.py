@@ -47,6 +47,13 @@ def test_validate_selector():
         {"model": "mock-model"},
         {"manufacturer": "mock-manuf", "model": "mock-model"},
         {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
+        {"entity": {"device_class": "motion"}},
+        {
+            "integration": "zha",
+            "manufacturer": "mock-manuf",
+            "model": "mock-model",
+            "entity": {"domain": "binary_sensor", "device_class": "motion"},
+        },
     ),
 )
 def test_device_selector_schema(schema):
@@ -74,11 +81,17 @@ def test_entity_selector_schema(schema):
     "schema",
     (
         {},
-        {"integration": "zha"},
-        {"domain": "light"},
-        {"device_class": "motion"},
-        {"integration": "zha", "domain": "light"},
-        {"integration": "zha", "domain": "binary_sensor", "device_class": "motion"},
+        {"entity": {"integration": "zha"}},
+        {"entity": {"domain": "light"}},
+        {"entity": {"device_class": "motion"}},
+        {"entity": {"integration": "zha", "domain": "light"}},
+        {
+            "entity": {
+                "integration": "zha",
+                "domain": "binary_sensor",
+                "device_class": "motion",
+            }
+        },
     ),
 )
 def test_area_selector_schema(schema):
