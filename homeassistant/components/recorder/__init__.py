@@ -531,6 +531,7 @@ class Recorder(threading.Thread):
             # It likely means the state was deleted
             # out from under us because they
             # did keep_days=0
+            self._old_states = {}
             self._commits_without_expire = 0
             self.event_session.expire_all()
             raise
