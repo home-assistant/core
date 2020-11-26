@@ -112,6 +112,12 @@ async def async_setup_entry(hass, config_entry):
     polling = config_entry.data.get(CONF_POLLING)
     cache = hass.config.path(DEFAULT_CACHEDB)
 
+    # For previous config entries where unique_id is None
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_USERNAME]
+        )
+
     try:
         abode = await hass.async_add_executor_job(
             Abode, username, password, True, True, True, cache

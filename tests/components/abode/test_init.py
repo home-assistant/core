@@ -1,5 +1,5 @@
 """Tests for the Abode module."""
-from abodepy.exceptions import AbodeAuthenticationException
+from abodepy.exceptions import AbodeAuthenticationException, AbodeException
 
 from homeassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
@@ -8,7 +8,8 @@ from homeassistant.components.abode import (
     SERVICE_TRIGGER_AUTOMATION,
 )
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.const import HTTP_BAD_REQUEST
+from homeassistant.const import CONF_USERNAME, HTTP_BAD_REQUEST
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .common import setup_platform
 
@@ -28,6 +29,38 @@ async def test_change_settings(hass):
         )
         await hass.async_block_till_done()
         mock_set_setting.assert_called_once()
+
+    with patch(
+        "abodepy.Abode.set_setting", side_effect=AbodeException((13, "invalid setting"))
+    ):
+        await hass.services.async_call(
+            ABODE_DOMAIN,
+            SERVICE_SETTINGS,
+            {"setting": "confirm_snd", "value": "loud"},
+            blocking=True,
+        )
+
+        assert AbodeException
+
+
+async def test_add_unique_id(hass):
+    """Test unique_id is set to Abode username."""
+    mock_entry = await setup_platform(hass, ALARM_DOMAIN)
+    # Set unique_id to None to match previous config entries
+    hass.config_entries.async_update_entry(entry=mock_entry, unique_id=None)
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+
+    assert config_entry.unique_id is None
+
+    with patch("abodepy.UTILS"):
+        await hass.config_entries.async_reload(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+
+    assert config_entry.unique_id == mock_entry.data[CONF_USERNAME]
 
 
 async def test_unload_entry(hass):
@@ -57,3 +90,14 @@ async def test_invalid_credentials(hass):
         await setup_platform(hass, ALARM_DOMAIN)
 
         mock_async_step_reauth.assert_called_once()
+
+
+async def test_connection_error(hass):
+    """Test connection error with Abode."""
+    with patch(
+        "homeassistant.components.abode.Abode",
+        side_effect=AbodeException((HTTP_BAD_REQUEST, "connection error")),
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+
+        assert ConfigEntryNotReady
