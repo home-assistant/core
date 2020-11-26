@@ -1131,7 +1131,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.2
+zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2
