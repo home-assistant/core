@@ -3,10 +3,10 @@ import asyncio
 import logging
 import time
 
+import multidict
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
@@ -149,9 +149,10 @@ async def test_abort_if_oauth_error(
     hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
 ):
     """Check bad oauth token."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
     )
 
     flow_handler.async_register_implementation(hass, local_impl)
@@ -171,7 +172,13 @@ async def test_abort_if_oauth_error(
         result["flow_id"], user_input={"implementation": TEST_DOMAIN}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -203,10 +210,6 @@ async def test_abort_if_oauth_error(
 
 async def test_step_discovery(hass, flow_handler, local_impl):
     """Check flow triggers from discovery."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -222,11 +225,6 @@ async def test_step_discovery(hass, flow_handler, local_impl):
 
 async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
     """Test if aborts when discovered multiple times."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
-
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -249,10 +247,6 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
 
 async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl):
     """Test if abort discovery when entries exists."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -276,9 +270,10 @@ async def test_full_flow(
     hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
 ):
     """Check full flow."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
     )
 
     flow_handler.async_register_implementation(hass, local_impl)
@@ -298,7 +293,13 @@ async def test_full_flow(
         result["flow_id"], user_input={"implementation": TEST_DOMAIN}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
