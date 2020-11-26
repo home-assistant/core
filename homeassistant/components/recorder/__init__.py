@@ -533,6 +533,7 @@ class Recorder(threading.Thread):
             # did keep_days=0
             self._commits_without_expire = 0
             self.event_session.expire_all()
+            raise
 
     def _commit_event_session_inner(self):
         if self._pending_expunge:
