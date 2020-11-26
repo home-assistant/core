@@ -4,11 +4,7 @@ import logging
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
-from homeassistant.const import (
-    DATA_RATE_KILOBYTES_PER_SECOND,
-    STATE_IDLE,
-    CONF_URL,
-)
+from homeassistant.const import CONF_URL, DATA_RATE_KILOBYTES_PER_SECOND, STATE_IDLE
 from homeassistant.helpers.entity import Entity
 
 from .const import (
