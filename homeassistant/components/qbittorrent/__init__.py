@@ -3,20 +3,12 @@ import logging
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
-from .services import async_setup_services
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DATA_KEY_CLIENT,
@@ -25,7 +17,8 @@ from .const import (
     DOMAIN,
     SCAN_INTERVAL,
 )
-from .wrapper_functions import get_main_data_client, create_client
+from .services import async_setup_services
+from .wrapper_functions import create_client, get_main_data_client
 
 PLATFORMS = ["sensor"]
 

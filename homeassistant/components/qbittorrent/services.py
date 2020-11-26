@@ -57,11 +57,11 @@ async def async_setup_services(hass):
 def add_download(hass, service_call):
     """Download a magnetlink."""
     qbit_url = service_call.data.get("server_url")
-    downloadPath = service_call.data.get("download_path")
+    download_path = service_call.data.get("download_path")
     magnet = service_call.data.get("magnet_link")
     client = get_qbitclient(hass, qbit_url)[DATA_KEY_CLIENT]
 
-    client.download_from_link(magnet, savepath=downloadPath)
+    client.download_from_link(magnet, savepath=download_path)
     return True
 
 
@@ -95,7 +95,7 @@ def get_qbitclient(hass, server_url=None):
 def remove_download(hass, service_call):
     """Remove a download from the download/seed list."""
     qbit_url = service_call.data.get("server_url")
-    hash = service_call.data.get("torrent_hash")
+    torrent_hash = service_call.data.get("torrent_hash")
     delete_permanent = service_call.data.get("delete_permanent")
     if delete_permanent is None:
         delete_permanent = False
@@ -103,7 +103,7 @@ def remove_download(hass, service_call):
     client = get_qbitclient(hass, qbit_url)[DATA_KEY_CLIENT]
 
     if delete_permanent is True:
-        client.delete_permanently(hash)
+        client.delete_permanently(torrent_hash)
     else:
-        client.delete(hash)
+        client.delete(torrent_hash)
     return True

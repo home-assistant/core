@@ -8,13 +8,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint:disable=unused-import
 from .wrapper_functions import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class qBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for qbittorrent."""
 
     VERSION = 1
