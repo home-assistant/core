@@ -56,7 +56,6 @@ class _GlobalFreezeContext:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
-        return None
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -124,7 +123,6 @@ class _ZoneFreezeContext:
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
-        return None
 
     def _enter(self) -> None:
         """Run freeze."""
