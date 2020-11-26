@@ -212,12 +212,12 @@ class DomainBlueprints:
         """Load a blueprint."""
         try:
             blueprint_data = yaml.load_yaml(self.blueprint_folder / blueprint_path)
-        except FileNotFoundError:
+        except FileNotFoundError as err:
             raise FailedToLoad(
                 self.domain,
                 blueprint_path,
                 FileNotFoundError(f"Unable to find {blueprint_path}"),
-            )
+            ) from err
         except HomeAssistantError as err:
             raise FailedToLoad(self.domain, blueprint_path, err) from err
 
