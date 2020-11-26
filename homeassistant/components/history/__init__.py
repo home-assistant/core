@@ -454,6 +454,7 @@ class HistoryPeriodView(HomeAssistantView):
     url = "/api/history/period"
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
+    cors_allowed = True
 
     def __init__(self, filters, use_include_order):
         """Initialize the history period view."""
