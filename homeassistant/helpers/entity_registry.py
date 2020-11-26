@@ -53,9 +53,10 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 DISABLED_CONFIG_ENTRY = "config_entry"
+DISABLED_DEVICE = "device"
 DISABLED_HASS = "hass"
-DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
+DISABLED_USER = "user"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -89,10 +90,11 @@ class RegistryEntry:
         default=None,
         validator=attr.validators.in_(
             (
-                DISABLED_HASS,
-                DISABLED_USER,
-                DISABLED_INTEGRATION,
                 DISABLED_CONFIG_ENTRY,
+                DISABLED_DEVICE,
+                DISABLED_HASS,
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
                 None,
             )
         ),
@@ -127,7 +129,7 @@ class EntityRegistry:
         self._index: Dict[Tuple[str, str, str], str] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
-            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_removed
+            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
         )
 
     @callback
@@ -286,18 +288,34 @@ class EntityRegistry:
         )
         self.async_schedule_save()
 
-    @callback
-    def async_device_removed(self, event: Event) -> None:
-        """Handle the removal of a device.
+    async def async_device_modified(self, event: Event) -> None:
+        """Handle the removal or update of a device.
 
         Remove entities from the registry that are associated to a device when
         the device is removed.
+
+        Disable entities in the registry that are associated to a device when
+        the device is disabled.
         """
-        if event.data["action"] != "remove":
+        if event.data["action"] == "remove":
+            entities = async_entries_for_device(self, event.data["device_id"])
+            for entity in entities:
+                self.async_remove(entity.entity_id)
             return
+
+        if event.data["action"] != "update":
+            return
+
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = device_registry.async_get(event.data["device_id"])
+        if not device.disabled:
+            return
+
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
-            self.async_remove(entity.entity_id)
+            self.async_update_entity(  # type: ignore
+                entity.entity_id, disabled_by=DISABLED_DEVICE
+            )
 
     @callback
     def async_update_entity(

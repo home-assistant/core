@@ -417,7 +417,7 @@ async def test_thermostat_set_hvac_mode(hass, auth):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
@@ -441,7 +441,7 @@ async def test_thermostat_set_hvac_mode(hass, auth):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
@@ -514,7 +514,7 @@ async def test_thermostat_set_eco_preset(hass, auth):
         },
         auth=auth,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
@@ -834,7 +834,7 @@ async def test_thermostat_target_temp(hass, auth):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")

@@ -262,6 +262,10 @@ omit =
     homeassistant/components/fibaro/*
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
+    homeassistant/components/fireservicerota/__init__.py
+    homeassistant/components/fireservicerota/binary_sensor.py
+    homeassistant/components/fireservicerota/const.py
+    homeassistant/components/fireservicerota/sensor.py
     homeassistant/components/firmata/__init__.py
     homeassistant/components/firmata/binary_sensor.py
     homeassistant/components/firmata/board.py
@@ -542,6 +546,10 @@ omit =
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/switch.py
     homeassistant/components/modem_callerid/sensor.py
+    homeassistant/components/motion_blinds/__init__.py
+    homeassistant/components/motion_blinds/const.py
+    homeassistant/components/motion_blinds/cover.py
+    homeassistant/components/motion_blinds/sensor.py
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py

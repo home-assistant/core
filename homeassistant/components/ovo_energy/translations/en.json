@@ -1,12 +1,19 @@
 {
     "config": {
-        "flow_title": "OVO Energy: {username}",
         "error": {
             "already_configured": "Account is already configured",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Authentication failed for OVO Energy. Please enter your current credentials.",
+                "title": "Reauthentication"
+            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -14,14 +21,7 @@
                 },
                 "description": "Set up an OVO Energy instance to access your energy usage.",
                 "title": "Add OVO Energy Account"
-            },
-            "reauth": {
-                "data": {
-                    "password": "[%key:common::config_flow::data::password%]"
-                },
-                "description": "Authentication failed for OVO Energy. Please enter your current credentials.",
-                "title": "Reauthentication"
-              }
             }
+        }
     }
 }
