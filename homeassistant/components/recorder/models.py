@@ -112,8 +112,6 @@ class States(Base):  # type: ignore
     event = relationship(
         "Events",
         uselist=False,
-        single_parent=True,
-        cascade="save-update,merge,delete,delete-orphan",
     )
     old_state = relationship(
         "States",
