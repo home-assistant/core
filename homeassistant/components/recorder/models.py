@@ -108,7 +108,7 @@ class States(Base):  # type: ignore
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(Integer)
+    old_state_id = Column(Integer, ForeignKey("states.state_id", ondelete="SET NULL"))
     event = relationship(
         "Events",
         uselist=False,
