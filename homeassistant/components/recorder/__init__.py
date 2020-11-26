@@ -503,27 +503,8 @@ class Recorder(threading.Thread):
             _LOGGER.exception("Error while creating new event session: %s", err)
 
     def _commit_event_session(self):
-        self._commits_without_expire += 1
-
         try:
-            if self._pending_expunge:
-                self.event_session.flush()
-                for dbstate in self._pending_expunge:
-                    # Expunge the state so its not expired
-                    # until we use it later for dbstate.old_state
-                    if dbstate in self.event_session:
-                        self.event_session.expunge(dbstate)
-                self._pending_expunge = []
-            self.event_session.commit()
-        except exc.IntegrityError as err:
-            _LOGGER.error("Integrity error while executing query: %s", err)
-            self.event_session.rollback()
-            # It likely means the state was deleted
-            # out from under us
-            for obj in self.event_session:
-                if isinstance(obj, States):
-                    obj.old_state_id = None
-            raise
+            self._commit_event_session_handle_old_state_purged()
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()
@@ -535,6 +516,35 @@ class Recorder(threading.Thread):
         if self._commits_without_expire == EXPIRE_AFTER_COMMITS:
             self._commits_without_expire = 0
             self.event_session.expire_all()
+
+    def _commit_event_session_handle_old_state_purged(self):
+        try:
+            self._commit_event_session_inner()
+        except exc.IntegrityError as err:
+            _LOGGER.debug(
+                "Integrity error while executing query (old state likely purged): %s",
+                err,
+            )
+            self.event_session.rollback()
+            # It likely means the state was deleted
+            # out from under us because they
+            # did keep_days=0
+            for obj in self.event_session:
+                if isinstance(obj, States):
+                    obj.old_state_id = None
+            self._commit_event_session_inner()
+
+    def _commit_event_session_inner(self):
+        if self._pending_expunge:
+            self.event_session.flush()
+            for dbstate in self._pending_expunge:
+                # Expunge the state so its not expired
+                # until we use it later for dbstate.old_state
+                if dbstate in self.event_session:
+                    self.event_session.expunge(dbstate)
+            self._pending_expunge = []
+        self.event_session.commit()
+        self._commits_without_expire += 1
 
     @callback
     def event_listener(self, event):
