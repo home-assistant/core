@@ -26,7 +26,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     @callback
     def handle_event(event):
         """Listen for tag scan events and calls the action when data matches."""
-        if event.data.get(TAG_ID) not in device_ids or (device_ids and event.data.get(DEVICE_ID) not in device_ids):
+        if event.data.get(TAG_ID) not in tag_ids or (
+            device_ids and event.data.get(DEVICE_ID) not in device_ids
+        ):
             return
 
         hass.async_run_hass_job(
