@@ -48,7 +48,7 @@ async def get_coap_context(hass):
     await context.initialize()
 
     @callback
-    def shutdown_listener(ev):
+    async def shutdown_listener(ev):
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
