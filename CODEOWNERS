@@ -238,6 +238,7 @@ homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
+homeassistant/components/ketra/* @s4v4g3
 homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
