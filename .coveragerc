@@ -266,6 +266,7 @@ omit =
     homeassistant/components/fireservicerota/binary_sensor.py
     homeassistant/components/fireservicerota/const.py
     homeassistant/components/fireservicerota/sensor.py
+    homeassistant/components/fireservicerota/switch.py
     homeassistant/components/firmata/__init__.py
     homeassistant/components/firmata/binary_sensor.py
     homeassistant/components/firmata/board.py
