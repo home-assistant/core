@@ -1,9 +1,9 @@
 """Test to verify that we can load components."""
 import pytest
 
+from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
-import homeassistant.loader as loader
 
 from tests.async_mock import ANY, patch
 from tests.common import MockModule, async_mock_service, mock_integration
@@ -83,6 +83,7 @@ async def test_helpers_wrapper(hass):
 
     result = []
 
+    @core.callback
     def discovery_callback(service, discovered):
         """Handle discovery callback."""
         result.append(discovered)
