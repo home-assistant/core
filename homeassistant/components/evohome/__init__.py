@@ -145,7 +145,6 @@ def _handle_exception(err) -> bool:
             "Message is: %s",
             err,
         )
-        return False
 
     except aiohttp.ClientConnectionError:
         # this appears to be a common occurrence with the vendor's servers
@@ -155,7 +154,6 @@ def _handle_exception(err) -> bool:
             "Message is: %s",
             err,
         )
-        return False
 
     except aiohttp.ClientResponseError:
         if err.status == HTTP_SERVICE_UNAVAILABLE:
@@ -163,17 +161,16 @@ def _handle_exception(err) -> bool:
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
-            return False
 
-        if err.status == HTTP_TOO_MANY_REQUESTS:
+        elif err.status == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "If this message persists, consider increasing the %s",
                 CONF_SCAN_INTERVAL,
             )
-            return False
 
-        raise  # we don't expect/handle any other Exceptions
+        else:
+            raise  # we don't expect/handle any other Exceptions
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -427,8 +424,8 @@ class EvoBroker:
         try:
             result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            if not _handle_exception(err):
-                return
+            _handle_exception(err)
+            return
 
         if update_state:  # wait a moment for system to quiesce before updating state
             self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
