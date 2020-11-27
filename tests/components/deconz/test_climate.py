@@ -81,7 +81,15 @@ async def test_climate_devices(hass):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
-    assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
+    climate_thermostat = hass.states.get("climate.thermostat")
+    assert climate_thermostat.state == HVAC_MODE_AUTO
+    assert climate_thermostat.attributes["hvac_modes"] == [
+        HVAC_MODE_AUTO,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_OFF,
+    ]
+    assert climate_thermostat.attributes["current_temperature"] == 22.6
+    assert climate_thermostat.attributes["temperature"] == 22.0
     assert hass.states.get("sensor.thermostat") is None
     assert hass.states.get("sensor.thermostat_battery_level").state == "100"
     assert hass.states.get("climate.presence_sensor") is None

@@ -1,4 +1,6 @@
 """Support for deCONZ climate devices."""
+from typing import Optional
+
 from pydeconz.sensor import Thermostat
 
 from homeassistant.components.climate import DOMAIN, ClimateEntity
@@ -10,6 +12,7 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     FAN_ON,
     HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
@@ -34,6 +37,7 @@ FAN_MODES = {
 
 HVAC_MODES = {
     HVAC_MODE_AUTO: "auto",
+    HVAC_MODE_COOL: "cool",
     HVAC_MODE_HEAT: "heat",
     HVAC_MODE_OFF: "off",
 }
@@ -85,6 +89,10 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
+        self._hvac_modes = dict(HVAC_MODES)
+        if device.coolsetpoint is None:
+            self._hvac_modes.pop(HVAC_MODE_COOL)
+
         self._features = SUPPORT_TARGET_TEMPERATURE
 
         if device.fanmode is not None:
@@ -94,6 +102,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         return self._features
+
+    # Fan control
 
     @property
     def fan_mode(self) -> str:
@@ -115,11 +125,13 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in FAN_MODES:
-            raise ValueError(f"Unsupported mode {fan_mode}")
+            raise ValueError(f"Unsupported fan mode {fan_mode}")
 
         data = {"fanmode": FAN_MODES[fan_mode]}
 
         await self._device.async_set_config(data)
+
+    # HVAC control
 
     @property
     def hvac_mode(self):
@@ -127,7 +139,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         Need to be one of HVAC_MODE_*.
         """
-        for hass_hvac_mode, device_mode in HVAC_MODES.items():
+        for hass_hvac_mode, device_mode in self._hvac_modes.items():
             if self._device.mode == device_mode:
                 return hass_hvac_mode
 
@@ -139,17 +151,40 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def hvac_modes(self) -> list:
         """Return the list of available hvac operation modes."""
-        return list(HVAC_MODES)
+        return list(self._hvac_modes)
+
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        if hvac_mode not in self._hvac_modes:
+            raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
+
+        data = {"mode": self._hvac_modes[hvac_mode]}
+
+        await self._device.async_set_config(data)
+
+    # Temperature control
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the target temperature."""
+        if self._device.mode == "cool":
+            return self._device.coolsetpoint
         return self._device.heatsetpoint
+
+    @property
+    def target_temperature_high(self) -> float:
+        """Return the high target temperature."""
+        return self._device.heatsetpoint
+
+    @property
+    def target_temperature_low(self) -> Optional[float]:
+        """Return the low target temperature."""
+        return self._device.coolsetpoint
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -157,15 +192,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
         data = {"heatsetpoint": kwargs[ATTR_TEMPERATURE] * 100}
-
-        await self._device.async_set_config(data)
-
-    async def async_set_hvac_mode(self, hvac_mode):
-        """Set new target hvac mode."""
-        if hvac_mode not in HVAC_MODES:
-            raise ValueError(f"Unsupported mode {hvac_mode}")
-
-        data = {"mode": HVAC_MODES[hvac_mode]}
+        if self._device.mode == "cool":
+            data = {"coolsetpoint": kwargs[ATTR_TEMPERATURE] * 100}
 
         await self._device.async_set_config(data)
 
