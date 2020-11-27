@@ -635,7 +635,7 @@ class EvoChild(EvoDevice):
             return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
 
         day_time = dt_util.now()
-        day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
+        day_of_week = day_time.weekday()  # for evohome, 0 is Monday
         time_of_day = day_time.strftime("%H:%M:%S")
 
         try:
