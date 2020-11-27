@@ -28,7 +28,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
-    MAX_TIME_TRACKING_ERROR,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
@@ -1133,16 +1132,36 @@ def async_track_point_in_utc_time(
     # having to figure out how to call the action every time its called.
     job = action if isinstance(action, HassJob) else HassJob(action)
 
-    cancel_callback = hass.loop.call_at(
-        hass.loop.time() + point_in_time.timestamp() - time.time(),
-        hass.async_run_hass_job,
-        job,
-        utc_point_in_time,
-    )
+    cancel_callback: Optional[asyncio.TimerHandle] = None
+
+    @callback
+    def run_action() -> None:
+        """Call the action."""
+        nonlocal cancel_callback
+
+        now = time_tracker_utcnow()
+
+        # Depending on the available clock support (including timer hardware
+        # and the OS kernel) it can happen that we fire a little bit too early
+        # as measured by utcnow(). That is bad when callbacks have assumptions
+        # about the current time. Thus, we rearm the timer for the remaining
+        # time.
+        delta = (utc_point_in_time - now).total_seconds()
+        if delta > 0:
+            _LOGGER.debug("Called %f seconds too early, rearming", delta)
+
+            cancel_callback = hass.loop.call_later(delta, run_action)
+            return
+
+        hass.async_run_hass_job(job, utc_point_in_time)
+
+    delta = utc_point_in_time.timestamp() - time.time()
+    cancel_callback = hass.loop.call_later(delta, run_action)
 
     @callback
     def unsub_point_in_time_listener() -> None:
         """Cancel the call_later."""
+        assert cancel_callback is not None
         cancel_callback.cancel()
 
     return unsub_point_in_time_listener
@@ -1294,7 +1313,7 @@ def async_track_sunset(
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
-pattern_utc_now = dt_util.utcnow
+time_tracker_utcnow = dt_util.utcnow
 
 
 @callback
@@ -1325,75 +1344,38 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    next_time: datetime = dt_util.utcnow()
-
-    def calculate_next(now: datetime) -> None:
+    def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
-        nonlocal next_time
-
         localized_now = dt_util.as_local(now) if local else now
-        next_time = dt_util.find_next_time_expression_time(
+        return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
         )
 
-    # Make sure rolling back the clock doesn't prevent the timer from
-    # triggering.
-    cancel_callback: Optional[asyncio.TimerHandle] = None
-    calculate_next(next_time)
+    time_listener: Optional[CALLBACK_TYPE] = None
 
     @callback
-    def pattern_time_change_listener() -> None:
+    def pattern_time_change_listener(_: datetime) -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, cancel_callback
+        nonlocal time_listener
 
-        now = pattern_utc_now()
+        now = time_tracker_utcnow()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
-        calculate_next(now + timedelta(seconds=1))
-
-        cancel_callback = hass.loop.call_at(
-            -time.time()
-            + hass.loop.time()
-            + next_time.timestamp()
-            + MAX_TIME_TRACKING_ERROR,
+        time_listener = async_track_point_in_utc_time(
+            hass,
             pattern_time_change_listener,
+            calculate_next(now + timedelta(seconds=1)),
         )
 
-    # We always get time.time() first to avoid time.time()
-    # ticking forward after fetching hass.loop.time()
-    # and callback being scheduled a few microseconds early.
-    #
-    # Since we loose additional time calling `hass.loop.time()`
-    # we add MAX_TIME_TRACKING_ERROR to ensure
-    # we always schedule the call within the time window between
-    # second and the next second.
-    #
-    # For example:
-    # If the clock ticks forward 30 microseconds when fectching
-    # `hass.loop.time()` and we want the event to fire at exactly
-    # 03:00:00.000000, the event would actually fire around
-    # 02:59:59.999970. To ensure we always fire sometime between
-    # 03:00:00.000000 and 03:00:00.999999 we add
-    # MAX_TIME_TRACKING_ERROR to make up for the time
-    # lost fetching the time. This ensures we do not fire the
-    # event before the next time pattern match which would result
-    # in the event being fired again since we would otherwise
-    # potentially fire early.
-    #
-    cancel_callback = hass.loop.call_at(
-        -time.time()
-        + hass.loop.time()
-        + next_time.timestamp()
-        + MAX_TIME_TRACKING_ERROR,
-        pattern_time_change_listener,
+    time_listener = async_track_point_in_utc_time(
+        hass, pattern_time_change_listener, calculate_next(dt_util.utcnow())
     )
 
     @callback
     def unsub_pattern_time_change_listener() -> None:
-        """Cancel the call_later."""
-        nonlocal cancel_callback
-        assert cancel_callback is not None
-        cancel_callback.cancel()
+        """Cancel the time listener."""
+        assert time_listener is not None
+        time_listener()
 
     return unsub_pattern_time_change_listener
 

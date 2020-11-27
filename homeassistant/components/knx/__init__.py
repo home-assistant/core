@@ -1,4 +1,5 @@
 """Support KNX devices."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -27,7 +29,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ServiceCallType
 
 from .const import DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
@@ -170,6 +176,28 @@ async def async_setup(hass, config):
         SERVICE_KNX_SEND,
         hass.data[DOMAIN].service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
+    )
+
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
+        """Remove all KNX components and load new ones from config."""
+
+        # First check for config file. If for some reason it is no longer there
+        # or knx is no longer mentioned, stop the reload.
+        config = await async_integration_yaml_config(hass, DOMAIN)
+
+        if not config or DOMAIN not in config:
+            return
+
+        await hass.data[DOMAIN].xknx.stop()
+
+        await asyncio.gather(
+            *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
+        )
+
+        await async_setup(hass, config)
+
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     return True

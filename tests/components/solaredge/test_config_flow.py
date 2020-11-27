@@ -85,14 +85,14 @@ async def test_abort_if_already_setup(hass, test_api):
         {CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "site_exists"
+    assert result["reason"] == "already_configured"
 
     # user: Should fail, same SITE_ID
     result = await flow.async_step_user(
         {CONF_NAME: "test", CONF_SITE_ID: SITE_ID, CONF_API_KEY: "test"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_SITE_ID: "site_exists"}
+    assert result["errors"] == {CONF_SITE_ID: "already_configured"}
 
 
 async def test_asserts(hass, test_api):
@@ -113,7 +113,7 @@ async def test_asserts(hass, test_api):
         {CONF_NAME: NAME, CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_SITE_ID: "api_failure"}
+    assert result["errors"] == {CONF_SITE_ID: "invalid_api_key"}
 
     # test with ConnectionTimeout
     test_api.get_details.side_effect = ConnectTimeout()

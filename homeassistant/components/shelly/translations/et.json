@@ -9,6 +9,7 @@
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
         },
+        "flow_title": "",
         "step": {
             "confirm_discovery": {
                 "description": "Kas soovid seadistada {model} saidil {host} ?\n\n Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadmel nuppu."
@@ -26,6 +27,5 @@
                 "description": "Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadme nuppu."
             }
         }
-    },
-    "title": ""
+    }
 }

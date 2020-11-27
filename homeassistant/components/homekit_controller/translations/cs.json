@@ -7,15 +7,13 @@
             "already_paired": "Toto p\u0159\u00edslu\u0161enstv\u00ed je ji\u017e sp\u00e1rov\u00e1no s jin\u00fdm za\u0159\u00edzen\u00edm. Resetujte p\u0159\u00edslu\u0161enstv\u00ed a zkuste to znovu.",
             "ignored_model": "Podpora pro tento model je v HomeKit blokov\u00e1na, proto\u017ee je k dispozici nativn\u00ed integrace s v\u00edce funkcemi.",
             "invalid_config_entry": "Toto za\u0159\u00edzen\u00ed vypad\u00e1, \u017ee je p\u0159ipraven\u00e9 ke sp\u00e1rov\u00e1n\u00ed, ale v Home Assistant ji\u017e existuje konfliktn\u00ed polo\u017eka konfigurace, kterou je t\u0159eba nejprve odebrat.",
+            "invalid_properties": "Neplatn\u00e9 vlastnosti ozn\u00e1men\u00e9 za\u0159\u00edzen\u00edm.",
             "no_devices": "Nebyla nalezena \u017e\u00e1dn\u00e1 nesp\u00e1rov\u00e1 za\u0159\u00edzen\u00ed"
         },
         "error": {
             "authentication_error": "Nespr\u00e1vn\u00fd HomeKit k\u00f3d. Zkontrolujte to a zkuste to znovu.",
-            "busy_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee je ji\u017e sp\u00e1rov\u00e1no s jin\u00fdm ovlada\u010dem.",
             "max_peers_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee nem\u00e1 voln\u00e9 \u00falo\u017ei\u0161t\u011b pro p\u00e1rov\u00e1n\u00ed.",
-            "max_tries_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee p\u0159ijalo v\u00edce ne\u017e 100 ne\u00fasp\u011b\u0161n\u00fdch pokus\u016f o ov\u011b\u0159en\u00ed.",
             "pairing_failed": "P\u0159i pokusu o sp\u00e1rov\u00e1n\u00ed s t\u00edmto za\u0159\u00edzen\u00edm do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b. M\u016f\u017ee se jednat o do\u010dasn\u00e9 selh\u00e1n\u00ed nebo va\u0161e za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt aktu\u00e1ln\u011b podporov\u00e1no.",
-            "protocol_error": "P\u0159i komunikaci s p\u0159\u00edslu\u0161enstv\u00edm do\u0161lo k chyb\u011b. Za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt v re\u017eimu p\u00e1rov\u00e1n\u00ed a m\u016f\u017ee vy\u017eadovat fyzick\u00e9 nebo virtu\u00e1ln\u00ed stisknut\u00ed tla\u010d\u00edtka.",
             "unable_to_pair": "Nelze sp\u00e1rovat, zkuste to pros\u00edm znovu.",
             "unknown_error": "Za\u0159\u00edzen\u00ed nahl\u00e1silo nezn\u00e1mou chybu. P\u00e1rov\u00e1n\u00ed se nezda\u0159ilo."
         },
@@ -39,9 +37,6 @@
             "protocol_error": {
                 "description": "Za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt v re\u017eimu p\u00e1rov\u00e1n\u00ed a m\u016f\u017ee vy\u017eadovat fyzick\u00e9 nebo virtu\u00e1ln\u00ed stisknut\u00ed tla\u010d\u00edtka. Ujist\u011bte se, \u017ee je za\u0159\u00edzen\u00ed v re\u017eimu p\u00e1rov\u00e1n\u00ed, nebo zkuste za\u0159\u00edzen\u00ed restartovat a pot\u00e9 pokra\u010dujte v p\u00e1rov\u00e1n\u00ed.",
                 "title": "P\u0159i komunikaci s p\u0159\u00edslu\u0161enstv\u00edm do\u0161lo k chyb\u011b"
-            },
-            "try_pair_later": {
-                "title": "P\u00e1rov\u00e1n\u00ed nen\u00ed k dispozici"
             },
             "user": {
                 "data": {

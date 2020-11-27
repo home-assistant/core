@@ -116,7 +116,7 @@ async def test_setup_minimum_resource_template(hass):
         {
             "binary_sensor": {
                 "platform": "rest",
-                "resource_template": "http://localhost",
+                "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
             }
         },
     )
@@ -375,6 +375,29 @@ async def test_reload(hass):
 
     assert hass.states.get("binary_sensor.mockreset") is None
     assert hass.states.get("binary_sensor.rollout")
+
+
+@respx.mock
+async def test_setup_query_params(hass):
+    """Test setup with query params."""
+    respx.get(
+        "http://localhost?search=something",
+        status_code=200,
+    )
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "params": {"search": "something"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
 
 
 def _get_fixtures_base_path():

@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Lokacija je \u017ee nastavljena"
+        },
         "error": {
-            "identifier_exists": "Koordinate \u017ee registrirane",
             "invalid_api_key": "Neveljaven API klju\u010d"
         },
         "step": {

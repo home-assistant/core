@@ -208,7 +208,7 @@ class ZigbeeChannel(LogMixin):
         attributes = []
         for report_config in self._report_config:
             attributes.append(report_config["attr"])
-        if len(attributes) > 0:
+        if attributes:
             await self.get_attributes(attributes, from_cache=from_cache)
         self._status = ChannelStatus.INITIALIZED
 

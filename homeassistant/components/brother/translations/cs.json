@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit",
             "wrong_host": "Neplatn\u00fd hostitel nebo IP adresa."
         },
         "flow_title": "Tisk\u00e1rna Brother: {model} {serial_number}",
@@ -21,7 +20,7 @@
                 "data": {
                     "type": "Typ tisk\u00e1rny"
                 },
-                "description": "Chcete p\u0159idat tisk\u00e1rnu Brother {model} se s\u00e9riov\u00fdm \u010d\u00edslem \"{serial_number}\" do Home Assistant?",
+                "description": "Chcete p\u0159idat tisk\u00e1rnu Brother {model} se s\u00e9riov\u00fdm \u010d\u00edslem `{serial_number}` do Home Assistant?",
                 "title": "Objeven\u00e1 tisk\u00e1rna Brother"
             }
         }

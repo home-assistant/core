@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide",
-            "unknown": "Errore imprevisto",
-            "user_already_configured": "L'account \u00e8 gi\u00e0 configurato"
+            "unknown": "Errore imprevisto"
         },
         "create_entry": {
             "default": "Per impostare le opzioni avanzate, consultare la [Documentazione Life360]({docs_url})."
@@ -12,11 +10,8 @@
         "error": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide",
             "invalid_username": "Nome utente non valido",
-            "unexpected": "Errore imprevisto durante la comunicazione con il server di Life360",
-            "unknown": "Errore imprevisto",
-            "user_already_configured": "L'account \u00e8 gi\u00e0 configurato"
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {

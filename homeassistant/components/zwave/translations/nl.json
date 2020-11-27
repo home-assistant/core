@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Z-Wave is al geconfigureerd",
-            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n Z-Wave-instantie",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {

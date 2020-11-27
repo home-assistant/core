@@ -370,7 +370,7 @@ class Camera(HomeAccessory, PyhapCamera):
         if self.config[CONF_SUPPORT_AUDIO]:
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
         _LOGGER.debug("FFmpeg output settings: %s", output)
-        stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
+        stream = HAFFmpeg(self._ffmpeg.binary)
         opened = await stream.open(
             cmd=[], input_source=input_source, output=output, stdout_pipe=False
         )
