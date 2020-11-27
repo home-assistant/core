@@ -31,6 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             "EVW3226@UPC",
             "DVW32CB",
             "DDW36C",
+            "UBC1303BA00",
         ),
     }
 )
