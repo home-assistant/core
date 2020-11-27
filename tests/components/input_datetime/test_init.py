@@ -276,7 +276,6 @@ async def test_set_invalid_2(hass):
             {"entity_id": entity_id, "time": time_portion, "datetime": dt_obj},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == initial
@@ -467,7 +466,6 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -643,7 +641,6 @@ async def test_setup_no_config(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())
 
