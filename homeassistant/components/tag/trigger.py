@@ -18,32 +18,15 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for tag_scanned events based on configuration."""
-    tag_ids = config.get(TAG_ID)
-    device_ids = config.get(DEVICE_ID)
-
-    tag_data_schema = vol.Schema(
-        {
-            vol.Required(TAG_ID): vol.In(tag_ids),
-        },
-        extra=vol.ALLOW_EXTRA,
-    )
-
-    if device_ids:
-        tag_data_schema = tag_data_schema.extend(
-            {
-                vol.Required(DEVICE_ID): vol.In(device_ids),
-            }
-        )
+    tag_ids = set(config[TAG_ID])
+    device_ids = set(config[DEVICE_ID]) if DEVICE_ID in config else None
 
     job = HassJob(action)
 
     @callback
     def handle_event(event):
         """Listen for tag scan events and calls the action when data matches."""
-        try:
-            tag_data_schema(event.data)
-        except vol.Invalid:
-            # If event doesn't match, skip tag event
+        if event.data.get(TAG_ID) not in device_ids or (device_ids and event.data.get(DEVICE_ID) not in device_ids):
             return
 
         hass.async_run_hass_job(
