@@ -537,3 +537,9 @@ def legacy_patchable_time():
         async_track_utc_time_change,
     ):
         yield
+
+
+@pytest.fixture
+def enable_custom_integrations(hass):
+    """Enable custom integrations defined in the test dir."""
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
