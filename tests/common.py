@@ -195,6 +195,8 @@ async def async_test_home_assistant(loop):
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
 
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
+
     hass.config.location_name = "test home"
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
