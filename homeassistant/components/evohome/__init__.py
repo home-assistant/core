@@ -634,7 +634,7 @@ class EvoChild(EvoDevice):
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
-        if not self._schedule or not not self._schedule.get("DailySchedules"):
+        if not self._schedule or not self._schedule.get("DailySchedules"):
             return {}  # no scheduled setpoints when {'DailySchedules': []}
 
         day_time = dt_util.now()
