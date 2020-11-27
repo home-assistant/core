@@ -36,7 +36,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
+    with patch("aioshelly.COAP", return_value=Mock(initialize=AsyncMock())), patch(
         "aioshelly.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
