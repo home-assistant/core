@@ -1248,7 +1248,7 @@ async def cleanup_device_registry(hass, device_id):
     if (
         device_id
         and not hass.helpers.entity_registry.async_entries_for_device(
-            entity_registry, device_id
+            entity_registry, device_id, include_disabled_entities=True
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)

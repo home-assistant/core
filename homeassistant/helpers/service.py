@@ -260,7 +260,7 @@ async def async_extract_entity_ids(
             entry.entity_id
             for device in devices
             for entry in hass.helpers.entity_registry.async_entries_for_device(
-                ent_reg, device.id
+                ent_reg, device.id, include_disabled_entities=True
             )
             if not entry.area_id
         )
