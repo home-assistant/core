@@ -233,7 +233,6 @@ async def async_setup(hass, config):
         }
 
         connection = pypck.connection.PchkConnectionManager(
-            hass.loop,
             conf_connection[CONF_HOST],
             conf_connection[CONF_PORT],
             conf_connection[CONF_USERNAME],

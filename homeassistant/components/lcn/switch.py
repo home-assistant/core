@@ -58,13 +58,17 @@ class LcnOutputSwitch(LcnDevice, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._is_on = True
-        self.address_connection.dim_output(self.output.value, 100, 0)
+        self.hass.async_create_task(
+            self.address_connection.dim_output(self.output.value, 100, 0)
+        )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         self._is_on = False
-        self.address_connection.dim_output(self.output.value, 0, 0)
+        self.hass.async_create_task(
+            self.address_connection.dim_output(self.output.value, 0, 0)
+        )
         self.async_write_ha_state()
 
     def input_received(self, input_obj):
@@ -106,7 +110,7 @@ class LcnRelaySwitch(LcnDevice, SwitchEntity):
 
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
-        self.address_connection.control_relays(states)
+        self.hass.async_create_task(self.address_connection.control_relays(states))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
@@ -115,7 +119,7 @@ class LcnRelaySwitch(LcnDevice, SwitchEntity):
 
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
-        self.address_connection.control_relays(states)
+        self.hass.async_create_task(self.address_connection.control_relays(states))
         self.async_write_ha_state()
 
     def input_received(self, input_obj):

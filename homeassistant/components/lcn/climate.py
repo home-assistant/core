@@ -119,10 +119,14 @@ class LcnClimate(LcnDevice, ClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode == const.HVAC_MODE_HEAT:
             self._is_on = True
-            self.address_connection.lock_regulator(self.regulator_id, False)
+            self.hass.async_create_task(
+                self.address_connection.lock_regulator(self.regulator_id, False)
+            )
         elif hvac_mode == const.HVAC_MODE_OFF:
             self._is_on = False
-            self.address_connection.lock_regulator(self.regulator_id, True)
+            self.hass.async_create_task(
+                self.address_connection.lock_regulator(self.regulator_id, True)
+            )
             self._target_temperature = None
 
         self.async_write_ha_state()
@@ -134,8 +138,10 @@ class LcnClimate(LcnDevice, ClimateEntity):
             return
 
         self._target_temperature = temperature
-        self.address_connection.var_abs(
-            self.setpoint, self._target_temperature, self.unit
+        self.hass.async_create_task(
+            self.address_connection.var_abs(
+                self.setpoint, self._target_temperature, self.unit
+            )
         )
         self.async_write_ha_state()
 

@@ -67,10 +67,12 @@ class LcnScene(LcnDevice, Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
-        self.address_connection.activate_scene(
-            self.register_id,
-            self.scene_id,
-            self.output_ports,
-            self.relay_ports,
-            self.transition,
+        self.hass.async_create_task(
+            self.address_connection.activate_scene(
+                self.register_id,
+                self.scene_id,
+                self.output_ports,
+                self.relay_ports,
+                self.transition,
+            )
         )
