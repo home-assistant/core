@@ -531,7 +531,7 @@ async def _handle_entity_call(
     else:
         result = hass.async_run_job(func, entity, data)
 
-    # Guard because callback functions do not return a task when passed to async_add_job.
+    # Guard because callback functions do not return a task when passed to async_run_job.
     if result is not None:
         await result
 
@@ -564,7 +564,7 @@ def async_register_admin_service(
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        result = hass.async_add_job(service_func, call)
+        result = hass.async_run_job(service_func, call)
         if result is not None:
             await result
 
