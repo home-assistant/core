@@ -126,10 +126,7 @@ class ResponseSwitch(SwitchEntity):
         if not data or "status" not in data:
             return
 
-        if data["status"] == "acknowledged":
-            self._state = True
-        else:
-            self._state = False
+        self._state = data["status"] == "acknowledged"
 
         del data["user_photo"]
         self._state_attributes = data
