@@ -434,6 +434,24 @@ async def test_hvac_mode_heat(hass, setup_comp_2):
     assert ENT_SWITCH == call.data["entity_id"]
 
 
+async def test_set_temperature_and_hvac_mode_at_the_same_time(hass, setup_comp_2):
+    """Test set temperature and change mode from OFF to HEAT at the same time."""
+
+    await common.async_set_hvac_mode(hass, HVAC_MODE_OFF)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    calls = _setup_switch(hass, False)
+    await common.async_set_temperature(hass, temperature=30, hvac_mode=HVAC_MODE_HEAT)
+    assert 2 == len(calls)
+    call = calls[0]
+    assert HASS_DOMAIN == call.domain
+    assert SERVICE_TURN_ON == call.service
+    assert ENT_SWITCH == call.data["entity_id"]
+    state = hass.states.get(ENTITY)
+    assert 30 == state.attributes[ATTR_TEMPERATURE]
+    assert HVAC_MODE_HEAT == state.state
+
+
 def _setup_switch(hass, is_on):
     """Set up the test switch."""
     hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
