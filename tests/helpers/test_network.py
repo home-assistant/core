@@ -500,7 +500,7 @@ async def test_get_url(hass: HomeAssistant):
 
     with patch(
         "homeassistant.helpers.network._get_request_host", return_value="example.com"
-    ), patch("homeassistant.helpers.network.current_request"):
+    ), patch("homeassistant.components.http.current_request"):
         assert get_url(hass, require_current_request=True) == "https://example.com"
         assert (
             get_url(hass, require_current_request=True, require_ssl=True)
@@ -512,7 +512,7 @@ async def test_get_url(hass: HomeAssistant):
 
     with patch(
         "homeassistant.helpers.network._get_request_host", return_value="example.local"
-    ), patch("homeassistant.helpers.network.current_request"):
+    ), patch("homeassistant.components.http.current_request"):
         assert get_url(hass, require_current_request=True) == "http://example.local"
 
         with pytest.raises(NoURLAvailableError):
@@ -533,7 +533,7 @@ async def test_get_request_host(hass: HomeAssistant):
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.url = "http://example.com:8123/test/request"
         mock_request_context.get = Mock(return_value=mock_request)
