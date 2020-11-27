@@ -49,6 +49,7 @@ class Debouncer:
     async def async_call(self) -> None:
         """Call the function."""
         assert self.function is not None
+        assert self._job is not None
 
         if self._timer_task:
             if not self._execute_at_end_of_timer:
@@ -70,7 +71,9 @@ class Debouncer:
             if self._timer_task:
                 return
 
-            await self.hass.async_add_hass_job(self._job)  # type: ignore
+            task = self.hass.async_run_hass_job(self._job)
+            if task:
+                await task
 
             self._schedule_timer()
 

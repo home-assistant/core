@@ -1485,20 +1485,22 @@ def async_subscribe_connection_status(hass, connection_status_callback):
 
     connection_status_callback_job = HassJob(connection_status_callback)
 
-    @callback
-    def connected():
-        hass.async_add_hass_job(connection_status_callback_job, True)
+    async def connected():
+        task = hass.async_run_hass_job(connection_status_callback_job, True)
+        if task:
+            await task
 
-    @callback
-    def disconnected():
-        _LOGGER.error("Calling connection_status_callback, False")
-        hass.async_add_hass_job(connection_status_callback_job, False)
+    async def disconnected():
+        task = hass.async_run_hass_job(connection_status_callback_job, False)
+        if task:
+            await task
 
     subscriptions = {
         "connect": async_dispatcher_connect(hass, MQTT_CONNECTED, connected),
         "disconnect": async_dispatcher_connect(hass, MQTT_DISCONNECTED, disconnected),
     }
 
+    @callback
     def unsubscribe():
         subscriptions["connect"]()
         subscriptions["disconnect"]()
