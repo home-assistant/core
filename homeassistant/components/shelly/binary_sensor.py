@@ -75,19 +75,19 @@ SENSORS = {
 REST_SENSORS = {
     "cloud": RestAttributeDescription(
         name="Cloud",
+        value=lambda status, _: status["cloud"]["connected"],
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
-        path="cloud/connected",
     ),
     "fwupdate": RestAttributeDescription(
         name="Firmware update",
         icon="mdi:update",
+        value=lambda status, _: status["update"]["has_update"],
         default_enabled=False,
-        path="update/has_update",
-        attributes=[
-            {"description": "latest_stable_version", "path": "update/new_version"},
-            {"description": "installed_version", "path": "update/old_version"},
-        ],
+        device_state_attributes=lambda status: {
+            "latest_stable_version": status["update"]["new_version"],
+            "installed_version": status["update"]["old_version"],
+        },
     ),
 }
 
