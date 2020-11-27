@@ -149,7 +149,7 @@ async def test_get_integration_legacy(hass):
     assert integration.get_platform("switch") is not None
 
 
-async def test_get_integration_custom_component(hass):
+async def test_get_integration_custom_component(hass, enable_custom_integrations):
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
     print(integration)
@@ -293,7 +293,7 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-async def test_get_custom_components(hass):
+async def test_get_custom_components(hass, enable_custom_integrations):
     """Verify that custom components are cached."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
