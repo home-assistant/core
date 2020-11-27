@@ -941,7 +941,7 @@ regenmaschine==3.0.0
 restrictedpython==5.0
 
 # homeassistant.components.rflink
-rflink==0.0.54
+rflink==0.0.55
 
 # homeassistant.components.ring
 ring_doorbell==0.6.0
