@@ -100,7 +100,7 @@ class SolarlogSensor(Entity):
     def device_info(self):
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self.device_name)},
+            "identifiers": {(DOMAIN, self.entry_id)},
             "name": self.device_name,
             "manufacturer": "Solar-Log",
         }
