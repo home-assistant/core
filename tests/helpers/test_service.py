@@ -178,7 +178,7 @@ class TestServiceHelpers(unittest.TestCase):
                 "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
             },
             "data_template": {"list": ["{{ 'list' }}", "2"]},
-            "target": {"area_id": "test-area-id"},
+            "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
         }
 
         service.call_from_config(self.hass, config)
