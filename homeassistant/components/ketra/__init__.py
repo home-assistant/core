@@ -9,7 +9,7 @@ from aioketraapi import HubReady, WebsocketV2Notification
 from aioketraapi.n4_hub import N4Hub, N4HubWebSocketConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -17,6 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_INSTALLATION_ID = "__installation_id__"
+KETRA_PLATFORMS = ["light", "scene"]
 
 
 async def async_setup(hass: HomeAssistantType, config: dict):
@@ -41,10 +42,26 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         "common_platform": KetraPlatformCommon(hass, hub, _LOGGER)
     }
 
-    for platform in ["light", "scene"]:
+    for platform in KETRA_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload a config entry."""
+
+    tasks = []
+
+    for platform in KETRA_PLATFORMS:
+        tasks.append(hass.config_entries.async_forward_entry_unload(entry, platform))
+
+    await asyncio.gather(*tasks)
+
+    common_platform = hass.data[DOMAIN][entry.unique_id]["common_platform"]
+    await common_platform.shutdown()
 
     return True
 
@@ -107,6 +124,20 @@ class KetraPlatformCommon:
         self.logger = logger
         self.ws_task = self.hass.loop.create_task(self.__register_websocket_callback())
         self.platforms = []  # type: List[KetraPlatformBase]
+        self.is_closing = False
+
+        async def hass_shutdown(_):
+            """Call shutdown to close websocket connection."""
+            await self.shutdown()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hass_shutdown)
+
+    async def shutdown(self):
+        """Shutdown platform."""
+        self.is_closing = True
+        await self.hub.disconnect_websocket_callback()
+        await self.ws_task
+        self.logger.info("Closed websocket connection")
 
     def add_platform(self, platform: KetraPlatformBase):
         """Add a platform to enable websocket notification callbacks."""
@@ -120,7 +151,7 @@ class KetraPlatformCommon:
                 )
             except N4HubWebSocketConnectionError:
                 pass
-            if self.hass.is_stopping:
+            if self.hass.is_stopping or self.is_closing:
                 break
             self.logger.warning(
                 "Websocket connection error, attempting reconnection in 5 seconds"

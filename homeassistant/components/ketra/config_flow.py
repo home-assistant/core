@@ -53,65 +53,44 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="init", data_schema=vol.Schema(data_schema)
             )
 
-        if self.account_credentials is None:
-            self.account_credentials = user_input
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-            client_id = user_input[CONF_CLIENT_ID]
-            client_secret = user_input[CONF_CLIENT_SECRET]
+        self.account_credentials = user_input
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+        client_id = user_input[CONF_CLIENT_ID]
+        client_secret = user_input[CONF_CLIENT_SECRET]
 
-            oauth_response = await OAuthTokenResponse.request_token(
-                client_id, client_secret, username, password
+        oauth_response = await OAuthTokenResponse.request_token(
+            client_id, client_secret, username, password
+        )
+        if oauth_response is None:
+            # login error
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(data_schema),
+                errors={CONF_PASSWORD: "login"},
             )
-            if oauth_response is None:
-                # login error
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=vol.Schema(data_schema),
-                    errors={CONF_PASSWORD: "login"},
-                )
 
-            self.oauth_token = oauth_response.access_token
-            async with aiohttp.ClientSession() as session:
-                # first, get all installations to which the user has access.
-                async with session.get(
-                    f"https://my.goketra.com/api/v4/locations.json?access_token={self.oauth_token}"
-                ) as response:
-                    if response.status == 200:
-                        api_resp = await response.json()
-                        installations = api_resp["content"]
-                        # next, filter out all installations that don't correspond to a discovered hub
-                        async with session.get(
-                            "https://my.goketra.com/api/n4/v1/query"
-                        ) as response:
-                            if response.status == 200:
-                                api_resp = await response.json()
-                                local_installation_ids = [
-                                    inst["installation_id"]
-                                    for inst in api_resp["content"]
-                                ]
-                                self.installation_id_to_title_dict = {
-                                    inst["id"]: inst["title"]
-                                    for inst in installations
-                                    if inst["id"] in local_installation_ids
-                                }
-                                return await self.async_step_select_installation()
-                            else:
-                                _LOGGER.warning(
-                                    f"Received status code {response.status} when querying for hubs"
-                                )
-                    else:
-                        _LOGGER.warning(
-                            f"Received status code {response.status} when querying for accessible installations"
-                        )
-
+        self.oauth_token = oauth_response.access_token
+        inst_dict = await self._get_installations()
+        if inst_dict is None:
             # connection error to one of the my.goketra.com endpoints
             return self.async_show_form(
                 step_id="init",
                 data_schema=vol.Schema(data_schema),
-                errors={"installation_ids": "connection"},
+                errors={"installation_id": "connection"},
                 description_placeholders={},
             )
+
+        current_entries = self._async_current_entries() or []
+        for entry in current_entries:
+            if entry.data["installation_id"] in inst_dict:
+                inst_dict.pop(entry.data["installation_id"])
+
+        if len(inst_dict) == 0:
+            return self.async_abort(reason="no_installations")
+
+        self.installation_id_to_title_dict = inst_dict
+        return await self.async_step_select_installation()
 
     async def async_step_select_installation(self, user_input=None):
         """Handle installation selection."""
@@ -137,3 +116,36 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "installation_name": installation_name,
         }
         return self.async_create_entry(title=installation_name, data=config_data)
+
+    async def _get_installations(self):
+        async with aiohttp.ClientSession() as session:
+            # first, get all installations to which the user has access.
+            async with session.get(
+                f"https://my.goketra.com/api/v4/locations.json?access_token={self.oauth_token}"
+            ) as response:
+                if response.status == 200:
+                    api_resp = await response.json()
+                    installations = api_resp["content"]
+                    # next, filter out all installations that don't correspond to a discovered hub
+                    async with session.get(
+                        "https://my.goketra.com/api/n4/v1/query"
+                    ) as response:
+                        if response.status == 200:
+                            api_resp = await response.json()
+                            local_installation_ids = [
+                                inst["installation_id"] for inst in api_resp["content"]
+                            ]
+                            return {
+                                inst["id"]: inst["title"]
+                                for inst in installations
+                                if inst["id"] in local_installation_ids
+                            }
+                        else:
+                            _LOGGER.warning(
+                                f"Received status code {response.status} when querying for hubs"
+                            )
+                else:
+                    _LOGGER.warning(
+                        f"Received status code {response.status} when querying for accessible installations"
+                    )
+        return None
