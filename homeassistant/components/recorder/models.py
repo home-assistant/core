@@ -42,6 +42,10 @@ ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHAN
 class Events(Base):  # type: ignore
     """Event history data."""
 
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, primary_key=True)
     event_type = Column(String(32))
@@ -96,6 +100,10 @@ class Events(Base):  # type: ignore
 class States(Base):  # type: ignore
     """State change history."""
 
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
     __tablename__ = TABLE_STATES
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
