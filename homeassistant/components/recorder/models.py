@@ -25,7 +25,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
-ALL_TABLES = [TABLE_EVENTS, TABLE_STATES, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
 
 
 class Events(Base):  # type: ignore
@@ -102,11 +102,15 @@ class States(Base):  # type: ignore
     entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
-    event_id = Column(Integer, ForeignKey("events.event_id"), index=True)
+    event_id = Column(
+        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
+    )
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(Integer, ForeignKey("states.state_id"))
+    old_state_id = Column(
+        Integer, ForeignKey("states.state_id", ondelete="SET NULL"), index=True
+    )
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 
