@@ -115,6 +115,9 @@ aiohue==2.1.0
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
+# homeassistant.components.ketra
+aioketraapi==0.1.9
+
 # homeassistant.components.notion
 aionotion==1.1.0
 
