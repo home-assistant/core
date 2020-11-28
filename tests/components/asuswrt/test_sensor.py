@@ -82,6 +82,39 @@ def mock_controller_connect():
 
 async def test_sensors(hass, connect):
     """Test creating an AsusWRT sensor."""
+    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+
+    # Pre-enable the status sensor
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{IP_ADDRESS} AsusWrt download speed",
+        suggested_object_id="asuswrt_download_speed",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{IP_ADDRESS} AsusWrt download",
+        suggested_object_id="asuswrt_download",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{IP_ADDRESS} AsusWrt upload speed",
+        suggested_object_id="asuswrt_upload_speed",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{IP_ADDRESS} AsusWrt upload",
+        suggested_object_id="asuswrt_upload",
+        disabled_by=None,
+    )
+
+    # init config entry
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
@@ -92,6 +125,8 @@ async def test_sensors(hass, connect):
 
     # initial devices setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME

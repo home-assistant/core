@@ -8,6 +8,7 @@ from homeassistant.const import (
     DATA_GIGABYTES,
     DATA_RATE_MEGABITS_PER_SECOND,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -30,6 +31,7 @@ SENSOR_ICON = "icon"
 SENSOR_NAME = "name"
 SENSOR_UNIT = "unit"
 SENSOR_FACTOR = "factor"
+SENSOR_DEFAULT_ENABLED = "default_enabled"
 
 UNIT_DEVICES = "Devices"
 
@@ -40,6 +42,7 @@ CONNECTION_SENSORS = {
         SENSOR_FACTOR: 0,
         SENSOR_ICON: "mdi:router-network",
         SENSOR_DEVICE_CLASS: None,
+        SENSOR_DEFAULT_ENABLED: True,
     },
     SENSOR_RX_RATES: {
         SENSOR_NAME: "download speed",
@@ -123,15 +126,24 @@ class AsusWrtSensor(Entity):
         self._icon = sensor[SENSOR_ICON]
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._unique_id = f"{self._router.unique_id} {self._name}"
+        self._default_enabled = sensor.get(SENSOR_DEFAULT_ENABLED, False)
 
     @callback
     def async_update_state(self) -> None:
         """Update the AsusWrt sensor."""
-        state = self._router.sensors[self._sensor_type]
+        state = self._router.sensors[self._sensor_type].value
+        if state is None:
+            self._state = STATE_UNKNOWN
+            return
         if self._factor and isinstance(state, Number):
             self._state = round(state / self._factor, 2)
         else:
             self._state = state
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._default_enabled
 
     @property
     def unique_id(self) -> str:
@@ -186,6 +198,7 @@ class AsusWrtSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
+        self._router.sensors[self._sensor_type].enable()
         self.async_update_state()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -194,3 +207,7 @@ class AsusWrtSensor(Entity):
                 self.async_on_demand_update,
             )
         )
+
+    async def async_will_remove_from_hass(self):
+        """Call when entity is removed from hass."""
+        self._router.sensors[self._sensor_type].disable()
