@@ -57,16 +57,9 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-        if not self.coordinator.data:
-            return
 
-        data = self.coordinator.data
-        if "available" in data and data["available"]:
-            self._state = True
-        else:
-            self._state = False
+        self._state = self._client.on_duty
 
-        self._client.on_duty = self._state
         _LOGGER.debug("Set state of entity 'Duty Binary Sensor' to '%s'", self._state)
         return self._state
 
