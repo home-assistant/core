@@ -3,6 +3,6 @@
   "name": "Gree Climate",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gree",
-  "requirements": ["greeclimate==0.10.3"],
+  "requirements": ["greeclimate==0.11.0"],
   "codeowners": ["@cmroche"]
 }

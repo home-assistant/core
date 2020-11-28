@@ -699,7 +699,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.10.3
+greeclimate==0.11.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
