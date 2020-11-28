@@ -210,12 +210,12 @@ def _update_states_table_with_foreign_key_options(engine):
     """Add the options to foreign key constraints."""
     inspector = reflection.Inspector.from_engine(engine)
     alters = []
-    for fk in inspector.get_foreign_keys(TABLE_STATES):
-        if fk["name"] and not fk["options"]:
+    for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
+        if foreign_key["name"] and not foreign_key["options"]:
             alters.append(
                 {
-                    "old_fk": ForeignKeyConstraint((), (), name=fk["name"]),
-                    "columns": fk["constrained_columns"],
+                    "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+                    "columns": foreign_key["constrained_columns"],
                 }
             )
 
@@ -223,7 +223,7 @@ def _update_states_table_with_foreign_key_options(engine):
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
-    old_states_table = Table(  # noqa: F841
+    old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
         TABLE_STATES, MetaData(), *[alter["old_fk"] for alter in alters]
     )
 
@@ -235,7 +235,7 @@ def _update_states_table_with_foreign_key_options(engine):
                     engine.execute(AddConstraint(fkc))
         except (InternalError, OperationalError):
             _LOGGER.exception(
-                "Could not update foreign options in % table", TABLE_STATES
+                "Could not update foreign options in %s table", TABLE_STATES
             )
 
 

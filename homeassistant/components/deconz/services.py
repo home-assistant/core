@@ -207,5 +207,12 @@ async def async_remove_orphaned_entries_service(hass, data):
 
     # Remove devices that don't belong to any entity
     for device_id in devices_to_be_removed:
-        if len(async_entries_for_device(entity_registry, device_id)) == 0:
+        if (
+            len(
+                async_entries_for_device(
+                    entity_registry, device_id, include_disabled_entities=True
+                )
+            )
+            == 0
+        ):
             device_registry.async_remove_device(device_id)

@@ -133,15 +133,24 @@ def test_blueprint_validate():
     )
 
 
-def test_blueprint_inputs(blueprint_1):
+def test_blueprint_inputs(blueprint_2):
     """Test blueprint inputs."""
     inputs = models.BlueprintInputs(
-        blueprint_1,
-        {"use_blueprint": {"path": "bla", "input": {"test-placeholder": 1}}},
+        blueprint_2,
+        {
+            "use_blueprint": {
+                "path": "bla",
+                "input": {"test-placeholder": 1, "test-placeholder-default": 12},
+            },
+            "example-default": {"overridden": "via-config"},
+        },
     )
     inputs.validate()
-    assert inputs.inputs == {"test-placeholder": 1}
-    assert inputs.async_substitute() == {"example": 1}
+    assert inputs.inputs == {"test-placeholder": 1, "test-placeholder-default": 12}
+    assert inputs.async_substitute() == {
+        "example": 1,
+        "example-default": {"overridden": "via-config"},
+    }
 
 
 def test_blueprint_inputs_validation(blueprint_1):
@@ -203,8 +212,8 @@ async def test_domain_blueprints_get_blueprint_errors(hass, domain_bps):
 
     with patch(
         "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
-    ):
-        assert await domain_bps.async_get_blueprint("non-existing-path") is None
+    ), pytest.raises(errors.FailedToLoad):
+        await domain_bps.async_get_blueprint("non-existing-path")
 
 
 async def test_domain_blueprints_caching(domain_bps):
@@ -258,3 +267,11 @@ async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1):
     with patch.object(domain_bps, "_load_blueprint") as mock_load:
         assert await domain_bps.async_get_blueprint("something.yaml") == blueprint_1
         assert not mock_load.mock_calls
+
+
+async def test_inputs_from_config_nonexisting_blueprint(domain_bps):
+    """Test referring non-existing blueprint."""
+    with pytest.raises(errors.FailedToLoad):
+        await domain_bps.async_inputs_from_config(
+            {"use_blueprint": {"path": "non-existing.yaml"}}
+        )

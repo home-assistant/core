@@ -86,6 +86,7 @@ async def websocket_create(hass, connection, msg):
         vol.Required("type"): "config/auth/update",
         vol.Required("user_id"): str,
         vol.Optional("name"): str,
+        vol.Optional("is_active"): bool,
         vol.Optional("group_ids"): [str],
     }
 )
@@ -107,6 +108,16 @@ async def websocket_update(hass, connection, msg):
                 msg["id"],
                 "cannot_modify_system_generated",
                 "Unable to update system generated users.",
+            )
+        )
+        return
+
+    if user.is_owner and msg["is_active"] is False:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "cannot_deactivate_owner",
+                "Unable to deactivate owner.",
             )
         )
         return

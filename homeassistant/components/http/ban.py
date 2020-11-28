@@ -15,7 +15,7 @@ from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.yaml import dump
+from homeassistant.util import dt as dt_util, yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -179,7 +179,7 @@ class IpBan:
     def __init__(self, ip_ban: str, banned_at: Optional[datetime] = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
-        self.banned_at = banned_at or datetime.utcnow()
+        self.banned_at = banned_at or dt_util.utcnow()
 
 
 async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBan]:
@@ -208,10 +208,6 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBa
 def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
     """Update config file with new banned IP address."""
     with open(path, "a") as out:
-        ip_ = {
-            str(ip_ban.ip_address): {
-                ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
+        ip_ = {str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}}
         out.write("\n")
-        out.write(dump(ip_))
+        out.write(yaml.dump(ip_))

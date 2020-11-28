@@ -273,6 +273,7 @@ omit =
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
     homeassistant/components/fireservicerota/__init__.py
+    homeassistant/components/fireservicerota/binary_sensor.py
     homeassistant/components/fireservicerota/const.py
     homeassistant/components/fireservicerota/sensor.py
     homeassistant/components/firmata/__init__.py
@@ -841,6 +842,7 @@ omit =
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/__init__.py
     homeassistant/components/spotify/media_player.py
+    homeassistant/components/spotify/system_health.py
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py

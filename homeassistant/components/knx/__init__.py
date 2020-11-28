@@ -326,8 +326,6 @@ class KNXModule:
             "knx_event",
             {"address": str(telegram.group_address), "data": telegram.payload.value},
         )
-        # False signals XKNX to proceed with processing telegrams.
-        return False
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""

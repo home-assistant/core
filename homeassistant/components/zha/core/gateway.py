@@ -400,7 +400,9 @@ class ZHAGateway:
 
         # then we get all group entity entries tied to the coordinator
         all_group_entity_entries = async_entries_for_device(
-            self.ha_entity_registry, self.coordinator_zha_device.device_id
+            self.ha_entity_registry,
+            self.coordinator_zha_device.device_id,
+            include_disabled_entities=True,
         )
 
         # then we get the entity entries for this specific group by getting the entries that match
