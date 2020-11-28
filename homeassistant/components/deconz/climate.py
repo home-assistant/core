@@ -77,9 +77,6 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         self._features = SUPPORT_TARGET_TEMPERATURE
 
-        # if "preset" in device.raw["config"]:
-        #     self._features |= SUPPORT_PRESET_MODE
-
     @property
     def supported_features(self):
         """Return the list of supported features."""
