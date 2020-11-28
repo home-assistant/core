@@ -6,10 +6,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
@@ -22,19 +18,17 @@ async def async_setup_entry(
     """Set up FireServiceRota switch based on a config entry."""
     client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
 
-    coordinator: DataUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
-        entry.entry_id
-    ][DATA_COORDINATOR]
+    coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     async_add_entities([ResponseSwitch(coordinator, client, entry)])
 
 
-class ResponseSwitch(CoordinatorEntity, SwitchEntity):
+class ResponseSwitch(SwitchEntity):
     """Representation of an FireServiceRota switch."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client, entry):
+    def __init__(self, coordinator, client, entry):
         """Initialize."""
-        super().__init__(coordinator)
+        self._coordinator = coordinator
         self._client = client
         self._unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
@@ -130,12 +124,12 @@ class ResponseSwitch(CoordinatorEntity, SwitchEntity):
                 self.client_update,
             )
         )
-        self.async_on_remove(self.coordinator.async_add_listener(self.on_duty_update))
+        self.async_on_remove(self._coordinator.async_add_listener(self.on_duty_update))
 
     @callback
     def on_duty_update(self):
-        """Trigger on duty update."""
-        self.async_schedule_update_ha_state()
+        """Trigger on a on duty update."""
+        self.async_write_ha_state()
 
     @callback
     def client_update(self) -> None:
