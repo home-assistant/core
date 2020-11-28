@@ -185,7 +185,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try:
         await api.async_setup()
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-        _LOGGER.debug("async_setup_entry - Unable to connect to DSM: %s", str(err))
+        _LOGGER.debug("async_setup_entry - Unable to connect to DSM: %s", err)
         raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
@@ -244,9 +244,6 @@ async def _async_setup_services(hass: HomeAssistantType):
 
     async def service_handler(call: ServiceCall):
         """Handle service call."""
-        _LOGGER.debug(
-            "service_handler - called as '%s' with data: %s", call.service, call.data
-        )
         serial = call.data.get(CONF_SERIAL)
         dsm_devices = hass.data[DOMAIN]
 
@@ -268,7 +265,7 @@ async def _async_setup_services(hass: HomeAssistantType):
             )
             return
 
-        _LOGGER.info("%s DSM with serial %s", call.service, serial)
+        _LOGGER.debug("%s DSM with serial %s", call.service, serial)
         dsm_api = dsm_device[SYNO_API]
         if call.service == SERVICE_REBOOT:
             await dsm_api.async_reboot()
@@ -276,9 +273,6 @@ async def _async_setup_services(hass: HomeAssistantType):
             await dsm_api.system.shutdown()
 
     for service in SERVICES:
-        _LOGGER.debug(
-            "_async_setup_services - register service %s on domain %s", service, DOMAIN
-        )
         hass.services.async_register(DOMAIN, service, service_handler)
 
 
@@ -445,14 +439,14 @@ class SynoApi:
         if not self.system:
             _LOGGER.debug("async_reboot - System API not ready: %s", self)
             return
-        self._hass.async_add_executor_job(self.system.reboot)
+        await self._hass.async_add_executor_job(self.system.reboot)
 
     async def async_shutdown(self):
         """Shutdown NAS."""
         if not self.system:
             _LOGGER.debug("async_shutdown - System API not ready: %s", self)
             return
-        self._hass.async_add_executor_job(self.system.shutdown)
+        await self._hass.async_add_executor_job(self.system.shutdown)
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
@@ -465,13 +459,14 @@ class SynoApi:
             await self._hass.async_add_executor_job(
                 self.dsm.update, self._with_information
             )
-            async_dispatcher_send(self._hass, self.signal_sensor_update)
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
             _LOGGER.warning(
                 "async_update - connection error during update, fallback by reloading the entry"
             )
-            _LOGGER.debug("async_update - exception: %s", str(err))
+            _LOGGER.debug("async_update - exception: %s", err)
             await self._hass.config_entries.async_reload(self._entry.entry_id)
+            return
+        async_dispatcher_send(self._hass, self.signal_sensor_update)
 
 
 class SynologyDSMEntity(Entity):

@@ -15,11 +15,7 @@ import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    REQUIRED_NEXT_PYTHON_DATE,
-    REQUIRED_NEXT_PYTHON_VER,
-)
+from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
@@ -142,11 +138,9 @@ async def async_setup_hass(
         _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
-        hass.async_track_tasks()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
         with contextlib.suppress(asyncio.TimeoutError):
             async with hass.timeout.async_timeout(10):
-                await hass.async_block_till_done()
+                await hass.async_stop()
 
         safe_mode = True
         old_config = hass.config
@@ -534,7 +528,7 @@ async def _async_set_up_integrations(
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Enables after dependencies
-    async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
+    async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)

@@ -2,11 +2,12 @@
 import asyncio
 import logging
 
-from spiderpy.spiderapi import SpiderApi, UnauthorizedException
+from spiderpy.spiderapi import SpiderApi, SpiderApiException, UnauthorizedException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
@@ -27,16 +28,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-
-def _spider_startup_wrapper(entry):
-    """Startup wrapper for spider."""
-    api = SpiderApi(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        entry.data[CONF_SCAN_INTERVAL],
-    )
-    return api
 
 
 async def async_setup(hass, config):
@@ -60,12 +51,20 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up Spider via config entry."""
     try:
-        hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-            _spider_startup_wrapper, entry
+        api = await hass.async_add_executor_job(
+            SpiderApi,
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_SCAN_INTERVAL],
         )
     except UnauthorizedException:
-        _LOGGER.error("Can't connect to the Spider API")
+        _LOGGER.error("Authorization failed")
         return False
+    except SpiderApiException as err:
+        _LOGGER.error("Can't connect to the Spider API: %s", err)
+        raise ConfigEntryNotReady from err
+
+    hass.data[DOMAIN][entry.entry_id] = api
 
     for component in PLATFORMS:
         hass.async_create_task(

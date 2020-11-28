@@ -3,7 +3,8 @@
         "info": {
             "dashboards": "Dashboardy",
             "mode": "Tryb",
-            "resources": "Zasoby"
+            "resources": "Zasoby",
+            "views": "Widoki"
         }
     }
 }

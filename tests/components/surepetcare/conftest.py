@@ -7,8 +7,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from tests.async_mock import AsyncMock, patch
 
 
-@fixture()
-def surepetcare(hass):
+@fixture
+async def surepetcare(hass):
     """Mock the SurePetcare for easier testing."""
     with patch("homeassistant.components.surepetcare.SurePetcare") as mock_surepetcare:
         instance = mock_surepetcare.return_value = SurePetcare(

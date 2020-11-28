@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom, les aplicacions i/o les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, l'entrada de configuraci\u00f3 s'ha actualitzat."
         },
         "error": {

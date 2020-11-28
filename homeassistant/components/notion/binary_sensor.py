@@ -77,24 +77,20 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        task = self.coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self.task_id]
 
-        if task["task_type"] == SENSOR_BATTERY:
-            self._state = self.coordinator.data["tasks"][self._task_id]["status"][
-                "data"
-            ]["to_state"]
-        else:
-            self._state = self.coordinator.data["tasks"][self._task_id]["status"][
-                "value"
-            ]
+        if "value" in task["status"]:
+            self._state = task["status"]["value"]
+        elif task["task_type"] == SENSOR_BATTERY:
+            self._state = task["status"]["data"]["to_state"]
 
     @property
     def is_on(self) -> bool:
         """Return whether the sensor is on or off."""
-        task = self.coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self.task_id]
 
         if task["task_type"] == SENSOR_BATTERY:
-            return self._state != "critical"
+            return self._state == "critical"
         if task["task_type"] in (
             SENSOR_DOOR,
             SENSOR_GARAGE_DOOR,
