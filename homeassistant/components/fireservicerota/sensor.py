@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
+# pylint: disable=relative-beyond-top-level
 from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ class IncidentsSensor(RestoreEntity):
             return attr
 
         for value in (
+            "id",
             "trigger",
             "created_at",
             "message_to_speech_url",
@@ -106,7 +108,9 @@ class IncidentsSensor(RestoreEntity):
         if state:
             self._state = state.state
             self._state_attributes = state.attributes
-            _LOGGER.debug("Restored entity 'Incidents' state to: %s", self._state)
+            if "id" in self._state_attributes:
+                self._client.incident_id = self._state_attributes["id"]
+            _LOGGER.debug("Restored entity 'Incidents' to: %s", self._state)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -125,4 +129,6 @@ class IncidentsSensor(RestoreEntity):
 
         self._state = data["body"]
         self._state_attributes = data
+        if "id" in self._state_attributes:
+            self._client.incident_id = self._state_attributes["id"]
         self.async_write_ha_state()
