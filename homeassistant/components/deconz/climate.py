@@ -15,7 +15,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
     SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -40,6 +45,20 @@ HVAC_MODES = {
     HVAC_MODE_COOL: "cool",
     HVAC_MODE_HEAT: "heat",
     HVAC_MODE_OFF: "off",
+}
+
+DECONZ_PRESET_AUTO = "auto"
+DECONZ_PRESET_COMPLEX = "complex"
+DECONZ_PRESET_MANUAL = "manual"
+
+PRESET_MODES = {
+    DECONZ_PRESET_AUTO: "auto",
+    PRESET_AWAY: "holiday",
+    PRESET_BOOST: "boost",
+    PRESET_COMFORT: "comfort",
+    DECONZ_PRESET_COMPLEX: "complex",
+    PRESET_ECO: "eco",
+    DECONZ_PRESET_MANUAL: "manual",
 }
 
 
@@ -97,6 +116,9 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         if device.fanmode is not None:
             self._features |= SUPPORT_FAN_MODE
+
+        if "preset" in device.raw["config"]:
+            self._features |= SUPPORT_PRESET_MODE
 
     @property
     def supported_features(self):
@@ -159,6 +181,31 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
 
         data = {"mode": self._hvac_modes[hvac_mode]}
+
+        await self._device.async_set_config(data)
+
+    # Preset control
+
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return preset mode."""
+        for hass_preset_mode, preset_mode in PRESET_MODES.items():
+            if self._device.preset == preset_mode:
+                return hass_preset_mode
+
+        return None
+
+    @property
+    def preset_modes(self) -> list:
+        """Return the list of available preset modes."""
+        return list(PRESET_MODES)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if preset_mode not in PRESET_MODES:
+            raise ValueError(f"Unsupported preset mode {preset_mode}")
+
+        data = {"preset": PRESET_MODES[preset_mode]}
 
         await self._device.async_set_config(data)
 
