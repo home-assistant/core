@@ -117,3 +117,12 @@ def test_boolean_selector_schema(schema):
 def test_time_selector_schema(schema):
     """Test time selector."""
     selector.validate_selector({"time": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({},),
+)
+def test_target_selector_schema(schema):
+    """Test entity selector."""
+    selector.validate_selector({"target": schema})
