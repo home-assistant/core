@@ -569,6 +569,17 @@ class ZHAGateway:
             )
             await self._async_device_joined(zha_device)
 
+        device_info = zha_device.device_info
+        device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.INITIALIZED.name
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: device_info,
+            },
+        )
+
     async def _async_device_joined(self, zha_device: zha_typing.ZhaDeviceType) -> None:
         zha_device.available = True
         device_info = zha_device.device_info
@@ -583,15 +594,6 @@ class ZHAGateway:
             },
         )
         await zha_device.async_initialize(from_cache=False)
-        device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.INITIALIZED.name
-        async_dispatcher_send(
-            self._hass,
-            ZHA_GW_MSG,
-            {
-                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
-                ZHA_GW_MSG_DEVICE_INFO: device_info,
-            },
-        )
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
     async def _async_device_rejoined(self, zha_device):
@@ -602,6 +604,16 @@ class ZHAGateway:
         )
         # we don't have to do this on a nwk swap but we don't have a way to tell currently
         await zha_device.async_configure()
+        device_info = zha_device.device_info
+        device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: device_info,
+            },
+        )
         # force async_initialize() to fire so don't explicitly call it
         zha_device.available = False
         zha_device.update_available(True)
