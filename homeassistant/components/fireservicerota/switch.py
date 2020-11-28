@@ -33,9 +33,9 @@ class ResponseSwitch(SwitchEntity):
         self._unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
 
-        self._icon_state = None
         self._state = None
         self._state_attributes = {}
+        self._state_icon = None
 
     @property
     def name(self) -> str:
@@ -45,9 +45,9 @@ class ResponseSwitch(SwitchEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        if self._icon_state == "acknowledged":
+        if self._state_icon == "acknowledged":
             return "mdi:run-fast"
-        elif self._icon_state == "rejected":
+        elif self._state_icon == "rejected":
             return "mdi:account-off-outline"
 
         return "mdi:forum"
@@ -148,6 +148,6 @@ class ResponseSwitch(SwitchEntity):
 
         self._state = data["status"] == "acknowledged"
         self._state_attributes = data
-        self._icon_state = data["status"]
+        self._state_icon = data["status"]
 
         _LOGGER.debug("Set state of entity 'Response Switch' to '%s'", self._state)
