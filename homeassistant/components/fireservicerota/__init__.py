@@ -13,6 +13,7 @@ from pyfireservicerota import (
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARYSENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -25,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_PLATFORMS = {SENSOR_DOMAIN, BINARYSENSOR_DOMAIN}
+SUPPORTED_PLATFORMS = {SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN}
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -191,6 +192,7 @@ class FireServiceRotaClient:
 
         self.token_refresh_failure = False
         self.incident_id = None
+        self.on_duty = False
 
         self.fsr = FireServiceRota(base_url=self._url, token_info=self._tokens)
 
@@ -229,24 +231,29 @@ class FireServiceRotaClient:
             self.fsr.get_availability, str(self._hass.config.time_zone)
         )
 
+        self.on_duty = bool(data.get("available"))
+
         _LOGGER.debug("Updated availability data: %s", data)
         return data
 
     async def async_response_update(self) -> object:
         """Get the latest incident response data."""
-        data = self.websocket.incident_data()
-        if data is None or "id" not in data:
+
+        if not self.incident_id:
             return
 
-        self.incident_id = data("id")
-        _LOGGER.debug("Updating incident response data for id: %s", self.incident_id)
+        _LOGGER.debug("Updating response data for incident id %s", self.incident_id)
 
         return await self.update_call(self.fsr.get_incident_response, self.incident_id)
 
     async def async_set_response(self, value) -> None:
         """Set incident response status."""
+
+        if not self.incident_id:
+            return
+
         _LOGGER.debug(
-            "Setting incident response for incident '%s' to status '%s'",
+            "Setting incident response for incident id '%s' to state '%s'",
             self.incident_id,
             value,
         )
