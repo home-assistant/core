@@ -127,8 +127,6 @@ class ResponseSwitch(SwitchEntity):
             return
 
         self._state = data["status"] == "acknowledged"
-
-        del data["user_photo"]
         self._state_attributes = data
 
         _LOGGER.debug("Set state of entity 'Response Switch' to '%s'", self._state)
