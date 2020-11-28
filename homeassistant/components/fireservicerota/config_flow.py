@@ -5,7 +5,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 
-from .const import DOMAIN, URL_LIST  # pylint: disable=unused-import
+# pylint: disable=relative-beyond-top-level
+from .const import DOMAIN, URL_LIST
 
 DATA_SCHEMA = vol.Schema(
     {

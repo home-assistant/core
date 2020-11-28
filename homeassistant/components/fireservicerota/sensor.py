@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
+# pylint: disable=relative-beyond-top-level
 from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
