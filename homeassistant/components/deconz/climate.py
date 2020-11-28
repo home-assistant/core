@@ -31,13 +31,16 @@ from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+DECONZ_FAN_SMART = "smart"
+
 FAN_MODES = {
+    DECONZ_FAN_SMART: "smart",
     FAN_AUTO: "auto",
     FAN_HIGH: "high",
-    FAN_LOW: "low",
     FAN_MEDIUM: "medium",
-    FAN_OFF: "off",
+    FAN_LOW: "low",
     FAN_ON: "on",
+    FAN_OFF: "off",
 }
 
 HVAC_MODES = {
@@ -109,12 +112,12 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         super().__init__(device, gateway)
 
         self._hvac_modes = dict(HVAC_MODES)
-        if device.coolsetpoint is None:
+        if "coolsetpoint" not in device.raw["config"]:
             self._hvac_modes.pop(HVAC_MODE_COOL)
 
         self._features = SUPPORT_TARGET_TEMPERATURE
 
-        if device.fanmode is not None:
+        if "fanmode" in device.raw["config"]:
             self._features |= SUPPORT_FAN_MODE
 
         if "preset" in device.raw["config"]:
@@ -131,7 +134,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     def fan_mode(self) -> str:
         """Return fan operation."""
         for hass_fan_mode, fan_mode in FAN_MODES.items():
-            if self._device.fanmode == fan_mode:
+            if self._device.raw["config"].get("fanmode") == fan_mode:
+                # if self._device.fanmode == fan_mode:
                 return hass_fan_mode
 
         if self._device.state_on:
@@ -222,16 +226,6 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         if self._device.mode == "cool":
             return self._device.coolsetpoint
         return self._device.heatsetpoint
-
-    @property
-    def target_temperature_high(self) -> float:
-        """Return the high target temperature."""
-        return self._device.heatsetpoint
-
-    @property
-    def target_temperature_low(self) -> Optional[float]:
-        """Return the low target temperature."""
-        return self._device.coolsetpoint
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
