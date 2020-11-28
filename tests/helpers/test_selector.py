@@ -121,7 +121,11 @@ def test_time_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
-    ({},),
+    (
+        {},
+        {"entity": {}},
+        {"entity": {"domain": "light"}},
+    ),
 )
 def test_target_selector_schema(schema):
     """Test entity selector."""

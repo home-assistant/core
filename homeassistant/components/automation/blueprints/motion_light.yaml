@@ -12,8 +12,9 @@ blueprint:
     light_entity:
       name: Light
       selector:
-        entity:
-          domain: light
+        target:
+          entity:
+            domain: light
 
 # If motion is detected within the 120s delay,
 # we restart the script.
