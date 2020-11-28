@@ -26,8 +26,7 @@ async def async_process_devices(hass, manager):
 
     if manager.switches:
         for switch in manager.switches:
-            if not switch.is_dimmable():
-                devices[VS_SWITCHES].append(switch)
+            devices[VS_SWITCHES].append(switch)
         _LOGGER.info("%d VeSync standard switches found", len(manager.switches))
 
     return devices
