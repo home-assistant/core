@@ -133,15 +133,24 @@ def test_blueprint_validate():
     )
 
 
-def test_blueprint_inputs(blueprint_1):
+def test_blueprint_inputs(blueprint_2):
     """Test blueprint inputs."""
     inputs = models.BlueprintInputs(
-        blueprint_1,
-        {"use_blueprint": {"path": "bla", "input": {"test-placeholder": 1}}},
+        blueprint_2,
+        {
+            "use_blueprint": {
+                "path": "bla",
+                "input": {"test-placeholder": 1, "test-placeholder-default": 12},
+            },
+            "example-default": {"overridden": "via-config"},
+        },
     )
     inputs.validate()
-    assert inputs.inputs == {"test-placeholder": 1}
-    assert inputs.async_substitute() == {"example": 1}
+    assert inputs.inputs == {"test-placeholder": 1, "test-placeholder-default": 12}
+    assert inputs.async_substitute() == {
+        "example": 1,
+        "example-default": {"overridden": "via-config"},
+    }
 
 
 def test_blueprint_inputs_validation(blueprint_1):
