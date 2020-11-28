@@ -60,9 +60,9 @@ class AsusWrtSensorType(enum.IntEnum):
 class AsusWrtSensorData:
     """Representation of AsusWrt sensor data."""
 
-    def __init__(self, type: AsusWrtSensorType, value=None):
+    def __init__(self, sensor_type: AsusWrtSensorType, value=None):
         """Initialize a AsusWrt sensor data."""
-        self.type = type
+        self.type = sensor_type
         self.value = value
         self.enabled = False
 
@@ -257,9 +257,9 @@ class AsusWrtRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
-    def has_sensor_type(self, type: AsusWrtSensorType):
+    def has_sensor_type(self, sensor_type: AsusWrtSensorType):
         """Return if an AsusWrt sensor type is enabled."""
-        for sensor in (x for x in self._sensors.values() if x.type == type):
+        for sensor in (x for x in self._sensors.values() if x.type == sensor_type):
             if sensor.enabled:
                 return True
         return False
@@ -299,7 +299,7 @@ class AsusWrtRouter:
             _LOGGER.error("Error executing method %s", method)
             self._api_error[method] = True
         elif prev_error:
-            _LOGGER.info("Method %s succesfully executed", method)
+            _LOGGER.info("Method %s successfully executed", method)
             self._api_error[method] = False
 
     async def _get_nvram_info(self, info_type):
