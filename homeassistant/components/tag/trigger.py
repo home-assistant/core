@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import HassJob, callback
+from homeassistant.core import HassJob
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
@@ -23,15 +23,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     job = HassJob(action)
 
-    @callback
-    def handle_event(event):
+    async def handle_event(event):
         """Listen for tag scan events and calls the action when data matches."""
         if event.data.get(TAG_ID) not in tag_ids or (
-            device_ids and event.data.get(DEVICE_ID) not in device_ids
+            device_ids is not None and event.data.get(DEVICE_ID) not in device_ids
         ):
             return
 
-        hass.async_run_hass_job(
+        task = hass.async_run_hass_job(
             job,
             {
                 "trigger": {
@@ -42,5 +41,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
             },
             event.context,
         )
+
+        if task:
+            await task
 
     return hass.bus.async_listen(EVENT_TAG_SCANNED, handle_event)
