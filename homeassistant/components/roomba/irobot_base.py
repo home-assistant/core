@@ -51,6 +51,7 @@ SUPPORT_IROBOT = (
 STATE_MAP = {
     "": STATE_IDLE,
     "charge": STATE_DOCKED,
+    "evac": STATE_RETURNING,  # Emptying at cleanbase
     "hmMidMsn": STATE_CLEANING,  # Recharging at the middle of a cycle
     "hmPostMsn": STATE_RETURNING,  # Cycle finished
     "hmUsrDock": STATE_RETURNING,

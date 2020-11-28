@@ -14,8 +14,10 @@ RESULT_TYPE_CREATE_ENTRY = "create_entry"
 RESULT_TYPE_ABORT = "abort"
 RESULT_TYPE_EXTERNAL_STEP = "external"
 RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
+RESULT_TYPE_SHOW_PROGRESS = "progress"
+RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 
-# Event that is fired when a flow is progressed via external source.
+# Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
 
@@ -152,8 +154,8 @@ class FlowManager(abc.ABC):
 
         result = await self._async_handle_step(flow, cur_step["step_id"], user_input)
 
-        if cur_step["type"] == RESULT_TYPE_EXTERNAL_STEP:
-            if result["type"] not in (
+        if cur_step["type"] in (RESULT_TYPE_EXTERNAL_STEP, RESULT_TYPE_SHOW_PROGRESS):
+            if cur_step["type"] == RESULT_TYPE_EXTERNAL_STEP and result["type"] not in (
                 RESULT_TYPE_EXTERNAL_STEP,
                 RESULT_TYPE_EXTERNAL_STEP_DONE,
             ):
@@ -161,10 +163,20 @@ class FlowManager(abc.ABC):
                     "External step can only transition to "
                     "external step or external step done."
                 )
+            if cur_step["type"] == RESULT_TYPE_SHOW_PROGRESS and result["type"] not in (
+                RESULT_TYPE_SHOW_PROGRESS,
+                RESULT_TYPE_SHOW_PROGRESS_DONE,
+            ):
+                raise ValueError(
+                    "Show progress can only transition to show progress or show progress done."
+                )
 
             # If the result has changed from last result, fire event to update
             # the frontend.
-            if cur_step["step_id"] != result.get("step_id"):
+            if (
+                cur_step["step_id"] != result.get("step_id")
+                or result["type"] == RESULT_TYPE_SHOW_PROGRESS
+            ):
                 # Tell frontend to reload the flow state.
                 self.hass.bus.async_fire(
                     EVENT_DATA_ENTRY_FLOW_PROGRESSED,
@@ -217,6 +229,8 @@ class FlowManager(abc.ABC):
             RESULT_TYPE_CREATE_ENTRY,
             RESULT_TYPE_ABORT,
             RESULT_TYPE_EXTERNAL_STEP_DONE,
+            RESULT_TYPE_SHOW_PROGRESS,
+            RESULT_TYPE_SHOW_PROGRESS_DONE,
         ):
             raise ValueError(f"Handler returned incorrect type: {result['type']}")
 
@@ -224,6 +238,8 @@ class FlowManager(abc.ABC):
             RESULT_TYPE_FORM,
             RESULT_TYPE_EXTERNAL_STEP,
             RESULT_TYPE_EXTERNAL_STEP_DONE,
+            RESULT_TYPE_SHOW_PROGRESS,
+            RESULT_TYPE_SHOW_PROGRESS_DONE,
         ):
             flow.cur_step = result
             return result
@@ -343,6 +359,34 @@ class FlowHandler:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,
+            "flow_id": self.flow_id,
+            "handler": self.handler,
+            "step_id": next_step_id,
+        }
+
+    @callback
+    def async_show_progress(
+        self,
+        *,
+        step_id: str,
+        progress_action: str,
+        description_placeholders: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
+        """Show a progress message to the user, without user input allowed."""
+        return {
+            "type": RESULT_TYPE_SHOW_PROGRESS,
+            "flow_id": self.flow_id,
+            "handler": self.handler,
+            "step_id": step_id,
+            "progress_action": progress_action,
+            "description_placeholders": description_placeholders,
+        }
+
+    @callback
+    def async_show_progress_done(self, *, next_step_id: str) -> Dict[str, Any]:
+        """Mark the progress done."""
+        return {
+            "type": RESULT_TYPE_SHOW_PROGRESS_DONE,
             "flow_id": self.flow_id,
             "handler": self.handler,
             "step_id": next_step_id,

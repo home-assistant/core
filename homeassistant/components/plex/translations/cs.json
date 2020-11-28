@@ -37,6 +37,9 @@
                 "title": "Plex Media Server"
             },
             "user_advanced": {
+                "data": {
+                    "setup_method": "Metoda nastaven\u00ed"
+                },
                 "title": "Plex Media Server"
             }
         }

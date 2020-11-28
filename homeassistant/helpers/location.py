@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location as loc_util
 
@@ -91,6 +90,9 @@ def find_coordinates(
 
     # Check if state is valid coordinate set
     try:
+        # Import here, not at top-level to avoid circular import
+        import homeassistant.helpers.config_validation as cv  # pylint: disable=import-outside-toplevel
+
         cv.gps(entity_state.state.split(","))
     except vol.Invalid:
         _LOGGER.error(

@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "connection_error": "Kan geen verbinding maken, probeer het opnieuw, het kan helpen om de netvoeding en ethernetkabels los te koppelen en opnieuw aan te sluiten"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
-        "flow_title": "Denon AVR Network Receiver: {naam}",
+        "flow_title": "Denon AVR Network Receiver: {name}",
         "step": {
             "confirm": {
                 "title": "Denon AVR Network Receivers"
@@ -12,12 +12,14 @@
                 "data": {
                     "select_host": "Receiver IP-adres"
                 },
+                "description": "Voer de installatie opnieuw uit als u extra ontvangers wilt aansluiten",
                 "title": "Selecteer de receiver waarmee u verbinding wilt maken"
             },
             "user": {
                 "data": {
                     "host": "IP-adres"
-                }
+                },
+                "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt"
             }
         }
     },

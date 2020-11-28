@@ -10,6 +10,7 @@ import os
 import ssl
 import time
 from typing import Any, Callable, List, Optional, Union
+import uuid
 
 import attr
 import certifi
@@ -711,9 +712,10 @@ class MQTT:
 
         client_id = self.conf.get(CONF_CLIENT_ID)
         if client_id is None:
-            self._mqttc = mqtt.Client(protocol=proto)
-        else:
-            self._mqttc = mqtt.Client(client_id, protocol=proto)
+            # PAHO MQTT relies on the MQTT server to generate random client IDs.
+            # However, that feature is not mandatory so we generate our own.
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+        self._mqttc = mqtt.Client(client_id, protocol=proto)
 
         # Enable logging
         self._mqttc.enable_logger()
@@ -942,7 +944,7 @@ class MQTT:
                 )
 
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
-            self.hass.loop.create_task(publish_birth_message(birth_message))
+            self.hass.add_job(publish_birth_message(birth_message))
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
@@ -1246,7 +1248,7 @@ async def cleanup_device_registry(hass, device_id):
     if (
         device_id
         and not hass.helpers.entity_registry.async_entries_for_device(
-            entity_registry, device_id
+            entity_registry, device_id, include_disabled_entities=True
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
@@ -1483,20 +1485,22 @@ def async_subscribe_connection_status(hass, connection_status_callback):
 
     connection_status_callback_job = HassJob(connection_status_callback)
 
-    @callback
-    def connected():
-        hass.async_add_hass_job(connection_status_callback_job, True)
+    async def connected():
+        task = hass.async_run_hass_job(connection_status_callback_job, True)
+        if task:
+            await task
 
-    @callback
-    def disconnected():
-        _LOGGER.error("Calling connection_status_callback, False")
-        hass.async_add_hass_job(connection_status_callback_job, False)
+    async def disconnected():
+        task = hass.async_run_hass_job(connection_status_callback_job, False)
+        if task:
+            await task
 
     subscriptions = {
         "connect": async_dispatcher_connect(hass, MQTT_CONNECTED, connected),
         "disconnect": async_dispatcher_connect(hass, MQTT_DISCONNECTED, disconnected),
     }
 
+    @callback
     def unsubscribe():
         subscriptions["connect"]()
         subscriptions["disconnect"]()

@@ -12,12 +12,14 @@
                 "data": {
                     "host": "Host",
                     "port": "Puerto"
-                }
+                },
+                "title": "Configurar los detalles del servidor"
             },
             "user": {
                 "data": {
                     "type": "Tipo de conexi\u00f3n"
-                }
+                },
+                "title": "Configurar 1 cable"
             }
         }
     }

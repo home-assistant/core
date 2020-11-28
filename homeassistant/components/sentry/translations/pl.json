@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {

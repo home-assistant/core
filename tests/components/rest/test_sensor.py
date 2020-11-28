@@ -102,7 +102,7 @@ async def test_setup_minimum_resource_template(hass):
         {
             "sensor": {
                 "platform": "rest",
-                "resource_template": "http://localhost",
+                "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
             }
         },
     )
@@ -247,6 +247,29 @@ async def test_setup_get_xml(hass):
     state = hass.states.get("sensor.foo")
     assert state.state == "abc"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == DATA_MEGABYTES
+
+
+@respx.mock
+async def test_setup_query_params(hass):
+    """Test setup with query params."""
+    respx.get(
+        "http://localhost?search=something",
+        status_code=200,
+    )
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "params": {"search": "something"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
 
 
 @respx.mock

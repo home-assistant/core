@@ -98,6 +98,9 @@
             "off": "Normalno",
             "on": "Nizko"
         },
+        "battery_charging": {
+            "off": "Se ne polni"
+        },
         "cold": {
             "off": "Normalno",
             "on": "Hladno"
@@ -122,6 +125,10 @@
             "off": "Normalno",
             "on": "Vro\u010de"
         },
+        "light": {
+            "off": "Ni lu\u010di",
+            "on": "Zaznana svetloba"
+        },
         "lock": {
             "off": "Zaklenjeno",
             "on": "Odklenjeno"
@@ -134,6 +141,9 @@
             "off": "\u010cisto",
             "on": "Zaznano"
         },
+        "moving": {
+            "on": "Premikanje"
+        },
         "occupancy": {
             "off": "\u010cisto",
             "on": "Zaznano"
@@ -141,6 +151,10 @@
         "opening": {
             "off": "Zaprto",
             "on": "Odprto"
+        },
+        "plug": {
+            "off": "Odklopljeno",
+            "on": "Priklopljeno"
         },
         "presence": {
             "off": "Odsoten",

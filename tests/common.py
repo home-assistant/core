@@ -9,7 +9,7 @@ from io import StringIO
 import json
 import logging
 import os
-import sys
+import pathlib
 import threading
 import time
 import uuid
@@ -109,24 +109,21 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config directory."""
-    if sys.platform == "win32":
-        loop = asyncio.ProactorEventLoop()
-    else:
-        loop = asyncio.new_event_loop()
-
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
-    stop_event = threading.Event()
+    loop_stop_event = threading.Event()
 
     def run_loop():
         """Run event loop."""
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        stop_event.set()
+        loop_stop_event.set()
 
     orig_stop = hass.stop
+    hass._stopped = Mock(set=loop.stop)
 
     def start_hass(*mocks):
         """Start hass."""
@@ -135,7 +132,7 @@ def get_test_home_assistant():
     def stop_hass():
         """Stop hass."""
         orig_stop()
-        stop_event.wait()
+        loop_stop_event.wait()
         loop.close()
 
     hass.start = start_hass
@@ -198,6 +195,8 @@ async def async_test_home_assistant(loop):
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
 
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
+
     hass.config.location_name = "test home"
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
@@ -207,7 +206,6 @@ async def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
-    hass.config.legacy_templates = False
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
@@ -301,7 +299,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.pattern_utc_now",
+                "homeassistant.helpers.event.time_tracker_utcnow",
                 return_value=date_util.as_utc(datetime_),
             ):
                 task._run()
@@ -709,6 +707,9 @@ def patch_yaml_files(files_dict, endswith=True):
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
+        if isinstance(fname, pathlib.Path):
+            fname = str(fname)
+
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
@@ -965,7 +966,7 @@ async def flush_store(store):
 
 async def get_system_health_info(hass, domain):
     """Get system health info."""
-    return await hass.data["system_health"]["info"][domain](hass)
+    return await hass.data["system_health"][domain].info_callback(hass)
 
 
 def mock_integration(hass, module):

@@ -5,7 +5,6 @@
             "unsupported_firmware": "Il dispositivo utilizza una versione del firmware non supportata."
         },
         "error": {
-            "auth_not_supported": "I dispositivi Shelly che richiedono l'autenticazione non sono attualmente supportati.",
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
@@ -13,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Vuoi impostare il {model} presso {host}?\n\nPrima di configurare, il dispositivo alimentato a batteria deve essere svegliato premendo il pulsante sul dispositivo."
+                "description": "Vuoi impostare {model} su {host} ?\n\n Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati premendo il pulsante sul dispositivo."
             },
             "credentials": {
                 "data": {
@@ -25,9 +24,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Prima di configurare, il dispositivo alimentato a batteria deve essere svegliato premendo il pulsante sul dispositivo."
+                "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati premendo il pulsante sul dispositivo."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

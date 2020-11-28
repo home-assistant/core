@@ -4,7 +4,7 @@ import enum
 from typing import Any, Iterable, List, Optional
 
 import pytest
-from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqVacuum
+from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sharkiq import DOMAIN
@@ -217,6 +217,7 @@ async def test_locate(hass):
     [
         (None, True),
         (SharkIqAuthError, False),
+        (SharkIqNotAuthedError, False),
         (RuntimeError, False),
     ],
 )

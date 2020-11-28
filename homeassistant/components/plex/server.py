@@ -97,6 +97,7 @@ class PlexServer:
             immediate=True,
             function=self._async_update_platforms,
         ).async_call
+        self.thumbnail_cache = {}
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_ID in server_config:
