@@ -172,7 +172,7 @@ class BlueprintInputs:
         processed = placeholder.substitute(
             self.blueprint.data, self.inputs_with_default
         )
-        combined = {**self.config_with_inputs, **processed}
+        combined = {**processed, **self.config_with_inputs}
         # From config_with_inputs
         combined.pop(CONF_USE_BLUEPRINT)
         # From blueprint
