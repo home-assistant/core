@@ -59,7 +59,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
                     self.name,
                     self.device.device_info,
                 )
-                raise UpdateFailed(error) from error
+                raise UpdateFailed(f"Device {self.name} is unavailable") from error
 
     async def push_state_update(self):
         """Send state updates to the physical device."""
