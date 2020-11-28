@@ -47,7 +47,10 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        return "mdi:calendar"
+        if self._state:
+            return "mdi:calendar-check"
+
+        return "mdi:calendar-remove"
 
     @property
     def unique_id(self) -> str:
