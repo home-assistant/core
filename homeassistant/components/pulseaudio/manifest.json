@@ -1,0 +1,17 @@
+{
+  "domain": "pulseaudio",
+  "name": "PulseAudio",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pulseaudio",
+  "requirements": [
+    "pulsectl==20.2.4"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@breiti"
+  ],
+  "iot_class": "local_polling"
+}

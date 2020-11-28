@@ -806,6 +806,8 @@ omit =
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
+    homeassistant/components/pulseaudio/__init__.py
+    homeassistant/components/pulseaudio/media_player.py
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py

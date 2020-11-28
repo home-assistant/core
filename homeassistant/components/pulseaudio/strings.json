@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PulseAudio connection",
+        "description": "Enter connection string to your PulseAudio server.",
+        "data": {
+          "server": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pulse Audio Options",
+        "description": "Media Player configuration",
+        "data": {
+            "mediaplayer_sinks": "Select sinks to create media players",
+            "mediaplayer_sources": "Select sources to use as input"
+        }
+      }
+    }
+  }
+}

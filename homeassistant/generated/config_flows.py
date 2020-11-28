@@ -206,6 +206,7 @@ FLOWS = [
     "profiler",
     "progettihwsw",
     "ps4",
+    "pulseaudio",
     "pvpc_hourly_pricing",
     "rachio",
     "rainmachine",
