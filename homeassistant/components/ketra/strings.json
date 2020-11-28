@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "login": "Invalid credentials",
+            "connection": "Connection Error",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "title": "Enter your Ketra Account Credentials",
+                "data": {
+                    "client_id": "Client ID",
+                    "password": "Password",
+                    "client_secret": "Client Secret",
+                    "username": "Username"
+                }
+            },
+            "select_installation" : {
+                "title": "Installation Selection",
+                "data": {
+                    "installation_id": "Select an Installation"
+                }
+            }
+        }
+    }
+}

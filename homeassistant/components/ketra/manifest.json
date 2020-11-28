@@ -4,5 +4,5 @@
     "documentation": "https://www.home-assistant.io/integrations/ketra",
     "codeowners": ["@s4v4g3"],
     "config_flow": true,
-    "requirements": ["aioketraapi==0.1.5"]
+    "requirements": ["aioketraapi==0.1.9"]
   }

@@ -1,3 +1,5 @@
+"""Config flow to configure Ketra-based lighting products."""
+
 import logging
 
 import aiohttp
@@ -12,7 +14,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -30,10 +31,16 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the ketra config flow."""
         self.account_credentials = None
         self.oauth_token = None
-        self.installations = None
+        self.installation_id_to_title_dict = {}
 
     async def async_step_user(self, user_input=None):
-        errors = {}
+        """Handle a flow initialized by the user."""
+        # This is for backwards compatibility.
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(self, user_input=None):
+        """Handle a flow start."""
+
         data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
@@ -43,7 +50,7 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=vol.Schema(data_schema)
+                step_id="init", data_schema=vol.Schema(data_schema)
             )
 
         if self.account_credentials is None:
@@ -57,39 +64,76 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 client_id, client_secret, username, password
             )
             if oauth_response is None:
+                # login error
                 return self.async_show_form(
-                    step_id="user",
+                    step_id="init",
                     data_schema=vol.Schema(data_schema),
                     errors={CONF_PASSWORD: "login"},
                 )
 
             self.oauth_token = oauth_response.access_token
             async with aiohttp.ClientSession() as session:
+                # first, get all installations to which the user has access.
                 async with session.get(
                     f"https://my.goketra.com/api/v4/locations.json?access_token={self.oauth_token}"
                 ) as response:
                     if response.status == 200:
                         api_resp = await response.json()
-                        self.installations = api_resp['content']
-                        inst_map = {
-                            inst["id"]: inst["title"] for inst in self.installations
-                        }
-                        data_schema = {
-                            vol.Required("installation_ids"): cv.multi_select(inst_map)
-                        }
-                        return self.async_show_form(
-                            step_id="user", data_schema=vol.Schema(data_schema)
-                        )
+                        installations = api_resp["content"]
+                        # next, filter out all installations that don't correspond to a discovered hub
+                        async with session.get(
+                            "https://my.goketra.com/api/n4/v1/query"
+                        ) as response:
+                            if response.status == 200:
+                                api_resp = await response.json()
+                                local_installation_ids = [
+                                    inst["installation_id"]
+                                    for inst in api_resp["content"]
+                                ]
+                                self.installation_id_to_title_dict = {
+                                    inst["id"]: inst["title"]
+                                    for inst in installations
+                                    if inst["id"] in local_installation_ids
+                                }
+                                return await self.async_step_select_installation()
+                            else:
+                                _LOGGER.warning(
+                                    f"Received status code {response.status} when querying for hubs"
+                                )
                     else:
-                        return self.async_show_form(
-                            step_id="user",
-                            data_schema=vol.Schema(data_schema),
-                            errors={"installation_ids": "connection"},
+                        _LOGGER.warning(
+                            f"Received status code {response.status} when querying for accessible installations"
                         )
 
-        assert "installation_ids" in user_input
+            # connection error to one of the my.goketra.com endpoints
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(data_schema),
+                errors={"installation_ids": "connection"},
+                description_placeholders={},
+            )
+
+    async def async_step_select_installation(self, user_input=None):
+        """Handle installation selection."""
+
+        if user_input is None:
+            _LOGGER.warning("showing select installation form")
+            data_schema = {
+                vol.Required("installation_id"): vol.In(
+                    {**self.installation_id_to_title_dict}
+                )
+            }
+            return self.async_show_form(
+                step_id="select_installation", data_schema=vol.Schema(data_schema)
+            )
+
+        assert "installation_id" in user_input
+        installation_name = self.installation_id_to_title_dict[
+            user_input["installation_id"]
+        ]
         config_data = {
             CONF_ACCESS_TOKEN: self.oauth_token,
-            "installation_ids": user_input["installation_ids"],
+            "installation_id": user_input["installation_id"],
+            "installation_name": installation_name,
         }
-        return self.async_create_entry(title="ketra config", data=config_data)
+        return self.async_create_entry(title=installation_name, data=config_data)
