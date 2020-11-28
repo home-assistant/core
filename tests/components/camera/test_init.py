@@ -155,25 +155,20 @@ async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
 async def test_websocket_stream_no_source(
     hass, hass_ws_client, mock_camera, mock_stream
 ):
-    """Test camera/stream websocket command."""
+    """Test camera/stream websocket command fails when no source is available."""
     await async_setup_component(hass, "camera", {})
 
-    with patch(
-        "homeassistant.components.camera.request_stream",
-        return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_request_stream:
-        # Request playlist through WebSocket
-        client = await hass_ws_client(hass)
-        await client.send_json(
-            {"id": 6, "type": "camera/stream", "entity_id": "camera.demo_camera"}
-        )
-        msg = await client.receive_json()
+    # Request playlist through WebSocket
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 6, "type": "camera/stream", "entity_id": "camera.demo_camera"}
+    )
+    msg = await client.receive_json()
 
-        # Assert WebSocket response
-        assert not mock_request_stream.called
-        assert msg["id"] == 6
-        assert msg["type"] == TYPE_RESULT
-        assert not msg["success"]
+    # Assert WebSocket response fails
+    assert msg["id"] == 6
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
 
 
 async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_stream):
@@ -200,6 +195,12 @@ async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_s
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
+
+        # Verify StreamSource internals created correctly
+        stream_source = await mock_request_stream.call_args[0][1]()
+        assert stream_source.source == "http://example.com"
+        assert stream_source.options == {}
+        assert not stream_source.keepalive
 
 
 async def test_websocket_get_prefs(hass, hass_ws_client, mock_camera):
@@ -284,6 +285,12 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
         # by the play_media service tests.
         assert mock_request_stream.called
 
+        # Verify StreamSource internals created correctly
+        stream_source = await mock_request_stream.call_args[0][1]()
+        assert stream_source.source == "http://example.com"
+        assert stream_source.options == {}
+        assert not stream_source.keepalive
+
 
 async def test_no_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
@@ -323,6 +330,12 @@ async def test_preload_stream(hass, mock_stream):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
         assert mock_request_stream.called
+
+        # Verify StreamSource internals created correctly
+        stream_source = await mock_request_stream.call_args[0][1]()
+        assert stream_source.source == "http://example.com"
+        assert stream_source.options == {}
+        assert stream_source.keepalive
 
 
 async def test_record_service_invalid_path(hass, mock_camera):

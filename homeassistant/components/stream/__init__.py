@@ -3,11 +3,12 @@ import logging
 import secrets
 import threading
 from types import MappingProxyType
+from typing import Awaitable, Callable
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
@@ -40,32 +41,88 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
 )
 
 
+class StreamSource:
+    """Holds a Stream URL and other parameters.
+
+    This class exists to support expiring stream URLs that need to be
+    refreshed regularly.
+    """
+
+    def __init__(
+        self,
+        source: str,
+        options: dict = None,
+        keepalive: bool = False,
+        cache_key: str = None,
+    ):
+        """Initialize StreamSource."""
+        self._source = source
+        self._keepalive = keepalive
+        if options is None:
+            options = {}
+        # For RTSP streams, prefer TCP
+        if isinstance(self.source, str) and self.source[:7] == "rtsp://":
+            options = {
+                "rtsp_flags": "prefer_tcp",
+                "stimeout": "5000000",
+                **options,
+            }
+        self._options = options
+        if not cache_key:
+            cache_key = source
+        self._cache_key = cache_key
+
+    @property
+    def source(self) -> str:
+        """Stream URL."""
+        return self._source
+
+    @property
+    def options(self) -> dict:
+        """Return ffpmeg options for the stream."""
+        return self._options
+
+    @property
+    def keepalive(self) -> bool:
+        """Determine if the stream should stay active, and retry on error."""
+        return self._keepalive
+
+    @property
+    def cache_key(self) -> str:
+        """Key to update an existing stream source."""
+        return self._cache_key
+
+
 @bind_hass
-def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=None):
+async def request_stream(
+    hass: HomeAssistant,
+    stream_source_cb: Callable[[], Awaitable[StreamSource]],
+    *,
+    fmt: str = "hls",
+):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
-    if options is None:
-        options = {}
-
-    # For RTSP streams, prefer TCP
-    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-        options = {
-            "rtsp_flags": "prefer_tcp",
-            "stimeout": "5000000",
-            **options,
-        }
+    # Currently this is invoked only once at the start of the worker, but needs to be invoked on expiration
+    # to resolve issue #42793 to update expired urls.
+    stream_source = await stream_source_cb()
 
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
-        stream = streams.get(stream_source)
+        stream = streams.get(stream_source.cache_key)
         if not stream:
-            stream = Stream(hass, stream_source, options=options, keepalive=keepalive)
-            streams[stream_source] = stream
+            stream = Stream(
+                hass,
+                stream_source.source,
+                options=stream_source.options,
+                keepalive=stream_source.keepalive,
+            )
+            streams[stream_source.cache_key] = stream
         else:
-            # Update keepalive option on existing stream
-            stream.keepalive = keepalive
+            # Update options on existing stream
+            stream.source = stream_source.source
+            stream.keepalive = stream_source.keepalive
 
         # Add provider
         stream.add_provider(fmt)
@@ -183,7 +240,6 @@ class Stream:
                 args=(self.hass, self, self._thread_quit),
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", self.source)
 
     def stop(self):
         """Remove outputs and access token."""
@@ -199,12 +255,11 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", self.source)
 
 
 async def async_handle_record_service(hass, call):
     """Handle save video service calls."""
-    stream_source = call.data[CONF_STREAM_SOURCE]
+    stream_source = StreamSource(call.data[CONF_STREAM_SOURCE])
     video_path = call.data[CONF_FILENAME]
     duration = call.data[CONF_DURATION]
     lookback = call.data[CONF_LOOKBACK]
@@ -215,10 +270,10 @@ async def async_handle_record_service(hass, call):
 
     # Check for active stream
     streams = hass.data[DOMAIN][ATTR_STREAMS]
-    stream = streams.get(stream_source)
+    stream = streams.get(stream_source.source)
     if not stream:
         stream = Stream(hass, stream_source)
-        streams[stream_source] = stream
+        streams[stream_source.source] = stream
 
     # Add recorder
     recorder = stream.outputs.get("recorder")

@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 import av
 import pytest
 
-from homeassistant.components.stream import request_stream
+from homeassistant.components.stream import StreamSource, request_stream
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -30,8 +30,11 @@ async def test_hls_stream(hass, hass_client):
     stream = preload_stream(hass, source)
     stream.add_provider("hls")
 
+    async def callback() -> StreamSource:
+        return source
+
     # Request stream
-    url = request_stream(hass, source)
+    url = await request_stream(hass, callback)
 
     http_client = await hass_client()
 
@@ -50,7 +53,7 @@ async def test_hls_stream(hass, hass_client):
     # Fetch segment
     playlist = await playlist_response.text()
     playlist_url = "/".join(parsed_url.path.split("/")[:-1])
-    segment_url = playlist_url + playlist.splitlines()[-1][1:]
+    segment_url = playlist_url + "/" + playlist.splitlines()[-1]
     segment_response = await http_client.get(segment_url)
     assert segment_response.status == 200
 
@@ -72,8 +75,11 @@ async def test_stream_timeout(hass, hass_client):
     stream = preload_stream(hass, source)
     stream.add_provider("hls")
 
+    async def callback() -> StreamSource:
+        return source
+
     # Request stream
-    url = request_stream(hass, source)
+    url = await request_stream(hass, callback)
 
     http_client = await hass_client()
 
@@ -109,8 +115,11 @@ async def test_stream_ended(hass):
     stream = preload_stream(hass, source)
     track = stream.add_provider("hls")
 
+    async def callback() -> StreamSource:
+        return source
+
     # Request stream
-    request_stream(hass, source)
+    await request_stream(hass, callback)
 
     # Run it dead
     while True:
@@ -131,12 +140,16 @@ async def test_stream_keepalive(hass):
     await async_setup_component(hass, "stream", {"stream": {}})
 
     # Setup demo HLS track
-    source = "test_stream_keepalive_source"
+    source = StreamSource("test_stream_keepalive_source", keepalive=True)
+
     stream = preload_stream(hass, source)
     track = stream.add_provider("hls")
     track.num_segments = 2
 
     cur_time = 0
+
+    async def callback() -> StreamSource:
+        return source
 
     def time_side_effect():
         nonlocal cur_time
@@ -153,7 +166,7 @@ async def test_stream_keepalive(hass):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
         # Request stream
-        request_stream(hass, source, keepalive=True)
+        await request_stream(hass, callback)
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2

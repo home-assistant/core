@@ -180,6 +180,7 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
             }
         },
     )
+    assert await async_setup_component(hass, "stream", {})
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
@@ -198,30 +199,29 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
 
         # Assert WebSocket response
         assert mock_request_stream.call_count == 1
-        assert mock_request_stream.call_args[0][1] == "http://example.com/5a"
+        stream_source = await mock_request_stream.call_args[0][1]()
+        assert stream_source.source == "http://example.com/5a"
         assert msg["id"] == 1
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
 
-        # Cause a template render error
-        hass.states.async_remove("sensor.temp")
+    # Cause a template render error
+    hass.states.async_remove("sensor.temp")
 
-        await client.send_json(
-            {"id": 2, "type": "camera/stream", "entity_id": "camera.config_test"}
-        )
-        msg = await client.receive_json()
+    await client.send_json(
+        {"id": 2, "type": "camera/stream", "entity_id": "camera.config_test"}
+    )
+    msg = await client.receive_json()
 
-        # Assert that no new call to the stream request should have been made
-        assert mock_request_stream.call_count == 1
-        # Assert the websocket error message
-        assert msg["id"] == 2
-        assert msg["type"] == TYPE_RESULT
-        assert msg["success"] is False
-        assert msg["error"] == {
-            "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
-        }
+    # Assert the websocket error message
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"] is False
+    assert msg["error"] == {
+        "code": "start_stream_failed",
+        "message": "camera.config_test does not support streams",
+    }
 
 
 async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
@@ -235,32 +235,28 @@ async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_clien
                 "platform": "generic",
                 "still_image_url": "https://example.com",
                 "limit_refetch_to_url_change": True,
-            }
+            },
         },
     )
+    assert await async_setup_component(hass, "stream", {})
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.camera.request_stream",
-        return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_request_stream:
-        # Request playlist through WebSocket
-        client = await hass_ws_client(hass)
+    # Request playlist through WebSocket
+    client = await hass_ws_client(hass)
 
-        await client.send_json(
-            {"id": 3, "type": "camera/stream", "entity_id": "camera.config_test"}
-        )
-        msg = await client.receive_json()
+    await client.send_json(
+        {"id": 3, "type": "camera/stream", "entity_id": "camera.config_test"}
+    )
+    msg = await client.receive_json()
 
-        # Assert the websocket error message
-        assert mock_request_stream.call_count == 0
-        assert msg["id"] == 3
-        assert msg["type"] == TYPE_RESULT
-        assert msg["success"] is False
-        assert msg["error"] == {
-            "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
-        }
+    # Assert the websocket error message
+    assert msg["id"] == 3
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"] is False
+    assert msg["error"] == {
+        "code": "start_stream_failed",
+        "message": "camera.config_test does not support streams",
+    }
 
 
 async def test_camera_content_type(aioclient_mock, hass, hass_client):
