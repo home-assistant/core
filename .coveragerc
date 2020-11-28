@@ -449,7 +449,8 @@ omit =
     homeassistant/components/keba/*
     homeassistant/components/keenetic_ndms2/device_tracker.py
     homeassistant/components/kef/*
-    homeassistant/components/ketra/*
+    homeassistant/components/ketra/__init__.py
+    homeassistant/components/ketra/light.py
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*
     homeassistant/components/kira/*
