@@ -231,10 +231,7 @@ class FireServiceRotaClient:
             self.fsr.get_availability, str(self._hass.config.time_zone)
         )
 
-        if "available" in data and data["available"]:
-            self.on_duty = True
-        else:
-            self.on_duty = False
+        self.on_duty = bool(data.get("available"))
 
         _LOGGER.debug("Updated availability data: %s", data)
         return data
