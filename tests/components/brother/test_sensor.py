@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.brother import init_integration
 
@@ -39,9 +39,7 @@ async def test_sensors(hass):
         disabled_by=None,
     )
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
-    with patch(
-        "homeassistant.components.brother.sensor.utcnow", return_value=test_time
-    ), patch(
+    with patch("brother.datetime", utcnow=Mock(return_value=test_time)), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
