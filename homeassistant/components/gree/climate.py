@@ -105,7 +105,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Register the device."""
         async_add_entities([GreeClimateEntity(coordinator)])
 
-    [init_device(x) for x in hass.data[DOMAIN][COORDINATORS]]
+    for coordo in hass.data[DOMAIN][COORDINATORS]:
+        init_device(coordo)
+
     async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
 
 
