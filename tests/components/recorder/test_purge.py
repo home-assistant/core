@@ -67,7 +67,7 @@ def test_purge_old_recorder_runs(hass, hass_recorder):
     hass = hass_recorder()
     _add_test_recorder_runs(hass)
 
-    # make sure we start with 6 states
+    # make sure we start with 7 recorder runs
     with session_scope(hass=hass) as session:
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
