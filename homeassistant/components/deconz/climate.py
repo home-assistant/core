@@ -4,13 +4,7 @@ from typing import Optional
 from pydeconz.sensor import Thermostat
 
 from homeassistant.components.climate import DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
-    FAN_AUTO,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_OFF,
-    FAN_ON,
+from homeassistant.components.climate.const import (  # FAN_AUTO,; FAN_HIGH,; FAN_LOW,; FAN_MEDIUM,; FAN_OFF,; FAN_ON,; SUPPORT_FAN_MODE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -19,7 +13,6 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -31,17 +24,17 @@ from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DECONZ_FAN_SMART = "smart"
+# DECONZ_FAN_SMART = "smart"
 
-FAN_MODES = {
-    DECONZ_FAN_SMART: "smart",
-    FAN_AUTO: "auto",
-    FAN_HIGH: "high",
-    FAN_MEDIUM: "medium",
-    FAN_LOW: "low",
-    FAN_ON: "on",
-    FAN_OFF: "off",
-}
+# FAN_MODES = {
+#     DECONZ_FAN_SMART: "smart",
+#     FAN_AUTO: "auto",
+#     FAN_HIGH: "high",
+#     FAN_MEDIUM: "medium",
+#     FAN_LOW: "low",
+#     FAN_ON: "on",
+#     FAN_OFF: "off",
+# }
 
 HVAC_MODES = {
     HVAC_MODE_AUTO: "auto",
@@ -117,8 +110,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         self._features = SUPPORT_TARGET_TEMPERATURE
 
-        if "fanmode" in device.raw["config"]:
-            self._features |= SUPPORT_FAN_MODE
+        # if "fanmode" in device.raw["config"]:
+        #     self._features |= SUPPORT_FAN_MODE
 
         if "preset" in device.raw["config"]:
             self._features |= SUPPORT_PRESET_MODE
@@ -128,34 +121,34 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Return the list of supported features."""
         return self._features
 
-    # Fan control
+    # # Fan control
 
-    @property
-    def fan_mode(self) -> str:
-        """Return fan operation."""
-        for hass_fan_mode, fan_mode in FAN_MODES.items():
-            if self._device.raw["config"].get("fanmode") == fan_mode:
-                # if self._device.fanmode == fan_mode:
-                return hass_fan_mode
+    # @property
+    # def fan_mode(self) -> str:
+    #     """Return fan operation."""
+    #     for hass_fan_mode, fan_mode in FAN_MODES.items():
+    #         if self._device.raw["config"].get("fanmode") == fan_mode:
+    #             # if self._device.fanmode == fan_mode:
+    #             return hass_fan_mode
 
-        if self._device.state_on:
-            return FAN_ON
+    #     if self._device.state_on:
+    #         return FAN_ON
 
-        return FAN_OFF
+    #     return FAN_OFF
 
-    @property
-    def fan_modes(self) -> list:
-        """Return the list of available fan operation modes."""
-        return list(FAN_MODES)
+    # @property
+    # def fan_modes(self) -> list:
+    #     """Return the list of available fan operation modes."""
+    #     return list(FAN_MODES)
 
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        if fan_mode not in FAN_MODES:
-            raise ValueError(f"Unsupported fan mode {fan_mode}")
+    # async def async_set_fan_mode(self, fan_mode: str) -> None:
+    #     """Set new target fan mode."""
+    #     if fan_mode not in FAN_MODES:
+    #         raise ValueError(f"Unsupported fan mode {fan_mode}")
 
-        data = {"fanmode": FAN_MODES[fan_mode]}
+    #     data = {"fanmode": FAN_MODES[fan_mode]}
 
-        await self._device.async_set_config(data)
+    #     await self._device.async_set_config(data)
 
     # HVAC control
 
