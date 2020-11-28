@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hub = await N4Hub.get_hub(installation_id, oauth_token, loop=hass.loop)
     _LOGGER.info(
-        f"Discovered N4 Hub at endpoint '{hub.url_base}' for installation '{installation_id}'"
+        "Discovered N4 Hub at endpoint '%s' for installation '%s'",
+        hub.url_base,
+        installation_id,
     )
 
     hass.data.setdefault(DOMAIN, {})
@@ -89,7 +91,6 @@ class KetraPlatformBase(ABC):
         a Design Studio publish operation is complete.  Must be implemented by derived class to handle
         added or removed items.
         """
-        pass
 
     @abstractmethod
     async def refresh_entity_state(self):
@@ -99,7 +100,6 @@ class KetraPlatformBase(ABC):
         Called by platform_common in response to a websocket reconnection.  Should be overridden
         by derived class to update the hub and/or force an entity refresh.
         """
-        pass
 
     async def websocket_notification(self, notification_model: WebsocketV2Notification):
         """

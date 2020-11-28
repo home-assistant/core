@@ -54,9 +54,9 @@ class KetraLightPlatform(KetraPlatformBase):
         self.logger.info("Beginning setup_platform()")
         groups = []
         for group in await self.hub.get_groups():
-            kg = KetraGroup(group)
-            groups.append(kg)
-            self.group_map[group.id] = kg
+            group_entity = KetraGroup(group)
+            groups.append(group_entity)
+            self.group_map[group.id] = group_entity
         self.add_entities(groups)
         self.logger.info(f"{len(groups)} light groups added")
         self.platform_common.add_platform(self)
@@ -69,9 +69,9 @@ class KetraLightPlatform(KetraPlatformBase):
         for group in current_groups:
             current_groups_ids.append(group.id)
             if group.id not in self.group_map:
-                kg = KetraGroup(group)
-                new_groups.append(kg)
-                self.group_map[group.id] = kg
+                group_entity = KetraGroup(group)
+                new_groups.append(group_entity)
+                self.group_map[group.id] = group_entity
         if len(new_groups) > 0:
             self.logger.info(f"{len(new_groups)} new lights added")
         self.add_entities(new_groups)

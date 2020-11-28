@@ -15,9 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import DOMAIN
-
-DATA_SCHEMA = vol.Schema({("host"): str})
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,12 +138,13 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 for inst in installations
                                 if inst["id"] in local_installation_ids
                             }
-                        else:
-                            _LOGGER.warning(
-                                f"Received status code {response.status} when querying for hubs"
-                            )
+                        _LOGGER.warning(
+                            "Received status code %s when querying for hubs",
+                            str(response.status),
+                        )
                 else:
                     _LOGGER.warning(
-                        f"Received status code {response.status} when querying for accessible installations"
+                        "Received status code %s when querying for accessible installations",
+                        str(response.status),
                     )
         return None

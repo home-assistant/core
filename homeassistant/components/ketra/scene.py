@@ -85,7 +85,9 @@ class KetraScenePlatform(KetraPlatformBase):
             activated = notification_model.contents.activated
             if button_id in self.button_map:
                 _LOGGER.debug(
-                    f"Scene button '{self.button_map[button_id].name}' {'activated' if activated else 'deactivated'}"
+                    "Scene button '%s' %s",
+                    self.button_map[button_id].name,
+                    "activated" if activated else "deactivated",
                 )
                 event_data = {
                     "button_id": button_id,
@@ -94,7 +96,8 @@ class KetraScenePlatform(KetraPlatformBase):
                     "activated": activated,
                 }
                 _LOGGER.debug(
-                    f"Firing ketra_button_press event with event data: {event_data}"
+                    "Firing ketra_button_press event with event data: %s",
+                    str(event_data),
                 )
                 self.platform_common.hass.bus.fire("ketra_button_press", event_data)
 
