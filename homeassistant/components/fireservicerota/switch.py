@@ -41,6 +41,9 @@ class ResponseSwitch(SwitchEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
+        if self._state:
+            return "mdi:run-fast"
+
         return "mdi:forum"
 
     @property
