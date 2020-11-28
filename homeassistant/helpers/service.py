@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
+    CONF_TARGET,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -136,6 +137,10 @@ def async_prepare_call_from_config(
     domain, service = domain_service.split(".", 1)
 
     service_data = {}
+
+    if CONF_TARGET in config:
+        service_data.update(config[CONF_TARGET])
+
     for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
         if conf not in config:
             continue
