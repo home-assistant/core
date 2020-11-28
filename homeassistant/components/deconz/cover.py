@@ -116,6 +116,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Return the current tilt position of the cover."""
         if self._device.tilt is not None:
             return 100 - self._device.tilt
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Tilt the cover to a specific position."""
