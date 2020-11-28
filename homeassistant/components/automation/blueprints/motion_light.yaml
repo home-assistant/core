@@ -9,11 +9,12 @@ blueprint:
         entity:
           domain: binary_sensor
           device_class: motion
-    light_entity:
+    light_target:
       name: Light
       selector:
-        entity:
-          domain: light
+        target:
+          entity:
+            domain: light
 
 # If motion is detected within the 120s delay,
 # we restart the script.
@@ -28,7 +29,7 @@ trigger:
 
 action:
   - service: homeassistant.turn_on
-    entity_id: !placeholder light_entity
+    target: !placeholder light_target
   - wait_for_trigger:
       platform: state
       entity_id: !placeholder motion_entity
@@ -36,4 +37,4 @@ action:
       to: "off"
   - delay: 120
   - service: homeassistant.turn_off
-    entity_id: !placeholder light_entity
+    target: !placeholder light_target

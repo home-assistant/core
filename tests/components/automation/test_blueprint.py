@@ -123,7 +123,7 @@ async def test_motion_light(hass):
                     "use_blueprint": {
                         "path": "motion_light.yaml",
                         "input": {
-                            "light_entity": "light.kitchen",
+                            "light_target": {"entity_id": "light.kitchen"},
                             "motion_entity": "binary_sensor.kitchen",
                         },
                     }

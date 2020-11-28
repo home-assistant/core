@@ -111,3 +111,13 @@ class TimeSelector(Selector):
     """Selector of a time value."""
 
     CONFIG_SCHEMA = vol.Schema({})
+
+
+@SELECTORS.register("target")
+class TargetSelector(Selector):
+    """Selector of a target value (area ID, device ID, entity ID etc).
+
+    Value should follow cv.ENTITY_SERVICE_FIELDS format.
+    """
+
+    CONFIG_SCHEMA = vol.Schema({"entity": {"domain": str}})
