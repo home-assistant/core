@@ -3,7 +3,9 @@
 COORDINATORS = "coordinators"
 
 DATA_DISCOVERY_SERVICE = "gree_discovery"
+DATA_DISCOVERY_INTERVAL = "gree_discovery_interval"
 
+DISCOVERY_SCAN_INTERVAL = 300
 DISCOVERY_TIMEOUT = 8
 DISPATCH_DEVICE_DISCOVERED = "gree_device_discovered"
 
