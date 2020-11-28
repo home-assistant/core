@@ -6,8 +6,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,14 +22,19 @@ async def async_setup_entry(
     """Set up FireServiceRota switch based on a config entry."""
     client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
 
-    async_add_entities([ResponseSwitch(client, entry)])
+    coordinator: DataUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
+        entry.entry_id
+    ][DATA_COORDINATOR]
+
+    async_add_entities([ResponseSwitch(coordinator, client, entry)])
 
 
-class ResponseSwitch(SwitchEntity):
+class ResponseSwitch(CoordinatorEntity, SwitchEntity):
     """Representation of an FireServiceRota switch."""
 
-    def __init__(self, client, entry):
+    def __init__(self, coordinator: DataUpdateCoordinator, client, entry):
         """Initialize."""
+        super().__init__(coordinator)
         self._client = client
         self._unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
@@ -60,6 +69,11 @@ class ResponseSwitch(SwitchEntity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
+
+    @property
+    def available(self):
+        """Return if switch is available."""
+        return self._client.on_duty
 
     @property
     def device_state_attributes(self) -> object:
@@ -116,6 +130,12 @@ class ResponseSwitch(SwitchEntity):
                 self.client_update,
             )
         )
+        self.async_on_remove(self.coordinator.async_add_listener(self.on_duty_update))
+
+    @callback
+    def on_duty_update(self):
+        """Trigger on duty update."""
+        self.async_schedule_update_ha_state()
 
     @callback
     def client_update(self) -> None:
