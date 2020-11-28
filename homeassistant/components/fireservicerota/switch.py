@@ -47,7 +47,7 @@ class ResponseSwitch(SwitchEntity):
         """Return the icon to use in the frontend."""
         if self._state_icon == "acknowledged":
             return "mdi:run-fast"
-        elif self._state_icon == "rejected":
+        if self._state_icon == "rejected":
             return "mdi:account-off-outline"
 
         return "mdi:forum"
