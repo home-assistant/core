@@ -1,25 +1,43 @@
 """Common helpers for gree test cases."""
 import asyncio
+import logging
+
+from greeclimate.discovery import Listener
+
+from homeassistant.components.gree.const import DISCOVERY_TIMEOUT
 
 from tests.async_mock import AsyncMock, Mock
 
+_LOGGER = logging.getLogger(__name__)
 
-class MockDiscovery:
+
+class FakeDiscovery:
     """Mock class replacing Gree device discovery."""
 
-    def __init__(self, mock_devices):
+    def __init__(self, timeout: int = DISCOVERY_TIMEOUT) -> None:
         """Initialize the class."""
-        self._mock_devices = mock_devices
+        self.mock_devices = [build_device_mock()]
+        self.timeout = timeout
+        self._listeners = []
+        self._count = 0
 
-    async def search_devices(self, async_callback=None):
+    def add_listener(self, listener: Listener) -> None:
+        """Add an event listener."""
+        self._listeners.append(listener)
+
+    async def scan(self, wait_for: int = 0):
         """Search for devices, return mocked data."""
-        infos = [x.device_info for x in self._mock_devices]
-        tasks = (
-            [asyncio.create_task(async_callback(x)) for x in infos]
-            if async_callback
-            else None
-        )
-        return infos, tasks
+        self._count += 1
+        _LOGGER.info("CALLED SCAN %d TIMES", self._count)
+
+        infos = [x.device_info for x in self.mock_devices]
+        for listener in self._listeners:
+            [await listener.device_found(x) for x in infos]
+
+        if wait_for:
+            await asyncio.sleep(wait_for)
+
+        return infos
 
 
 def build_device_info_mock(

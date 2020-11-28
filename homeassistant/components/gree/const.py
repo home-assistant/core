@@ -2,6 +2,8 @@
 
 COORDINATORS = "coordinators"
 
+DATA_DISCOVERY_SERVICE = "gree_discovery"
+
 DISCOVERY_TIMEOUT = 8
 DISPATCH_DEVICE_DISCOVERED = "gree_device_discovered"
 

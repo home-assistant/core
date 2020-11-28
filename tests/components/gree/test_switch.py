@@ -16,20 +16,10 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import MockDiscovery, build_device_mock
-
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1_panel_light"
-
-
-@pytest.fixture(autouse=True, name="discovery")
-def discovery_fixture(hass):
-    """Patch the discovery service."""
-    with patch("homeassistant.components.gree.Discovery") as mock:
-        mock.return_value = MockDiscovery([build_device_mock()])
-        yield mock
 
 
 @pytest.fixture

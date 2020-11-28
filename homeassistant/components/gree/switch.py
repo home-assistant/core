@@ -21,7 +21,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Register the device."""
         async_add_entities([GreeSwitchEntity(coordinator)])
 
-    [init_device(coordinator) for coordinator in hass.data[DOMAIN].get(COORDINATORS)]
+    [init_device(x) for x in hass.data[DOMAIN][COORDINATORS]]
     async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
 
 

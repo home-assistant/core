@@ -1,53 +1,60 @@
 """Tests for the Gree Integration."""
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 
-from .common import MockDiscovery, build_device_mock
+from .common import FakeDiscovery
 
 from tests.async_mock import patch
 
 
-@pytest.fixture(autouse=True, name="discovery")
-def discovery_fixture(hass):
-    """Patch the discovery service."""
-    with patch("homeassistant.components.gree.config_flow.Discovery") as mock:
-        mock.return_value = MockDiscovery([build_device_mock()])
-        yield mock
-
-
-async def test_creating_entry_sets_up_climate(hass, setup):
+async def test_creating_entry_sets_up_climate(hass):
     """Test setting up Gree creates the climate components."""
-    result = await hass.config_entries.flow.async_init(
-        GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.gree.climate.async_setup_entry", return_value=True
+    ) as setup, patch(
+        "homeassistant.components.gree.bridge.Discovery", return_value=FakeDiscovery()
+    ), patch(
+        "homeassistant.components.gree.config_flow.Discovery",
+        return_value=FakeDiscovery(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    # Confirmation form
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        # Confirmation form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    assert len(setup.mock_calls) == 1
+        assert len(setup.mock_calls) == 1
 
 
-async def test_creating_entry_has_no_devices(hass, discovery, setup):
+async def test_creating_entry_has_no_devices(hass):
     """Test setting up Gree creates the climate components."""
-    discovery.return_value = MockDiscovery([])
+    with patch(
+        "homeassistant.components.gree.climate.async_setup_entry", return_value=True
+    ) as setup, patch(
+        "homeassistant.components.gree.bridge.Discovery", return_value=FakeDiscovery()
+    ) as discovery, patch(
+        "homeassistant.components.gree.config_flow.Discovery",
+        return_value=FakeDiscovery(),
+    ) as discovery2:
+        discovery.return_value.mock_devices = []
+        discovery2.return_value.mock_devices = []
 
-    result = await hass.config_entries.flow.async_init(
-        GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+        result = await hass.config_entries.flow.async_init(
+            GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    # Confirmation form
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        # Confirmation form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    assert len(setup.mock_calls) == 0
+        assert len(setup.mock_calls) == 0

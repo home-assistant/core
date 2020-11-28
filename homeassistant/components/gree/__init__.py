@@ -2,21 +2,14 @@
 import asyncio
 import logging
 
-from greeclimate.device import (
-    Device,
-    DeviceInfo,
-    DeviceNotBoundError,
-    DeviceTimeoutError,
-)
-from greeclimate.discovery import Discovery
-
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 
-from .bridge import DeviceDataUpdateCoordinator
-from .const import COORDINATORS, DISCOVERY_TIMEOUT, DOMAIN
+from .bridge import DiscoveryService
+from .const import COORDINATORS, DATA_DISCOVERY_SERVICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,40 +24,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Gree Climate from a config entry."""
+    gree_discovery = DiscoveryService(hass)
+    hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
-    device_infos = []
+    @callback
+    def shutdown_event(_: Event) -> None:
+        if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
+            del hass.data[DATA_DISCOVERY_SERVICE]
 
-    async def async_device_found(device_info: DeviceInfo):
-        """Initialize and bind discovered devices."""
-        if device_info not in device_infos:
-            device_infos.append(device_info)
-            device = Device(device_info)
-            try:
-                await device.bind()
-            except DeviceNotBoundError:
-                _LOGGER.error("Unable to bind to gree device: %s", device_info)
-            except DeviceTimeoutError:
-                _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
-            else:
-                _LOGGER.info(
-                    "Adding Gree device at %s:%i (%s)",
-                    device.device_info.ip,
-                    device.device_info.port,
-                    device.device_info.name,
-                )
-                coordo = DeviceDataUpdateCoordinator(hass, device)
-                await coordo.async_refresh()
-                return coordo
-
-    # First we'll grab as many devices as we can find on the network
-    # it's necessary to bind static devices anyway
-    _LOGGER.debug("Scanning network for Gree devices")
-
-    gree_discovery = Discovery(DISCOVERY_TIMEOUT)
-    _, tasks = await gree_discovery.search_devices(async_callback=async_device_found)
-
-    coordinators = await asyncio.gather(*tasks)
-    hass.data[DOMAIN][COORDINATORS] = [x for x in coordinators if x is not None]
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
@@ -73,11 +41,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
     )
 
+    _LOGGER.debug("Scanning network for Gree devices")
+    await gree_discovery.discovery.scan()
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
+        del hass.data[DATA_DISCOVERY_SERVICE]
+
     results = asyncio.gather(
         hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN),
         hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
@@ -88,24 +63,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(COORDINATORS, None)
 
     return unload_ok
-
-
-class GreeScanner:
-    """Scan and initialize Gree devices."""
-
-    _scanner = None
-
-    @classmethod
-    @callback
-    def async_get(cls, hass: HomeAssistant):
-        """Get the scanner instance."""
-        if cls._scanner is None:
-            cls._scanner = cls(hass)
-        return cls._scanner
-
-    def __init__(self, hass: HomeAssistant):
-        """Initialize class."""
-        self._hass = hass
-
-    async def _async_scan(self):
-        pass

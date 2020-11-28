@@ -1,22 +1,10 @@
 """Tests for the Gree Integration."""
-import pytest
-
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.setup import async_setup_component
 
-from .common import MockDiscovery, build_device_mock
-
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True, name="discovery")
-def discovery_fixture(hass):
-    """Patch the discovery service."""
-    with patch("homeassistant.components.gree.Discovery") as mock:
-        mock.return_value = MockDiscovery([build_device_mock()])
-        yield mock
 
 
 async def test_setup_simple(hass):

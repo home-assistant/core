@@ -56,20 +56,12 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import MockDiscovery, build_device_mock
+from .common import build_device_mock
 
 from tests.async_mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
-
-
-@pytest.fixture(autouse=True, name="discovery")
-def discovery_fixture(hass):
-    """Patch the discovery service."""
-    with patch("homeassistant.components.gree.Discovery") as mock:
-        mock.return_value = MockDiscovery([build_device_mock()])
-        yield mock
 
 
 @pytest.fixture
@@ -103,7 +95,7 @@ async def test_discovery_setup(hass, discovery, device):
         name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
     )
 
-    discovery.return_value = MockDiscovery([MockDevice1, MockDevice2])
+    discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
     await async_setup_gree(hass)
@@ -114,22 +106,26 @@ async def test_discovery_setup(hass, discovery, device):
 
 async def test_discovery_setup_connection_error(hass, discovery, device):
     """Test gree integration is setup."""
-    MockDevice1 = build_device_mock(name="fake-device-1")
+    MockDevice1 = build_device_mock(
+        name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
+    )
     MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
 
-    MockDevice2 = build_device_mock(name="fake-device-2")
-    MockDevice2.bind = AsyncMock(side_effect=DeviceNotBoundError)
+    MockDevice2 = build_device_mock(
+        name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
+    )
+    MockDevice2.bind = AsyncMock(side_effect=DeviceTimeoutError)
 
+    discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
     await async_setup_gree(hass)
     await hass.async_block_till_done()
-    assert discovery.call_count == 1
 
-    assert not hass.states.async_all(DOMAIN)
+    assert len(hass.states.async_all(DOMAIN)) == 2
 
 
-async def test_update_connection_failure(hass, discovery, device, mock_now):
+async def test_update_connection_failure(hass, device, mock_now):
     """Testing update hvac connection failure exception."""
     device().update_state.side_effect = [
         DEFAULT_MOCK,
