@@ -73,7 +73,8 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
     _LOGGER.debug(
-        "Scan interval = %s", scan_interval,
+        "Scan interval = %s",
+        scan_interval,
     )
 
     # Register alarm_control_panel specific service
