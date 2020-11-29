@@ -30,9 +30,9 @@ async def patched_token_request_failure(*_):
 
 async def patched_token_request_success(*_):
     """Simulate a token request success."""
-    o = Mock()
-    o.access_token = "1234"
-    return o
+    oauth_request = Mock()
+    oauth_request.access_token = "1234"
+    return oauth_request
 
 
 async def patched_get_installations_failure(*_):

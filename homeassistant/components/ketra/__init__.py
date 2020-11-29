@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_INSTALLATION_ID = "__installation_id__"
 KETRA_PLATFORMS = ["light", "scene"]
+WEBSOCKET_RECONNECT_DELAY = 5
 
 
 async def async_setup(hass: HomeAssistantType, config: dict):
@@ -154,9 +155,10 @@ class KetraPlatformCommon:
             if self.hass.is_stopping or self.is_closing:
                 break
             self.logger.warning(
-                "Websocket connection error, attempting reconnection in 5 seconds"
+                "Websocket connection error, attempting reconnection in %s seconds",
+                str(WEBSOCKET_RECONNECT_DELAY),
             )
-            await asyncio.sleep(5)
+            await asyncio.sleep(WEBSOCKET_RECONNECT_DELAY)
             self.hub = await N4Hub.get_hub(
                 self.hub.installation_id,
                 self.hub.oauth_token,

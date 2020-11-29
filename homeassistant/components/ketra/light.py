@@ -171,13 +171,15 @@ class KetraGroup(LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
+        if not self.is_on:
+            return None
         return self._lamp_state.brightness * 255
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
         cct = self._lamp_state.cct
-        if cct == 0:
+        if cct == 0 or cct is None:
             return None
         return 1000000 / cct
 
@@ -224,6 +226,7 @@ class KetraGroup(LightEntity):
     @property
     def is_on(self):
         """Return true if light is on."""
+        print("is_on == " + str(self._lamp_state.power_on))
         return self._lamp_state.power_on
 
     async def __async_set_lamp_state(self, power_state: bool, **kwargs):
@@ -246,6 +249,8 @@ class KetraGroup(LightEntity):
             lamp_state.vibrancy = 1 - (kwargs[ATTR_WHITE_VALUE] / 255.0)
 
         await self._group.set_state(lamp_state)
+        self._lamp_state = self._group.state
+        self.schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
