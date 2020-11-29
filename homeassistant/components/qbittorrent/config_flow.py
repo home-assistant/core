@@ -43,10 +43,11 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except LoginRequired:
-                errors["auth"] = "Invalid authentication"
+                errors["base"] = "invalid_auth"
                 return
             except RequestException as err:
-                errors["auth"] = "Connection failed - %s", err
+                errors["base"] = "cannot_connect"
+                _LOGGER.error("Connection failed - %s", err)
 
             if not errors:
                 return self.async_create_entry(

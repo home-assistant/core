@@ -4,7 +4,8 @@
             "already_configured": "Het toestel is al geconfigureerd"
         },
         "error": {
-            "invalid_auth": "De opgegeven gebruikersgegevens zijn niet geldig"
+            "invalid_auth": "De opgegeven gebruikersgegevens zijn niet geldig",
+            "cannot_connect": "De opgegeven server gegevens zijn niet geldig"
         },
         "step": {
             "user": {
