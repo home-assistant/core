@@ -57,14 +57,14 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._username)
             self._abort_if_unique_id_configured()
 
-        try:
-            self.api = FireServiceRota(
-                base_url=self._base_url,
-                username=self._username,
-                password=self._password,
-            )
-            token_info = await self.hass.async_add_executor_job(self.api.request_tokens)
+        self.api = FireServiceRota(
+            base_url=self._base_url,
+            username=self._username,
+            password=self._password,
+        )
 
+        try:
+            token_info = await self.hass.async_add_executor_job(self.api.request_tokens)
         except InvalidAuthError:
             self.api = None
             return self.async_show_form(
