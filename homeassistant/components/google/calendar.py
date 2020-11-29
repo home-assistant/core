@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     "orderBy": "startTime",
-    "maxResults": 5,
+    "maxResults": 100,
     "singleEvents": True,
 }
 
