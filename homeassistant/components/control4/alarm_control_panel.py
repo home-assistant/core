@@ -108,7 +108,7 @@ async def async_setup_entry(
         try:
             return await director_update_data_multi_variable(hass, entry, variables)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
