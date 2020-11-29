@@ -36,8 +36,14 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    PRESET_NONE,
     PRESET_AWAY,
     PRESET_HOME,
+    PRESET_BOOST,
+    PRESET_SLEEP,
+    PRESET_ECO,
+    PRESET_COMFORT,
+    PRESET_ACTIVITY,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
@@ -171,7 +177,22 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     @property
     def preset_modes(self):
         """Return preset modes."""
-        return [PRESET_AWAY, PRESET_HOME] if self._static_info.supports_away else []
+        presets = []
+        none_flag = False
+        if self._static_info.supports_away: 
+           presets.append(PRESET_AWAY)
+           presets.append(PRESET_HOME)
+        if self._static_info.supports_boost:
+           presets.append(PRESET_BOOST)
+           none_flag = True
+        if self._static_info.supports_night:
+           presets.append(PRESET_SLEEP)
+           none_flag = True
+        ##Uncomment this to enable None preset - See row 269
+        #if none_flag:
+        #   presets.append(PRESET_NONE)
+
+        return presets
 
     @property
     def swing_modes(self):
@@ -205,7 +226,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             features |= SUPPORT_TARGET_TEMPERATURE_RANGE
         else:
             features |= SUPPORT_TARGET_TEMPERATURE
-        if self._static_info.supports_away:
+        if self._static_info.supports_away or self._static_info.supports_night or self._static_info.supports_boost:
             features |= SUPPORT_PRESET_MODE
         if self._static_info.supported_fan_modes:
             features |= SUPPORT_FAN_MODE
@@ -236,8 +257,15 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
 
     @esphome_state_property
     def preset_mode(self):
-        """Return current preset mode."""
-        return PRESET_AWAY if self._state.away else PRESET_HOME
+        """Return current preset mode.""" 
+        if self._state.away: return PRESET_AWAY 
+        elif self._state.boost: return PRESET_BOOST
+        elif self._state.night: return PRESET_SLEEP
+        #####Change This to get preset None instead of preset Home when Idle - see row 196
+        #elif not self._static_info.supports_boost and not self._static_info.supports_night: 
+        #    return PRESET_HOME
+        #else: return PRESET_NONE
+        else: return PRESET_HOME #and comment this...
 
     @esphome_state_property
     def swing_mode(self):
@@ -285,8 +313,27 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
-        away = preset_mode == PRESET_AWAY
-        await self._client.climate_command(key=self._static_info.key, away=away)
+        if preset_mode == "away":
+           await self._client.climate_command(key=self._static_info.key, boost=False)
+           await self._client.climate_command(key=self._static_info.key, night=False)
+           await self._client.climate_command(key=self._static_info.key, away=True)
+        if preset_mode == "home":
+           await self._client.climate_command(key=self._static_info.key, away=False)
+           await self._client.climate_command(key=self._static_info.key, boost=False)
+           await self._client.climate_command(key=self._static_info.key, night=False)
+        if preset_mode == "boost":
+           await self._client.climate_command(key=self._static_info.key, away=False)
+           await self._client.climate_command(key=self._static_info.key, night=False)
+           await self._client.climate_command(key=self._static_info.key, boost=True)
+        if preset_mode == "sleep":
+           await self._client.climate_command(key=self._static_info.key, away=False)
+           await self._client.climate_command(key=self._static_info.key, boost=False)
+           await self._client.climate_command(key=self._static_info.key, night=True) 
+        #Uncomment to make None available   
+        #if preset_mode == "none":
+        #   await self._client.climate_command(key=self._static_info.key, away=False)
+        #   await self._client.climate_command(key=self._static_info.key, boost=False)
+        #   await self._client.climate_command(key=self._static_info.key, night=False)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
