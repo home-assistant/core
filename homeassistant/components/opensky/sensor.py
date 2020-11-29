@@ -127,19 +127,17 @@ class OpenSkySensor(Entity):
 
     def _get_route(self, callsign):
         request = self._session.get(OPENSKY_ROUTE_API_URL + str(callsign))
-        _LOGGER.debug("Route API status: " + str(request.status_code))
+        _LOGGER.debug("Route API status: %d", request.status_code)
         if request.status_code == 200:
             return request.json()
-        else:
-            return None
+        return None
 
     def _get_plane_meta(self, icao24):
         request = self._session.get(OPENSKY_AIRPLANE_META_API_URL + str(icao24))
-        _LOGGER.debug("Plane Meta API status: " + str(request.status_code))
+        _LOGGER.debug("Plane Meta API status: %d", request.status_code)
         if request.status_code == 200:
             return request.json()
-        else:
-            return None
+        return None
 
     def _handle_boundary(self, flights, event, metadata):
         """Handle flights crossing region boundary."""
@@ -154,8 +152,8 @@ class OpenSkySensor(Entity):
 
             if flight in metadata and metadata[flight].get(ATTR_CALLSIGN) != "":
                 _LOGGER.debug(
-                    "Fetching route for callsign "
-                    + str(metadata[flight].get(ATTR_CALLSIGN))
+                    "Fetching route for callsign %s",
+                    str(metadata[flight].get(ATTR_CALLSIGN)),
                 )
                 route = self._get_route(metadata[flight].get(ATTR_CALLSIGN))
                 if route is not None:
@@ -167,7 +165,7 @@ class OpenSkySensor(Entity):
             else:
                 route = None
                 flightnumber = ""
-            _LOGGER.debug("Flight: " + flightnumber)
+            _LOGGER.debug("Flight: %s", flightnumber)
 
             if flight in metadata and metadata[flight].get(ATTR_ICAO24) != "":
                 planemeta = self._get_plane_meta(metadata[flight].get(ATTR_ICAO24))
@@ -186,7 +184,7 @@ class OpenSkySensor(Entity):
                 data = {**data, **route}
             if planemeta is not None:
                 data = {**data, **planemeta}
-            _LOGGER.debug("Fire event for: " + str(data))
+            _LOGGER.debug("Fire event for: %s", str(data))
             self._hass.bus.fire(event, data)
 
     def update(self):
@@ -194,7 +192,7 @@ class OpenSkySensor(Entity):
         currently_tracked = set()
         flight_metadata = {}
         states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
-        _LOGGER.debug(str(len(states)) + " flights parsed")
+        _LOGGER.debug("%d flights parsed", len(states))
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
