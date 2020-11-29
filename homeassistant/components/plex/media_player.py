@@ -195,6 +195,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         self._available = self.device or self.session
 
+        old_player_state = self._player_state
+
         if self.device:
             try:
                 device_url = self.device.url("/")
@@ -239,7 +241,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
             if self._media_position is not None:
                 pos_diff = position - self._media_position
                 time_diff = now - self._media_position_updated_at
-                if pos_diff != 0 and abs(time_diff.total_seconds() - pos_diff) > 5:
+                if (
+                    pos_diff != 0
+                    and abs(time_diff.total_seconds() - pos_diff) > 5
+                    # Make sure time correct time is displayed on paused players
+                    or (self._player_state != old_player_state)
+                ):
                     self._media_position_updated_at = now
                     self._media_position = position
             else:
