@@ -157,7 +157,7 @@ class Control4BinarySensor(Control4Entity, BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         # In Control4, True = closed/clear and False = open/not clear
-        return not bool(self._coordinator.data[self._idx]["value"])
+        return not bool(self.coordinator.data[self._idx]["value"])
 
     @property
     def device_class(self):

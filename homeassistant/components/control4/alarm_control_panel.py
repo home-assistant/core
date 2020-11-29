@@ -229,21 +229,19 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        partition_state = self._coordinator.data[self._idx][
-            CONTROL4_PARTITION_STATE_VAR
-        ]
+        partition_state = self.coordinator.data[self._idx][CONTROL4_PARTITION_STATE_VAR]
         if partition_state == CONTROL4_EXIT_DELAY_STATE:
             return STATE_ALARM_ARMING
         if partition_state == CONTROL4_ENTRY_DELAY_STATE:
             return STATE_ALARM_PENDING
 
-        alarm_state = bool(self._coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR])
+        alarm_state = bool(self.coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR])
         if alarm_state:
             return STATE_ALARM_TRIGGERED
 
-        disarmed = self._coordinator.data[self._idx][CONTROL4_DISARMED_VAR]
-        armed_home = self._coordinator.data[self._idx][CONTROL4_ARMED_HOME_VAR]
-        armed_away = self._coordinator.data[self._idx][CONTROL4_ARMED_AWAY_VAR]
+        disarmed = self.coordinator.data[self._idx][CONTROL4_DISARMED_VAR]
+        armed_home = self.coordinator.data[self._idx][CONTROL4_ARMED_HOME_VAR]
+        armed_away = self.coordinator.data[self._idx][CONTROL4_ARMED_AWAY_VAR]
         if disarmed == 1:
             return STATE_ALARM_DISARMED
         if armed_home == 1:
@@ -268,9 +266,9 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
             CONTROL4_LAST_ARM_FAILURE_VAR,
         ]
         for var in all_vars:
-            state_attr[var.lower()] = self._coordinator.data[self._idx][var]
+            state_attr[var.lower()] = self.coordinator.data[self._idx][var]
         state_attr[CONTROL4_ALARM_STATE_VAR.lower()] = bool(
-            self._coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR]
+            self.coordinator.data[self._idx][CONTROL4_ALARM_STATE_VAR]
         )
         return state_attr
 
