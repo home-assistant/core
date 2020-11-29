@@ -216,6 +216,8 @@ class OpenSkySensor(Entity):
             if distance is None or distance > self._radius:
                 continue
             altitude = flight.get(ATTR_ALTITUDE)
+            if altitude is None:
+                continue
             if altitude > self._altitude and self._altitude != 0:
                 continue
             currently_tracked.add(callsign)
