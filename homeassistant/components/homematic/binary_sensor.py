@@ -1,6 +1,4 @@
 """Support for HomeMatic binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_MOTION,
@@ -12,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 
 from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES_CLASS = {
     "IPShutterContact": DEVICE_CLASS_OPENING,

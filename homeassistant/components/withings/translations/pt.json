@@ -5,6 +5,9 @@
                 "data": {
                     "profile": "Perfil"
                 }
+            },
+            "reauth": {
+                "title": "Re-autenticar Perfil"
             }
         }
     }

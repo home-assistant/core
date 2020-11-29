@@ -1,6 +1,4 @@
 """Support for Z-Wave cover devices."""
-import logging
-
 from openzwavemqtt.const import CommandClass
 
 from homeassistant.components.cover import (
@@ -17,9 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
-
 
 SUPPORTED_FEATURES_POSITION = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE

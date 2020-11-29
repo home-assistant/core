@@ -54,6 +54,9 @@ async def test_moon_day2(hass):
 async def async_update_entity(hass, entity_id):
     """Run an update action for an entity."""
     await hass.services.async_call(
-        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True,
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()

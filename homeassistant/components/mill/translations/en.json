@@ -4,7 +4,7 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "connection_error": "Failed to connect"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {

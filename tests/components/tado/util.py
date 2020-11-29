@@ -10,7 +10,8 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 async def async_init_integration(
-    hass: HomeAssistant, skip_setup: bool = False,
+    hass: HomeAssistant,
+    skip_setup: bool = False,
 ):
     """Set up the tado integration in Home Assistant."""
 
@@ -42,7 +43,8 @@ async def async_init_integration(
     with requests_mock.mock() as m:
         m.post("https://auth.tado.com/oauth/token", text=load_fixture(token_fixture))
         m.get(
-            "https://my.tado.com/api/v2/me", text=load_fixture(me_fixture),
+            "https://my.tado.com/api/v2/me",
+            text=load_fixture(me_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/devices",

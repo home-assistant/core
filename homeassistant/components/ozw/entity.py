@@ -7,6 +7,8 @@ from openzwavemqtt.const import (
     EVENT_INSTANCE_STATUS_CHANGED,
     EVENT_VALUE_CHANGED,
     OZW_READY_STATES,
+    CommandClass,
+    ValueIndex,
 )
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
@@ -23,6 +25,7 @@ from .const import DOMAIN, PLATFORMS
 from .discovery import check_node_schema, check_value_schema
 
 _LOGGER = logging.getLogger(__name__)
+OZW_READY_STATES_VALUES = {st.value for st in OZW_READY_STATES}
 
 
 class ZWaveDeviceEntityValues:
@@ -159,10 +162,14 @@ class ZWaveDeviceEntity(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity is added."""
-        # add dispatcher and OZW listeners callbacks,
-        self.options.listen(EVENT_VALUE_CHANGED, self._value_changed)
-        self.options.listen(EVENT_INSTANCE_STATUS_CHANGED, self._instance_updated)
-        # add to on_remove so they will be cleaned up on entity removal
+        # Add dispatcher and OZW listeners callbacks.
+        # Add to on_remove so they will be cleaned up on entity removal.
+        self.async_on_remove(
+            self.options.listen(EVENT_VALUE_CHANGED, self._value_changed)
+        )
+        self.async_on_remove(
+            self.options.listen(EVENT_INSTANCE_STATUS_CHANGED, self._instance_updated)
+        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, const.SIGNAL_DELETE_ENTITY, self._delete_callback
@@ -182,12 +189,18 @@ class ZWaveDeviceEntity(Entity):
         node = self.values.primary.node
         node_instance = self.values.primary.instance
         dev_id = create_device_id(node, self.values.primary.instance)
+        node_firmware = node.get_value(
+            CommandClass.VERSION, ValueIndex.VERSION_APPLICATION
+        )
         device_info = {
             "identifiers": {(DOMAIN, dev_id)},
             "name": create_device_name(node),
             "manufacturer": node.node_manufacturer_name,
             "model": node.node_product_name,
         }
+        if node_firmware is not None:
+            device_info["sw_version"] = node_firmware.value
+
         # device with multiple instances is split up into virtual devices for each instance
         if node_instance > 1:
             parent_dev_id = create_device_id(node)
@@ -216,9 +229,7 @@ class ZWaveDeviceEntity(Entity):
         """Return entity availability."""
         # Use OZW Daemon status for availability.
         instance_status = self.values.primary.ozw_instance.get_status()
-        return instance_status and instance_status.status in (
-            state.value for state in OZW_READY_STATES
-        )
+        return instance_status and instance_status.status in OZW_READY_STATES_VALUES
 
     @callback
     def _value_changed(self, value):
@@ -258,14 +269,6 @@ class ZWaveDeviceEntity(Entity):
             return  # race condition: delete already requested
         if values_id == self.values.values_id:
             await self.async_remove()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Call when entity will be removed from hass."""
-        # cleanup OZW listeners
-        self.options.listeners[EVENT_VALUE_CHANGED].remove(self._value_changed)
-        self.options.listeners[EVENT_INSTANCE_STATUS_CHANGED].remove(
-            self._instance_updated
-        )
 
 
 def create_device_name(node: OZWNode):

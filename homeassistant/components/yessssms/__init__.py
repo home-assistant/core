@@ -1,1 +1,0 @@
-"""The yessssms component."""

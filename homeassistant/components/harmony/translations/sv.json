@@ -17,5 +17,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Justera inst\u00e4llningarna f\u00f6r Harmony Hub"
+            }
+        }
     }
 }

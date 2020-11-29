@@ -10,7 +10,11 @@ import jwt
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -200,7 +204,7 @@ class GoogleConfig(AbstractConfig):
             try:
                 return await _call()
             except ClientResponseError as error:
-                if error.status == 401:
+                if error.status == HTTP_UNAUTHORIZED:
                     _LOGGER.warning(
                         "Request for %s unauthorized, renewing token and retrying", url
                     )

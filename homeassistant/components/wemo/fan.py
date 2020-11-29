@@ -129,7 +129,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Register service(s)
     hass.services.async_register(
-        WEMO_DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA,
+        WEMO_DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        service_handle,
+        schema=SET_HUMIDITY_SCHEMA,
     )
 
     hass.services.async_register(

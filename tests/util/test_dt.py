@@ -187,6 +187,7 @@ def test_parse_time_expression():
     assert [x for x in range(24)] == dt_util.parse_time_expression("*", 0, 23)
 
     assert [42] == dt_util.parse_time_expression(42, 0, 59)
+    assert [42] == dt_util.parse_time_expression("42", 0, 59)
 
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)
@@ -217,6 +218,10 @@ def test_find_next_time_expression_time_basic():
 
     assert datetime(2018, 10, 8, 5, 0, 0) == find(
         datetime(2018, 10, 7, 10, 30, 0), 5, 0, 0
+    )
+
+    assert find(datetime(2018, 10, 7, 10, 30, 0, 999999), "*", "/30", 0) == datetime(
+        2018, 10, 7, 10, 30, 0
     )
 
 

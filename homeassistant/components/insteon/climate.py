@@ -1,5 +1,4 @@
 """Support for Insteon thermostat."""
-import logging
 from typing import List, Optional
 
 from pyinsteon.constants import ThermostatMode
@@ -13,7 +12,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY,
@@ -26,11 +25,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 COOLING = 1
 HEATING = 2
@@ -62,11 +61,22 @@ SUPPORTED_FEATURES = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Insteon platform."""
-    async_add_insteon_entities(
-        hass, DOMAIN, InsteonClimateEntity, async_add_entities, discovery_info
-    )
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Insteon climate entities from a config entry."""
+
+    def add_entities(discovery_info=None):
+        """Add the Insteon entities for the platform."""
+        async_add_insteon_entities(
+            hass,
+            CLIMATE_DOMAIN,
+            InsteonClimateEntity,
+            async_add_entities,
+            discovery_info,
+        )
+
+    signal = f"{SIGNAL_ADD_ENTITIES}_{CLIMATE_DOMAIN}"
+    async_dispatcher_connect(hass, signal, add_entities)
+    add_entities()
 
 
 class InsteonClimateEntity(InsteonEntity, ClimateEntity):
@@ -192,12 +202,12 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        mode = list(FAN_MODES.keys())[list(FAN_MODES.values()).index(fan_mode)]
+        mode = list(FAN_MODES)[list(FAN_MODES.values()).index(fan_mode)]
         await self._insteon_device.async_set_mode(mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        mode = list(HVAC_MODES.keys())[list(HVAC_MODES.values()).index(hvac_mode)]
+        mode = list(HVAC_MODES)[list(HVAC_MODES.values()).index(hvac_mode)]
         await self._insteon_device.async_set_mode(mode)
 
     async def async_set_humidity(self, humidity):

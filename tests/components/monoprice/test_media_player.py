@@ -97,7 +97,8 @@ async def test_cannot_connect(hass):
     """Test connection error."""
 
     with patch(
-        "homeassistant.components.monoprice.get_monoprice", side_effect=SerialException,
+        "homeassistant.components.monoprice.get_monoprice",
+        side_effect=SerialException,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
         config_entry.add_to_hass(hass)
@@ -108,7 +109,8 @@ async def test_cannot_connect(hass):
 
 async def _setup_monoprice(hass, monoprice):
     with patch(
-        "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
+        "homeassistant.components.monoprice.get_monoprice",
+        new=lambda *a: monoprice,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
         config_entry.add_to_hass(hass)
@@ -118,7 +120,8 @@ async def _setup_monoprice(hass, monoprice):
 
 async def _setup_monoprice_with_options(hass, monoprice):
     with patch(
-        "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
+        "homeassistant.components.monoprice.get_monoprice",
+        new=lambda *a: monoprice,
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
@@ -130,7 +133,8 @@ async def _setup_monoprice_with_options(hass, monoprice):
 
 async def _setup_monoprice_not_first_run(hass, monoprice):
     with patch(
-        "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
+        "homeassistant.components.monoprice.get_monoprice",
+        new=lambda *a: monoprice,
     ):
         data = {**MOCK_CONFIG, CONF_NOT_FIRST_RUN: True}
         config_entry = MockConfigEntry(domain=DOMAIN, data=data)

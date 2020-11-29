@@ -1,6 +1,4 @@
 """The tests for the Template vacuum platform."""
-import logging
-
 import pytest
 
 from homeassistant import setup
@@ -16,8 +14,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UN
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.vacuum import common
-
-_LOGGER = logging.getLogger(__name__)
 
 _TEST_VACUUM = "vacuum.test_vacuum"
 _STATE_INPUT_SELECT = "input_select.state"
@@ -341,9 +337,12 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
-    await hass.helpers.entity_component.async_update_entity("vacuum.invalid_template")
 
-    assert ("Error rendering attribute test_attribute") in caplog.text
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert "test_attribute" in caplog.text
+    assert "TemplateError" in caplog.text
 
 
 # End of template tests #
@@ -612,3 +611,34 @@ async def _register_components(hass):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one vacuum per id."""
+    await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "test_template_vacuum_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "start": {"service": "script.vacuum_start"},
+                    },
+                    "test_template_vacuum_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "start": {"service": "script.vacuum_start"},
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "one": "\u00fcks",
+            "other": "mitu"
+        },
+        "step": {
+            "one": "\u00fcks",
+            "other": "mitu"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimaalne aeg olemi v\u00e4rskenduste vahel [s]"
+                },
+                "title": "DSMR-i valikud"
+            }
+        }
+    }
+}

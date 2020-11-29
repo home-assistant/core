@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     COORDINATOR,
@@ -117,7 +117,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NUTSensor(Entity):
+class NUTSensor(CoordinatorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     def __init__(
@@ -132,7 +132,7 @@ class NUTSensor(Entity):
         firmware,
     ):
         """Initialize the sensor."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._type = sensor_type
         self._manufacturer = manufacturer
         self._firmware = firmware
@@ -201,32 +201,9 @@ class NUTSensor(Entity):
         return self._unit
 
     @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
-
-    @property
     def device_state_attributes(self):
         """Return the sensor attributes."""
         return {ATTR_STATE: _format_display_state(self._data.status)}
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
 
 def _format_display_state(status):

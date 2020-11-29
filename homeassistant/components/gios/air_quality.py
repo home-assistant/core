@@ -9,8 +9,9 @@ from homeassistant.components.air_quality import (
     AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_STATION, DOMAIN, ICONS_MAP
+from .const import ATTR_STATION, DEFAULT_NAME, DOMAIN, ICONS_MAP, MANUFACTURER
 
 ATTRIBUTION = "Data provided by GIOŚ"
 
@@ -22,6 +23,8 @@ SENSOR_MAP = {
     "PM2.5": ATTR_PM_2_5,
     "SO2": ATTR_SO2,
 }
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -45,12 +48,12 @@ def round_state(func):
     return _decorator
 
 
-class GiosAirQuality(AirQualityEntity):
+class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an GIOS sensor."""
 
     def __init__(self, coordinator, name):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._name = name
         self._attrs = {}
 
@@ -118,14 +121,14 @@ class GiosAirQuality(AirQualityEntity):
         return self.coordinator.gios.station_id
 
     @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.gios.station_id)},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def device_state_attributes(self):
@@ -139,16 +142,6 @@ class GiosAirQuality(AirQualityEntity):
                 ]["index"]
         self._attrs[ATTR_STATION] = self.coordinator.gios.station_name
         return self._attrs
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update GIOS entity."""
-        await self.coordinator.async_request_refresh()
 
     def _get_sensor_value(self, sensor):
         """Return value of specified sensor."""

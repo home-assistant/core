@@ -2,5 +2,6 @@
   "domain": "hyperion",
   "name": "Hyperion",
   "documentation": "https://www.home-assistant.io/integrations/hyperion",
-  "codeowners": []
+  "requirements": ["hyperion-py==0.3.0"],
+  "codeowners": ["@dermotduffy"]
 }

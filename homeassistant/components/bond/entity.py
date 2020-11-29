@@ -18,16 +18,22 @@ _LOGGER = logging.getLogger(__name__)
 class BondEntity(Entity):
     """Generic Bond entity encapsulating common features of any Bond controlled device."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    def __init__(
+        self, hub: BondHub, device: BondDevice, sub_device: Optional[str] = None
+    ):
         """Initialize entity with API and device info."""
         self._hub = hub
         self._device = device
+        self._sub_device = sub_device
         self._available = True
 
     @property
     def unique_id(self) -> Optional[str]:
         """Get unique ID for the entity."""
-        return self._device.device_id
+        hub_id = self._hub.bond_id
+        device_id = self._device.device_id
+        sub_device_id: str = f"_{self._sub_device}" if self._sub_device else ""
+        return f"{hub_id}_{device_id}{sub_device_id}"
 
     @property
     def name(self) -> Optional[str]:
@@ -46,7 +52,7 @@ class BondEntity(Entity):
     @property
     def assumed_state(self) -> bool:
         """Let HA know this entity relies on an assumed state tracked by Bond."""
-        return True
+        return self._hub.is_bridge and not self._device.trust_state
 
     @property
     def available(self) -> bool:
@@ -64,6 +70,7 @@ class BondEntity(Entity):
                 )
             self._available = False
         else:
+            _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
             if not self._available:
                 _LOGGER.info("Entity %s has come back", self.entity_id)
             self._available = True

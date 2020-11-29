@@ -44,10 +44,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "television":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.TELEVISION:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitTelevision(conn, info)], True)
         return True
 
@@ -129,7 +129,8 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         this_tv = this_accessory.services.iid(self._iid)
 
         input_sources = this_accessory.services.filter(
-            service_type=ServicesTypes.INPUT_SOURCE, parent_service=this_tv,
+            service_type=ServicesTypes.INPUT_SOURCE,
+            parent_service=this_tv,
         )
 
         for input_source in input_sources:

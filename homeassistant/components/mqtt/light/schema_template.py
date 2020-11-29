@@ -26,7 +26,6 @@ from homeassistant.components.mqtt import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -98,13 +98,13 @@ PLATFORM_SCHEMA_TEMPLATE = (
 
 
 async def async_setup_entity_template(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightTemplate(config, config_entry, discovery_data)])
 
 
-class MqttTemplate(
+class MqttLightTemplate(
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -185,32 +185,6 @@ class MqttTemplate(
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
 
-        # features
-        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
-            self._brightness = 255
-        else:
-            self._brightness = None
-
-        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
-            self._color_temp = 255
-        else:
-            self._color_temp = None
-
-        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
-            self._white_value = 255
-        else:
-            self._white_value = None
-
-        if (
-            self._templates[CONF_RED_TEMPLATE] is not None
-            and self._templates[CONF_GREEN_TEMPLATE] is not None
-            and self._templates[CONF_BLUE_TEMPLATE] is not None
-        ):
-            self._hs = [0, 0]
-        else:
-            self._hs = None
-        self._effect = None
-
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
@@ -233,7 +207,7 @@ class MqttTemplate(
             else:
                 _LOGGER.warning("Invalid state value received")
 
-            if self._brightness is not None:
+            if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
                 try:
                     self._brightness = int(
                         self._templates[
@@ -243,7 +217,7 @@ class MqttTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
 
-            if self._color_temp is not None:
+            if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
                 try:
                     self._color_temp = int(
                         self._templates[
@@ -253,7 +227,11 @@ class MqttTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
-            if self._hs is not None:
+            if (
+                self._templates[CONF_RED_TEMPLATE] is not None
+                and self._templates[CONF_GREEN_TEMPLATE] is not None
+                and self._templates[CONF_BLUE_TEMPLATE] is not None
+            ):
                 try:
                     red = int(
                         self._templates[
@@ -274,7 +252,7 @@ class MqttTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
-            if self._white_value is not None:
+            if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
                 try:
                     self._white_value = int(
                         self._templates[
@@ -429,7 +407,8 @@ class MqttTemplate(
                 brightness = 255
             else:
                 brightness = kwargs.get(
-                    ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
+                    ATTR_BRIGHTNESS,
+                    self._brightness if self._brightness is not None else 255,
                 )
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100
@@ -462,7 +441,9 @@ class MqttTemplate(
         mqtt.async_publish(
             self.hass,
             self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
+            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
+                parse_result=False, **values
+            ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -485,7 +466,9 @@ class MqttTemplate(
         mqtt.async_publish(
             self.hass,
             self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
+            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
+                parse_result=False, **values
+            ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -497,15 +480,19 @@ class MqttTemplate(
     def supported_features(self):
         """Flag supported features."""
         features = SUPPORT_FLASH | SUPPORT_TRANSITION
-        if self._brightness is not None:
+        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
             features = features | SUPPORT_BRIGHTNESS
-        if self._hs is not None:
+        if (
+            self._templates[CONF_RED_TEMPLATE] is not None
+            and self._templates[CONF_GREEN_TEMPLATE] is not None
+            and self._templates[CONF_BLUE_TEMPLATE] is not None
+        ):
             features = features | SUPPORT_COLOR
         if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | SUPPORT_EFFECT
-        if self._color_temp is not None:
+        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
             features = features | SUPPORT_COLOR_TEMP
-        if self._white_value is not None:
+        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
             features = features | SUPPORT_WHITE_VALUE
 
         return features

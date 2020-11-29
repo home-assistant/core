@@ -6,6 +6,22 @@
             "toggle": "Veksle {entity_name}",
             "turn_off": "Sl\u00e5 av {entity_name}",
             "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} er satt til en spesifikk modus",
+            "is_off": "{entity_name} er av",
+            "is_on": "{entity_name} er p\u00e5"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name} m\u00e5let fuktighet endret",
+            "turned_off": "{entity_name} sl\u00e5tt av",
+            "turned_on": "{entity_name} sl\u00e5tt p\u00e5"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
         }
     },
     "title": "Luftfukter"

@@ -4,10 +4,10 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again.",
-      "invalid_auth": "Invalid authentication.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "too_many_requests": "Too many requests, retry later.",
-      "unknown": "Unexpected error."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {

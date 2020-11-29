@@ -2,7 +2,7 @@
 
 import logging
 
-from openzwavemqtt.const import CommandClass
+from openzwavemqtt.const import CommandClass, ValueType
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -30,11 +30,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_sensor(value):
         """Add Z-Wave Sensor."""
         # Basic Sensor types
-        if isinstance(value.primary.value, (float, int)):
+        if value.primary.type in (
+            ValueType.BYTE,
+            ValueType.INT,
+            ValueType.SHORT,
+            ValueType.DECIMAL,
+        ):
             sensor = ZWaveNumericSensor(value)
 
-        elif isinstance(value.primary.value, dict):
+        elif value.primary.type == ValueType.LIST:
             sensor = ZWaveListSensor(value)
+
+        elif value.primary.type == ValueType.STRING:
+            sensor = ZWaveStringSensor(value)
 
         else:
             _LOGGER.warning("Sensor not implemented for value %s", value.primary.label)
@@ -91,6 +99,25 @@ class ZwaveSensorBase(ZWaveDeviceEntity):
     def force_update(self) -> bool:
         """Force updates."""
         return True
+
+
+class ZWaveStringSensor(ZwaveSensorBase):
+    """Representation of a Z-Wave sensor."""
+
+    @property
+    def state(self):
+        """Return state of the sensor."""
+        return self.values.primary.value
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of measurement the value is expressed in."""
+        return self.values.primary.units
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
 
 
 class ZWaveNumericSensor(ZwaveSensorBase):

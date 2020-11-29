@@ -83,19 +83,21 @@ async def test_form(hass: HomeAssistantType):
     ) as mock_connection_class, patch(
         PATCH_ASYNC_SETUP, return_value=True
     ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
     ) as mock_setup_entry:
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT,
+            result["flow_id"],
+            MOCK_USER_INPUT,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -126,10 +128,12 @@ async def test_form_invalid_auth(hass: HomeAssistantType):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(PATCH_CONFIGURATION), patch(
-        PATCH_CONNECTION, side_effect=ValueError("PyISY could not connect to the ISY."),
+        PATCH_CONNECTION,
+        side_effect=ValueError("PyISY could not connect to the ISY."),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT,
+            result["flow_id"],
+            MOCK_USER_INPUT,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -142,10 +146,12 @@ async def test_form_cannot_connect(hass: HomeAssistantType):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(PATCH_CONFIGURATION), patch(
-        PATCH_CONNECTION, side_effect=CannotConnect,
+        PATCH_CONNECTION,
+        side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT,
+            result["flow_id"],
+            MOCK_USER_INPUT,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -169,7 +175,8 @@ async def test_form_existing_config_entry(hass: HomeAssistantType):
         isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT,
+            result["flow_id"],
+            MOCK_USER_INPUT,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
@@ -179,13 +186,16 @@ async def test_import_flow_some_fields(hass: HomeAssistantType) -> None:
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
     ) as mock_connection_class, patch(PATCH_ASYNC_SETUP, return_value=True), patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
     ):
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_BASIC_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=MOCK_IMPORT_BASIC_CONFIG,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -200,13 +210,16 @@ async def test_import_flow_with_https(hass: HomeAssistantType) -> None:
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
     ) as mock_connection_class, patch(PATCH_ASYNC_SETUP, return_value=True), patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
     ):
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_WITH_SSL,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=MOCK_IMPORT_WITH_SSL,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -220,13 +233,16 @@ async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
     ) as mock_connection_class, patch(PATCH_ASYNC_SETUP, return_value=True), patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
     ):
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_FULL_CONFIG,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=MOCK_IMPORT_FULL_CONFIG,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -284,19 +300,21 @@ async def test_form_ssdp(hass: HomeAssistantType):
     ) as mock_connection_class, patch(
         PATCH_ASYNC_SETUP, return_value=True
     ) as mock_setup, patch(
-        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
     ) as mock_setup_entry:
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT,
+            result["flow_id"],
+            MOCK_USER_INPUT,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

@@ -71,7 +71,7 @@ KONN_PANEL_MODEL_NAMES = {
 }
 
 OPTIONS_IO_ANY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG, CONF_IO_SWI])
-OPTIONS_IO_INPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG])
+OPTIONS_IO_INPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_BIN])
 OPTIONS_IO_OUTPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_SWI])
 
 
@@ -161,7 +161,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
 
 
 class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for NEW_NAME."""
+    """Handle a config flow for Konnected Panels."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
@@ -186,8 +186,8 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             status = await get_status(self.hass, host, port)
             self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
-        except (CannotConnect, KeyError):
-            raise CannotConnect
+        except (CannotConnect, KeyError) as err:
+            raise CannotConnect from err
         else:
             self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
             self.data[CONF_ACCESS_TOKEN] = "".join(
@@ -329,7 +329,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             # abort and update an existing config entry if host info changes
             await self.async_set_unique_id(self.data[CONF_ID])
-            self._abort_if_unique_id_configured(updates=self.data)
+            self._abort_if_unique_id_configured(
+                updates=self.data, reload_on_update=False
+            )
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
@@ -347,7 +349,8 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ) or "".join(random.choices(f"{string.ascii_uppercase}{string.digits}", k=20))
 
         return self.async_create_entry(
-            title=KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]], data=self.data,
+            title=KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]],
+            data=self.data,
         )
 
     @staticmethod
@@ -808,6 +811,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options_misc",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_DISCOVERY,
+                        default=self.current_opt.get(CONF_DISCOVERY, True),
+                    ): bool,
                     vol.Required(
                         CONF_BLINK, default=self.current_opt.get(CONF_BLINK, True)
                     ): bool,

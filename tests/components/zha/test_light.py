@@ -34,7 +34,7 @@ IEEE_GROUPABLE_DEVICE3 = "03:2d:6f:00:0a:90:69:e7"
 
 LIGHT_ON_OFF = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT,
+        "device_type": zha.DeviceType.ON_OFF_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
             general.Identify.cluster_id,
@@ -46,7 +46,7 @@ LIGHT_ON_OFF = {
 
 LIGHT_LEVEL = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT,
+        "device_type": zha.DeviceType.DIMMABLE_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
             general.LevelControl.cluster_id,
@@ -58,7 +58,7 @@ LIGHT_LEVEL = {
 
 LIGHT_COLOR = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+        "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
             general.Identify.cluster_id,
@@ -323,7 +323,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -340,7 +340,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
+        False, OFF, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
 
 
@@ -360,7 +360,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 0
     assert level_cluster.request.await_count == 0
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -373,7 +373,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -383,6 +383,7 @@ async def async_test_level_on_off_from_hass(
         100.0,
         expect_reply=True,
         manufacturer=None,
+        tries=1,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
@@ -396,16 +397,17 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
         4,
         (zigpy.types.uint8_t, zigpy.types.uint16_t),
         10,
-        0,
+        1,
         expect_reply=True,
         manufacturer=None,
+        tries=1,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
@@ -445,6 +447,7 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
         0,
         expect_reply=True,
         manufacturer=None,
+        tries=1,
         tsn=None,
     )
 

@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Kon niet verbinden",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "IP-adres",
+                    "port": "Poort"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP-adres",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modemtype."
+                },
+                "description": "Selecteer het Insteon-modemtype.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "step": {
+            "add_x10": {
+                "description": "Wijzig het wachtwoord van de Insteon Hub."
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP-adres",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Wijzig de verbindingsgegevens van de Insteon Hub. Je moet Home Assistant opnieuw opstarten nadat je deze wijziging hebt aangebracht. Dit verandert niets aan de configuratie van de Hub zelf. Gebruik de Hub-app om de configuratie in de Hub te wijzigen."
+            }
+        }
+    }
+}

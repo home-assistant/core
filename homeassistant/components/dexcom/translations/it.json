@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato"
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "account_error": "Autenticazione non valida",
-            "session_error": "Impossibile connettersi",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "step": {

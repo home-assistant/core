@@ -55,7 +55,8 @@ async def test_update_entity(hass, hass_client):
     with patch("homeassistant.components.config._read", mock_read), patch(
         "homeassistant.components.config._write", mock_write
     ), patch(
-        "homeassistant.config.async_hass_config_yaml", return_value={},
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={},
     ):
         resp = await client.post(
             "/api/config/customize/config/hello.world",

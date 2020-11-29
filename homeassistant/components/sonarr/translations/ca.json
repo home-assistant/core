@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "unknown": "Error inesperat"
         },
         "error": {
@@ -10,16 +11,19 @@
         },
         "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3 de Sonarr ha de tornar a autenticar-se manualment amb l'API de Sonarr allotjada a: {host}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
             "user": {
                 "data": {
                     "api_key": "Clau API",
                     "base_path": "Ruta a l'API",
                     "host": "Amfitri\u00f3",
                     "port": "Port",
-                    "ssl": "Sonarr utilitza un certificat SSL",
-                    "verify_ssl": "Sonarr utilitza un certificat adequat"
-                },
-                "title": "Connexi\u00f3 amb Sonarr"
+                    "ssl": "Utilitza un certificat SSL",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
             }
         }
     },
@@ -32,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

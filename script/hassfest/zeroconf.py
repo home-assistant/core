@@ -37,8 +37,17 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not (service_types or homekit_models):
             continue
 
-        for service_type in service_types:
-            service_type_dict[service_type].append(domain)
+        for entry in service_types:
+            data = {"domain": domain}
+            if isinstance(entry, dict):
+                typ = entry["type"]
+                entry_without_type = entry.copy()
+                del entry_without_type["type"]
+                data.update(entry_without_type)
+            else:
+                typ = entry
+
+            service_type_dict[typ].append(data)
 
         for model in homekit_models:
             if model in homekit_dict:

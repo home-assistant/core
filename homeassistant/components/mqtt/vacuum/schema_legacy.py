@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import (
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -27,7 +26,12 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumEntity,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level

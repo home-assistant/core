@@ -1,17 +1,10 @@
 """The tests for the MQTT statestream component."""
-import pytest
-
 import homeassistant.components.mqtt_statestream as statestream
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import ANY, call
 from tests.common import mock_state_change_event
-
-
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage):
-    """Autouse hass_storage for the TestCase tests."""
 
 
 async def add_statestream(

@@ -14,6 +14,20 @@ from buienradar.constants import (
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -40,20 +54,20 @@ CONF_FORECAST = "forecast"
 
 
 CONDITION_CLASSES = {
-    "cloudy": ["c", "p"],
-    "fog": ["d", "n"],
-    "hail": [],
-    "lightning": ["g"],
-    "lightning-rainy": ["s"],
-    "partlycloudy": ["b", "j", "o", "r"],
-    "pouring": ["l", "q"],
-    "rainy": ["f", "h", "k", "m"],
-    "snowy": ["u", "i", "v", "t"],
-    "snowy-rainy": ["w"],
-    "sunny": ["a"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_CLOUDY: ["c", "p"],
+    ATTR_CONDITION_FOG: ["d", "n"],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: ["g"],
+    ATTR_CONDITION_LIGHTNING_RAINY: ["s"],
+    ATTR_CONDITION_PARTLYCLOUDY: ["b", "j", "o", "r"],
+    ATTR_CONDITION_POURING: ["l", "q"],
+    ATTR_CONDITION_RAINY: ["f", "h", "k", "m"],
+    ATTR_CONDITION_SNOWY: ["u", "i", "v", "t"],
+    ATTR_CONDITION_SNOWY_RAINY: ["w"],
+    ATTR_CONDITION_SUNNY: ["a"],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -90,7 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    async_add_entities([BrWeather(data, config)])
+    async_add_entities([BrWeather(data, config, coordinates)])
 
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
@@ -99,11 +113,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BrWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, data, config):
+    def __init__(self, data, config, coordinates):
         """Initialise the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME)
         self._forecast = config[CONF_FORECAST]
         self._data = data
+
+        self._unique_id = "{:2.6f}{:2.6f}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
+        )
 
     @property
     def attribution(self):
@@ -120,7 +138,6 @@ class BrWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-
         if self._data and self._data.condition:
             ccode = self._data.condition.get(CONDCODE)
             if ccode:
@@ -170,7 +187,6 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-
         if not self._forecast:
             return None
 
@@ -197,3 +213,8 @@ class BrWeather(WeatherEntity):
             fcdata_out.append(data_out)
 
         return fcdata_out
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id

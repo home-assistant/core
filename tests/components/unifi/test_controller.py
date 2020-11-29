@@ -13,6 +13,7 @@ from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
@@ -49,6 +50,7 @@ CONTROLLER_HOST = {
     "sw_port": 1,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
+    "uptime": 1562600160,
 }
 
 CONTROLLER_DATA = {
@@ -79,6 +81,8 @@ async def setup_unifi_integration(
     devices_response=None,
     clients_all_response=None,
     wlans_response=None,
+    dpigroup_response=None,
+    dpiapp_response=None,
     known_wireless_clients=None,
     controllers=None,
 ):
@@ -114,6 +118,14 @@ async def setup_unifi_integration(
     if wlans_response:
         mock_wlans_responses.append(wlans_response)
 
+    mock_dpigroup_responses = deque()
+    if dpigroup_response:
+        mock_dpigroup_responses.append(dpigroup_response)
+
+    mock_dpiapp_responses = deque()
+    if dpiapp_response:
+        mock_dpiapp_responses.append(dpiapp_response)
+
     mock_requests = []
 
     async def mock_request(self, method, path, json=None):
@@ -127,10 +139,15 @@ async def setup_unifi_integration(
             return mock_client_all_responses.popleft()
         if path == "/rest/wlanconf" and mock_wlans_responses:
             return mock_wlans_responses.popleft()
+        if path == "/rest/dpigroup" and mock_dpigroup_responses:
+            return mock_dpigroup_responses.popleft()
+        if path == "/rest/dpiapp" and mock_dpiapp_responses:
+            return mock_dpiapp_responses.popleft()
         return {}
 
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-        "aiounifi.Controller.login", return_value=True,
+        "aiounifi.Controller.login",
+        return_value=True,
     ), patch("aiounifi.Controller.sites", return_value=sites), patch(
         "aiounifi.Controller.site_description", return_value=site_description
     ), patch(
@@ -174,6 +191,7 @@ async def test_controller_setup(hass):
     assert controller.site_role == SITES[controller.site_name]["role"]
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
+    assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
     assert isinstance(controller.option_block_clients, list)
     assert controller.option_track_clients == DEFAULT_TRACK_CLIENTS
     assert controller.option_track_devices == DEFAULT_TRACK_DEVICES

@@ -20,7 +20,8 @@ async def test_show_form(hass):
 async def test_invalid_credentials(hass):
     """Test we handle invalid credentials."""
     with patch(
-        "poolsense.PoolSense.test_poolsense_credentials", return_value=False,
+        "poolsense.PoolSense.test_poolsense_credentials",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -46,10 +47,10 @@ async def test_valid_credentials(hass):
             context={"source": SOURCE_USER},
             data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-email"
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

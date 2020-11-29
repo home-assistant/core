@@ -1,7 +1,5 @@
 """Support for the Elgato Avea lights."""
-import logging
-
-import avea
+import avea  # pylint: disable=import-error
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,8 +10,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 

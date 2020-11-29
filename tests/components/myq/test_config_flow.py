@@ -19,16 +19,19 @@ async def test_form_user(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login", return_value=True,
+        "homeassistant.components.myq.config_flow.pymyq.login",
+        return_value=True,
     ), patch(
         "homeassistant.components.myq.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.myq.async_setup_entry", return_value=True,
+        "homeassistant.components.myq.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
@@ -36,7 +39,6 @@ async def test_form_user(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -46,17 +48,20 @@ async def test_import(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login", return_value=True,
+        "homeassistant.components.myq.config_flow.pymyq.login",
+        return_value=True,
     ), patch(
         "homeassistant.components.myq.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.myq.async_setup_entry", return_value=True,
+        "homeassistant.components.myq.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-username"
@@ -64,7 +69,6 @@ async def test_import(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -95,7 +99,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.myq.config_flow.pymyq.login", side_effect=MyQError,
+        "homeassistant.components.myq.config_flow.pymyq.login",
+        side_effect=MyQError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

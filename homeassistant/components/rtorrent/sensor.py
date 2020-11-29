@@ -59,9 +59,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         rtorrent = xmlrpc.client.ServerProxy(url)
-    except (xmlrpc.client.ProtocolError, ConnectionRefusedError):
+    except (xmlrpc.client.ProtocolError, ConnectionRefusedError) as ex:
         _LOGGER.error("Connection to rtorrent daemon failed")
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(RTorrentSensor(variable, rtorrent, name))

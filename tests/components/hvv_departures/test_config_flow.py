@@ -32,12 +32,17 @@ async def test_user_flow(hass):
     with patch(
         "homeassistant.components.hvv_departures.hub.GTI.init",
         return_value=FIXTURE_INIT,
-    ), patch("pygti.gti.GTI.checkName", return_value=FIXTURE_CHECK_NAME,), patch(
-        "pygti.gti.GTI.stationInformation", return_value=FIXTURE_STATION_INFORMATION,
+    ), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.checkName",
+        return_value=FIXTURE_CHECK_NAME,
+    ), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.stationInformation",
+        return_value=FIXTURE_STATION_INFORMATION,
     ), patch(
         "homeassistant.components.hvv_departures.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.hvv_departures.async_setup_entry", return_value=True,
+        "homeassistant.components.hvv_departures.async_setup_entry",
+        return_value=True,
     ):
 
         # step: user
@@ -56,14 +61,16 @@ async def test_user_flow(hass):
 
         # step: station
         result_station = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], {CONF_STATION: "Wartenau"},
+            result_user["flow_id"],
+            {CONF_STATION: "Wartenau"},
         )
 
         assert result_station["step_id"] == "station_select"
 
         # step: station_select
         result_station_select = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], {CONF_STATION: "Wartenau"},
+            result_user["flow_id"],
+            {CONF_STATION: "Wartenau"},
         )
 
         assert result_station_select["type"] == "create_entry"
@@ -92,11 +99,13 @@ async def test_user_flow_no_results(hass):
         "homeassistant.components.hvv_departures.hub.GTI.init",
         return_value=FIXTURE_INIT,
     ), patch(
-        "pygti.gti.GTI.checkName", return_value={"returnCode": "OK", "results": []},
+        "homeassistant.components.hvv_departures.hub.GTI.checkName",
+        return_value={"returnCode": "OK", "results": []},
     ), patch(
         "homeassistant.components.hvv_departures.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.hvv_departures.async_setup_entry", return_value=True,
+        "homeassistant.components.hvv_departures.async_setup_entry",
+        return_value=True,
     ):
 
         # step: user
@@ -115,7 +124,8 @@ async def test_user_flow_no_results(hass):
 
         # step: station
         result_station = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], {CONF_STATION: "non_existing_station"},
+            result_user["flow_id"],
+            {CONF_STATION: "non_existing_station"},
         )
 
         assert result_station["step_id"] == "station"
@@ -176,9 +186,11 @@ async def test_user_flow_station(hass):
     """Test that config flow handles empty data on step station."""
 
     with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
+        "homeassistant.components.hvv_departures.hub.GTI.init",
+        return_value=True,
     ), patch(
-        "pygti.gti.GTI.checkName", return_value={"returnCode": "OK", "results": []},
+        "homeassistant.components.hvv_departures.hub.GTI.checkName",
+        return_value={"returnCode": "OK", "results": []},
     ):
 
         # step: user
@@ -197,7 +209,8 @@ async def test_user_flow_station(hass):
 
         # step: station
         result_station = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], None,
+            result_user["flow_id"],
+            None,
         )
         assert result_station["type"] == "form"
         assert result_station["step_id"] == "station"
@@ -207,9 +220,11 @@ async def test_user_flow_station_select(hass):
     """Test that config flow handles empty data on step station_select."""
 
     with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
+        "homeassistant.components.hvv_departures.hub.GTI.init",
+        return_value=True,
     ), patch(
-        "pygti.gti.GTI.checkName", return_value=FIXTURE_CHECK_NAME,
+        "homeassistant.components.hvv_departures.hub.GTI.checkName",
+        return_value=FIXTURE_CHECK_NAME,
     ):
         result_user = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -222,12 +237,14 @@ async def test_user_flow_station_select(hass):
         )
 
         result_station = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], {CONF_STATION: "Wartenau"},
+            result_user["flow_id"],
+            {CONF_STATION: "Wartenau"},
         )
 
         # step: station_select
         result_station_select = await hass.config_entries.flow.async_configure(
-            result_station["flow_id"], None,
+            result_station["flow_id"],
+            None,
         )
 
         assert result_station_select["type"] == "form"
@@ -250,12 +267,15 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
+    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.init",
+        return_value=True,
     ), patch(
-        "pygti.gti.GTI.departureList", return_value=FIXTURE_DEPARTURE_LIST,
+        "homeassistant.components.hvv_departures.hub.GTI.departureList",
+        return_value=FIXTURE_DEPARTURE_LIST,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -298,15 +318,23 @@ async def test_options_flow_invalid_auth(hass):
     )
     config_entry.add_to_hass(hass)
 
+    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
+    ), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.departureList",
+        return_value=FIXTURE_DEPARTURE_LIST,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     with patch(
-        "homeassistant.components.hvv_departures.hub.GTI.init",
+        "homeassistant.components.hvv_departures.hub.GTI.departureList",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
             "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
             "Authentication failed!",
         ),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -331,11 +359,19 @@ async def test_options_flow_cannot_connect(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "pygti.gti.GTI.departureList", side_effect=CannotConnect(),
+    with patch("homeassistant.components.hvv_departures.PLATFORMS", new=[]), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True
+    ), patch(
+        "homeassistant.components.hvv_departures.hub.GTI.departureList",
+        return_value=FIXTURE_DEPARTURE_LIST,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
+    with patch(
+        "homeassistant.components.hvv_departures.hub.GTI.departureList",
+        side_effect=CannotConnect(),
+    ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

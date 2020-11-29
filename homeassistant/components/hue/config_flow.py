@@ -122,7 +122,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if any(
-            user_input["host"] == entry.data["host"]
+            user_input["host"] == entry.data.get("host")
             for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")
@@ -198,7 +198,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: bridge.host}, reload_on_update=False
+        )
 
         self.bridge = bridge
         return await self.async_step_link()
@@ -214,7 +216,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Check if host exists, abort if so.
         if any(
-            import_info["host"] == entry.data["host"]
+            import_info["host"] == entry.data.get("host")
             for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")

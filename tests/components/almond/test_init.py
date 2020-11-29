@@ -99,7 +99,8 @@ async def test_set_up_local(hass, aioclient_mock):
 
     # Set up an internal URL, as Almond won't be set up if there is no URL available
     await async_process_ha_core_config(
-        hass, {"internal_url": "https://192.168.0.1"},
+        hass,
+        {"internal_url": "https://192.168.0.1"},
     )
 
     entry = MockConfigEntry(

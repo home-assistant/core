@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {},
+    "error": {},
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "time_between_update": "Minimum time between entity updates [s]"
+        },
+        "title": "DSMR Options"
+      }
+    }
+  }
+}

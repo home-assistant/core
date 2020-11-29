@@ -503,7 +503,10 @@ async def test_should_turn_off(
     assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
-        "media_player", "turn_off", {"entity_id": "media_player.soundtouch_1"}, True,
+        "media_player",
+        "turn_off",
+        {"entity_id": "media_player.soundtouch_1"},
+        True,
     )
     assert mocked_status.call_count == 3
     assert mocked_power_off.call_count == 1
@@ -522,7 +525,10 @@ async def test_should_turn_on(
     assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
-        "media_player", "turn_on", {"entity_id": "media_player.soundtouch_1"}, True,
+        "media_player",
+        "turn_on",
+        {"entity_id": "media_player.soundtouch_1"},
+        True,
     )
     assert mocked_status.call_count == 3
     assert mocked_power_on.call_count == 1
@@ -540,7 +546,10 @@ async def test_volume_up(
     assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
-        "media_player", "volume_up", {"entity_id": "media_player.soundtouch_1"}, True,
+        "media_player",
+        "volume_up",
+        {"entity_id": "media_player.soundtouch_1"},
+        True,
     )
     assert mocked_volume.call_count == 3
     assert mocked_volume_up.call_count == 1
@@ -558,7 +567,10 @@ async def test_volume_down(
     assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
-        "media_player", "volume_down", {"entity_id": "media_player.soundtouch_1"}, True,
+        "media_player",
+        "volume_down",
+        {"entity_id": "media_player.soundtouch_1"},
+        True,
     )
     assert mocked_volume.call_count == 3
     assert mocked_volume_down.call_count == 1
@@ -614,7 +626,10 @@ async def test_play(mocked_play, mocked_status, mocked_volume, hass, one_device)
     assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
-        "media_player", "media_play", {"entity_id": "media_player.soundtouch_1"}, True,
+        "media_player",
+        "media_play",
+        {"entity_id": "media_player.soundtouch_1"},
+        True,
     )
     assert mocked_status.call_count == 3
     assert mocked_play.call_count == 1
@@ -630,7 +645,10 @@ async def test_pause(mocked_pause, mocked_status, mocked_volume, hass, one_devic
     assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
-        "media_player", "media_pause", {"entity_id": "media_player.soundtouch_1"}, True,
+        "media_player",
+        "media_pause",
+        {"entity_id": "media_player.soundtouch_1"},
+        True,
     )
     assert mocked_status.call_count == 3
     assert mocked_pause.call_count == 1
@@ -955,7 +973,11 @@ async def test_remove_zone_slave(
 
 @patch("libsoundtouch.device.SoundTouchDevice.add_zone_slave")
 async def test_add_zone_slave(
-    mocked_add_zone_slave, mocked_status, mocked_volume, hass, two_zones,
+    mocked_add_zone_slave,
+    mocked_status,
+    mocked_volume,
+    hass,
+    two_zones,
 ):
     """Test removing a slave from a zone."""
     mocked_device = two_zones
@@ -998,7 +1020,11 @@ async def test_add_zone_slave(
 
 @patch("libsoundtouch.device.SoundTouchDevice.create_zone")
 async def test_zone_attributes(
-    mocked_create_zone, mocked_status, mocked_volume, hass, two_zones,
+    mocked_create_zone,
+    mocked_status,
+    mocked_volume,
+    hass,
+    two_zones,
 ):
     """Test play everywhere."""
     mocked_device = two_zones

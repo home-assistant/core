@@ -102,7 +102,10 @@ async def test_turn_off(hass, utcnow):
     helper.characteristics[V1_ON].value = 1
 
     await hass.services.async_call(
-        "fan", "turn_off", {"entity_id": "fan.testdevice"}, blocking=True,
+        "fan",
+        "turn_off",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
     )
     assert helper.characteristics[V1_ON].value == 0
 
@@ -255,7 +258,10 @@ async def test_v2_turn_off(hass, utcnow):
     helper.characteristics[V2_ACTIVE].value = 1
 
     await hass.services.async_call(
-        "fan", "turn_off", {"entity_id": "fan.testdevice"}, blocking=True,
+        "fan",
+        "turn_off",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
     )
     assert helper.characteristics[V2_ACTIVE].value == 0
 

@@ -1,22 +1,20 @@
 """Schema migration helpers."""
 import logging
-import os
 
-from sqlalchemy import Table, text
+from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
 from sqlalchemy.engine import reflection
 from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
+from sqlalchemy.schema import AddConstraint, DropConstraint
 
-from .models import SCHEMA_VERSION, Base, SchemaChanges
+from .const import DOMAIN
+from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
-PROGRESS_FILE = ".migration_progress"
 
 
 def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
-    progress_path = instance.hass.config.path(PROGRESS_FILE)
-
     with session_scope(session=instance.get_session()) as session:
         res = (
             session.query(SchemaChanges)
@@ -32,20 +30,13 @@ def migrate_schema(instance):
             )
 
         if current_version == SCHEMA_VERSION:
-            # Clean up if old migration left file
-            if os.path.isfile(progress_path):
-                _LOGGER.warning("Found existing migration file, cleaning up")
-                os.remove(instance.hass.config.path(PROGRESS_FILE))
             return
-
-        with open(progress_path, "w"):
-            pass
 
         _LOGGER.warning(
             "Database is about to upgrade. Schema version: %s", current_version
         )
 
-        try:
+        with instance.hass.timeout.freeze(DOMAIN):
             for version in range(current_version, SCHEMA_VERSION):
                 new_version = version + 1
                 _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
@@ -53,8 +44,6 @@ def migrate_schema(instance):
                 session.add(SchemaChanges(schema_version=new_version))
 
                 _LOGGER.info("Upgrade to version %s done", new_version)
-        finally:
-            os.remove(instance.hass.config.path(PROGRESS_FILE))
 
 
 def _create_index(engine, table_name, index_name):
@@ -217,6 +206,39 @@ def _add_columns(engine, table_name, columns_def):
             )
 
 
+def _update_states_table_with_foreign_key_options(engine):
+    """Add the options to foreign key constraints."""
+    inspector = reflection.Inspector.from_engine(engine)
+    alters = []
+    for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
+        if foreign_key["name"] and not foreign_key["options"]:
+            alters.append(
+                {
+                    "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+                    "columns": foreign_key["constrained_columns"],
+                }
+            )
+
+    if not alters:
+        return
+
+    states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
+    old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
+        TABLE_STATES, MetaData(), *[alter["old_fk"] for alter in alters]
+    )
+
+    for alter in alters:
+        try:
+            engine.execute(DropConstraint(alter["old_fk"]))
+            for fkc in states_key_constraints:
+                if fkc.column_keys == alter["columns"]:
+                    engine.execute(AddConstraint(fkc))
+        except (InternalError, OperationalError):
+            _LOGGER.exception(
+                "Could not update foreign options in %s table", TABLE_STATES
+            )
+
+
 def _apply_update(engine, new_version, old_version):
     """Perform operations to bring schema up to date."""
     if new_version == 1:
@@ -289,6 +311,8 @@ def _apply_update(engine, new_version, old_version):
         _drop_index(engine, "states", "ix_states_entity_id")
         _create_index(engine, "events", "ix_events_event_type_time_fired")
         _drop_index(engine, "events", "ix_events_event_type")
+    elif new_version == 10:
+        _update_states_table_with_foreign_key_options(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

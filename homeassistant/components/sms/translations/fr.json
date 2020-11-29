@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "device": "Appareil"
-                }
+                },
+                "title": "Se connecter au modem"
             }
         }
     }

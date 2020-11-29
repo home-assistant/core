@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Allerede konfigurert",
-            "invalid_credentials": "Ugyldig legitimasjon"
+            "already_configured": "Enheten er allerede konfigurert",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "create_entry": {
             "default": "Se [Neato dokumentasjon]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Ugyldig legitimasjon",
-            "unexpected_error": "Uventet feil"
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

@@ -10,12 +10,16 @@ from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEn
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -53,6 +57,7 @@ SUPPORT_MPD = (
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PLAY
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_REPEAT_SET
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_SEEK
     | SUPPORT_STOP
@@ -133,10 +138,17 @@ class MpdDevice(MediaPlayerEntity):
         self._status = self._client.status()
         self._currentsong = self._client.currentsong()
 
-        position = self._status.get("time")
+        position = self._status.get("elapsed")
+
+        if position is None:
+            position = self._status.get("time")
+
+            if isinstance(position, str) and ":" in position:
+                position = position.split(":")[0]
+
         if position is not None and self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = position
+            self._media_position = int(float(position))
 
         self._update_playlists()
 
@@ -152,8 +164,9 @@ class MpdDevice(MediaPlayerEntity):
                 self._connect()
 
             self._fetch_status()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
+        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
             # Cleanly disconnect in case connection is not in valid state
+            _LOGGER.debug("Error updating status: %s", error)
             self._disconnect()
 
     @property
@@ -307,7 +320,10 @@ class MpdDevice(MediaPlayerEntity):
 
     def media_play(self):
         """Service to send the MPD the command for play/pause."""
-        self._client.pause(0)
+        if self._status["state"] == "pause":
+            self._client.pause(0)
+        else:
+            self._client.play()
 
     def media_pause(self):
         """Service to send the MPD the command for play/pause."""
@@ -351,6 +367,27 @@ class MpdDevice(MediaPlayerEntity):
             self._client.clear()
             self._client.add(media_id)
             self._client.play()
+
+    @property
+    def repeat(self):
+        """Return current repeat mode."""
+        if self._status["repeat"] == "1":
+            if self._status["single"] == "1":
+                return REPEAT_MODE_ONE
+            return REPEAT_MODE_ALL
+        return REPEAT_MODE_OFF
+
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        if repeat == REPEAT_MODE_OFF:
+            self._client.repeat(0)
+            self._client.single(0)
+        else:
+            self._client.repeat(1)
+            if repeat == REPEAT_MODE_ONE:
+                self._client.single(1)
+            else:
+                self._client.single(0)
 
     @property
     def shuffle(self):

@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Soma.",
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "connection_error": "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 z SOMA Connect.",
+            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z SOMA Connect",
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
-            "result_error": "SOMA Connect odpowiedzia\u0142 statusem b\u0142\u0119du."
+            "result_error": "SOMA Connect odpowiedzia\u0142 statusem b\u0142\u0119du"
         },
         "create_entry": {
-            "default": "Pomy\u015blnie uwierzytelniono z Soma"
+            "default": "Pomy\u015blnie uwierzytelniono"
         },
         "step": {
             "user": {
