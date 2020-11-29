@@ -273,6 +273,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         return super().precision
 
     @property
+    def target_temperature_step(self) -> Optional[float]:
+        """Return the target_temperature_step based on precision of the system."""
+        if self._temp_precision is not None:
+            return self._temp_precision
+        return super().target_temperature_step
+
+    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return self._unit
