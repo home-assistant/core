@@ -18,6 +18,8 @@ from .const import (
 )
 from .helpers import get_connection
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_platform(
     hass, hass_config, async_add_entities, discovery_info=None
@@ -67,12 +69,10 @@ class LcnScene(LcnDevice, Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
-        self.hass.async_create_task(
-            self.address_connection.activate_scene(
-                self.register_id,
-                self.scene_id,
-                self.output_ports,
-                self.relay_ports,
-                self.transition,
-            )
+        await self.address_connection.activate_scene(
+            self.register_id,
+            self.scene_id,
+            self.output_ports,
+            self.relay_ports,
+            self.transition,
         )
