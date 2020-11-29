@@ -21,6 +21,8 @@ from .const import (
 )
 from .helpers import get_connection
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_platform(
     hass, hass_config, async_add_entities, discovery_info=None
@@ -87,8 +89,6 @@ class LcnOutputLight(LcnDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._is_on = True
-        self._is_dimming_to_zero = False
         if ATTR_BRIGHTNESS in kwargs:
             percent = int(kwargs[ATTR_BRIGHTNESS] / 255.0 * 100)
         else:
@@ -100,12 +100,16 @@ class LcnOutputLight(LcnDevice, LightEntity):
         else:
             transition = self._transition
 
-        self.address_connection.dim_output(self.output.value, percent, transition)
+        if not await self.address_connection.dim_output(
+            self.output.value, percent, transition
+        ):
+            return
+        self._is_on = True
+        self._is_dimming_to_zero = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        self._is_on = False
         if ATTR_TRANSITION in kwargs:
             transition = pypck.lcn_defs.time_to_ramp_value(
                 kwargs[ATTR_TRANSITION] * 1000
@@ -113,9 +117,12 @@ class LcnOutputLight(LcnDevice, LightEntity):
         else:
             transition = self._transition
 
+        if not await self.address_connection.dim_output(
+            self.output.value, 0, transition
+        ):
+            return
         self._is_dimming_to_zero = bool(transition)
-
-        self.address_connection.dim_output(self.output.value, 0, transition)
+        self._is_on = False
         self.async_write_ha_state()
 
     def input_received(self, input_obj):
@@ -157,22 +164,22 @@ class LcnRelayLight(LcnDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._is_on = True
 
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
-        self.address_connection.control_relays(states)
-
+        if not await self.address_connection.control_relays(states):
+            return
+        self._is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        self._is_on = False
 
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
-        self.address_connection.control_relays(states)
-
+        if not await self.address_connection.control_relays(states):
+            return
+        self._is_on = False
         self.async_write_ha_state()
 
     def input_received(self, input_obj):
