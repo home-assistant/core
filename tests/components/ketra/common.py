@@ -29,6 +29,7 @@ class MockHub:
         self.button.id = "12345"
         self.button.scene_name = SCENE_ENTITY_ID
         self.button.activate = AsyncMock()
+        self.button.keypad = self.keypad
         self.keypad.buttons = [self.button]
         self.group = Mock()
         self.group.id = "1234567"
@@ -42,6 +43,18 @@ class MockHub:
             y_chromaticity=0.5,
         )
         self.group.set_state = self.__set_lamp_state
+
+    def add_keypad_button(self):
+        """Add a keypad button."""
+        new_button = Mock()
+        new_button.id = "1234567"
+        new_button.scene_name = "ketra_scene_name_2"
+        new_button.activate = AsyncMock()
+        self.keypad.buttons.append(new_button)
+
+    def remove_keypad_buttons(self):
+        """Remove all keypad buttons."""
+        self.keypad.buttons = []
 
     async def __set_lamp_state(self, lamp_state):
         for key in lamp_state.to_dict():

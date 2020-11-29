@@ -42,7 +42,7 @@ class KetraScenePlatform(KetraPlatformBase):
         for keypad in keypads:
             for button in keypad.buttons:
                 scene = KetraScene(button)
-                scenes.append(KetraScene(button))
+                scenes.append(scene)
                 self.button_map[button.id] = scene
         self.add_entities(scenes)
         self.logger.info(f"{len(scenes)} scenes added")
@@ -62,7 +62,7 @@ class KetraScenePlatform(KetraPlatformBase):
                     self.button_map[button.id] = scene
         if len(new_scenes) > 0:
             self.logger.info(f"{len(new_scenes)} new scenes added")
-        self.add_entities(new_scenes)
+            self.add_entities(new_scenes)
         for button_id in list(self.button_map.keys()):
             if button_id not in current_scene_ids:
                 self.logger.info(f"Removing scene id '{button_id}'")
@@ -84,7 +84,7 @@ class KetraScenePlatform(KetraPlatformBase):
             button_id = notification_model.contents.button_id
             activated = notification_model.contents.activated
             if button_id in self.button_map:
-                _LOGGER.debug(
+                self.logger.debug(
                     "Scene button '%s' %s",
                     self.button_map[button_id].name,
                     "activated" if activated else "deactivated",
@@ -95,7 +95,7 @@ class KetraScenePlatform(KetraPlatformBase):
                     "keypad_name": self.button_map[button_id].keypad_name,
                     "activated": activated,
                 }
-                _LOGGER.debug(
+                self.logger.debug(
                     "Firing ketra_button_press event with event data: %s",
                     str(event_data),
                 )

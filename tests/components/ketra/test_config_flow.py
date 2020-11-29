@@ -166,3 +166,20 @@ async def test_abort_if_installations_configured(hass):
 
             assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
             assert result["reason"] == "no_installations"
+
+
+async def test_entry_created(hass):
+    """Test that we abort if there are no installations available."""
+    flow = config_flow.KetraConfigFlow()
+    flow.hass = hass
+    flow.installation_id_to_title_dict = {"12345": "my_installation_name"}
+    flow.oauth_token = "asdfasdf"
+
+    result = await flow.async_step_select_installation({"installation_id": "12345"})
+
+    assert result
+    assert isinstance(result, dict)
+    assert result["title"] == "my_installation_name"
+    assert result["data"]["access_token"] == flow.oauth_token
+    assert result["data"]["installation_id"] == "12345"
+    assert result["data"]["installation_name"] == result["title"]
