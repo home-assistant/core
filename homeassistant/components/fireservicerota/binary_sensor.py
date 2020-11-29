@@ -89,5 +89,4 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if key in data
         }
 
-        _LOGGER.debug("Set attributes of entity 'Duty Binary Sensor' to '%s'", attr)
         return attr
