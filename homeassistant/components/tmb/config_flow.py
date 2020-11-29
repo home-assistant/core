@@ -36,8 +36,7 @@ class TMBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_SERVICE] == SERVICE_IBUS:
                 return await self.async_step_ibus()
-            elif user_input[CONF_SERVICE] == SERVICE_PLANNER:
-                return await self.async_step_planner()
+            return await self.async_step_planner()
 
         return self.async_show_form(
             step_id="select",
