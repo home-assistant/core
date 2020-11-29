@@ -93,7 +93,6 @@ CB_NEW_NODE = "NEW_NODE"
 AVAILABLE_SENSOR_ID = "available"
 CURRENT_POWER_SENSOR_ID = "power_1s"
 TODAY_ENERGY_SENSOR_ID = "power_con_today"
-MOTION_SENSOR_ID = "motion"
 
 ATTR_MAC_ADDRESS = "mac"
 
@@ -107,14 +106,6 @@ USB_SENSORS = {
         ATTR_STATE: "get_available",
         ATTR_UNIT_OF_MEASUREMENT: None,
     },
-    "ping": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ENABLED_DEFAULT: False,
-        ATTR_ICON: "mdi:speedometer",
-        ATTR_NAME: "Ping roundtrip",
-        ATTR_STATE: "get_ping",
-        ATTR_UNIT_OF_MEASUREMENT: TIME_MILLISECONDS,
-    },
     CURRENT_POWER_SENSOR_ID: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_ENABLED_DEFAULT: True,
@@ -123,30 +114,6 @@ USB_SENSORS = {
         ATTR_STATE: "get_power_usage",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
     },
-    "power_8s": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ENABLED_DEFAULT: False,
-        ATTR_ICON: None,
-        ATTR_NAME: "Power usage 8 seconds",
-        ATTR_STATE: "get_power_usage_8_sec",
-        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-    },
-    "power_con_cur_hour": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ENABLED_DEFAULT: True,
-        ATTR_ICON: None,
-        ATTR_NAME: "Power consumption current hour",
-        ATTR_STATE: "get_power_consumption_current_hour",
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-    },
-    "power_con_prev_hour": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ENABLED_DEFAULT: True,
-        ATTR_ICON: None,
-        ATTR_NAME: "Power consumption previous hour",
-        ATTR_STATE: "get_power_consumption_prev_hour",
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-    },
     TODAY_ENERGY_SENSOR_ID: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_ENABLED_DEFAULT: True,
@@ -154,46 +121,6 @@ USB_SENSORS = {
         ATTR_NAME: "Power consumption today",
         ATTR_STATE: "get_power_consumption_today",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-    },
-    "power_con_yesterday": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ENABLED_DEFAULT: True,
-        ATTR_ICON: None,
-        ATTR_NAME: "Power consumption yesterday",
-        ATTR_STATE: "get_power_consumption_yesterday",
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-    },
-    "power_prod_cur_hour": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ENABLED_DEFAULT: False,
-        ATTR_ICON: None,
-        ATTR_NAME: "Power production current hour",
-        ATTR_STATE: "get_power_production_current_hour",
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-    },
-    "power_prod_prev_hour": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_ENABLED_DEFAULT: False,
-        ATTR_ICON: None,
-        ATTR_NAME: "Power production previous hour",
-        ATTR_STATE: "get_power_production_previous_hour",
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-    },
-    "RSSI_in": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH,
-        ATTR_ENABLED_DEFAULT: False,
-        ATTR_ICON: None,
-        ATTR_NAME: "Inbound RSSI",
-        ATTR_STATE: "get_in_RSSI",
-        ATTR_UNIT_OF_MEASUREMENT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    },
-    "RSSI_out": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH,
-        ATTR_ENABLED_DEFAULT: False,
-        ATTR_ICON: None,
-        ATTR_NAME: "Outbound RSSI",
-        ATTR_STATE: "get_out_RSSI",
-        ATTR_UNIT_OF_MEASUREMENT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
 }
 
