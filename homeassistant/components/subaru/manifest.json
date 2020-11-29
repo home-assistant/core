@@ -3,6 +3,6 @@
   "name": "Subaru",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/subaru",
-  "requirements": ["subarulink==0.3.6"],
+  "requirements": ["subarulink==0.3.8"],
   "codeowners": ["@G-Two"]
 }
