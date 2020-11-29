@@ -76,10 +76,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         # MSSQL uses TOP and not LIMIT
         if not ("LIMIT" in query_str or "SELECT TOP" in query_str):
-            if "mssql" in db_url:
-                query_str = query_str.replace("SELECT", "SELECT TOP 1")
-            else:
-                query_str = query_str.replace(";", " LIMIT 1;")
+            query_str = (
+                query_str.replace("SELECT", "SELECT TOP 1")
+                if "mssql" in db_url
+                else query_str.replace(";", " LIMIT 1;")
+            )
 
         sensor = SQLSensor(
             name, sessmaker, query_str, column_name, unit, value_template

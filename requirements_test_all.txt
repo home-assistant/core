@@ -775,9 +775,6 @@ pynx584==0.5
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
 
-# homeassistant.components.sql
-pyodbc==4.0.30
-
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 
