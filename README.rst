@@ -1,3 +1,12 @@
+Govee Component
+=================================================================================
+
+For the govee component i decided to switch to an HACS-Repository for now.
+
+Please see: https://github.com/LaggAt/hacs-govee
+
+All development and install instructions will be there.
+
 Home Assistant |Chat Status|
 =================================================================================
 
