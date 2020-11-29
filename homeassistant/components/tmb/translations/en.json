@@ -5,14 +5,6 @@
         },
         "flow_title": "TMB iBus",
         "step": {
-            "auth": {
-                "data": {
-                    "app_id": "App ID",
-                    "app_key": "App key"
-                },
-                "description": "Please go to https://developer.tmb.cat and create an application to get the credentials.",
-                "title": "Credentials"
-            },
             "ibus": {
                 "data": {
                     "line": "Line",
@@ -21,10 +13,6 @@
                 },
                 "description": "Create a sensor to track the remaining time of the next bus in an specific bus station.",
                 "title": "iBus"
-            },
-            "needs_config": {
-                "description": "To use this integration, please configure the `app_id` and `app_key` keys on your `configuration.yaml` file [as described](https://www.home-assistant.io/integrations/tmb/) and restart Home Assistant.",
-                "title": "Missing credentials"
             },
             "planner": {
                 "data": {
