@@ -11,8 +11,7 @@ An open source audio and home automation platform that puts local action and pri
 1. Install the core dependencies.
 ```
 sudo apt install python3.9
-sudo apt install python3.9-devmkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
-
+sudo apt install python3.9-dev
 sudo apt install python3.9-venv
 sudo apt install python3.9-pip
 sudo apt install git autoconf libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libffi-dev libudev-dev zlib1g-dev pkg-config libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libavresample-dev libavfilter-dev ffmpeg
@@ -42,7 +41,8 @@ hass -c /data/data/pl.sviete.dom/files/home/AIS
 ```
 
 5. Open app in browser http://localhost:8180
-![screenshot](https://raw.github.com/sviete/AIS-home-assistant/master/docs/dev.png)
+
+![screenshot](https://raw.github.com/sviete/AIS-home-assistant/beta/docs/dev.png)
 
 
 ### Debugging in PyCharm:
@@ -51,8 +51,9 @@ hass -c /data/data/pl.sviete.dom/files/home/AIS
 https://www.jetbrains.com/pycharm/download/#section=linux
 
 2. Add a configuration to project
-![screenshot](https://raw.github.com/sviete/AIS-home-assistant/master/docs/ide.png)
+
+![screenshot](https://raw.github.com/sviete/AIS-home-assistant/beta/docs/ide.png)
 
 3. Add some break point and start debugging
-![screenshot](https://raw.github.com/sviete/AIS-home-assistant/master/docs/debug.png)
 
+![screenshot](https://raw.github.com/sviete/AIS-home-assistant/beta/docs/debug.png)
