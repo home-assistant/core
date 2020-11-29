@@ -7,7 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-# pylint: disable=relative-beyond-top-level
 from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,8 +27,8 @@ class IncidentsSensor(RestoreEntity):
     def __init__(self, client):
         """Initialize."""
         self._client = client
-        self._entry_id = self._client._entry.entry_id
-        self._unique_id = f"{self._client._entry.unique_id}_Incidents"
+        self._entry_id = self._client.entry_id
+        self._unique_id = f"{self._client.unique_id}_Incidents"
         self._state = None
         self._state_attributes = {}
 
@@ -123,7 +122,7 @@ class IncidentsSensor(RestoreEntity):
     @callback
     def client_update(self) -> None:
         """Handle updated data from the data client."""
-        data = self._client.websocket.incident_data()
+        data = self._client.websocket.incident_data
         if not data or "body" not in data:
             return
 
