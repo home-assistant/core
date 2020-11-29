@@ -255,7 +255,6 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     @esphome_state_property
     def preset_mode(self):
         """Return current preset mode."""
-        state = ""
         if self._state.away:
             return PRESET_AWAY
         if self._state.boost:
