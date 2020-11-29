@@ -255,16 +255,16 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     @esphome_state_property
     def preset_mode(self):
         """Return current preset mode."""
+        state = ""
         if self._state.away:
             return PRESET_AWAY
-        elif self._state.boost:
+        if self._state.boost:
             return PRESET_BOOST
-        elif self._state.night:
+        if self._state.night:
             return PRESET_SLEEP
-        elif self._state.eco:
+        if self._state.eco:
             return PRESET_ECO
-        else:
-            return PRESET_HOME
+        return PRESET_HOME
 
     @esphome_state_property
     def swing_mode(self):
