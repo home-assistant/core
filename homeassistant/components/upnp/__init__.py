@@ -52,7 +52,7 @@ async def async_construct_device(hass: HomeAssistantType, udn: str, st: str) -> 
 
     # Some additional clues for remote debugging.
     if len(discoveries) > 1:
-        _LOGGER.info("Multiple devices discovered")
+        _LOGGER.info("Multiple devices discovered: %s", discoveries)
 
     discovery = discoveries[0]
     _LOGGER.debug("Constructing from discovery: %s", discovery)
