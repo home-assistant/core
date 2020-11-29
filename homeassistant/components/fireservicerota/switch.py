@@ -97,7 +97,6 @@ class ResponseSwitch(SwitchEntity):
             if key in data
         }
 
-        _LOGGER.debug("Set attributes of entity 'Response Switch' to '%s'", attr)
         return attr
 
     async def async_turn_on(self, **kwargs) -> None:
