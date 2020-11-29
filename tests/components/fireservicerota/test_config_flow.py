@@ -2,9 +2,7 @@
 from pyfireservicerota import InvalidAuthError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.fireservicerota.const import (
-    DOMAIN,
-)
+from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 from tests.async_mock import patch
