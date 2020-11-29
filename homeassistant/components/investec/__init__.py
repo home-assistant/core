@@ -1,0 +1,1 @@
+"""The investec sensor integration."""

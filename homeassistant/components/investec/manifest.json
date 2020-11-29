@@ -1,0 +1,9 @@
+{
+  "domain": "investec",
+  "name": "investec",
+  "documentation": "https://www.home-assistant.io/integrations/investec",
+  "requirements": [
+    "investec==0.1.0"
+  ],
+  "codeowners": []
+}
