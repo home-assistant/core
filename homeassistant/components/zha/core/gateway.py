@@ -569,7 +569,7 @@ class ZHAGateway:
             )
             await self._async_device_joined(zha_device)
 
-        device_info = zha_device.device_info
+        device_info = zha_device.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.INITIALIZED.name
         async_dispatcher_send(
             self._hass,
