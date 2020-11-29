@@ -16,6 +16,7 @@ from homeassistant.components.androidtv.media_player import (
     CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
+    CONF_SOURCE_PROVIDER,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
     KEYS,
@@ -23,6 +24,7 @@ from homeassistant.components.androidtv.media_player import (
     SERVICE_DOWNLOAD,
     SERVICE_LEARN_SENDEVENT,
     SERVICE_UPLOAD,
+    SOURCE_PROVIDER_INSTALLED_APPS,
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -324,9 +326,15 @@ async def _test_sources(hass, config0):
     }
     patch_key, entity_id = _setup(config)
 
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+    with patchers.patch_installed_apps(
+        ["com.app.test1", "com.app.test2", "com.app.test3", "com.app.test4"]
+    ), patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+    ], patchers.patch_shell(
+        SHELL_RESPONSE_OFF
+    )[
+        patch_key
+    ]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -389,14 +397,28 @@ async def _test_sources(hass, config0):
     return True
 
 
-async def test_androidtv_sources(hass):
+async def test_androidtv_sources_running_apps(hass):
     """Test that sources (i.e., apps) are handled correctly for Android TV devices."""
     assert await _test_sources(hass, CONFIG_ANDROIDTV_ADB_SERVER)
 
 
-async def test_firetv_sources(hass):
+async def test_androidtv_sources_installed_apps(hass):
+    """Test that sources (i.e., apps) are handled correctly for Android TV devices."""
+    config = copy.deepcopy(CONFIG_ANDROIDTV_ADB_SERVER)
+    config[DOMAIN][CONF_SOURCE_PROVIDER] = SOURCE_PROVIDER_INSTALLED_APPS
+    assert await _test_sources(hass, config)
+
+
+async def test_firetv_sources_running_apps(hass):
     """Test that sources (i.e., apps) are handled correctly for Fire TV devices."""
     assert await _test_sources(hass, CONFIG_FIRETV_ADB_SERVER)
+
+
+async def test_firetv_sources_installed_apps(hass):
+    """Test that sources (i.e., apps) are handled correctly for Fire TV devices."""
+    config = copy.deepcopy(CONFIG_ANDROIDTV_ADB_SERVER)
+    config[DOMAIN][CONF_SOURCE_PROVIDER] = SOURCE_PROVIDER_INSTALLED_APPS
+    assert await _test_sources(hass, config)
 
 
 async def _test_exclude_sources(hass, config0, expected_sources):

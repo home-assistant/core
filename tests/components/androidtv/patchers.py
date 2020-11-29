@@ -181,6 +181,14 @@ def patch_androidtv_update(
     )
 
 
+def patch_installed_apps(apps):
+    """Patch the AndrdoiTV.get_installed_apps method."""
+    return patch(
+        "androidtv.basetv.basetv_async.BaseTVAsync.get_installed_apps",
+        return_value=apps,
+    )
+
+
 PATCH_LAUNCH_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.launch_app")
 PATCH_STOP_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.stop_app")
 

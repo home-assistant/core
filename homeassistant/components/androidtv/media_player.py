@@ -89,6 +89,7 @@ CONF_ADB_SERVER_PORT = "adb_server_port"
 CONF_APPS = "apps"
 CONF_EXCLUDE_UNNAMED_APPS = "exclude_unnamed_apps"
 CONF_GET_SOURCES = "get_sources"
+CONF_SOURCE_PROVIDER = "source_provider"
 CONF_STATE_DETECTION_RULES = "state_detection_rules"
 CONF_TURN_ON_COMMAND = "turn_on_command"
 CONF_TURN_OFF_COMMAND = "turn_off_command"
@@ -100,6 +101,11 @@ DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
 DEFAULT_DEVICE_CLASS = "auto"
 DEFAULT_SCREENCAP = True
+
+SOURCE_PROVIDER_RUNNING_APPS = "running_apps"
+SOURCE_PROVIDER_INSTALLED_APPS = "installed_apps"
+SOURCE_PROVIDERS = [SOURCE_PROVIDER_RUNNING_APPS, SOURCE_PROVIDER_INSTALLED_APPS]
+DEFAULT_SOURCE_PROVIDER = SOURCE_PROVIDER_RUNNING_APPS
 
 DEVICE_ANDROIDTV = "androidtv"
 DEVICE_FIRETV = "firetv"
@@ -143,6 +149,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADB_SERVER_IP): cv.string,
         vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
         vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
+        vol.Optional(CONF_SOURCE_PROVIDER, default=DEFAULT_SOURCE_PROVIDER): vol.In(
+            SOURCE_PROVIDERS
+        ),
         vol.Optional(CONF_APPS, default={}): vol.Schema(
             {cv.string: vol.Any(cv.string, None)}
         ),
@@ -241,6 +250,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config[CONF_NAME],
         config[CONF_APPS],
         config[CONF_GET_SOURCES],
+        config[CONF_SOURCE_PROVIDER],
         config.get(CONF_TURN_ON_COMMAND),
         config.get(CONF_TURN_OFF_COMMAND),
         config[CONF_EXCLUDE_UNNAMED_APPS],
@@ -397,6 +407,7 @@ class ADBDevice(MediaPlayerEntity):
         name,
         apps,
         get_sources,
+        source_provider,
         turn_on_command,
         turn_off_command,
         exclude_unnamed_apps,
@@ -428,6 +439,19 @@ class ADBDevice(MediaPlayerEntity):
         self._exclude_unnamed_apps = exclude_unnamed_apps
         self._screencap = screencap
 
+        self._source_provider = source_provider
+
+        if get_sources and SOURCE_PROVIDER_INSTALLED_APPS == source_provider:
+            sources = [
+                self._app_id_to_name.get(
+                    app_id, app_id if not self._exclude_unnamed_apps else None
+                )
+                for app_id in self.aftv.installed_apps
+            ]
+            self._sources = [source for source in sources if source]
+        else:
+            self._sources = None
+
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
@@ -449,7 +473,6 @@ class ADBDevice(MediaPlayerEntity):
         self._adb_response = None
         self._available = True
         self._current_app = None
-        self._sources = None
         self._state = None
         self._hdmi_input = None
 
@@ -640,6 +663,7 @@ class AndroidTVDevice(ADBDevice):
         name,
         apps,
         get_sources,
+        source_provider,
         turn_on_command,
         turn_off_command,
         exclude_unnamed_apps,
@@ -651,6 +675,7 @@ class AndroidTVDevice(ADBDevice):
             name,
             apps,
             get_sources,
+            source_provider,
             turn_on_command,
             turn_off_command,
             exclude_unnamed_apps,
@@ -681,13 +706,15 @@ class AndroidTVDevice(ADBDevice):
             self._is_volume_muted,
             self._volume_level,
             self._hdmi_input,
-        ) = await self.aftv.update(self._get_sources)
+        ) = await self.aftv.update(
+            self._get_sources and self._source_provider == SOURCE_PROVIDER_RUNNING_APPS
+        )
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
             self._available = False
 
-        if running_apps:
+        if running_apps and self._source_provider == SOURCE_PROVIDER_RUNNING_APPS:
             sources = [
                 self._app_id_to_name.get(
                     app_id, app_id if not self._exclude_unnamed_apps else None
@@ -695,8 +722,6 @@ class AndroidTVDevice(ADBDevice):
                 for app_id in running_apps
             ]
             self._sources = [source for source in sources if source]
-        else:
-            self._sources = None
 
     @property
     def is_volume_muted(self):
@@ -760,7 +785,9 @@ class FireTVDevice(ADBDevice):
             self._current_app,
             running_apps,
             self._hdmi_input,
-        ) = await self.aftv.update(self._get_sources)
+        ) = await self.aftv.update(
+            self._get_sources and self._source_provider == SOURCE_PROVIDER_RUNNING_APPS
+        )
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
@@ -774,8 +801,6 @@ class FireTVDevice(ADBDevice):
                 for app_id in running_apps
             ]
             self._sources = [source for source in sources if source]
-        else:
-            self._sources = None
 
     @property
     def supported_features(self):
