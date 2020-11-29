@@ -1,0 +1,38 @@
+{
+    "title": "TMB iBus",
+    "config": {
+        "flow_title": "TMB iBus",
+        "step": {
+            "select": {
+                "title": "Select a service",
+                "description": "Select **iBus** service to get the remainng time for the next bus on a given stop, or select **Planner** to get the time travel between two locations.",
+                "data": {
+                    "service": "Service"
+                }
+            },
+            "ibus": {
+                "title": "iBus",
+                "description": "Create a sensor to track the remaining time of the next bus in an specific bus station.",
+                "data": {
+                    "line": "Line",
+                    "stop": "Stop",
+                    "name": "Name"
+                }
+            },
+            "planner": {
+                "title": "Planner",
+                "description": "Create a sensor to get the travel time between two locations in Barcelona.",
+                "data": {
+                    "name": "Name for this route",
+                    "from_latitude": "From latitude",
+                    "from_longitude": "From longitude",
+                    "to_latitude": "To latitude",
+                    "to_longitude": "To longitude"
+                }
+            }
+        },
+        "abort": {
+            "missing_configuration": "The TMB integration is not configured. Please follow the documentation."
+        }
+    }
+}

@@ -4,117 +4,75 @@ import logging
 
 from requests import HTTPError
 from tmb import IBus, Planner
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_NAME,
     ATTR_SECONDS,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     CONF_NAME,
     TIME_MINUTES,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_BUS_STOP,
+    ATTR_DESCRIPTION,
+    ATTR_IN_TRANSIT,
+    ATTR_LINE,
+    ATTR_TRANSFERS,
+    ATTR_WAITING,
+    ATTR_WALK_DISTANCE,
+    ATTRIBUTION,
+    CONF_APP_ID,
+    CONF_APP_KEY,
+    CONF_BUS_STOP,
+    CONF_FROM_LATITUDE,
+    CONF_FROM_LONGITUDE,
+    CONF_LINE,
+    CONF_SERVICE,
+    CONF_TO_LATITUDE,
+    CONF_TO_LONGITUDE,
+    DOMAIN,
+    ICON_IBUS,
+    ICON_PLANNER,
+    SERVICE_IBUS,
+    SERVICE_PLANNER,
+)
 
-ATTRIBUTION = "Data provided by Transports Metropolitans de Barcelona - tmb.cat"
-ATTR_BUS_STOP = "stop"
-ATTR_DESCRIPTION = "description"
-ATTR_IN_TRANSIT = "time in transit"
-ATTR_LINE = "line"
-ATTR_TRANSFERS = "num transfers"
-ATTR_WAITING = "time waiting"
-ATTR_WALK_DISTANCE = "walk distance"
-CONF_APP_ID = "app_id"
-CONF_APP_KEY = "app_key"
-CONF_BUS_STOP = "stop"
-CONF_BUS_STOPS = "stops"
-CONF_LINE = "line"
-CONF_ROUTES = "routes"
-CONF_ROUTE_FROM = "from"
-CONF_ROUTE_TO = "to"
-ICON_IBUS = "mdi:bus-clock"
-ICON_PLANNER = "mdi:map-marker-distance"
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES_IBUS = timedelta(seconds=60)
 MIN_TIME_BETWEEN_UPDATES_PLANNER = timedelta(seconds=300)
 
-LINE_STOP_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_BUS_STOP): cv.string,
-        vol.Required(CONF_LINE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
 
-ROUTES_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ROUTE_FROM): vol.Schema(
-            {
-                vol.Required(CONF_LATITUDE): cv.latitude,
-                vol.Required(CONF_LONGITUDE): cv.longitude,
-            }
-        ),
-        vol.Required(CONF_ROUTE_TO): vol.Schema(
-            {
-                vol.Required(CONF_LATITUDE): cv.latitude,
-                vol.Required(CONF_LONGITUDE): cv.longitude,
-            }
-        ),
-    }
-)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi sensor from a config entry."""
+    entities = []
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_APP_ID): cv.string,
-        vol.Required(CONF_APP_KEY): cv.string,
-        vol.Optional(CONF_BUS_STOPS): vol.All(cv.ensure_list, [LINE_STOP_SCHEMA]),
-        vol.Optional(CONF_ROUTES): vol.All(cv.ensure_list, [ROUTES_SCHEMA]),
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensors."""
-    ibus_client = IBus(config[CONF_APP_ID], config[CONF_APP_KEY])
-    planner_client = Planner(config[CONF_APP_ID], config[CONF_APP_KEY])
-
-    sensors = []
-
-    # TMB iBus sensors
-    if config.get(CONF_BUS_STOPS) is not None:
-        for line_stop in config.get(CONF_BUS_STOPS):
-            line = line_stop[CONF_LINE]
-            stop = line_stop[CONF_BUS_STOP]
-            if line_stop.get(CONF_NAME):
-                name = f"{line} - {line_stop[CONF_NAME]} ({stop})"
-            else:
-                name = f"{line} - {stop}"
-
-            sensors.append(TMBIBusSensor(ibus_client, stop, line, name))
-
-    # TMB Planner sensors
-    if config.get(CONF_ROUTES) is not None:
-        for route in config.get(CONF_ROUTES):
-            from_lat = route[CONF_ROUTE_FROM][CONF_LATITUDE]
-            from_lon = route[CONF_ROUTE_FROM][CONF_LONGITUDE]
-            from_latlon = f"{from_lat},{from_lon}"
-
-            to_lat = route[CONF_ROUTE_TO][CONF_LATITUDE]
-            to_lon = route[CONF_ROUTE_TO][CONF_LONGITUDE]
-            to_latlon = f"{to_lat},{to_lon}"
-            name = route[CONF_NAME]
-
-            sensors.append(
-                TMBPlannerSensor(planner_client, from_latlon, to_latlon, name)
+    if config_entry.data[CONF_SERVICE] == SERVICE_IBUS:
+        ibus_client = IBus(
+            hass.data[DOMAIN][CONF_APP_ID], hass.data[DOMAIN][CONF_APP_KEY]
+        )
+        entities.append(
+            TMBIBusSensor(
+                ibus_client,
+                config_entry.data[CONF_BUS_STOP],
+                config_entry.data[CONF_LINE],
+                config_entry.data[CONF_NAME],
             )
+        )
+    elif config_entry.data[CONF_SERVICE] == SERVICE_PLANNER:
+        planner_client = Planner(
+            hass.data[DOMAIN][CONF_APP_ID], hass.data[DOMAIN][CONF_APP_KEY]
+        )
+        from_latlon = f"{config_entry.data[CONF_FROM_LATITUDE]},{config_entry.data[CONF_FROM_LONGITUDE]}"
+        to_latlon = f"{config_entry.data[CONF_TO_LATITUDE]},{config_entry.data[CONF_TO_LONGITUDE]}"
+        name = config_entry.data[CONF_NAME]
 
-    add_entities(sensors, True)
+        entities.append(TMBPlannerSensor(planner_client, from_latlon, to_latlon, name))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class TMBIBusSensor(Entity):
@@ -125,9 +83,10 @@ class TMBIBusSensor(Entity):
         self._ibus_client = ibus_client
         self._stop = stop
         self._line = line.upper()
-        self._name = name
+        self._name = f"{SERVICE_IBUS}: {name}"
         self._unit = TIME_MINUTES
         self._state = None
+        self._service = SERVICE_IBUS
 
     @property
     def name(self):
@@ -147,7 +106,7 @@ class TMBIBusSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return f"{self._stop}_{self._line}"
+        return f"{self._service}_{self._stop}_{self._line}_{self._name}"
 
     @property
     def state(self):
@@ -183,7 +142,7 @@ class TMBPlannerSensor(Entity):
         self._from_coords = from_coords
         self._to_coords = to_coords
         self._unit = TIME_MINUTES
-        self._name = name
+        self._name = f"{SERVICE_PLANNER}: {name}"
         self._attr_description = None
         self._attr_duration_in_seconds = None
         self._attr_transit_time = None
@@ -191,6 +150,7 @@ class TMBPlannerSensor(Entity):
         self._attr_walk_distance = None
         self._attr_transfers = None
         self._state = None
+        self._service = SERVICE_PLANNER
 
     @property
     def name(self):
@@ -210,7 +170,7 @@ class TMBPlannerSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return f"tmb_planner_{self._name}"
+        return f"{self._service}_{self._name}"
 
     @property
     def state(self):
