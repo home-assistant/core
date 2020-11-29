@@ -1,6 +1,7 @@
 """Adds support for generic thermostat units."""
 import asyncio
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
