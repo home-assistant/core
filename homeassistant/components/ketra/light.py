@@ -226,7 +226,6 @@ class KetraGroup(LightEntity):
     @property
     def is_on(self):
         """Return true if light is on."""
-        print("is_on == " + str(self._lamp_state.power_on))
         return self._lamp_state.power_on
 
     async def __async_set_lamp_state(self, power_state: bool, **kwargs):
