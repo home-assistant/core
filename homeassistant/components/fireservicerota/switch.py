@@ -7,7 +7,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-# pylint: disable=relative-beyond-top-level
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,7 +96,6 @@ class ResponseSwitch(SwitchEntity):
             if key in data
         }
 
-        _LOGGER.debug("Set attributes of entity 'Response Switch' to '%s'", attr)
         return attr
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -128,12 +126,9 @@ class ResponseSwitch(SwitchEntity):
                 self.client_update,
             )
         )
-        self.async_on_remove(self._coordinator.async_add_listener(self.on_duty_update))
-
-    @callback
-    def on_duty_update(self):
-        """Trigger on a on duty update."""
-        self.async_write_ha_state()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @callback
     def client_update(self) -> None:

@@ -75,7 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FireServiceRota config entry."""
 
-    hass.data[DOMAIN][entry.entry_id].websocket.stop_listener()
+    await hass.async_add_executor_job(
+        hass.data[DOMAIN][entry.entry_id].websocket.stop_listener
+    )
 
     unload_ok = all(
         await asyncio.gather(
@@ -115,7 +117,7 @@ class FireServiceRotaOauth:
 
         except (InvalidAuthError, InvalidTokenError):
             _LOGGER.error("Error refreshing tokens, triggered reauth workflow")
-            self._hass.add_job(
+            self._hass.async_create_task(
                 self._hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": SOURCE_REAUTH},
@@ -150,7 +152,7 @@ class FireServiceRotaWebSocket:
         self._entry = entry
 
         self._fsr_incidents = FireServiceRotaIncidents(on_incident=self._on_incident)
-        self._incident_data = None
+        self.incident_data = None
 
     def _construct_url(self) -> str:
         """Return URL with latest access token."""
@@ -158,14 +160,10 @@ class FireServiceRotaWebSocket:
             self._entry.data[CONF_URL], self._entry.data[CONF_TOKEN]["access_token"]
         )
 
-    def incident_data(self) -> object:
-        """Return incident data."""
-        return self._incident_data
-
     def _on_incident(self, data) -> None:
         """Received new incident, update data."""
         _LOGGER.debug("Received new incident via websocket: %s", data)
-        self._incident_data = data
+        self.incident_data = data
         dispatcher_send(self._hass, f"{DOMAIN}_{self._entry.entry_id}_update")
 
     def start_listener(self) -> None:
@@ -189,6 +187,9 @@ class FireServiceRotaClient:
 
         self._url = entry.data[CONF_URL]
         self._tokens = entry.data[CONF_TOKEN]
+
+        self.entry_id = entry.entry_id
+        self.unique_id = entry.unique_id
 
         self.token_refresh_failure = False
         self.incident_id = None
@@ -216,12 +217,12 @@ class FireServiceRotaClient:
         try:
             return await self._hass.async_add_executor_job(func, *args)
         except (ExpiredTokenError, InvalidTokenError):
-            self.websocket.stop_listener()
+            await self._hass.async_add_executor_job(self.websocket.stop_listener)
             self.token_refresh_failure = True
 
             if await self.oauth.async_refresh_tokens():
                 self.token_refresh_failure = False
-                self.websocket.start_listener()
+                await self._hass.async_add_executor_job(self.websocket.start_listener)
 
                 return await self._hass.async_add_executor_job(func, *args)
 
@@ -230,6 +231,9 @@ class FireServiceRotaClient:
         data = await self.update_call(
             self.fsr.get_availability, str(self._hass.config.time_zone)
         )
+
+        if not data:
+            return
 
         self.on_duty = bool(data.get("available"))
 

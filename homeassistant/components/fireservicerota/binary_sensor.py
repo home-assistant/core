@@ -63,7 +63,6 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         self._state = self._client.on_duty
 
-        _LOGGER.debug("Set state of entity 'Duty Binary Sensor' to '%s'", self._state)
         return self._state
 
     @property
@@ -89,5 +88,4 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if key in data
         }
 
-        _LOGGER.debug("Set attributes of entity 'Duty Binary Sensor' to '%s'", attr)
         return attr
