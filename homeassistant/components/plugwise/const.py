@@ -125,7 +125,7 @@ USB_SENSORS = {
 }
 
 # Switch types
-SWITCHES = {
+USB_SWITCHES = {
     "relay": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_OUTLET,
         ATTR_ENABLED_DEFAULT: True,

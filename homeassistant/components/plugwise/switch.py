@@ -18,7 +18,7 @@ from .const import (
     PW_TYPE,
     STICK,
     SWITCH_ICON,
-    SWITCHES,
+    USB_SWITCHES,
     TODAY_ENERGY_SENSOR_ID,
     USB,
     USB_SENSORS,
@@ -45,7 +45,7 @@ async def async_setup_entry_usb(hass, config_entry, async_add_entities):
         """Add plugwise switch."""
         node = stick.node(mac)
         for switch_type in node.get_switches():
-            if switch_type in SWITCHES:
+            if switch_type in USB_SWITCHES:
                 async_add_entities([USBSwitch(node, mac, switch_type)])
 
     for mac in hass.data[DOMAIN][config_entry.entry_id]["switch"]:
@@ -163,7 +163,7 @@ class USBSwitch(NodeEntity, SwitchEntity):
         """Initialize a Node entity."""
         super().__init__(node, mac)
         self.switch_id = switch_id
-        self.switch_type = SWITCHES[self.switch_id]
+        self.switch_type = USB_SWITCHES[self.switch_id]
         if (CURRENT_POWER_SENSOR_ID in node.get_sensors()) and (
             TODAY_ENERGY_SENSOR_ID in node.get_sensors()
         ):
