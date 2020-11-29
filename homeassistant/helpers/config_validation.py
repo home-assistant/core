@@ -62,6 +62,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
+    CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
@@ -881,7 +882,10 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+ENTITY_SERVICE_FIELDS = {
+    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+    vol.Optional(ATTR_AREA_ID): vol.Any(ENTITY_MATCH_NONE, vol.All(ensure_list, [str])),
+}
 
 
 def make_entity_service_schema(
@@ -892,10 +896,7 @@ def make_entity_service_schema(
         vol.Schema(
             {
                 **schema,
-                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.Any(
-                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
-                ),
+                **ENTITY_SERVICE_FIELDS,
             },
             extra=extra,
         ),
@@ -942,6 +943,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
+            vol.Optional(CONF_TARGET): ENTITY_SERVICE_FIELDS,
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),

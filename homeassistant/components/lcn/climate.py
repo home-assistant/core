@@ -17,6 +17,8 @@ from .const import (
 )
 from .helpers import get_connection
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_platform(
     hass, hass_config, async_add_entities, discovery_info=None
@@ -118,14 +120,20 @@ class LcnClimate(LcnDevice, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == const.HVAC_MODE_HEAT:
+            if not await self.address_connection.lock_regulator(
+                self.regulator_id, False
+            ):
+                return
             self._is_on = True
-            self.address_connection.lock_regulator(self.regulator_id, False)
+            self.async_write_ha_state()
         elif hvac_mode == const.HVAC_MODE_OFF:
+            if not await self.address_connection.lock_regulator(
+                self.regulator_id, True
+            ):
+                return
             self._is_on = False
-            self.address_connection.lock_regulator(self.regulator_id, True)
             self._target_temperature = None
-
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -133,10 +141,11 @@ class LcnClimate(LcnDevice, ClimateEntity):
         if temperature is None:
             return
 
-        self._target_temperature = temperature
-        self.address_connection.var_abs(
+        if not await self.address_connection.var_abs(
             self.setpoint, self._target_temperature, self.unit
-        )
+        ):
+            return
+        self._target_temperature = temperature
         self.async_write_ha_state()
 
     def input_received(self, input_obj):

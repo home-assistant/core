@@ -5,7 +5,8 @@
             "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
             "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
             "external_setup": "Point on teisest voost edukalt seadistatud.",
-            "no_flows": "Osis pole seadistatud. Palun vaata dokumentatsiooni."
+            "no_flows": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
+            "unknown_authorize_url_generation": "Tundmatu viga tuvastamise URL-i loomisel."
         },
         "create_entry": {
             "default": "Tuvastamine \u00f5nnestus"

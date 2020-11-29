@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "connection_error": "Failed to connect"
+        },
+        "flow_title": "Motion Blinds",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "host": "IP Address"
+                },
+                "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
+                "title": "Motion Blinds"
+            }
+        }
+    }
+}

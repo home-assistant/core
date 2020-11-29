@@ -243,7 +243,9 @@ class GroupProbe:
             if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry, member.device.device_id
+                zha_gateway.ha_entity_registry,
+                member.device.device_id,
+                include_disabled_entities=True,
             )
             all_domain_occurrences.extend(
                 [
