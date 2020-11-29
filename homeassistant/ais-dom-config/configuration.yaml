@@ -78,7 +78,7 @@ ais_usb:
 zone:
 
 logger:
-  default: warning
+  default: info
 
 # set up Zeroconf and make AIS dom discoverable
 ais_mdns:
