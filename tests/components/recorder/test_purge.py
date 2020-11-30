@@ -62,6 +62,22 @@ def test_purge_old_events(hass, hass_recorder):
         assert events.count() == 2
 
 
+def test_purge_old_recorder_runs(hass, hass_recorder):
+    """Test deleting old recorder runs keeps current run."""
+    hass = hass_recorder()
+    _add_test_recorder_runs(hass)
+
+    # make sure we start with 7 recorder runs
+    with session_scope(hass=hass) as session:
+        recorder_runs = session.query(RecorderRuns)
+        assert recorder_runs.count() == 7
+
+        # run purge_old_data()
+        finished = purge_old_data(hass.data[DATA_INSTANCE], 0, repack=False)
+        assert finished
+        assert recorder_runs.count() == 1
+
+
 def test_purge_method(hass, hass_recorder):
     """Test purge method."""
     hass = hass_recorder()
