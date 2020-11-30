@@ -305,6 +305,16 @@ async def test_addon_not_installed(
         result["flow_id"], {"use_addon": True}
     )
 
+    assert result["type"] == "progress"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "start_addon"
+
     with patch(
         "homeassistant.components.ozw.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -341,6 +351,13 @@ async def test_install_addon_failure(hass, supervisor, addon_installed, install_
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"use_addon": True}
     )
+
+    assert result["type"] == "progress"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == "abort"
     assert result["reason"] == "addon_install_failed"
