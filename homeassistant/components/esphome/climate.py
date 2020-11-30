@@ -314,45 +314,73 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             if self._static_info.supports_away:
                 await self._client.climate_command(key=self._static_info.key, away=True)
             if self._static_info.supports_boost:
-                await self._client.climate_command(key=self._static_info.key, boost=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, boost=False
+                )
             if self._static_info.supports_night:
-                await self._client.climate_command(key=self._static_info.key, night=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, night=False
+                )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
         if preset_mode == "home":
             if self._static_info.supports_away:
-                await self._client.climate_command(key=self._static_info.key, away=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, away=False
+                )
             if self._static_info.supports_boost:
-                await self._client.climate_command(key=self._static_info.key, boost=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, boost=False
+                )
             if self._static_info.supports_night:
-                await self._client.climate_command(key=self._static_info.key, night=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, night=False
+                )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
         if preset_mode == "boost":
             if self._static_info.supports_away:
-                await self._client.climate_command(key=self._static_info.key, away=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, away=False
+                )
             if self._static_info.supports_boost:
-                await self._client.climate_command(key=self._static_info.key, boost=True)
+                await self._client.climate_command(
+                    key=self._static_info.key, boost=True
+                )
             if self._static_info.supports_night:
-                await self._client.climate_command(key=self._static_info.key, night=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, night=False
+                )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
         if preset_mode == "sleep":
             if self._static_info.supports_away:
-                await self._client.climate_command(key=self._static_info.key, away=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, away=False
+                )
             if self._static_info.supports_boost:
-                await self._client.climate_command(key=self._static_info.key, boost=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, boost=False
+                )
             if self._static_info.supports_night:
-                await self._client.climate_command(key=self._static_info.key, night=True)
+                await self._client.climate_command(
+                    key=self._static_info.key, night=True
+                )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
         if preset_mode == "eco":
             if self._static_info.supports_away:
-                await self._client.climate_command(key=self._static_info.key, away=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, away=False
+                )
             if self._static_info.supports_boost:
-                await self._client.climate_command(key=self._static_info.key, boost=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, boost=False
+                )
             if self._static_info.supports_night:
-                await self._client.climate_command(key=self._static_info.key, night=False)
+                await self._client.climate_command(
+                    key=self._static_info.key, night=False
+                )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=True)
 
