@@ -793,7 +793,7 @@ class FireTVDevice(ADBDevice):
         if self._state is None:
             self._available = False
 
-        if running_apps:
+        if running_apps and self._source_provider == SOURCE_PROVIDER_RUNNING_APPS:
             sources = [
                 self._app_id_to_name.get(
                     app_id, app_id if not self._exclude_unnamed_apps else None
