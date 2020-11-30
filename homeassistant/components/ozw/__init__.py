@@ -63,9 +63,6 @@ DATA_MQTT_CLIENT = "ozw_mqtt_client"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Initialize basic config of ozw component."""
-    if "mqtt" not in hass.config.components:
-        _LOGGER.error("MQTT integration is not set up")
-        return False
     hass.data[DOMAIN] = {}
     return True
 
@@ -110,6 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ozw_data[DATA_MQTT_CLIENT] = mqtt_client
 
     else:
+        if "mqtt" not in hass.config.components:
+            _LOGGER.error("MQTT integration is not set up")
+            return False
 
         @callback
         def send_message(topic, payload):
