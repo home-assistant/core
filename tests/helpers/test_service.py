@@ -93,7 +93,7 @@ def area_mock(hass):
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
     device_in_area = dev_reg.DeviceEntry(area_id="test-area")
-    device_no_area = dev_reg.DeviceEntry()
+    device_no_area = dev_reg.DeviceEntry(id="device-no-area-id")
     device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
 
     mock_device_registry(
@@ -946,4 +946,17 @@ async def test_extract_from_service_area_id(hass, area_mock):
     assert sorted(ent.entity_id for ent in extracted) == [
         "light.diff_area",
         "light.in_area",
+    ]
+
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {"area_id": ["test-area", "diff-area"], "device_id": "device-no-area-id"},
+    )
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 3
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.diff_area",
+        "light.in_area",
+        "light.no_area",
     ]
