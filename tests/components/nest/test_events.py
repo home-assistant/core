@@ -110,7 +110,7 @@ async def test_doorbell_chime_event(hass):
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
-        "type": "DoorbellChime",
+        "type": "doorbell_chime",
     }
 
 
@@ -134,7 +134,7 @@ async def test_camera_motion_event(hass):
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
-        "type": "CameraMotion",
+        "type": "camera_motion",
     }
 
 
@@ -158,7 +158,7 @@ async def test_camera_sound_event(hass):
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
-        "type": "CameraSound",
+        "type": "camera_sound",
     }
 
 
@@ -182,7 +182,7 @@ async def test_camera_person_event(hass):
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
-        "type": "CameraPerson",
+        "type": "camera_person",
     }
 
 
@@ -215,11 +215,11 @@ async def test_camera_multiple_event(hass):
     assert len(events) == 2
     assert events[0].data == {
         "device_id": entry.device_id,
-        "type": "CameraMotion",
+        "type": "camera_motion",
     }
     assert events[1].data == {
         "device_id": entry.device_id,
-        "type": "CameraPerson",
+        "type": "camera_person",
     }
 
 
