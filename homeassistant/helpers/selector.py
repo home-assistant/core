@@ -120,4 +120,4 @@ class TargetSelector(Selector):
     Value should follow cv.ENTITY_SERVICE_FIELDS format.
     """
 
-    CONFIG_SCHEMA = vol.Schema({"entity": {"domain": str}})
+    CONFIG_SCHEMA = vol.Schema({"entity": {"domain": str, "device_class": str}})
