@@ -159,7 +159,7 @@ async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/uninstall"
-    return await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
@@ -183,7 +183,7 @@ async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/stop"
-    return await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
