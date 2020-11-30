@@ -183,3 +183,87 @@ async def test_entry_created(hass):
     assert result["data"]["access_token"] == flow.oauth_token
     assert result["data"]["installation_id"] == "12345"
     assert result["data"]["installation_name"] == result["title"]
+
+
+class _MockResponse:
+    def __init__(self, status, json):
+        self.json_data = json
+        self._status = status
+
+    @property
+    def status(self):
+        """Return the status."""
+        return self._status
+
+    async def json(self):
+        """Return the json."""
+        return self.json_data
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return self
+
+
+class _MockClientSession:
+    locations_resp = (200, {})
+    n4_query_resp = (200, {})
+
+    def __init__(self):
+        pass
+
+    def get(self, url):
+        """Return the mock response."""
+        if url.startswith("https://my.goketra.com/api/v4/locations.json"):
+            return _MockResponse(*self.locations_resp)
+        if url.startswith("https://my.goketra.com/api/n4/v1/query"):
+            return _MockResponse(*self.n4_query_resp)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return self
+
+
+async def test_get_installations():
+    """Test the happy path of _get_installations."""
+    _MockClientSession.locations_resp = (
+        200,
+        {"content": [{"id": "12345", "title": "my_inst"}]},
+    )
+    _MockClientSession.n4_query_resp = (
+        200,
+        {"content": [{"installation_id": "12345"}]},
+    )
+
+    with patch("aiohttp.ClientSession", _MockClientSession):
+        flow = config_flow.KetraConfigFlow()
+        inst_map = await flow._get_installations()  # pylint: disable=protected-access
+        assert len(inst_map) == 1
+
+
+async def test_get_installations_failures():
+    """Test the failure cases of _get_installations."""
+    _MockClientSession.locations_resp = (400, {})
+    _MockClientSession.n4_query_resp = (
+        200,
+        {"content": [{"installation_id": "12345"}]},
+    )
+
+    with patch("aiohttp.ClientSession", _MockClientSession):
+        flow = config_flow.KetraConfigFlow()
+        inst_map = await flow._get_installations()  # pylint: disable=protected-access
+        assert inst_map is None
+
+    _MockClientSession.locations_resp = (
+        200,
+        {"content": [{"id": "12345", "title": "my_inst"}]},
+    )
+    _MockClientSession.n4_query_resp = (400, {})
+
+    with patch("aiohttp.ClientSession", _MockClientSession):
+        flow = config_flow.KetraConfigFlow()
+        inst_map = await flow._get_installations()  # pylint: disable=protected-access
+        assert inst_map is None
