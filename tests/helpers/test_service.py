@@ -93,7 +93,7 @@ def area_mock(hass):
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
     device_in_area = dev_reg.DeviceEntry(area_id="test-area")
-    device_no_area = dev_reg.DeviceEntry()
+    device_no_area = dev_reg.DeviceEntry(id="device-no-area-id")
     device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
 
     mock_device_registry(
@@ -175,18 +175,25 @@ class TestServiceHelpers(unittest.TestCase):
             "entity_id": "hello.world",
             "data": {
                 "hello": "{{ 'goodbye' }}",
-                "data": {"value": "{{ 'complex' }}", "simple": "simple"},
+                "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
             },
             "data_template": {"list": ["{{ 'list' }}", "2"]},
+            "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
         }
 
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
-        assert self.calls[0].data["hello"] == "goodbye"
-        assert self.calls[0].data["data"]["value"] == "complex"
-        assert self.calls[0].data["data"]["simple"] == "simple"
-        assert self.calls[0].data["list"][0] == "list"
+        assert dict(self.calls[0].data) == {
+            "hello": "goodbye",
+            "effect": {
+                "value": "complex",
+                "simple": "simple",
+            },
+            "list": ["list", "2"],
+            "entity_id": ["hello.world"],
+            "area_id": ["test-area-id"],
+        }
 
     def test_service_template_service_call(self):
         """Test legacy service_template call with templating."""
@@ -939,4 +946,17 @@ async def test_extract_from_service_area_id(hass, area_mock):
     assert sorted(ent.entity_id for ent in extracted) == [
         "light.diff_area",
         "light.in_area",
+    ]
+
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {"area_id": ["test-area", "diff-area"], "device_id": "device-no-area-id"},
+    )
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 3
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.diff_area",
+        "light.in_area",
+        "light.no_area",
     ]

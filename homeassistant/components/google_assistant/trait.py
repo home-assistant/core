@@ -67,6 +67,7 @@ from .const import (
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
     ERR_ALREADY_DISARMED,
+    ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
@@ -564,24 +565,49 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN
+        if domain == vacuum.DOMAIN:
+            return True
+
+        if domain == cover.DOMAIN and features & cover.SUPPORT_STOP:
+            return True
+
+        return False
 
     def sync_attributes(self):
         """Return StartStop attributes for a sync request."""
-        return {
-            "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            & vacuum.SUPPORT_PAUSE
-            != 0
-        }
+        domain = self.state.domain
+        if domain == vacuum.DOMAIN:
+            return {
+                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & vacuum.SUPPORT_PAUSE
+                != 0
+            }
+        if domain == cover.DOMAIN:
+            return {}
 
     def query_attributes(self):
         """Return StartStop query attributes."""
-        return {
-            "isRunning": self.state.state == vacuum.STATE_CLEANING,
-            "isPaused": self.state.state == vacuum.STATE_PAUSED,
-        }
+        domain = self.state.domain
+        state = self.state.state
+
+        if domain == vacuum.DOMAIN:
+            return {
+                "isRunning": state == vacuum.STATE_CLEANING,
+                "isPaused": state == vacuum.STATE_PAUSED,
+            }
+
+        if domain == cover.DOMAIN:
+            return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
 
     async def execute(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        domain = self.state.domain
+        if domain == vacuum.DOMAIN:
+            return await self._execute_vacuum(command, data, params, challenge)
+        if domain == cover.DOMAIN:
+            return await self._execute_cover(command, data, params, challenge)
+
+    async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"]:
@@ -617,6 +643,31 @@ class StartStopTrait(_Trait):
                     blocking=True,
                     context=data.context,
                 )
+
+    async def _execute_cover(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        if command == COMMAND_STARTSTOP:
+            if params["start"] is False:
+                if self.state.state in (cover.STATE_CLOSING, cover.STATE_OPENING):
+                    await self.hass.services.async_call(
+                        self.state.domain,
+                        cover.SERVICE_STOP_COVER,
+                        {ATTR_ENTITY_ID: self.state.entity_id},
+                        blocking=True,
+                        context=data.context,
+                    )
+                else:
+                    raise SmartHomeError(
+                        ERR_ALREADY_STOPPED, "Cover is already stopped"
+                    )
+            else:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED, "Starting a cover is not supported"
+                )
+        else:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, f"Command {command} is not supported"
+            )
 
 
 @register_trait

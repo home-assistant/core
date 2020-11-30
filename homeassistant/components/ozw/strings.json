@@ -6,6 +6,9 @@
         "description": "Do you want to use the OpenZWave Supervisor add-on?",
         "data": {"use_addon": "Use the OpenZWave Supervisor add-on"}
       },
+      "install_addon": {
+        "title": "The OpenZWave add-on installation has started"
+      },
       "start_addon": {
         "title": "Enter the OpenZWave add-on configuration",
         "data": {"usb_path": "[%key:common::config_flow::data::usb_path%]", "network_key": "Network Key"}
@@ -20,6 +23,9 @@
     },
     "error": {
       "addon_start_failed": "Failed to start the OpenZWave add-on. Check the configuration."
+    },
+    "progress": {
+      "install_addon": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes."
     }
   }
 }
