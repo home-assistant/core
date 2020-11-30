@@ -23,7 +23,13 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -76,7 +82,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if entry.data.get(CONF_USE_ADDON):
         # Do not use MQTT integration. Use own MQTT client.
-        mqtt_client = MQTTClient("localhost")
+        host = entry.data.get(CONF_HOST)
+
+        if not host:
+            # Retrieve discovery info from the OpenZWave add-on.
+            discovery_info = (
+                await hass.components.hassio.async_get_addon_discovery_info(
+                    "core_zwave"
+                )
+            )
+            addon_discovery_info = {
+                CONF_HOST: discovery_info["host"],
+                CONF_PORT: discovery_info["port"],
+                CONF_USERNAME: discovery_info["username"],
+                CONF_PASSWORD: discovery_info["password"],
+            }
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, **addon_discovery_info},
+            )
+
+        port = entry.data[CONF_PORT]
+        username = entry.data[CONF_USERNAME]
+        password = entry.data[CONF_PASSWORD]
+        mqtt_client = MQTTClient(host, port, username=username, password=password)
         manager_options["send_message"] = mqtt_client.send_message
         ozw_data[DATA_MQTT_CLIENT] = mqtt_client
 
@@ -257,7 +286,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 Do not unsubscribe the manager topic.
                 """
                 mqtt_client_task.cancel()
-                await mqtt_client_task
+                try:
+                    await mqtt_client_task
+                except asyncio.CancelledError:
+                    pass
 
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client)
 
