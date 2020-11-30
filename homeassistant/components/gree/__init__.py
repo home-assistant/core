@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .bridge import CannotConnect, DeviceDataUpdateCoordinator, DeviceHelper
-from .const import DOMAIN
+from .const import COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinators = [DeviceDataUpdateCoordinator(hass, d) for d in devices]
     await asyncio.gather(*[x.async_refresh() for x in coordinators])
 
-    hass.data[DOMAIN]["devices"] = coordinators
-    hass.data[DOMAIN][CLIMATE_DOMAIN] = coordinators
-    hass.data[DOMAIN][SWITCH_DOMAIN] = coordinators
+    hass.data[DOMAIN][COORDINATOR] = coordinators
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
     )

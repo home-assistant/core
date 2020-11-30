@@ -2,15 +2,11 @@
 import logging
 from typing import Optional
 
-from homeassistant.components.switch import (
-    DEVICE_CLASS_SWITCH,
-    DOMAIN as SWITCH_DOMAIN,
-    SwitchEntity,
-)
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        [GreeSwitchEntity(device) for device in hass.data[DOMAIN].pop(SWITCH_DOMAIN)]
+        [GreeSwitchEntity(device) for device in hass.data[DOMAIN][COORDINATOR]]
     )
 
 
@@ -31,7 +27,6 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
         self._device = device
         self._name = device.device_info.name + " Panel Light"
         self._mac = device.device_info.mac
-        self._icon = "mdi:lightbulb"
 
     @property
     def name(self) -> str:
@@ -46,7 +41,7 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
     @property
     def icon(self) -> Optional[str]:
         """Return the icon for the device."""
-        return self._icon
+        return "mdi:lightbulb"
 
     @property
     def device_info(self):

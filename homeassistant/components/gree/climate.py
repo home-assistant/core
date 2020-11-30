@@ -10,7 +10,7 @@ from greeclimate.device import (
     VerticalSwing,
 )
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -46,6 +46,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    COORDINATOR,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
@@ -96,7 +97,7 @@ SUPPORTED_FEATURES = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        [GreeClimateEntity(device) for device in hass.data[DOMAIN].pop(CLIMATE_DOMAIN)]
+        [GreeClimateEntity(device) for device in hass.data[DOMAIN][COORDINATOR]]
     )
 
 
