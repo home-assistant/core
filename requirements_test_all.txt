@@ -302,13 +302,11 @@ enocean==0.50
 # homeassistant.components.season
 ephem==3.7.7.0
 
-<<<<<<< HEAD
 # homeassistant.components.epson
 epson-projector==0.2.3
-=======
+
 # homeassistant.components.rpi_fanshim
-# fanshim==0.0.4
->>>>>>> 3d3c0b3d88... Add config flow test and adjust requirments
+# fanshim==0.0.5
 
 # homeassistant.components.faa_delays
 faadelays==0.0.6

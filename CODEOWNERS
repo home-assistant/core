@@ -393,20 +393,10 @@ homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
-<<<<<<< HEAD
+homeassistant/components/rpi_fanshim/* @csseal
 homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
-=======
->>>>>>> 71bc875172... Fix codeowners file
-homeassistant/components/rpi_fanshim/* @csseal
-<<<<<<< HEAD
-<<<<<<< HEAD
 homeassistant/components/ruckus_unleashed/* @gabe565
-=======
->>>>>>> e3742dfeb7... Fix codeowners file
-=======
-homeassistant/components/rpi_power/* @shenxn @swetoast
->>>>>>> 220249aa93... Fix codeowners file
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/samsungtv/* @escoand

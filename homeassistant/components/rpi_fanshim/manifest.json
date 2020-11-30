@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/rpi_fanshim",
   "requirements": [
     "RPi.GPIO==0.7.0",
-    "fanshim==0.0.4"
+    "fanshim==0.0.5"
   ],
   "ssdp": [],
   "zeroconf": [],
