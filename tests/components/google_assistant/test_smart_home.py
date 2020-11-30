@@ -842,7 +842,10 @@ async def test_device_class_cover(hass, device_class, google_type):
                     "attributes": {"discreteOnlyOpenClose": True},
                     "id": "cover.demo_sensor",
                     "name": {"name": "Demo Sensor"},
-                    "traits": ["action.devices.traits.OpenClose"],
+                    "traits": [
+                        "action.devices.traits.StartStop",
+                        "action.devices.traits.OpenClose",
+                    ],
                     "type": google_type,
                     "willReportState": False,
                 }
