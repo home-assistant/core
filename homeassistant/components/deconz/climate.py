@@ -139,8 +139,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     def fan_mode(self) -> str:
         """Return fan operation."""
         for hass_fan_mode, fan_mode in FAN_MODES.items():
-            if self._device.raw["config"].get("fanmode") == fan_mode:
-                # if self._device.fanmode == fan_mode:
+            if self._device.fanmode == fan_mode:
                 return hass_fan_mode
 
         if self._device.state_on:
