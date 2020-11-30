@@ -34,6 +34,7 @@ import voluptuous_serialize
 
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
@@ -884,6 +885,9 @@ PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 ENTITY_SERVICE_FIELDS = {
     vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+    ),
     vol.Optional(ATTR_AREA_ID): vol.Any(ENTITY_MATCH_NONE, vol.All(ensure_list, [str])),
 }
 
