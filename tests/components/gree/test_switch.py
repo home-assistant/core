@@ -1,6 +1,4 @@
 """Tests for gree component."""
-from datetime import timedelta
-
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
 
@@ -18,8 +16,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1_panel_light"
 
@@ -41,11 +38,6 @@ async def test_send_panel_light_on(hass, discovery, device, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -64,11 +56,6 @@ async def test_send_panel_light_on_device_timeout(hass, discovery, device, mock_
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -85,11 +72,6 @@ async def test_send_panel_light_off(hass, discovery, device, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
@@ -105,11 +87,6 @@ async def test_send_panel_light_off(hass, discovery, device, mock_now):
 async def test_send_panel_light_toggle(hass, discovery, device, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     # Turn the service on first
     assert await hass.services.async_call(
