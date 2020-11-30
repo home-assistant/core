@@ -172,6 +172,7 @@ def get_entities(onewirehub: OneWireHub):
             device_file = os.path.join(
                 os.path.split(device["path"])[0], device_switch["path"]
             )
+            unique_id = f"/{sensor_id}/{device_switch['path']}"
             entities.append(
                 OneWireProxySwitch(
                     sensor_id,
@@ -181,6 +182,7 @@ def get_entities(onewirehub: OneWireHub):
                     device_info,
                     device_switch.get("default_disabled", False),
                     onewirehub.owproxy,
+                    unique_id,
                 )
             )
 
