@@ -8,6 +8,7 @@ from homeassistant.components.tag.const import DOMAIN, TAG_ID
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture

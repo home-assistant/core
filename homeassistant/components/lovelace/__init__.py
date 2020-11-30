@@ -37,6 +37,7 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
 )
+from .system_health import system_health_info  # NOQA
 
 _LOGGER = logging.getLogger(__name__)
 

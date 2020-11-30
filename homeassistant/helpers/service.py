@@ -260,7 +260,7 @@ async def async_extract_entity_ids(
             entry.entity_id
             for device in devices
             for entry in hass.helpers.entity_registry.async_entries_for_device(
-                ent_reg, device.id
+                ent_reg, device.id, include_disabled_entities=True
             )
             if not entry.area_id
         )
@@ -527,11 +527,11 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_add_job(partial(getattr(entity, func), **data))  # type: ignore
+        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore
     else:
-        result = hass.async_add_job(func, entity, data)
+        result = hass.async_run_job(func, entity, data)
 
-    # Guard because callback functions do not return a task when passed to async_add_job.
+    # Guard because callback functions do not return a task when passed to async_run_job.
     if result is not None:
         await result
 
@@ -564,7 +564,7 @@ def async_register_admin_service(
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        result = hass.async_add_job(service_func, call)
+        result = hass.async_run_job(service_func, call)
         if result is not None:
             await result
 

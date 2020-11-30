@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "general_error": "Ismeretlen hiba t\u00f6rt\u00e9nt."
         },
         "step": {
@@ -14,6 +15,11 @@
             "node_pro": {
                 "data": {
                     "password": "Jelsz\u00f3"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API kulcs"
                 }
             }
         }

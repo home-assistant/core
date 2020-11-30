@@ -82,7 +82,6 @@ from .device import (
     ZHADevice,
 )
 from .group import GroupMember, ZHAGroup
-from .patches import apply_application_controller_patch
 from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
 from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
@@ -155,7 +154,6 @@ class ZHAGateway:
             )
             raise ConfigEntryNotReady from exception
 
-        apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
@@ -402,7 +400,9 @@ class ZHAGateway:
 
         # then we get all group entity entries tied to the coordinator
         all_group_entity_entries = async_entries_for_device(
-            self.ha_entity_registry, self.coordinator_zha_device.device_id
+            self.ha_entity_registry,
+            self.coordinator_zha_device.device_id,
+            include_disabled_entities=True,
         )
 
         # then we get the entity entries for this specific group by getting the entries that match
@@ -505,13 +505,6 @@ class ZHAGateway:
             zha_group = ZHAGroup(self._hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
         return zha_group
-
-    @callback
-    def async_device_became_available(
-        self, sender, profile, cluster, src_ep, dst_ep, message
-    ):
-        """Handle tasks when a device becomes available."""
-        self.async_update_device(sender, available=True)
 
     @callback
     def async_update_device(
@@ -638,6 +631,19 @@ class ZHAGateway:
         for unsubscribe in self._unsubs:
             unsubscribe()
         await self.application_controller.pre_shutdown()
+
+    def handle_message(
+        self,
+        sender: zigpy_dev.Device,
+        profile: int,
+        cluster: int,
+        src_ep: int,
+        dst_ep: int,
+        message: bytes,
+    ) -> None:
+        """Handle message from a device Event handler."""
+        if sender.ieee in self.devices and not self.devices[sender.ieee].available:
+            self.async_update_device(sender, available=True)
 
 
 @callback

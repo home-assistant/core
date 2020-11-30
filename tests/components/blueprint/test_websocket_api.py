@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from homeassistant.components import automation
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
@@ -15,7 +14,7 @@ async def setup_bp(hass):
     assert await async_setup_component(hass, "blueprint", {})
 
     # Trigger registration of automation blueprints
-    automation.async_get_blueprints(hass)
+    await async_setup_component(hass, "automation", {})
 
 
 async def test_list_blueprints(hass, hass_ws_client):
@@ -86,16 +85,17 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
     assert msg["id"] == 5
     assert msg["success"]
     assert msg["result"] == {
-        "suggested_filename": "balloob-motion_light",
-        "url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        "suggested_filename": "balloob/motion_light",
         "raw_data": raw_data,
         "blueprint": {
             "metadata": {
                 "domain": "automation",
                 "input": {"service_to_call": None, "trigger_event": None},
                 "name": "Call service based on event",
+                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             },
         },
+        "validation_errors": None,
     }
 
 

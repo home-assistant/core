@@ -5,7 +5,8 @@
         },
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_host": "ongeldige host of IP adres"
         },
         "step": {
             "user": {

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen autentik\u00e1ci\u00f3",
+            "invalid_zone": "\u00c9rv\u00e9nytelen z\u00f3na"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Rekordok"
+                },
+                "title": "V\u00e1lassza a friss\u00edteni k\u00edv\u00e1nt rekordokat"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Token"
+                },
+                "title": "Csatlakoz\u00e1s a Cloudflare szolg\u00e1ltat\u00e1shoz"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Z\u00f3na"
+                },
+                "title": "V\u00e1lassza ki a friss\u00edtend\u0151 z\u00f3n\u00e1t"
+            }
+        }
+    }
+}

@@ -28,6 +28,26 @@ def blueprint_1():
 
 
 @pytest.fixture
+def blueprint_2():
+    """Blueprint fixture with default placeholder."""
+    return models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "input": {
+                    "test-placeholder": {"name": "Name", "description": "Description"},
+                    "test-placeholder-default": {"default": "test"},
+                },
+            },
+            "example": Placeholder("test-placeholder"),
+            "example-default": Placeholder("test-placeholder-default"),
+        }
+    )
+
+
+@pytest.fixture
 def domain_bps(hass):
     """Domain blueprints fixture."""
     return models.DomainBlueprints(hass, "automation", logging.getLogger(__name__))
@@ -71,7 +91,7 @@ def test_blueprint_properties(blueprint_1):
 
 
 def test_blueprint_update_metadata():
-    """Test properties."""
+    """Test update metadata."""
     bp = models.Blueprint(
         {
             "blueprint": {
@@ -85,15 +105,52 @@ def test_blueprint_update_metadata():
     assert bp.metadata["source_url"] == "http://bla.com"
 
 
-def test_blueprint_inputs(blueprint_1):
+def test_blueprint_validate():
+    """Test validate blueprint."""
+    assert (
+        models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "Hello",
+                    "domain": "automation",
+                },
+            }
+        ).validate()
+        is None
+    )
+
+    assert (
+        models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "Hello",
+                    "domain": "automation",
+                    "homeassistant": {"min_version": "100000.0.0"},
+                },
+            }
+        ).validate()
+        == ["Requires at least Home Assistant 100000.0.0"]
+    )
+
+
+def test_blueprint_inputs(blueprint_2):
     """Test blueprint inputs."""
     inputs = models.BlueprintInputs(
-        blueprint_1,
-        {"use_blueprint": {"path": "bla", "input": {"test-placeholder": 1}}},
+        blueprint_2,
+        {
+            "use_blueprint": {
+                "path": "bla",
+                "input": {"test-placeholder": 1, "test-placeholder-default": 12},
+            },
+            "example-default": {"overridden": "via-config"},
+        },
     )
     inputs.validate()
-    assert inputs.inputs == {"test-placeholder": 1}
-    assert inputs.async_substitute() == {"example": 1}
+    assert inputs.inputs == {"test-placeholder": 1, "test-placeholder-default": 12}
+    assert inputs.async_substitute() == {
+        "example": 1,
+        "example-default": {"overridden": "via-config"},
+    }
 
 
 def test_blueprint_inputs_validation(blueprint_1):
@@ -104,6 +161,44 @@ def test_blueprint_inputs_validation(blueprint_1):
     )
     with pytest.raises(errors.MissingPlaceholder):
         inputs.validate()
+
+
+def test_blueprint_inputs_default(blueprint_2):
+    """Test blueprint inputs."""
+    inputs = models.BlueprintInputs(
+        blueprint_2,
+        {"use_blueprint": {"path": "bla", "input": {"test-placeholder": 1}}},
+    )
+    inputs.validate()
+    assert inputs.inputs == {"test-placeholder": 1}
+    assert inputs.inputs_with_default == {
+        "test-placeholder": 1,
+        "test-placeholder-default": "test",
+    }
+    assert inputs.async_substitute() == {"example": 1, "example-default": "test"}
+
+
+def test_blueprint_inputs_override_default(blueprint_2):
+    """Test blueprint inputs."""
+    inputs = models.BlueprintInputs(
+        blueprint_2,
+        {
+            "use_blueprint": {
+                "path": "bla",
+                "input": {"test-placeholder": 1, "test-placeholder-default": "custom"},
+            }
+        },
+    )
+    inputs.validate()
+    assert inputs.inputs == {
+        "test-placeholder": 1,
+        "test-placeholder-default": "custom",
+    }
+    assert inputs.inputs_with_default == {
+        "test-placeholder": 1,
+        "test-placeholder-default": "custom",
+    }
+    assert inputs.async_substitute() == {"example": 1, "example-default": "custom"}
 
 
 async def test_domain_blueprints_get_blueprint_errors(hass, domain_bps):
@@ -117,8 +212,8 @@ async def test_domain_blueprints_get_blueprint_errors(hass, domain_bps):
 
     with patch(
         "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
-    ):
-        assert await domain_bps.async_get_blueprint("non-existing-path") is None
+    ), pytest.raises(errors.FailedToLoad):
+        await domain_bps.async_get_blueprint("non-existing-path")
 
 
 async def test_domain_blueprints_caching(domain_bps):
@@ -172,3 +267,11 @@ async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1):
     with patch.object(domain_bps, "_load_blueprint") as mock_load:
         assert await domain_bps.async_get_blueprint("something.yaml") == blueprint_1
         assert not mock_load.mock_calls
+
+
+async def test_inputs_from_config_nonexisting_blueprint(domain_bps):
+    """Test referring non-existing blueprint."""
+    with pytest.raises(errors.FailedToLoad):
+        await domain_bps.async_inputs_from_config(
+            {"use_blueprint": {"path": "non-existing.yaml"}}
+        )
