@@ -22,7 +22,10 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
@@ -154,11 +157,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.player_source = source
         self.async_schedule_update_ha_state(True)
 
+        async_dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
+        )
+
     @callback
     def async_update_from_websocket(self, state):
         """Update the entity based on new websocket data."""
         self.state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
+
+        async_dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
+        )
 
     def update(self):
         """Refresh key device data."""
@@ -201,11 +214,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.device = None
             self.session_device = None
             self._available = False
-
-        dispatcher_send(
-            self.hass,
-            PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
-        )
 
     @property
     def should_poll(self):
