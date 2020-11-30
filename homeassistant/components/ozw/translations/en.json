@@ -14,6 +14,9 @@
             "install_addon": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes."
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the OpenZWave daemon provided by the Supervisor add-on {addon}?",
+                "title": "Set up OpenZWave integration with the OpenZWave add-on",
             "install_addon": {
                 "title": "The OpenZWave add-on installation has started"
             },

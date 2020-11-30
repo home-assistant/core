@@ -12,6 +12,10 @@
       "start_addon": {
         "title": "Enter the OpenZWave add-on configuration",
         "data": {"usb_path": "[%key:common::config_flow::data::usb_path%]", "network_key": "Network Key"}
+      },
+      "hassio_confirm": {
+        "title": "Set up OpenZWave integration with the OpenZWave add-on",
+        "description": "Do you want to configure Home Assistant to connect to the OpenZWave daemon provided by the Supervisor add-on {addon}?"
       }
     },
     "abort": {

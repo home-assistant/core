@@ -1,9 +1,11 @@
 """Config flow for ozw integration."""
 import logging
+from pprint import pformat
 
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
@@ -30,6 +32,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Set up flow instance."""
         self.addon_config = None
+        self.addon_discovery_info = {}
         self.network_key = None
         self.usb_path = None
         self.use_addon = False
@@ -53,6 +56,39 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_on_supervisor()
 
+    async def async_step_hassio(self, discovery_info):
+        """Receive configuration from add-on discovery info.
+
+        This flow is triggered by the OpenZWave add-on.
+        """
+        _LOGGER.debug("Add-on discovery info %s", pformat(discovery_info))
+        self.addon_discovery_info = {
+            CONF_HOST: discovery_info["host"],
+            CONF_PORT: discovery_info["port"],
+            CONF_USERNAME: discovery_info["username"],
+            CONF_PASSWORD: discovery_info["password"],
+        }
+
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured(updates=self.addon_discovery_info)
+
+        addon_config = await self._async_get_addon_config()
+        self.usb_path = addon_config[CONF_ADDON_DEVICE]
+        self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(self, user_input=None):
+        """Confirm the add-on discovery."""
+        if user_input is not None:
+            self.use_addon = True
+            return await self._async_create_entry_from_vars()
+
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            description_placeholders={"addon": self.addon_discovery_info["addon"]},
+        )
+
     def _async_create_entry_from_vars(self):
         """Return a config entry for the flow."""
         return self.async_create_entry(
@@ -62,6 +98,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NETWORK_KEY: self.network_key,
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
+                **self.addon_discovery_info,
             },
         )
 
