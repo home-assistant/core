@@ -104,17 +104,14 @@ class OpenSkySensor(Entity):
         self._hass = hass
         self._name = name
         self._previously_tracked = None
-        self._lat_min, self._lon_min, self._lat_max, self._lon_max = self._get_bbox(
-            self._latitude, self._longitude, self._radius / 1000 + 100
-        )
+        self._lat_min, self._lon_min, self._lat_max, self._lon_max = self._get_bbox()
 
-    def _get_bbox(self, latitude_in_degrees, longitude_in_degrees, half_side_in_km):
+    def _get_bbox(self):
+        half_side_in_km = self._radius / 1000 + 100
         assert half_side_in_km > 0
-        assert latitude_in_degrees >= -90.0 and latitude_in_degrees <= 90.0
-        assert longitude_in_degrees >= -180.0 and longitude_in_degrees <= 180.0
 
-        lat = math.radians(latitude_in_degrees)
-        lon = math.radians(longitude_in_degrees)
+        lat = math.radians(self._latitude)
+        lon = math.radians(self._longitude)
 
         radius = 6371
         parallel_radius = radius * math.cos(lat)
