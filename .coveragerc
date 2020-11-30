@@ -417,6 +417,7 @@ omit =
     homeassistant/components/insteon/utils.py
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
+    homeassistant/components/ipma/system_health.py
     homeassistant/components/ios/*
     homeassistant/components/iota/*
     homeassistant/components/iperf3/*
