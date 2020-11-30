@@ -125,6 +125,7 @@ def test_time_selector_schema(schema):
         {},
         {"entity": {}},
         {"entity": {"domain": "light"}},
+        {"entity": {"domain": "binary_sensor", "device_class": "motion"}},
     ),
 )
 def test_target_selector_schema(schema):
