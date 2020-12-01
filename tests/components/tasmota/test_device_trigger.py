@@ -503,7 +503,8 @@ async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock, setup_tasm
     )
 
     call_count = mqtt_mock.async_subscribe.call_count
-    assert call_count == 1
+    number_of_device_topics = 3
+    assert call_count == 1 + number_of_device_topics
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
     assert mqtt_mock.async_subscribe.call_count == call_count

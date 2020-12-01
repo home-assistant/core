@@ -94,7 +94,7 @@ async def async_start(
 
         _LOGGER.debug("Received discovery data for tasmota device: %s", mac)
         tasmota_device_config = tasmota_get_device_config(payload)
-        setup_device(tasmota_device_config, mac)
+        await setup_device(tasmota_device_config, mac, payload)
 
         if not payload:
             return

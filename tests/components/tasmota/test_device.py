@@ -1,4 +1,4 @@
-"""The tests for the Tasmota binary sensor platform."""
+"""The tests for Tasmota device."""
 import copy
 import json
 
@@ -9,6 +9,66 @@ from .test_common import DEFAULT_CONFIG
 
 from tests.async_mock import call
 from tests.common import MockConfigEntry, async_fire_mqtt_message
+
+
+async def test_tasmota_ws_get_discovered_device(
+    hass, device_reg, entity_reg, hass_ws_client, mqtt_mock, setup_tasmota
+):
+    """Test Tasmota websocket device removal."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    # Verify device entry is created
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "tasmota/device", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "ip": "192.168.15.10",
+        "mac": "00:00:00:49:a3:bc",
+        "manufacturer": "Tasmota",
+        "model": "Sonoff Basic",
+        "name": "Tasmota",
+        "sw_version": "8.4.0.2",
+    }
+
+    # Device status received
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/STATUS11", '{"StatusSTS": {"Wifi": {"RSSI":75}}}'
+    )
+    await client.send_json(
+        {"id": 6, "type": "tasmota/device", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "ip": "192.168.15.10",
+        "mac": "00:00:00:49:a3:bc",
+        "manufacturer": "Tasmota",
+        "model": "Sonoff Basic",
+        "name": "Tasmota",
+        "sw_version": "8.4.0.2",
+        "rssi": 75,
+    }
+
+
+async def test_tasmota_ws_get_unknown_device(
+    hass, device_reg, hass_ws_client, mqtt_mock, setup_tasmota
+):
+    """Test Tasmota websocket device removal of device belonging to other domain."""
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "tasmota/device", "device_id": "abc"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
 
 
 async def test_device_remove(

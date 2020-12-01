@@ -1,6 +1,7 @@
 """Constants used by multiple Tasmota modules."""
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 
+DATA_DEVICES = "tasmota_devices"
 DATA_REMOVE_DISCOVER_COMPONENT = "tasmota_discover_{}"
 DATA_UNSUB = "tasmota_subscriptions"
 

@@ -319,7 +319,8 @@ async def help_test_availability_poll_state(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    assert mqtt_mock.async_publish.call_count == 2  # device status and tested component
+    mqtt_mock.async_publish.assert_called_with(poll_topic, poll_payload, 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Disconnected from MQTT server
@@ -347,7 +348,8 @@ async def help_test_availability_poll_state(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    assert mqtt_mock.async_publish.call_count == 2  # device status and tested component
+    mqtt_mock.async_publish.assert_called_with(poll_topic, poll_payload, 0, False)
 
 
 async def help_test_discovery_removal(
@@ -525,7 +527,8 @@ async def help_test_entity_id_update_subscriptions(
 
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state is not None
-    assert mqtt_mock.async_subscribe.call_count == len(topics)
+    number_of_device_topics = 3
+    assert mqtt_mock.async_subscribe.call_count == len(topics) + number_of_device_topics
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
