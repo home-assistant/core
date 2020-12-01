@@ -473,3 +473,28 @@ async def test_abort_discovery_with_user_flow(
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
     assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_abort_discovery_with_existing_entry(
+    hass, supervisor, addon_running, addon_options
+):
+    """Test discovery flow is aborted if an entry already exists."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data == {
+        "host": ADDON_DISCOVERY_INFO["host"],
+        "port": ADDON_DISCOVERY_INFO["port"],
+        "username": ADDON_DISCOVERY_INFO["username"],
+        "password": ADDON_DISCOVERY_INFO["password"],
+    }
