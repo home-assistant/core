@@ -16,7 +16,7 @@
                     "port": "[%key::common::config_flow::data::port%]",
                     "site": "ID del lloc",
                     "username": "[%key::common::config_flow::data::username%]",
-                    "verify_ssl": "El controlador est\u00e0 utilitzant un certificat adequat"
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "title": "Configuraci\u00f3 del controlador UniFi"
             }
@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients controlats amb acc\u00e9s a la xarxa",
+                    "dpi_restrictions": "Permet el control de grups de restricci\u00f3 DPI",
                     "poe_clients": "Permet control POE dels clients"
                 },
                 "description": "Configura els controls del client \n\nConfigura interruptors per als n\u00fameros de s\u00e8rie als quals vulguis controlar l'acc\u00e9s a la xarxa.",
@@ -54,7 +55,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Sensors d'utilitzaci\u00f3 d'ample de banda per a clients de la xarxa"
+                    "allow_bandwidth_sensors": "Sensors d'utilitzaci\u00f3 d'ample de banda per a clients de la xarxa",
+                    "allow_uptime_sensors": "Sensors de temps d'activitat per a clients de xarxa"
                 },
                 "description": "Configuraci\u00f3 dels sensors d'estad\u00edstiques",
                 "title": "Opcions d'UniFi 3/3"

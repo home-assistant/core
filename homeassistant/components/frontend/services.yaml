@@ -5,7 +5,7 @@ set_theme:
   fields:
     name:
       description: Name of a predefined theme, 'default' or 'none'.
-      example: "light"
+      example: "default"
     mode:
       description: The mode the theme is for, either 'dark' or 'light' (default).
       example: "dark"

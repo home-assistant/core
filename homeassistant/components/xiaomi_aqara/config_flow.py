@@ -18,6 +18,7 @@ from .const import (
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
+    ZEROCONF_ACPARTNER,
     ZEROCONF_GATEWAY,
 )
 
@@ -158,7 +159,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_xiaomi_aqara")
 
         # Check if the discovered device is an xiaomi aqara gateway.
-        if not name.startswith(ZEROCONF_GATEWAY):
+        if not (
+            name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
+        ):
             _LOGGER.debug(
                 "Xiaomi device '%s' discovered with host %s, not identified as xiaomi aqara gateway",
                 name,

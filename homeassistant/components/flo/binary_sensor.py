@@ -11,12 +11,12 @@ from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
-DEPENDENCIES = ["flo"]
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN]["devices"]
+    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+        config_entry.entry_id
+    ]["devices"]
     entities = [FloPendingAlertsBinarySensor(device) for device in devices]
     async_add_entities(entities)
 
@@ -36,12 +36,13 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        if self._device.has_alerts:
-            attr["info"] = self._device.pending_info_alerts_count
-            attr["warning"] = self._device.pending_warning_alerts_count
-            attr["critical"] = self._device.pending_critical_alerts_count
-        return attr
+        if not self._device.has_alerts:
+            return {}
+        return {
+            "info": self._device.pending_info_alerts_count,
+            "warning": self._device.pending_warning_alerts_count,
+            "critical": self._device.pending_critical_alerts_count,
+        }
 
     @property
     def device_class(self):

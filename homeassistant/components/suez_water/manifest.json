@@ -1,7 +1,7 @@
 {
-  "domain": "suez_water",
-  "name": "Suez Water",
-  "documentation": "https://www.home-assistant.io/integrations/suez_water",
-  "codeowners": ["@ooii"],
-  "requirements": ["pysuez==0.1.17"]
+    "domain": "suez_water",
+    "name": "Suez Water",
+    "documentation": "https://www.home-assistant.io/integrations/suez_water",
+    "codeowners": ["@ooii"],
+    "requirements": ["pysuez==0.1.19"]
 }

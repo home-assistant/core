@@ -69,7 +69,8 @@ class TestImageProcessing:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"Test",
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        return_value=b"Test",
     )
     def test_get_image_from_camera(self, mock_camera_read):
         """Grab an image from camera entity."""

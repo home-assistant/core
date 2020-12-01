@@ -136,14 +136,20 @@ DEMO_DEVICES = [
     {
         "id": "cover.living_room_window",
         "name": {"name": "Living Room Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
     {
         "id": "cover.hall_window",
         "name": {"name": "Hall Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
@@ -157,7 +163,10 @@ DEMO_DEVICES = [
     {
         "id": "cover.kitchen_window",
         "name": {"name": "Kitchen Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },

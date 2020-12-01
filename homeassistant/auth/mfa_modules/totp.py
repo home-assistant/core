@@ -1,7 +1,6 @@
 """Time-based One Time Password auth module."""
 import asyncio
 from io import BytesIO
-import logging
 from typing import Any, Dict, Optional, Tuple
 
 import voluptuous as vol
@@ -29,8 +28,6 @@ STORAGE_OTA_SECRET = "ota_secret"
 INPUT_FIELD_CODE = "code"
 
 DUMMY_SECRET = "FPPTH34D4E3MI2HG"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _generate_qr_code(data: str) -> str:

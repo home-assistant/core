@@ -1,13 +1,11 @@
 """Provides device automations for Philips Hue events."""
-import logging
-
 import voluptuous as vol
 
-import homeassistant.components.automation.event as event
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -19,8 +17,6 @@ from homeassistant.const import (
 
 from . import DOMAIN
 from .hue_event import CONF_HUE_EVENT
-
-_LOGGER = logging.getLogger(__file__)
 
 CONF_SUBTYPE = "subtype"
 
@@ -139,13 +135,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     trigger = REMOTES[device.model][trigger]
 
     event_config = {
-        event.CONF_PLATFORM: "event",
-        event.CONF_EVENT_TYPE: CONF_HUE_EVENT,
-        event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: hue_event.unique_id, **trigger},
+        event_trigger.CONF_PLATFORM: "event",
+        event_trigger.CONF_EVENT_TYPE: CONF_HUE_EVENT,
+        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: hue_event.unique_id, **trigger},
     }
 
-    event_config = event.TRIGGER_SCHEMA(event_config)
-    return await event.async_attach_trigger(
+    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 
@@ -164,7 +160,7 @@ async def async_get_triggers(hass, device_id):
         return
 
     triggers = []
-    for trigger, subtype in REMOTES[device.model].keys():
+    for trigger, subtype in REMOTES[device.model]:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

@@ -18,12 +18,12 @@
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to a Konnected Panel at {host}:{port}"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "unknown": "Unknown error occurred",
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Config flow for device is already in progress.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_konn_panel": "Not a recognized Konnected.io device"
     }
   },
@@ -59,27 +59,27 @@
       },
       "options_binary": {
         "title": "Configure Binary Sensor",
-        "description": "Please select the options for the binary sensor attached to {zone}",
+        "description": "{zone} options",
         "data": {
           "type": "Binary Sensor Type",
-          "name": "Name (optional)",
+          "name": "[%key:common::config_flow::data::name%] (optional)",
           "inverse": "Invert the open/close state"
         }
       },
       "options_digital": {
         "title": "Configure Digital Sensor",
-        "description": "Please select the options for the digital sensor attached to {zone}",
+        "description": "{zone} options",
         "data": {
           "type": "Sensor Type",
-          "name": "Name (optional)",
+          "name": "[%key:common::config_flow::data::name%] (optional)",
           "poll_interval": "Poll Interval (minutes) (optional)"
         }
       },
       "options_switch": {
         "title": "Configure Switchable Output",
-        "description": "Please select the output options for {zone}: state {state}",
+        "description": "{zone} options: state {state}",
         "data": {
-          "name": "Name (optional)",
+          "name": "[%key:common::config_flow::data::name%] (optional)",
           "activation": "Output when on",
           "momentary": "Pulse duration (ms) (optional)",
           "pause": "Pause between pulses (ms) (optional)",
@@ -91,6 +91,7 @@
         "title": "Configure Misc",
         "description": "Please select the desired behavior for your panel",
         "data": {
+          "discovery": "Respond to discovery requests on your network",
           "blink": "Blink panel LED on when sending state change",
           "override_api_host": "Override default Home Assistant API host panel URL",
           "api_host": "Override API host URL (optional)"

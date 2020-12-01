@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/mobile_app",
   "requirements": ["PyNaCl==1.3.0", "emoji==0.5.4"],
   "dependencies": ["http", "webhook", "person", "tag"],
-  "after_dependencies": ["cloud", "camera"],
+  "after_dependencies": ["cloud", "camera", "notify"],
   "codeowners": ["@robbiet480"],
   "quality_scale": "internal"
 }

@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ten klucz API jest ju\u017c w u\u017cyciu."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana lub ID Node/Pro jest ju\u017c zarejestrowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "general_error": "Nieoczekiwany b\u0142\u0105d.",
-            "invalid_api_key": "Nieprawid\u0142owy klucz API.",
-            "unable_to_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z jednostk\u0105 Node/Pro."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "general_error": "Nieoczekiwany b\u0142\u0105d",
+            "invalid_api_key": "Nieprawid\u0142owy klucz API"
         },
         "step": {
             "geography": {
@@ -26,13 +27,19 @@
                 "description": "Monitoruj jednostk\u0119 AirVisual. Has\u0142o mo\u017cna odzyska\u0107 z interfejsu u\u017cytkownika urz\u0105dzenia.",
                 "title": "Konfiguracja AirVisual Node/Pro"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                },
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
             "user": {
                 "data": {
                     "cloud_api": "Lokalizacja geograficzna",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Typ integracji"
                 },
-                "description": "Monitoruj jako\u015b\u0107 powietrza w okre\u015blonej lokalizacji geograficznej.",
+                "description": "Wybierz, kt\u00f3re dane AirVisual chcesz monitorowa\u0107.",
                 "title": "Konfiguracja AirVisual"
             }
         }

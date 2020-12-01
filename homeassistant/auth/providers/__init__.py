@@ -146,7 +146,9 @@ async def load_auth_provider_module(
         module = importlib.import_module(f"homeassistant.auth.providers.{provider}")
     except ImportError as err:
         _LOGGER.error("Unable to load auth provider %s: %s", provider, err)
-        raise HomeAssistantError(f"Unable to load auth provider {provider}: {err}")
+        raise HomeAssistantError(
+            f"Unable to load auth provider {provider}: {err}"
+        ) from err
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
@@ -205,7 +207,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             errors["base"] = "invalid_auth_module"
 
         if len(self.available_mfa_modules) == 1:
-            self._auth_module_id = list(self.available_mfa_modules.keys())[0]
+            self._auth_module_id = list(self.available_mfa_modules)[0]
             return await self.async_step_mfa()
 
         return self.async_show_form(

@@ -113,7 +113,8 @@ def patch_bond_device_ids(enabled: bool = True, return_value=None, side_effect=N
 def patch_bond_device(return_value=None):
     """Patch Bond API device endpoint."""
     return patch(
-        "homeassistant.components.bond.Bond.device", return_value=return_value,
+        "homeassistant.components.bond.Bond.device",
+        return_value=return_value,
     )
 
 

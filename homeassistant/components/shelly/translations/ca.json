@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unsupported_firmware": "El dispositiu utilitza una versi\u00f3 de programari no compatible."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vols configurar el {model} a {host}? \n\nAbans de configurar-lo, els dispositius amb bateria s'han de desperar prement el bot\u00f3 del dispositiu."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Abans de configurar-lo, els dispositius amb bateria s'han de desperar prement el bot\u00f3 del dispositiu."
+            }
+        }
+    }
+}

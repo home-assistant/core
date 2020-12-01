@@ -136,13 +136,13 @@ async def get_api(hass, entry):
     except TransmissionError as error:
         if "401: Unauthorized" in str(error):
             _LOGGER.error("Credentials for Transmission client are not valid")
-            raise AuthenticationError
+            raise AuthenticationError from error
         if "111: Connection refused" in str(error):
             _LOGGER.error("Connecting to the Transmission client %s failed", host)
-            raise CannotConnect
+            raise CannotConnect from error
 
         _LOGGER.error(error)
-        raise UnknownError
+        raise UnknownError from error
 
 
 class TransmissionClient:
@@ -166,8 +166,8 @@ class TransmissionClient:
 
         try:
             self.tm_api = await get_api(self.hass, self.config_entry.data)
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as error:
+            raise ConfigEntryNotReady from error
         except (AuthenticationError, UnknownError):
             return False
 

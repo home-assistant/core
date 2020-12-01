@@ -95,11 +95,6 @@ class KankunSwitch(SwitchEntity):
             _LOGGER.error("State query failed")
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the switch."""
         return self._name

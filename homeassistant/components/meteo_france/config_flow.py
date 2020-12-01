@@ -74,7 +74,8 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=city, data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
+            title=city,
+            data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
         )
 
     async def async_step_import(self, user_input):

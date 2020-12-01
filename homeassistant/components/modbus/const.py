@@ -46,6 +46,7 @@ ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
+DEFAULT_SCAN_INTERVAL = 15  # seconds
 
 # binary_sensor.py
 CONF_INPUTS = "inputs"
@@ -54,6 +55,11 @@ CONF_ADDRESS = "address"
 
 # sensor.py
 # CONF_DATA_TYPE = "data_type"
+DEFAULT_STRUCT_FORMAT = {
+    DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
+    DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
+    DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
+}
 
 # switch.py
 CONF_STATE_OFF = "state_off"
@@ -62,6 +68,7 @@ CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 
 # climate.py
+CONF_CLIMATES = "climates"
 CONF_TARGET_TEMP = "target_temp_register"
 CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
@@ -71,3 +78,14 @@ CONF_UNIT = "temperature_unit"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_STEP = "temp_step"
+DEFAULT_STRUCTURE_PREFIX = ">f"
+DEFAULT_TEMP_UNIT = "C"
+
+# cover.py
+CONF_STATE_OPEN = "state_open"
+CONF_STATE_CLOSED = "state_closed"
+CONF_STATE_OPENING = "state_opening"
+CONF_STATE_CLOSING = "state_closing"
+CONF_STATUS_REGISTER = "status_register"
+CONF_STATUS_REGISTER_TYPE = "status_register_type"
+DEFAULT_SLAVE = 1

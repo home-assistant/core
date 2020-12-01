@@ -1,11 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "old_firmware": "Net \u00ebnnerst\u00ebtzten al Firmware op dem Bond Apparat - aktualis\u00e9ier iers Du  weider fiers",
             "unknown": "Onerwaarte Feeler"
         },
+        "flow_title": "Bond: {bond_id} ({host})",
         "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Acc\u00e8s jeton"
+                },
+                "description": "Soll {bond_id} konfigur\u00e9iert ginn?"
+            },
             "user": {
                 "data": {
                     "access_token": "Acc\u00e8s jeton",

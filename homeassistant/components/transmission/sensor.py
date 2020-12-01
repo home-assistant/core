@@ -1,6 +1,4 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-import logging
-
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,8 +11,6 @@ from .const import (
     STATE_ATTR_TORRENT_INFO,
     SUPPORTED_ORDER_MODES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -153,7 +149,9 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         order = self._tm_client.config_entry.options[CONF_ORDER]
         torrents = self._tm_client.api.torrents[0:limit]
         info = _torrents_info(
-            torrents, order=order, statuses=self.SUBTYPE_MODES[self._sub_type],
+            torrents,
+            order=order,
+            statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,

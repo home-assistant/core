@@ -1,7 +1,6 @@
 """Flo device object."""
 import asyncio
 from datetime import datetime, timedelta
-import logging
 from typing import Any, Dict, Optional
 
 from aioflo.api import API
@@ -12,9 +11,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as FLO_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
 
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
@@ -33,7 +30,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._water_usage: Optional[Dict[str, Any]] = None
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=f"{FLO_DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )
@@ -46,7 +43,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                     *[self._update_device(), self._update_consumption_data()]
                 )
         except (RequestError) as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
 
     @property
     def location_id(self) -> str:
@@ -172,12 +169,30 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the target valve state for the device."""
         return self._device_information["valve"]["target"]
 
+    async def async_set_mode_home(self):
+        """Set the Flo location to home mode."""
+        await self.api_client.location.set_mode_home(self._flo_location_id)
+
+    async def async_set_mode_away(self):
+        """Set the Flo location to away mode."""
+        await self.api_client.location.set_mode_away(self._flo_location_id)
+
+    async def async_set_mode_sleep(self, sleep_minutes, revert_to_mode):
+        """Set the Flo location to sleep mode."""
+        await self.api_client.location.set_mode_sleep(
+            self._flo_location_id, sleep_minutes, revert_to_mode
+        )
+
+    async def async_run_health_test(self):
+        """Run a Flo device health test."""
+        await self.api_client.device.run_health_test(self._flo_device_id)
+
     async def _update_device(self, *_) -> None:
         """Update the device information from the API."""
         self._device_information = await self.api_client.device.get_info(
             self._flo_device_id
         )
-        _LOGGER.debug("Flo device data: %s", self._device_information)
+        LOGGER.debug("Flo device data: %s", self._device_information)
 
     async def _update_consumption_data(self, *_) -> None:
         """Update water consumption data from the API."""
@@ -187,4 +202,4 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._water_usage = await self.api_client.water.get_consumption_info(
             self._flo_location_id, start_date, end_date
         )
-        _LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
+        LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)

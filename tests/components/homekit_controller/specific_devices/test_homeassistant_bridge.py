@@ -28,7 +28,11 @@ async def test_homeassistant_bridge_fan_setup(hass):
     assert fan.unique_id == "homekit-fan.living_room_fan-8"
 
     fan_helper = Helper(
-        hass, "fan.living_room_fan", pairing, accessories[0], config_entry,
+        hass,
+        "fan.living_room_fan",
+        pairing,
+        accessories[0],
+        config_entry,
     )
 
     fan_state = await fan_helper.poll_and_get_state()

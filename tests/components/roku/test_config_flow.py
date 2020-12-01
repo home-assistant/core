@@ -1,6 +1,6 @@
 """Test the Roku config flow."""
 from homeassistant.components.roku.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -30,7 +30,7 @@ async def test_duplicate_error(
 
     user_input = {CONF_HOST: HOST}
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -70,11 +70,13 @@ async def test_form(
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roku.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
@@ -82,7 +84,6 @@ async def test_form(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -113,7 +114,8 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
 
     user_input = {CONF_HOST: HOST}
     with patch(
-        "homeassistant.components.roku.config_flow.Roku.update", side_effect=Exception,
+        "homeassistant.components.roku.config_flow.Roku.update",
+        side_effect=Exception,
     ) as mock_validate_input:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
@@ -126,33 +128,6 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     assert len(mock_validate_input.mock_calls) == 1
 
 
-async def test_import(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the import step."""
-    mock_connection(aioclient_mock)
-
-    user_input = {CONF_HOST: HOST}
-    with patch(
-        "homeassistant.components.roku.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.roku.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == UPNP_FRIENDLY_NAME
-
-    assert result["data"]
-    assert result["data"][CONF_HOST] == HOST
-
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_ssdp_cannot_connect(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -161,7 +136,9 @@ async def test_ssdp_cannot_connect(
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discovery_info,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -174,10 +151,13 @@ async def test_ssdp_unknown_error(
     """Test we abort SSDP flow on unknown error."""
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
     with patch(
-        "homeassistant.components.roku.config_flow.Roku.update", side_effect=Exception,
+        "homeassistant.components.roku.config_flow.Roku.update",
+        side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info,
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_SSDP},
+            data=discovery_info,
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -202,11 +182,13 @@ async def test_ssdp_discovery(
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roku.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
@@ -215,6 +197,5 @@ async def test_ssdp_discovery(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

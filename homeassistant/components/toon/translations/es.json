@@ -5,7 +5,9 @@
             "authorize_url_fail": "Error desconocido generando una url de autorizaci\u00f3n",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
             "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
-            "no_agreements": "Esta cuenta no tiene pantallas Toon."
+            "no_agreements": "Esta cuenta no tiene pantallas Toon.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
         "step": {
             "agreement": {

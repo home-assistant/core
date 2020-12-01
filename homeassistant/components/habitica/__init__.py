@@ -49,7 +49,7 @@ INSTANCE_SCHEMA = vol.Schema(
     }
 )
 
-has_unique_values = vol.Schema(vol.Unique())  # pylint: disable=invalid-name
+has_unique_values = vol.Schema(vol.Unique())
 # because we want a handy alias
 
 

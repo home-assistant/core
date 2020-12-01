@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub428. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4.",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328"
+        },
+        "flow_title": "NZBGet : {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uc774\ub984",
+                    "password": "\uc554\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "ssl": "NZBGet\uc740 SSL \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2e4.",
+                    "username": "\uc0ac\uc6a9\uc790\uba85",
+                    "verify_ssl": "NZBGet\uc740 \uc801\uc808\ud55c \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2e4."
+                },
+                "title": "NZBGet\uc5d0 \uc5f0\uacb0"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\uc5c5\ub370\uc774\ud2b8 \uac04\uaca9 (\ucd08)"
+                }
+            }
+        }
+    }
+}

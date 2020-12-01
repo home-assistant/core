@@ -14,6 +14,7 @@
             "user": {
                 "data": {
                     "base_path": "Caminho relativo para a impressora",
+                    "port": "Porta",
                     "ssl": "A impressora suporta comunica\u00e7\u00e3o via SSL/TLS",
                     "verify_ssl": "A impressora usa um certificado SSL adequado"
                 },

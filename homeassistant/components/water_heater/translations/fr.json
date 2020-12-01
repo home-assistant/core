@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "\u00c9teindre {entity_name}",
+            "turn_on": "Allumer {entity_name}"
+        }
+    }
+}

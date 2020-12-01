@@ -31,7 +31,8 @@ async def test_unload_entry(hass):
 async def test_async_setup_raises_entry_not_ready(hass):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},
+        domain=DOMAIN,
+        data={CONF_URL: "https://some.url:1234"},
     )
     config_entry.add_to_hass(hass)
 

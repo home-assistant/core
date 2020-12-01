@@ -54,9 +54,11 @@ def report(what: str) -> None:
     """
     try:
         integration_frame = get_integration_frame()
-    except MissingIntegrationFrame:
+    except MissingIntegrationFrame as err:
         # Did not source from an integration? Hard error.
-        raise RuntimeError(f"Detected code that {what}. Please report this issue.")
+        raise RuntimeError(
+            f"Detected code that {what}. Please report this issue."
+        ) from err
 
     report_integration(what, integration_frame)
 

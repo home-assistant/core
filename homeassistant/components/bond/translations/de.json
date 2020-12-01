@@ -7,7 +7,8 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Zugriffstoken"
+                    "access_token": "Zugriffstoken",
+                    "host": "Host"
                 }
             }
         }

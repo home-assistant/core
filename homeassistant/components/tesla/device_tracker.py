@@ -1,5 +1,4 @@
 """Support for tracking Tesla cars."""
-import logging
 from typing import Optional
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -7,14 +6,13 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     entities = [
         TeslaDeviceEntity(
-            device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
+            device,
+            hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
         )
         for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
             "devices_tracker"

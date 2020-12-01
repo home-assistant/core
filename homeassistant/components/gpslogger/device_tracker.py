@@ -1,6 +1,4 @@
 """Support for the GPSLogger device tracking."""
-import logging
-
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.const import (
@@ -23,8 +21,6 @@ from .const import (
     ATTR_PROVIDER,
     ATTR_SPEED,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):

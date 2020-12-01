@@ -169,14 +169,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             return await self.async_step_profiles()
 
-        # Password is optional and default empty due to some cameras not
-        # allowing you to change ONVIF user settings.
-        # See https://github.com/home-assistant/core/issues/35904
+        # Username and Password are optional and default empty
+        # due to some cameras not allowing you to change ONVIF user settings.
+        # See https://github.com/home-assistant/core/issues/39182
+        # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Optional(CONF_USERNAME, default=""): str,
                     vol.Optional(CONF_PASSWORD, default=""): str,
                 }
             ),
@@ -198,9 +199,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD],
         )
 
-        await device.update_xaddrs()
-
         try:
+            await device.update_xaddrs()
             device_mgmt = device.create_devicemgmt_service()
 
             # Get the MAC address to use as the unique ID for the config flow
@@ -249,6 +249,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not h264:
                 return self.async_abort(reason="no_h264")
 
+            await device.close()
+
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
@@ -258,11 +260,13 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.onvif_config[CONF_NAME],
                 err,
             )
+            await device.close()
             return self.async_abort(reason="onvif_error")
 
         except Fault:
-            errors["base"] = "connection_failed"
+            errors["base"] = "cannot_connect"
 
+        await device.close()
         return self.async_show_form(step_id="auth", errors=errors)
 
     async def async_step_import(self, user_input):

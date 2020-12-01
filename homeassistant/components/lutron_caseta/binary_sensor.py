@@ -64,7 +64,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         sensors by each room. Therefore, there shouldn't be devices
         related to any sensor entities.
         """
-        return None  # pylint: disable=useless-return
+        return None
 
     @property
     def device_state_attributes(self):

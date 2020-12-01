@@ -19,7 +19,8 @@ async def test_setup_entry_account_error(hass):
         options=None,
     )
     with patch(
-        "homeassistant.components.dexcom.Dexcom", side_effect=AccountError,
+        "homeassistant.components.dexcom.Dexcom",
+        side_effect=AccountError,
     ):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)
@@ -38,7 +39,8 @@ async def test_setup_entry_session_error(hass):
         options=None,
     )
     with patch(
-        "homeassistant.components.dexcom.Dexcom", side_effect=SessionError,
+        "homeassistant.components.dexcom.Dexcom",
+        side_effect=SessionError,
     ):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)

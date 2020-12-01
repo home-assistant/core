@@ -1,7 +1,7 @@
 """
 Regression tests for Ecobee occupancy.
 
-https://github.com/home-assistant/home-assistant/issues/31827
+https://github.com/home-assistant/core/issues/31827
 """
 
 from tests.components.homekit_controller.common import (

@@ -130,7 +130,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(
         [
             HoneywellUSThermostat(
-                client, device, cool_away_temp, heat_away_temp, username, password,
+                client,
+                device,
+                cool_away_temp,
+                heat_away_temp,
+                username,
+                password,
             )
             for location in client.locations_by_id.values()
             for device in location.devices_by_id.values()

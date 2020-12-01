@@ -37,7 +37,8 @@ async def test_unregistering_webhook(hass, mock_client):
 async def test_generate_webhook_url(hass):
     """Test we generate a webhook url correctly."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     url = hass.components.webhook.async_generate_url("some_id")
 

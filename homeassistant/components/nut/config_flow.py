@@ -194,7 +194,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_resources()
 
         return self.async_show_form(
-            step_id="ups", data_schema=_ups_schema(self.ups_list), errors=errors,
+            step_id="ups",
+            data_schema=_ups_schema(self.ups_list),
+            errors=errors,
         )
 
     async def async_step_resources(self, user_input=None):
@@ -264,7 +266,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ] = cv.positive_int
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(base_schema),
+            step_id="init",
+            data_schema=vol.Schema(base_schema),
         )
 
 

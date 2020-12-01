@@ -51,7 +51,8 @@ async def test_setup_entry_fails(hass):
 
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert hass.data[AXIS_DOMAIN]
 
     assert await hass.config_entries.async_unload(device.config_entry.entry_id)

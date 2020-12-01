@@ -12,7 +12,7 @@
                     "email": "Email",
                     "password": "Password"
                 },
-                "description": "[%key:common::config_flow::description%]",
+                "description": "Do you want to start set up?",
                 "title": "PoolSense"
             }
         }

@@ -1,6 +1,5 @@
 """Tests for the Google Assistant traits."""
 from datetime import datetime, timedelta
-import logging
 
 import pytest
 
@@ -57,8 +56,6 @@ from . import BASIC_CONFIG, MockConfig
 from tests.async_mock import patch
 from tests.common import async_mock_service
 
-_LOGGER = logging.getLogger(__name__)
-
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
 BASIC_DATA = helpers.RequestData(
@@ -110,7 +107,8 @@ async def test_brightness_light(hass):
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(camera.DOMAIN, camera.SUPPORT_STREAM, None)
@@ -134,7 +132,8 @@ async def test_camera_stream(hass):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
 
     assert trt.query_attributes() == {
-        "cameraStreamAccessUrl": "https://example.com/api/streams/bla"
+        "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
+        "cameraStreamReceiverAppId": "B12CE3CA",
     }
 
 
@@ -206,6 +205,11 @@ async def test_onoff_switch(hass):
     trt_off = trait.OnOffTrait(hass, State("switch.bla", STATE_OFF), BASIC_CONFIG)
 
     assert trt_off.query_attributes() == {"on": False}
+
+    trt_assumed = trait.OnOffTrait(
+        hass, State("switch.bla", STATE_OFF, {"assumed_state": True}), BASIC_CONFIG
+    )
+    assert trt_assumed.sync_attributes() == {"commandOnlyOnOff": True}
 
     on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
@@ -378,6 +382,51 @@ async def test_startstop_vacuum(hass):
     await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+
+async def test_startstop_covert(hass):
+    """Test startStop trait support for vacuum domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.StartStopTrait.supported(cover.DOMAIN, cover.SUPPORT_STOP, None)
+
+    state = State(
+        "cover.bla",
+        cover.STATE_CLOSED,
+        {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP},
+    )
+
+    trt = trait.StartStopTrait(
+        hass,
+        state,
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {}
+
+    for state_value in (cover.STATE_CLOSING, cover.STATE_OPENING):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": True}
+
+    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    assert len(stop_calls) == 1
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    for state_value in (cover.STATE_CLOSED, cover.STATE_OPEN):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": False}
+
+    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
+        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+
+    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
+        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+
+    with pytest.raises(
+        SmartHomeError,
+        match="Command action.devices.commands.PauseUnpause is not supported",
+    ):
+        await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
 
 
 async def test_color_setting_color_light(hass):
@@ -564,7 +613,8 @@ async def test_light_modes(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"effect": "colorloop"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"effect": "colorloop"}},
     )
 
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
@@ -988,7 +1038,9 @@ async def test_lock_unlock_unlock(hass):
 
     # Test with 2FA override
     with patch.object(
-        BASIC_CONFIG, "should_2fa", return_value=False,
+        BASIC_CONFIG,
+        "should_2fa",
+        return_value=False,
     ):
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
@@ -1150,7 +1202,10 @@ async def test_arm_disarm_arm_away(hass):
 
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True}, {},
+            trait.COMMAND_ARMDISARM,
+            PIN_DATA,
+            {"arm": True},
+            {},
         )
 
 
@@ -1483,13 +1538,19 @@ async def test_inputselector(hass):
         "currentInput": "game",
     }
 
-    assert trt.can_execute(trait.COMMAND_INPUT, params={"newInput": "media"},)
+    assert trt.can_execute(
+        trait.COMMAND_INPUT,
+        params={"newInput": "media"},
+    )
 
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        trait.COMMAND_INPUT, BASIC_DATA, {"newInput": "media"}, {},
+        trait.COMMAND_INPUT,
+        BASIC_DATA,
+        {"newInput": "media"},
+        {},
     )
 
     assert len(calls) == 1
@@ -1526,10 +1587,16 @@ async def test_inputselector_nextprev(hass, sources, source, source_next, source
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+        "action.devices.commands.NextInput",
+        BASIC_DATA,
+        {},
+        {},
     )
     await trt.execute(
-        "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+        "action.devices.commands.PreviousInput",
+        BASIC_DATA,
+        {},
+        {},
     )
 
     assert len(calls) == 2
@@ -1563,17 +1630,26 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
 
     with pytest.raises(SmartHomeError):
         await trt.execute(
-            "action.devices.commands.NextInput", BASIC_DATA, {}, {},
+            "action.devices.commands.NextInput",
+            BASIC_DATA,
+            {},
+            {},
         )
 
     with pytest.raises(SmartHomeError):
         await trt.execute(
-            "action.devices.commands.PreviousInput", BASIC_DATA, {}, {},
+            "action.devices.commands.PreviousInput",
+            BASIC_DATA,
+            {},
+            {},
         )
 
     with pytest.raises(SmartHomeError):
         await trt.execute(
-            "action.devices.commands.InvalidCommand", BASIC_DATA, {}, {},
+            "action.devices.commands.InvalidCommand",
+            BASIC_DATA,
+            {},
+            {},
         )
 
 
@@ -1583,7 +1659,9 @@ async def test_modes_input_select(hass):
     assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
 
     trt = trait.ModesTrait(
-        hass, State("input_select.bla", "unavailable"), BASIC_CONFIG,
+        hass,
+        State("input_select.bla", "unavailable"),
+        BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {"availableModes": []}
 
@@ -1633,14 +1711,18 @@ async def test_modes_input_select(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"option": "xyz"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"option": "xyz"}},
     )
 
     calls = async_mock_service(
         hass, input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION
     )
     await trt.execute(
-        trait.COMMAND_MODES, BASIC_DATA, {"updateModeSettings": {"option": "xyz"}}, {},
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"option": "xyz"}},
+        {},
     )
 
     assert len(calls) == 1
@@ -1711,7 +1793,10 @@ async def test_modes_humidifier(hass):
 
     calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_MODE)
     await trt.execute(
-        trait.COMMAND_MODES, BASIC_DATA, {"updateModeSettings": {"mode": "away"}}, {},
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"mode": "away"}},
+        {},
     )
 
     assert len(calls) == 1
@@ -1774,7 +1859,8 @@ async def test_sound_modes(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"sound mode": "stereo"}},
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
     calls = async_mock_service(
@@ -1819,8 +1905,12 @@ async def test_openclose_cover(hass):
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
-    assert len(calls) == 1
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
+    )
+    assert len(calls) == 2
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
+    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 100}
 
 
 async def test_openclose_cover_unknown_state(hass):
@@ -1832,10 +1922,14 @@ async def test_openclose_cover_unknown_state(hass):
 
     # No state
     trt = trait.OpenCloseTrait(
-        hass, State("cover.bla", STATE_UNKNOWN, {}), BASIC_CONFIG
+        hass,
+        State(
+            "cover.bla", STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN}
+        ),
+        BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
 
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
@@ -1845,7 +1939,8 @@ async def test_openclose_cover_unknown_state(hass):
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
-    assert trt.query_attributes() == {"openPercent": 100}
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
 
 
 async def test_openclose_cover_assumed_state(hass):
@@ -1868,37 +1963,90 @@ async def test_openclose_cover_assumed_state(hass):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"commandOnlyOpenClose": True}
 
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
+    assert trt.query_attributes() == {}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 40}
 
-    assert trt.query_attributes() == {"openPercent": 40}
+
+async def test_openclose_cover_query_only(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN, 0, None)
+
+    state = State(
+        "cover.bla",
+        cover.STATE_OPEN,
+    )
+
+    trt = trait.OpenCloseTrait(
+        hass,
+        state,
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "discreteOnlyOpenClose": True,
+        "queryOnlyOpenClose": True,
+    }
+    assert trt.query_attributes() == {"openPercent": 100}
 
 
 async def test_openclose_cover_no_position(hass):
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None
+        cover.DOMAIN, cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE, None
+    )
+
+    state = State(
+        "cover.bla",
+        cover.STATE_OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
+        },
     )
 
     trt = trait.OpenCloseTrait(
-        hass, State("cover.bla", cover.STATE_OPEN, {}), BASIC_CONFIG
+        hass,
+        state,
+        BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
     assert trt.query_attributes() == {"openPercent": 100}
+
+    state.state = cover.STATE_CLOSED
+
+    assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
+    assert trt.query_attributes() == {"openPercent": 0}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    with pytest.raises(
+        SmartHomeError, match=r"Current position not know for relative command"
+    ):
+        await trt.execute(
+            trait.COMMAND_OPENCLOSE_RELATIVE,
+            BASIC_DATA,
+            {"openRelativePercent": 100},
+            {},
+        )
+
+    with pytest.raises(SmartHomeError, match=r"No support for partial open close"):
+        await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
 
 
 @pytest.mark.parametrize(
@@ -1957,10 +2105,9 @@ async def test_openclose_cover_secure(hass, device_class):
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
 
     # no challenge on close
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
     await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 0}, {})
-    assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert len(calls) == 2
+    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 0}
 
 
 @pytest.mark.parametrize(
@@ -1984,7 +2131,10 @@ async def test_openclose_binary_sensor(hass, device_class):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"queryOnlyOpenClose": True}
+    assert trt.sync_attributes() == {
+        "queryOnlyOpenClose": True,
+        "discreteOnlyOpenClose": True,
+    }
 
     assert trt.query_attributes() == {"openPercent": 100}
 
@@ -1994,7 +2144,10 @@ async def test_openclose_binary_sensor(hass, device_class):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"queryOnlyOpenClose": True}
+    assert trt.sync_attributes() == {
+        "queryOnlyOpenClose": True,
+        "discreteOnlyOpenClose": True,
+    }
 
     assert trt.query_attributes() == {"openPercent": 0}
 
@@ -2003,7 +2156,9 @@ async def test_volume_media_player(hass):
     """Test volume trait support for media player domain."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_VOLUME_SET, None,
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_SET,
+        None,
     )
 
     trt = trait.VolumeTrait(
@@ -2054,7 +2209,9 @@ async def test_volume_media_player(hass):
 async def test_volume_media_player_relative(hass):
     """Test volume trait support for relative-volume-only media players."""
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_VOLUME_STEP, None,
+        media_player.DOMAIN,
+        media_player.SUPPORT_VOLUME_STEP,
+        None,
     )
     trt = trait.VolumeTrait(
         hass,
@@ -2083,7 +2240,10 @@ async def test_volume_media_player_relative(hass):
     )
 
     await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": 10}, {},
+        trait.COMMAND_VOLUME_RELATIVE,
+        BASIC_DATA,
+        {"relativeSteps": 10},
+        {},
     )
     assert len(calls) == 10
     for call in calls:
@@ -2095,7 +2255,10 @@ async def test_volume_media_player_relative(hass):
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_DOWN
     )
     await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"relativeSteps": -10}, {},
+        trait.COMMAND_VOLUME_RELATIVE,
+        BASIC_DATA,
+        {"relativeSteps": -10},
+        {},
     )
     assert len(calls) == 10
     for call in calls:
@@ -2144,7 +2307,10 @@ async def test_media_player_mute(hass):
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
     )
     await trt.execute(
-        trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {},
+        trait.COMMAND_MUTE,
+        BASIC_DATA,
+        {"mute": True},
+        {},
     )
     assert len(mute_calls) == 1
     assert mute_calls[0].data == {
@@ -2156,7 +2322,10 @@ async def test_media_player_mute(hass):
         hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_MUTE
     )
     await trt.execute(
-        trait.COMMAND_MUTE, BASIC_DATA, {"mute": False}, {},
+        trait.COMMAND_MUTE,
+        BASIC_DATA,
+        {"mute": False},
+        {},
     )
     assert len(unmute_calls) == 1
     assert unmute_calls[0].data == {

@@ -27,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_BLOCKS = "blocks"
 ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
+ATTR_ICON = "icon"
 ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"
@@ -51,7 +52,12 @@ DATA_FILE_SCHEMA = vol.Schema(
 )
 
 DATA_TEXT_ONLY_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_BLOCKS): list, vol.Optional(ATTR_BLOCKS_TEMPLATE): list}
+    {
+        vol.Optional(ATTR_USERNAME): cv.string,
+        vol.Optional(ATTR_ICON): cv.string,
+        vol.Optional(ATTR_BLOCKS): list,
+        vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
+    }
 )
 
 DATA_SCHEMA = vol.All(
@@ -112,7 +118,7 @@ def _async_templatize_blocks(hass, value):
         }
 
     tmpl = template.Template(value, hass=hass)
-    return tmpl.async_render()
+    return tmpl.async_render(parse_result=False)
 
 
 class SlackNotificationService(BaseNotificationService):
@@ -191,27 +197,28 @@ class SlackNotificationService(BaseNotificationService):
         except ClientError as err:
             _LOGGER.error("Error while uploading file message: %s", err)
 
-    async def _async_send_text_only_message(self, targets, message, title, blocks):
+    async def _async_send_text_only_message(
+        self, targets, message, title, blocks, username, icon
+    ):
         """Send a text-only message."""
-        username = self._username
-        icon = self._icon
+        message_dict = {
+            "blocks": blocks,
+            "link_names": True,
+            "text": message,
+            "username": username,
+        }
 
-        if self._icon.lower().startswith(("http://", "https://")):
-            icon_type = "url"
-        else:
-            icon_type = "emoji"
+        icon = icon or self._icon
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
+                icon_type = "url"
+            else:
+                icon_type = "emoji"
+
+            message_dict[f"icon_{icon_type}"] = icon
 
         tasks = {
-            target: self._client.chat_postMessage(
-                **{
-                    "channel": target,
-                    "text": message,
-                    "blocks": blocks,
-                    "link_names": True,
-                    "username": username,
-                    f"icon_{icon_type}": icon,
-                }
-            )
+            target: self._client.chat_postMessage(**message_dict, channel=target)
             for target in targets
         }
 
@@ -252,7 +259,12 @@ class SlackNotificationService(BaseNotificationService):
                 blocks = {}
 
             return await self._async_send_text_only_message(
-                targets, message, title, blocks
+                targets,
+                message,
+                title,
+                blocks,
+                username=data.get(ATTR_USERNAME, self._username),
+                icon=data.get(ATTR_ICON, self._icon),
             )
 
         # Message Type 2: A message that uploads a remote file

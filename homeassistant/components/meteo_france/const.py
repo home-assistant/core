@@ -1,13 +1,31 @@
 """Meteo-France component constants."""
 
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 DOMAIN = "meteo_france"
@@ -24,6 +42,7 @@ FORECAST_MODE_DAILY = "daily"
 FORECAST_MODE = [FORECAST_MODE_HOURLY, FORECAST_MODE_DAILY]
 
 ATTR_NEXT_RAIN_1_HOUR_FORECAST = "1_hour_forecast"
+ATTR_NEXT_RAIN_DT_REF = "forecast_time_ref"
 
 ENTITY_NAME = "name"
 ENTITY_UNIT = "unit"
@@ -43,7 +62,7 @@ SENSOR_TYPES = {
     },
     "rain_chance": {
         ENTITY_NAME: "Rain chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:weather-rainy",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -51,7 +70,7 @@ SENSOR_TYPES = {
     },
     "snow_chance": {
         ENTITY_NAME: "Snow chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:weather-snowy",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -59,7 +78,7 @@ SENSOR_TYPES = {
     },
     "freeze_chance": {
         ENTITY_NAME: "Freeze chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:snowflake",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -107,7 +126,7 @@ SENSOR_TYPES = {
     },
     "precipitation": {
         ENTITY_NAME: "Daily precipitation",
-        ENTITY_UNIT: "mm",
+        ENTITY_UNIT: LENGTH_MILLIMETERS,
         ENTITY_ICON: "mdi:cup-water",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -115,7 +134,7 @@ SENSOR_TYPES = {
     },
     "cloud": {
         ENTITY_NAME: "Cloud cover",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:weather-partly-cloudy",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -124,46 +143,52 @@ SENSOR_TYPES = {
 }
 
 CONDITION_CLASSES = {
-    "clear-night": ["Nuit Claire", "Nuit claire"],
-    "cloudy": ["Très nuageux", "Couvert"],
-    "fog": [
+    ATTR_CONDITION_CLEAR_NIGHT: ["Nuit Claire", "Nuit claire"],
+    ATTR_CONDITION_CLOUDY: ["Très nuageux", "Couvert"],
+    ATTR_CONDITION_FOG: [
         "Brume ou bancs de brouillard",
         "Brume",
         "Brouillard",
         "Brouillard givrant",
+        "Bancs de Brouillard",
     ],
-    "hail": ["Risque de grêle", "Risque de grèle"],
-    "lightning": ["Risque d'orages", "Orages"],
-    "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": [
+    ATTR_CONDITION_HAIL: ["Risque de grêle", "Risque de grèle"],
+    ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages"],
+    ATTR_CONDITION_LIGHTNING_RAINY: [
+        "Pluie orageuses",
+        "Pluies orageuses",
+        "Averses orageuses",
+    ],
+    ATTR_CONDITION_PARTLYCLOUDY: [
         "Ciel voilé",
         "Ciel voilé nuit",
         "Éclaircies",
         "Eclaircies",
         "Peu nuageux",
     ],
-    "pouring": ["Pluie forte"],
-    "rainy": [
+    ATTR_CONDITION_POURING: ["Pluie forte"],
+    ATTR_CONDITION_RAINY: [
         "Bruine / Pluie faible",
         "Bruine",
         "Pluie faible",
         "Pluies éparses / Rares averses",
         "Pluies éparses",
         "Rares averses",
+        "Pluie modérée",
         "Pluie / Averses",
         "Averses",
         "Pluie",
     ],
-    "snowy": [
+    ATTR_CONDITION_SNOWY: [
         "Neige / Averses de neige",
         "Neige",
         "Averses de neige",
         "Neige forte",
         "Quelques flocons",
     ],
-    "snowy-rainy": ["Pluie et neige", "Pluie verglaçante"],
-    "sunny": ["Ensoleillé"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante"],
+    ATTR_CONDITION_SUNNY: ["Ensoleillé"],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }

@@ -79,8 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
 
         smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)

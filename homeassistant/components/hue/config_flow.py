@@ -122,7 +122,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if any(
-            user_input["host"] == entry.data["host"]
+            user_input["host"] == entry.data.get("host")
             for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")
@@ -216,7 +216,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Check if host exists, abort if so.
         if any(
-            import_info["host"] == entry.data["host"]
+            import_info["host"] == entry.data.get("host")
             for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")

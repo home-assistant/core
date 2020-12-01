@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -60,7 +60,6 @@ def server_id_valid(server_id):
 
 async def async_setup(hass, config):
     """Import integration from config."""
-
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -108,6 +107,8 @@ async def async_unload_entry(hass, config_entry):
     """Unload SpeedTest Entry from config_entry."""
     hass.services.async_remove(DOMAIN, SPEED_TEST_SERVICE)
 
+    hass.data[DOMAIN].async_unload()
+
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
 
     hass.data.pop(DOMAIN)
@@ -124,8 +125,12 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self.api = None
         self.servers = {}
+        self._unsub_update_listener = None
         super().__init__(
-            self.hass, _LOGGER, name=DOMAIN, update_method=self.async_update,
+            self.hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=self.async_update,
         )
 
     def update_servers(self):
@@ -133,13 +138,17 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         try:
             server_list = self.api.get_servers()
         except speedtest.ConfigRetrievalError:
+            _LOGGER.debug("Error retrieving server list")
             return
 
         self.servers[DEFAULT_SERVER] = {}
         for server in sorted(
-            server_list.values(), key=lambda server: server[0]["country"]
+            server_list.values(),
+            key=lambda server: server[0]["country"] + server[0]["sponsor"],
         ):
-            self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
+            self.servers[
+                f"{server[0]['country']} - {server[0]['sponsor']} - {server[0]['name']}"
+            ] = server[0]
 
     def update_data(self):
         """Get the latest data from speedtest.net."""
@@ -163,8 +172,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         """Update Speedtest data."""
         try:
             return await self.hass.async_add_executor_job(self.update_data)
-        except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers):
-            raise UpdateFailed
+        except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers) as err:
+            raise UpdateFailed from err
 
     async def async_set_options(self):
         """Set options for entry."""
@@ -183,8 +192,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         """Set up SpeedTest."""
         try:
             self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
-        except speedtest.ConfigRetrievalError:
-            raise ConfigEntryNotReady
+        except speedtest.ConfigRetrievalError as err:
+            raise ConfigEntryNotReady from err
 
         async def request_update(call):
             """Request update."""
@@ -196,7 +205,17 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 
-        self.config_entry.add_update_listener(options_updated_listener)
+        self._unsub_update_listener = self.config_entry.add_update_listener(
+            options_updated_listener
+        )
+
+    @callback
+    def async_unload(self):
+        """Unload the coordinator."""
+        if not self._unsub_update_listener:
+            return
+        self._unsub_update_listener()
+        self._unsub_update_listener = None
 
 
 async def options_updated_listener(hass, entry):

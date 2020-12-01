@@ -116,7 +116,10 @@ async def test_dimmer_on(dimmer, hass, config):
 
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -186,7 +189,10 @@ async def test_dimmer_off(dimmer, hass, config):
 
     feature_mock.async_off = AsyncMock(side_effect=turn_off)
     await hass.services.async_call(
-        "light", SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -282,7 +288,10 @@ async def test_wlightbox_s_on(wlightbox_s, hass, config):
 
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -523,7 +532,10 @@ async def test_wlightbox_on_to_last_color(wlightbox, hass, config):
     feature_mock.sensible_on_value = "f1e2d3e4"
 
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -555,7 +567,10 @@ async def test_wlightbox_off(wlightbox, hass, config):
     feature_mock.async_off = AsyncMock(side_effect=turn_off)
 
     await hass.services.async_call(
-        "light", SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -589,7 +604,10 @@ async def test_turn_on_failure(feature, hass, config, caplog):
 
     feature_mock.sensible_on_value = 123
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     assert (

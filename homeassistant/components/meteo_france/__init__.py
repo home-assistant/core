@@ -33,7 +33,8 @@ SCAN_INTERVAL = timedelta(minutes=15)
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))}, extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -130,7 +131,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
-        "Department corresponding to %s is %s", entry.title, department,
+        "Department corresponding to %s is %s",
+        entry.title,
+        department,
     )
     if is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):

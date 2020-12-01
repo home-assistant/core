@@ -14,18 +14,13 @@ from homeassistant.components.alexa import (
     state_report as alexa_state_report,
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
-from homeassistant.core import callback
+from homeassistant.core import callback, split_entity_id
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    CONF_ENTITY_CONFIG,
-    CONF_FILTER,
-    DEFAULT_SHOULD_EXPOSE,
-    PREF_SHOULD_EXPOSE,
-    RequireRelink,
-)
+from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, RequireRelink
+from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +32,7 @@ SYNC_DELAY = 1
 class AlexaConfig(alexa_config.AbstractConfig):
     """Alexa Configuration."""
 
-    def __init__(self, hass, config, prefs, cloud):
+    def __init__(self, hass, config, prefs: CloudPreferences, cloud):
         """Initialize the Alexa config."""
         super().__init__(hass)
         self._config = config
@@ -46,6 +41,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         self._token = None
         self._token_valid = None
         self._cur_entity_prefs = prefs.alexa_entity_configs
+        self._cur_default_expose = prefs.alexa_default_expose
         self._alexa_sync_unsub = None
         self._endpoint = None
 
@@ -99,7 +95,17 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         entity_configs = self._prefs.alexa_entity_configs
         entity_config = entity_configs.get(entity_id, {})
-        return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+        entity_expose = entity_config.get(PREF_SHOULD_EXPOSE)
+        if entity_expose is not None:
+            return entity_expose
+
+        default_expose = self._prefs.alexa_default_expose
+
+        # Backwards compat
+        if default_expose is None:
+            return True
+
+        return split_entity_id(entity_id)[0] in default_expose
 
     @callback
     def async_invalidate_access_token(self):
@@ -147,16 +153,24 @@ class AlexaConfig(alexa_config.AbstractConfig):
             await self.async_sync_entities()
             return
 
-        # If entity prefs are the same or we have filter in config.yaml,
-        # don't sync.
+        # If user has filter in config.yaml, don't sync.
+        if not self._config[CONF_FILTER].empty_filter:
+            return
+
+        # If entity prefs are the same, don't sync.
         if (
             self._cur_entity_prefs is prefs.alexa_entity_configs
-            or not self._config[CONF_FILTER].empty_filter
+            and self._cur_default_expose is prefs.alexa_default_expose
         ):
             return
 
         if self._alexa_sync_unsub:
             self._alexa_sync_unsub()
+            self._alexa_sync_unsub = None
+
+        if self._cur_default_expose is not prefs.alexa_default_expose:
+            await self.async_sync_entities()
+            return
 
         self._alexa_sync_unsub = async_call_later(
             self.hass, SYNC_DELAY, self._sync_prefs

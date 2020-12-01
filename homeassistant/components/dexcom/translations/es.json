@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "La cuenta ya ha sido configurada"
+            "already_configured": "La cuenta ya ha sido configurada"
         },
         "error": {
-            "account_error": "Autenticaci\u00f3n no v\u00e1lida",
-            "session_error": "No se pudo conectar",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "step": {

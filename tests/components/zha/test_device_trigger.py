@@ -3,6 +3,7 @@ from datetime import timedelta
 import time
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
@@ -18,6 +19,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 ON = 1
 OFF = 0
@@ -58,7 +60,7 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
             1: {
                 "in_clusters": [general.Basic.cluster_id],
                 "out_clusters": [general.OnOff.cluster_id],
-                "device_type": 0,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )

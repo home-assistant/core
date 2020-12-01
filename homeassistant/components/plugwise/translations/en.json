@@ -1,22 +1,41 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Smile is already configured"
+            "already_configured": "Service is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
-            "invalid_auth": "Invalid authentication, check the 8 characters of your Smile ID",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Smile IP address",
-                    "password": "Smile ID"
+                    "flow_type": "Connection type"
                 },
-                "description": "Details",
+                "description": "Product:",
+                "title": "Plugwise type"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP Address",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile Username"
+                },
+                "description": "Please enter",
                 "title": "Connect to the Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Adjust Plugwise Options"
             }
         }
     }

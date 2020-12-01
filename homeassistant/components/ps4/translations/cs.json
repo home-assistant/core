@@ -1,10 +1,37 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "credential_error": "P\u0159i na\u010d\u00edt\u00e1n\u00ed p\u0159ihla\u0161ovac\u00edch \u00fadaj\u016f do\u0161lo k chyb\u011b.",
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed",
+            "port_987_bind_error": "Nelze se p\u0159ipojit na port 987. Dal\u0161\u00ed informace naleznete v [dokumentaci](https://www.home-assistant.io/components/ps4/).",
+            "port_997_bind_error": "Nelze se p\u0159ipojit na port 997. Dal\u0161\u00ed informace naleznete v [dokumentaci](https://www.home-assistant.io/components/ps4/)."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "login_failed": "Nepoda\u0159ilo se sp\u00e1rovat s PlayStation 4. Ov\u011b\u0159te, zda je PIN k\u00f3d spr\u00e1vn\u00fd.",
+            "no_ipaddress": "Zadejte IP adresu PlayStation 4, kter\u00fd chcete konfigurovat."
+        },
         "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
             "link": {
                 "data": {
+                    "code": "PIN k\u00f3d",
+                    "ip_address": "IP adresa",
+                    "name": "Jm\u00e9no",
                     "region": "Region"
                 },
+                "description": "Zadejte sv\u00e9 informace o PlayStation 4. \"PIN\" naleznete v \"Nastaven\u00ed\" sv\u00e9 konzole PlayStation 4. Pot\u00e9 p\u0159ejd\u011bte do \"Nastaven\u00ed p\u0159ipojen\u00ed mobiln\u00ed aplikace\" a vyberte \"P\u0159idat za\u0159\u00edzen\u00ed\". Zadejte PIN. Dal\u0161\u00ed informace naleznete v [dokumentaci](https://www.home-assistant.io/components/ps4/).",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP adresa (Pokud pou\u017e\u00edv\u00e1te automatick\u00e9 zji\u0161\u0165ov\u00e1n\u00ed, ponechte pr\u00e1zdn\u00e9.)",
+                    "mode": "Re\u017eim nastaven\u00ed"
+                },
+                "description": "Vyberte re\u017eim pro konfiguraci. Pole IP adresa m\u016f\u017ee b\u00fdt ponech\u00e1no pr\u00e1zdn\u00e9, pokud vyberete \"automatick\u00e9 zji\u0161\u0165ov\u00e1n\u00ed\", proto\u017ee za\u0159\u00edzen\u00ed budou automaticky objevena.",
                 "title": "PlayStation 4"
             }
         }

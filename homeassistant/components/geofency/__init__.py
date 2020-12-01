@@ -1,6 +1,4 @@
 """Support for Geofency."""
-import logging
-
 from aiohttp import web
 import voluptuous as vol
 
@@ -20,8 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
@@ -154,5 +150,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

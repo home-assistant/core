@@ -5,17 +5,23 @@ from typing import Union
 from pymata_express.pymata_express import PymataExpress
 from pymata_express.pymata_express_serial import serial
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_LIGHTS,
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+)
 
 from .const import (
     CONF_ARDUINO_INSTANCE_ID,
     CONF_ARDUINO_WAIT,
-    CONF_BINARY_SENSORS,
     CONF_SAMPLING_INTERVAL,
     CONF_SERIAL_BAUD_RATE,
     CONF_SERIAL_PORT,
     CONF_SLEEP_TUNE,
-    CONF_SWITCHES,
+    PIN_TYPE_ANALOG,
+    PIN_TYPE_DIGITAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,13 +40,19 @@ class FirmataBoard:
         self.protocol_version = None
         self.name = self.config[CONF_NAME]
         self.switches = []
+        self.lights = []
         self.binary_sensors = []
+        self.sensors = []
         self.used_pins = []
 
         if CONF_SWITCHES in self.config:
             self.switches = self.config[CONF_SWITCHES]
+        if CONF_LIGHTS in self.config:
+            self.lights = self.config[CONF_LIGHTS]
         if CONF_BINARY_SENSORS in self.config:
             self.binary_sensors = self.config[CONF_BINARY_SENSORS]
+        if CONF_SENSORS in self.config:
+            self.sensors = self.config[CONF_SENSORS]
 
     async def async_setup(self, tries=0) -> bool:
         """Set up a Firmata instance."""
@@ -109,11 +121,11 @@ board %s: %s",
     def get_pin_type(self, pin: FirmataPinType) -> tuple:
         """Return the type and Firmata location of a pin on the board."""
         if isinstance(pin, str):
-            pin_type = "analog"
+            pin_type = PIN_TYPE_ANALOG
             firmata_pin = int(pin[1:])
             firmata_pin += self.api.first_analog_pin
         else:
-            pin_type = "digital"
+            pin_type = PIN_TYPE_DIGITAL
             firmata_pin = pin
         return (pin_type, firmata_pin)
 

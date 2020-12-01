@@ -65,7 +65,10 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
         name = f"{self.host}{display_port}"
 
         super().__init__(
-            hass, _LOGGER, name=name, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=name,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> Optional[datetime]:
@@ -73,7 +76,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
         try:
             timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
         except TemporaryFailure as err:
-            raise UpdateFailed(err.args[0])
+            raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False

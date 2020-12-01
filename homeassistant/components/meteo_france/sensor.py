@@ -8,13 +8,16 @@ from meteofrance.helpers import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_NEXT_RAIN_1_HOUR_FORECAST,
+    ATTR_NEXT_RAIN_DT_REF,
     ATTRIBUTION,
     COORDINATOR_ALERT,
     COORDINATOR_FORECAST,
@@ -64,20 +67,22 @@ async def async_setup_entry(
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
 
     async_add_entities(
-        entities, False,
+        entities,
+        False,
     )
 
 
-class MeteoFranceSensor(Entity):
+class MeteoFranceSensor(CoordinatorEntity):
     """Representation of a Meteo-France sensor."""
 
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
         """Initialize the Meteo-France sensor."""
+        super().__init__(coordinator)
         self._type = sensor_type
-        self.coordinator = coordinator
-        city_name = self.coordinator.data.position["name"]
-        self._name = f"{city_name} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
-        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{self._type}"
+        if hasattr(self.coordinator.data, "position"):
+            city_name = self.coordinator.data.position["name"]
+            self._name = f"{city_name} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
+            self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{self._type}"
 
     @property
     def unique_id(self):
@@ -140,29 +145,6 @@ class MeteoFranceSensor(Entity):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    @property
-    def available(self):
-        """Return if state is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_update(self):
-        """Only used by the generic entity update service."""
-        if not self.enabled:
-            return
-
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
 
 class MeteoFranceRainSensor(MeteoFranceSensor):
     """Representation of a Meteo-France rain sensor."""
@@ -184,11 +166,13 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
-            ATTR_NEXT_RAIN_1_HOUR_FORECAST: [
-                {dt_util.utc_from_timestamp(item["dt"]).isoformat(): item["desc"]}
+            ATTR_NEXT_RAIN_DT_REF: dt_util.utc_from_timestamp(reference_dt).isoformat(),
+            ATTR_NEXT_RAIN_1_HOUR_FORECAST: {
+                f"{int((item['dt'] - reference_dt) / 60)} min": item["desc"]
                 for item in self.coordinator.data.forecast
-            ],
+            },
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
@@ -199,8 +183,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
     # pylint: disable=super-init-not-called
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
         """Initialize the Meteo-France sensor."""
-        self._type = sensor_type
-        self.coordinator = coordinator
+        super().__init__(sensor_type, coordinator)
         dept_code = self.coordinator.data.domain_id
         self._name = f"{dept_code} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
         self._unique_id = self._name

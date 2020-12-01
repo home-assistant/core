@@ -148,13 +148,15 @@ async def get_newest_version(hass, huuid, include_components):
 
     try:
         res = await req.json()
-    except ValueError:
+    except ValueError as err:
         raise update_coordinator.UpdateFailed(
             "Received invalid JSON from Home Assistant Update"
-        )
+        ) from err
 
     try:
         res = RESPONSE_SCHEMA(res)
         return res["version"], res["release-notes"]
     except vol.Invalid as err:
-        raise update_coordinator.UpdateFailed(f"Got unexpected response: {err}")
+        raise update_coordinator.UpdateFailed(
+            f"Got unexpected response: {err}"
+        ) from err

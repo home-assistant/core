@@ -19,9 +19,11 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
     )
     await hass.async_block_till_done()
-    assert len(hass.data[FLO_DOMAIN]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
 
-    device: FloDeviceDataUpdateCoordinator = hass.data[FLO_DOMAIN]["devices"][0]
+    device: FloDeviceDataUpdateCoordinator = hass.data[FLO_DOMAIN][
+        config_entry.entry_id
+    ]["devices"][0]
     assert device.api_client is not None
     assert device.available
     assert device.consumption_today == 3.674

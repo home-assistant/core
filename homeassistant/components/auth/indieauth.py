@@ -170,8 +170,8 @@ def _parse_client_id(client_id):
     try:
         # parts raises ValueError when port cannot be parsed as int
         parts.port
-    except ValueError:
-        raise ValueError("Client ID contains invalid port")
+    except ValueError as ex:
+        raise ValueError("Client ID contains invalid port") from ex
 
     # Additionally, hostnames
     # MUST be domain names or a loopback interface and

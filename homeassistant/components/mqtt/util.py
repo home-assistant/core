@@ -21,8 +21,8 @@ def valid_topic(value: Any) -> str:
     value = cv.string(value)
     try:
         raw_value = value.encode("utf-8")
-    except UnicodeError:
-        raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.")
+    except UnicodeError as err:
+        raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.") from err
     if not raw_value:
         raise vol.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_value) > 65535:

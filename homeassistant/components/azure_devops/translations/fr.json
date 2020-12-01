@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
+            "reauth_successful": "Jeton d'acc\u00e8s mis \u00e0 jour avec succ\u00e8s"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
+            "project_error": "Impossible d'obtenir les informations sur le projet."
+        },
+        "flow_title": "Azure DevOps: {project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Jeton d'acc\u00e8s personnel (PAT)"
+                },
+                "description": "L'authentification a \u00e9chou\u00e9 pour {project_url} . Veuillez saisir vos informations d'identification actuelles.",
+                "title": "R\u00e9authentification"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisation",
+                    "personal_access_token": "Jeton d'acc\u00e8s personnel (PAT)",
+                    "project": "Projet"
+                },
+                "description": "Configurez une instance Azure DevOps pour acc\u00e9der \u00e0 votre projet. Un jeton d'acc\u00e8s personnel n'est requis que pour un projet priv\u00e9.",
+                "title": "Ajouter un projet Azure DevOps"
+            }
+        }
+    }
+}

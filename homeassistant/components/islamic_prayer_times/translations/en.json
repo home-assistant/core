@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Only a single instance is necessary."
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
             "user": {

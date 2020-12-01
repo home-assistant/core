@@ -1,6 +1,4 @@
 """Support for X10 dimmer over Mochad."""
-import logging
-
 from pymochad import device
 import voluptuous as vol
 
@@ -14,8 +12,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLAT
 from homeassistant.helpers import config_validation as cv
 
 from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_BRIGHTNESS_LEVELS = "brightness_levels"
 

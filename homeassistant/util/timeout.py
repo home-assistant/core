@@ -7,15 +7,12 @@ from __future__ import annotations
 
 import asyncio
 import enum
-import logging
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
 
 from .async_ import run_callback_threadsafe
 
 ZONE_GLOBAL = "global"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class _State(str, enum.Enum):
@@ -255,7 +252,10 @@ class _ZoneTaskContext:
     """Context manager that tracks an active task for a zone."""
 
     def __init__(
-        self, zone: _ZoneTimeoutManager, task: asyncio.Task[Any], timeout: float,
+        self,
+        zone: _ZoneTimeoutManager,
+        task: asyncio.Task[Any],
+        timeout: float,
     ) -> None:
         """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()

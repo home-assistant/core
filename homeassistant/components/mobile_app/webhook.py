@@ -8,7 +8,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import tag
+from homeassistant.components import notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -26,15 +26,19 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    ATTR_SUPPORTED_FEATURES,
     CONF_WEBHOOK_ID,
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
 )
 from homeassistant.core import EventOrigin
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    template,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.decorator import Registry
 
@@ -149,10 +153,12 @@ async def handle_webhook(
 
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
 
+    device_name = config_entry.data[ATTR_DEVICE_NAME]
+
     try:
         req_data = await request.json()
     except ValueError:
-        _LOGGER.warning("Received invalid JSON from mobile_app")
+        _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
         return empty_okay_response(status=HTTP_BAD_REQUEST)
 
     if (
@@ -161,7 +167,7 @@ async def handle_webhook(
     ):
         _LOGGER.warning(
             "Refusing to accept unencrypted webhook from %s",
-            config_entry.data[ATTR_DEVICE_NAME],
+            device_name,
         )
         return error_response(ERR_ENCRYPTION_REQUIRED, "Encryption required")
 
@@ -169,7 +175,9 @@ async def handle_webhook(
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
     except vol.Invalid as ex:
         err = vol.humanize.humanize_error(req_data, ex)
-        _LOGGER.error("Received invalid webhook payload: %s", err)
+        _LOGGER.error(
+            "Received invalid webhook from %s with payload: %s", device_name, err
+        )
         return empty_okay_response()
 
     webhook_type = req_data[ATTR_WEBHOOK_TYPE]
@@ -181,11 +189,16 @@ async def handle_webhook(
         webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
 
     if webhook_type not in WEBHOOK_COMMANDS:
-        _LOGGER.error("Received invalid webhook type: %s", webhook_type)
+        _LOGGER.error(
+            "Received invalid webhook from %s of type: %s", device_name, webhook_type
+        )
         return empty_okay_response()
 
     _LOGGER.debug(
-        "Received webhook payload for type %s: %s", webhook_type, webhook_payload
+        "Received webhook payload from %s for type %s: %s",
+        device_name,
+        webhook_type,
+        webhook_payload,
     )
 
     # Shield so we make sure we finish the webhook, even if sender hangs up.
@@ -219,7 +232,7 @@ async def webhook_call_service(hass, config_entry, data):
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
-        raise HTTPBadRequest()
+        raise HTTPBadRequest() from ex
 
     return empty_okay_response()
 
@@ -251,12 +264,14 @@ async def webhook_stream_camera(hass, config_entry, data):
 
     if camera is None:
         return webhook_response(
-            {"success": False}, registration=config_entry.data, status=HTTP_BAD_REQUEST,
+            {"success": False},
+            registration=config_entry.data,
+            status=HTTP_BAD_REQUEST,
         )
 
     resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
 
-    if camera.attributes["supported_features"] & CAMERA_SUPPORT_STREAM:
+    if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:
             resp["hls_path"] = await hass.components.camera.async_request_stream(
                 camera.entity_id, "hls"
@@ -273,7 +288,7 @@ async def webhook_stream_camera(hass, config_entry, data):
 @validate_schema(
     {
         str: {
-            vol.Required(ATTR_TEMPLATE): cv.template,
+            vol.Required(ATTR_TEMPLATE): cv.string,
             vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
         }
     }
@@ -283,10 +298,9 @@ async def webhook_render_template(hass, config_entry, data):
     resp = {}
     for key, item in data.items():
         try:
-            tpl = item[ATTR_TEMPLATE]
-            attach(hass, tpl)
+            tpl = template.Template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
-        except TemplateError as ex:
+        except template.TemplateError as ex:
             resp[key] = {"error": str(ex)}
 
     return webhook_response(resp, registration=config_entry.data)
@@ -341,8 +355,11 @@ async def webhook_update_registration(hass, config_entry, data):
 
     hass.config_entries.async_update_entry(config_entry, data=new_registration)
 
+    await hass_notify.async_reload(hass, DOMAIN)
+
     return webhook_response(
-        safe_registration(new_registration), registration=new_registration,
+        safe_registration(new_registration),
+        registration=new_registration,
     )
 
 
@@ -395,6 +412,7 @@ async def webhook_register_sensor(hass, config_entry, data):
     """Handle a register sensor webhook."""
     entity_type = data[ATTR_SENSOR_TYPE]
     unique_id = data[ATTR_SENSOR_UNIQUE_ID]
+    device_name = config_entry.data[ATTR_DEVICE_NAME]
 
     unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
     existing_sensor = unique_store_key in hass.data[DOMAIN][entity_type]
@@ -403,7 +421,9 @@ async def webhook_register_sensor(hass, config_entry, data):
 
     # If sensor already is registered, update current state instead
     if existing_sensor:
-        _LOGGER.debug("Re-register existing sensor %s", unique_id)
+        _LOGGER.debug(
+            "Re-register for %s of existing sensor %s", device_name, unique_id
+        )
         entry = hass.data[DOMAIN][entity_type][unique_store_key]
         data = {**entry, **data}
 
@@ -420,7 +440,9 @@ async def webhook_register_sensor(hass, config_entry, data):
         async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(
-        {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
+        {"success": True},
+        registration=config_entry.data,
+        status=HTTP_CREATED,
     )
 
 
@@ -454,6 +476,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
         }
     )
 
+    device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
@@ -464,7 +487,9 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         if unique_store_key not in hass.data[DOMAIN][entity_type]:
             _LOGGER.error(
-                "Refusing to update non-registered sensor: %s", unique_store_key
+                "Refusing to update %s non-registered sensor: %s",
+                device_name,
+                unique_store_key,
             )
             err_msg = f"{entity_type} {unique_id} is not registered"
             resp[unique_id] = {
@@ -480,7 +505,10 @@ async def webhook_update_sensor_states(hass, config_entry, data):
         except vol.Invalid as err:
             err_msg = vol.humanize.humanize_error(sensor, err)
             _LOGGER.error(
-                "Received invalid sensor payload for %s: %s", unique_id, err_msg
+                "Received invalid sensor payload from %s for %s: %s",
+                device_name,
+                unique_id,
+                err_msg,
             )
             resp[unique_id] = {
                 "success": False,

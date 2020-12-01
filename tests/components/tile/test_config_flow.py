@@ -37,13 +37,14 @@ async def test_invalid_credentials(hass):
     }
 
     with patch(
-        "homeassistant.components.tile.config_flow.async_login", side_effect=TileError,
+        "homeassistant.components.tile.config_flow.async_login",
+        side_effect=TileError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_step_import(hass):

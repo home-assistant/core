@@ -4,14 +4,14 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import Dict, Iterator, List, TypeVar, Union, overload
+from typing import Dict, Iterator, List, TextIO, TypeVar, Union, overload
 
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass
+from .objects import NodeListClass, NodeStrClass, Placeholder
 
 try:
     import keyring
@@ -56,15 +56,21 @@ def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
-    except yaml.YAMLError as exc:
-        _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
+            return parse_yaml(conf_file)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
+
+
+def parse_yaml(content: Union[str, TextIO]) -> JSON_TYPE:
+    """Load a YAML file."""
+    try:
+        # If configuration file is empty YAML returns None
+        # We convert that to an empty dict
+        return yaml.load(content, Loader=SafeLineLoader) or OrderedDict()
+    except yaml.YAMLError as exc:
+        _LOGGER.error(str(exc))
+        raise HomeAssistantError(exc) from exc
 
 
 @overload
@@ -88,9 +94,7 @@ def _add_reference(
     ...
 
 
-def _add_reference(  # type: ignore
-    obj, loader: SafeLineLoader, node: yaml.nodes.Node
-):
+def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type: ignore
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
@@ -111,8 +115,10 @@ def _include_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     fname = os.path.join(os.path.dirname(loader.name), node.value)
     try:
         return _add_reference(load_yaml(fname), loader, node)
-    except FileNotFoundError:
-        raise HomeAssistantError(f"{node.start_mark}: Unable to read file {fname}.")
+    except FileNotFoundError as exc:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Unable to read file {fname}."
+        ) from exc
 
 
 def _is_file_valid(name: str) -> bool:
@@ -197,12 +203,12 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         try:
             hash(key)
-        except TypeError:
+        except TypeError as exc:
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(fname, 0, line, -1, None, None),
-            )
+            ) from exc
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
@@ -325,3 +331,4 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
+yaml.SafeLoader.add_constructor("!placeholder", Placeholder.from_node)

@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses WLED-Ger\u00e4t ist bereits konfiguriert.",
-            "connection_error": "Verbindung zum WLED-Ger\u00e4t fehlgeschlagen."
-        },
-        "error": {
-            "connection_error": "Verbindung zum WLED-Ger\u00e4t fehlgeschlagen."
+            "already_configured": "Dieses WLED-Ger\u00e4t ist bereits konfiguriert."
         },
         "flow_title": "WLED: {name}",
         "step": {

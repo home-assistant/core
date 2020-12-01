@@ -64,13 +64,11 @@ SERVICE_HANDLERS = {
     SERVICE_KONNECTED: ("konnected", None),
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
-    SERVICE_YEELIGHT: ("yeelight", None),
     "yamaha": ("media_player", "yamaha"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
-    "kodi": ("media_player", "kodi"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
     "nanoleaf_aurora": ("light", "nanoleaf"),
 }
@@ -87,12 +85,14 @@ MIGRATED_SERVICE_HANDLERS = [
     "harmony",
     "homekit",
     "ikea_tradfri",
+    "kodi",
     "philips_hue",
     "sonos",
     "songpal",
     SERVICE_WEMO,
     SERVICE_XIAOMI_GW,
     "volumio",
+    SERVICE_YEELIGHT,
 ]
 
 DEFAULT_ENABLED = (
@@ -193,7 +193,9 @@ async def async_setup(hass, config):
     async def scan_devices(now):
         """Scan for devices."""
         try:
-            results = await hass.async_add_job(_discover, netdisco, zeroconf_instance)
+            results = await hass.async_add_executor_job(
+                _discover, netdisco, zeroconf_instance
+            )
 
             for result in results:
                 hass.async_create_task(new_service_found(*result))

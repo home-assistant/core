@@ -19,12 +19,14 @@ async def test_form(hass):
     with patch("sense_energy.ASyncSenseable.authenticate", return_value=True,), patch(
         "homeassistant.components.sense.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.sense.async_setup_entry", return_value=True,
+        "homeassistant.components.sense.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"timeout": "6", "email": "test-email", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-email"
@@ -33,7 +35,6 @@ async def test_form(hass):
         "email": "test-email",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

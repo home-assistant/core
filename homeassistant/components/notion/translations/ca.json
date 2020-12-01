@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest nom d'usuari ja est\u00e0 en \u00fas."
+            "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
-            "invalid_credentials": "Nom d'usuari o contrasenya incorrectes",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "no_devices": "No s'han trobat dispositius al compte"
         },
         "step": {

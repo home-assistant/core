@@ -11,9 +11,12 @@ from ovoenergy.ovoenergy import OVOEnergy
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
@@ -31,23 +34,38 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     client = OVOEnergy()
 
     try:
-        await client.authenticate(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+        authenticated = await client.authenticate(
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        )
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
+    if not authenticated:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "reauth"}, data=entry.data
+            )
+        )
+        return False
+
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        now = datetime.utcnow()
         async with async_timeout.timeout(10):
             try:
-                await client.authenticate(
+                authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
                 )
-                return await client.get_daily_usage(now.strftime("%Y-%m"))
             except aiohttp.ClientError as exception:
-                _LOGGER.warning(exception)
-                return None
+                raise UpdateFailed(exception) from exception
+            if not authenticated:
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": "reauth"}, data=entry.data
+                    )
+                )
+                raise UpdateFailed("Not authenticated with OVO Energy")
+            return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -86,7 +104,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
     return True
 
 
-class OVOEnergyEntity(Entity):
+class OVOEnergyEntity(CoordinatorEntity):
     """Defines a base OVO Energy entity."""
 
     def __init__(
@@ -98,7 +116,7 @@ class OVOEnergyEntity(Entity):
         icon: str,
     ) -> None:
         """Initialize the OVO Energy entity."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._client = client
         self._key = key
         self._name = name
@@ -123,22 +141,7 @@ class OVOEnergyEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._coordinator.last_update_success and self._available
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    async def async_update(self) -> None:
-        """Update OVO Energy entity."""
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        return self.coordinator.last_update_success and self._available
 
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):
@@ -150,6 +153,6 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
         return {
             "identifiers": {(DOMAIN, self._client.account_id)},
             "manufacturer": "OVO Energy",
-            "name": self._client.account_id,
+            "name": self._client.username,
             "entry_type": "service",
         }

@@ -27,7 +27,8 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
 async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
     config_entry.add_to_hass(hass)
 
@@ -39,7 +40,8 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAssistant):
     """Test that configuring entry sets up cover domain."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
 
     with patch_bond_version(
@@ -86,7 +88,8 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
 async def test_unload_config_entry(hass: HomeAssistant):
     """Test that configuration entry supports unloading."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
 
     result = await setup_bond_entity(

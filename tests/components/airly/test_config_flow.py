@@ -48,7 +48,7 @@ async def test_invalid_api_key(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "auth"}
+        assert result["errors"] == {"base": "invalid_api_key"}
 
 
 async def test_invalid_location(hass):

@@ -54,7 +54,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if discovery[DISCOVERY_USN] == user_input["usn"]
             ]
             if not matching_discoveries:
-                return self.async_abort(reason="no_devices_discovered")
+                return self.async_abort(reason="no_devices_found")
 
             discovery = matching_discoveries[0]
             await self.async_set_unique_id(
@@ -90,7 +90,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-        return self.async_show_form(step_id="user", data_schema=data_schema,)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+        )
 
     async def async_step_import(self, import_info: Optional[Mapping]):
         """Import a new UPnP/IGD device as a config entry.
@@ -101,19 +104,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         _LOGGER.debug("async_step_import: import_info: %s", import_info)
 
-        if import_info is None:
-            # Landed here via configuration.yaml entry.
-            # Any device already added, then abort.
-            if self._async_current_entries():
-                _LOGGER.debug("aborting, already configured")
-                return self.async_abort(reason="already_configured")
-
-        # Test if import_info isn't already configured.
-        if import_info is not None and any(
-            import_info["udn"] == entry.data[CONFIG_ENTRY_UDN]
-            and import_info["st"] == entry.data[CONFIG_ENTRY_ST]
-            for entry in self._async_current_entries()
-        ):
+        # Landed here via configuration.yaml entry.
+        # Any device already added, then abort.
+        if self._async_current_entries():
+            _LOGGER.debug("Already configured, aborting")
             return self.async_abort(reason="already_configured")
 
         # Discover devices.
@@ -124,8 +118,17 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
-        discovery = self._discoveries[0]
-        return await self._async_create_entry_from_discovery(discovery)
+        # Ensure complete discovery.
+        discovery_info = self._discoveries[0]
+        if DISCOVERY_USN not in discovery_info:
+            _LOGGER.debug("Incomplete discovery, ignoring")
+            return self.async_abort(reason="incomplete_discovery")
+
+        # Ensure not already configuring/configured.
+        usn = discovery_info[DISCOVERY_USN]
+        await self.async_set_unique_id(usn)
+
+        return await self._async_create_entry_from_discovery(discovery_info)
 
     async def async_step_ssdp(self, discovery_info: Mapping):
         """Handle a discovered UPnP/IGD device.
@@ -183,11 +186,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return UpnpOptionsFlowHandler(config_entry)
 
     async def _async_create_entry_from_discovery(
-        self, discovery: Mapping,
+        self,
+        discovery: Mapping,
     ):
         """Create an entry from discovery."""
         _LOGGER.debug(
-            "_async_create_entry_from_data: discovery: %s", discovery,
+            "_async_create_entry_from_discovery: discovery: %s",
+            discovery,
         )
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
@@ -238,9 +243,10 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): vol.All(
-                        vol.Coerce(int), vol.Range(min=30)
-                    ),
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=scan_interval,
+                    ): vol.All(vol.Coerce(int), vol.Range(min=30)),
                 }
             ),
         )

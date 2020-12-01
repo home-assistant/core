@@ -1,7 +1,4 @@
 """Support for UK Met Office weather service."""
-
-import logging
-
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -19,8 +16,6 @@ from .const import (
     VISIBILITY_DISTANCE_CLASSES,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigType, async_add_entities
@@ -29,7 +24,13 @@ async def async_setup_entry(
     hass_data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [MetOfficeWeather(entry.data, hass_data,)], False,
+        [
+            MetOfficeWeather(
+                entry.data,
+                hass_data,
+            )
+        ],
+        False,
     )
 
 

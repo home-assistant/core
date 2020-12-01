@@ -1,6 +1,5 @@
 """The songpal component."""
 from collections import OrderedDict
-import logging
 
 import voluptuous as vol
 
@@ -10,8 +9,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_ENDPOINT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SONGPAL_CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}
@@ -31,7 +28,9 @@ async def async_setup(hass: HomeAssistantType, config: OrderedDict) -> bool:
     for config_entry in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config_entry,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config_entry,
             ),
         )
     return True
