@@ -51,6 +51,9 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if "mqtt" not in self.hass.config.components:
             return self.async_abort(reason="mqtt_required")
 
+        # Set a unique_id to make sure discovery flow is aborted on progress.
+        await self.async_set_unique_id(DOMAIN)
+
         if not self.hass.components.hassio.is_hassio():
             return self._async_use_mqtt_integration()
 
