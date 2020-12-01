@@ -347,11 +347,11 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
         scene_value_id = scene_value.value["Selected_id"]
 
     _LOGGER.debug(
-        "[SCENE_ACTIVATED] node_id: %s - scene_id: %s - scene_value_id: %s - scene_instance: %s",
+        "[SCENE_ACTIVATED] scene_instance: %s - node_id: %s - scene_id: %s - scene_value_id: %s",
+        scene_instance,
         node_id,
         scene_id,
         scene_value_id,
-        scene_instance,
     )
     # Simply forward it to the hass event bus
     hass.bus.async_fire(
