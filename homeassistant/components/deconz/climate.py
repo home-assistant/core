@@ -72,7 +72,12 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         super().__init__(device, gateway)
 
         self._hvac_modes = dict(HVAC_MODES)
-        if "coolsetpoint" not in device.raw["config"]:
+        if "mode" not in device.raw["config"]:
+            self._hvac_modes = {
+                HVAC_MODE_HEAT: True,
+                HVAC_MODE_OFF: False,
+            }
+        elif "coolsetpoint" not in device.raw["config"]:
             self._hvac_modes.pop(HVAC_MODE_COOL)
 
         self._features = SUPPORT_TARGET_TEMPERATURE
@@ -110,6 +115,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
 
         data = {"mode": self._hvac_modes[hvac_mode]}
+        if len(self._hvac_modes) == 2:  # Only allow turn on and off thermostat
+            data = {"on": self._hvac_modes[hvac_mode]}
 
         await self._device.async_set_config(data)
 
