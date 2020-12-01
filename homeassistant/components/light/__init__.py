@@ -121,6 +121,7 @@ LIGHT_TURN_ON_SCHEMA = {
     ATTR_EFFECT: cv.string,
 }
 
+LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH}
 
 PROFILE_SCHEMA = vol.Schema(
     vol.Any(
@@ -192,6 +193,17 @@ def preprocess_turn_off(params):
     return (False, None)  # Light should be turned on
 
 
+def load_turn_off_profile(light_entity_id, off_params):
+    """Load transition data from light profile when turning light off."""
+    default_profile = Profiles.get_default(light_entity_id)
+    if default_profile is not None:
+        params = {ATTR_PROFILE: default_profile}
+        preprocess_turn_on_alternatives(params)
+        off_params.setdefault(ATTR_TRANSITION, params[ATTR_TRANSITION])
+
+    return off_params
+
+
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -244,6 +256,7 @@ async def async_setup(hass, config):
 
         turn_light_off, off_params = preprocess_turn_off(params)
         if turn_light_off:
+            off_params = load_turn_off_profile(light.entity_id, off_params)
             await light.async_turn_off(**off_params)
         else:
             await light.async_turn_on(**params)
@@ -255,9 +268,20 @@ async def async_setup(hass, config):
         """
         if light.is_on:
             off_params = filter_turn_off_params(call.data["params"])
+
+            off_params = load_turn_off_profile(light.entity_id, off_params)
+
             await light.async_turn_off(**off_params)
         else:
             await async_handle_light_on_service(light, call)
+
+    async def async_handle_light_off_service(light, call):
+        """Handle turning off a light."""
+        off_params = filter_turn_off_params(call.data["params"])
+
+        off_params = load_turn_off_profile(light.entity_id, off_params)
+
+        await light.async_turn_off(**off_params)
 
     # Listen for light on and light off service calls.
 
@@ -269,8 +293,8 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH},
-        "async_turn_off",
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA), preprocess_data),
+        async_handle_light_off_service,
     )
 
     component.async_register_entity_service(
@@ -469,5 +493,6 @@ class Light(LightEntity):
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+            "Light is deprecated, modify %s to extend LightEntity",
+            cls.__name__,
         )
