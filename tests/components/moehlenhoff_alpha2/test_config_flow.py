@@ -1,4 +1,4 @@
-"""Test the devolo_home_control config flow."""
+"""Test the moehlenhoff_alpha2 config flow."""
 from unittest.mock import PropertyMock
 
 from moehlenhoff_alpha2 import Alpha2Base
