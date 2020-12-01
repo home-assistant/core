@@ -43,6 +43,7 @@ async def test_create_area(hass, registry, update_events):
     """Make sure that we can create an area."""
     area = registry.async_create("mock")
 
+    assert area.id == "mock"
     assert area.name == "mock"
     assert len(registry.areas) == 1
 
@@ -66,6 +67,17 @@ async def test_create_area_with_name_already_in_use(hass, registry, update_event
 
     assert len(registry.areas) == 1
     assert len(update_events) == 1
+
+
+async def test_create_area_with_id_already_in_use(registry):
+    """Make sure that we can't create an area with a name already in use."""
+    area1 = registry.async_create("mock")
+
+    updated_area1 = registry.async_update(area1.id, "New Name")
+    assert updated_area1.id == area1.id
+
+    area2 = registry.async_create("mock")
+    assert area2.id == "mock_2"
 
 
 async def test_delete_area(hass, registry, update_events):
