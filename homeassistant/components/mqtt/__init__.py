@@ -944,7 +944,9 @@ class MQTT:
                 )
 
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
-            self.hass.add_job(publish_birth_message(birth_message))
+            asyncio.run_coroutine_threadsafe(
+                publish_birth_message(birth_message), self.hass.loop
+            )
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
