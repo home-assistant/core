@@ -11,7 +11,7 @@ import yaml
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass, Placeholder
+from .objects import Input, NodeListClass, NodeStrClass
 
 try:
     import keyring
@@ -331,4 +331,4 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
-yaml.SafeLoader.add_constructor("!placeholder", Placeholder.from_node)
+yaml.SafeLoader.add_constructor("!input", Input.from_node)
