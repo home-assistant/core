@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN
 
@@ -36,6 +37,31 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         if user_input is None:
             return self._show_form(user_input)
+        return await self._helper(user_input)
+
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+        """Handle zeroconf discovery."""
+        try:
+            # Check if it is a gateway
+            if discovery_info["hostname"].startswith("devolo-homecontrol"):
+                # Check if already configured
+                await self.async_set_unique_id(discovery_info["properties"]["SN"])
+                self._abort_if_unique_id_configured()
+
+                return await self.async_step_zeroconf_confirm()
+            else:
+                return self.async_abort(reason="Not a devolo homecontrol gateway.")
+        except KeyError:
+            return self.async_abort(reason="Not a devolo homecontrol gateway.")
+
+    async def async_step_zeroconf_confirm(self, user_input=None):
+        """Handle a flow initiated by zeroconf."""
+        if user_input is None:
+            return self._show_form(step_id="zeroconf_confirm")
+        return await self._helper(user_input)
+
+    async def _helper(self, user_input):
+        # TODO: Find a better function name
         user = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         mydevolo = Mydevolo()
@@ -65,10 +91,10 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _show_form(self, errors=None):
+    def _show_form(self, errors=None, step_id="user"):
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=vol.Schema(self.data_schema),
             errors=errors if errors else {},
         )
