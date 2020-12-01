@@ -1,5 +1,5 @@
 """Platform for switch integration."""
-import asyncio
+import time
 
 from omnilogic import OmniLogicException
 import voluptuous as vol
@@ -56,7 +56,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
-    """Define an Omnilogic Water Heater entity."""
+    """Define an Omnilogic Switch entity."""
 
     def __init__(
         self,
@@ -77,16 +77,20 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         )
 
         self._state_key = state_key
+        self._state = None
+        self._last_action = 0
+        self._state_delay = 30
 
     @property
     def is_on(self):
         """Return the on/off state of the switch."""
-        state = int(self.coordinator.data[self._item_id][self._state_key])
+        if self._last_action < (time.time() - self._state_delay):
+            self._state = int(self.coordinator.data[self._item_id][self._state_key])
 
-        if state == 7:
-            state = 0
+            if self._state == 7:
+                self._state = 0
 
-        return state
+        return self._state
 
 
 class OmniLogicRelayControl(OmniLogicSwitch):
@@ -94,29 +98,29 @@ class OmniLogicRelayControl(OmniLogicSwitch):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the relay."""
-        success = await self.coordinator.api.set_relay_valve(
+        self._state = True
+        self._last_action = time.time()
+        self.async_schedule_update_ha_state()
+
+        await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
             int(self._item_id[3]),
             int(self._item_id[-1]),
             1,
         )
 
-        if success:
-            await asyncio.sleep(10)
-            self.async_schedule_update_ha_state()
-
     async def async_turn_off(self, **kwargs):
         """Turn off the relay."""
-        success = await self.coordinator.api.set_relay_valve(
+        self._state = False
+        self._last_action = time.time()
+        self.async_schedule_update_ha_state()
+
+        await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
             int(self._item_id[3]),
             int(self._item_id[-1]),
             0,
         )
-
-        if success:
-            await asyncio.sleep(10)
-            self.async_schedule_update_ha_state()
 
 
 class OmniLogicPumpControl(OmniLogicSwitch):
@@ -153,40 +157,40 @@ class OmniLogicPumpControl(OmniLogicSwitch):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the pump."""
+        self._state = True
+        self._last_action = time.time()
+        self.async_schedule_update_ha_state()
+
         on_value = 100
 
         if self._pump_type != "SINGLE" and self._last_speed:
             on_value = self._last_speed
 
-        success = await self.coordinator.api.set_relay_valve(
+        await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
             int(self._item_id[3]),
             int(self._item_id[-1]),
             on_value,
         )
 
-        if success:
-            await asyncio.sleep(10)
-            self.async_schedule_update_ha_state()
-
     async def async_turn_off(self, **kwargs):
         """Turn off the pump."""
+        self._state = False
+        self._last_action = time.time()
+        self.async_schedule_update_ha_state()
+
         if self._pump_type != "SINGLE":
             if "filterSpeed" in self.coordinator.data[self._item_id]:
                 self._last_speed = self.coordinator.data[self._item_id]["filterSpeed"]
             else:
                 self._last_speed = self.coordinator.data[self._item_id]["pumpSpeed"]
 
-        success = await self.coordinator.api.set_relay_valve(
+        await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
             int(self._item_id[3]),
             int(self._item_id[-1]),
             0,
         )
-
-        if success:
-            await asyncio.sleep(10)
-            self.async_schedule_update_ha_state()
 
     async def async_set_speed(self, speed):
         """Set the switch speed."""
