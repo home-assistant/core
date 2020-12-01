@@ -147,7 +147,6 @@ class LevelControlClientChannel(ClientChannel):
 
 
 @registries.BINDABLE_CLUSTERS.register(general.LevelControl.cluster_id)
-@registries.LIGHT_CLUSTERS.register(general.LevelControl.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.LevelControl.cluster_id)
 class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
@@ -222,10 +221,7 @@ class OnOffClientChannel(ClientChannel):
     """OnOff client channel."""
 
 
-@registries.BINARY_SENSOR_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.BINDABLE_CLUSTERS.register(general.OnOff.cluster_id)
-@registries.LIGHT_CLUSTERS.register(general.OnOff.cluster_id)
-@registries.SWITCH_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.OnOff.cluster_id)
 class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
@@ -370,7 +366,6 @@ class PollControl(ZigbeeChannel):
         await self.set_long_poll_interval(self.LONG_POLL)
 
 
-@registries.DEVICE_TRACKER_CLUSTERS.register(general.PowerConfiguration.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
