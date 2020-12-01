@@ -1,0 +1,17 @@
+{   "title": "AIS NBP",
+    "config": {
+        "step": {
+          "confirm": {
+              "title": "AIS NBP",
+              "description": "###### ![logo](https://ai-speaker.com/images/brands/ais_nbp/icon.png?v1)\n\nIntegracja AIS NBP pozwala na pobieranie informacji z Narodowego Banku Polskiego o aktualnej cenie złota i opcjonalnie kursach wybranych walut. Czy chcesz skonfigurować nową integrację AIS NBP?"
+            },
+            "settings": {
+                "title": "AIS NBP - wybór walut do śledzenia",
+                "description": "Dodajemy śledzenie ceny złota z NBP.\n\n ###### ![logo](https://ai-speaker.com/images/brands/ais_nbp/logo.png?v1)\n\n Jeśli chcesz możesz dodatkowo wybrać jakie waluty waluty mam sprawdzać, [szczegóły w dokumentacji](https://www.ai-speaker.com)\n\nWypełnij poniższy formularz i kliknij przycisk **ZATWIERDZ**.",
+                "data": {
+                    "currency": "Waluty"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{   "title": "AIS NBP",
+    "config": {
+        "step": {
+          "confirm": {
+              "title": "AIS NBP",
+              "description": "###### ![logo](https://ai-speaker.com/images/brands/ais_nbp/icon.png?v1)\n\nThe AIS NBP integration allows you to download information from the National Bank of Poland about the current gold price and, optionally, the rates of selected currencies. \n Do you want to set up new AIS NBP integration?"
+            },
+            "settings": {
+                "title": "AIS NBP - select currency",
+                "description": "We add the tracking of the gold price from the NBP.\n\n ###### ![logo](https://ai-speaker.com/images/brands/ais_nbp/logo.png?v1)\n\nTo get data from NBP about exchange rates, you need to select the currencies you want to track,  [Details in the documentation ](https://www.ai-speaker.com)\n\n Fill in the form below and click **SUBMIT** button.",
+                "data": {
+                    "currency": "Currencies"
+                }
+            }
+        }
+    }
+}
