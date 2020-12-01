@@ -20,6 +20,14 @@
                     "password": "Password",
                     "username": "Email / devolo ID"
                 }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Password",
+                    "username": "Email / devolo ID"
+                }
             }
         }
     }
