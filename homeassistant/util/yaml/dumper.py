@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import yaml
 
-from .objects import NodeListClass, Placeholder
+from .objects import Input, NodeListClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -62,6 +62,6 @@ yaml.SafeDumper.add_representer(
 )
 
 yaml.SafeDumper.add_representer(
-    Placeholder,
-    lambda dumper, value: dumper.represent_scalar("!placeholder", value.name),
+    Input,
+    lambda dumper, value: dumper.represent_scalar("!input", value.name),
 )

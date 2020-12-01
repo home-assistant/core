@@ -1,45 +1,46 @@
-"""Placeholder helpers."""
+"""Deal with YAML input."""
+
 from typing import Any, Dict, Set
 
-from homeassistant.util.yaml import Placeholder
+from .objects import Input
 
 
 class UndefinedSubstitution(Exception):
     """Error raised when we find a substitution that is not defined."""
 
-    def __init__(self, placeholder: str) -> None:
+    def __init__(self, input_name: str) -> None:
         """Initialize the undefined substitution exception."""
-        super().__init__(f"No substitution found for placeholder {placeholder}")
-        self.placeholder = placeholder
+        super().__init__(f"No substitution found for input {input_name}")
+        self.input = input
 
 
-def extract_placeholders(obj: Any) -> Set[str]:
-    """Extract placeholders from a structure."""
+def extract_inputs(obj: Any) -> Set[str]:
+    """Extract input from a structure."""
     found: Set[str] = set()
-    _extract_placeholders(obj, found)
+    _extract_inputs(obj, found)
     return found
 
 
-def _extract_placeholders(obj: Any, found: Set[str]) -> None:
-    """Extract placeholders from a structure."""
-    if isinstance(obj, Placeholder):
+def _extract_inputs(obj: Any, found: Set[str]) -> None:
+    """Extract input from a structure."""
+    if isinstance(obj, Input):
         found.add(obj.name)
         return
 
     if isinstance(obj, list):
         for val in obj:
-            _extract_placeholders(val, found)
+            _extract_inputs(val, found)
         return
 
     if isinstance(obj, dict):
         for val in obj.values():
-            _extract_placeholders(val, found)
+            _extract_inputs(val, found)
         return
 
 
 def substitute(obj: Any, substitutions: Dict[str, Any]) -> Any:
     """Substitute values."""
-    if isinstance(obj, Placeholder):
+    if isinstance(obj, Input):
         if obj.name not in substitutions:
             raise UndefinedSubstitution(obj.name)
         return substitutions[obj.name]
