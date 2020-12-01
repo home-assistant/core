@@ -159,6 +159,6 @@ class TargetSelector(Selector):
 
 @SELECTORS.register("action")
 class ActionSelector(Selector):
-    """Selector of a action sequence."""
+    """Selector of an action sequence (script syntax)."""
 
     CONFIG_SCHEMA = vol.Schema({})
