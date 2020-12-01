@@ -77,6 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     removed_nodes = []
     manager_options = {"topic_prefix": f"{TOPIC_OPENZWAVE}/"}
 
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
+
     if entry.data.get(CONF_USE_ADDON):
         # Do not use MQTT integration. Use own MQTT client.
         host = entry.data.get(CONF_HOST)
@@ -88,17 +91,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     "core_zwave"
                 )
             )
+            discovery_info_config = discovery_info["config"]
             addon_discovery_info = {
-                CONF_HOST: discovery_info["host"],
-                CONF_PORT: discovery_info["port"],
-                CONF_USERNAME: discovery_info["username"],
-                CONF_PASSWORD: discovery_info["password"],
+                CONF_HOST: discovery_info_config["host"],
+                CONF_PORT: discovery_info_config["port"],
+                CONF_USERNAME: discovery_info_config["username"],
+                CONF_PASSWORD: discovery_info_config["password"],
             }
             hass.config_entries.async_update_entry(
                 entry,
                 data={**entry.data, **addon_discovery_info},
             )
 
+        host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
         username = entry.data[CONF_USERNAME]
         password = entry.data[CONF_PASSWORD]
