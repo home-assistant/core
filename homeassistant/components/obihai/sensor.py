@@ -49,6 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     def _reboot(call):
+        """Send API call to reboot device."""
         success = pyobihai.call_reboot()
         if not success:
             _LOGGER.error("Failed to reboot")
