@@ -4,3 +4,4 @@ MANUFACTURER = "Motion, Coulisse B.V."
 
 KEY_GATEWAY = "gateway"
 KEY_COORDINATOR = "coordinator"
+KEY_MULTICAST_LISTENER = "multicast_listener"

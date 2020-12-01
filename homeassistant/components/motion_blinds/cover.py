@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
@@ -156,6 +157,20 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed or not."""
         return self._blind.position == 100
+
+    @callback
+    def push_callback(self):
+        """Update entity state when a push has been received."""
+        self.schedule_update_ha_state(force_refresh=False)
+
+    async def async_added_to_hass(self):
+        """Subscribe to multicast pushes."""
+        self._blind.Register_callback("cover", self.push_callback)
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        self._blind.Remove_callback("cover")
+        await super().async_will_remove_from_hass()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
