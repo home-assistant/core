@@ -343,7 +343,7 @@ class Slat(HomeAccessory):
     """
         
     def __init__(self, *args):
-        super().__init__(*args, category=CATEGORY_OTHER)
+        super().__init__(*args, category=38) # https://docs.microsoft.com/en-us/dotnet/api/homekit.hmservicetype?view=xamarin-ios-sdk-12
 
         serv_slat = self.add_preload_service('Slat', ["SlatType", "CurrentSlatState", "CurrentTiltAngle", "TargetTiltAngle"])
         self.char_slat_type = serv_slat.configure_char(
