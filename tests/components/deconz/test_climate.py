@@ -475,11 +475,11 @@ async def test_climate_device_with_preset(hass):
     assert climate_zen_01.attributes["preset_mode"] == "auto"
     assert climate_zen_01.attributes["preset_modes"] == [
         "auto",
-        "away",
         "boost",
         "comfort",
         "complex",
         "eco",
+        "holiday",
         "manual",
     ]
 

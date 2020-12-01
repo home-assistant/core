@@ -9,7 +9,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -33,15 +32,16 @@ HVAC_MODES = {
 
 DECONZ_PRESET_AUTO = "auto"
 DECONZ_PRESET_COMPLEX = "complex"
+DECONZ_PRESET_HOLIDAY = "holiday"
 DECONZ_PRESET_MANUAL = "manual"
 
 PRESET_MODES = {
     DECONZ_PRESET_AUTO: "auto",
-    PRESET_AWAY: "holiday",
     PRESET_BOOST: "boost",
     PRESET_COMFORT: "comfort",
     DECONZ_PRESET_COMPLEX: "complex",
     PRESET_ECO: "eco",
+    DECONZ_PRESET_HOLIDAY: "holiday",
     DECONZ_PRESET_MANUAL: "manual",
 }
 
