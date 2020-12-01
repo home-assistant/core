@@ -64,7 +64,7 @@ async def async_call_action_from_config(
             service_data[key] = template.render_complex(value_template, variables)
         except template.TemplateError as err:
             raise InvalidDeviceAutomationConfig(
-                "Error rendering %s: %s", key, err
+                f"Error rendering {key}: {err}"
             ) from err
 
     await hass.services.async_call(
