@@ -4,7 +4,7 @@ import logging
 import pytest
 
 from homeassistant.components.blueprint import errors, models
-from homeassistant.util.yaml import Placeholder
+from homeassistant.util.yaml import Input
 
 from tests.async_mock import patch
 
@@ -22,14 +22,14 @@ def blueprint_1():
                     "test-placeholder": {"name": "Name", "description": "Description"}
                 },
             },
-            "example": Placeholder("test-placeholder"),
+            "example": Input("test-placeholder"),
         }
     )
 
 
 @pytest.fixture
 def blueprint_2():
-    """Blueprint fixture with default placeholder."""
+    """Blueprint fixture with default inputs."""
     return models.Blueprint(
         {
             "blueprint": {
@@ -41,8 +41,8 @@ def blueprint_2():
                     "test-placeholder-default": {"default": "test"},
                 },
             },
-            "example": Placeholder("test-placeholder"),
-            "example-default": Placeholder("test-placeholder-default"),
+            "example": Input("test-placeholder"),
+            "example-default": Input("test-placeholder-default"),
         }
     )
 
@@ -72,7 +72,7 @@ def test_blueprint_model_init():
                     "domain": "automation",
                     "input": {"something": None},
                 },
-                "trigger": {"platform": Placeholder("non-existing")},
+                "trigger": {"platform": Input("non-existing")},
             }
         )
 
@@ -87,7 +87,9 @@ def test_blueprint_properties(blueprint_1):
     }
     assert blueprint_1.domain == "automation"
     assert blueprint_1.name == "Hello"
-    assert blueprint_1.placeholders == {"test-placeholder"}
+    assert blueprint_1.inputs == {
+        "test-placeholder": {"name": "Name", "description": "Description"}
+    }
 
 
 def test_blueprint_update_metadata():
@@ -159,7 +161,7 @@ def test_blueprint_inputs_validation(blueprint_1):
         blueprint_1,
         {"use_blueprint": {"path": "bla", "input": {"non-existing-placeholder": 1}}},
     )
-    with pytest.raises(errors.MissingPlaceholder):
+    with pytest.raises(errors.MissingInput):
         inputs.validate()
 
 
@@ -238,7 +240,7 @@ async def test_domain_blueprints_inputs_from_config(domain_bps, blueprint_1):
     with pytest.raises(errors.InvalidBlueprintInputs):
         await domain_bps.async_inputs_from_config({"not-referencing": "use_blueprint"})
 
-    with pytest.raises(errors.MissingPlaceholder), patch.object(
+    with pytest.raises(errors.MissingInput), patch.object(
         domain_bps, "async_get_blueprint", return_value=blueprint_1
     ):
         await domain_bps.async_inputs_from_config(
