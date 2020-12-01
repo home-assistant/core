@@ -1,7 +1,6 @@
 """The devolo_home_control integration."""
 import asyncio
 from functools import partial
-import re
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 from devolo_home_control_api.homecontrol import HomeControl
@@ -13,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_MYDEVOLO, DOMAIN, PLATFORMS
+from .const import CONF_MYDEVOLO, DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 
 async def async_setup(hass, config):
@@ -37,8 +36,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
 
-    pattern = re.compile(r"\d{16}")
-    if pattern.match(entry.unique_id):
+    if GATEWAY_SERIAL_PATTERN.match(entry.unique_id):
         uuid = await hass.async_add_executor_job(mydevolo.uuid)
         hass.config_entries.async_update_entry(entry, unique_id=uuid)
 
