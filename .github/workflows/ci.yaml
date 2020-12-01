@@ -11,7 +11,7 @@ on:
 
 env:
   CACHE_VERSION: 1
-  DEFAULT_PYTHON: 3.7
+  DEFAULT_PYTHON: 3.8
   PRE_COMMIT_HOME: ~/.cache/pre-commit
 
 jobs:
@@ -521,13 +521,12 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -585,13 +584,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -605,8 +603,7 @@ jobs:
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-
-      - name:
-          Create full Python ${{ matrix.python-version }} virtual environment
+      - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           # Temporary addition of cmake, needed to build some Python 3.9 packages
@@ -626,13 +623,12 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -661,13 +657,12 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -696,15 +691,14 @@ jobs:
     strategy:
       matrix:
         group: [1, 2, 3, 4]
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (group ${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -759,13 +753,12 @@ jobs:
     needs: pytest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
