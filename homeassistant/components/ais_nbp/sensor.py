@@ -8,8 +8,8 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-# Dostosowany do potrzeb i do bycia dobrym użytkownikiem API.
-SCAN_INTERVAL = timedelta(minutes=15)
+# Dostosowany do potrzeb, pamiętaj by być "dobrym użytkownikiem API".
+SCAN_INTERVAL = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,6 +44,7 @@ class AisNbpSensor(Entity):
         self._currency = currency
         self._entity_id = entity_id
         self._state = None
+        self._status_on_start = True
 
     @property
     def entity_id(self):
@@ -69,6 +70,15 @@ class AisNbpSensor(Entity):
         """Funkcja zwracająca status sensora.
         Wartość sensora powinna zawsze zwracać tylko informacje z pamięci: self._state
         """
+        if self._status_on_start:
+            self._status_on_start = False
+            self.hass.async_add_job(
+                self.hass.services.async_call(
+                    "homeassistant",
+                    "update_entity",
+                    {"entity_id": "sensor." + self._entity_id},
+                )
+            )
         return self._state
 
     @property
@@ -119,5 +129,4 @@ class AisNbpSensor(Entity):
         pytanie serwisu powinno się odbywacć asynchronicznie
         nie powinno się wykonywać częstych blokujących operacji I/O (we/wy) takich jak żądania sieciowe
         """
-        _LOGGER.debug("async_update nbp sensor: " + self._currency.lower())
         self._state = await self.async_ask_nbp()
