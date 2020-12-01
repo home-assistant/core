@@ -150,9 +150,22 @@ async def async_setup_entry(
     min_time_between_updates = timedelta(
         seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
+    updateTimeout = None
+    updateCount = 0
+
+    def timerCallback():
+        nonlocal updateTimeout
+        nonlocal updateCount
+        if not updateTimeout.done():
+            updateTimeout.set_result(1)
+
+    updateTimer = Timer(config[30, timerCallback, loop=hass.loop)
 
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
+        nonlocal updateTimer
+        nonlocal updateCount
+        updateTimer.reset()
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
         for device in devices:
@@ -180,10 +193,15 @@ async def async_setup_entry(
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
+        nonlocal updateTimeout
+        nonlocal updateTimer
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
+                updateTimeout = loop.create_future()
+                updateTimer.setTimeout(config[CONF_RECONNECT_INTERVAL]])
+                updateTimer.start()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
@@ -192,12 +210,16 @@ async def async_setup_entry(
                     )
 
                     # Wait for reader to close
-                    await protocol.wait_closed()
+                    await asyncio.wait([protocol.wait_closed(), updateTimeout], return_when=asyncio.FIRST_COMPLETED)
 
                 # Unexpected disconnect
                 if transport:
                     # remove listener
                     stop_listener()
+
+                # Need to stop the timer after we close transport or otherwise the telegramcb might reset it after stopping    
+                if not updateTimer.done():
+                    updateTimer.stop()
 
                 transport = None
                 protocol = None
