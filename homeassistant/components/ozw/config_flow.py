@@ -45,7 +45,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         # Set a unique_id to make sure discovery flow is aborted on progress.
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
 
         if not self.hass.components.hassio.is_hassio():
             return self._async_use_mqtt_integration()
