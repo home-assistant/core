@@ -175,17 +175,6 @@ def filter_turn_off_params(params):
     """Filter out params not used in turn off."""
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
 
-  
-def load_turn_off_profile(light_entity_id, off_params):
-    """Load transition data from light profile when turning light off."""
-    default_profile = Profiles.get_default(light_entity_id)
-    if default_profile is not None:
-        params = {ATTR_PROFILE: default_profile}
-        preprocess_turn_on_alternatives(params)
-        off_params.setdefault(ATTR_TRANSITION, params[ATTR_TRANSITION])
-
-    return off_params
-
 
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
@@ -207,7 +196,16 @@ async def async_setup(hass, config):
 
         preprocess_turn_on_alternatives(hass, data)
         base["params"] = data
-        return base
+        return
+
+    def load_turn_off_profile(light_entity_id, off_params):
+        """Load transition data from light profile when turning light off."""
+        params = {}
+        profiles.apply_default(light_entity_id, params)
+        preprocess_turn_on_alternatives(hass, params)
+        off_params.setdefault(ATTR_TRANSITION, params[ATTR_TRANSITION])
+
+        return off_params
 
     async def async_handle_light_on_service(light, call):
         """Handle turning a light on.
@@ -237,7 +235,9 @@ async def async_setup(hass, config):
 
         # Zero brightness: Light will be turned off
         if params.get(ATTR_BRIGHTNESS) == 0:
-            off_params = load_turn_off_profile(light.entity_id, filter_turn_off_params(params))
+            off_params = load_turn_off_profile(
+                light.entity_id, filter_turn_off_params(params)
+            )
             await light.async_turn_off(**off_params)
         else:
             await light.async_turn_on(**params)
@@ -246,7 +246,7 @@ async def async_setup(hass, config):
         """Handle toggling a light."""
         if light.is_on:
             off_params = filter_turn_off_params(call.data)
-  
+
             off_params = load_turn_off_profile(light.entity_id, off_params)
 
             await light.async_turn_off(**off_params)
@@ -255,7 +255,7 @@ async def async_setup(hass, config):
 
     async def async_handle_light_off_service(light, call):
         """Handle turning off a light."""
-        off_params = filter_turn_off_params(call.data["params"])
+        off_params = filter_turn_off_params(call.data)
 
         off_params = load_turn_off_profile(light.entity_id, off_params)
 
