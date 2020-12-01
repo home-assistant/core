@@ -332,7 +332,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
 def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
     """Handle a (central) scene activation message."""
     node_id = scene_value.node.id
-    ozw_instance = scene_value.ozw_instance.id
+    ozw_instance_id = scene_value.ozw_instance.id
     scene_id = scene_value.index
     scene_label = scene_value.label
     if scene_value.command_class == CommandClass.SCENE_ACTIVATION:
@@ -348,7 +348,7 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
 
     _LOGGER.debug(
         "[SCENE_ACTIVATED] ozw_instance: %s - node_id: %s - scene_id: %s - scene_value_id: %s",
-        ozw_instance,
+        ozw_instance_id,
         node_id,
         scene_id,
         scene_value_id,
@@ -357,7 +357,7 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
     hass.bus.async_fire(
         const.EVENT_SCENE_ACTIVATED,
         {
-            const.ATTR_OZW_INSTANCE: ozw_instance,
+            const.ATTR_INSTANCE_ID: ozw_instance_id,
             const.ATTR_NODE_ID: node_id,
             const.ATTR_SCENE_ID: scene_id,
             const.ATTR_SCENE_LABEL: scene_label,
