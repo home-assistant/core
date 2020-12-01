@@ -77,12 +77,9 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm the add-on discovery."""
         if user_input is not None:
             self.use_addon = True
-            return await self._async_create_entry_from_vars()
+            return self._async_create_entry_from_vars()
 
-        return self.async_show_form(
-            step_id="hassio_confirm",
-            description_placeholders={"addon": self.addon_discovery_info["addon"]},
-        )
+        return self.async_show_form(step_id="hassio_confirm")
 
     def _async_create_entry_from_vars(self):
         """Return a config entry for the flow."""
