@@ -1,5 +1,6 @@
 """Support for media browsing."""
 import json
+from urllib.parse import quote_plus
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
@@ -88,7 +89,7 @@ def _item_to_media_class(item, parent_item=None):
     return MEDIA_CLASS_DIRECTORY
 
 
-def _list_payload(media_library, item, children=None):
+def _list_payload(item, children=None):
     return BrowseMedia(
         title=item["name"],
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -100,11 +101,13 @@ def _list_payload(media_library, item, children=None):
     )
 
 
-def _raw_item_payload(media_library, item, parent_item=None, title=None, info=None):
+def _raw_item_payload(entity, item, parent_item=None, title=None, info=None):
     if "type" in item:
         thumbnail = item.get("albumart")
         if thumbnail:
-            thumbnail = media_library.canonic_url(thumbnail)
+            # we double encode because yarl is over-zealous with decoding
+            encoded_url = quote_plus(quote_plus(thumbnail))
+            thumbnail = entity.get_browse_image_url(MEDIA_TYPE_MUSIC, encoded_url)
     else:
         # don't use the built-in volumio white-on-white icons
         thumbnail = None
@@ -121,16 +124,14 @@ def _raw_item_payload(media_library, item, parent_item=None, title=None, info=No
     }
 
 
-def _item_payload(media_library, item, parent_item):
-    return BrowseMedia(
-        **_raw_item_payload(media_library, item, parent_item=parent_item)
-    )
+def _item_payload(entity, item, parent_item):
+    return BrowseMedia(**_raw_item_payload(entity, item, parent_item=parent_item))
 
 
 async def browse_top_level(media_library):
     """Browse the top-level of a Volumio media hierarchy."""
     navigation = await media_library.browse()
-    children = [_list_payload(media_library, item) for item in navigation["lists"]]
+    children = [_list_payload(item) for item in navigation["lists"]]
     return BrowseMedia(
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id="library",
@@ -142,7 +143,7 @@ async def browse_top_level(media_library):
     )
 
 
-async def browse_node(media_library, media_content_type, media_content_id):
+async def browse_node(entity, media_library, media_content_type, media_content_id):
     """Browse a node of a Volumio media hierarchy."""
     json_item = json.loads(media_content_id)
     navigation = await media_library.browse(json_item["uri"])
@@ -152,7 +153,7 @@ async def browse_node(media_library, media_content_type, media_content_id):
     # we only use the first list since the second one could include all tracks
     first_list = navigation["lists"][0]
     children = [
-        _item_payload(media_library, item, parent_item=json_item)
+        _item_payload(entity, item, parent_item=json_item)
         for item in first_list["items"]
     ]
     info = navigation.get("info")
@@ -163,5 +164,5 @@ async def browse_node(media_library, media_content_type, media_content_id):
         else:
             title = "Media Library"
 
-    payload = _raw_item_payload(media_library, json_item, title=title, info=info)
+    payload = _raw_item_payload(entity, json_item, title=title, info=info)
     return BrowseMedia(**payload, children=children)
