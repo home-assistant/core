@@ -5,6 +5,7 @@ from pyhap.const import (
     CATEGORY_GARAGE_DOOR_OPENER,
     CATEGORY_WINDOW,
     CATEGORY_WINDOW_COVERING,
+    CATEGORY_OTHER
 )
 
 from homeassistant.components.cover import (
@@ -53,7 +54,7 @@ from .const import (
     HK_POSITION_GOING_TO_MAX,
     HK_POSITION_GOING_TO_MIN,
     HK_POSITION_STOPPED,
-    SERV_GARAGE_DOOR_OPENER,
+    SERV_GARAGE_DOOR_OPENER, SERV_SLAT,
     SERV_WINDOW,
     SERV_WINDOW_COVERING,
 )
@@ -203,7 +204,7 @@ class OpeningDeviceBase(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._supports_stop = self.features & SUPPORT_STOP
+        self._supports_stop = self.features & SUPPORT_STOP & SUPPORT_SET_TILT_POSITION == False
         self.chars = []
         if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
@@ -333,6 +334,46 @@ class WindowCovering(OpeningDevice):
         super().__init__(
             *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
         )
+
+@TYPES.register("Slat")
+class Slat(HomeAccessory):
+    """Generate a Slat accessory for a cover entity.
+
+    The entity must support: set_tilt_position.
+    """
+        
+    def __init__(self, *args):
+        super().__init__(*args, category=CATEGORY_OTHER)
+
+        serv_slat = self.add_preload_service('Slat', ["SlatType", "CurrentSlatState", "CurrentTiltAngle", "TargetTiltAngle"])
+        self.char_slat_type = serv_slat.configure_char(
+            'SlatType', value=0)
+        self.char_current_slat_state = serv_slat.configure_char(
+            'CurrentSlatState', value=1)
+
+        self.char_current_tilt_angle = serv_slat.configure_char(
+            'CurrentTiltAngle', value=45)
+
+        self.char_target_tilt_angle = serv_slat.configure_char(
+            'TargetTiltAngle', setter_callback=self.set_target_tilt)
+
+    def set_target_tilt(self, value):
+        logging.info("Target Tilt value: %s", value)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update cover position and tilt after state changed."""
+        # update tilt
+        # current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+        # if isinstance(current_tilt, (float, int)):
+        #     # HomeKit sends values between -90 and 90.
+        #     # We'll have to normalize to [0,100]
+        #     current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
+        #     current_tilt = int(current_tilt)
+        #     if self.char_current_tilt.value != current_tilt:
+        #         self.char_current_tilt.set_value(current_tilt)
+        #     if self.char_target_tilt.value != current_tilt:
+        #         self.char_target_tilt.set_value(current_tilt)
 
 
 @TYPES.register("WindowCoveringBasic")

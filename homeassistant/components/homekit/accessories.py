@@ -164,6 +164,8 @@ def get_accessory(hass, driver, state, aid, config):
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
+        elif features & cover.SUPPORT_SET_TILT_POSITION:
+            a_type = "Slat"
         elif features & cover.SUPPORT_SET_POSITION:
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):

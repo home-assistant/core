@@ -148,6 +148,7 @@ SERV_THERMOSTAT = "Thermostat"
 SERV_VALVE = "Valve"
 SERV_WINDOW = "Window"
 SERV_WINDOW_COVERING = "WindowCovering"
+SERV_SLAT = "Slat"
 
 # #### Characteristics ####
 CHAR_ACTIVE = "Active"
