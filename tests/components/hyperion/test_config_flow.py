@@ -690,7 +690,7 @@ async def test_options(hass: HomeAssistantType) -> None:
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 
-async def test_reauth_success(hass):
+async def test_reauth_success(hass: HomeAssistantType) -> None:
     """Check a reauth flow that succeeds."""
 
     config_data = {
@@ -724,7 +724,7 @@ async def test_reauth_success(hass):
         assert CONF_TOKEN in config_entry.data
 
 
-async def test_reauth_cannot_connect(hass):
+async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
     """Check a reauth flow that fails to connect."""
 
     config_data = {

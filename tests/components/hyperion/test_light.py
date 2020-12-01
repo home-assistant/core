@@ -733,7 +733,7 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     assert client.async_client_disconnect.call_count == 2
 
 
-async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:
+async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
     """Test warning on old version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
@@ -742,7 +742,7 @@ async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:
     assert "Please consider upgrading" in caplog.text
 
 
-async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None:
+async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
     """Test no warning on acceptable version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.9")

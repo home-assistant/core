@@ -50,7 +50,7 @@ TEST_INSTANCE_3: Dict[str, Any] = {
     "running": True,
 }
 
-TEST_AUTH_REQUIRED_RESP = {
+TEST_AUTH_REQUIRED_RESP: Dict[str, Any] = {
     "command": "authorize-tokenRequired",
     "info": {
         "required": True,
