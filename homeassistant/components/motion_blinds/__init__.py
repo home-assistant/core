@@ -1,4 +1,5 @@
 """The motion_blinds component."""
+import asyncio
 from asyncio import TimeoutError as AsyncioTimeoutError
 from datetime import timedelta
 import logging
@@ -40,7 +41,10 @@ async def async_setup_entry(
     key = entry.data[CONF_API_KEY]
 
     # Create multicast Listener
-    multicast = hass.data[DOMAIN].setdefault(KEY_MULTICAST_LISTENER, MotionMulticast(),)
+    multicast = hass.data[DOMAIN].setdefault(
+        KEY_MULTICAST_LISTENER,
+        MotionMulticast(),
+    )
 
     if len(hass.data[DOMAIN]) == 1:
         # start listining for local pushes (only once)
