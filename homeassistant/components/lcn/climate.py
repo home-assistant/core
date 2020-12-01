@@ -142,7 +142,7 @@ class LcnClimate(LcnDevice, ClimateEntity):
             return
 
         if not await self.address_connection.var_abs(
-            self.setpoint, self._target_temperature, self.unit
+            self.setpoint, temperature, self.unit
         ):
             return
         self._target_temperature = temperature
