@@ -76,7 +76,7 @@ class AisNbpSensor(Entity):
         """Funkcja zwracająca jednostkę miary sensora."""
         if self._currency == "gold":
             return "PLN/1g"
-        return self._currency
+        return "PLN"
 
     @property
     def icon(self):
