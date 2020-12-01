@@ -39,8 +39,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "camera_person": "Person detected",
             "camera_motion": "Motion detected",
+            "camera_person": "Person detected",
             "camera_sound": "Sound detected",
             "doorbell_chime": "Doorbell pressed"
         }

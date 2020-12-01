@@ -10,7 +10,13 @@
         "error": {
             "addon_start_failed": "OpenZWave'i lisandmooduli k\u00e4ivitamine nurjus. Kontrolli s\u00e4tteid."
         },
+        "progress": {
+            "install_addon": "Palun oota kuni OpenZWave lisandmooduli paigaldus l\u00f5peb. See v\u00f5ib v\u00f5tta mitu minutit."
+        },
         "step": {
+            "install_addon": {
+                "title": "OpenZWave lisandmooduli paigaldamine on alanud"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Kasuta OpenZWave Supervisori lisandmoodulit"
