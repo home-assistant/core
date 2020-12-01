@@ -113,7 +113,7 @@ class AisNbpSensor(Entity):
                 + "?format=json"
             )
         try:
-            with async_timeout.timeout(2):
+            with async_timeout.timeout(15):
                 ws_resp = await web_session.get(url)
                 json_info = await ws_resp.json()
                 if self._currency == "gold":
@@ -121,7 +121,7 @@ class AisNbpSensor(Entity):
                 else:
                     return json_info["rates"][0]["mid"]
         except Exception as e:
-            _LOGGER.error("Ask NBP error: " + str(e))
+            _LOGGER.error("Ask NBP timeout error: " + str(e))
 
     async def async_update(self):
         """Pobranie aktualnego statusu sensora
