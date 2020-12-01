@@ -82,6 +82,14 @@ class AisNbpSensor(Entity):
     def icon(self):
         if self._currency == "gold":
             return "mdi:gold"
+        elif self._currency.lower() == "eur":
+            return "mdi:currency-eur"
+        elif self._currency.lower() == "usd":
+            return "mdi:currency-usd"
+        elif self._currency.lower() == "chf":
+            return "mdi:cash-multiple"
+        elif self._currency.lower() == "gbp":
+            return "mdi:currency-gbp"
         return "mdi:cash-multiple"
 
     async def async_ask_nbp(self):
