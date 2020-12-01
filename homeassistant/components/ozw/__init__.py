@@ -358,8 +358,8 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
         const.EVENT_SCENE_ACTIVATED,
         {
             const.ATTR_NODE_ID: node_id,
-            const.ATTR_SCENE_INSTANCE: scene_instance,
             const.ATTR_SCENE_ID: scene_id,
+            const.ATTR_SCENE_INSTANCE: scene_instance,
             const.ATTR_SCENE_LABEL: scene_label,
             const.ATTR_SCENE_VALUE_ID: scene_value_id,
             const.ATTR_SCENE_VALUE_LABEL: scene_value_label,
