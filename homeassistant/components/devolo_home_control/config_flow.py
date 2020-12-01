@@ -45,16 +45,9 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Check if it is a gateway
             if discovery_info["hostname"].startswith("devolo-homecontrol"):
                 # Check if already configured
-                try:
-                    for entry in self.hass.data[DOMAIN].values():
-                        for gw in entry["gateways"]:
-                            if gw.gateway.id == discovery_info["properties"]["SN"]:
-                                return self.async_abort(
-                                    reason="Gateway already configured"
-                                )
-                    return await self.async_step_zeroconf_confirm()
-                except KeyError:
-                    self.async_abort(reason="devolo home control not yet configured.")
+                await self.async_set_unique_id(discovery_info["properties"]["SN"])
+                self._abort_if_unique_id_configured()
+
                 return await self.async_step_zeroconf_confirm()
             else:
                 return self.async_abort(reason="Not a devolo homecontrol gateway.")
