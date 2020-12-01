@@ -8,9 +8,9 @@ from .objects import Input
 class UndefinedSubstitution(Exception):
     """Error raised when we find a substitution that is not defined."""
 
-    def __init__(self, input: str) -> None:
+    def __init__(self, input_name: str) -> None:
         """Initialize the undefined substitution exception."""
-        super().__init__(f"No substitution found for input {input}")
+        super().__init__(f"No substitution found for input {input_name}")
         self.input = input
 
 
