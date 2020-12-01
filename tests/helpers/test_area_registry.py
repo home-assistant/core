@@ -77,7 +77,7 @@ async def test_create_area_with_id_already_in_use(registry):
     assert updated_area1.id == area1.id
 
     area2 = registry.async_create("mock")
-    assert area2.id == "mock-2"
+    assert area2.id == "mock_2"
 
 
 async def test_delete_area(hass, registry, update_events):

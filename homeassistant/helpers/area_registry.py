@@ -31,7 +31,7 @@ class AreaEntry:
         tries = 1
         while suggestion in existing_ids:
             tries += 1
-            suggestion = f"{suggestion_base}-{tries}"
+            suggestion = f"{suggestion_base}_{tries}"
         object.__setattr__(self, "id", suggestion)
 
 
