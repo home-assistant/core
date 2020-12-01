@@ -44,12 +44,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        # Currently all flow results need the MQTT integration.
-        # This will change when we have the direct MQTT client connection.
-        # When that is implemented, move this check to _async_use_mqtt_integration.
-        if "mqtt" not in self.hass.config.components:
-            return self.async_abort(reason="mqtt_required")
-
         # Set a unique_id to make sure discovery flow is aborted on progress.
         await self.async_set_unique_id(DOMAIN)
 
@@ -110,6 +104,8 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This is the entry point for the logic that is needed
         when this integration will depend on the MQTT integration.
         """
+        if "mqtt" not in self.hass.config.components:
+            return self.async_abort(reason="mqtt_required")
         return self._async_create_entry_from_vars()
 
     async def async_step_on_supervisor(self, user_input=None):
