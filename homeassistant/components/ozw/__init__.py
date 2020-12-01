@@ -277,8 +277,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
         if entry.data.get(CONF_USE_ADDON):
-            mqtt_client.add_manager(manager)
-            mqtt_client_task = asyncio.create_task(mqtt_client.start_client())
+            mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))
 
             async def async_stop_mqtt_client(event=None):
                 """Stop the mqtt client.
@@ -326,7 +325,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.data.get(CONF_USE_ADDON):
         mqtt_client = hass.data[DOMAIN][entry.entry_id][DATA_MQTT_CLIENT]
         manager = hass.data[DOMAIN][MANAGER]
-        await mqtt_client.remove_manager(manager)
+        await mqtt_client.unsubscribe_manager(manager)
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
