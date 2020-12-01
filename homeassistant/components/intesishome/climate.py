@@ -375,7 +375,7 @@ class IntesisAC(ClimateEntity):
             )
             # Schedule reconnection
             async_call_later(
-                self.hass, reconnect_minutes * 60, self._controller.connect()
+                self.hass, reconnect_minutes * 60, self._controller.connect
             )
 
         if self._controller.is_connected and not self._connected:
