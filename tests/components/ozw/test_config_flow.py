@@ -452,3 +452,24 @@ async def test_clean_discovery_on_user_create(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_abort_discovery_with_user_flow(
+    hass, supervisor, addon_running, addon_options
+):
+    """Test discovery flow is aborted if a user flow is in progress."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_in_progress"
+    assert len(hass.config_entries.flow.async_progress()) == 1
