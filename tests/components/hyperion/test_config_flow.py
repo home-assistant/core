@@ -691,7 +691,7 @@ async def test_options(hass: HomeAssistantType) -> None:
 
 
 async def test_reauth_success(hass):
-    """Check an import flow that cannot connect."""
+    """Check a reauth flow that succeeds."""
 
     config_data = {
         CONF_HOST: TEST_HOST,
@@ -722,3 +722,28 @@ async def test_reauth_success(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "reauth_successful"
         assert CONF_TOKEN in config_entry.data
+
+
+async def test_reauth_cannot_connect(hass):
+    """Check a reauth flow that fails to connect."""
+
+    config_data = {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+    }
+
+    config_entry = add_test_config_entry(hass, data=config_data)
+    client = create_mock_client()
+    client.async_client_connect = AsyncMock(return_value=False)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _init_flow(
+            hass,
+            source=SOURCE_REAUTH,
+            data={**config_data, CONF_ENTRY_ID: config_entry.entry_id},
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"

@@ -425,7 +425,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             assert entry is not None
             self.hass.config_entries.async_update_entry(entry, data=self._data)
             # Need to manually reload, as the listener won't have been installed because
-            # the initial load did not succeed.
+            # the initial load did not succeed (the reauth flow will not be initiated if
+            # the load succeeds)
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 

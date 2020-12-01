@@ -220,10 +220,38 @@ async def test_setup_config_entry(hass: HomeAssistantType) -> None:
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
 
-async def test_setup_config_entry_not_ready(hass: HomeAssistantType) -> None:
+async def test_setup_config_entry_not_ready_connect_fail(
+    hass: HomeAssistantType,
+) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+
+
+async def test_setup_config_entry_not_ready_switch_instance_fail(
+    hass: HomeAssistantType,
+) -> None:
+    """Test the component not being ready."""
+    client = create_mock_client()
+    client.async_client_switch_instance = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+
+
+async def test_setup_config_entry_not_ready_load_state_fail(
+    hass: HomeAssistantType,
+) -> None:
+    """Test the component not being ready."""
+    client = create_mock_client()
+    client.async_get_serverinfo = AsyncMock(
+        return_value={
+            "command": "serverinfo",
+            "success": False,
+        }
+    )
+
     await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
