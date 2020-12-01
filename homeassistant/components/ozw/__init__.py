@@ -58,7 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
-DATA_MQTT_CLIENT = "ozw_mqtt_client"
+DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -104,7 +104,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         password = entry.data[CONF_PASSWORD]
         mqtt_client = MQTTClient(host, port, username=username, password=password)
         manager_options["send_message"] = mqtt_client.send_message
-        ozw_data[DATA_MQTT_CLIENT] = mqtt_client
 
     else:
         if "mqtt" not in hass.config.components:
@@ -291,6 +290,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     pass
 
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client)
+            ozw_data[DATA_STOP_MQTT_CLIENT] = async_stop_mqtt_client
 
         else:
             ozw_data[DATA_UNSUBSCRIBE].append(
@@ -323,9 +323,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         unsubscribe_listener()
 
     if entry.data.get(CONF_USE_ADDON):
-        mqtt_client = hass.data[DOMAIN][entry.entry_id][DATA_MQTT_CLIENT]
-        manager = hass.data[DOMAIN][MANAGER]
-        await mqtt_client.unsubscribe_manager(manager)
+        async_stop_mqtt_client = hass.data[DOMAIN][entry.entry_id][
+            DATA_STOP_MQTT_CLIENT
+        ]
+        await async_stop_mqtt_client()
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
