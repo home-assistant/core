@@ -347,7 +347,7 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
         scene_value_id = scene_value.value["Selected_id"]
 
     _LOGGER.debug(
-        "[SCENE_ACTIVATED] scene_instance: %s - node_id: %s - scene_id: %s - scene_value_id: %s",
+        "[SCENE_ACTIVATED] ozw_instance: %s - node_id: %s - scene_id: %s - scene_value_id: %s",
         ozw_instance,
         node_id,
         scene_id,
