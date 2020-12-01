@@ -166,6 +166,6 @@ def test_target_selector_schema(schema):
     "schema",
     ({},),
 )
-def test_sequence_selector_schema(schema):
-    """Test sequence selector."""
-    selector.validate_selector({"sequence": schema})
+def test_action_selector_schema(schema):
+    """Test action sequence selector."""
+    selector.validate_selector({"action": schema})

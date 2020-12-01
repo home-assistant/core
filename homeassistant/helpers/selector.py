@@ -157,8 +157,8 @@ class TargetSelector(Selector):
     )
 
 
-@SELECTORS.register("sequence")
-class SequenceSelector(Selector):
-    """Selector of a sequence."""
+@SELECTORS.register("action")
+class ActionSelector(Selector):
+    """Selector of a action sequence."""
 
     CONFIG_SCHEMA = vol.Schema({})
