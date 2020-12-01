@@ -90,7 +90,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _create_reauth_flow(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    hyperion_const: client.HyperionClient,
 ) -> None:
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -141,12 +140,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         and token is None
     ):
-        await _create_reauth_flow(hass, config_entry, hyperion_client)
+        await _create_reauth_flow(hass, config_entry)
         return False
 
     # Client login doesn't work? => Reauth.
     if not await hyperion_client.async_client_login():
-        await _create_reauth_flow(hass, config_entry, hyperion_client)
+        await _create_reauth_flow(hass, config_entry)
         return False
 
     # Cannot switch instance or cannot load state? => Not ready.
