@@ -1,7 +1,7 @@
 """The devolo_home_control integration."""
 import asyncio
 from functools import partial
-import logging
+import re
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 from devolo_home_control_api.homecontrol import HomeControl
@@ -9,18 +9,11 @@ from devolo_home_control_api.mydevolo import Mydevolo
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_UNIQUE_ID,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MYDEVOLO, DOMAIN, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -43,6 +36,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
+
+    pattern = re.compile(r"\d{16}")
+    if pattern.match(entry.unique_id):
+        uuid = await hass.async_add_executor_job(mydevolo.uuid)
+        hass.config_entries.async_update_entry(entry, unique_id=uuid)
 
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
@@ -76,22 +74,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, shutdown
     )
-
-    return True
-
-
-async def async_migrate_entry(hass, entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", entry.version)
-
-    if entry.version == 1:
-        mydevolo = _mydevolo(entry.data)
-        new = {**entry.data}
-        new[CONF_UNIQUE_ID] = await hass.async_add_executor_job(mydevolo.uuid)
-        entry.data = {**new}
-        entry.version = 2
-
-    _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
 
