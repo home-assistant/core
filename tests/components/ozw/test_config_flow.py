@@ -407,3 +407,48 @@ async def test_supervisor_discovery(hass, supervisor, addon_running, addon_optio
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_clean_discovery_on_user_create(
+    hass, supervisor, addon_running, addon_options
+):
+    """Test discovery flow is cleaned up when a user flow is finished."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    addon_options["device"] = "/test"
+    addon_options["network_key"] = "abc123"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"use_addon": False}
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": None,
+        "network_key": None,
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
