@@ -1,6 +1,5 @@
 """Config flow for ozw integration."""
 import logging
-from pprint import pformat
 
 import voluptuous as vol
 
@@ -64,7 +63,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the OpenZWave add-on.
         """
-        _LOGGER.debug("Add-on discovery info %s", pformat(discovery_info))
         self.addon_discovery_info = {
             CONF_HOST: discovery_info["host"],
             CONF_PORT: discovery_info["port"],
