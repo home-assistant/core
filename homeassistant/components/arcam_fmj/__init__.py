@@ -108,7 +108,7 @@ async def _run_client(hass, client, interval):
             await asyncio.sleep(interval)
         except asyncio.TimeoutError:
             continue
-        except asyncio.CancelledError:
+        except asyncio.CancelledError:  # pylint: disable=try-except-raise
             raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception, aborting arcam client")
