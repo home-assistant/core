@@ -1,17 +1,18 @@
 """The devolo Home Network integration."""
 import asyncio
 
-from devolo_plc_api.device import Device
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+# TODO List the platforms that you want to support.
+# For your initial PR, limit it to 1 platform.
+PLATFORMS = ["light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -21,28 +22,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up devolo Home Network from a config entry."""
-    conf = entry.data
-    hass.data.setdefault(DOMAIN, {})
-
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-    device = Device(ip=conf[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
-    device.password = conf.get(CONF_PASSWORD) or ""
-    await device.async_connect()
-
-    hass.data[DOMAIN][entry.entry_id] = {"device": device, "listener": None}
+    # TODO Store an API object for your platforms to access
+    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
-    async def disconnect(event):
-        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
-
-    # Listen when EVENT_HOMEASSISTANT_STOP is fired
-    hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, disconnect
-    )
 
     return True
 
@@ -58,8 +44,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
-        hass.data[DOMAIN][entry.entry_id]["listener"]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
