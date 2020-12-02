@@ -173,9 +173,9 @@ class ECWeather(WeatherEntity):
         """Return the forecast array."""
         return get_forecast(self.ec_data, self.forecast_type)
 
-    def update(self):
+    async def update(self):
         """Get the latest data from Environment Canada."""
-        self.ec_data.update()
+        await self.ec_data.update()
 
 
 def get_forecast(ec_data, forecast_type):

@@ -68,9 +68,9 @@ class ECCamera(Camera):
         self.image = None
         self.timestamp = None
 
-    def camera_image(self):
+    async def camera_image(self):
         """Return bytes of camera image."""
-        self.update()
+        await self.update()
         return self.image
 
     @property
@@ -86,10 +86,10 @@ class ECCamera(Camera):
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def update(self):
         """Update radar image."""
         if self.is_loop:
-            self.image = self.radar_object.get_loop()
+            self.image = await self.radar_object.get_loop()
         else:
-            self.image = self.radar_object.get_latest_frame()
-        self.timestamp = self.radar_object.timestamp
+            self.image = await self.radar_object.get_latest_frame()
+        self.timestamp = await self.radar_object.timestamp
