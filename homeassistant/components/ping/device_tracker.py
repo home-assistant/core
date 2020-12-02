@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from . import async_get_next_ping_id
-from .const import PING_ATTEMPTS_COUNT
+from .const import ICMP_TIMEOUT, PING_ATTEMPTS_COUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class HostICMPLib:
         ).result()
 
         return icmp_ping(
-            self.ip_address, count=PING_ATTEMPTS_COUNT, timeout=1, id=next_id
+            self.ip_address, count=PING_ATTEMPTS_COUNT, timeout=ICMP_TIMEOUT, id=next_id
         ).is_alive
 
     def update(self, see):

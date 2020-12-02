@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS, async_get_next_ping_id
+from .const import ICMP_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,7 +133,7 @@ class PingDataICMPLib(PingData):
                 icmp_ping,
                 self._ip_address,
                 count=self._count,
-                timeout=1,
+                timeout=ICMP_TIMEOUT,
                 id=async_get_next_ping_id(self.hass),
             )
         )
