@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_climate(sensors):
+    def async_add_climate(sensors=gateway.api.sensors.values()):
         """Add climate devices from deCONZ."""
         entities = []
 
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_climate(gateway.api.sensors.values())
+    async_add_climate()
 
 
 class DeconzThermostat(DeconzDevice, ClimateEntity):
