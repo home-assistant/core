@@ -24,6 +24,9 @@ POLLING_INTERVAL = 10
 
 SENSOR_TYPE_RATE = "rate"
 SENSOR_TYPE_THIS_DAY = "thisDay"
+SENSOR_TYPE_THIS_WEEK = "thisWeek"
+SENSOR_TYPE_THIS_MONTH = "thisMonth"
+SENSOR_TYPE_THIS_YEAR = "thisYear"
 
 SOURCE_TYPES = [
     SOURCE_TYPE_ELECTRICITY,
@@ -69,6 +72,30 @@ SENSORS_INFO = [
         "precision": 1,
     },
     {
+        "name": "Huisbaasje Energy This Week",
+        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
+        "source_type": SOURCE_TYPE_ELECTRICITY,
+        "sensor_type": SENSOR_TYPE_THIS_WEEK,
+        "icon": "mdi:counter",
+        "precision": 1,
+    },
+    {
+        "name": "Huisbaasje Energy This Month",
+        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
+        "source_type": SOURCE_TYPE_ELECTRICITY,
+        "sensor_type": SENSOR_TYPE_THIS_MONTH,
+        "icon": "mdi:counter",
+        "precision": 1,
+    },
+    {
+        "name": "Huisbaasje Energy This Year",
+        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
+        "source_type": SOURCE_TYPE_ELECTRICITY,
+        "sensor_type": SENSOR_TYPE_THIS_YEAR,
+        "icon": "mdi:counter",
+        "precision": 1,
+    },
+    {
         "name": "Huisbaasje Current Gas",
         "unit_of_measurement": FLOW_CUBIC_METERS_PER_HOUR,
         "source_type": SOURCE_TYPE_GAS,
@@ -80,6 +107,30 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
+        "icon": "mdi:counter",
+        "precision": 1,
+    },
+    {
+        "name": "Huisbaasje Gas This Week",
+        "unit_of_measurement": VOLUME_CUBIC_METERS,
+        "source_type": SOURCE_TYPE_GAS,
+        "sensor_type": SENSOR_TYPE_THIS_WEEK,
+        "icon": "mdi:counter",
+        "precision": 1,
+    },
+    {
+        "name": "Huisbaasje Gas This Month",
+        "unit_of_measurement": VOLUME_CUBIC_METERS,
+        "source_type": SOURCE_TYPE_GAS,
+        "sensor_type": SENSOR_TYPE_THIS_MONTH,
+        "icon": "mdi:counter",
+        "precision": 1,
+    },
+    {
+        "name": "Huisbaasje Gas This Year",
+        "unit_of_measurement": VOLUME_CUBIC_METERS,
+        "source_type": SOURCE_TYPE_GAS,
+        "sensor_type": SENSOR_TYPE_THIS_YEAR,
         "icon": "mdi:counter",
         "precision": 1,
     },

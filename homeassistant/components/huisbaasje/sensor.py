@@ -16,6 +16,9 @@ from .const import (
     POLLING_INTERVAL,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
+    SENSOR_TYPE_THIS_MONTH,
+    SENSOR_TYPE_THIS_WEEK,
+    SENSOR_TYPE_THIS_YEAR,
     SENSORS_INFO,
     SOURCE_TYPES,
 )
@@ -67,13 +70,23 @@ def _get_measurement_rate(current_measurements: dict, source_type: str):
     return None
 
 
-def _get_this_day_value(current_measurements: dict, source_type: str):
+def _get_cumulative_value(
+    current_measurements: dict,
+    source_type: str,
+    period_type: str,
+):
+    """Get the cumulative energy consumption for a certain period.
+
+    :param current_measurements: The result from the Huisbaasje client
+    :param source_type: The source of energy (electricity or gas)
+    :param period_type: The period for which cumulative value should be given.
+    """
     if source_type in current_measurements.keys():
         if (
-            "thisDay" in current_measurements[source_type]
-            and current_measurements[source_type]["thisDay"] is not None
+            period_type in current_measurements[source_type]
+            and current_measurements[source_type][period_type] is not None
         ):
-            return current_measurements[source_type]["thisDay"]["value"]
+            return current_measurements[source_type][period_type]["value"]
     else:
         _LOGGER.error(
             "Source type %s not present in %s", source_type, current_measurements
@@ -94,8 +107,17 @@ async def async_update_huisbaasje(huisbaasje):
                     SENSOR_TYPE_RATE: _get_measurement_rate(
                         current_measurements, source_type
                     ),
-                    SENSOR_TYPE_THIS_DAY: _get_this_day_value(
-                        current_measurements, source_type
+                    SENSOR_TYPE_THIS_DAY: _get_cumulative_value(
+                        current_measurements, source_type, SENSOR_TYPE_THIS_DAY
+                    ),
+                    SENSOR_TYPE_THIS_WEEK: _get_cumulative_value(
+                        current_measurements, source_type, SENSOR_TYPE_THIS_WEEK
+                    ),
+                    SENSOR_TYPE_THIS_MONTH: _get_cumulative_value(
+                        current_measurements, source_type, SENSOR_TYPE_THIS_MONTH
+                    ),
+                    SENSOR_TYPE_THIS_YEAR: _get_cumulative_value(
+                        current_measurements, source_type, SENSOR_TYPE_THIS_YEAR
                     ),
                 }
                 for source_type in SOURCE_TYPES
