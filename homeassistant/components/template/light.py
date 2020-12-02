@@ -513,7 +513,11 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_effect_list(self, effect_list):
         """Update the effect list from the template."""
-        if effect_list in ("None", "") or not isinstance(effect_list, list):
+        if effect_list in ("None", "") :
+            self._effect_list = None
+            return
+
+        if not isinstance(effect_list, list):
             _LOGGER.error(
                 "Received invalid effect list: %s. Expected list of strings",
                 effect_list,
