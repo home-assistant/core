@@ -515,7 +515,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Update the effect list from the template."""
         if effect_list in ("None", "") or not isinstance(effect_list, list):
             _LOGGER.error(
-                "Received invalid effect list: %s. Expected list of strings", effect_list
+                "Received invalid effect list: %s. Expected list of strings",
+                effect_list
             )
             self._effect_list = None
             return
