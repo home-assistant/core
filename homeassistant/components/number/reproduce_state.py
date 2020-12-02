@@ -3,8 +3,6 @@ import asyncio
 import logging
 from typing import Any, Dict, Iterable, Optional
 
-import voluptuous as vol
-
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
