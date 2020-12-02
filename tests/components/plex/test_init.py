@@ -13,11 +13,11 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, STATE_IDLE
 import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .helpers import trigger_plex_update
+from .helpers import trigger_plex_update, wait_for_debouncer
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
@@ -91,19 +91,19 @@ async def test_unload_config_entry(hass, entry, mock_plex_server):
 
 async def test_setup_with_photo_session(hass, entry, mock_websocket, setup_plex_server):
     """Test setup component with config."""
-    mock_plex_server = await setup_plex_server(config_entry=entry, session_type="photo")
+    await setup_plex_server(session_type="photo")
 
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
-
-    trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
 
     media_player = hass.states.get("media_player.plex_product_title")
-    assert media_player.state == "idle"
+    assert media_player.state == STATE_IDLE
+
+    await wait_for_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
-    assert sensor.state == str(len(mock_plex_server.accounts))
+    assert sensor.state == "0"
 
 
 async def test_setup_when_certificate_changed(hass, entry):
