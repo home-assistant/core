@@ -1230,10 +1230,10 @@ async def test_color_template(hass, expected_hs, template):
         "expected_min_mireds,template",
         [
             (118, "{{118}}"),
-            (None, "{{x - 12}}"),
-            (None, "None"),
-            (None, "{{ none }}"),
-            (None, ""),
+            (153, "{{x - 12}}"),
+            (153, "None"),
+            (153, "{{ none }}"),
+            (153, ""),
         ],
     )
     def test_min_mireds_template(self, expected_min_mireds, template):
@@ -1256,13 +1256,14 @@ async def test_color_template(hass, expected_hs, template):
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_effect": {
+                                "set_temperature": {
                                     "service": "light.turn_on",
                                     "data_template": {
                                         "entity_id": "light.test_state",
-                                        "effect": "{{effect}}",
+                                        "color_temp": "{{color_temp}}",
                                     },
                                 },
+                                "temperature_template": template,
                                 "min_mireds_template": template,
                             }
                         },
@@ -1281,11 +1282,11 @@ async def test_color_template(hass, expected_hs, template):
     @pytest.mark.parametrize(
         "expected_max_mireds,template",
         [
-            (118, "{{118}}"),
-            (None, "{{x - 12}}"),
-            (None, "None"),
-            (None, "{{ none }}"),
-            (None, ""),
+            (488, "{{488}}"),
+            (500, "{{x - 12}}"),
+            (500, "None"),
+            (500, "{{ none }}"),
+            (500, ""),
         ],
     )
     def test_max_mireds_template(self, expected_max_mireds, template):
@@ -1308,13 +1309,14 @@ async def test_color_template(hass, expected_hs, template):
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_effect": {
+                                "set_temperature": {
                                     "service": "light.turn_on",
                                     "data_template": {
                                         "entity_id": "light.test_state",
-                                        "effect": "{{effect}}",
+                                        "color_temp": "{{color_temp}}",
                                     },
                                 },
+                                "temperature_template": template,
                                 "max_mireds_template": template,
                             }
                         },
