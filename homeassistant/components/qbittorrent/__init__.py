@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
-    if type(configtest) is not Client:
+    if not isinstance(configtest, Client):
         return
 
     client = configtest

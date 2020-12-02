@@ -40,7 +40,7 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             )
-            if type(configtest) is not Client:
+            if not isinstance(configtest, Client):
                 errors = configtest
 
             if not errors:
