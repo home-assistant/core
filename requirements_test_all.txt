@@ -745,6 +745,9 @@ pykira==0.1.1
 # homeassistant.components.kodi
 pykodi==0.2.1
 
+# homeassistant.components.kulersky
+pykulersky==0.4.0
+
 # homeassistant.components.lastfm
 pylast==4.0.0
 
