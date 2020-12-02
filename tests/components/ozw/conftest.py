@@ -253,3 +253,12 @@ def mock_uninstall_addon():
         "homeassistant.components.hassio.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
+
+
+@pytest.fixture(name="get_addon_discovery_info")
+def mock_get_addon_discovery_info():
+    """Mock get add-on discovery info."""
+    with patch(
+        "homeassistant.components.hassio.async_get_addon_discovery_info"
+    ) as get_addon_discovery_info:
+        yield get_addon_discovery_info

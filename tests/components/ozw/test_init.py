@@ -5,6 +5,7 @@ from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
 
 from .common import setup_ozw
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -128,3 +129,28 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the OpenZWave add-on" in caplog.text
+
+
+async def test_setup_with_addon(hass, get_addon_discovery_info):
+    """Test set up entry using OpenZWave add-on."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenZWave",
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={"use_addon": True},
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ozw.MQTTClient", autospec=True):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify integration + platform loaded.
+    assert "ozw" in hass.config.components
+    for platform in PLATFORMS:
+        assert platform in hass.config.components, platform
+        assert f"{platform}.{DOMAIN}" in hass.config.components, f"{platform}.{DOMAIN}"
+
+    # Verify services registered
+    assert hass.services.has_service(DOMAIN, const.SERVICE_ADD_NODE)
+    assert hass.services.has_service(DOMAIN, const.SERVICE_REMOVE_NODE)
