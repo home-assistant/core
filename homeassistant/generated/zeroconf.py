@@ -90,6 +90,11 @@ ZEROCONF = {
             "domain": "ipp"
         }
     ],
+    "_mediaremotetv._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_miio._udp.local.": [
         {
             "domain": "xiaomi_aqara"
@@ -127,6 +132,11 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee2*"
+        }
+    ],
+    "_touch-able._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_viziocast._tcp.local.": [
