@@ -6,29 +6,61 @@ import logging
 from socket import timeout
 
 from motionblinds import MotionMulticast
+import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_API_KEY,
+    CONF_HOST,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    ATTR_ABSOLUTE_POSITION,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
+    MOTION_PLATFORMS,
+    SERVICE_SET_ABSOLUTE_POSITION,
 )
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-MOTION_PLATFORMS = ["cover", "sensor"]
+CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
+
+SET_ABSOLUTE_POSITION_SCHEMA = CALL_SCHEMA.extend(
+    {vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100))}
+)
+
+SERVICE_TO_METHOD = {
+    SERVICE_SET_ABSOLUTE_POSITION: {
+        "method": SERVICE_SET_ABSOLUTE_POSITION,
+        "schema": SET_ABSOLUTE_POSITION_SCHEMA,
+    }
+}
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict):
+def setup(hass: core.HomeAssistant, config: dict):
     """Set up the Motion Blinds component."""
+
+    def service_handler(service):
+        method = SERVICE_TO_METHOD.get(service.service)
+        data = service.data.copy()
+        data["method"] = method["method"]
+        dispatcher_send(hass, DOMAIN, data)
+
+    for service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service]["schema"]
+        hass.services.register(DOMAIN, service, service_handler, schema=schema)
+
     return True
 
 
@@ -41,10 +73,7 @@ async def async_setup_entry(
     key = entry.data[CONF_API_KEY]
 
     # Create multicast Listener
-    multicast = hass.data[DOMAIN].setdefault(
-        KEY_MULTICAST_LISTENER,
-        MotionMulticast(),
-    )
+    multicast = hass.data[DOMAIN].setdefault(KEY_MULTICAST_LISTENER, MotionMulticast(),)
 
     if len(hass.data[DOMAIN]) == 1:
         # start listining for local pushes (only once)

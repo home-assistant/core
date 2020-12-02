@@ -15,15 +15,21 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
+from .const import (
+    ATTR_ABSOLUTE_POSITION,
+    ATTR_WIDTH,
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_GATEWAY,
+    MANUFACTURER,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_WIDTH = "width"
-ATTR_ABSOLUTE_POSITION = "absolute_position"
 
 POSITION_DEVICE_MAP = {
     BlindType.RollerBlind: DEVICE_CLASS_SHADE,
@@ -164,8 +170,25 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self.schedule_update_ha_state(force_refresh=False)
 
     async def async_added_to_hass(self):
-        """Subscribe to multicast pushes."""
+        """Subscribe to multicast pushes and register signal handler."""
         self._blind.Register_callback("cover", self.push_callback)
+
+        async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+
+    def signal_handler(self, data):
+        """Handle domain-specific signal by calling appropriate method."""
+        entity_ids = data[ATTR_ENTITY_ID]
+
+        if entity_ids == ENTITY_MATCH_NONE:
+            return
+
+        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
+            params = {
+                key: value
+                for key, value in data.items()
+                if key not in ["entity_id", "method"]
+            }
+            getattr(self, data["method"])(**params)
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -183,6 +206,11 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
+        self._blind.Set_position(100 - position)
+
+    def set_absolute_position(self, **kwargs):
+        """Move the cover to a specific absolute position (see TDBU)."""
+        position = kwargs[ATTR_ABSOLUTE_POSITION]
         self._blind.Set_position(100 - position)
 
     def stop_cover(self, **kwargs):
@@ -288,9 +316,14 @@ class MotionTDBUDevice(MotionPositionDevice):
         self._blind.Close(motor=self._motor_key)
 
     def set_cover_position(self, **kwargs):
-        """Move the cover to a specific position."""
+        """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
         self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
+
+    def set_absolute_position(self, **kwargs):
+        """Move the cover to a specific absolute position."""
+        position = kwargs[ATTR_ABSOLUTE_POSITION]
+        self._blind.Set_position(100 - position, motor=self._motor_key)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""

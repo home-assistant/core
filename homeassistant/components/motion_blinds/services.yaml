@@ -1,0 +1,11 @@
+# Describes the format for available motion blinds services
+
+set_absolute_position:
+  description: "Set the absolute position of the cover."
+  fields:
+    entity_id:
+      description: Name of the motion blind cover entity to control.
+      example: "cover.TopDownBottomUp-Bottom-0001"
+    absolute_position:
+      description: Absolute position to move to.
+      example: 70
