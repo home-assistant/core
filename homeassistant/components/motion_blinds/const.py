@@ -1,6 +1,7 @@
 """Constants for the Motion Blinds component."""
 DOMAIN = "motion_blinds"
-MANUFACTURER = "Motion, Coulisse B.V."
+MANUFACTURER = "Motion Blinds, Coulisse B.V."
+DEFAULT_GATEWAY_NAME = "Motion Blinds Gateway"
 
 KEY_GATEWAY = "gateway"
 KEY_COORDINATOR = "coordinator"

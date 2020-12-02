@@ -4,8 +4,7 @@ import socket
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
-from homeassistant.components.motion_blinds.const import DOMAIN
+from homeassistant.components.motion_blinds.const import DOMAIN, DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 from tests.async_mock import patch

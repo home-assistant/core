@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, DEFAULT_GATEWAY_NAME
 
 # pylint: disable=unused-import
 from .const import DOMAIN
@@ -12,7 +12,6 @@ from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_GATEWAY_NAME = "Motion Gateway"
 
 CONFIG_SCHEMA = vol.Schema(
     {
