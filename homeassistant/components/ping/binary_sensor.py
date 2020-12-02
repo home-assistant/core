@@ -8,9 +8,9 @@ from functools import partial
 import logging
 import re
 import sys
-from typing import Any
+from typing import Any, Dict
 
-from icmplib import SocketPermissionError, ping as icmp_ping
+from icmplib import ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -23,7 +23,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS, async_get_next_ping_id
-from .const import PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,15 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
-    try:
-        # Verify we can create a raw socket, or
-        # fallback to using a subprocess
-        icmp_ping("127.0.0.1", count=0, timeout=0)
-        ping_cls = PingDataICMPLib
-    except SocketPermissionError:
-        ping_cls = PingDataSubProcess
-
-    ping_data = ping_cls(hass, host, count)
+    ping_data = PingDataICMPLib(hass, host, count)
 
     add_entities([PingBinarySensor(name, ping_data)], True)
 
