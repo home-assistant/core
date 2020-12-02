@@ -1,4 +1,4 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
 
-PING_TIMEOUT = 3
+ICMP_TIMEOUT = 1
 PING_ATTEMPTS_COUNT = 3
