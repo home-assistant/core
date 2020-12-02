@@ -400,10 +400,6 @@ async def test_supervisor_discovery(hass, supervisor, addon_running, addon_optio
         "network_key": "abc123",
         "use_addon": True,
         "integration_created_addon": False,
-        "host": ADDON_DISCOVERY_INFO["host"],
-        "port": ADDON_DISCOVERY_INFO["port"],
-        "username": ADDON_DISCOVERY_INFO["username"],
-        "password": ADDON_DISCOVERY_INFO["password"],
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -492,9 +488,3 @@ async def test_abort_discovery_with_existing_entry(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data == {
-        "host": ADDON_DISCOVERY_INFO["host"],
-        "port": ADDON_DISCOVERY_INFO["port"],
-        "username": ADDON_DISCOVERY_INFO["username"],
-        "password": ADDON_DISCOVERY_INFO["password"],
-    }

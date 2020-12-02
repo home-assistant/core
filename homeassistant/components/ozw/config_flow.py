@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
@@ -31,7 +30,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Set up flow instance."""
         self.addon_config = None
-        self.addon_discovery_info = {}
         self.network_key = None
         self.usb_path = None
         self.use_addon = False
@@ -57,15 +55,8 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the OpenZWave add-on.
         """
-        self.addon_discovery_info = {
-            CONF_HOST: discovery_info["host"],
-            CONF_PORT: discovery_info["port"],
-            CONF_USERNAME: discovery_info["username"],
-            CONF_PASSWORD: discovery_info["password"],
-        }
-
         await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured(updates=self.addon_discovery_info)
+        self._abort_if_unique_id_configured()
 
         addon_config = await self._async_get_addon_config()
         self.usb_path = addon_config[CONF_ADDON_DEVICE]
@@ -90,7 +81,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NETWORK_KEY: self.network_key,
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
-                **self.addon_discovery_info,
             },
         )
 
