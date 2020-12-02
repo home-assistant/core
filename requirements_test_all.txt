@@ -394,7 +394,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201126.0
+home-assistant-frontend==20201202.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -419,7 +419,7 @@ hyperion-py==0.6.0
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.2.2
+icmplib==2.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.8.0

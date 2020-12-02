@@ -31,5 +31,11 @@
                 "title": "AccuWeather Options"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Reach AccuWeather server",
+            "remaining_requests": "Remaining allowed requests"
+        }
     }
 }
