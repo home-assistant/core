@@ -26,7 +26,7 @@ def create_client(url, username, password):
         errors["base"] = "cannot_connect"
         _LOGGER.error("Connection failed - %s", err)
         return errors
-    except Exception as err:
+    except Exception as err:  # pylint:disable=broad-except
         errors["base"] = "cannot_connect"
         _LOGGER.error("Connection failed - %s", err)
         return errors
