@@ -115,6 +115,15 @@ async def test_notify_leaving_zone(hass):
 
         assert len(mock_call_action.mock_calls) == 2
 
+        # Verify trigger works
+        await hass.services.async_call(
+            "automation",
+            "trigger",
+            {"entity_id": "automation.automation_0"},
+            blocking=True,
+        )
+        assert len(mock_call_action.mock_calls) == 3
+
 
 async def test_motion_light(hass):
     """Test motion light blueprint."""
@@ -192,3 +201,13 @@ async def test_motion_light(hass):
 
     assert len(turn_on_calls) == 3
     assert len(turn_off_calls) == 1
+
+    # Verify trigger works
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.automation_0"},
+    )
+    for _ in range(25):
+        await asyncio.sleep(0)
+    assert len(turn_on_calls) == 4
