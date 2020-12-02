@@ -165,7 +165,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @callback
     def async_update_from_websocket(self, state):
         """Update the entity based on new websocket data."""
-        self.state = state
+        self.update_state(state)
         self.async_write_ha_state()
 
         async_dispatcher_send(
@@ -235,9 +235,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._session = session
         if session:
             self.session_device = self.session.player
-            self.state = self.session.state
+            self.update_state(self.session.state)
         else:
-            self.state = STATE_IDLE
+            self._state = STATE_IDLE
 
     @property
     def available(self):
@@ -260,9 +260,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Return the state of the device."""
         return self._state
 
-    @state.setter
-    def state(self, state):
-        """Set the state of the device."""
+    def update_state(self, state):
+        """Set the state of the device, handle session termination."""
         if state == "playing":
             self._state = STATE_PLAYING
         elif state == "paused":
