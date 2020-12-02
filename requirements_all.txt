@@ -81,7 +81,7 @@ RtmAPI==0.7.2
 TravisPy==0.3.5
 
 # homeassistant.components.twitter
-TwitterAPI==2.5.13
+TwitterAPI==2.6.2.1
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
@@ -215,7 +215,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.recollect_waste
-aiorecollect==0.2.1
+aiorecollect==0.2.2
 
 # homeassistant.components.shelly
 aioshelly==0.5.1
@@ -245,7 +245,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.54
+androidtv[async]==0.0.56
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -532,7 +532,7 @@ ecoaliface==0.4.0
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==0.2.0
+elgato==1.0.0
 
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
@@ -853,7 +853,7 @@ konnected==1.2.0
 lakeside==0.12
 
 # homeassistant.components.dyson
-libpurecool==0.6.3
+libpurecool==0.6.4
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1280,7 +1280,7 @@ pyatmo==4.2.1
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.3.13
+pyatv==0.7.3
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1334,7 +1334,7 @@ pydaikin==2.3.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==75
+pydeconz==76
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1479,7 +1479,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lastfm
-pylast==3.3.0
+pylast==4.0.0
 
 # homeassistant.components.launch_library
 pylaunches==1.0.0
@@ -1604,7 +1604,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.6
+pypck==0.7.7
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1689,7 +1689,7 @@ pysmartthings==0.7.6
 pysmarty==0.8
 
 # homeassistant.components.edl21
-pysml==0.0.2
+pysml==0.0.3
 
 # homeassistant.components.snmp
 pysnmp==4.4.12
@@ -1791,7 +1791,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.3.2
+python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
@@ -1804,9 +1804,6 @@ python-sochain-api==0.0.2
 
 # homeassistant.components.songpal
 python-songpal==0.12
-
-# homeassistant.components.synology_dsm
-python-synology==1.0.0
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -1859,9 +1856,6 @@ pytradfri[async]==7.0.4
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.6.2
-
-# homeassistant.components.ubee
-pyubee==0.10
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
@@ -2139,6 +2133,9 @@ swisshydrodata==0.0.3
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
+
+# homeassistant.components.synology_dsm
+synologydsm-api==1.0.1
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16

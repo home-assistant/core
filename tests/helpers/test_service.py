@@ -960,3 +960,40 @@ async def test_extract_from_service_area_id(hass, area_mock):
         "light.in_area",
         "light.no_area",
     ]
+
+
+async def test_entity_service_call_warn_referenced(hass, caplog):
+    """Test we only warn for referenced entities in entity_service_call."""
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {
+            "area_id": "non-existent-area",
+            "entity_id": "non.existent",
+            "device_id": "non-existent-device",
+        },
+    )
+    await service.entity_service_call(hass, {}, "", call)
+    assert (
+        "Unable to find referenced areas non-existent-area, devices non-existent-device, entities non.existent"
+        in caplog.text
+    )
+
+
+async def test_async_extract_entities_warn_referenced(hass, caplog):
+    """Test we only warn for referenced entities in async_extract_entities."""
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {
+            "area_id": "non-existent-area",
+            "entity_id": "non.existent",
+            "device_id": "non-existent-device",
+        },
+    )
+    extracted = await service.async_extract_entities(hass, {}, call)
+    assert len(extracted) == 0
+    assert (
+        "Unable to find referenced areas non-existent-area, devices non-existent-device, entities non.existent"
+        in caplog.text
+    )

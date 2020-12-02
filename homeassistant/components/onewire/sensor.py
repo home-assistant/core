@@ -244,7 +244,7 @@ def get_entities(onewirehub: OneWireHub, config):
         for device in onewirehub.devices:
             family = device["family"]
             device_type = device["type"]
-            sensor_id = os.path.split(os.path.split(device["path"])[0])[1]
+            device_id = os.path.split(os.path.split(device["path"])[0])[1]
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
@@ -254,38 +254,37 @@ def get_entities(onewirehub: OneWireHub, config):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
-                    sensor_id,
+                    device_id,
                 )
                 continue
             device_info = {
-                "identifiers": {(DOMAIN, sensor_id)},
+                "identifiers": {(DOMAIN, device_id)},
                 "manufacturer": "Maxim Integrated",
                 "model": device_type,
-                "name": sensor_id,
+                "name": device_id,
             }
-            for device_sensor in hb_info_from_type(dev_type)[family]:
-                if device_sensor["type"] == SENSOR_TYPE_MOISTURE:
-                    s_id = device_sensor["path"].split(".")[1]
+            for entity_specs in hb_info_from_type(dev_type)[family]:
+                if entity_specs["type"] == SENSOR_TYPE_MOISTURE:
+                    s_id = entity_specs["path"].split(".")[1]
                     is_leaf = int(
                         onewirehub.owproxy.read(
                             f"{device['path']}moisture/is_leaf.{s_id}"
                         ).decode()
                     )
                     if is_leaf:
-                        device_sensor["type"] = SENSOR_TYPE_WETNESS
-                        device_sensor["name"] = f"Wetness {s_id}"
-                device_file = os.path.join(
-                    os.path.split(device["path"])[0], device_sensor["path"]
+                        entity_specs["type"] = SENSOR_TYPE_WETNESS
+                        entity_specs["name"] = f"Wetness {s_id}"
+                entity_path = os.path.join(
+                    os.path.split(device["path"])[0], entity_specs["path"]
                 )
                 entities.append(
                     OneWireProxySensor(
-                        device_names.get(sensor_id, sensor_id),
-                        device_file,
-                        device_sensor["type"],
-                        device_sensor["name"],
-                        device_info,
-                        device_sensor.get("default_disabled", False),
-                        onewirehub.owproxy,
+                        device_id=device_id,
+                        device_name=device_names.get(device_id, device_id),
+                        device_info=device_info,
+                        entity_path=entity_path,
+                        entity_specs=entity_specs,
+                        owproxy=onewirehub.owproxy,
                     )
                 )
 

@@ -23,6 +23,7 @@ blueprint:
         number:
           min: 0
           max: 3600
+          unit_of_measurement: seconds
 
 # If motion is detected within the delay,
 # we restart the script.
@@ -31,18 +32,18 @@ max_exceeded: silent
 
 trigger:
   platform: state
-  entity_id: !placeholder motion_entity
+  entity_id: !input motion_entity
   from: "off"
   to: "on"
 
 action:
-  - service: homeassistant.turn_on
-    target: !placeholder light_target
+  - service: light.turn_on
+    target: !input light_target
   - wait_for_trigger:
       platform: state
-      entity_id: !placeholder motion_entity
+      entity_id: !input motion_entity
       from: "on"
       to: "off"
-  - delay: !placeholder no_motion_wait
-  - service: homeassistant.turn_off
-    target: !placeholder light_target
+  - delay: !input no_motion_wait
+  - service: light.turn_off
+    target: !input light_target

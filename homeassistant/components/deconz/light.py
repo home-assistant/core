@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     other_light_resource_types = CONTROLLER + COVER_TYPES + LOCK_TYPES + SWITCH_TYPES
 
     @callback
-    def async_add_light(lights):
+    def async_add_light(lights=gateway.api.lights.values()):
         """Add light from deCONZ."""
         entities = []
 
@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     @callback
-    def async_add_group(groups):
+    def async_add_group(groups=gateway.api.groups.values()):
         """Add group from deCONZ."""
         if not gateway.option_allow_deconz_groups:
             return
@@ -91,8 +91,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_light(gateway.api.lights.values())
-    async_add_group(gateway.api.groups.values())
+    async_add_light()
+    async_add_group()
 
 
 class DeconzBaseLight(DeconzDevice, LightEntity):

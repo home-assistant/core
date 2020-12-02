@@ -36,5 +36,13 @@
                 "title": "Velg godkjenningsmetode"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Bevegelse oppdaget",
+            "camera_person": "Person oppdaget",
+            "camera_sound": "Lyd oppdaget",
+            "doorbell_chime": "Ringeklokke trykket"
+        }
     }
 }

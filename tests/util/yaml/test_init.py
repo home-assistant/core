@@ -463,18 +463,18 @@ def test_duplicate_key(caplog):
     assert "contains duplicate key" in caplog.text
 
 
-def test_placeholder_class():
-    """Test placeholder class."""
-    placeholder = yaml_loader.Placeholder("hello")
-    placeholder2 = yaml_loader.Placeholder("hello")
+def test_input_class():
+    """Test input class."""
+    input = yaml_loader.Input("hello")
+    input2 = yaml_loader.Input("hello")
 
-    assert placeholder.name == "hello"
-    assert placeholder == placeholder2
+    assert input.name == "hello"
+    assert input == input2
 
-    assert len({placeholder, placeholder2}) == 1
+    assert len({input, input2}) == 1
 
 
-def test_placeholder():
-    """Test loading placeholders."""
-    data = {"hello": yaml.Placeholder("test_name")}
+def test_input():
+    """Test loading inputs."""
+    data = {"hello": yaml.Input("test_name")}
     assert yaml.parse_yaml(yaml.dump(data)) == data

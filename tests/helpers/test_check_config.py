@@ -159,9 +159,9 @@ blueprint:
     service_to_call:
 trigger:
   platform: event
-  event_type: !placeholder trigger_event
+  event_type: !input trigger_event
 action:
-  service: !placeholder service_to_call
+  service: !input service_to_call
 """,
     }
     with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
