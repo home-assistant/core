@@ -131,7 +131,7 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
     assert "Failed to uninstall the OpenZWave add-on" in caplog.text
 
 
-async def test_setup_with_addon(hass, get_addon_discovery_info):
+async def test_setup_entry_with_addon(hass, get_addon_discovery_info):
     """Test set up entry using OpenZWave add-on."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -141,9 +141,11 @@ async def test_setup_with_addon(hass, get_addon_discovery_info):
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.ozw.MQTTClient", autospec=True):
+    with patch("homeassistant.components.ozw.MQTTClient", autospec=True) as mock_client:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+    assert mock_client.return_value.start_client.call_count == 1
 
     # Verify integration + platform loaded.
     assert "ozw" in hass.config.components
@@ -154,3 +156,29 @@ async def test_setup_with_addon(hass, get_addon_discovery_info):
     # Verify services registered
     assert hass.services.has_service(DOMAIN, const.SERVICE_ADD_NODE)
     assert hass.services.has_service(DOMAIN, const.SERVICE_REMOVE_NODE)
+
+
+async def test_unload_entry_with_addon(
+    hass, get_addon_discovery_info, generic_data, switch_msg, caplog
+):
+    """Test unload the config entry using the OpenZWave add-on."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenZWave",
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={"use_addon": True},
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+    with patch("homeassistant.components.ozw.MQTTClient", autospec=True) as mock_client:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_client.return_value.start_client.call_count == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
