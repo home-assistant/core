@@ -516,7 +516,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if effect_list in ("None", "") or not isinstance(effect_list, list):
             _LOGGER.error(
                 "Received invalid effect list: %s. Expected list of strings",
-                effect_list
+                effect_list,
             )
             self._effect_list = None
             return
