@@ -48,7 +48,9 @@ omit =
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apcupsd/*
-    homeassistant/components/apple_tv/*
+    homeassistant/components/apple_tv/__init__.py
+    homeassistant/components/apple_tv/media_player.py
+    homeassistant/components/apple_tv/remote.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/media_player.py
