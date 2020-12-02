@@ -6,7 +6,6 @@ from homeassistant.components.number.const import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.core import State
-from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
