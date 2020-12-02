@@ -26,6 +26,10 @@ def create_client(url, username, password):
         errors["base"] = "cannot_connect"
         _LOGGER.error("Connection failed - %s", err)
         return errors
+    except Exception as err:
+        errors["base"] = "cannot_connect"
+        _LOGGER.error("Connection failed - %s", err)
+        return errors
 
 
 def retrieve_torrentdata(client: Client, torrentfilter):
