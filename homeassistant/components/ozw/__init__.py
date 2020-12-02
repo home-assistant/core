@@ -91,6 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     "core_zwave"
                 )
             )
+
+            if not discovery_info:
+                _LOGGER.error("Failed to get add-on discovery info")
+                return False
+
             discovery_info_config = discovery_info["config"]
             addon_discovery_info = {
                 CONF_HOST: discovery_info_config["host"],
