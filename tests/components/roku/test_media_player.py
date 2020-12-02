@@ -620,7 +620,9 @@ async def test_media_browse_internal(hass, aioclient_mock, hass_ws_client):
 
     client = await hass_ws_client(hass)
 
-    with patch("homeassistant.helpers.network._get_request_host", return_value="example.local"):
+    with patch(
+        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+    ):
         await client.send_json(
             {
                 "id": 2,
