@@ -39,10 +39,10 @@ class HuisbaasjeSensor(CoordinatorEntity):
         precision: int = 0,
     ):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._user_id = user_id
         self._name = name
         self._device_class = device_class
-        self._coordinator = coordinator
         self._unit_of_measurement = unit_of_measurement
         self._source_type = source_type
         self._sensor_type = sensor_type
@@ -72,9 +72,9 @@ class HuisbaasjeSensor(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._coordinator.data[self._source_type][self._sensor_type] is not None:
+        if self.coordinator.data[self._source_type][self._sensor_type] is not None:
             return round(
-                self._coordinator.data[self._source_type][self._sensor_type],
+                self.coordinator.data[self._source_type][self._sensor_type],
                 self._precision,
             )
         return None
@@ -88,8 +88,8 @@ class HuisbaasjeSensor(CoordinatorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            super().available()
-            and self._coordinator.data
-            and self._source_type in self._coordinator.data
-            and self._coordinator.data[self._source_type]
+            super().available
+            and self.coordinator.data
+            and self._source_type in self.coordinator.data
+            and self.coordinator.data[self._source_type]
         )
