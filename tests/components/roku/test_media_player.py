@@ -600,6 +600,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert not msg["success"]
 
 
+@patch("homeassistant.helpers.network._get_request_host", return_value="example.local")
 async def test_media_browse_internal(hass, aioclient_mock, hass_ws_client):
     """Test browsing media with internal url."""
     await async_process_ha_core_config(
@@ -649,9 +650,7 @@ async def test_media_browse_internal(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["children"][0]["title"] == "Satellite TV"
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
-    assert (
-        "/query/icon/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
-    )
+    assert "/query/icon/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
     assert msg["result"]["children"][0]["can_play"]
 
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
