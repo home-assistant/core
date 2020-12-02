@@ -104,6 +104,7 @@ class OpenSkySensor(Entity):
         self._hass = hass
         self._name = name
         self._previously_tracked = None
+        self._connectionproblems = 0
 
     @property
     def name(self):
@@ -135,7 +136,16 @@ class OpenSkySensor(Entity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
+        request = self._session.get(OPENSKY_API_URL)
+        _LOGGER.debug("OpenSky API request status: %d", request.status_code)
+        if request.status_code != 200:
+            _LOGGER.warning("OpenSky API request status: %d", request.status_code)
+            self._connectionproblems = self._connectionproblems + 1
+        else:
+            self._connectionproblems = 0
+        if self._connectionproblems > 10:
+            _LOGGER.error("Persistent error retrieving data from the OpenSky API.")
+        states = request.json().get(ATTR_STATES)
         _LOGGER.debug(str(len(states)) + " flights parsed")
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
