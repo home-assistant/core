@@ -12,7 +12,9 @@
                 "data": {
                     "host": "",
                     "passkey": "Juurdep\u00e4\u00e4sut\u00f5endi string",
-                    "port": ""
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi"
                 },
                 "description": "Seadista oma BSB-Lan seadme sidumine Home Assistant'iga.",
                 "title": "\u00dchendu BSB-Lan seadmega"

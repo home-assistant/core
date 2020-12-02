@@ -12,7 +12,9 @@
                 "data": {
                     "host": "Vert",
                     "passkey": "Tilgangsn\u00f8kkel streng",
-                    "port": "Port"
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
                 },
                 "description": "Konfigurer din BSB-Lan-enhet for \u00e5 integrere med Home Assistant.",
                 "title": "Koble til BSB-Lan-enheten"
