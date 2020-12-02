@@ -27,6 +27,8 @@ trigger:
 variables:
   zone_entity: !input zone_entity
   zone_state: "{{ states[zone_entity].name }}"
+  person_entity: !input person_entity
+  person_name: "{{ states[person_entity].name }}"
 
 condition:
   condition: template
@@ -36,4 +38,4 @@ action:
   domain: mobile_app
   type: notify
   device_id: !input notify_device
-  message: "{{ trigger.to_state.name }} has left {{ zone_state }}"
+  message: "{{ person_name }} has left {{ zone_state }}"
