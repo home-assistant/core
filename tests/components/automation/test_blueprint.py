@@ -131,8 +131,8 @@ async def test_motion_light(hass):
             },
         )
 
-    turn_on_calls = async_mock_service(hass, "homeassistant", "turn_on")
-    turn_off_calls = async_mock_service(hass, "homeassistant", "turn_off")
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+    turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
     # Turn on motion
     hass.states.async_set("binary_sensor.kitchen", "on")
