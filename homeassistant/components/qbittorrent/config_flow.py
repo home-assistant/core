@@ -44,11 +44,10 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except LoginRequired:
                 errors["base"] = "invalid_auth"
-                return
-            except RequestException as err:
+            except Timeout as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection failed - %s", err)
-            except Timeout as err:
+            except RequestException as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection failed - %s", err)
 
