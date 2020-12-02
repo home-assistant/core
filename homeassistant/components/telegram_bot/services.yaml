@@ -179,7 +179,7 @@ send_voice:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
     timeout:
-      description: Timeout for send video. Will help with timeout errors (poor internet connection, etc)
+      description: Timeout for send voice. Will help with timeout errors (poor internet connection, etc)
       example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
