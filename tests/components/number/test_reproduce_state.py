@@ -45,3 +45,10 @@ async def test_reproducing_states(hass, caplog):
     assert len(calls) == 1
     assert calls[0].domain == DOMAIN
     assert calls[0].data == {"entity_id": "number.test_number", "value": VALID_NUMBER2}
+
+    # Test invalid state
+    await hass.helpers.state.async_reproduce_state(
+        [State("number.test_number", "invalid_state")]
+    )
+
+    assert len(calls) == 1
