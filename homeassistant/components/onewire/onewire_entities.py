@@ -83,24 +83,22 @@ class OneWireProxyEntity(OneWireBaseEntity):
 
     def __init__(
         self,
-        name: str,
-        device_file: str,
-        entity_type: str,
-        entity_name: str,
+        device_id: str,
+        device_name: str,
         device_info: Dict[str, Any],
-        default_disabled: bool,
+        entity_path: str,
+        entity_specs: Dict[str, Any],
         owproxy: protocol._Proxy,
-        unique_id: str,
     ):
         """Initialize the sensor."""
         super().__init__(
-            name,
-            device_file,
-            entity_type,
-            entity_name,
-            device_info,
-            default_disabled,
-            unique_id,
+            name=device_name,
+            device_file=entity_path,
+            entity_type=entity_specs["type"],
+            entity_name=entity_specs["name"],
+            device_info=device_info,
+            default_disabled=entity_specs.get("default_disabled", False),
+            unique_id=f"/{device_id}/{entity_specs['path']}",
         )
         self._owproxy = owproxy
 
