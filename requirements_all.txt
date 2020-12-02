@@ -726,7 +726,7 @@ guppy3==3.1.0
 ha-ffmpeg==2.0
 
 # homeassistant.components.microsoft_graph
-ha-graphapi==0.0.17
+ha-graphapi==0.0.18
 
 # homeassistant.components.philips_js
 ha-philipsjs==0.0.8
