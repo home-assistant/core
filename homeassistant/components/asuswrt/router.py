@@ -6,19 +6,13 @@ from aioasuswrt.asuswrt import AsusWrt
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
 
-from .const import (
-    CONF_DNSMASQ,
-    CONF_INTERFACE,
-    CONF_REQUIRE_IP,
-    CONF_SSH_KEY,
-)
+from .const import CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP, CONF_SSH_KEY
 
 
 def get_api(conf: Dict) -> AsusWrt:
