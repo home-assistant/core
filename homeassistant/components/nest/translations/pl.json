@@ -36,5 +36,13 @@
                 "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "nast\u0105pi wykrycie ruchu",
+            "camera_person": "nast\u0105pi wykrycie osoby",
+            "camera_sound": "nast\u0105pi wykrycie d\u017awi\u0119ku",
+            "doorbell_chime": "dzwonek zostanie wci\u015bni\u0119ty"
+        }
     }
 }

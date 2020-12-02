@@ -12,7 +12,9 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "passkey": "Ci\u0105g klucza dost\u0119pu",
-                    "port": "Port"
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Konfiguracja urz\u0105dzenia BSB-LAN w celu integracji z Home Assistantem.",
                 "title": "Po\u0142\u0105czenie z urz\u0105dzeniem BSB-Lan"

@@ -8,5 +8,10 @@
                 "description": "Kas soovid seadistada mobiilirakenduse sidumist?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Saada teavitus"
+        }
     }
 }
