@@ -1808,9 +1808,6 @@ python-sochain-api==0.0.2
 # homeassistant.components.songpal
 python-songpal==0.12
 
-# homeassistant.components.synology_dsm
-python-synology==1.0.0
-
 # homeassistant.components.tado
 python-tado==0.8.1
 
@@ -2139,6 +2136,9 @@ swisshydrodata==0.0.3
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
+
+# homeassistant.components.synology_dsm
+synologydsm-api==1.0.1
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
