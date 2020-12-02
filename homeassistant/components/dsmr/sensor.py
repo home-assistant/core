@@ -4,6 +4,7 @@ from asyncio import CancelledError
 from datetime import timedelta
 from functools import partial
 import logging
+import warnings
 from typing import Dict
 
 from dsmr_parser import obis_references as obis_ref
@@ -75,7 +76,11 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
+    # Suppress logging
+    logger = logging.getLogger("dsmr_parser")
+    logger.setLevel(logging.INFO)
     config = entry.data
+    
     options = entry.options
 
     dsmr_version = config[CONF_DSMR_VERSION]
@@ -156,10 +161,14 @@ async def async_setup_entry(
     def timerCallback():
         nonlocal updateTimeout
         nonlocal updateCount
+        updateCount += 1
         if not updateTimeout.done():
-            updateTimeout.set_result(1)
+            updateTimeout.set_result(True)
+        else:
+            raise Exception('Future ''updateTimeout'' Already set')
+        _LOGGER.warn("Connection timed out")
 
-    updateTimer = Timer(config[30, timerCallback, loop=hass.loop)
+    updateTimer = Timer(30, timerCallback, loop=hass.loop)
 
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
@@ -198,9 +207,12 @@ async def async_setup_entry(
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
+                logger.info("Connecting...")
+                updateTimeout = hass.loop.create_future()
                 transport, protocol = await hass.loop.create_task(reader_factory())
-                updateTimeout = loop.create_future()
-                updateTimer.setTimeout(config[CONF_RECONNECT_INTERVAL]])
+                logger.info("Connected")                
+
+                updateTimer.setTimeout(config[CONF_RECONNECT_INTERVAL])
                 updateTimer.start()
 
                 if transport:
@@ -220,6 +232,9 @@ async def async_setup_entry(
                 # Need to stop the timer after we close transport or otherwise the telegramcb might reset it after stopping    
                 if not updateTimer.done():
                     updateTimer.stop()
+                    _LOGGER.warn("Connection lost")
+                    
+                logger.info("Resetting connection")
 
                 transport = None
                 protocol = None
@@ -431,3 +446,69 @@ class DerivativeDSMREntity(DSMREntity):
         unit = self.get_dsmr_object_attr("unit")
         if unit:
             return f"{unit}/{TIME_HOURS}"
+
+class Timer(object):
+#async Timer object with start, stop reset and garbage collection using futures and and loop.call_later
+    def __init__(self, delay, callback, *args, loop=None):
+        self.TimerHandle = None
+        self.setTimeout(delay)
+        self.setCallback(callback)
+        self.callback = callback
+        self.args = args
+        if loop:
+            self.loop = loop
+        else:
+            self.loop = asyncio.get_event_loop()
+
+    def setTimeout(self, delay):
+        if self._timerActive():
+            warnings.warn("A timer was still running with the old delay. delay won't be changed untill next reset()")
+        self.delay = delay
+    
+    def setCallback(self, callback):
+        if callable(callback):
+            if self._timerActive():
+                warnings.warn("A timer was still running with the old callback. callback won't be changed untill next reset()")
+            self.callback = callback
+        else:
+            raise Exception("callback for Timer is not callable")
+
+
+    def start(self):
+        if not self._timerActive():
+            self.TimerHandle = self.loop.call_later(self.delay, self.callback, *self.args)
+        else:
+            raise Exception("Timer already started")
+
+    def stop(self):
+        if not self.TimerHandle:
+            raise Exception("Timer was stopped before being started")
+        elif self.TimerHandle.cancelled():
+            warnings.warn("Timer was stopped, before being stopped again")
+        elif self._timerDone():
+            warnings.warn("Timer was finished, before being stopped")
+        self.TimerHandle.cancel()
+
+    def reset(self):
+        if not self.TimerHandle:
+            warnings.warn("Timer was not started while being reset")
+        elif not self._timerDone():
+            self.stop()
+        self.TimerHandle = None
+        self.start()
+
+    def done(self):
+        return not self._timerActive()
+
+    def _timerDone(self):
+        if self.TimerHandle:
+            return ((self.loop.time() - self.TimerHandle.when()) >= 0)
+        else:
+            return False
+
+    def _timerActive(self):
+        return (self.TimerHandle and not self.TimerHandle.cancelled() and not self._timerDone())
+
+    def __del__(self):
+        if self._timerActive():
+            self.TimerHandle.cancel()
