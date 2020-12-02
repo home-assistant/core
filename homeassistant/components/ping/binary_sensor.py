@@ -1,13 +1,11 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
 import re
-import sys
 from typing import Any, Dict
 
-from icmplib import SocketPermissionError, ping as icmp_ping
+from icmplib import ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -20,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS, async_get_next_ping_id
-from .const import PING_TIMEOUT
+from .const import ICMP_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,15 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
-    try:
-        # Verify we can create a raw socket, or
-        # fallback to using a subprocess
-        icmp_ping("127.0.0.1", count=0, timeout=0)
-        ping_cls = PingDataICMPLib
-    except SocketPermissionError:
-        ping_cls = PingDataSubProcess
-
-    ping_data = ping_cls(hass, host, count)
+    ping_data = PingDataICMPLib(hass, host, count)
 
     add_entities([PingBinarySensor(name, ping_data)], True)
 
@@ -143,7 +133,7 @@ class PingDataICMPLib(PingData):
                 icmp_ping,
                 self._ip_address,
                 count=self._count,
-                timeout=1,
+                timeout=ICMP_TIMEOUT,
                 id=async_get_next_ping_id(self.hass),
             )
         )
@@ -158,99 +148,3 @@ class PingDataICMPLib(PingData):
             "avg": data.avg_rtt,
             "mdev": "",
         }
-
-
-class PingDataSubProcess(PingData):
-    """The Class for handling the data retrieval using the ping binary."""
-
-    def __init__(self, hass, host, count) -> None:
-        """Initialize the data object."""
-        super().__init__(hass, host, count)
-        if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
-        else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
-
-    async def async_ping(self):
-        """Send ICMP echo request and return details if success."""
-        pinger = await asyncio.create_subprocess_exec(
-            *self._ping_cmd,
-            stdin=None,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        try:
-            out_data, out_error = await asyncio.wait_for(
-                pinger.communicate(), self._count + PING_TIMEOUT
-            )
-
-            if out_data:
-                _LOGGER.debug(
-                    "Output of command: `%s`, return code: %s:\n%s",
-                    " ".join(self._ping_cmd),
-                    pinger.returncode,
-                    out_data,
-                )
-            if out_error:
-                _LOGGER.debug(
-                    "Error of command: `%s`, return code: %s:\n%s",
-                    " ".join(self._ping_cmd),
-                    pinger.returncode,
-                    out_error,
-                )
-
-            if pinger.returncode > 1:
-                # returncode of 1 means the host is unreachable
-                _LOGGER.exception(
-                    "Error running command: `%s`, return code: %s",
-                    " ".join(self._ping_cmd),
-                    pinger.returncode,
-                )
-
-            if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(str(out_data).split("\n")[-1])
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            if "max/" not in str(out_data):
-                match = PING_MATCHER_BUSYBOX.search(str(out_data).split("\n")[-1])
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out_data).split("\n")[-1])
-            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except asyncio.TimeoutError:
-            _LOGGER.exception(
-                "Timed out running command: `%s`, after: %ss",
-                self._ping_cmd,
-                self._count + PING_TIMEOUT,
-            )
-            if pinger:
-                try:
-                    await pinger.kill()
-                except TypeError:
-                    pass
-                del pinger
-
-            return False
-        except AttributeError:
-            return False
-
-    async def async_update(self) -> None:
-        """Retrieve the latest details from the host."""
-        self.data = await self.async_ping()
-        self.available = bool(self.data)
