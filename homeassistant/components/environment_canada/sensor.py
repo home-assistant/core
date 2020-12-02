@@ -104,9 +104,10 @@ class ECSensor(Entity):
         """Return the units of measurement."""
         return self._unit
 
-    def update(self):
+    async def update(self):
         """Update current conditions."""
-        self.ec_data.update()
+        await self.ec_data.update()
+
         self.ec_data.conditions.update(self.ec_data.alerts)
 
         conditions = self.ec_data.conditions
