@@ -28,6 +28,7 @@ class OneWireBaseEntity(Entity):
         entity_name: str = None,
         device_info=None,
         default_disabled: bool = False,
+        unique_id: str = None,
     ):
         """Initialize the entity."""
         self._name = f"{name} {entity_name or entity_type.capitalize()}"
@@ -39,6 +40,7 @@ class OneWireBaseEntity(Entity):
         self._state = None
         self._value_raw = None
         self._default_disabled = default_disabled
+        self._unique_id = unique_id or device_file
 
     @property
     def name(self) -> Optional[str]:
@@ -63,7 +65,7 @@ class OneWireBaseEntity(Entity):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return self._device_file
+        return self._unique_id
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
@@ -81,17 +83,22 @@ class OneWireProxyEntity(OneWireBaseEntity):
 
     def __init__(
         self,
-        name: str,
-        device_file: str,
-        entity_type: str,
-        entity_name: str,
+        device_id: str,
+        device_name: str,
         device_info: Dict[str, Any],
-        default_disabled: bool,
+        entity_path: str,
+        entity_specs: Dict[str, Any],
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""
         super().__init__(
-            name, device_file, entity_type, entity_name, device_info, default_disabled
+            name=device_name,
+            device_file=entity_path,
+            entity_type=entity_specs["type"],
+            entity_name=entity_specs["name"],
+            device_info=device_info,
+            default_disabled=entity_specs.get("default_disabled", False),
+            unique_id=f"/{device_id}/{entity_specs['path']}",
         )
         self._owproxy = owproxy
 
