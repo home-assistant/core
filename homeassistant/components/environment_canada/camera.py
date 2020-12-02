@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
 
     if config.get(CONF_STATION):
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
         )
 
-    add_devices(
+    async_add_devices(
         [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
     )
 
@@ -68,9 +68,9 @@ class ECCamera(Camera):
         self.image = None
         self.timestamp = None
 
-    async def camera_image(self):
+    async def async_camera_image(self):
         """Return bytes of camera image."""
-        await self.update()
+        await self.async_update()
         return self.image
 
     @property
@@ -86,10 +86,10 @@ class ECCamera(Camera):
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def update(self):
+    async def async_update(self):
         """Update radar image."""
         if self.is_loop:
             self.image = await self.radar_object.get_loop()
         else:
             self.image = await self.radar_object.get_latest_frame()
-        self.timestamp = await self.radar_object.timestamp
+        self.timestamp = self.radar_object.timestamp
