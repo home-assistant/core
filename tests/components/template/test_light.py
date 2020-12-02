@@ -1180,6 +1180,8 @@ async def test_color_template(hass, expected_hs, template):
             ),
             ([], "{{ [] }}"),
             ([], "{{ '[]' }}"),
+            (None, "{{ 124 }}"),
+            (None, "{{ '124' }}"),
             (None, "{{ none }}"),
             (None, ""),
         ],
@@ -1234,6 +1236,7 @@ async def test_color_template(hass, expected_hs, template):
             (153, "None"),
             (153, "{{ none }}"),
             (153, ""),
+            (153, "{{ 'a' }}"),
         ],
     )
     def test_min_mireds_template(self, expected_min_mireds, template):
@@ -1287,6 +1290,7 @@ async def test_color_template(hass, expected_hs, template):
             (500, "None"),
             (500, "{{ none }}"),
             (500, ""),
+            (500, "{{ 'a' }}"),
         ],
     )
     def test_max_mireds_template(self, expected_max_mireds, template):
