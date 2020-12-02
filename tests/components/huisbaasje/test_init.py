@@ -4,10 +4,15 @@ from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_POLL,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_RETRY,
     ConfigEntry,
 )
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
+from tests.components.huisbaasje.test_data import MOCK_CURRENT_MEASUREMENTS
 
 
 async def test_setup(hass: HomeAssistant):
@@ -19,15 +24,52 @@ async def test_setup(hass: HomeAssistant):
 
 async def test_setup_entry(hass: HomeAssistant):
     """Test for successfully setting a config entry."""
+    with patch(
+        "huisbaasje.Huisbaasje.current_measurements",
+        return_value=MOCK_CURRENT_MEASUREMENTS,
+    ):
+        hass.config.components.add(huisbaasje.DOMAIN)
+        config_entry = ConfigEntry(
+            1,
+            huisbaasje.DOMAIN,
+            "userId",
+            {
+                CONF_ID: "userId",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
+            "test",
+            CONN_CLASS_CLOUD_POLL,
+            system_options={},
+        )
+        hass.config_entries._entries.append(config_entry)
+
+        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert integration is loaded
+        assert config_entry.state == ENTRY_STATE_LOADED
+        assert huisbaasje.DOMAIN in hass.config.components
+        assert huisbaasje.DOMAIN in hass.data
+        assert config_entry.entry_id in hass.data[huisbaasje.DOMAIN]
+
+        # Assert entities are loaded
+        entities = hass.states.async_entity_ids("sensor")
+        assert len(entities) == 14
+
+
+async def test_setup_entry_error(hass: HomeAssistant):
+    """Test for successfully setting a config entry."""
     hass.config.components.add(huisbaasje.DOMAIN)
     config_entry = ConfigEntry(
         1,
         huisbaasje.DOMAIN,
         "userId",
         {
-            huisbaasje.CONF_ID: "userId",
-            huisbaasje.CONF_USERNAME: "username",
-            huisbaasje.CONF_PASSWORD: "password",
+            CONF_ID: "userId",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
         },
         "test",
         CONN_CLASS_CLOUD_POLL,
@@ -36,60 +78,49 @@ async def test_setup_entry(hass: HomeAssistant):
     hass.config_entries._entries.append(config_entry)
 
     assert config_entry.state == ENTRY_STATE_NOT_LOADED
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert integration is loaded
-    assert config_entry.state == ENTRY_STATE_LOADED
-    assert huisbaasje.DOMAIN in hass.config.components
-    assert huisbaasje.DOMAIN in hass.data
-    assert "userId" in hass.data[huisbaasje.DOMAIN]
+    # Assert integration is loaded with error
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert huisbaasje.DOMAIN not in hass.data
 
     # Assert entities are loaded
     entities = hass.states.async_entity_ids("sensor")
-    assert len(entities) == 8
-    assert hass.states.get("sensor.huisbaasje_current_power").state == "unavailable"
-    assert hass.states.get("sensor.huisbaasje_current_power_in").state == "unavailable"
-    assert (
-        hass.states.get("sensor.huisbaasje_current_power_in_low").state == "unavailable"
-    )
-    assert hass.states.get("sensor.huisbaasje_current_power_out").state == "unavailable"
-    assert (
-        hass.states.get("sensor.huisbaasje_current_power_out_low").state
-        == "unavailable"
-    )
-    assert hass.states.get("sensor.huisbaasje_current_gas").state == "unavailable"
-    assert hass.states.get("sensor.huisbaasje_energy_today").state == "unavailable"
-    assert hass.states.get("sensor.huisbaasje_gas_today").state == "unavailable"
+    assert len(entities) == 0
 
 
 async def test_unload_entry(hass: HomeAssistant):
     """Test for successfully unloading the config entry."""
-    hass.config.components.add(huisbaasje.DOMAIN)
-    config_entry = ConfigEntry(
-        1,
-        huisbaasje.DOMAIN,
-        "userId",
-        {
-            huisbaasje.CONF_ID: "userId",
-            huisbaasje.CONF_USERNAME: "username",
-            huisbaasje.CONF_PASSWORD: "password",
-        },
-        "test",
-        CONN_CLASS_CLOUD_POLL,
-        system_options={},
-    )
-    hass.config_entries._entries.append(config_entry)
+    with patch(
+        "huisbaasje.Huisbaasje.current_measurements",
+        return_value=MOCK_CURRENT_MEASUREMENTS,
+    ):
+        hass.config.components.add(huisbaasje.DOMAIN)
+        config_entry = ConfigEntry(
+            1,
+            huisbaasje.DOMAIN,
+            "userId",
+            {
+                CONF_ID: "userId",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
+            "test",
+            CONN_CLASS_CLOUD_POLL,
+            system_options={},
+        )
+        hass.config_entries._entries.append(config_entry)
 
-    # Load config entry
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state == ENTRY_STATE_LOADED
-    entities = hass.states.async_entity_ids("sensor")
-    assert len(entities) == 8
+        # Load config entry
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ENTRY_STATE_LOADED
+        entities = hass.states.async_entity_ids("sensor")
+        assert len(entities) == 14
 
-    # Unload config entry
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ENTRY_STATE_NOT_LOADED
-    entities = hass.states.async_entity_ids("sensor")
-    assert len(entities) == 0
+        # Unload config entry
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        entities = hass.states.async_entity_ids("sensor")
+        assert len(entities) == 0
