@@ -743,7 +743,7 @@ pykira==0.1.1
 pykodi==0.2.1
 
 # homeassistant.components.lastfm
-pylast==3.3.0
+pylast==4.0.0
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
