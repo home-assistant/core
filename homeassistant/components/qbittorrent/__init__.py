@@ -1,13 +1,12 @@
 """The qbittorrent component."""
 import logging
 
-from qbittorrent.client import LoginRequired
+from qbittorrent.client import Client
 from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -37,19 +36,17 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Qbittorrent from a config entry."""
     name = "Qbittorrent"
-    try:
-        client = await hass.async_add_executor_job(
-            create_client,
-            entry.data[CONF_URL],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
-    except LoginRequired:
-        _LOGGER.error("Intvalid authentication")
+
+    configtest = await hass.async_add_executor_job(
+        create_client,
+        entry.data[CONF_URL],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+    )
+    if type(configtest) is not Client:
         return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
+
+    client = configtest
 
     async def async_update_data():
         """Fetch data from API endpoint."""

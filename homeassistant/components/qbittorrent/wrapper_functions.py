@@ -1,5 +1,10 @@
 """Some recurrend functions used in the qtorrent components."""
-from qbittorrent.client import Client
+import logging
+
+from qbittorrent.client import Client, LoginRequired
+from requests.exceptions import RequestException
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_main_data_client(client: Client):
@@ -9,9 +14,18 @@ def get_main_data_client(client: Client):
 
 def create_client(url, username, password):
     """Create the Qtorrent client."""
-    client = Client(url)
-    client.login(username, password)
-    return client
+    errors = {}
+    try:
+        client = Client(url)
+        client.login(username, password)
+        return client
+    except LoginRequired:
+        errors["base"] = "invalid_auth"
+        return errors
+    except RequestException as err:
+        errors["base"] = "cannot_connect"
+        _LOGGER.error("Connection failed - %s", err)
+        return errors
 
 
 def retrieve_torrentdata(client: Client, torrentfilter):
