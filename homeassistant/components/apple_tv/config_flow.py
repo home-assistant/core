@@ -144,9 +144,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return await self.async_step_confirm()
 
-            # Use whatever the user entered as default value
-            default_suggestion = self.unique_id
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
