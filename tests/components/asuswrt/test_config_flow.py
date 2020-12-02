@@ -11,7 +11,6 @@ from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
     DOMAIN,
 )
-from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
