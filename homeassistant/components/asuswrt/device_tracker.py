@@ -3,9 +3,14 @@ import logging
 
 from homeassistant.components.device_tracker import DeviceScanner
 
-from . import DATA_ASUSWRT
+from .const import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the asuswrt scanner."""
+    return
 
 
 async def async_get_scanner(hass, config):
