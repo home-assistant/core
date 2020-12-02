@@ -66,45 +66,54 @@ async def test_notify_leaving_zone(hass):
                         "input": {
                             "person_entity": "person.test_person",
                             "zone_entity": "zone.school",
-                            "notify_service": "notify.test_service",
+                            "notify_device": "abcdefgh",
                         },
                     }
                 }
             },
         )
 
-    calls = async_mock_service(hass, "notify", "test_service")
+    with patch(
+        "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
+    ) as mock_call_action:
+        # Leaving zone to no zone
+        set_person_state("not_home")
+        await hass.async_block_till_done()
 
-    # Leaving zone to no zone
-    set_person_state("not_home")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
+        _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
+        message_tpl = config.pop("message")
+        assert config == {
+            "domain": "mobile_app",
+            "type": "notify",
+            "device_id": "abcdefgh",
+        }
+        message_tpl.hass = hass
+        assert message_tpl.async_render(variables) == "Paulus has left School"
 
-    assert len(calls) == 1
-    assert calls[0].data["message"] == "Paulus has left School"
+        # Should not increase when we go to another zone
+        set_person_state("bla")
+        await hass.async_block_till_done()
 
-    # Should not increase when we go to another zone
-    set_person_state("bla")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
 
-    assert len(calls) == 1
+        # Should not increase when we go into the zone
+        set_person_state("School")
+        await hass.async_block_till_done()
 
-    # Should not increase when we go into the zone
-    set_person_state("School")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
 
-    assert len(calls) == 1
+        # Should not increase when we move in the zone
+        set_person_state("School", {"extra_key": "triggers change with same state"})
+        await hass.async_block_till_done()
 
-    # Should not increase when we move in the zone
-    set_person_state("School", {"extra_key": "triggers change with same state"})
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
 
-    assert len(calls) == 1
+        # Should increase when leaving zone for another zone
+        set_person_state("Just Outside School")
+        await hass.async_block_till_done()
 
-    # Should increase when leaving zone for another zone
-    set_person_state("Just Outside School")
-    await hass.async_block_till_done()
-
-    assert len(calls) == 2
+        assert len(mock_call_action.mock_calls) == 2
 
 
 async def test_motion_light(hass):
