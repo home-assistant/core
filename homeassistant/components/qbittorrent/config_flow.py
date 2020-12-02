@@ -2,7 +2,7 @@
 import logging
 
 from qbittorrent.client import LoginRequired
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, Timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -46,6 +46,9 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
                 return
             except RequestException as err:
+                errors["base"] = "cannot_connect"
+                _LOGGER.error("Connection failed - %s", err)
+            except Timeout as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection failed - %s", err)
 
