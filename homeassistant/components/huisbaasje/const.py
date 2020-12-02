@@ -15,6 +15,8 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
+DATA_COORDINATOR = "coordinator"
+
 DOMAIN = "huisbaasje"
 
 FLOW_CUBIC_METERS_PER_HOUR = f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}"

@@ -1,133 +1,29 @@
 """Platform for sensor integration."""
-from datetime import timedelta
-import logging
-
-import async_timeout
-from huisbaasje import HuisbaasjeException
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import (
-    DOMAIN,
-    POLLING_INTERVAL,
-    SENSOR_TYPE_RATE,
-    SENSOR_TYPE_THIS_DAY,
-    SENSOR_TYPE_THIS_MONTH,
-    SENSOR_TYPE_THIS_WEEK,
-    SENSOR_TYPE_THIS_YEAR,
-    SENSORS_INFO,
-    SOURCE_TYPES,
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_COORDINATOR, DOMAIN, SENSOR_TYPE_RATE, SENSORS_INFO
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up the sensor platform."""
-
-    # Get the Huisbaasje client
-    huisbaasje = hass.data[DOMAIN][config_entry.entry_id]
-
-    async def async_update_data():
-        return await async_update_huisbaasje(huisbaasje)
-
-    # Create a coordinator for polling updates
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=POLLING_INTERVAL),
-    )
-
-    # Fetch initial data
-    await coordinator.async_refresh()
-
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     user_id = config_entry.data[CONF_ID]
+
     async_add_entities(
         HuisbaasjeSensor(coordinator, user_id=user_id, **sensor_info)
         for sensor_info in SENSORS_INFO
     )
 
 
-def _get_measurement_rate(current_measurements: dict, source_type: str):
-    if source_type in current_measurements:
-        if (
-            "measurement" in current_measurements[source_type]
-            and current_measurements[source_type]["measurement"] is not None
-        ):
-            return current_measurements[source_type]["measurement"]["rate"]
-    else:
-        _LOGGER.error(
-            "Source type %s not present in %s", source_type, current_measurements
-        )
-    return None
-
-
-def _get_cumulative_value(
-    current_measurements: dict,
-    source_type: str,
-    period_type: str,
-):
-    """
-    Get the cumulative energy consumption for a certain period.
-
-    :param current_measurements: The result from the Huisbaasje client
-    :param source_type: The source of energy (electricity or gas)
-    :param period_type: The period for which cumulative value should be given.
-    """
-    if source_type in current_measurements.keys():
-        if (
-            period_type in current_measurements[source_type]
-            and current_measurements[source_type][period_type] is not None
-        ):
-            return current_measurements[source_type][period_type]["value"]
-    else:
-        _LOGGER.error(
-            "Source type %s not present in %s", source_type, current_measurements
-        )
-    return None
-
-
-async def async_update_huisbaasje(huisbaasje):
-    """Update the data by performing a request to Huisbaasje."""
-    try:
-        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-        # handled by the data update coordinator.
-        async with async_timeout.timeout(10):
-            current_measurements = await huisbaasje.current_measurements()
-
-            return {
-                source_type: {
-                    SENSOR_TYPE_RATE: _get_measurement_rate(
-                        current_measurements, source_type
-                    ),
-                    SENSOR_TYPE_THIS_DAY: _get_cumulative_value(
-                        current_measurements, source_type, SENSOR_TYPE_THIS_DAY
-                    ),
-                    SENSOR_TYPE_THIS_WEEK: _get_cumulative_value(
-                        current_measurements, source_type, SENSOR_TYPE_THIS_WEEK
-                    ),
-                    SENSOR_TYPE_THIS_MONTH: _get_cumulative_value(
-                        current_measurements, source_type, SENSOR_TYPE_THIS_MONTH
-                    ),
-                    SENSOR_TYPE_THIS_YEAR: _get_cumulative_value(
-                        current_measurements, source_type, SENSOR_TYPE_THIS_YEAR
-                    ),
-                }
-                for source_type in SOURCE_TYPES
-            }
-    except HuisbaasjeException as exception:
-        raise UpdateFailed(f"Error communicating with API: {exception}") from exception
-
-
-class HuisbaasjeSensor(Entity):
+class HuisbaasjeSensor(CoordinatorEntity):
     """Defines a Huisbaasje sensor."""
 
     def __init__(
@@ -189,29 +85,11 @@ class HuisbaasjeSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self) -> bool:
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            self._coordinator.last_update_success
+            super().available()
             and self._coordinator.data
             and self._source_type in self._coordinator.data
             and self._coordinator.data[self._source_type]
         )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
