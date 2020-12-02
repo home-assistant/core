@@ -600,7 +600,6 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert not msg["success"]
 
 
-@patch("homeassistant.helpers.network._get_request_host", return_value="example.local")
 async def test_media_browse_internal(hass, aioclient_mock, hass_ws_client):
     """Test browsing media with internal url."""
     await async_process_ha_core_config(
@@ -621,17 +620,18 @@ async def test_media_browse_internal(hass, aioclient_mock, hass_ws_client):
 
     client = await hass_ws_client(hass)
 
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "media_player/browse_media",
-            "entity_id": TV_ENTITY_ID,
-            "media_content_type": MEDIA_TYPE_APPS,
-            "media_content_id": "apps",
-        }
-    )
+    with patch("homeassistant.helpers.network._get_request_host", return_value="example.local"):
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "media_player/browse_media",
+                "entity_id": TV_ENTITY_ID,
+                "media_content_type": MEDIA_TYPE_APPS,
+                "media_content_id": "apps",
+            }
+        )
 
-    msg = await client.receive_json()
+        msg = await client.receive_json()
 
     assert msg["id"] == 2
     assert msg["type"] == TYPE_RESULT
