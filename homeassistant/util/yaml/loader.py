@@ -32,8 +32,8 @@ DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
 _LOGGER = logging.getLogger(__name__)
 __SECRET_CACHE: Dict[str, JSON_TYPE] = {}
 
-credstash_warn = False
-keyring_warn = False
+CREDSTASH_WARN = False
+KEYRING_WARN = False
 
 
 def clear_secret_cache() -> None:
@@ -298,10 +298,10 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
         # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
-            global keyring_warn
+            global KEYRING_WARN  # pylint: disable=global-statement
 
-            if not keyring_warn:
-                keyring_warn = True
+            if not KEYRING_WARN:
+                KEYRING_WARN = True
                 _LOGGER.warning(
                     "Keyring is deprecated and will be removed in March 2021."
                 )
@@ -316,10 +316,10 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
         try:
             pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
             if pwd:
-                global credstash_warn
+                global CREDSTASH_WARN  # pylint: disable=global-statement
 
-                if not credstash_warn:
-                    credstash_warn = True
+                if not CREDSTASH_WARN:
+                    CREDSTASH_WARN = True
                     _LOGGER.warning(
                         "Credstash is deprecated and will be removed in March 2021."
                     )
