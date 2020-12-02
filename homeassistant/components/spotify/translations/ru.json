@@ -18,5 +18,10 @@
                 "title": "\u041f\u043e\u0432\u0442\u043e\u0440\u043d\u0430\u044f \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u043f\u0440\u043e\u0444\u0438\u043b\u044f"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "\u0414\u043e\u0441\u0442\u0443\u043f \u043a API Spotify"
+        }
     }
 }

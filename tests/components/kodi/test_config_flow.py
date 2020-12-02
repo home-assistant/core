@@ -11,6 +11,7 @@ from homeassistant.components.kodi.const import DEFAULT_TIMEOUT, DOMAIN
 from .util import (
     TEST_CREDENTIALS,
     TEST_DISCOVERY,
+    TEST_DISCOVERY_WO_UUID,
     TEST_HOST,
     TEST_IMPORT,
     TEST_WS_PORT,
@@ -571,6 +572,16 @@ async def test_discovery_updates_unique_id(hass):
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["port"] == 8080
     assert entry.data["name"] == "hostname"
+
+
+async def test_discovery_without_unique_id(hass):
+    """Test a discovery flow with no unique id aborts."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY_WO_UUID
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_uuid"
 
 
 async def test_form_import(hass):

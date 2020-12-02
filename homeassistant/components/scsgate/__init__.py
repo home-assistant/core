@@ -131,7 +131,7 @@ class SCSGate:
 
         with self._devices_to_register_lock:
             while self._devices_to_register:
-                _, device = self._devices_to_register.popitem()
+                device = self._devices_to_register.popitem()[1]
                 self._devices[device.scs_id] = device
                 self._device_being_registered = device.scs_id
                 self._reactor.append_task(GetStatusTask(target=device.scs_id))

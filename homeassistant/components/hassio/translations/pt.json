@@ -1,3 +1,14 @@
 {
+    "system_health": {
+        "info": {
+            "disk_total": "Disco Total",
+            "disk_used": "Disco Usado",
+            "docker_version": "Vers\u00e3o Docker",
+            "host_os": "Sistema operativo anfitri\u00e3o",
+            "supervisor_api": "API do Supervisor",
+            "supervisor_version": "Vers\u00e3o do Supervisor",
+            "supported": "Suportado"
+        }
+    },
     "title": "Hass.io"
 }

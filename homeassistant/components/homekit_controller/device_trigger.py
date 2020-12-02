@@ -174,9 +174,9 @@ def enumerate_doorbell(service):
 
 
 TRIGGER_FINDERS = {
-    "service-label": enumerate_stateless_switch_group,
-    "stateless-programmable-switch": enumerate_stateless_switch,
-    "doorbell": enumerate_doorbell,
+    ServicesTypes.SERVICE_LABEL: enumerate_stateless_switch_group,
+    ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH: enumerate_stateless_switch,
+    ServicesTypes.DOORBELL: enumerate_doorbell,
 }
 
 
@@ -186,8 +186,9 @@ async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service_dict):
-        service_type = service_dict["stype"]
+    def async_add_service(service):
+        aid = service.accessory.aid
+        service_type = service.short_type
 
         # If not a known service type then we can't handle any stateless events for it
         if service_type not in TRIGGER_FINDERS:
@@ -200,11 +201,6 @@ async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
         device_id = conn.devices[aid]
         if device_id in hass.data[TRIGGERS]:
             return False
-
-        # At the moment add_listener calls us with the raw service dict, rather than
-        # a service model. So turn it into a service ourselves.
-        accessory = conn.entity_map.aid(aid)
-        service = accessory.services.iid(service_dict["iid"])
 
         # Just because we recognise the service type doesn't mean we can actually
         # extract any triggers - so only proceed if we can

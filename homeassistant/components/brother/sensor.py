@@ -1,9 +1,6 @@
 """Support for the Brother service."""
-from datetime import timedelta
-
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utcnow
 
 from .const import (
     ATTR_BLACK_DRUM_COUNTER,
@@ -15,6 +12,7 @@ from .const import (
     ATTR_DRUM_COUNTER,
     ATTR_DRUM_REMAINING_LIFE,
     ATTR_DRUM_REMAINING_PAGES,
+    ATTR_ENABLED,
     ATTR_ICON,
     ATTR_LABEL,
     ATTR_MAGENTA_DRUM_COUNTER,
@@ -78,8 +76,7 @@ class BrotherPrinterSensor(CoordinatorEntity):
     def state(self):
         """Return the state."""
         if self.kind == ATTR_UPTIME:
-            uptime = utcnow() - timedelta(seconds=self.coordinator.data.get(self.kind))
-            return uptime.replace(microsecond=0).isoformat()
+            return self.coordinator.data.get(self.kind).isoformat()
         return self.coordinator.data.get(self.kind)
 
     @property
@@ -139,4 +136,4 @@ class BrotherPrinterSensor(CoordinatorEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        return True
+        return SENSOR_TYPES[self.kind][ATTR_ENABLED]

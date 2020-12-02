@@ -10,7 +10,13 @@
         "error": {
             "addon_start_failed": "OpenZWave add-on \u555f\u52d5\u5931\u6557\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u3002"
         },
+        "progress": {
+            "install_addon": "\u8acb\u7a0d\u7b49 OpenZWave add-on \u5b89\u88dd\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002"
+        },
         "step": {
+            "install_addon": {
+                "title": "OpenZWave add-on \u5b89\u88dd\u5df2\u555f\u52d5"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "\u4f7f\u7528 OpenZWave Supervisor add-on"

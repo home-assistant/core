@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
@@ -25,6 +26,7 @@ from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYI
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.network import is_internal_request
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -494,6 +496,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PREVIOUS_TRACK
                 | SUPPORT_NEXT_TRACK
                 | SUPPORT_STOP
+                | SUPPORT_SEEK
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
@@ -556,6 +559,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
+
+    def media_seek(self, position):
+        """Send the seek command."""
+        if self.device and "playback" in self._device_protocol_capabilities:
+            self.device.seekTo(position * 1000, self._active_media_plexapi_type)
 
     def media_next_track(self):
         """Send next track command."""
@@ -622,10 +630,22 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        is_internal = is_internal_request(self.hass)
         return await self.hass.async_add_executor_job(
             browse_media,
-            self.entity_id,
-            self.plex_server,
+            self,
+            is_internal,
             media_content_type,
             media_content_id,
         )
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Get media image from Plex server."""
+        image_url = self.plex_server.thumbnail_cache.get(media_content_id)
+        if image_url:
+            result = await self._async_fetch_image(image_url)
+            return result
+
+        return (None, None)

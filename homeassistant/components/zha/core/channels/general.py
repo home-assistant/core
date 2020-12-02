@@ -17,10 +17,9 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
-    SIGNAL_STATE_ATTR,
     SIGNAL_UPDATE_DEVICE,
 )
-from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
+from .base import ChannelStatus, ClientChannel, ZigbeeChannel, parse_and_log_command
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
@@ -72,13 +71,6 @@ class BasicChannel(ZigbeeChannel):
         6: "Emergency mains and transfer switch",
     }
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
-        """Initialize BasicChannel."""
-        super().__init__(cluster, ch_pool)
-        self._power_source = None
-
     async def async_configure(self):
         """Configure this channel."""
         await super().async_configure()
@@ -87,16 +79,12 @@ class BasicChannel(ZigbeeChannel):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         if not self._ch_pool.skip_configuration or from_cache:
-            power_source = await self.get_attribute_value(
-                "power_source", from_cache=from_cache
-            )
-            if power_source is not None:
-                self._power_source = power_source
+            await self.get_attribute_value("power_source", from_cache=from_cache)
         await super().async_initialize(from_cache)
 
     def get_power_source(self):
         """Get the power source."""
-        return self._power_source
+        return self.cluster.get("power_source")
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
@@ -159,7 +147,6 @@ class LevelControlClientChannel(ClientChannel):
 
 
 @registries.BINDABLE_CLUSTERS.register(general.LevelControl.cluster_id)
-@registries.LIGHT_CLUSTERS.register(general.LevelControl.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.LevelControl.cluster_id)
 class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
@@ -234,10 +221,7 @@ class OnOffClientChannel(ClientChannel):
     """OnOff client channel."""
 
 
-@registries.BINARY_SENSOR_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.BINDABLE_CLUSTERS.register(general.OnOff.cluster_id)
-@registries.LIGHT_CLUSTERS.register(general.OnOff.cluster_id)
-@registries.SWITCH_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.OnOff.cluster_id)
 class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
@@ -382,7 +366,6 @@ class PollControl(ZigbeeChannel):
         await self.set_long_poll_interval(self.LONG_POLL)
 
 
-@registries.DEVICE_TRACKER_CLUSTERS.register(general.PowerConfiguration.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
@@ -392,38 +375,8 @@ class PowerConfigurationChannel(ZigbeeChannel):
         {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
     )
 
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute updates on this cluster."""
-        attr = self._report_config[1].get("attr")
-        if isinstance(attr, str):
-            attr_id = self.cluster.attridx.get(attr)
-        else:
-            attr_id = attr
-        if attrid == attr_id:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                attrid,
-                self.cluster.attributes.get(attrid, [attrid])[0],
-                value,
-            )
-            return
-        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_STATE_ATTR}", attr_name, value
-        )
-
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.async_read_state(from_cache)
-        await super().async_initialize(from_cache)
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        await self.async_read_state(True)
-
-    async def async_read_state(self, from_cache):
-        """Read data from the cluster."""
         attributes = [
             "battery_size",
             "battery_percentage_remaining",
@@ -431,6 +384,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
             "battery_quantity",
         ]
         await self.get_attributes(attributes, from_cache=from_cache)
+        self._status = ChannelStatus.INITIALIZED
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)

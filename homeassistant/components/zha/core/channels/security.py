@@ -109,7 +109,6 @@ class IasWd(ZigbeeChannel):
         )
 
 
-@registries.BINARY_SENSOR_CLUSTERS.register(security.IasZone.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""

@@ -82,6 +82,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
         invert_position=config[CoverSchema.CONF_INVERT_POSITION],
         invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
+        device_class=config.get(CONF_DEVICE_CLASS),
     )
 
 

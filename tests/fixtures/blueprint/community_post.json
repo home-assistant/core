@@ -7,7 +7,7 @@
         "username": "balloob",
         "avatar_template": "/user_avatar/community.home-assistant.io/balloob/{size}/21956_2.png",
         "created_at": "2020-10-16T12:20:12.688Z",
-        "cooked": "\u003cp\u003ehere a test topic.\u003cbr\u003e\nhere a test topic.\u003cbr\u003e\nhere a test topic.\u003cbr\u003e\nhere a test topic.\u003c/p\u003e\n\u003ch1\u003eBlock without syntax\u003c/h1\u003e\n\u003cpre\u003e\u003ccode class=\"lang-auto\"\u003eblueprint:\n  domain: automation\n  name: Example Blueprint from post\n  input:\n    trigger_event:\n    service_to_call:\ntrigger:\n  platform: event\n  event_type: !placeholder trigger_event\naction:\n  service: !placeholder service_to_call\n\u003c/code\u003e\u003c/pre\u003e",
+        "cooked": "\u003cp\u003ehere a test topic.\u003cbr\u003e\nhere a test topic.\u003cbr\u003e\nhere a test topic.\u003cbr\u003e\nhere a test topic.\u003c/p\u003e\n\u003ch1\u003eBlock without syntax\u003c/h1\u003e\n\u003cpre\u003e\u003ccode class=\"lang-auto\"\u003eblueprint:\n  domain: automation\n  name: Example Blueprint from post\n  input:\n    trigger_event:\n    service_to_call:\ntrigger:\n  platform: event\n  event_type: !input trigger_event\naction:\n  service: !input service_to_call\n\u003c/code\u003e\u003c/pre\u003e",
         "post_number": 1,
         "post_type": 1,
         "updated_at": "2020-10-20T08:24:14.189Z",

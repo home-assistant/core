@@ -56,11 +56,10 @@ def test_extract_blueprint_from_community_topic(community_post):
         "http://example.com", json.loads(community_post)
     )
     assert imported_blueprint is not None
-    assert imported_blueprint.url == "http://example.com"
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "service_to_call",
-        "trigger_event",
+    assert imported_blueprint.blueprint.inputs == {
+        "service_to_call": None,
+        "trigger_event": None,
     }
 
 
@@ -79,10 +78,10 @@ def test_extract_blueprint_from_community_topic_invalid_yaml():
         )
 
 
-def test__extract_blueprint_from_community_topic_wrong_lang():
+def test_extract_blueprint_from_community_topic_wrong_lang():
     """Test extracting blueprint with invalid YAML."""
-    assert (
-        importer._extract_blueprint_from_community_topic(
+    with pytest.raises(importer.HomeAssistantError):
+        assert importer._extract_blueprint_from_community_topic(
             "http://example.com",
             {
                 "post_stream": {
@@ -92,8 +91,6 @@ def test__extract_blueprint_from_community_topic_wrong_lang():
                 }
             },
         )
-        is None
-    )
 
 
 async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, community_post):
@@ -106,10 +103,15 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
     )
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "service_to_call",
-        "trigger_event",
+    assert imported_blueprint.blueprint.inputs == {
+        "service_to_call": None,
+        "trigger_event": None,
     }
+    assert imported_blueprint.suggested_filename == "balloob/test-topic"
+    assert (
+        imported_blueprint.blueprint.metadata["source_url"]
+        == "https://community.home-assistant.io/t/test-topic/123/2"
+    )
 
 
 @pytest.mark.parametrize(
@@ -131,7 +133,33 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "service_to_call",
-        "trigger_event",
+    assert imported_blueprint.blueprint.inputs == {
+        "service_to_call": None,
+        "trigger_event": None,
     }
+    assert imported_blueprint.suggested_filename == "balloob/motion_light"
+    assert imported_blueprint.blueprint.metadata["source_url"] == url
+
+
+async def test_fetch_blueprint_from_github_gist_url(hass, aioclient_mock):
+    """Test fetching blueprint from url."""
+    aioclient_mock.get(
+        "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344",
+        text=load_fixture("blueprint/github_gist.json"),
+    )
+
+    url = "https://gist.github.com/balloob/e717ce85dd0d2f1bdcdfc884ea25a344"
+    imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
+    assert isinstance(imported_blueprint, importer.ImportedBlueprint)
+    assert imported_blueprint.blueprint.domain == "automation"
+    assert imported_blueprint.blueprint.inputs == {
+        "motion_entity": {
+            "name": "Motion Sensor",
+            "selector": {
+                "entity": {"domain": "binary_sensor", "device_class": "motion"}
+            },
+        },
+        "light_entity": {"name": "Light", "selector": {"entity": {"domain": "light"}}},
+    }
+    assert imported_blueprint.suggested_filename == "balloob/motion_light"
+    assert imported_blueprint.blueprint.metadata["source_url"] == url

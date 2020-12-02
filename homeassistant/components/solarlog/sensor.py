@@ -4,47 +4,34 @@ from urllib.parse import ParseResult, urlparse
 
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
+from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import YAML configuration when available."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
-        )
+    """Set up the solarlog platform."""
+    _LOGGER.warning(
+        "Configuration of the solarlog platform in configuration.yaml is deprecated "
+        "in Home Assistant 0.119. Please remove entry from your configuration"
     )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add solarlog entry."""
     host_entry = entry.data[CONF_HOST]
+    device_name = entry.title
 
     url = urlparse(host_entry, "http")
     netloc = url.netloc or url.path
     path = url.path if url.netloc else ""
     url = ParseResult("http", netloc, path, *url[3:])
     host = url.geturl()
-
-    platform_name = entry.title
 
     try:
         api = await hass.async_add_executor_job(SolarLog, host)
@@ -61,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     # Create a new sensor for each sensor type.
     entities = []
     for sensor_key in SENSOR_TYPES:
-        sensor = SolarlogSensor(entry.entry_id, platform_name, sensor_key, data)
+        sensor = SolarlogSensor(entry.entry_id, device_name, sensor_key, data)
         entities.append(sensor)
 
     async_add_entities(entities, True)
@@ -71,9 +58,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SolarlogSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, entry_id, platform_name, sensor_key, data):
+    def __init__(self, entry_id, device_name, sensor_key, data):
         """Initialize the sensor."""
-        self.platform_name = platform_name
+        self.device_name = device_name
         self.sensor_key = sensor_key
         self.data = data
         self.entry_id = entry_id
@@ -92,7 +79,7 @@ class SolarlogSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.platform_name} {self._label}"
+        return f"{self.device_name} {self._label}"
 
     @property
     def unit_of_measurement(self):
@@ -108,6 +95,15 @@ class SolarlogSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self.entry_id)},
+            "name": self.device_name,
+            "manufacturer": "Solar-Log",
+        }
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
