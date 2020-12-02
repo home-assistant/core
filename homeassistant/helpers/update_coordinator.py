@@ -193,6 +193,11 @@ class DataUpdateCoordinator(Generic[T]):
             update_callback()
 
     @callback
+    def async_reset(self) -> None:
+        """Reset the refresh process."""
+        self._schedule_refresh()
+
+    @callback
     def async_set_updated_data(self, data: T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
         if self._unsub_refresh:

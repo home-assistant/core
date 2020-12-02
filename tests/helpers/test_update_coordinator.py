@@ -284,3 +284,16 @@ async def test_async_set_updated_data(crd):
     crd.async_set_updated_data(300)
     # We have created a new refresh listener
     assert crd._unsub_refresh is not old_refresh
+
+
+async def test_async_reset(hass, crd):
+    """Test async_reset for update coordinator."""
+    # Start the update cycle
+    update_callback = Mock()
+    crd.async_add_listener(update_callback)
+    await crd.async_refresh()
+
+    # Ensuring refreshing produces a different tracked point in time
+    old_unsub_refresh = crd._unsub_refresh
+    crd.async_reset()
+    assert old_unsub_refresh != crd._unsub_refresh
