@@ -8,8 +8,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,

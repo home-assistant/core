@@ -1328,7 +1328,8 @@ async def test_color_template(hass, expected_hs, template):
 
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
-        assert state.attributes.get("min_mireds") == expected_min_mireds
+        assert state.attributes.get("max_mireds") == expected_max_mireds
+
 
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
