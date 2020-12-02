@@ -130,22 +130,22 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
-        server_id = self.plex_server.machine_identifier
-
         _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
-        unsub = async_dispatcher_connect(
-            self.hass,
-            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
-            self.async_refresh_media_player,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
+                self.async_refresh_media_player,
+            )
         )
-        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-        unsub = async_dispatcher_connect(
-            self.hass,
-            PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(self.unique_id),
-            self.async_update_from_websocket,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(self.unique_id),
+                self.async_update_from_websocket,
+            )
         )
-        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     @callback
     def async_refresh_media_player(self, device, session, source):
