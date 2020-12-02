@@ -40,8 +40,6 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Abort if entry already exists
             if existing_config_entry is not None:
                 return self.async_abort(reason="already_configured")
-            if await self._entry_exists(user_id):
-                return self.async_abort(reason="already_configured")
 
             # Create entry
             return self.async_create_entry(
@@ -84,11 +82,3 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await huisbaasje.authenticate()
 
         return huisbaasje.get_user_id()
-
-    async def _entry_exists(self, user_id):
-        entries = self._async_current_entries()
-        for entry in entries:
-            if entry.data[CONF_ID] == user_id:
-                return True
-
-        return False

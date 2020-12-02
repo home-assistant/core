@@ -27,9 +27,9 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up the sensor platform."""
-    user_id = config_entry.data[CONF_ID]
+
     # Get the Huisbaasje client
-    huisbaasje = hass.data[DOMAIN][user_id]
+    huisbaasje = hass.data[DOMAIN][config_entry.entry_id]
 
     async def async_update_data():
         return await async_update_huisbaasje(huisbaasje)
@@ -46,6 +46,7 @@ async def async_setup_entry(
     # Fetch initial data
     await coordinator.async_refresh()
 
+    user_id = config_entry.data[CONF_ID]
     async_add_entities(
         HuisbaasjeSensor(coordinator, user_id=user_id, **sensor_info)
         for sensor_info in SENSORS_INFO
@@ -53,7 +54,7 @@ async def async_setup_entry(
 
 
 def _get_measurement_rate(current_measurements: dict, source_type: str):
-    if source_type in current_measurements.keys():
+    if source_type in current_measurements:
         if (
             "measurement" in current_measurements[source_type]
             and current_measurements[source_type]["measurement"] is not None
