@@ -57,7 +57,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMEntity, ToggleEntity):
 
     @property
     def should_poll(self) -> bool:
-        """No polling needed."""
+        """Return the polling state."""
         return True
 
     async def async_update(self):

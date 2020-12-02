@@ -1,8 +1,10 @@
 """Support for Synology DSM cameras."""
+import logging
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
+from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +20,8 @@ from .const import (
     ENTITY_UNIT,
     SYNO_API,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -94,7 +98,27 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
         """Return bytes of camera image."""
         if not self.available:
             return None
-        return self._api.surveillance_station.get_camera_image(self._camera.id)
+        try:
+            return self._api.surveillance_station.get_camera_image(self._camera.id)
+        except (SynologyDSMAPIErrorException) as err:
+            _LOGGER.debug(
+                "SynoDSMCamera.camera_image() - Exception:%s",
+                err,
+            )
+            return None
+
+    @property
+    def should_poll(self) -> bool:
+        """Return the polling state."""
+        return True
+
+    async def async_update(self):
+        """Update camera state."""
+        await self.hass.async_add_executor_job(self._api.surveillance_station.update)
+        await self.hass.async_block_till_done()
+        self._camera = await self.hass.async_add_executor_job(
+            self._api.surveillance_station.get_camera, self._camera.id
+        )
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
