@@ -25,6 +25,7 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -83,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         if not discovery_info:
             _LOGGER.error("Failed to get add-on discovery info")
-            return False
+            raise ConfigEntryNotReady
 
         discovery_info_config = discovery_info["config"]
 

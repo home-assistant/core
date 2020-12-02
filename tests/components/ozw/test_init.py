@@ -186,6 +186,7 @@ async def test_setup_entry_without_addon_info(hass, get_addon_discovery_info):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert mock_client.return_value.start_client.call_count == 0
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unload_entry_with_addon(
