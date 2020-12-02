@@ -254,12 +254,18 @@ class LightTemplate(TemplateEntity, LightEntity):
     @property
     def max_mireds(self):
         """Return the max mireds value in mireds."""
-        return self._max_mireds
+        if self._max_mireds is not None:
+            return self._max_mireds
+
+        return super().max_mireds
 
     @property
     def min_mireds(self):
         """Return the min mireds value in mireds."""
-        return self._min_mireds
+        if self._min_mireds is not None:
+            return self._min_mireds
+
+        return super().min_mireds
 
     @property
     def white_value(self):
