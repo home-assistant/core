@@ -132,5 +132,6 @@ class GoogleProvider(Provider):
             tts.write_to_fp(mp3_data)
         except gTTSError as exc:
             _LOGGER.exception("Error during processing of TTS request %s", exc)
+            return None, None
 
         return "mp3", mp3_data.getvalue()
