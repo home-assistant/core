@@ -17,6 +17,7 @@ from axis.param_cgi import (
     IOPORT as IOPORT_URL,
     OUTPUT as OUTPUT_URL,
     PROPERTIES as PROPERTIES_URL,
+    PTZ as PTZ_URL,
     STREAM_PROFILES as STREAM_PROFILES_URL,
 )
 from axis.port_management import URL as PORT_MANAGEMENT_URL
@@ -126,6 +127,65 @@ MQTT_CLIENT_RESPONSE = {
     "data": {"status": {"state": "active", "connectionStatus": "Connected"}},
 }
 
+OBJECT_ANALYTICS = {
+    "apiVersion": "1.0",
+    "context": "Axis library",
+    "data": {
+        "devices": [{"id": 1, "rotation": 180, "type": "camera"}],
+        "metadataOverlay": [],
+        "perspectives": [],
+        "scenarios": [
+            {
+                "devices": [{"id": 1}],
+                "filters": [
+                    {"distance": 5, "type": "distanceSwayingObject"},
+                    {"time": 1, "type": "timeShortLivedLimit"},
+                    {"height": 3, "type": "sizePercentage", "width": 3},
+                ],
+                "id": 1,
+                "name": "Scenario 1",
+                "objectClassifications": [],
+                "perspectives": [],
+                "presets": [],
+                "triggers": [
+                    {
+                        "type": "includeArea",
+                        "vertices": [
+                            [-0.97, -0.97],
+                            [-0.97, 0.97],
+                            [0.97, 0.97],
+                            [0.97, -0.97],
+                        ],
+                    }
+                ],
+                "type": "motion",
+            },
+            {
+                "devices": [{"id": 1}],
+                "filters": [
+                    {"time": 1, "type": "timeShortLivedLimit"},
+                    {"height": 3, "type": "sizePercentage", "width": 3},
+                ],
+                "id": 2,
+                "name": "Scenario 2",
+                "objectClassifications": [{"type": "human"}],
+                "perspectives": [],
+                "presets": [],
+                "triggers": [
+                    {
+                        "alarmDirection": "leftToRight",
+                        "type": "fence",
+                        "vertices": [[0, -0.7], [0, 0.7]],
+                    }
+                ],
+                "type": "fence",
+            },
+        ],
+        "status": {},
+    },
+    "method": "getConfiguration",
+}
+
 PORT_MANAGEMENT_RESPONSE = {
     "apiVersion": "1.0",
     "method": "getPorts",
@@ -188,6 +248,9 @@ root.Properties.Image.Rotation=0,180
 root.Properties.System.SerialNumber=00408C12345
 """
 
+PTZ_RESPONSE = ""
+
+
 STREAM_PROFILES_RESPONSE = """root.StreamProfile.MaxGroups=26
 root.StreamProfile.S0.Description=profile_1_description
 root.StreamProfile.S0.Name=profile_1
@@ -220,6 +283,8 @@ async def vapix_request(self, session, url, **kwargs):
         return PORTS_RESPONSE
     if PROPERTIES_URL in url:
         return PROPERTIES_RESPONSE
+    if PTZ_URL in url:
+        return PTZ_RESPONSE
     if STREAM_PROFILES_URL in url:
         return STREAM_PROFILES_RESPONSE
 

@@ -21,6 +21,14 @@ EVENTS = [
     },
     {
         "operation": "Initialized",
+        "topic": "tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+        "source": "PresetToken",
+        "source_idx": "0",
+        "type": "on_preset",
+        "value": "1",
+    },
+    {
+        "operation": "Initialized",
         "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
         "type": "active",
         "value": "1",
