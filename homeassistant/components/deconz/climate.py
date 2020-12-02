@@ -144,8 +144,6 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         await self._device.async_set_config(data)
 
-    # Temperature control
-
     # Preset control
 
     @property
