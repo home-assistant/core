@@ -513,7 +513,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_effect_list(self, effect_list):
         """Update the effect list from the template."""
-        if effect_list in ("None", "") :
+        if effect_list in ("None", ""):
             self._effect_list = None
             return
 
