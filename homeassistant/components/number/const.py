@@ -11,4 +11,7 @@ DEFAULT_STEP = 1.0
 
 DOMAIN = "number"
 
+MODE_SLIDER = "slider"
+MODE_BOX = "box"
+
 SERVICE_SET_VALUE = "set_value"

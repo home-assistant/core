@@ -11,7 +11,7 @@ from homeassistant.components.number.const import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.setup import async_setup_component
 
 ENTITY_VOLUME = "number.volume"
@@ -37,11 +37,13 @@ def test_default_setup_params(hass):
     assert state.attributes.get(ATTR_MIN) == 0.0
     assert state.attributes.get(ATTR_MAX) == 100.0
     assert state.attributes.get(ATTR_STEP) == 1.0
+    assert state.attributes.get(ATTR_MODE) == "slider"
 
     state = hass.states.get(ENTITY_PWM)
     assert state.attributes.get(ATTR_MIN) == 0.0
     assert state.attributes.get(ATTR_MAX) == 1.0
     assert state.attributes.get(ATTR_STEP) == 0.01
+    assert state.attributes.get(ATTR_MODE) == "box"
 
 
 async def test_set_value_bad_attr(hass):

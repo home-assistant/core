@@ -2,6 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components.number import NumberEntity
+from homeassistant.components.number.const import MODE_BOX
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 from . import DOMAIN
@@ -21,12 +22,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             DemoNumber(
                 "pwm1",
                 "PWM 1",
-                42.0,
+                0.75,
                 "mdi:square-wave",
                 False,
                 0.0,
                 1.0,
                 0.01,
+                MODE_BOX,
             ),
         ]
     )
@@ -50,6 +52,7 @@ class DemoNumber(NumberEntity):
         min_value=None,
         max_value=None,
         step=None,
+        mode=None,
     ):
         """Initialize the Demo Number entity."""
         self._unique_id = unique_id
@@ -60,6 +63,7 @@ class DemoNumber(NumberEntity):
         self._min_value = min_value
         self._max_value = max_value
         self._step = step
+        self._mode = mode
 
     @property
     def device_info(self):
@@ -116,6 +120,11 @@ class DemoNumber(NumberEntity):
     def step(self):
         """Return the value step."""
         return self._step or super().step
+
+    @property
+    def mode(self):
+        """Return the appearance mode."""
+        return self._mode or super().mode
 
     async def async_set_value(self, value):
         """Update the current value."""
