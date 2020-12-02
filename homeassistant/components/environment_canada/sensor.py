@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Environment Canada sensor."""
 
     if config.get(CONF_STATION):
@@ -60,9 +60,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
         ec_data = ECWeather(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
+        await ec_data.update()
 
     sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
-    add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
+    async_add_devices(
+        [ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True
+    )
 
 
 class ECSensor(Entity):
@@ -104,7 +107,7 @@ class ECSensor(Entity):
         """Return the units of measurement."""
         return self._unit
 
-    async def update(self):
+    async def async_update(self):
         """Update current conditions."""
         await self.ec_data.update()
 
