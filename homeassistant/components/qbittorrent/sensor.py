@@ -180,7 +180,6 @@ class QBittorrentSensor(Entity):
                 attributes[trim_name(torrentattr, TRIM_SIZE - 5)] = torrentattr["state"]
 
             self._state = len(torrents)
-            self._attribute = attributes
         elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "active"
@@ -190,7 +189,6 @@ class QBittorrentSensor(Entity):
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
 
             self._state = len(torrents)
-            self._attribute = attributes
         elif self.type == SENSOR_TYPE_INACTIVE_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "inactive"
@@ -200,7 +198,6 @@ class QBittorrentSensor(Entity):
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
 
             self._state = len(torrents)
-            self._attribute = attributes
         elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "downloading"
@@ -209,8 +206,7 @@ class QBittorrentSensor(Entity):
             for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
 
-            self._state = len(torrents)
-            self._attribute = attributes
+            self._state = len(torrents)            
         elif self.type == SENSOR_TYPE_SEEDING_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "seeding"
@@ -222,8 +218,7 @@ class QBittorrentSensor(Entity):
 
                 attributes[trim_name(torrent)] = ratio
 
-            self._state = len(torrents)
-            self._attribute = attributes
+            self._state = len(torrents)           
         elif self.type == SENSOR_TYPE_RESUMED_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "resumed"
@@ -232,8 +227,7 @@ class QBittorrentSensor(Entity):
             for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
 
-            self._state = len(torrents)
-            self._attribute = attributes
+            self._state = len(torrents)            
         elif self.type == SENSOR_TYPE_PAUSED_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "paused"
@@ -242,8 +236,7 @@ class QBittorrentSensor(Entity):
             for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
 
-            self._state = len(torrents)
-            self._attribute = attributes
+            self._state = len(torrents)            
         elif self.type == SENSOR_TYPE_COMPLETED_TORRENTS:
             torrents = await self.hass.async_add_executor_job(
                 retrieve_torrentdata, self.client, "completed"
@@ -253,8 +246,7 @@ class QBittorrentSensor(Entity):
                 attributes[trim_name(torrent)] = "100.0%"
 
             self._state = len(torrents)
-            self._attribute = attributes
-
+        self._attribute = attributes
 
 def trim_name(torrent, trim_size=TRIM_SIZE):
     """Do not show the complete name of the torrent, trim it a bit."""
