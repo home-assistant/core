@@ -24,6 +24,18 @@ async def test_init_entry(hass, generic_data):
     assert hass.services.has_service(DOMAIN, const.SERVICE_REMOVE_NODE)
 
 
+async def test_setup_entry_without_mqtt(hass):
+    """Test setting up config entry without mqtt integration setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenZWave",
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
 async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     """Test unload the config entry."""
     entry = MockConfigEntry(
@@ -156,6 +168,24 @@ async def test_setup_entry_with_addon(hass, get_addon_discovery_info):
     # Verify services registered
     assert hass.services.has_service(DOMAIN, const.SERVICE_ADD_NODE)
     assert hass.services.has_service(DOMAIN, const.SERVICE_REMOVE_NODE)
+
+
+async def test_setup_entry_without_addon_info(hass, get_addon_discovery_info):
+    """Test set up entry using OpenZWave add-on but missing discovery info."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenZWave",
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={"use_addon": True},
+    )
+    entry.add_to_hass(hass)
+
+    get_addon_discovery_info.return_value = None
+
+    with patch("homeassistant.components.ozw.MQTTClient", autospec=True) as mock_client:
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert mock_client.return_value.start_client.call_count == 0
 
 
 async def test_unload_entry_with_addon(
