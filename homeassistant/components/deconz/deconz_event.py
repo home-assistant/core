@@ -16,7 +16,7 @@ async def async_setup_events(gateway) -> None:
     """Set up the deCONZ events."""
 
     @callback
-    def async_add_sensor(sensors):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Create DeconzEvent."""
         for sensor in sensors:
 
@@ -38,9 +38,7 @@ async def async_setup_events(gateway) -> None:
         )
     )
 
-    async_add_sensor(
-        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
-    )
+    async_add_sensor()
 
 
 @callback
