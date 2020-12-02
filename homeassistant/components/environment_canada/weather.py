@@ -2,7 +2,7 @@
 import datetime
 import re
 
-from env_canada import ECData  # pylint: disable=import-error
+from env_canada import ECWeather  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -75,11 +75,11 @@ ICON_CONDITION_MAP = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada weather."""
     if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
+        ec_data = ECWeather(station_id=config[CONF_STATION])
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
+        ec_data = ECWeather(coordinates=(lat, lon))
 
     add_devices([ECWeather(ec_data, config)])
 
