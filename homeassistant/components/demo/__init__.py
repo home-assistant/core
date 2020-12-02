@@ -19,6 +19,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "light",
     "lock",
     "media_player",
+    "number",
     "sensor",
     "switch",
     "vacuum",
