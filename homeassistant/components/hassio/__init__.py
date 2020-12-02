@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import os
+from typing import Optional
 
 import voluptuous as vol
 
@@ -23,6 +24,7 @@ from homeassistant.util.dt import utcnow
 
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
+from .const import ATTR_DISCOVERY
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
@@ -198,6 +200,17 @@ async def async_set_addon_options(
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/options"
     return await hassio.send_command(command, payload=options)
+
+
+@bind_hass
+async def async_get_addon_discovery_info(
+    hass: HomeAssistantType, slug: str
+) -> Optional[dict]:
+    """Return discovery data for an add-on."""
+    hassio = hass.data[DOMAIN]
+    data = await hassio.retrieve_discovery_messages()
+    discovered_addons = data[ATTR_DISCOVERY]
+    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
 @callback
