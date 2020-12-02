@@ -5,6 +5,7 @@ import json
 import pytest
 
 from homeassistant.components import scene
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -21,7 +22,6 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.components.scene import common
 
 DEFAULT_CONFIG = {
     scene.DOMAIN: {
@@ -58,7 +58,8 @@ async def test_sending_mqtt_commands(hass, mqtt_mock):
     state = hass.states.get("scene.test")
     assert state.state == scene.STATE
 
-    await common.async_activate(hass, "scene.test")
+    data = {ATTR_ENTITY_ID: "scene.test"}
+    await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "beer on", 0, False

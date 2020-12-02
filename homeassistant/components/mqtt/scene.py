@@ -45,7 +45,7 @@ async def async_setup_platform(
 ):
     """Set up MQTT scene through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, config, async_add_entities, discovery_info)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                hass, config, async_add_entities, config_entry, discovery_data
+                config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
             clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
@@ -69,10 +69,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    hass, config, async_add_entities, config_entry=None, discovery_data=None
+    config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT scene."""
-    async_add_entities([MqttScene(hass, config, config_entry, discovery_data)])
+    async_add_entities([MqttScene(config, config_entry, discovery_data)])
 
 
 class MqttScene(
@@ -82,9 +82,8 @@ class MqttScene(
 ):
     """Representation of a scene that can be activated using MQTT."""
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT scene."""
-        self.hass = hass
         self._state = False
         self._sub_state = None
 
