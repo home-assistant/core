@@ -43,13 +43,9 @@ async def _async_reproduce_state(
     service = SERVICE_SET_VALUE
     service_data = {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: state.state}
 
-    try:
-        await hass.services.async_call(
-            DOMAIN, service, service_data, context=context, blocking=True
-        )
-    except vol.Invalid as err:
-        # If value out of range.
-        _LOGGER.warning("Unable to reproduce state for %s: %s", state.entity_id, err)
+    await hass.services.async_call(
+        DOMAIN, service, service_data, context=context, blocking=True
+    )
 
 
 async def async_reproduce_states(
