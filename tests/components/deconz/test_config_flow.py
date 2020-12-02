@@ -402,47 +402,6 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     }
 
 
-async def test_flow_ssdp_discovery_bad_bridge_id_aborts(hass, aioclient_mock):
-    """Test that config flow aborts if deCONZ signals no radio hardware available."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={
-            ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
-            ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-            ATTR_UPNP_SERIAL: BAD_BRIDGEID,
-        },
-        context={"source": SOURCE_SSDP},
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-
-    aioclient_mock.post(
-        "http://1.2.3.4:80/api",
-        json=[{"success": {"username": API_KEY}}],
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "no_hardware_available"
-
-
-async def test_ssdp_discovery_not_deconz_bridge(hass):
-    """Test a non deconz bridge being discovered over ssdp."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={ATTR_UPNP_MANUFACTURER_URL: "not deconz bridge"},
-        context={"source": SOURCE_SSDP},
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_deconz_bridge"
-
-
 async def test_ssdp_discovery_update_configuration(hass):
     """Test if a discovered bridge is configured but updates with new attributes."""
     config_entry = await setup_deconz_integration(hass)
