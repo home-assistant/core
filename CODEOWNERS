@@ -404,6 +404,7 @@ homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
 homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
+homeassistant/components/slack/* @bachya
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smappee/* @bsmappee
