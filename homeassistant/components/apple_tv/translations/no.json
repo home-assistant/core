@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "invalid_auth": "Ugyldig godkjenning",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "",
+        "step": {
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN kode"
+                }
+            },
+            "user": {
+                "data": {
+                    "device_input": "Enhet"
+                }
+            }
+        }
+    },
+    "title": ""
+}
