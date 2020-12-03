@@ -26,11 +26,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ALTITUDE = "altitude"
 
+ATTR_ICAO24 = "icao24"
 ATTR_CALLSIGN = "callsign"
 ATTR_ALTITUDE = "altitude"
 ATTR_ON_GROUND = "on_ground"
 ATTR_SENSOR = "sensor"
 ATTR_STATES = "states"
+ATTR_OP_IATA = "operatorIata"
+ATTR_FLIGHT_NUMBER = "flightNumber"
 
 DOMAIN = "opensky"
 
@@ -47,7 +50,7 @@ OPENSKY_API_URL = (
     "https://opensky-network.org/api/states/all?lamin=%s&lomin=%s&lamax=%s&lomax=%s"
 )
 OPENSKY_API_FIELDS = [
-    "icao24",
+    ATTR_ICAO24,
     ATTR_CALLSIGN,
     "origin_country",
     "time_position",
@@ -61,7 +64,14 @@ OPENSKY_API_FIELDS = [
     "vertical_rate",
     "sensors",
 ]
-
+# Api for route -> Flight Number
+# e.g. https://opensky-network.org/api/routes?callsign=SAS125
+OPENSKY_ROUTE_API_URL = "https://opensky-network.org/api/routes?callsign="
+# Api for airplane meta data -> Registration etc
+# e.g. https://opensky-network.org/api/metadata/aircraft/icao/4ac9f4
+OPENSKY_AIRPLANE_META_API_URL = (
+    "https://opensky-network.org/api/metadata/aircraft/icao/"
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -145,20 +155,66 @@ class OpenSkySensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
+    def _get_route(self, callsign):
+        request = self._session.get(OPENSKY_ROUTE_API_URL + str(callsign))
+        _LOGGER.debug("Route API status: %d", request.status_code)
+        if request.status_code == 200:
+            return request.json()
+        return None
+
+    def _get_plane_meta(self, icao24):
+        request = self._session.get(OPENSKY_AIRPLANE_META_API_URL + str(icao24))
+        _LOGGER.debug("Plane Meta API status: %d", request.status_code)
+        if request.status_code == 200:
+            return request.json()
+        return None
+
     def _handle_boundary(self, flights, event, metadata):
         """Handle flights crossing region boundary."""
         for flight in flights:
             if flight in metadata:
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
+                icao = metadata[flight].get(ATTR_ICAO24)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
+                icao = ""
+
+            if flight in metadata and metadata[flight].get(ATTR_CALLSIGN) != "":
+                _LOGGER.debug(
+                    "Fetching route for callsign %s",
+                    str(metadata[flight].get(ATTR_CALLSIGN)),
+                )
+                route = self._get_route(metadata[flight].get(ATTR_CALLSIGN))
+                if route is not None:
+                    flightnumber = str(route.get(ATTR_OP_IATA)) + str(
+                        route.get(ATTR_FLIGHT_NUMBER)
+                    )
+                else:
+                    flightnumber = ""
+            else:
+                route = None
+                flightnumber = ""
+            _LOGGER.debug("Flight: %s", flightnumber)
+
+            if flight in metadata and metadata[flight].get(ATTR_ICAO24) != "":
+                planemeta = self._get_plane_meta(metadata[flight].get(ATTR_ICAO24))
+            else:
+                planemeta = None
 
             data = {
+                ATTR_ICAO24: icao,
                 ATTR_CALLSIGN: flight,
+                "fligh": flightnumber,
                 ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
             }
+            if route is not None:
+                # Merge all route info into data dictionary
+                data = {**data, **route}
+            if planemeta is not None:
+                data = {**data, **planemeta}
+            _LOGGER.debug("Fire event for: %s", str(data))
             self._hass.bus.fire(event, data)
 
     def update(self):
