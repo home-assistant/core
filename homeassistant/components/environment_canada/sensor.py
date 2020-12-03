@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import logging
 import re
 
+import async_timeout
 from env_canada import ECWeather  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -16,14 +17,16 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
-
 ATTR_UPDATED = "updated"
 ATTR_STATION = "station"
-ATTR_TIME = "alert time"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = "station"
@@ -60,100 +63,87 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
         ec_data = ECWeather(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
-        await ec_data.update()
 
-    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
+    async def async_update_data():
+        """Fetch data from Environment Canada."""
+        async with async_timeout.timeout(10):
+            await ec_data.update()
+        ec_data.conditions.update(ec_data.alerts)
+        return ec_data.conditions
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="environment_canada_sensor",
+        update_method=async_update_data,
+        update_interval=timedelta(minutes=5),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+
     async_add_devices(
-        [ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True
+        ECSensor(coordinator, sensor_type, ec_data.metadata)
+        for sensor_type in coordinator.data.keys()
     )
 
 
-class ECSensor(Entity):
+class ECSensor(CoordinatorEntity, Entity):
     """Implementation of an Environment Canada sensor."""
 
-    def __init__(self, sensor_type, ec_data):
+    def __init__(self, coordinator, sensor_type, metadata):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.sensor_type = sensor_type
-        self.ec_data = ec_data
-
-        self._unique_id = None
-        self._name = None
-        self._state = None
-        self._attr = None
-        self._unit = None
+        self.metadata = metadata
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
-        return self._unique_id
+        return f"{self.metadata['location']}-{self.sensor_type}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self.coordinator.data[self.sensor_type].get("label")
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        value = self.coordinator.data[self.sensor_type].get("value")
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._attr
+        if isinstance(value, list):
+            return " | ".join([str(s.get("title")) for s in value])[:255]
+        elif self.sensor_type == "tendency":
+            return str(value).capitalize()
+        elif value is not None and len(value) > 255:
+            _LOGGER.info("Value for %s truncated to 255 characters", self.unique_id)
+            return value[:255]
+        else:
+            return value
 
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return self._unit
+        unit = self.coordinator.data[self.sensor_type].get("unit")
 
-    async def async_update(self):
-        """Update current conditions."""
-        await self.ec_data.update()
-
-        self.ec_data.conditions.update(self.ec_data.alerts)
-
-        conditions = self.ec_data.conditions
-        metadata = self.ec_data.metadata
-        sensor_data = conditions.get(self.sensor_type)
-
-        self._unique_id = f"{metadata['location']}-{self.sensor_type}"
-        self._attr = {}
-        self._name = sensor_data.get("label")
-        value = sensor_data.get("value")
-
-        if isinstance(value, list):
-            self._state = " | ".join([str(s.get("title")) for s in value])[:255]
-            self._attr.update(
-                {ATTR_TIME: " | ".join([str(s.get("date")) for s in value])}
-            )
-        elif self.sensor_type == "tendency":
-            self._state = str(value).capitalize()
-        elif value is not None and len(value) > 255:
-            self._state = value[:255]
-            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
+        if unit == "C" or self.sensor_type in ["wind_chill", "humidex"]:
+            return TEMP_CELSIUS
         else:
-            self._state = value
+            return unit
 
-        if sensor_data.get("unit") == "C" or self.sensor_type in [
-            "wind_chill",
-            "humidex",
-        ]:
-            self._unit = TEMP_CELSIUS
-        else:
-            self._unit = sensor_data.get("unit")
-
-        timestamp = metadata.get("timestamp")
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        timestamp = self.metadata.get("timestamp")
         if timestamp:
             updated_utc = datetime.strptime(timestamp, "%Y%m%d%H%M%S").isoformat()
         else:
             updated_utc = None
 
-        self._attr.update(
-            {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                ATTR_UPDATED: updated_utc,
-                ATTR_LOCATION: metadata.get("location"),
-                ATTR_STATION: metadata.get("station"),
-            }
-        )
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_UPDATED: updated_utc,
+            ATTR_LOCATION: self.metadata.get("location"),
+            ATTR_STATION: self.metadata.get("station"),
+        }
