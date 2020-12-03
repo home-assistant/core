@@ -33,6 +33,12 @@ DISCOVERY_INTERVAL = timedelta(seconds=60)
 PARALLEL_UPDATES = 0
 
 
+def check_light(light: pykulersky.Light):
+    """Attempt to connect to this light and read the color."""
+    light.connect()
+    light.get_color()
+
+
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
@@ -69,13 +75,12 @@ async def async_setup_entry(
             for device in new_devices:
                 light = pykulersky.Light(device["address"], device["name"])
                 try:
-                    # Attempt to connect to this light and read the color. If the
-                    # connection fails, either this is not a Kuler Sky light, or
-                    # it's bluetooth connection is currently locked by another
-                    # device. If the vendor's app is connected to the light when
-                    # home assistant tries to connect, this connection will fail.
-                    await hass.async_add_executor_job(light.connect)
-                    await hass.async_add_executor_job(light.get_color)
+                    # If the connection fails, either this is not a Kuler Sky
+                    # light, or it's bluetooth connection is currently locked
+                    # by another device. If the vendor's app is connected to
+                    # the light when home assistant tries to connect, this
+                    # connection will fail.
+                    await hass.async_add_executor_job(check_light, light)
                 except pykulersky.PykulerskyException:
                     continue
                 # The light has successfully connected
@@ -83,7 +88,7 @@ async def async_setup_entry(
                 async_add_entities([KulerskyLight(light)], update_before_add=True)
 
     # Start initial discovery
-    hass.async_add_job(discover)
+    hass.async_create_task(discover())
 
     # Perform recurring discovery of new devices
     async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)

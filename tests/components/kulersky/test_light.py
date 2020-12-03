@@ -56,11 +56,11 @@ async def mock_light(hass, mock_entry):
         ],
     ):
         with patch(
-            "homeassistant.components.kulersky.light.pykulersky.Light"
-        ) as mockdevice, patch.object(light, "connect") as mock_connect, patch.object(
+            "homeassistant.components.kulersky.light.pykulersky.Light",
+            return_value=light,
+        ), patch.object(light, "connect") as mock_connect, patch.object(
             light, "get_color", return_value=(0, 0, 0, 0)
         ):
-            mockdevice.return_value = light
             mock_entry.add_to_hass(hass)
             await hass.config_entries.async_setup(mock_entry.entry_id)
             await hass.async_block_till_done()
