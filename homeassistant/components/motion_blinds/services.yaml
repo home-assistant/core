@@ -10,5 +10,5 @@ set_absolute_position:
       description: Absolute position to move to.
       example: 70
     width:
-      description: Optionally specify the width that is covered.
+      description: Optionally specify the width that is covered, only for TDBU Combined entities.
       example: 30
