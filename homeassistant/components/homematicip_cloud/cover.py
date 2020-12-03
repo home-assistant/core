@@ -2,6 +2,7 @@
 from typing import Optional
 
 from homematicip.aio.device import (
+    AsyncBlindModule,
     AsyncFullFlushBlind,
     AsyncFullFlushShutter,
     AsyncGarageDoorModuleTormatic,
@@ -34,7 +35,9 @@ async def async_setup_entry(
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = []
     for device in hap.home.devices:
-        if isinstance(device, AsyncFullFlushBlind):
+        if isinstance(device, AsyncBlindModule):
+            entities.append(HomematicipBlindModule(hap, device))
+        elif isinstance(device, AsyncFullFlushBlind):
             entities.append(HomematicipCoverSlats(hap, device))
         elif isinstance(device, AsyncFullFlushShutter):
             entities.append(HomematicipCoverShutter(hap, device))
@@ -49,6 +52,82 @@ async def async_setup_entry(
 
     if entities:
         async_add_entities(entities)
+
+
+class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
+    """Representation of the HomematicIP blind module."""
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return current position of cover."""
+        if self._device.primaryShadingLevel is not None:
+            return int((1 - self._device.primaryShadingLevel) * 100)
+        return None
+
+    @property
+    def current_cover_tilt_position(self) -> int:
+        """Return current tilt position of cover."""
+        if self._device.secondaryShadingLevel is not None:
+            return int((1 - self._device.secondaryShadingLevel) * 100)
+        return None
+
+    async def async_set_cover_position(self, **kwargs) -> None:
+        """Move the cover to a specific position."""
+        position = kwargs[ATTR_POSITION]
+        # HmIP cover is closed:1 -> open:0
+        level = 1 - position / 100.0
+        await self._device.set_primary_shading_level(primaryShadingLevel=level)
+
+    async def async_set_cover_tilt_position(self, **kwargs) -> None:
+        """Move the cover to a specific tilt position."""
+        position = kwargs[ATTR_TILT_POSITION]
+        # HmIP slats is closed:1 -> open:0
+        level = 1 - position / 100.0
+        await self._device.set_secondary_shading_level(
+            primaryShadingLevel=self._device.primaryShadingLevel,
+            secondaryShadingLevel=level,
+        )
+
+    @property
+    def is_closed(self) -> Optional[bool]:
+        """Return if the cover is closed."""
+        if self._device.primaryShadingLevel is not None:
+            return self._device.primaryShadingLevel == HMIP_COVER_CLOSED
+        return None
+
+    async def async_open_cover(self, **kwargs) -> None:
+        """Open the cover."""
+        await self._device.set_primary_shading_level(
+            primaryShadingLevel=HMIP_COVER_OPEN
+        )
+
+    async def async_close_cover(self, **kwargs) -> None:
+        """Close the cover."""
+        await self._device.set_primary_shading_level(
+            primaryShadingLevel=HMIP_COVER_CLOSED
+        )
+
+    async def async_stop_cover(self, **kwargs) -> None:
+        """Stop the device if in motion."""
+        await self._device.stop()
+
+    async def async_open_cover_tilt(self, **kwargs) -> None:
+        """Open the slats."""
+        await self._device.set_secondary_shading_level(
+            primaryShadingLevel=self._device.primaryShadingLevel,
+            secondaryShadingLevel=HMIP_SLATS_OPEN,
+        )
+
+    async def async_close_cover_tilt(self, **kwargs) -> None:
+        """Close the slats."""
+        await self._device.set_secondary_shading_level(
+            primaryShadingLevel=self._device.primaryShadingLevel,
+            secondaryShadingLevel=HMIP_SLATS_CLOSED,
+        )
+
+    async def async_stop_cover_tilt(self, **kwargs) -> None:
+        """Stop the device if in motion."""
+        await self._device.stop()
 
 
 class HomematicipCoverShutter(HomematicipGenericEntity, CoverEntity):
