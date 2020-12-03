@@ -80,6 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         auth = None
     rest = RestData(method, resource, auth, headers, None, payload, verify_ssl)
     await rest.async_update()
+    rest.async_setup(hass)
 
     if rest.data is None:
         raise PlatformNotReady
@@ -137,6 +138,14 @@ class ScrapeSensor(Entity):
     async def async_update(self):
         """Get the latest data from the source and updates the state."""
         await self.rest.async_update()
+        await self._async_update_from_rest_data()
+
+    async def async_added_to_hass(self):
+        """Ensure the data from the initial update is reflected in the state."""
+        await self._async_update_from_rest_data()
+
+    async def _async_update_from_rest_data(self):
+        """Update state from the rest data."""
         if self.rest.data is None:
             _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
@@ -153,7 +162,3 @@ class ScrapeSensor(Entity):
             )
         else:
             self._state = value
-
-    async def async_will_remove_from_hass(self):
-        """Shutdown the session."""
-        await self.rest.async_remove()
