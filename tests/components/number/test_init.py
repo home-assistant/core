@@ -1,7 +1,16 @@
 """The tests for the Number component."""
-from unittest.mock import MagicMock
-
 from homeassistant.components.number import NumberEntity
+
+from tests.async_mock import MagicMock
+
+
+class MockDefaultNumberEntity(NumberEntity):
+    """Mock NumberEntity device to use in tests."""
+
+    @property
+    def value(self):
+        """Return the current value."""
+        return 0.5
 
 
 class MockNumberEntity(NumberEntity):
@@ -13,14 +22,14 @@ class MockNumberEntity(NumberEntity):
         return 1.0
 
     @property
-    def state(self):
+    def value(self):
         """Return the current value."""
-        return "0.5"
+        return 0.5
 
 
 async def test_step(hass):
     """Test the step calculation."""
-    number = NumberEntity()
+    number = MockDefaultNumberEntity()
     assert number.step == 1.0
 
     number_2 = MockNumberEntity()
@@ -29,7 +38,7 @@ async def test_step(hass):
 
 async def test_sync_set_value(hass):
     """Test if async set_value calls sync set_value."""
-    number = NumberEntity()
+    number = MockDefaultNumberEntity()
     number.hass = hass
 
     number.set_value = MagicMock()
