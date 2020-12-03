@@ -1521,7 +1521,7 @@ pymediaroom==0.6.4.1
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.9.1
+pymfy==0.9.3
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3

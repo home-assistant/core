@@ -2,6 +2,17 @@
 
 import logging
 from typing import Any, Dict, List, Optional
+
+from pymfy.api.devices.category import Category
+from pymfy.api.devices.thermostat import (
+    DurationType,
+    HvacState,
+    RegulationState,
+    TargetMode,
+    Thermostat,
+)
+
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -10,22 +21,10 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_HOME,
-    PRESET_NONE,
     PRESET_SLEEP,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.helpers import temperature
-from pymfy.api.devices.thermostat import (
-    DurationType,
-    RegulationState,
-    Thermostat,
-    HvacState,
-    TargetMode,
-)
-from pymfy.api.devices.category import Category
-
-from homeassistant.components.climate import ClimateEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import SomfyEntity

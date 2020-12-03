@@ -197,8 +197,5 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         # Restore the last state if we use optimistic
         last_state = await self.async_get_last_state()
 
-        if last_state is not None and last_state.state in (
-            STATE_OPEN,
-            STATE_CLOSED,
-        ):
+        if last_state is not None and last_state.state in (STATE_OPEN, STATE_CLOSED,):
             self._closed = last_state.state == STATE_CLOSED
