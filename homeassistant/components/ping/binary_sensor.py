@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any, Dict
 
-from icmplib import ping as icmp_ping
+from icmplib import NameLookupError, ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -17,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
-from . import DOMAIN, PLATFORMS, async_get_next_ping_id
+from . import DOMAIN, PLATFORMS, async_get_next_ping_id, can_create_raw_socket
 from .const import ICMP_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
-    ping_data = PingDataICMPLib(hass, host, count)
+    privileged = can_create_raw_socket()
+
+    ping_data = PingDataICMPLib(hass, host, count, privileged)
 
     add_entities([PingBinarySensor(name, ping_data)], True)
 
@@ -110,33 +112,36 @@ class PingBinarySensor(BinarySensorEntity):
         await self._ping.async_update()
 
 
-class PingData:
-    """The base class for handling the data retrieval."""
+class PingDataICMPLib:
+    """The Class for handling the data retrieval using icmplib."""
 
-    def __init__(self, hass, host, count) -> None:
+    def __init__(self, hass, host, count, privileged) -> None:
         """Initialize the data object."""
         self.hass = hass
         self._ip_address = host
         self._count = count
         self.data = {}
         self.available = False
-
-
-class PingDataICMPLib(PingData):
-    """The Class for handling the data retrieval using icmplib."""
+        self._privileged = privileged
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         _LOGGER.debug("ping address: %s", self._ip_address)
-        data = await self.hass.async_add_executor_job(
-            partial(
-                icmp_ping,
-                self._ip_address,
-                count=self._count,
-                timeout=ICMP_TIMEOUT,
-                id=async_get_next_ping_id(self.hass),
+        try:
+            data = await self.hass.async_add_executor_job(
+                partial(
+                    icmp_ping,
+                    self._ip_address,
+                    count=self._count,
+                    timeout=ICMP_TIMEOUT,
+                    id=async_get_next_ping_id(self.hass),
+                    privileged=self._privileged,
+                )
             )
-        )
+        except NameLookupError:
+            self.available = False
+            return
+
         self.available = data.is_alive
         if not self.available:
             self.data = False
