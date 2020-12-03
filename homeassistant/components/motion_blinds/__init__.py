@@ -37,9 +37,12 @@ _LOGGER = logging.getLogger(__name__)
 
 CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
-SET_ABSOLUTE_POSITION_SCHEMA = CALL_SCHEMA.extend({
-        vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
-        vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100))
+SET_ABSOLUTE_POSITION_SCHEMA = CALL_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(
+            cv.positive_int, vol.Range(max=100)
+        ),
+        vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
     }
 )
 
