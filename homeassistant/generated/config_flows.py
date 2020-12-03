@@ -127,6 +127,7 @@ FLOWS = [
     "monoprice",
     "motion_blinds",
     "mqtt",
+    "mullvad",
     "myq",
     "neato",
     "nest",
