@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "kamereon_no_account": "Unable to find Kamereon account."
     },
     "error": {
@@ -19,7 +20,7 @@
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "title": "Set MyRenault credentials"
+        "title": "Set Renault credentials"
       }
     }
   }
