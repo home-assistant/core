@@ -118,6 +118,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     rest = RestData(
         method, resource, auth, headers, params, payload, verify_ssl, timeout
     )
+
+    rest.async_setup(hass)
     await rest.async_update()
 
     if rest.data is None:
@@ -140,7 +142,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 json_attrs_path,
             )
         ],
-        True,
     )
 
 
@@ -209,8 +210,15 @@ class RestSensor(Entity):
         if self._resource_template is not None:
             self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
-        await self.rest.async_update()
+        await self.rest.async_update(self.hass)
+        self._update_from_rest_data()
 
+    async def async_added_to_hass(self):
+        """Ensure the data from the initial update is reflected in the state."""
+        self._update_from_rest_data()
+
+    def _update_from_rest_data(self):
+        """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
         if self.rest.headers is not None:
@@ -265,10 +273,6 @@ class RestSensor(Entity):
             )
 
         self._state = value
-
-    async def async_will_remove_from_hass(self):
-        """Shutdown the session."""
-        await self.rest.async_remove()
 
     @property
     def device_state_attributes(self):
