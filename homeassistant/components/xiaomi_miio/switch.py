@@ -9,8 +9,10 @@ from miio import (  # pylint: disable=import-error
     Device,
     DeviceException,
     PowerStrip,
+    CurtainMiot,
 )
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
+from miio.curtain_youpin import MotorControl
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -59,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.hmi206",
                 "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
+                "lumi.curtain.hagl05",
             ]
         ),
     }
@@ -153,6 +156,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             devices.append(device)
             hass.data[DATA_KEY][host] = device
 
+    elif model in ['lumi.curtain.hagl05']:
+        plug = CurtainMiot(host, token)
+        device = XiaomiCurtainMotor(name, plug, model, unique_id)
+        devices.append(device)
+        hass.data[DATA_KEY][host] = device
     elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
         plug = PowerStrip(host, token, model=model)
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
@@ -545,6 +553,50 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state = state.power_socket == "on"
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
+        except DeviceException as ex:
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiCurtainMotor(XiaomiPlugGenericSwitch):
+    """Representation of a Xiaomi Curtain Motor A1."""
+
+    def __init__(self, name, plug, model, unique_id):
+        """Initialize the a1 motor."""
+        super().__init__(name, plug, model, unique_id)
+
+        self._state_attrs.update({ATTR_TEMPERATURE: None})
+
+    async def async_turn_on(self, **kwargs):
+        result = await self._try_command(
+            "Turning the socket on failed.", self._plug.set_motor_control, MotorControl(1),
+        )
+
+        if result:
+            self._state = True
+            self._skip_update = True
+
+    async def async_turn_off(self, **kwargs):
+        result = await self._try_command(
+            "Turning the socket off failed.", self._plug.set_motor_control, MotorControl(2),
+        )
+
+        if result:
+            self._state = False
+            self._skip_update = True
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        # On state change the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
+
+        try:
+            state = await self.hass.async_add_executor_job(self._plug.status)
+            self._available = True
+            self._state = state.current_position > 0
         except DeviceException as ex:
             if self._available:
                 self._available = False
