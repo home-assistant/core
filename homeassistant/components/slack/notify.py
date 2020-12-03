@@ -203,22 +203,23 @@ class SlackNotificationService(BaseNotificationService):
         message,
         title,
         username,
-        icon,
         *,
+        icon=None,
         blocks=None,
     ):
         """Send a text-only message."""
-        message_dict = {
-            "link_names": True,
-            "text": message,
-            "username": username,
-        }
+        message_dict = {"link_names": True, "text": message}
 
-        if icon.lower().startswith(("http://", "https://")):
-            icon_type = "url"
-        else:
-            icon_type = "emoji"
-        message_dict[f"icon_{icon_type}"] = icon
+        if username:
+            message_dict["username"] = username
+
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
+                icon_type = "url"
+            else:
+                icon_type = "emoji"
+
+            message_dict[f"icon_{icon_type}"] = icon
 
         if blocks:
             message_dict["blocks"] = blocks
@@ -268,8 +269,8 @@ class SlackNotificationService(BaseNotificationService):
                 targets,
                 message,
                 title,
-                data.get(ATTR_USERNAME, self._username),
-                data.get(ATTR_ICON, self._icon),
+                username=data.get(ATTR_USERNAME, self._username),
+                icon=data.get(ATTR_ICON, self._icon),
                 blocks=blocks,
             )
 
