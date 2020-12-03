@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zerproc",
   "requirements": [
-    "pyzerproc==0.2.5"
+    "pyzerproc==0.3.0"
   ],
   "codeowners": [
     "@emlove"
