@@ -78,10 +78,11 @@ async def test_owserver_coupler(owproxy, hass, device_id):
         read_side_effect += mock_coupler["inject_reads"]
 
     expected_sensors = []
-    for branch_details in mock_coupler["branches"].values():
+    for branch, branch_details in mock_coupler["branches"].items():
         dir_side_effect.append(
             list(  # dir on branch
-                f"/{sub_device_id}/" for sub_device_id in branch_details.keys()
+                f"/{device_id}/{branch}/{sub_device_id}/"
+                for sub_device_id in branch_details.keys()
             )
         )
 

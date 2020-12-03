@@ -764,3 +764,6 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
             assert state is None
         else:
             assert state.state == expected_sensor["result"]
+            assert state.attributes["device_file"] == expected_sensor.get(
+                "device_file", registry_entry.unique_id
+            )
