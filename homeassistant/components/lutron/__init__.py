@@ -10,9 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-import homeassistant.components.fan as fan
-
-
 DOMAIN = "lutron"
 
 PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
@@ -69,7 +66,7 @@ def setup(hass, base_config):
             if output.type == "SYSTEM_SHADE":
                 hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
             elif output.type == "CEILING_FAN_TYPE":
-                hass.data[LUTRON_DEVICES]["fan"].append(LutronFan(area.name, output, hass.data[LUTRON_CONTROLLER]))
+                hass.data[LUTRON_DEVICES]["fan"].append((area.name, output))
             elif output.is_dimmable:
                 hass.data[LUTRON_DEVICES]["light"].append((area.name, output))
             else:
@@ -133,66 +130,6 @@ class LutronDevice(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
-
-
-class LutronFan(LutronDevice, fan.FanEntity):
-    """Representation of a Lutron Fan controller. Including Fan Speed."""
-    FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH = 0, 25, 50, 75, 100
-
-    SPEED_MEDIUM_HIGH = "medium high"
-
-    VALUE_TO_SPEED = {
-        None: fan.SPEED_OFF,
-        FAN_HIGH: fan.SPEED_OFF,
-        FAN_LOW: fan.SPEED_LOW,
-        FAN_MEDIUM: fan.SPEED_MEDIUM,
-        FAN_MEDIUM_HIGH: SPEED_MEDIUM_HIGH,
-        FAN_HIGH: fan.SPEED_HIGH,
-    }
-
-    SPEED_TO_VALUE = {
-        SPEED_OFF: FAN_OFF,
-        SPEED_LOW: FAN_LOW,
-        SPEED_MEDIUM: FAN_MEDIUM,
-        SPEED_MEDIUM_HIGH: FAN_MEDIUM_HIGH,
-        SPEED_HIGH: FAN_HIGH,
-    }
-
-    FAN_SPEEDS = [fan.SPEED_OFF, fan.SPEED_LOW, fan.SPEED_MEDIUM, SPEED_MEDIUM_HIGH, fan.SPEED_HIGH]
-
-    def __init__(self, area_name, lutron_device, controller):
-        """Initialize the fan device."""
-        super(self, LutronDevice).__init__(area_name, lutron_device, controller)
-        super(self, fan.FanEntity).__init__()
-
-    @property
-    def speed(self) -> Optional[str]:
-        """Return the current speed."""
-        return VALUE_TO_SPEED[int(self._lutron_device.level)]
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return FAN_SPEEDS
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features. Speed Only."""
-        return fan.SUPPORT_SET_SPEED
-
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
-        """Turn the fan on."""
-        if speed is None:
-            speed = fan.SPEED_MEDIUM
-        await self.async_set_speed(speed)
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the fan off."""
-        await self.async_set_speed(SPEED_OFF)
-
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        await self._lutron_device.level = SPEED_TO_VALUE[speed]
 
 
 class LutronButton:
