@@ -19,5 +19,10 @@
                 "title": "Airly"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u0414\u043e\u0441\u0442\u0443\u043f \u043a \u0441\u0435\u0440\u0432\u0435\u0440\u0443 Airly"
+        }
     }
 }
