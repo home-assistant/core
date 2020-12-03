@@ -1,7 +1,7 @@
 """The tests for the Number component."""
-from unittest.mock import MagicMock
-
 from homeassistant.components.number import NumberEntity
+
+from tests.async_mock import MagicMock
 
 
 class MockNumberEntity(NumberEntity):
@@ -13,7 +13,7 @@ class MockNumberEntity(NumberEntity):
         return 1.0
 
     @property
-    def state(self):
+    def value(self):
         """Return the current value."""
         return "0.5"
 
