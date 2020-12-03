@@ -1,6 +1,7 @@
 """Sensor for the Open Sky Network."""
 from datetime import timedelta
 import logging
+import math
 
 import requests
 import voluptuous as vol
@@ -42,7 +43,9 @@ SCAN_INTERVAL = timedelta(seconds=15)  # opensky public limit is 10 seconds
 OPENSKY_ATTRIBUTION = (
     "Information provided by the OpenSky Network (https://opensky-network.org)"
 )
-OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
+OPENSKY_API_URL = (
+    "https://opensky-network.org/api/states/all?lamin=%s&lomin=%s&lamax=%s&lomax=%s"
+)
 OPENSKY_API_FIELDS = [
     "icao24",
     ATTR_CALLSIGN,
@@ -105,6 +108,32 @@ class OpenSkySensor(Entity):
         self._name = name
         self._previously_tracked = None
         self._connectionproblems = 0
+        self._lat_min, self._lon_min, self._lat_max, self._lon_max = self._get_bbox()
+
+    def _get_bbox(self):
+        half_side_in_km = self._radius / 1000 + 100
+        assert half_side_in_km > 0
+
+        lat = math.radians(self._latitude)
+        lon = math.radians(self._longitude)
+
+        radius = 6371
+        parallel_radius = radius * math.cos(lat)
+
+        lat_min = lat - half_side_in_km / radius
+        lat_min = max(-math.pi / 2, lat_min)
+        lat_max = lat + half_side_in_km / radius
+        lat_max = min(math.pi / 2, lat_max)
+        lon_min = lon - half_side_in_km / parallel_radius
+        if lon_min < -math.pi:
+            lon_min = math.pi + (lon_min % -math.pi)
+        lon_max = lon + half_side_in_km / parallel_radius
+        if lon_max > math.pi:
+            lon_max = math.pi - (lon_max % math.pi)
+
+        rad2deg = math.degrees
+
+        return (rad2deg(lat_min), rad2deg(lon_min), rad2deg(lat_max), rad2deg(lon_max))
 
     @property
     def name(self):
@@ -136,12 +165,20 @@ class OpenSkySensor(Entity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        request = self._session.get(OPENSKY_API_URL)
+        url_with_bbox = OPENSKY_API_URL % (
+            self._lat_min,
+            self._lon_min,
+            self._lat_max,
+            self._lon_max,
+        )
+        request = self._session.get(url_with_bbox)
         _LOGGER.debug("OpenSky API request status: %d", request.status_code)
         if request.status_code == 200:
             self._connectionproblems = 0
             states = request.json().get(ATTR_STATES)
             _LOGGER.debug(str(len(states)) + " flights parsed")
+            if states is None:
+                states = []
             for state in states:
                 flight = dict(zip(OPENSKY_API_FIELDS, state))
                 callsign = flight[ATTR_CALLSIGN].strip()
@@ -166,6 +203,8 @@ class OpenSkySensor(Entity):
                 if distance is None or distance > self._radius:
                     continue
                 altitude = flight.get(ATTR_ALTITUDE)
+                if altitude is None:
+                    continue
                 if altitude > self._altitude and self._altitude != 0:
                     continue
                 currently_tracked.add(callsign)
