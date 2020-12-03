@@ -810,7 +810,7 @@ ibm-watson==4.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.2.2
+icmplib==2.0
 
 # homeassistant.components.iglo
 iglo==1.2.7
