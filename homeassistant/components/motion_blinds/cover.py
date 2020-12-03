@@ -323,7 +323,8 @@ class MotionTDBUDevice(MotionPositionDevice):
     def set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
-        self._blind.Set_position(100 - position, motor=self._motor_key)
+        target_width = kwargs.get(ATTR_WIDTH, None)
+        self._blind.Set_position(100 - position, motor=self._motor_key, width = target_width)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
