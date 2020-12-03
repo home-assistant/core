@@ -25,5 +25,5 @@ async def _async_has_devices(hass) -> bool:
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, "Kuler Sky", _async_has_devices, config_entries.CONN_CLASS_UNKNOWN
+    DOMAIN, "Kuler Sky", _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL
 )
