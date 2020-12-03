@@ -124,7 +124,9 @@ def _extract_blueprint_from_community_topic(
         break
 
     if blueprint is None:
-        raise HomeAssistantError("No valid blueprint found in the topic")
+        raise HomeAssistantError(
+            "No valid blueprint found in the topic. Blueprint syntax blocks need to be marked as YAML or no syntax."
+        )
 
     return ImportedBlueprint(
         f'{post["username"]}/{topic["slug"]}', block_content, blueprint
@@ -204,7 +206,9 @@ async def fetch_blueprint_from_github_gist_url(
         break
 
     if blueprint is None:
-        raise HomeAssistantError("No valid blueprint found in the gist")
+        raise HomeAssistantError(
+            "No valid blueprint found in the gist. The blueprint file needs to end with '.yaml'"
+        )
 
     return ImportedBlueprint(
         f"{gist['owner']['login']}/{filename[:-5]}", content, blueprint
