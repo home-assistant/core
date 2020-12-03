@@ -374,9 +374,11 @@ class IntesisAC(ClimateEntity):
                 reconnect_minutes,
             )
             # Schedule reconnection
-            async_call_later(
-                self.hass, reconnect_minutes * 60, self._controller.connect()
-            )
+
+            async def try_connect(_now):
+                await self._controller.connect()
+
+            async_call_later(self.hass, reconnect_minutes * 60, try_connect)
 
         if self._controller.is_connected and not self._connected:
             # Connection has been restored
