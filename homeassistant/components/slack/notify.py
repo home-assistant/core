@@ -202,8 +202,8 @@ class SlackNotificationService(BaseNotificationService):
         targets,
         message,
         title,
-        username,
         *,
+        username=None,
         icon=None,
         blocks=None,
     ):
