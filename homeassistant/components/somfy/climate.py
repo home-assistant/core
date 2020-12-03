@@ -136,8 +136,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         """Return hvac operation ie. heat, cool mode."""
         if self.climate.get_regulation_state() == RegulationState.TIMETABLE:
             return HVAC_MODE_AUTO
-        else:
-            return HVAC_MODES_MAPPING.get(self.climate.get_hvac_state())
+        return HVAC_MODES_MAPPING.get(self.climate.get_hvac_state())
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -200,7 +199,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
             temperature = self.climate.get_night_temperature()
         elif preset_mode == PRESET_FROST_GUARD:
             temperature = self.climate.get_frost_protection_temperature()
-        elif preset_mode == PRESET_MANUAL or preset_mode == PRESET_GEOFENCING:
+        elif preset_mode in [PRESET_MANUAL, PRESET_GEOFENCING]:
             temperature = self.target_temperature
         else:
             _LOGGER.error("Preset mode not supported: %s", preset_mode)
