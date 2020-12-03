@@ -6,12 +6,14 @@ async def main():
     delay = 3
     #deltaDelay must be delay >> deltaDelay and deltaDelay >> code runtime
     deltaDelay = 0.2
-    timerRanOut = False
+
     loop=asyncio.get_event_loop()
+    timerRanOut = loop.create_future()
 
     def timerCallback():
-        nonlocal timerRanOut
-        timerRanOut = True
+        if (timerRanOut.done()):
+            raise Exception("Timer future already set")
+        timerRanOut.set_result(True)
         print("Timer ran out at: ", datetime.now().time())
 
 
@@ -22,24 +24,24 @@ async def main():
     assert(testTimer.TimerHandle)
     assert(not testTimer._timerDone())
     assert(testTimer._timerActive())
-    assert(not timerRanOut)
+    assert(not timerRanOut.done())
 
     await asyncio.sleep(delay+deltaDelay)
     assert(testTimer.TimerHandle)
     assert(testTimer._timerDone())
     assert(not testTimer._timerActive())
-    assert(timerRanOut)
+    assert(timerRanOut.done())
 
-    timerRanOut = False
+    timerRanOut = loop.create_future()
     testTimer.start()
     testTimer.stop()
     assert(not testTimer._timerActive())
-    assert(not timerRanOut)
+    assert(not timerRanOut.done())
 
     await asyncio.sleep(delay+deltaDelay)
-    assert(not timerRanOut)    
+    assert(not timerRanOut.done())    
 
-    timerRanOut = False
+    timerRanOut = loop.create_future()
     testTimer.start()
     
     await asyncio.sleep(2*deltaDelay)
@@ -49,22 +51,25 @@ async def main():
     assert(testTimer.TimerHandle)
     assert(not testTimer._timerDone())
     assert(testTimer._timerActive())
-    assert(not timerRanOut)
+    assert(not timerRanOut.done())
 
     #Test if the timer is still running when it should have gone off before reset
     await asyncio.sleep(delay-deltaDelay)
     assert(testTimer.TimerHandle)
     assert(not testTimer._timerDone())
     assert(testTimer._timerActive())
-    assert(not timerRanOut)
+    assert(not timerRanOut.done())
 
     #Test if the timer has gone off after it should have
     await asyncio.sleep(2*deltaDelay)
     assert(testTimer.TimerHandle)
     assert(testTimer._timerDone())
     assert(not testTimer._timerActive())
-    assert(timerRanOut)
+    assert(timerRanOut.done())
 
+    timerRanOut = loop.create_future()
+    await asyncio.sleep(2*delay)
+    assert(not timerRanOut.done())
 
 
 asyncio.run(main())
