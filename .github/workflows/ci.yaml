@@ -48,7 +48,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U "pip<20.3" setuptools
           pip install -r requirements.txt -r requirements_test.txt
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -214,11 +214,11 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check Dockerfile
-        uses: docker://hadolint/hadolint:v1.18.0
+        uses: docker://hadolint/hadolint:v1.18.2
         with:
           args: hadolint Dockerfile
       - name: Check Dockerfile.dev
-        uses: docker://hadolint/hadolint:v1.18.0
+        uses: docker://hadolint/hadolint:v1.18.2
         with:
           args: hadolint Dockerfile.dev
 
@@ -590,7 +590,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -604,12 +605,13 @@ jobs:
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
             ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-
-      - name: Create full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools wheel
+          pip install -U "pip<20.3" setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
           pip install -e .
@@ -625,7 +627,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -659,7 +662,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -695,7 +699,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -736,7 +741,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v2.2.0
+        uses: actions/upload-artifact@v2.2.1
         with:
           name: coverage-${{ matrix.python-version }}-group${{ matrix.group }}
           path: .coverage
@@ -755,7 +760,8 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name:
+          Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -779,4 +785,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.14
+        uses: codecov/codecov-action@v1.0.15

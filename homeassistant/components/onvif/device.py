@@ -28,6 +28,7 @@ from .const import (
     LOGGER,
     PAN_FACTOR,
     RELATIVE_MOVE,
+    STOP_MOVE,
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
@@ -386,7 +387,7 @@ class ONVIFDevice:
                 # Guard against unsupported operation
                 if not profile.ptz.relative:
                     LOGGER.warning(
-                        "ContinuousMove not supported on device '%s'", self.name
+                        "RelativeMove not supported on device '%s'", self.name
                     )
                     return
 
@@ -403,7 +404,7 @@ class ONVIFDevice:
                 # Guard against unsupported operation
                 if not profile.ptz.absolute:
                     LOGGER.warning(
-                        "ContinuousMove not supported on device '%s'", self.name
+                        "AbsoluteMove not supported on device '%s'", self.name
                     )
                     return
 
@@ -433,6 +434,8 @@ class ONVIFDevice:
                     "Zoom": {"x": speed_val},
                 }
                 await ptz_service.GotoPreset(req)
+            elif move_mode == STOP_MOVE:
+                await ptz_service.Stop(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
                 LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)

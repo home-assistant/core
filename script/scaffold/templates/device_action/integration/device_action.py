@@ -1,4 +1,4 @@
-"""Provides device automations for NEW_NAME."""
+"""Provides device actions for NEW_NAME."""
 from typing import List, Optional
 
 import voluptuous as vol
@@ -72,8 +72,6 @@ async def async_call_action_from_config(
     hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "turn_on":

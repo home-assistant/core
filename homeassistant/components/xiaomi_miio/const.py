@@ -21,6 +21,7 @@ SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
 SERVICE_SET_TARGET_HUMIDITY = "fan_set_target_humidity"
 SERVICE_SET_DRY_ON = "fan_set_dry_on"
 SERVICE_SET_DRY_OFF = "fan_set_dry_off"
+SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
 
 # Light Services
 SERVICE_SET_SCENE = "light_set_scene"

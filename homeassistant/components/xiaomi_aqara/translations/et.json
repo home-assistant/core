@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "not_xiaomi_aqara": "See pole Xiaomi Aqara Gateway, avastatud seade ei sobinud teadaolevate l\u00fc\u00fcsidega"
         },
         "error": {
             "discovery_error": "Xiaomi Aqara l\u00fc\u00fcsi avastamine nurjus, proovi kasutada HomeAssistanti IP-d liidesena",
@@ -15,7 +16,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "L\u00fc\u00fcsi IP"
+                    "select_ip": "L\u00fc\u00fcsi IP aadress"
                 },
                 "description": "K\u00e4ivita seadistamine uuesti kui soovid \u00fchendada t\u00e4iendavaid l\u00fc\u00fcse",
                 "title": "Vali Xiaomi Aqara l\u00fc\u00fcs mida soovid \u00fchendada"

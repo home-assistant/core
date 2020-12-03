@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z odnalezionym Volumio"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z odnalezionym Volumio"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -10,7 +10,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Czy chcesz doda\u0107 Volumio (\"{name}\") do Home Assistant?",
+                "description": "Czy chcesz doda\u0107 Volumio (\"{name}\") do Home Assistanta?",
                 "title": "Wykryte Volumio"
             },
             "user": {

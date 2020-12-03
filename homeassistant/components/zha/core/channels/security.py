@@ -109,7 +109,6 @@ class IasWd(ZigbeeChannel):
         )
 
 
-@registries.BINARY_SENSOR_CLUSTERS.register(security.IasZone.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
@@ -153,6 +152,15 @@ class IASZoneChannel(ZigbeeChannel):
                 "Failed to write cie_addr: %s to '%s' cluster: %s",
                 str(ieee),
                 self._cluster.ep_attribute,
+                str(ex),
+            )
+
+        try:
+            self.debug("Sending pro-active IAS enroll response")
+            await self._cluster.enroll_response(0, 0)
+        except ZigbeeException as ex:
+            self.debug(
+                "Failed to send pro-active IAS enroll response: %s",
                 str(ex),
             )
         self.debug("finished IASZoneChannel configuration")

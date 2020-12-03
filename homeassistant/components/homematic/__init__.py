@@ -258,7 +258,7 @@ def setup(hass, config):
 
     # Init homematic hubs
     entity_hubs = []
-    for hub_name in conf[CONF_HOSTS].keys():
+    for hub_name in conf[CONF_HOSTS]:
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
     def _hm_service_virtualkey(service):

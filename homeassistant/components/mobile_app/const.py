@@ -15,6 +15,7 @@ DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
 DATA_SENSOR = "sensor"
 DATA_STORE = "store"
+DATA_NOTIFY = "notify"
 
 ATTR_APP_DATA = "app_data"
 ATTR_APP_ID = "app_id"

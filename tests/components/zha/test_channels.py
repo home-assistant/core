@@ -15,6 +15,7 @@ import homeassistant.components.zha.core.registries as registries
 from .common import get_zha_gateway, make_zcl_header
 
 import tests.async_mock
+from tests.common import async_capture_events
 
 
 @pytest.fixture
@@ -451,10 +452,7 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     checkin_mock = tests.async_mock.AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-
-    events = []
-    hass.bus.async_listen("zha_event", lambda x: events.append(x))
-    await hass.async_block_till_done()
+    events = async_capture_events(hass, "zha_event")
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -475,3 +473,4 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["args"][1] is mock.sentinel.args2
     assert data["args"][2] is mock.sentinel.args3
     assert data["unique_id"] == "00:11:22:33:44:55:66:77:1:0x0020"
+    assert data["device_id"] == poll_control_device.device_id

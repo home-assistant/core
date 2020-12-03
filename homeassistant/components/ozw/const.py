@@ -10,6 +10,10 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "ozw"
 DATA_UNSUBSCRIBE = "unsubscribe"
+
+CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
+CONF_USE_ADDON = "use_addon"
+
 PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
     COVER_DOMAIN,
@@ -21,7 +25,6 @@ PLATFORMS = [
     SWITCH_DOMAIN,
 ]
 MANAGER = "manager"
-OPTIONS = "options"
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API \u017eeton"
+                },
+                "title": "Pove\u017eite se z Cloudflare"
+            }
+        }
+    }
+}

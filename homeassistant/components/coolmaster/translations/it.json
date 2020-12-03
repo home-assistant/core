@@ -2,7 +2,6 @@
     "config": {
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Impossibile connettersi all'istanza CoolMasterNet. Controlla il tuo host.",
             "no_units": "Impossibile trovare alcuna unit\u00e0 HVAC nell'host CoolMasterNet."
         },
         "step": {

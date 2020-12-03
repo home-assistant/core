@@ -5,7 +5,7 @@
             "unsupported_model": "Ez a nyomtat\u00f3modell nem t\u00e1mogatott."
         },
         "error": {
-            "connection_error": "Csatlakoz\u00e1si hiba.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "snmp_error": "Az SNMP szerver ki van kapcsolva, vagy a nyomtat\u00f3 nem t\u00e1mogatott.",
             "wrong_host": "\u00c9rv\u00e9nytelen \u00e1llom\u00e1sn\u00e9v vagy IP-c\u00edm."
         },

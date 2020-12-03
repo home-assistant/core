@@ -2,14 +2,13 @@
     "config": {
         "abort": {
             "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa, aplikacje i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "complete_pairing_failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
-            "existing_config_entry_found": "Istnieje ju\u017c wpis konfiguracyjny VIZIO SmartCast z tym samym numerem seryjnym. W celu skonfigurowania tego wpisu nale\u017cy usun\u0105\u0107 istniej\u0105cy.",
-            "host_exists": "Urz\u0105dzenie VIZIO SmartCast z okre\u015blonym hostem jest ju\u017c skonfigurowane",
-            "name_exists": "Urz\u0105dzenie VIZIO SmartCast o okre\u015blonej nazwie jest ju\u017c skonfigurowane"
+            "existing_config_entry_found": "Istnieje ju\u017c wpis konfiguracyjny VIZIO SmartCast z tym samym numerem seryjnym. W celu skonfigurowania tego wpisu nale\u017cy usun\u0105\u0107 istniej\u0105cy."
         },
         "step": {
             "pair_tv": {
@@ -20,7 +19,7 @@
                 "title": "Ko\u0144czenie procesu parowania"
             },
             "pairing_complete": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.",
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {

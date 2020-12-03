@@ -3,10 +3,18 @@
 from copy import deepcopy
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
 )
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
@@ -30,7 +38,7 @@ COVERS = {
         "id": "Window covering device id",
         "name": "Window covering device",
         "type": "Window covering device",
-        "state": {"bri": 254, "on": True, "reachable": True},
+        "state": {"lift": 100, "open": False, "reachable": True},
         "modelid": "lumi.curtain",
         "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
@@ -53,7 +61,7 @@ COVERS = {
         "id": "Window covering controller id",
         "name": "Window covering controller",
         "type": "Window covering controller",
-        "state": {"bri": 254, "on": True, "reachable": True},
+        "state": {"bri": 253, "on": True, "reachable": True},
         "modelid": "Motor controller",
         "uniqueid": "00:00:00:00:00:00:00:04-00",
     },
@@ -105,7 +113,67 @@ async def test_cover(hass):
 
     assert hass.states.get("cover.level_controllable_cover").state == STATE_CLOSED
 
-    # Verify service calls
+    # Verify service calls for cover
+
+    windows_covering_device = gateway.api.lights["2"]
+
+    # Service open cover
+
+    with patch.object(
+        windows_covering_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.window_covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/2/state", json={"open": True})
+
+    # Service close cover
+
+    with patch.object(
+        windows_covering_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.window_covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/2/state", json={"open": False})
+
+    # Service set cover position
+
+    with patch.object(
+        windows_covering_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.window_covering_device", ATTR_POSITION: 40},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/2/state", json={"lift": 60})
+
+    # Service stop cover movement
+
+    with patch.object(
+        windows_covering_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: "cover.window_covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/2/state", json={"stop": True})
+
+    # Verify service calls for legacy cover
 
     level_controllable_cover_device = gateway.api.lights["1"]
 
@@ -135,9 +203,21 @@ async def test_cover(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/lights/1/state", json={"on": True, "bri": 254}
+        set_callback.assert_called_with("put", "/lights/1/state", json={"on": True})
+
+    # Service set cover position
+
+    with patch.object(
+        level_controllable_cover_device, "_request", return_value=True
+    ) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 40},
+            blocking=True,
         )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/1/state", json={"bri": 152})
 
     # Service stop cover movement
 
@@ -173,3 +253,80 @@ async def test_cover(hass):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
+
+
+async def test_tilt_cover(hass):
+    """Test that tilting a cover works."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["lights"] = {
+        "0": {
+            "etag": "87269755b9b3a046485fdae8d96b252c",
+            "lastannounced": None,
+            "lastseen": "2020-08-01T16:22:05Z",
+            "manufacturername": "AXIS",
+            "modelid": "Gear",
+            "name": "Covering device",
+            "state": {
+                "bri": 0,
+                "lift": 0,
+                "on": False,
+                "open": True,
+                "reachable": True,
+                "tilt": 0,
+            },
+            "swversion": "100-5.3.5.1122",
+            "type": "Window covering device",
+            "uniqueid": "00:24:46:00:00:12:34:56-01",
+        }
+    }
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    assert len(hass.states.async_all()) == 1
+    entity = hass.states.get("cover.covering_device")
+    assert entity.state == STATE_OPEN
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
+    covering_device = gateway.api.lights["0"]
+
+    with patch.object(covering_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            {ATTR_ENTITY_ID: "cover.covering_device", ATTR_TILT_POSITION: 40},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 60})
+
+    with patch.object(covering_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: "cover.covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 0})
+
+    with patch.object(covering_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: "cover.covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 100})
+
+    # Service stop cover movement
+
+    with patch.object(covering_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER_TILT,
+            {ATTR_ENTITY_ID: "cover.covering_device"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/lights/0/state", json={"stop": True})

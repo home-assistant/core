@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
-    def async_add_scene(scenes):
+    def async_add_scene(scenes=gateway.api.scenes.values()):
         """Add scene from deCONZ."""
         entities = [DeconzScene(scene, gateway) for scene in scenes]
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_scene(gateway.api.scenes.values())
+    async_add_scene()
 
 
 class DeconzScene(Scene):

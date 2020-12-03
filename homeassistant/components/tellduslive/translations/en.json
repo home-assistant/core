@@ -4,10 +4,10 @@
             "already_configured": "Service is already configured",
             "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "unknown_authorize_url_generation": "Unknown error generating an authorize url."
         },
         "error": {
-            "auth_error": "Authentication error, please try again",
             "invalid_auth": "Invalid authentication"
         },
         "step": {
