@@ -8,6 +8,7 @@ from homematicip.aio.device import (
     AsyncDimmer,
     AsyncFullFlushDimmer,
     AsyncPluggableDimmer,
+    AsyncWiredDimmer3,
 )
 from homematicip.base.enums import RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
@@ -51,6 +52,9 @@ async def async_setup_entry(
                     hap, device, device.bottomLightChannelIndex
                 )
             )
+        elif isinstance(device, AsyncWiredDimmer3):
+            for channel in range(1, 4):
+                entities.append(HomematicipMultiDimmer(hap, device, channel=channel))
         elif isinstance(
             device,
             (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),
@@ -97,6 +101,45 @@ class HomematicipLightMeasuring(HomematicipLight):
         state_attr[ATTR_TODAY_ENERGY_KWH] = round(self._device.energyCounter, 2)
 
         return state_attr
+
+
+class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
+    """Representation of HomematicIP Cloud dimmer."""
+
+    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
+        """Initialize the dimmer light entity."""
+        super().__init__(hap, device, channel=channel)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if dimmer is on."""
+        func_channel = self._device.functionalChannels[self._channel]
+        return func_channel.dimLevel is not None and func_channel.dimLevel > 0.0
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        return int(
+            (self._device.functionalChannels[self._channel].dimLevel or 0.0) * 255
+        )
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the dimmer on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            await self._device.set_dim_level(
+                kwargs[ATTR_BRIGHTNESS] / 255.0, self._channel
+            )
+        else:
+            await self._device.set_dim_level(1, self._channel)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the dimmer off."""
+        await self._device.set_dim_level(0, self._channel)
 
 
 class HomematicipDimmer(HomematicipGenericEntity, LightEntity):
