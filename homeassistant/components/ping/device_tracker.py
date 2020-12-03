@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from icmplib import ping as icmp_ping
+from icmplib import NameLookupError, ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_callback_threadsafe
 
-from . import async_get_next_ping_id
+from . import async_get_next_ping_id, can_create_raw_socket
 from .const import ICMP_TIMEOUT, PING_ATTEMPTS_COUNT
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,12 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class HostICMPLib:
     """Host object with ping detection."""
 
-    def __init__(self, ip_address, dev_id, hass, config):
+    def __init__(self, ip_address, dev_id, hass, config, privileged):
         """Initialize the Host pinger."""
         self.hass = hass
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
+        self._privileged = privileged
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
@@ -47,9 +48,18 @@ class HostICMPLib:
             self.hass.loop, async_get_next_ping_id, self.hass
         ).result()
 
-        return icmp_ping(
-            self.ip_address, count=PING_ATTEMPTS_COUNT, timeout=ICMP_TIMEOUT, id=next_id
-        ).is_alive
+        try:
+            data = icmp_ping(
+                self.ip_address,
+                count=PING_ATTEMPTS_COUNT,
+                timeout=ICMP_TIMEOUT,
+                privileged=self._privileged,
+                id=next_id,
+            )
+        except NameLookupError:
+            return False
+
+        return data.is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
@@ -68,8 +78,10 @@ class HostICMPLib:
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
 
+    privileged = can_create_raw_socket()
+
     hosts = [
-        HostICMPLib(ip, dev_id, hass, config)
+        HostICMPLib(ip, dev_id, hass, config, privileged)
         for (dev_id, ip) in config[const.CONF_HOSTS].items()
     ]
     interval = config.get(
