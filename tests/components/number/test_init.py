@@ -10,7 +10,7 @@ class MockDefaultNumberEntity(NumberEntity):
     @property
     def value(self):
         """Return the current value."""
-        return "0.5"
+        return 0.5
 
 
 class MockNumberEntity(NumberEntity):
@@ -24,7 +24,7 @@ class MockNumberEntity(NumberEntity):
     @property
     def value(self):
         """Return the current value."""
-        return "0.5"
+        return 0.5
 
 
 async def test_step(hass):
