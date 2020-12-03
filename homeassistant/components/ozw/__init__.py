@@ -279,7 +279,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 except asyncio.CancelledError:
                     pass
 
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client)
+            ozw_data[DATA_UNSUBSCRIBE].append(
+                hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client
+                )
+            )
             ozw_data[DATA_STOP_MQTT_CLIENT] = async_stop_mqtt_client
 
         else:
