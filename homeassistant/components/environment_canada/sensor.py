@@ -20,7 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 _LOGGER = logging.getLogger(__name__)
