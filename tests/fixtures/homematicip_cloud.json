@@ -233,7 +233,7 @@
                     "profileMode": "AUTOMATIC",
                     "secondaryCloseAdjustable": false,
                     "secondaryOpenAdjustable": false,
-                    "secondaryShadingLevel": null,
+                    "secondaryShadingLevel": 0,
                     "secondaryShadingStateType": "NOT_EXISTENT",
                     "shadingDriveVersion": null,
                     "shadingPackagePosition": "TOP",
