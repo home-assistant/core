@@ -138,48 +138,49 @@ class OpenSkySensor(Entity):
         flight_metadata = {}
         request = self._session.get(OPENSKY_API_URL)
         _LOGGER.debug("OpenSky API request status: %d", request.status_code)
-        if request.status_code != 200:
+        if request.status_code == 200:
+            self._connectionproblems = 0
+            states = request.json().get(ATTR_STATES)
+            _LOGGER.debug(str(len(states)) + " flights parsed")
+            for state in states:
+                flight = dict(zip(OPENSKY_API_FIELDS, state))
+                callsign = flight[ATTR_CALLSIGN].strip()
+                if callsign != "":
+                    flight_metadata[callsign] = flight
+                else:
+                    continue
+                missing_location = (
+                    flight.get(ATTR_LONGITUDE) is None
+                    or flight.get(ATTR_LATITUDE) is None
+                )
+                if missing_location:
+                    continue
+                if flight.get(ATTR_ON_GROUND):
+                    continue
+                distance = util_location.distance(
+                    self._latitude,
+                    self._longitude,
+                    flight.get(ATTR_LATITUDE),
+                    flight.get(ATTR_LONGITUDE),
+                )
+                if distance is None or distance > self._radius:
+                    continue
+                altitude = flight.get(ATTR_ALTITUDE)
+                if altitude > self._altitude and self._altitude != 0:
+                    continue
+                currently_tracked.add(callsign)
+            if self._previously_tracked is not None:
+                entries = currently_tracked - self._previously_tracked
+                exits = self._previously_tracked - currently_tracked
+                self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, flight_metadata)
+                self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
+            self._state = len(currently_tracked)
+            self._previously_tracked = currently_tracked
+        else:
             _LOGGER.warning("OpenSky API request status: %d", request.status_code)
             self._connectionproblems = self._connectionproblems + 1
-        else:
-            self._connectionproblems = 0
         if self._connectionproblems > 10:
             _LOGGER.error("Persistent error retrieving data from the OpenSky API.")
-        states = request.json().get(ATTR_STATES)
-        _LOGGER.debug(str(len(states)) + " flights parsed")
-        for state in states:
-            flight = dict(zip(OPENSKY_API_FIELDS, state))
-            callsign = flight[ATTR_CALLSIGN].strip()
-            if callsign != "":
-                flight_metadata[callsign] = flight
-            else:
-                continue
-            missing_location = (
-                flight.get(ATTR_LONGITUDE) is None or flight.get(ATTR_LATITUDE) is None
-            )
-            if missing_location:
-                continue
-            if flight.get(ATTR_ON_GROUND):
-                continue
-            distance = util_location.distance(
-                self._latitude,
-                self._longitude,
-                flight.get(ATTR_LATITUDE),
-                flight.get(ATTR_LONGITUDE),
-            )
-            if distance is None or distance > self._radius:
-                continue
-            altitude = flight.get(ATTR_ALTITUDE)
-            if altitude > self._altitude and self._altitude != 0:
-                continue
-            currently_tracked.add(callsign)
-        if self._previously_tracked is not None:
-            entries = currently_tracked - self._previously_tracked
-            exits = self._previously_tracked - currently_tracked
-            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, flight_metadata)
-            self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
-        self._state = len(currently_tracked)
-        self._previously_tracked = currently_tracked
 
     @property
     def device_state_attributes(self):
