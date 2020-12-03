@@ -164,7 +164,7 @@ async def async_setup_entry(hass, entry):
 
 def validate_static_config(host, port):
     """Handle a static config."""
-    url = setup_url_for_address(host, port)
+    url = pywemo.setup_url_for_address(host, port)
 
     if not url:
         _LOGGER.error(
@@ -183,14 +183,3 @@ def validate_static_config(host, port):
         return None
 
     return device
-
-
-def setup_url_for_address(host, port):
-    """Determine setup.xml url for given host and port pair."""
-    if not port:
-        port = pywemo.ouimeaux_device.probe_wemo(host)
-
-    if not port:
-        return None
-
-    return f"http://{host}:{port}/setup.xml"

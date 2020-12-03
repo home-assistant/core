@@ -250,6 +250,29 @@ async def test_setup_get_xml(hass):
 
 
 @respx.mock
+async def test_setup_query_params(hass):
+    """Test setup with query params."""
+    respx.get(
+        "http://localhost?search=something",
+        status_code=200,
+    )
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "params": {"search": "something"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+
+@respx.mock
 async def test_update_with_json_attrs(hass):
     """Test attributes get extracted from a JSON result."""
 

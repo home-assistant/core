@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "auth_failed": "\u7528\u6237\u540d\u6216\u5bc6\u7801\u9519\u8bef",
             "invalid_auth": "\u9a8c\u8bc1\u7801\u65e0\u6548"
         },
         "step": {

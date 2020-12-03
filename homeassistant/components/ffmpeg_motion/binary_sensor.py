@@ -90,9 +90,7 @@ class FFmpegMotion(FFmpegBinarySensor):
         """Initialize FFmpeg motion binary sensor."""
 
         super().__init__(config)
-        self.ffmpeg = ffmpeg_sensor.SensorMotion(
-            manager.binary, hass.loop, self._async_callback
-        )
+        self.ffmpeg = ffmpeg_sensor.SensorMotion(manager.binary, self._async_callback)
 
     async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.

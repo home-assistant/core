@@ -19,12 +19,14 @@
                 "data": {
                     "access_token": "P\u0159\u00edstupov\u00fd token"
                 },
+                "description": "Zadejte [osobn\u00ed p\u0159\u00edstupov\u00fd token]({token_url}) SmartThings, kter\u00fd byl vytvo\u0159en podle [pokyn\u016f]({component_url}). Ten se pou\u017eije k vytvo\u0159en\u00ed integrace Home Assistant ve va\u0161em \u00fa\u010dtu SmartThings.",
                 "title": "Zadejte osobn\u00ed p\u0159\u00edstupov\u00fd token"
             },
             "select_location": {
                 "data": {
                     "location_id": "Um\u00edst\u011bn\u00ed"
                 },
+                "description": "Vyberte um\u00edst\u011bn\u00ed SmartThings, kter\u00e9 chcete p\u0159idat do Home Assistant. Pot\u00e9 otev\u0159eme nov\u00e9 okno a po\u017e\u00e1d\u00e1me v\u00e1s o p\u0159ihl\u00e1\u0161en\u00ed a autorizaci instalace integrace Home Assistant do vybran\u00e9ho um\u00edst\u011bn\u00ed.",
                 "title": "Vyberte um\u00edst\u011bn\u00ed"
             },
             "user": {

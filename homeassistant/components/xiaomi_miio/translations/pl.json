@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connect_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie"
         },
         "flow_title": "Xiaomi Miio: {name}",

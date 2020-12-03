@@ -5,7 +5,6 @@
             "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r bryggan p\u00e5g\u00e5r redan.",
             "no_bridges": "Inga deCONZ-bryggor uppt\u00e4cktes",
             "not_deconz_bridge": "Inte en deCONZ-brygga",
-            "one_instance_only": "Komponenten st\u00f6djer endast en deCONZ-instans",
             "updated_instance": "Uppdaterad deCONZ-instans med ny v\u00e4rdadress"
         },
         "error": {

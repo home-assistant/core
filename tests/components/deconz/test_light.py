@@ -330,3 +330,26 @@ async def test_disable_light_groups(hass):
 
     assert len(hass.states.async_all()) == 5
     assert hass.states.get("light.light_group") is None
+
+
+async def test_configuration_tool(hass):
+    """Test that lights or groups entities are created."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["lights"] = {
+        "0": {
+            "etag": "26839cb118f5bf7ba1f2108256644010",
+            "hascolor": False,
+            "lastannounced": None,
+            "lastseen": "2020-11-22T11:27Z",
+            "manufacturername": "dresden elektronik",
+            "modelid": "ConBee II",
+            "name": "Configuration tool 1",
+            "state": {"reachable": True},
+            "swversion": "0x264a0700",
+            "type": "Configuration tool",
+            "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
+        }
+    }
+    await setup_deconz_integration(hass, get_state_response=data)
+
+    assert len(hass.states.async_all()) == 0

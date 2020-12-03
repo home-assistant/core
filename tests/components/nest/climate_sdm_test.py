@@ -23,7 +23,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -267,7 +266,6 @@ async def test_thermostat_eco_off(hass):
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
-        HVAC_MODE_AUTO,
         HVAC_MODE_OFF,
     }
     assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 22.0
@@ -308,14 +306,13 @@ async def test_thermostat_eco_on(hass):
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
-    assert thermostat.state == HVAC_MODE_AUTO
+    assert thermostat.state == HVAC_MODE_HEAT_COOL
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
-        HVAC_MODE_AUTO,
         HVAC_MODE_OFF,
     }
     assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 21.0
@@ -325,25 +322,50 @@ async def test_thermostat_eco_on(hass):
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
 
-class FakeAuth:
-    """A fake implementation of the auth class that records requests."""
+async def test_thermostat_eco_heat_only(hass):
+    """Test a thermostat in eco mode that only supports heat."""
+    await setup_climate(
+        hass,
+        {
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "OFF",
+            },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["MANUAL_ECO", "OFF"],
+                "mode": "MANUAL_ECO",
+                "heatCelsius": 21.0,
+                "coolCelsius": 29.0,
+            },
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 29.9,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {},
+        },
+    )
 
-    def __init__(self):
-        """Initialize FakeAuth."""
-        self.method = None
-        self.url = None
-        self.json = None
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_HEAT
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
+        HVAC_MODE_HEAT,
+        HVAC_MODE_OFF,
+    }
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 21.0
+    assert ATTR_TARGET_TEMP_LOW not in thermostat.attributes
+    assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
+    assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+    assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
-    async def request(self, method, url, json):
-        """Capure the request arguments for tests to assert on."""
-        self.method = method
-        self.url = url
-        self.json = json
 
-
-async def test_thermostat_set_hvac_mode(hass):
+async def test_thermostat_set_hvac_mode(hass, auth):
     """Test a thermostat changing hvac modes."""
-    auth = FakeAuth()
     subscriber = await setup_climate(
         hass,
         {
@@ -395,7 +417,7 @@ async def test_thermostat_set_hvac_mode(hass):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
@@ -419,7 +441,7 @@ async def test_thermostat_set_hvac_mode(hass):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
@@ -428,9 +450,8 @@ async def test_thermostat_set_hvac_mode(hass):
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
 
-async def test_thermostat_set_eco_preset(hass):
+async def test_thermostat_set_eco_preset(hass, auth):
     """Test a thermostat put into eco mode."""
-    auth = FakeAuth()
     subscriber = await setup_climate(
         hass,
         {
@@ -493,12 +514,12 @@ async def test_thermostat_set_eco_preset(hass):
         },
         auth=auth,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
-    assert thermostat.state == HVAC_MODE_AUTO
+    assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_ECO
 
@@ -514,9 +535,8 @@ async def test_thermostat_set_eco_preset(hass):
     }
 
 
-async def test_thermostat_set_cool(hass):
+async def test_thermostat_set_cool(hass, auth):
     """Test a thermostat in cool mode with a temperature change."""
-    auth = FakeAuth()
     await setup_climate(
         hass,
         {
@@ -548,9 +568,8 @@ async def test_thermostat_set_cool(hass):
     }
 
 
-async def test_thermostat_set_heat(hass):
+async def test_thermostat_set_heat(hass, auth):
     """Test a thermostat heating mode with a temperature change."""
-    auth = FakeAuth()
     await setup_climate(
         hass,
         {
@@ -582,9 +601,8 @@ async def test_thermostat_set_heat(hass):
     }
 
 
-async def test_thermostat_set_heat_cool(hass):
+async def test_thermostat_set_heat_cool(hass, auth):
     """Test a thermostat in heatcool mode with a temperature change."""
-    auth = FakeAuth()
     await setup_climate(
         hass,
         {
@@ -693,9 +711,8 @@ async def test_thermostat_fan_on(hass):
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
 
-async def test_thermostat_set_fan(hass):
+async def test_thermostat_set_fan(hass, auth):
     """Test a thermostat enabling the fan."""
-    auth = FakeAuth()
     await setup_climate(
         hass,
         {
@@ -766,9 +783,8 @@ async def test_thermostat_fan_empty(hass):
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
-async def test_thermostat_target_temp(hass):
+async def test_thermostat_target_temp(hass, auth):
     """Test a thermostat changing hvac modes and affected on target temps."""
-    auth = FakeAuth()
     subscriber = await setup_climate(
         hass,
         {
@@ -818,7 +834,7 @@ async def test_thermostat_target_temp(hass):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     thermostat = hass.states.get("climate.my_thermostat")

@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Viga tuvastamisel",
             "cannot_connect": "\u00dchendamine nurjus",
-            "conn_error": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
         },
         "error": {
-            "auth_failed": "Vigane tuvastamine",
             "invalid_auth": "Tuvastamise viga"
         },
         "flow_title": "Tuya seaded",
@@ -36,7 +33,6 @@
                 "data": {
                     "brightness_range_mode": "Seadme kasutatav heledusvahemik",
                     "curr_temp_divider": "Praeguse temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
-                    "ext_temp_sensor": "Praeguse temperatuuri andur",
                     "max_kelvin": "Maksimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
                     "max_temp": "Maksimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
                     "min_kelvin": "Minimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",

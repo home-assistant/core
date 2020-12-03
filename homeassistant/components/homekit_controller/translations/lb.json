@@ -12,11 +12,8 @@
         },
         "error": {
             "authentication_error": "Ong\u00ebltege HomeKit Code. Iwwerpr\u00e9ift d\u00ebsen an prob\u00e9iert w.e.g. nach emol.",
-            "busy_error": "Den Apparat huet en Kupplungs Versuch refus\u00e9iert, well en scho mat engem anere Kontroller verbonnen ass.",
             "max_peers_error": "Den Apparat huet den Kupplungs Versuch refus\u00e9iert well et keng fr\u00e4i Pairing Memoire huet.",
-            "max_tries_error": "Den Apparat huet den Kupplungs Versuch refus\u00e9iert well et m\u00e9i w\u00e9i 100 net erfollegr\u00e4ich Authentifikatioun's Versich erhalen huet.",
             "pairing_failed": "Eng onerwaarte Feeler ass opgetruede beim Kupplung's Versuch mat d\u00ebsem Apparat. D\u00ebst kann e tempor\u00e4re Feeler sinn oder D\u00e4in Apparat g\u00ebtt aktuell net \u00ebnnerst\u00ebtzt.",
-            "protocol_error": "Feeler bei der Kommunikatioun mam Accessoire. Apparat ass vill\u00e4icht net am Kopplungs Modus a ben\u00e9idegt een Drock op ee Kn\u00e4ppchen.",
             "unable_to_pair": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
             "unknown_error": "Apparat mellt een onbekannte Feeler. Verbindung net m\u00e9iglech."
         },
@@ -40,10 +37,6 @@
             "protocol_error": {
                 "description": "Den Apparat ass vill\u00e4icht net am Kopplungs Modus an et muss ee Kn\u00e4ppche gedr\u00e9ckt ginn. Stell s\u00e9cher dass den Apparat am Kopplung Modus ass oder prob\u00e9ier den Apparat fr\u00ebsch ze starten, da versich et nach emol mat der Kopplung.",
                 "title": "Feeler bei der Kommunikatioun mam Accessoire"
-            },
-            "try_pair_later": {
-                "description": "Stell s\u00e9cher dass den Apparat sech am Kopplungs Modus bef\u00ebnnt oder prob\u00e9ier den Apparat fr\u00ebsch ze starten, da prob\u00e9ier nach emol mat der Kopplung.",
-                "title": "Kopplung net m\u00e9iglech"
             },
             "user": {
                 "data": {

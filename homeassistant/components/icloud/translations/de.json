@@ -5,7 +5,6 @@
             "no_device": "Auf keinem Ihrer Ger\u00e4te ist \"Find my iPhone\" aktiviert"
         },
         "error": {
-            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfe deine E-Mail & Passwort",
             "send_verification_code": "Fehler beim Senden des Best\u00e4tigungscodes",
             "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hle ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starte die Verifizierung erneut"
         },

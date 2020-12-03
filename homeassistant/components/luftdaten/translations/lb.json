@@ -3,9 +3,7 @@
         "error": {
             "already_configured": "Service ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
-            "communication_error": "Kann net mat der Luftdaten API kommuniz\u00e9ieren",
-            "invalid_sensor": "Sensor net disponibel oder ong\u00eblteg",
-            "sensor_exists": "Sensor ass scho registr\u00e9iert"
+            "invalid_sensor": "Sensor net disponibel oder ong\u00eblteg"
         },
         "step": {
             "user": {

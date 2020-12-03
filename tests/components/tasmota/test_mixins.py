@@ -23,7 +23,7 @@ async def test_availability_poll_state_once(
     config["swc"][0] = 1
     config["swc"][1] = 1
     poll_payload_relay = ""
-    poll_payload_switch = "8"
+    poll_payload_switch = "10"
     poll_topic_relay = "tasmota_49A3BC/cmnd/STATE"
     poll_topic_switch = "tasmota_49A3BC/cmnd/STATUS"
 

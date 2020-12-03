@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
-            "invalid_credentials": "Credenciales no v\u00e1lidas",
-            "unknown": "Error inesperado",
-            "user_already_configured": "La cuenta ya est\u00e1 configurada"
+            "unknown": "Error inesperado"
         },
         "create_entry": {
             "default": "Para configurar las opciones avanzadas, consulta la [documentaci\u00f3n de Life360]({docs_url})."
@@ -12,11 +10,8 @@
         "error": {
             "already_configured": "La cuenta ya ha sido configurada",
             "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
-            "invalid_credentials": "Credenciales no v\u00e1lidas",
             "invalid_username": "Nombre de usuario no v\u00e1lido",
-            "unexpected": "Error inesperado al comunicarse con el servidor Life360",
-            "unknown": "Error inesperado",
-            "user_already_configured": "La cuenta ya ha sido configurada"
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

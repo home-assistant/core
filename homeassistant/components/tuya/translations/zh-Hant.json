@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "conn_error": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {
-            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "flow_title": "Tuya \u8a2d\u5b9a",
@@ -36,7 +33,6 @@
                 "data": {
                     "brightness_range_mode": "\u8a2d\u5099\u6240\u4f7f\u7528\u4e4b\u4eae\u5ea6\u7bc4\u570d",
                     "curr_temp_divider": "\u76ee\u524d\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
-                    "ext_temp_sensor": "\u611f\u6e2c\u5668\u76ee\u524d\u8272\u6eab",
                     "max_kelvin": "Kelvin \u652f\u63f4\u6700\u9ad8\u8272\u6eab",
                     "max_temp": "\u6700\u9ad8\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
                     "min_kelvin": "Kelvin \u652f\u63f4\u6700\u4f4e\u8272\u6eab",

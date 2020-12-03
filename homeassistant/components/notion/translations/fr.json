@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Authentification invalide",
-            "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide",
             "no_devices": "Aucun appareil trouv\u00e9 sur le compte"
         },
         "step": {

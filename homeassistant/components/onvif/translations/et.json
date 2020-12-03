@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "no_h264": "H264 vooge pole saadaval. Kontrollie oma seadme profiili seadeid.",
+            "no_mac": "ONVIF-seadme unikaalset ID-d ei \u00f5nnestunud konfigureerida.",
+            "onvif_error": "T\u00f5rge ONVIF-seadme seadistamisel.  Lisateabe saamiseks kontrolli logisid."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
@@ -12,7 +15,8 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": "Autentimise seadistamine"
             },
             "configure_profile": {
                 "data": {

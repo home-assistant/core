@@ -5,7 +5,6 @@
             "already_in_progress": "Konfigurationsflow for bro er allerede i gang.",
             "no_bridges": "Ingen deConz-bridge fundet",
             "not_deconz_bridge": "Ikke en deCONZ-bro",
-            "one_instance_only": "Komponenten underst\u00f8tter kun \u00e9n deCONZ-instans",
             "updated_instance": "Opdaterede deCONZ-instans med ny v\u00e6rtadresse"
         },
         "error": {

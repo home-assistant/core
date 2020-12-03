@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "one_instance_only": "\u7d44\u4ef6\u50c5\u652f\u63f4\u4e00\u7d44 Z-Wave \u7269\u4ef6",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {

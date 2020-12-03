@@ -79,6 +79,7 @@ MOCK_DEVICE_SENSORS = {
             },
         ],
     },
+    "29-111111111111": {"sensors": []},
     "3B-111111111111": {
         "device_info": {
             "identifiers": {(DOMAIN, "3B-111111111111")},

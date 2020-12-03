@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
+                    "dpi_restrictions": "Autoriser le contr\u00f4le des groupes de restrictions DPI",
                     "poe_clients": "Autoriser le contr\u00f4le POE des clients"
                 },
                 "description": "Configurer les contr\u00f4les client \n\n Cr\u00e9ez des interrupteurs pour les num\u00e9ros de s\u00e9rie pour lesquels vous souhaitez contr\u00f4ler l'acc\u00e8s au r\u00e9seau.",

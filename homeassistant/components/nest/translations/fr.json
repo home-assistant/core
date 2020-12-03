@@ -1,11 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Nest.",
             "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
             "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
-            "no_flows": "Vous devez configurer Nest avant de pouvoir vous authentifier avec celui-ci. [Veuillez lire les instructions] (https://www.home-assistant.io/components/nest/).",
             "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
@@ -14,7 +12,6 @@
         },
         "error": {
             "internal_error": "Erreur interne lors de la validation du code",
-            "invalid_code": "Code invalide",
             "invalid_pin": "Code PIN invalide",
             "timeout": "D\u00e9lai de la validation du code expir\u00e9",
             "unknown": "Erreur inconnue lors de la validation du code"

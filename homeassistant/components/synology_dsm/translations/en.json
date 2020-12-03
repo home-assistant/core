@@ -5,9 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "connection": "Connection error: please check your host, port & ssl",
             "invalid_auth": "Invalid authentication",
-            "login": "Login error: please check your username & password",
             "missing_data": "Missing data: please retry later or an other configuration",
             "otp_failed": "Two-step authentication failed, retry with a new pass code",
             "unknown": "Unexpected error"

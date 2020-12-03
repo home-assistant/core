@@ -7,7 +7,6 @@
         "error": {
             "connection_error": "Kan ikke koble til ESP. Kontroller at YAML filen din inneholder en \"api:\" linje.",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_password": "Ugyldig passord!",
             "resolve_error": "Kan ikke l\u00f8se adressen til ESP. Hvis denne feilen vedvarer, vennligst [sett en statisk IP-adresse](https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips)"
         },
         "flow_title": "",

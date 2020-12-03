@@ -26,11 +26,14 @@ def get_update_manager(device):
 
     update_managers = {
         "A1": BroadlinkA1UpdateManager,
+        "BG1": BroadlinkBG1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
         "RM2": BroadlinkRMUpdateManager,
         "RM4": BroadlinkRMUpdateManager,
         "SP1": BroadlinkSP1UpdateManager,
         "SP2": BroadlinkSP2UpdateManager,
+        "SP4": BroadlinkSP4UpdateManager,
+        "SP4B": BroadlinkSP4UpdateManager,
     }
     return update_managers[device.api.type](device)
 
@@ -42,6 +45,8 @@ class BroadlinkUpdateManager(ABC):
     monitor device availability.
     """
 
+    SCAN_INTERVAL = timedelta(minutes=1)
+
     def __init__(self, device):
         """Initialize the update manager."""
         self.device = device
@@ -50,7 +55,7 @@ class BroadlinkUpdateManager(ABC):
             _LOGGER,
             name=f"{device.name} ({device.api.model} at {device.api.host[0]})",
             update_method=self.async_update,
-            update_interval=timedelta(minutes=1),
+            update_interval=self.SCAN_INTERVAL,
         )
         self.available = None
         self.last_update = None
@@ -62,7 +67,7 @@ class BroadlinkUpdateManager(ABC):
 
         except (BroadlinkException, OSError) as err:
             if self.available and (
-                dt.utcnow() - self.last_update > timedelta(minutes=3)
+                dt.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
                 or isinstance(err, (AuthorizationError, OSError))
             ):
                 self.available = False
@@ -93,6 +98,8 @@ class BroadlinkUpdateManager(ABC):
 
 class BroadlinkA1UpdateManager(BroadlinkUpdateManager):
     """Manages updates for Broadlink A1 devices."""
+
+    SCAN_INTERVAL = timedelta(seconds=10)
 
     async def async_fetch_data(self):
         """Fetch data from the device."""
@@ -153,3 +160,19 @@ class BroadlinkSP2UpdateManager(BroadlinkUpdateManager):
         except (CommandNotSupportedError, StorageError):
             data["load_power"] = None
         return data
+
+
+class BroadlinkBG1UpdateManager(BroadlinkUpdateManager):
+    """Manages updates for Broadlink BG1 devices."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.get_state)
+
+
+class BroadlinkSP4UpdateManager(BroadlinkUpdateManager):
+    """Manages updates for Broadlink SP4 devices."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.get_state)

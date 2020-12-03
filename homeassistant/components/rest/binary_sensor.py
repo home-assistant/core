@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
@@ -45,6 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+        vol.Optional(CONF_PARAMS): {cv.string: cv.string},
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(["POST", "GET"]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -78,6 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     force_update = config.get(CONF_FORCE_UPDATE)
@@ -97,7 +100,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         auth = None
 
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(
+        method, resource, auth, headers, params, payload, verify_ssl, timeout
+    )
     await rest.async_update()
     if rest.data is None:
         raise PlatformNotReady

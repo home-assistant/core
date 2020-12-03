@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Cet appareil Elgato Key Light est d\u00e9j\u00e0 configur\u00e9.",
-            "cannot_connect": "\u00c9chec de connexion",
-            "connection_error": "Impossible de se connecter au p\u00e9riph\u00e9rique Elgato Key Light."
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "error": {
-            "cannot_connect": "\u00c9chec de connexion",
-            "connection_error": "Impossible de se connecter au p\u00e9riph\u00e9rique Elgato Key Light."
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {

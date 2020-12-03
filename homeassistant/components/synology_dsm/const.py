@@ -25,6 +25,7 @@ SYNO_API = "syno_api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
+CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 
 DEFAULT_USE_SSL = True
@@ -41,6 +42,14 @@ ENTITY_UNIT = "unit"
 ENTITY_ICON = "icon"
 ENTITY_CLASS = "device_class"
 ENTITY_ENABLE = "enable"
+
+# Services
+SERVICE_REBOOT = "reboot"
+SERVICE_SHUTDOWN = "shutdown"
+SERVICES = [
+    SERVICE_REBOOT,
+    SERVICE_SHUTDOWN,
+]
 
 # Entity keys should start with the API_KEY to fetch
 

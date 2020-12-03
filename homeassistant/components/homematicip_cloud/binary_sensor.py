@@ -146,7 +146,15 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
-        super().__init__(hap, hap.home, "Cloud Connection")
+        super().__init__(hap, hap.home)
+
+    @property
+    def name(self) -> str:
+        """Return the name cloud connection entity."""
+
+        name = "Cloud Connection"
+        # Add a prefix to the name if the homematic ip home has a name.
+        return name if not self._home.name else f"{self._home.name} {name}"
 
     @property
     def device_info(self) -> Dict[str, Any]:

@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert.",
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen",
             "connection_upgrade": "Feeler beim verbannen mam Printer well eng Aktualis\u00e9ierung vun der Verbindung erfuerderlech ass.",
             "ipp_error": "IPP Feeler opgetrueden.",
             "ipp_version_error": "IPP Versioun net vum Printer \u00ebnnerst\u00ebtzt.",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen",
             "connection_upgrade": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol mat aktiv\u00e9ierter SSL/TLS Optioun."
         },
         "flow_title": "Printer: {name}",

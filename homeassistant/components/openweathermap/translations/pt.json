@@ -1,9 +1,5 @@
 {
     "config": {
-        "error": {
-            "auth": "A chave da API n\u00e3o est\u00e1 correta.",
-            "connection": "N\u00e3o \u00e9 poss\u00edvel conectar \u00e0 API OWM"
-        },
         "step": {
             "user": {
                 "data": {

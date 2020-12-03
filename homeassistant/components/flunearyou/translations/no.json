@@ -4,7 +4,6 @@
             "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "general_error": "Det oppstod en ukjent feil.",
             "unknown": "Uventet feil"
         },
         "step": {

@@ -4,15 +4,16 @@
             "already_configured": "Teenus on juba seadistatud",
             "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
             "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp.",
-            "unknown": "Tundmatu viga"
+            "unknown": "Tundmatu viga",
+            "unknown_authorize_url_generation": "Tundmatu viga tuvastamise URL-i loomisel."
         },
         "error": {
-            "auth_error": "Autentimisviga, proovi uuesti",
             "invalid_auth": "Tuvastamise viga"
         },
         "step": {
             "auth": {
-                "description": "TelldusLive'i konto linkimiseks toimi j\u00e4rgmiselt:\n 1. Kl\u00f5psa allolevat linki\n 2. Logi sisse Telldus Live'i\n 3. Autendi {app_name} ** {app_name} ** (kl\u00f5psa ** Jah **).\n 4. Tule siia tagasi ja kl\u00f5psa ** ESITA **.\n\n [Link TelldusLive account] ( {auth_url} )"
+                "description": "TelldusLive'i konto linkimiseks toimi j\u00e4rgmiselt:\n 1. Kl\u00f5psa allolevat linki\n 2. Logi sisse Telldus Live'i\n 3. Autendi {app_name} ** {app_name} ** (kl\u00f5psa ** Jah **).\n 4. Tule siia tagasi ja kl\u00f5psa ** ESITA **.\n\n [Link TelldusLive account] ( {auth_url} )",
+                "title": "Autendi TelldusLive'i kaudu"
             },
             "user": {
                 "data": {

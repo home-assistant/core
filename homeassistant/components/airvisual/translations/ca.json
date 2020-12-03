@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "general_error": "Error inesperat",
-            "invalid_api_key": "Clau API inv\u00e0lida",
-            "unable_to_connect": "No s'ha pogut connectar a la unitat Node/Pro."
+            "invalid_api_key": "Clau API inv\u00e0lida"
         },
         "step": {
             "geography": {

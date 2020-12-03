@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "P\u0159ipojen\u00ed modemu Insteon je ji\u017e nastaveno",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
@@ -10,22 +9,6 @@
             "select_single": "Vyberte jednu mo\u017enost."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "IP adresa rozbo\u010dova\u010de"
-                },
-                "description": "Nastavte Insteon Hub verze 1 (p\u0159ed rokem 2014).",
-                "title": "Insteon Hub verze 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "IP adresa rozbo\u010dova\u010de",
-                    "password": "Heslo",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                },
-                "description": "Nastavte Insteon Hub verze 2.",
-                "title": "Insteon Hub verze 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "IP adresa",
@@ -44,18 +27,11 @@
                 "description": "Nastavte Insteon Hub verze 2.",
                 "title": "Insteon Hub verze 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub verze 1 (p\u0159ed rokem 2014)",
-                    "hubv2": "Hub verze 2"
-                },
-                "description": "Vyberte typ modemu Insteon.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "Cesta k USB za\u0159\u00edzen\u00ed"
-                }
+                },
+                "description": "Nastavte modem Insteon PowerLink (PLM)."
             },
             "user": {
                 "data": {
@@ -67,10 +43,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "P\u0159ipojen\u00ed modemu Insteon je ji\u017e nastaveno",
-            "cannot_connect": "Nelze se p\u0159ipojit k modemu Insteon"
-        },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "input_error": "Neplatn\u00e9 polo\u017eky, zkontrolujte pros\u00edm sv\u00e9 hodnoty.",
@@ -86,7 +58,10 @@
             },
             "add_x10": {
                 "data": {
-                    "platform": "Platforma"
+                    "housecode": "K\u00f3d domu (a-p)",
+                    "platform": "Platforma",
+                    "steps": "Kroky stm\u00edva\u010de (pouze pro sv\u011btla, v\u00fdchoz\u00ed 22)",
+                    "unitcode": "K\u00f3d jednotky (1-16)"
                 },
                 "title": "Insteon"
             },
@@ -97,6 +72,7 @@
                     "port": "Port",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
+                "description": "Zm\u011b\u0148te informace o p\u0159ipojen\u00ed rozbo\u010dova\u010de Insteon. Po proveden\u00ed t\u00e9to zm\u011bny mus\u00edte Home Assistant restartovat. T\u00edm se nezm\u011bn\u00ed nastaven\u00ed samotn\u00e9ho rozbo\u010dova\u010de. Chcete-li zm\u011bnit nastaven\u00ed rozbo\u010dova\u010de, pou\u017eijte jeho aplikaci.",
                 "title": "Insteon"
             },
             "init": {
@@ -104,9 +80,13 @@
                     "add_x10": "P\u0159idejte za\u0159\u00edzen\u00ed X10.",
                     "remove_x10": "Odeberte za\u0159\u00edzen\u00ed X10."
                 },
+                "description": "Vyberte mo\u017enost k nastaven\u00ed.",
                 "title": "Insteon"
             },
             "remove_override": {
+                "data": {
+                    "address": "Vyberte adresu za\u0159\u00edzen\u00ed, kter\u00e9 chcete odebrat"
+                },
                 "title": "Insteon"
             },
             "remove_x10": {

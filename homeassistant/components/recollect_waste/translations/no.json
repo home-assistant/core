@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Ugyldig sted eller tjeneste ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Sted ID",
+                    "service_id": "Tjeneste ID"
+                }
+            }
+        }
+    }
+}

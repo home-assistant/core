@@ -28,9 +28,12 @@ async def async_setup_entry(hass, config, async_add_entities):
     """Initialize a Spider thermostat."""
     api = hass.data[DOMAIN][config.entry_id]
 
-    entities = [SpiderThermostat(api, entity) for entity in api.get_thermostats()]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            SpiderThermostat(api, entity)
+            for entity in await hass.async_add_executor_job(api.get_thermostats)
+        ]
+    )
 
 
 class SpiderThermostat(ClimateEntity):
@@ -44,12 +47,9 @@ class SpiderThermostat(ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supports = SUPPORT_TARGET_TEMPERATURE
-
         if self.thermostat.has_fan_mode:
-            supports |= SUPPORT_FAN_MODE
-
-        return supports
+            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def unique_id(self):

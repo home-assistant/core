@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
-            "already_configured_account": "Account is already configured",
             "cannot_connect": "Failed to connect",
             "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"

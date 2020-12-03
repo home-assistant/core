@@ -5,8 +5,7 @@
             "single_instance_allowed": "Une seule configuration d'AdGuard Home est autoris\u00e9e."
         },
         "error": {
-            "cannot_connect": "\u00c9chec de connexion",
-            "connection_error": "\u00c9chec de connexion."
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
             "hassio_confirm": {

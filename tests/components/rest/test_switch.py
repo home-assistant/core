@@ -8,6 +8,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONTENT_TYPE_JSON,
@@ -28,6 +29,7 @@ RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
 HEADERS = {"Content-type": CONTENT_TYPE_JSON}
 AUTH = None
+PARAMS = None
 
 
 async def test_setup_missing_config(hass):
@@ -78,6 +80,25 @@ async def test_setup_minimum(hass, aioclient_mock):
                 }
             },
         )
+    assert aioclient_mock.call_count == 1
+
+
+async def test_setup_query_params(hass, aioclient_mock):
+    """Test setup with query params."""
+    aioclient_mock.get("http://localhost/?search=something", status=HTTP_OK)
+    with assert_setup_component(1, SWITCH_DOMAIN):
+        assert await async_setup_component(
+            hass,
+            SWITCH_DOMAIN,
+            {
+                SWITCH_DOMAIN: {
+                    CONF_PLATFORM: rest.DOMAIN,
+                    CONF_RESOURCE: "http://localhost",
+                    CONF_PARAMS: {"search": "something"},
+                }
+            },
+        )
+    print(aioclient_mock)
     assert aioclient_mock.call_count == 1
 
 
@@ -137,6 +158,7 @@ def _setup_test_switch(hass):
         STATE_RESOURCE,
         METHOD,
         HEADERS,
+        PARAMS,
         AUTH,
         body_on,
         body_off,

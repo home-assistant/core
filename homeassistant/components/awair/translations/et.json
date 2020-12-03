@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Konto on juba seadistatud",
-            "no_devices": "V\u00f5rgust ei leitud seadmeid",
             "no_devices_found": "V\u00f5rgust ei leitud Awair seadmeid",
-            "reauth_successful": "Taasautentimine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "auth": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
             "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
             "unknown": "Tundmatu viga"
         },

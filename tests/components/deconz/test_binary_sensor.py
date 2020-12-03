@@ -40,7 +40,7 @@ SENSORS = {
         "id": "CLIP presence sensor id",
         "name": "CLIP presence sensor",
         "type": "CLIPPresence",
-        "state": {},
+        "state": {"presence": False},
         "config": {},
         "uniqueid": "00:00:00:00:00:00:00:02-00",
     },

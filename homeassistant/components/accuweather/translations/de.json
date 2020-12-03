@@ -4,7 +4,8 @@
             "user": {
                 "data": {
                     "latitude": "Breitengrad",
-                    "longitude": "L\u00e4ngengrad"
+                    "longitude": "L\u00e4ngengrad",
+                    "name": "Name"
                 },
                 "title": "AccuWeather"
             }

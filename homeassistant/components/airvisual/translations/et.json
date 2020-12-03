@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "general_error": "Tundmatu viga",
-            "invalid_api_key": "Vale API v\u00f5ti",
-            "unable_to_connect": "Node / Pro-seadmega ei saa \u00fchendust luua."
+            "invalid_api_key": "Vale API v\u00f5ti"
         },
         "step": {
             "geography": {

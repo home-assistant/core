@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Aquest compte ja est\u00e0 registrat",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_credentials": "Credencials inv\u00e0lides",
             "still_awaiting_mfa": "Esperant clic de l'enlla\u00e7 del correu MFA",
             "unknown": "Error inesperat"
         },

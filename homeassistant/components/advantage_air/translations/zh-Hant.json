@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "Advantage Air \u8a2d\u5b9a",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "\u9023\u63a5"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

@@ -13,7 +13,11 @@ from itertools import chain, repeat
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import DEFAULT, MagicMock
@@ -77,6 +81,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
@@ -92,7 +99,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -207,7 +214,7 @@ async def test_derivative():
         abs(entity.state - 0.033) < 0.00001
     ), "state should be hourly usage calculated from first and second update"
 
-    assert entity.unit_of_measurement == f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}"
+    assert entity.unit_of_measurement == VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR
 
 
 async def test_v4_meter(hass, dsmr_connection_fixture):
@@ -228,6 +235,9 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
@@ -240,7 +250,7 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -285,6 +295,9 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
@@ -297,7 +310,7 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -342,6 +355,9 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         BELGIUM_HOURLY_GAS_METER_READING: MBusObject(
@@ -354,7 +370,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -396,11 +412,14 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)

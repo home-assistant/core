@@ -6,8 +6,10 @@
         "step": {
             "user": {
                 "data": {
-                    "mmi": ""
-                }
+                    "mmi": "",
+                    "radius": "Raadius"
+                },
+                "title": "Sisesta oma filtri \u00fcksikasjad."
             }
         }
     }

@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "Advantage Air Setup",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
@@ -17,6 +16,5 @@
         "title": "Connect"
       }
     }
-  },
-  "title": "Advantage Air"
+  }
 }

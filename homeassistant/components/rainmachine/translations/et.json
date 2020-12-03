@@ -4,9 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "identifier_exists": "Konto on juba seadistatud",
-            "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat"
+            "invalid_auth": "Tuvastamise viga"
         },
         "step": {
             "user": {

@@ -64,6 +64,8 @@ async def setup_base_test(
 
     entity_id = f"{entity_domain}.{sensor_name}"
     device = hass.states.get(entity_id)
+    if device is None:
+        pytest.fail("CONFIG failed, see output")
     return entity_id, now, device
 
 

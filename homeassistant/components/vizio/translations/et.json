@@ -2,19 +2,20 @@
     "config": {
         "abort": {
             "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
             "updated_entry": "See kirje on juba seadistatud, kuid konfiguratsioonis m\u00e4\u00e4ratletud nimi, rakendused ja / v\u00f5i suvandid ei \u00fchti varem imporditud konfiguratsiooniga, seega on konfiguratsioonikirjet vastavalt v\u00e4rskendatud."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "existing_config_entry_found": "Olemasolev sama seerianumbriga konfiguratsioonikirje [VOID] on juba seadistatud. Selle seadistamiseks pead olemasoleva kirje kustutama.",
-            "host_exists": "Selle hostiga [VOID] seade on juba h\u00e4\u00e4lestatud.",
-            "name_exists": "Selle nimega [VOID] seade on juba h\u00e4\u00e4lestatud."
+            "complete_pairing_failed": "Sidumist ei saa l\u00f5pule viia. Veendu, et esitatud PIN-kood on \u00f5ige ning teler on enne uuesti esitamist endiselt v\u00f5rku \u00fchendatud.",
+            "existing_config_entry_found": "Olemasolev sama seerianumbriga konfiguratsioonikirje [VOID] on juba seadistatud. Selle seadistamiseks pead olemasoleva kirje kustutama."
         },
         "step": {
             "pair_tv": {
                 "data": {
                     "pin": "PIN kood"
                 },
+                "description": "Teler peaks kuvama koodi. Sisest see kood vormile ja j\u00e4tka sidumise l\u00f5petamiseks j\u00e4rgmise sammuga.",
                 "title": "Sidumise l\u00f5puleviimine"
             },
             "pairing_complete": {

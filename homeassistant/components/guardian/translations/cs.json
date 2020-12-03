@@ -3,8 +3,7 @@
         "abort": {
             "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed Guardian se nezda\u0159ilo."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "user": {
@@ -18,6 +17,5 @@
                 "description": "Chcete nastavit toto za\u0159\u00edzen\u00ed Guardian?"
             }
         }
-    },
-    "title": "Elexa Guardian"
+    }
 }

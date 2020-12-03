@@ -31,13 +31,6 @@
                 "description": "Zkontrolujte v\u0161echny kamery, kter\u00e9 podporuj\u00ed nativn\u00ed streamy H.264. Pokud kamera nepodporuje stream H.264, syst\u00e9m video p\u0159ek\u00f3duje pro HomeKit na H.264. P\u0159ek\u00f3dov\u00e1n\u00ed vy\u017eaduje v\u00fdkonn\u00fd procesor a je pravd\u011bpodobn\u00e9, \u017ee nebude fungovat na po\u010d\u00edta\u010d\u00edch s jednou z\u00e1kladn\u00ed deskou.",
                 "title": "Vyberte videokodek kamery."
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Entity, kter\u00e9 maj\u00ed b\u00fdt vylou\u010deny"
-                },
-                "description": "Vyberte entity, kter\u00e9 NECHCETE p\u0159emostit.",
-                "title": "Vylou\u010dit entity ve vybran\u00fdch dom\u00e9n\u00e1ch z p\u0159emost\u011bn\u00ed"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Entity",
@@ -58,6 +51,5 @@
                 "title": "Upravte mo\u017enosti HomeKit"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dienst ist bereits konfiguriert"
+        },
         "error": {
             "invalid_zip_code": "Postleitzahl ist ung\u00fcltig"
         },

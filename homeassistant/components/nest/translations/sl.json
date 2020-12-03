@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nastavite lahko samo en ra\u010dun Nest.",
             "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
-            "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
-            "no_flows": "Preden lahko preverite pristnost, morate konfigurirati Nest. [Preberite navodila](https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla."
         },
         "error": {
             "internal_error": "Notranja napaka pri preverjanju kode",
-            "invalid_code": "Neveljavna koda",
             "timeout": "\u010casovna omejitev je potekla pri preverjanju kode",
             "unknown": "Neznana napaka pri preverjanju kode"
         },

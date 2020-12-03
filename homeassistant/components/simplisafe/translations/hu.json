@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van",
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok"
+            "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van"
         },
         "step": {
             "user": {

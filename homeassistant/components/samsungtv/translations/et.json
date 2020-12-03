@@ -5,7 +5,6 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "auth_missing": "Home Assistant-il pole selle Samsungi teleriga \u00fchenduse loomiseks luba. Koduabilise autoriseerimiseks kontrolli oma teleri seadeid.",
             "cannot_connect": "\u00dchendamine nurjus",
-            "not_successful": "Selle Samsung TV seadmega ei saa \u00fchendust luua.",
             "not_supported": "Seda Samsungi tv-seadet praegu ei toetata."
         },
         "flow_title": "Samsungi teler: {model}",

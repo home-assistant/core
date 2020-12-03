@@ -11,13 +11,16 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     PRESET_SLEEP,
 )
 
 DOMAIN = "knx"
 
+CONF_INVERT = "invert"
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
+CONF_RESET_AFTER = "reset_after"
 
 
 class ColorTempModes(Enum):
@@ -41,8 +44,8 @@ class SupportedPlatforms(Enum):
     weather = "weather"
 
 
-# Map KNX operation modes to HA modes. This list might not be complete.
-OPERATION_MODES = {
+# Map KNX controller modes to HA modes. This list might not be complete.
+CONTROLLER_MODES = {
     # Map DPT 20.105 HVAC control modes
     "Auto": HVAC_MODE_AUTO,
     "Heat": HVAC_MODE_HEAT,
@@ -54,6 +57,7 @@ OPERATION_MODES = {
 
 PRESET_MODES = {
     # Map DPT 20.102 HVAC operating modes to HA presets
+    "Auto": PRESET_NONE,
     "Frost Protection": PRESET_ECO,
     "Night": PRESET_SLEEP,
     "Standby": PRESET_AWAY,

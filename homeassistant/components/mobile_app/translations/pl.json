@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
-            "install_app": "Otw\u00f3rz aplikacj\u0119 mobiln\u0105, aby skonfigurowa\u0107 integracj\u0119 z Home Assistant. Zapoznaj si\u0119 z [dokumentacj\u0105]({apps_url}), by zobaczy\u0107 list\u0119 kompatybilnych aplikacji."
+            "install_app": "Otw\u00f3rz aplikacj\u0119 mobiln\u0105, aby skonfigurowa\u0107 integracj\u0119 z Home Assistantem. Zapoznaj si\u0119 z [dokumentacj\u0105]({apps_url}), by zobaczy\u0107 list\u0119 kompatybilnych aplikacji."
         },
         "step": {
             "confirm": {
                 "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "wy\u015blij powiadomienie"
         }
     }
 }

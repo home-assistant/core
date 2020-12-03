@@ -1,8 +1,8 @@
 """The tests for NEW_NAME device actions."""
 import pytest
 
+from homeassistant.components import automation
 from homeassistant.components.NEW_DOMAIN import DOMAIN
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 

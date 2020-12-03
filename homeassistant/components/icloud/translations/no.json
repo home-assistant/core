@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
-            "login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt",
             "send_verification_code": "Kunne ikke sende bekreftelseskode",
             "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden din, velg en tillitsenhet og start bekreftelsen p\u00e5 nytt"
         },

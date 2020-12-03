@@ -4,7 +4,6 @@
             "already_configured": "Service is al geconfigureerd"
         },
         "error": {
-            "connection_error": "Kon niet verbinden",
             "invalid_access_token": "Ongeldig toegangstoken",
             "timeout": "Time-out om verbinding te maken met Tibber"
         },
@@ -17,6 +16,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }
