@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "board": "Board",
             "disk_total": "Disk Toal",
             "disk_used": "Disk benotzt",
             "docker_version": "Docker Versioun",

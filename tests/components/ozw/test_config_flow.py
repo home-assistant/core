@@ -9,6 +9,14 @@ from homeassistant.components.ozw.const import DOMAIN
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
+ADDON_DISCOVERY_INFO = {
+    "addon": "OpenZWave",
+    "host": "host1",
+    "port": 1234,
+    "username": "name1",
+    "password": "pass1",
+}
+
 
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture():
@@ -44,7 +52,7 @@ def mock_addon_installed(addon_info):
 def mock_addon_options(addon_info):
     """Mock add-on options."""
     addon_info.return_value["options"] = {}
-    return addon_info
+    return addon_info.return_value["options"]
 
 
 @pytest.fixture(name="set_addon_options")
@@ -361,3 +369,122 @@ async def test_install_addon_failure(hass, supervisor, addon_installed, install_
 
     assert result["type"] == "abort"
     assert result["reason"] == "addon_install_failed"
+
+
+async def test_supervisor_discovery(hass, supervisor, addon_running, addon_options):
+    """Test flow started from Supervisor discovery."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    addon_options["device"] = "/test"
+    addon_options["network_key"] = "abc123"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": "/test",
+        "network_key": "abc123",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_clean_discovery_on_user_create(
+    hass, supervisor, addon_running, addon_options
+):
+    """Test discovery flow is cleaned up when a user flow is finished."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    addon_options["device"] = "/test"
+    addon_options["network_key"] = "abc123"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"use_addon": False}
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": None,
+        "network_key": None,
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_abort_discovery_with_user_flow(
+    hass, supervisor, addon_running, addon_options
+):
+    """Test discovery flow is aborted if a user flow is in progress."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_in_progress"
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_abort_discovery_with_existing_entry(
+    hass, supervisor, addon_running, addon_options
+):
+    """Test discovery flow is aborted if an entry already exists."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"

@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_INTEGRATION_CREATED_ADDON
+from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,6 @@ CONF_ADDON_DEVICE = "device"
 CONF_ADDON_NETWORK_KEY = "network_key"
 CONF_NETWORK_KEY = "network_key"
 CONF_USB_PATH = "usb_path"
-CONF_USE_ADDON = "use_addon"
 TITLE = "OpenZWave"
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=False): bool})
@@ -43,16 +42,35 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        # Currently all flow results need the MQTT integration.
-        # This will change when we have the direct MQTT client connection.
-        # When that is implemented, move this check to _async_use_mqtt_integration.
-        if "mqtt" not in self.hass.config.components:
-            return self.async_abort(reason="mqtt_required")
+        # Set a unique_id to make sure discovery flow is aborted on progress.
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
 
         if not self.hass.components.hassio.is_hassio():
             return self._async_use_mqtt_integration()
 
         return await self.async_step_on_supervisor()
+
+    async def async_step_hassio(self, discovery_info):
+        """Receive configuration from add-on discovery info.
+
+        This flow is triggered by the OpenZWave add-on.
+        """
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        addon_config = await self._async_get_addon_config()
+        self.usb_path = addon_config[CONF_ADDON_DEVICE]
+        self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(self, user_input=None):
+        """Confirm the add-on discovery."""
+        if user_input is not None:
+            self.use_addon = True
+            return self._async_create_entry_from_vars()
+
+        return self.async_show_form(step_id="hassio_confirm")
 
     def _async_create_entry_from_vars(self):
         """Return a config entry for the flow."""
@@ -73,6 +91,8 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This is the entry point for the logic that is needed
         when this integration will depend on the MQTT integration.
         """
+        if "mqtt" not in self.hass.config.components:
+            return self.async_abort(reason="mqtt_required")
         return self._async_create_entry_from_vars()
 
     async def async_step_on_supervisor(self, user_input=None):
