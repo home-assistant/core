@@ -1100,9 +1100,6 @@ pywemo==0.6.5
 # homeassistant.components.wilight
 pywilight==0.0.70
 
-# homeassistant.components.renault
-pyze==0.6.0
-
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
 
@@ -1111,6 +1108,9 @@ rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
 regenmaschine==3.1.5
+
+# homeassistant.components.renault
+renault-api==0.0.1
 
 # homeassistant.components.python_script
 restrictedpython==5.1

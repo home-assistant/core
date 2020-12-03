@@ -1,25 +1,38 @@
 """Support for Renault devices."""
-from .const import DOMAIN, SUPPORTED_PLATFORMS
-from .pyze_proxy import PyZEProxy
+import aiohttp
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN, SUPPORTED_PLATFORMS
+from .renault_hub import RenaultHub
 
 
 async def async_setup(hass, config):
     """Set up renault integrations."""
-    hass.data.setdefault(DOMAIN, {})
-
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     """Load a config entry."""
-    pyzeproxy = PyZEProxy(hass)
-    pyzeproxy.set_api_keys(config_entry.data)
-    if not await pyzeproxy.attempt_login(config_entry.data):
+    hass.data.setdefault(DOMAIN, {})
+
+    renault_hub = RenaultHub(hass, config_entry.data[CONF_LOCALE])
+    try:
+        login_success = await renault_hub.attempt_login(
+            config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
+        )
+    except aiohttp.ClientConnectionError as exc:
+        raise ConfigEntryNotReady() from exc
+
+    if not login_success:
         return False
 
-    await pyzeproxy.initialise(config_entry.data)
+    await renault_hub.set_account_id(config_entry.data[CONF_KAMEREON_ACCOUNT_ID])
 
-    hass.data[DOMAIN][config_entry.unique_id] = pyzeproxy
+    hass.data[DOMAIN][config_entry.unique_id] = renault_hub
 
     for component in SUPPORTED_PLATFORMS:
         hass.async_create_task(
