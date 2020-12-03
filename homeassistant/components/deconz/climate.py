@@ -32,23 +32,23 @@ from .gateway import get_gateway_from_config_entry
 
 DECONZ_FAN_SMART = "smart"
 
-DECONZ_TO_FAN_MODE = {
-    "smart": DECONZ_FAN_SMART,
-    "auto": FAN_AUTO,
-    "high": FAN_HIGH,
-    "medium": FAN_MEDIUM,
-    "low": FAN_LOW,
-    "on": FAN_ON,
-    "off": FAN_OFF,
+FAN_MODE_TO_DECONZ = {
+    DECONZ_FAN_SMART: "smart",
+    FAN_AUTO: "auto",
+    FAN_HIGH: "high",
+    FAN_MEDIUM: "medium",
+    FAN_LOW: "low",
+    FAN_ON: "on",
+    FAN_OFF: "off",
 }
 
-FAN_MODE_TO_DECONZ = {value: key for key, value in DECONZ_TO_FAN_MODE.items()}
+DECONZ_TO_FAN_MODE = {value: key for key, value in FAN_MODE_TO_DECONZ.items()}
 
-DECONZ_TO_HVAC_MODE = {
-    "auto": HVAC_MODE_AUTO,
-    "cool": HVAC_MODE_COOL,
-    "heat": HVAC_MODE_HEAT,
-    "off": HVAC_MODE_OFF,
+HVAC_MODE_TO_DECONZ = {
+    HVAC_MODE_AUTO: "auto",
+    HVAC_MODE_COOL: "cool",
+    HVAC_MODE_HEAT: "heat",
+    HVAC_MODE_OFF: "off",
 }
 
 DECONZ_PRESET_AUTO = "auto"
@@ -56,24 +56,17 @@ DECONZ_PRESET_COMPLEX = "complex"
 DECONZ_PRESET_HOLIDAY = "holiday"
 DECONZ_PRESET_MANUAL = "manual"
 
-DECONZ_TO_PRESET_MODE = {
-    "auto": DECONZ_PRESET_AUTO,
-    "boost": PRESET_BOOST,
-    "comfort": PRESET_COMFORT,
-    "complex": DECONZ_PRESET_COMPLEX,
-    "eco": PRESET_ECO,
-    "holiday": DECONZ_PRESET_HOLIDAY,
-    "manual": DECONZ_PRESET_MANUAL,
+PRESET_MODE_TO_DECONZ = {
+    DECONZ_PRESET_AUTO: "auto",
+    PRESET_BOOST: "boost",
+    PRESET_COMFORT: "comfort",
+    DECONZ_PRESET_COMPLEX: "complex",
+    PRESET_ECO: "eco",
+    DECONZ_PRESET_HOLIDAY: "holiday",
+    DECONZ_PRESET_MANUAL: "manual",
 }
 
-PRESET_MODE_TO_DECONZ = {value: key for key, value in DECONZ_TO_PRESET_MODE.items()}
-
-
-def get_key_from_value(dictionary: dict, input_value: str) -> Optional[str]:
-    """Get key based on input value."""
-    for key, value in dictionary.items():
-        if input_value == value:
-            return key
+DECONZ_TO_PRESET_MODE = {value: key for key, value in PRESET_MODE_TO_DECONZ.items()}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -122,16 +115,16 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        self._deconz_to_hvac_mode = dict(DECONZ_TO_HVAC_MODE)
+        self._hvac_mode_to_deconz = dict(HVAC_MODE_TO_DECONZ)
         if "mode" not in device.raw["config"]:
-            self._deconz_to_hvac_mode = {
-                True: HVAC_MODE_HEAT,
-                False: HVAC_MODE_OFF,
+            self._hvac_mode_to_deconz = {
+                HVAC_MODE_HEAT: True,
+                HVAC_MODE_OFF: False,
             }
         elif "coolsetpoint" not in device.raw["config"]:
-            self._deconz_to_hvac_mode.pop("cool")
-        self._hvac_mode_to_deconz = {
-            value: key for key, value in self._deconz_to_hvac_mode.items()
+            self._hvac_mode_to_deconz.pop(HVAC_MODE_COOL)
+        self._deconz_to_hvac_mode = {
+            value: key for key, value in self._hvac_mode_to_deconz.items()
         }
 
         self._features = SUPPORT_TARGET_TEMPERATURE
