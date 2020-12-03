@@ -5,6 +5,8 @@ from homeassistant.components.qbittorrent.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
+from . import _create_mocked_client
+
 from tests.async_mock import patch
 
 
@@ -20,9 +22,10 @@ async def test_show_form(hass):
 
 async def test_invalid_credentials(hass):
     """Test handle invalid credentials."""
+    mocked_client = _create_mocked_client(True)
     with patch(
         "homeassistant.components.qbittorrent.client.Client.login",
-        return_value=False,
+        return_value=mocked_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
