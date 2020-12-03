@@ -1,6 +1,6 @@
 """The ping component."""
 
-from functools import cache
+from functools import lru_cache
 
 from icmplib import SocketPermissionError, ping as icmp_ping
 
@@ -32,7 +32,8 @@ def async_get_next_ping_id(hass):
     return next_id
 
 
-@cache
+# In python 3.9 and later, this can be converted to just be `cache`
+@lru_cache(maxsize=None)
 def can_create_raw_socket():
     """Verify we can create a raw socket."""
     try:
