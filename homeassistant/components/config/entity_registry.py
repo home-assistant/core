@@ -107,6 +107,19 @@ async def websocket_update_entity(hass, connection, msg):
             )
             return
 
+    if "disabled_by" in msg and msg["disabled_by"] is None:
+        entity = registry.entities[msg["entity_id"]]
+        if entity.device_id:
+            device_registry = await hass.helpers.device_registry.async_get_registry()
+            device = device_registry.async_get(entity.device_id)
+            if device.disabled:
+                connection.send_message(
+                    websocket_api.error_message(
+                        msg["id"], "invalid_info", "Device is disabled"
+                    )
+                )
+                return
+
     try:
         if changes:
             entry = registry.async_update_entity(msg["entity_id"], **changes)

@@ -1,4 +1,5 @@
 """Component to allow numeric input for platforms."""
+from abc import abstractmethod
 from datetime import timedelta
 import logging
 from typing import Any, Dict
@@ -100,6 +101,16 @@ class NumberEntity(Entity):
     def mode(self) -> str:
         """Return the appearance mode of the Number entity."""
         return MODE_SLIDER
+
+    @property
+    def state(self) -> float:
+        """Return the entity state."""
+        return self.value
+
+    @property
+    @abstractmethod
+    def value(self) -> float:
+        """Return the entity value to represent the entity state."""
 
     def set_value(self, value: float) -> None:
         """Set new value."""
