@@ -170,11 +170,15 @@ async def async_setup_entry(
 
     updateTimer = Timer(30, timerCallback, loop=hass.loop)
 
-    @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram):
+    def tcp_dsmr_reader_cb(telegram)
         nonlocal updateTimer
         nonlocal updateCount
         updateTimer.reset()
+        update_entities_telegram(telegram)
+    
+
+    @Throttle(min_time_between_updates)
+    def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
         for device in devices:
@@ -188,7 +192,7 @@ async def async_setup_entry(
             config[CONF_HOST],
             config[CONF_PORT],
             config[CONF_DSMR_VERSION],
-            update_entities_telegram,
+            tcp_dsmr_reader_cb,
             loop=hass.loop,
         )
     else:
