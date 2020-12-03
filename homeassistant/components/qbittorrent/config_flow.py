@@ -1,14 +1,15 @@
 """Config flow for qBittorrent integration."""
 import logging
 
-from qbittorrent.client import Client
+from qbittorrent.client import LoginRequired
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
+from .client import create_client
 from .const import DOMAIN  # pylint:disable=unused-import
-from .wrapper_functions import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,14 +35,19 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Configuring user: %s - Password hidden", user_input[CONF_USERNAME]
             )
 
-            configtest = await self.hass.async_add_executor_job(
-                create_client,
-                user_input[CONF_URL],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
-            if not isinstance(configtest, Client):
-                errors = configtest
+            try:
+                await self.hass.async_add_executor_job(
+                    create_client,
+                    user_input[CONF_URL],
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+            except LoginRequired:
+                errors["base"] = "invalid_auth"
+                return
+            except RequestException as err:
+                errors["base"] = "cannot_connect"
+                _LOGGER.error("Connection failed - %s", err)
 
             if not errors:
                 return self.async_create_entry(

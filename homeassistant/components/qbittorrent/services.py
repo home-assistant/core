@@ -70,11 +70,9 @@ def get_qbitclient(hass, server_url=None):
     qbittdata = hass.data[DOMAIN].values()
 
     if server_url:
-        plex_server = next(
-            (x for x in qbittdata if x.friendly_name == server_url), None
-        )
-        if plex_server is not None:
-            return plex_server
+        qbitclient = next((x for x in qbittdata if x.friendly_name == server_url), None)
+        if qbitclient is not None:
+            return qbitclient
         _LOGGER.error(
             "Requested Qbitclient '%s' not found in %s",
             server_url,

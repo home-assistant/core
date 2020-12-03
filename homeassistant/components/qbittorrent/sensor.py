@@ -1,4 +1,5 @@
 """Support for monitoring the qBittorrent API."""
+from datetime import timedelta
 import logging
 
 from qbittorrent.client import LoginRequired
@@ -7,6 +8,7 @@ from requests.exceptions import RequestException
 from homeassistant.const import CONF_URL, DATA_RATE_KILOBYTES_PER_SECOND, STATE_IDLE
 from homeassistant.helpers.entity import Entity
 
+from .client import get_main_data_client, retrieve_torrentdata
 from .const import (
     DATA_KEY_CLIENT,
     DATA_KEY_NAME,
@@ -24,9 +26,9 @@ from .const import (
     SENSOR_TYPE_UPLOAD_SPEED,
     TRIM_SIZE,
 )
-from .wrapper_functions import get_main_data_client, retrieve_torrentdata
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],

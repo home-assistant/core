@@ -1,7 +1,5 @@
 """Added constants for the qbittorrent component."""
 
-from datetime import timedelta
-
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
@@ -18,11 +16,9 @@ DEFAULT_NAME = "qbittorrent"
 TRIM_SIZE = 35
 CONF_CATEGORIES = "categories"
 
-SCAN_INTERVAL = timedelta(minutes=1)
 DOMAIN = DEFAULT_NAME
 
 DATA_KEY_CLIENT = "client"
-DATA_KEY_COORDINATOR = "coordinator"
 DATA_KEY_NAME = "name"
 
 SERVICE_ADD_DOWNLOAD = "add_download"

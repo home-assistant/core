@@ -21,7 +21,7 @@ async def test_show_form(hass):
 async def test_invalid_credentials(hass):
     """Test handle invalid credentials."""
     with patch(
-        "qbittorrent.client.Client.login",
+        "homeassistant.components.qbittorrent.client.Client.login",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
