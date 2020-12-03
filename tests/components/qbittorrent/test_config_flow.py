@@ -24,7 +24,7 @@ async def test_invalid_credentials(hass):
     """Test handle invalid credentials."""
     mocked_client = _create_mocked_client(True)
     with patch(
-        "homeassistant.components.qbittorrent.client.Client.login",
+        "homeassistant.components.qbittorrent.client.create_client",
         return_value=mocked_client,
     ):
         result = await hass.config_entries.flow.async_init(
