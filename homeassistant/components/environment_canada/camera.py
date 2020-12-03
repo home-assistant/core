@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada camera."""
 
     if config.get(CONF_STATION):
@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
             coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
         )
 
-    async_add_devices(
+    async_add_entities(
         [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
     )
 

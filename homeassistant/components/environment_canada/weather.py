@@ -72,7 +72,7 @@ ICON_CONDITION_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada weather."""
     if config.get(CONF_STATION):
         ec_data = ECWeather(station_id=config[CONF_STATION])
@@ -81,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
         ec_data = ECWeather(coordinates=(lat, lon))
 
-    async_add_devices([ECWeatherHA(ec_data, config)], True)
+    async_add_entities([ECWeatherHA(ec_data, config)], True)
 
 
 class ECWeatherHA(WeatherEntity):
