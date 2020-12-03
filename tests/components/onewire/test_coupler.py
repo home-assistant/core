@@ -1,9 +1,8 @@
 """Tests for 1-Wire devices connected on OWServer."""
-from homeassistant.components.onewire.const import DOMAIN
-
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
+from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.setup import async_setup_component
 
