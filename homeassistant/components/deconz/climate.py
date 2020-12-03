@@ -204,7 +204,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def preset_modes(self) -> list:
         """Return the list of available preset modes."""
-        return list(PRESET_MODES)
+        return list(PRESET_MODES.values())
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
