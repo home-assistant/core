@@ -294,6 +294,6 @@ async def test_async_reset(hass, crd):
     await crd.async_refresh()
 
     # Ensuring refreshing produces a different tracked point in time
-    old_unsub_refresh = crd._unsub_refresh
+    old_refresh = crd._unsub_refresh
     crd.async_reset()
-    assert old_unsub_refresh != crd._unsub_refresh
+    assert crd._unsub_refresh is not old_refresh
