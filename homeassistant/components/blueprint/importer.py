@@ -125,7 +125,7 @@ def _extract_blueprint_from_community_topic(
 
     if blueprint is None:
         raise HomeAssistantError(
-            "No valid blueprint found in the topic. Blueprint Syntax blocks need to be marked as YAML or no syntax."
+            "No valid blueprint found in the topic. Blueprint syntax blocks need to be marked as YAML or no syntax."
         )
 
     return ImportedBlueprint(
