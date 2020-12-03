@@ -11,12 +11,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
+    ATTR_TIME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
 
     if config.get(CONF_STATION):
@@ -81,13 +81,13 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    async_add_devices(
+    async_add_entities(
         ECSensor(coordinator, sensor_type, ec_data.metadata)
-        for sensor_type in coordinator.data.keys()
+        for sensor_type in coordinator.data
     )
 
 
-class ECSensor(CoordinatorEntity, Entity):
+class ECSensor(CoordinatorEntity):
     """Implementation of an Environment Canada sensor."""
 
     def __init__(self, coordinator, sensor_type, metadata):
@@ -113,13 +113,12 @@ class ECSensor(CoordinatorEntity, Entity):
 
         if isinstance(value, list):
             return " | ".join([str(s.get("title")) for s in value])[:255]
-        elif self.sensor_type == "tendency":
+        if self.sensor_type == "tendency":
             return str(value).capitalize()
-        elif value is not None and len(value) > 255:
+        if value is not None and len(value) > 255:
             _LOGGER.info("Value for %s truncated to 255 characters", self.unique_id)
             return value[:255]
-        else:
-            return value
+        return value
 
     @property
     def unit_of_measurement(self):
@@ -128,21 +127,27 @@ class ECSensor(CoordinatorEntity, Entity):
 
         if unit == "C" or self.sensor_type in ["wind_chill", "humidex"]:
             return TEMP_CELSIUS
-        else:
-            return unit
+        return unit
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        timestamp = self.metadata.get("timestamp")
-        if timestamp:
-            updated_utc = datetime.strptime(timestamp, "%Y%m%d%H%M%S").isoformat()
-        else:
-            updated_utc = None
-
-        return {
+        attributes = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_UPDATED: updated_utc,
             ATTR_LOCATION: self.metadata.get("location"),
             ATTR_STATION: self.metadata.get("station"),
         }
+
+        timestamp = self.metadata.get("timestamp")
+        if timestamp:
+            attributes[ATTR_UPDATED] = datetime.strptime(
+                timestamp, "%Y%m%d%H%M%S"
+            ).isoformat()
+        else:
+            attributes[ATTR_UPDATED] = None
+
+        value = self.coordinator.data[self.sensor_type].get("value")
+        if isinstance(value, list):
+            attributes[ATTR_TIME] = " | ".join([str(s.get("date")) for s in value])
+
+        return attributes
