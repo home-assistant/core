@@ -4,13 +4,13 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
   "requirements": [
-    "devolo_plc_api==0.3.0"
+    "devolo-plc-api==0.3.1"
   ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
+  "codeowners": ["@2Fake",
     "@Shutgun"
   ]
 }
