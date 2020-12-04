@@ -195,7 +195,8 @@ class Envoy(CoordinatorEntity):
             _LOGGER.debug("Updating: %s - %s", self._type, value)
 
         elif self._type == "inverters":
-            serial_number = self._name.split(" ")[(len(self._name.split(" ")) - 1)]
+            split_name = self._name.split(" ")
+            serial_number = split_name[(len(split_name) - 1)]
             try:
                 value = self.coordinator.data.get("inverters_production").get(
                     serial_number
