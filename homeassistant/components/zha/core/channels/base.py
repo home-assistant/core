@@ -214,7 +214,7 @@ class ZigbeeChannel(LogMixin):
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:
-            await ch_specific_init()
+            await ch_specific_init(from_cache=from_cache)
 
         self.debug("finished channel configuration")
         self._status = ChannelStatus.INITIALIZED
