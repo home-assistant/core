@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_NEW_DEVICES,
+    CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
@@ -175,7 +176,7 @@ async def test_add_new_binary_sensor_ignored(hass):
     """Test that adding a new binary sensor is not allowed."""
     config_entry = await setup_deconz_integration(
         hass,
-        options={"master": True, CONF_ALLOW_NEW_DEVICES: False},
+        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
     )
     gateway = get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
