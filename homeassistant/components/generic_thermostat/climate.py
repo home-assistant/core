@@ -207,7 +207,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             )
 
         @callback
-        def _async_startup(event):
+        def _async_startup(*_):
             """Init on startup."""
             sensor_state = self.hass.states.get(self.sensor_entity_id)
             if sensor_state and sensor_state.state not in (
@@ -215,8 +215,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 STATE_UNKNOWN,
             ):
                 self._async_update_temp(sensor_state)
+                self.async_write_ha_state()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
+        if self.hass.state == CoreState.running:
+            _async_startup()
+        else:
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
         # Check If we have an old state
         old_state = await self.async_get_last_state()
@@ -254,16 +258,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Set default state to off
         if not self._hvac_mode:
             self._hvac_mode = HVAC_MODE_OFF
-
-        # current_temperature is currently Null, lets fix that
-        if self.hass.state == CoreState.running:
-            # Already running, we should be able to get the current temp
-            await self._async_refresh_current_temp()
-        else:
-            # Wait until the sensor entity is definitely set up, then get the current temp
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._async_refresh_current_temp
-            )
 
     @property
     def should_poll(self):
