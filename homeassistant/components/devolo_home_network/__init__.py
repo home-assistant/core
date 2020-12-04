@@ -22,14 +22,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up devolo Home Network from a config entry."""
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    print(entry.entry_id)
     conf = entry.data
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry] = {}
-    hass.data[DOMAIN][entry] = {"devices": []}
+
     device = Device(ip=conf[CONF_IP_ADDRESS])
-    device.password = conf[CONF_PASSWORD]
-    hass.data[DOMAIN][entry]["devices"].append(device)
+    device.password = conf.get(CONF_PASSWORD) or ""
+
+    hass.data[DOMAIN][entry.entry_id] = device
     await device.async_connect()
+
+    # This should be done in validate_input
+    entry.title = device.hostname.split(".")[0]
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
