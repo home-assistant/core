@@ -41,7 +41,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Add binary sensor from deCONZ."""
-        print(sensors)
         entities = []
 
         for sensor in sensors:
