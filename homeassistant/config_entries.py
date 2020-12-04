@@ -891,6 +891,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self,
         updates: Optional[Dict[Any, Any]] = None,
         reload_on_update: bool = True,
+        allow_ignored_devices: bool = False,
     ) -> None:
         """Abort if the unique ID is already configured."""
         assert self.hass
@@ -911,6 +912,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
+                if entry.source == SOURCE_IGNORE and allow_ignored_devices:
+                    continue
                 raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
