@@ -9,13 +9,13 @@ from homeassistant.components.fan import (
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from typing import Optional
 
 """This currently omits the Medium-High setting of 75%"""
 FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH = 0, 25, 50, 100
 
 VALUE_TO_SPEED = {
     None: SPEED_OFF,
-    FAN_HIGH: SPEED_OFF,
     FAN_LOW: SPEED_LOW,
     FAN_MEDIUM: SPEED_MEDIUM,
     FAN_HIGH: SPEED_HIGH,
@@ -89,7 +89,7 @@ class LutronFan(LutronDevice, FanEntity):
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the fan on."""
         if speed is not None:
             new_speed = speed
@@ -99,12 +99,12 @@ class LutronFan(LutronDevice, FanEntity):
             new_speed = self._prev_speed
 
         self._prev_speed = new_speed
-        await self.async_set_speed(new_speed)
+        self.set_speed(new_speed)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn the fan off."""
-        await self.async_set_speed(SPEED_OFF)
+        self.set_speed(SPEED_OFF)
 
-    async def async_set_speed(self, speed: str) -> None:
+    def set_speed(self, speed: str) -> None:
         """Set the speed of the fan"""
-        await self._lutron_device.level = to_lutron_speed(speed)
+        self._lutron_device.level = to_lutron_speed(speed)
