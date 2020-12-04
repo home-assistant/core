@@ -9,6 +9,9 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_MUSIC,
+    MEDIA_CLASS_VIDEO,
+    MEDIA_CLASS_IMAGE,
     MEDIA_TYPE_MOVIE,
 )
 from homeassistant.components.media_source.const import MEDIA_CLASS_MAP
@@ -41,6 +44,27 @@ def parse_identifier(item: MediaSourceItem) -> Tuple[str, str]:
     start = ["", ""]
     items = identifier.lstrip("/").split("~~", 1)
     return tuple(items + start[len(items) :])
+
+
+def _media_mime_type(media_class: str) -> str:
+    if media_class == MEDIA_CLASS_VIDEO:
+        return "video"
+    elif media_class == MEDIA_CLASS_MUSIC:
+        return "audio"
+    elif media_class == MEDIA_CLASS_IMAGE:
+        return "image"
+    else:
+        raise BrowseError("Unsupported media mime type %s" % type)
+
+
+def _media_class(collection_type: str) -> str:
+    """ Takes a Jellyfin collection type and return the corresponding media class """
+    if collection_type == "movies" or collection_type == "tvshows":
+        return MEDIA_CLASS_VIDEO
+    elif collection_type == "music":
+        return MEDIA_CLASS_MUSIC
+    else:
+        raise BrowseError(f"Unsupported collection type {collection_type}")
 
 
 class JellyfinSource(MediaSource):
@@ -77,8 +101,10 @@ class JellyfinSource(MediaSource):
             result = self.api.get_item(library)
             return self._build_library(library, result["CollectionType"])
 
+        library_item = self.api.get_item(library)
         media_item = self.api.get_item(item_id)
-        return self._processMediaItem(library, media_item)
+        media_class = _media_class(library_item["CollectionType"])
+        return self._processMediaItem(library, media_item, media_class)
 
     async def _build_libraries(self):
         base = BrowseMediaSource(
@@ -106,8 +132,14 @@ class JellyfinSource(MediaSource):
         return result["Items"]
 
     async def _build_library(
-        self, library: str, library_type: str
+        self, library: str, collection_type: str
     ) -> BrowseMediaSource:
+        _LOGGER.info(
+            f"Bulding library {library} with collection type {collection_type}"
+        )
+
+        children_media_class = _media_class(collection_type)
+
         librarySource = BrowseMediaSource(
             domain=DOMAIN,
             identifier=library,
@@ -116,7 +148,7 @@ class JellyfinSource(MediaSource):
             title=library,
             can_play=False,
             can_expand=True,
-            children_media_class=library_type,
+            children_media_class=children_media_class,
         )
 
         result = await self.hass.async_add_executor_job(
@@ -124,36 +156,34 @@ class JellyfinSource(MediaSource):
         )
         items = result["Items"]
 
+        librarySource.children = []
         for item in items:
-            child = self._processMediaItem(library, item)
-            librarySource.children.append(child)
+            print(item)
+            if not item["IsFolder"]:
+                child = self._processMediaItem(library, item, children_media_class)
+                librarySource.children.append(child)
 
         return librarySource
 
-    def _processMediaItem(self, library: str, item: dict) -> BrowseMediaSource:
+    def _processMediaItem(
+        self, library: str, item: dict, media_class: str
+    ) -> BrowseMediaSource:
         item_id = item["Id"]
-
         title = item["Name"]
-        media_class = MEDIA_CLASS_MAP.get(item["MediaType"])
-        media_content_type = self._media_content_type(item["Type"].lower())
+
+        mime_type = _media_mime_type(media_class)
 
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{library}~~{self.url}/Items/{item_id}",
             media_class=media_class,
-            media_content_type=media_content_type,
+            media_content_type=mime_type,
             title=title,
             can_play=True,
             can_expand=False,
         )
 
         return media
-
-    def _media_content_type(self, type: str):
-        if type == "Movie":
-            return MEDIA_TYPE_MOVIE
-        else:
-            raise BrowseError("Unsupported item type")
 
 
 class JellyfinMediaView(HomeAssistantView):
