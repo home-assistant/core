@@ -104,16 +104,21 @@ async def async_setup_entry(
 
     def update_gateway():
         """Call all updates using one async_add_executor_job."""
+        error = False
+
         motion_gateway.Update()
         for blind in motion_gateway.device_list.values():
-            blind.Update()
+            try:
+                blind.Update()
+            except timeout as socket_timeout:
+                error = True
+
+        if error:
+            raise AsyncioTimeoutError from socket_timeout
 
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
-        try:
-            await hass.async_add_executor_job(update_gateway)
-        except timeout as socket_timeout:
-            raise AsyncioTimeoutError from socket_timeout
+        await hass.async_add_executor_job(update_gateway)
 
     coordinator = DataUpdateCoordinator(
         hass,
