@@ -30,6 +30,7 @@ SPEED_TO_VALUE = {
 
 FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Lutron switches."""
     devs = []
@@ -41,6 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
 
     add_entities(devs, True)
 
+
 def to_lutron_speed(speed: str) -> int:
     """Convert the given Home Assistant fan speed (off, low, medium, high) to Lutron (0.0-100.0)."""
     return SPEED_TO_VALUE[speed]
@@ -50,8 +52,10 @@ def to_hass_speed(speed: int) -> str:
     """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
     return VALUE_TO_SPEED[int(speed)]
 
+
 class LutronFan(LutronDevice, FanEntity):
     """Representation of a Lutron Fan controller. Including Fan Speed."""
+
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the fan device."""
         self._prev_speed = None
