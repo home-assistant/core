@@ -87,13 +87,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     optimistic = config.get(CONF_OPTIMISTIC)
 
     alarmpanel = IFTTTAlarmPanel(
-        name, 
-        code, 
-        code_arm_required, 
-        event_away, 
-        event_home, 
-        event_night, 
-        event_disarm, 
+        name,
+        code,
+        code_arm_required,
+        event_away,
+        event_home,
+        event_night,
+        event_disarm,
         optimistic,
     )
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
@@ -124,13 +124,13 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
 
     def __init__(
         self, 
-        name, 
-        code, 
-        code_arm_required, 
-        event_away, 
-        event_home, 
-        event_night, 
-        event_disarm, 
+        name,
+        code,
+        code_arm_required,
+        event_away,
+        event_home,
+        event_night,
+        event_disarm,
         optimistic,
     ):
         """Initialize the alarm control panel."""
