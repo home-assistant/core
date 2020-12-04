@@ -1,18 +1,16 @@
 """The devolo Home Network integration."""
 import asyncio
 
+from devolo_plc_api.device import Device
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -24,7 +22,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up devolo Home Network from a config entry."""
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-
+    conf = entry.data
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry] = {}
+    hass.data[DOMAIN][entry] = {"devices": []}
+    device = Device(ip=conf[CONF_IP_ADDRESS])
+    device.password = conf[CONF_PASSWORD]
+    hass.data[DOMAIN][entry]["devices"].append(device)
+    await device.async_connect()
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
