@@ -11,7 +11,9 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 # TODO PASSWORD needs to be optional
-STEP_USER_DATA_SCHEMA = vol.Schema({CONF_IP_ADDRESS: str, CONF_PASSWORD: str})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD): str}
+)
 
 
 class PlaceholderHub:
