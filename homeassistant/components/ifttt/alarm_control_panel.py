@@ -162,7 +162,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
     def code_arm_required(self):
         """Whether the code is required for arm actions."""
         return self._code_arm_required
-    
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if not self._check_code(code):
