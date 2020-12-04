@@ -1,4 +1,6 @@
 """Support for Lutron fans."""
+from typing import Optional
+
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -9,7 +11,6 @@ from homeassistant.components.fan import (
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
-from typing import Optional
 
 """This currently omits the Medium-High setting of 75%"""
 FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH = 0, 25, 50, 100
