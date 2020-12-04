@@ -73,13 +73,9 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         self._channel = channels[0]
         self._device_class = self.DEVICE_CLASS
 
-    async def get_device_class(self):
-        """Get the HA device class from the channel."""
-
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.get_device_class()
         self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
@@ -168,10 +164,10 @@ class IASZone(BinarySensor):
 
     SENSOR_ATTR = "zone_status"
 
-    async def get_device_class(self) -> None:
-        """Get the HA device class from the channel."""
-        zone_type = await self._channel.get_attribute_value("zone_type")
-        self._device_class = CLASS_MAPPING.get(zone_type)
+    @property
+    def device_class(self) -> str:
+        """Return device class from component DEVICE_CLASSES."""
+        return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
 
     async def async_update(self):
         """Attempt to retrieve on off state from the binary sensor."""
