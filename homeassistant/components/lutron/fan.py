@@ -12,7 +12,7 @@ from homeassistant.components.fan import (
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
-"""This currently omits the Medium-High setting of 75%"""
+"""This currently omits the Medium-High setting of 75%."""
 FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH = 0, 25, 50, 100
 
 VALUE_TO_SPEED = {
@@ -107,5 +107,5 @@ class LutronFan(LutronDevice, FanEntity):
         self.set_speed(SPEED_OFF)
 
     def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan"""
+        """Set the speed of the fan."""
         self._lutron_device.level = to_lutron_speed(speed)
