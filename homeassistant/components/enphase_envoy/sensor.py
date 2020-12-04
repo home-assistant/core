@@ -5,7 +5,8 @@ import logging
 
 import async_timeout
 from envoy_reader.envoy_reader import EnvoyReader
-import httpcore
+import httpx
+from requests_async.exceptions import HTTPError, RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -78,22 +79,33 @@ async def async_setup_platform(
 
     async def async_update_data():
         """Fetch data from API endpoint."""
+        data = dict()
         async with async_timeout.timeout(30):
             try:
-                data = await envoy_reader.update()
-            except httpcore.ProtocolError as err:
+                await envoy_reader.getData()
+            except (HTTPError, RequestException) as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
-            except httpcore.ConnectTimeout as err:
-                raise UpdateFailed(f"Timeout error with API: {err}") from err
+
+            for condition in monitored_conditions:
+                if condition != "inverters":
+                    data[condition] = await getattr(envoy_reader, condition)()
+                else:
+                    try:
+                        data["inverters_production"] = await getattr(
+                            envoy_reader, "inverters_production"
+                        )()
+                    except httpx.HTTPStatusError as err:
+                        _LOGGER.error("Authentication error: %s", err)
+                        continue
+                    except httpx.RemoteProtocolError as err:
+                        _LOGGER.error("Protocol Error: %s", err)
+                        continue
+                    except KeyError as err:
+                        _LOGGER.error("Error reading Inverter data: %s", err)
+                        continue
 
             _LOGGER.debug("Retrieved data from API: %s", data)
 
-            if "can't handle event type ConnectionClosed" in str(
-                data.get("inverters_production")
-            ):
-                raise UpdateFailed("Inverter updated failed")
-
-            _LOGGER.debug("Returning API data.")
             return data
 
     coordinator = DataUpdateCoordinator(
@@ -106,11 +118,20 @@ async def async_setup_platform(
 
     await coordinator.async_refresh()
 
+    if coordinator.data is None:
+        raise PlatformNotReady
+
     entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-        if condition == "inverters" and coordinator.data is not None:
+        # If inverter condition is found with no data (None) than Authentication failed
+        # during setup and will not be added to the list of created entities.
+        if (
+            condition == "inverters"
+            and coordinator.data.get("inverters_production") is not None
+        ):
             inverters = coordinator.data.get("inverters_production")
+            coordinator.data["inverters_production"] = inverters
             _LOGGER.debug("Inverter data: %s", inverters)
             if isinstance(inverters, dict):
                 for inverter in inverters:
@@ -127,15 +148,7 @@ async def async_setup_platform(
                         f"{name}{SENSORS[condition][0]} {inverter}",
                         condition,
                     )
-            elif "Unable to connect to Envoy" in inverters:
-                _LOGGER.error(
-                    "Unable to connect to Enphase Envoy during setup. Inverter entities not added. Please check IP address and credentials are correct."
-                )
-            elif "can't handle event type ConnectionClosed" in inverters:
-                _LOGGER.error(
-                    "Communication error with Enphase Envoy during setup. Inverter entities not added."
-                )
-        elif coordinator.data is not None:
+        elif condition != "inverters":
             entities.append(
                 Envoy(
                     condition,
@@ -149,8 +162,7 @@ async def async_setup_platform(
                 f"{name}{SENSORS[condition][0]})",
                 condition,
             )
-        else:
-            raise PlatformNotReady
+
     async_add_entities(entities)
 
 
@@ -183,7 +195,7 @@ class Envoy(CoordinatorEntity):
             _LOGGER.debug("Updating: %s - %s", self._type, value)
 
         elif self._type == "inverters":
-            serial_number = self._name.split(" ")[2]
+            serial_number = self._name.split(" ")[(len(self._name.split(" ")) - 1)]
             try:
                 value = self.coordinator.data.get("inverters_production").get(
                     serial_number
@@ -218,7 +230,7 @@ class Envoy(CoordinatorEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._type == "inverters":
-            serial_number = self._name.split(" ")[2]
+            serial_number = self._name.split(" ")[(len(self._name.split(" ")) - 1)]
             try:
                 value = self.coordinator.data.get("inverters_production").get(
                     serial_number
