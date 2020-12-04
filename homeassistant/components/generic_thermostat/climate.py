@@ -389,13 +389,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    async def _async_refresh_current_temp(self, *_):
-        """Get the current temperature from the sensor. Used during startup."""
-        state = self.hass.states.get(self.sensor_entity_id)
-        if state is not None:
-            self._async_update_temp(state)
-
-    @callback
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
         try:
