@@ -232,9 +232,9 @@ class OpenSkySensor(Entity):
         if request.status_code == 200:
             self._connectionproblems = 0
             states = request.json().get(ATTR_STATES)
-            _LOGGER.debug(str(len(states)) + " flights parsed")
             if states is None:
                 states = []
+            _LOGGER.debug(str(len(states)) + " flights parsed")
             for state in states:
                 flight = dict(zip(OPENSKY_API_FIELDS, state))
                 callsign = flight[ATTR_CALLSIGN].strip()
@@ -276,6 +276,7 @@ class OpenSkySensor(Entity):
             self._connectionproblems = self._connectionproblems + 1
         if self._connectionproblems > 10:
             _LOGGER.error("Persistent error retrieving data from the OpenSky API.")
+            self._connectionproblems = 0
 
     @property
     def device_state_attributes(self):
