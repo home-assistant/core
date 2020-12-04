@@ -20,7 +20,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .base import ZigbeeChannel
+from .base import ChannelStatus, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
@@ -155,14 +155,10 @@ class IASZoneChannel(ZigbeeChannel):
                 str(ex),
             )
 
-        try:
-            self.debug("Sending pro-active IAS enroll response")
-            await self._cluster.enroll_response(0, 0)
-        except ZigbeeException as ex:
-            self.debug(
-                "Failed to send pro-active IAS enroll response: %s",
-                str(ex),
-            )
+        self.debug("Sending pro-active IAS enroll response")
+        self._cluster.create_catching_task(self._cluster.enroll_response(0, 0))
+
+        self._status = ChannelStatus.CONFIGURED
         self.debug("finished IASZoneChannel configuration")
 
     @callback

@@ -1,5 +1,5 @@
 """Smart energy channels module for Zigbee Home Automation."""
-from typing import Union
+from typing import Coroutine, Union
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
@@ -96,10 +96,9 @@ class Metering(ZigbeeChannel):
         """Return multiplier for the value."""
         return self.cluster.get("multiplier")
 
-    async def async_configure(self) -> None:
+    def async_configure_channel_specific(self) -> Coroutine:
         """Configure channel."""
-        await self.fetch_config(False)
-        await super().async_configure()
+        return self.fetch_config(False)
 
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""

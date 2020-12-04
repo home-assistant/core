@@ -323,7 +323,7 @@ class PollControl(ZigbeeChannel):
     CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
     LONG_POLL = 6 * 4  # 6s
 
-    async def async_configure(self) -> None:
+    async def async_configure_channel_specific(self) -> None:
         """Configure channel: set check-in interval."""
         try:
             res = await self.cluster.write_attributes(
@@ -332,7 +332,6 @@ class PollControl(ZigbeeChannel):
             self.debug("%ss check-in interval set: %s", self.CHECKIN_INTERVAL / 4, res)
         except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
             self.debug("Couldn't set check-in interval: %s", ex)
-        await super().async_configure()
 
     @callback
     def cluster_command(
