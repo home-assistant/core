@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 
 
 async def test_setup_missing_basic_config(hass):
@@ -50,9 +50,7 @@ async def test_setup_missing_config(hass):
 @respx.mock
 async def test_setup_failed_connect(hass):
     """Test setup when connection error occurs."""
-    respx.get(
-        "http://localhost", content=httpx.RequestError(message="any", request=Mock())
-    )
+    respx.get("http://localhost").mock(side_effect=httpx.RequestError)
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -71,7 +69,7 @@ async def test_setup_failed_connect(hass):
 @respx.mock
 async def test_setup_timeout(hass):
     """Test setup when connection timeout occurs."""
-    respx.get("http://localhost", content=asyncio.TimeoutError())
+    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -90,7 +88,7 @@ async def test_setup_timeout(hass):
 @respx.mock
 async def test_setup_minimum(hass):
     """Test setup with minimum configuration."""
-    respx.get("http://localhost", status_code=200)
+    respx.get("http://localhost") % 200
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -109,7 +107,7 @@ async def test_setup_minimum(hass):
 @respx.mock
 async def test_setup_minimum_resource_template(hass):
     """Test setup with minimum configuration (resource_template)."""
-    respx.get("http://localhost", status_code=200)
+    respx.get("http://localhost") % 200
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -127,7 +125,7 @@ async def test_setup_minimum_resource_template(hass):
 @respx.mock
 async def test_setup_duplicate_resource_template(hass):
     """Test setup with duplicate resources."""
-    respx.get("http://localhost", status_code=200)
+    respx.get("http://localhost") % 200
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -146,7 +144,7 @@ async def test_setup_duplicate_resource_template(hass):
 @respx.mock
 async def test_setup_get(hass):
     """Test setup with valid configuration."""
-    respx.get("http://localhost", status_code=200, content="{}")
+    respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -174,7 +172,7 @@ async def test_setup_get(hass):
 @respx.mock
 async def test_setup_get_digest_auth(hass):
     """Test setup with valid configuration."""
-    respx.get("http://localhost", status_code=200, content="{}")
+    respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -202,7 +200,7 @@ async def test_setup_get_digest_auth(hass):
 @respx.mock
 async def test_setup_post(hass):
     """Test setup with valid configuration."""
-    respx.post("http://localhost", status_code=200, content="{}")
+    respx.post("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -230,11 +228,10 @@ async def test_setup_post(hass):
 @respx.mock
 async def test_setup_get_off(hass):
     """Test setup with valid off configuration."""
-    respx.get(
-        "http://localhost",
+    respx.get("http://localhost").respond(
         status_code=200,
         headers={"content-type": "text/json"},
-        content='{"dog": false}',
+        json={"dog": False},
     )
     assert await async_setup_component(
         hass,
@@ -261,11 +258,10 @@ async def test_setup_get_off(hass):
 @respx.mock
 async def test_setup_get_on(hass):
     """Test setup with valid on configuration."""
-    respx.get(
-        "http://localhost",
+    respx.get("http://localhost").respond(
         status_code=200,
         headers={"content-type": "text/json"},
-        content='{"dog": true}',
+        json={"dog": True},
     )
     assert await async_setup_component(
         hass,
@@ -292,7 +288,7 @@ async def test_setup_get_on(hass):
 @respx.mock
 async def test_setup_with_exception(hass):
     """Test setup with exception."""
-    respx.get("http://localhost", status_code=200, content="{}")
+    respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -318,9 +314,7 @@ async def test_setup_with_exception(hass):
     await hass.async_block_till_done()
 
     respx.clear()
-    respx.get(
-        "http://localhost", content=httpx.RequestError(message="any", request=Mock())
-    )
+    respx.get("http://localhost").mock(side_effect=httpx.RequestError)
     await hass.services.async_call(
         "homeassistant",
         "update_entity",
@@ -337,7 +331,7 @@ async def test_setup_with_exception(hass):
 async def test_reload(hass):
     """Verify we can reload reset sensors."""
 
-    respx.get("http://localhost", status_code=200)
+    respx.get("http://localhost") % 200
 
     await async_setup_component(
         hass,
@@ -380,10 +374,7 @@ async def test_reload(hass):
 @respx.mock
 async def test_setup_query_params(hass):
     """Test setup with query params."""
-    respx.get(
-        "http://localhost?search=something",
-        status_code=200,
-    )
+    respx.get("http://localhost", params={"search": "something"}) % 200
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
