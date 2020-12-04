@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import asyncio
+from typing import Coroutine
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
@@ -173,8 +174,7 @@ class IASZoneChannel(ZigbeeChannel):
                 value,
             )
 
-    async def async_initialize(self, from_cache):
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
-        attributes = ["zone_status", "zone_state"]
-        await self.get_attributes(attributes, from_cache=from_cache)
-        await super().async_initialize(from_cache)
+        attributes = ["zone_status", "zone_state", "zone_type"]
+        return self.get_attributes(attributes, from_cache=from_cache)

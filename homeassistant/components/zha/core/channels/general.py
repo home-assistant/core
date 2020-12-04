@@ -1,6 +1,6 @@
 """General channels module for Zigbee Home Automation."""
 import asyncio
-from typing import Any, List, Optional
+from typing import Any, Coroutine, List, Optional
 
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
@@ -19,7 +19,7 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
 )
-from .base import ChannelStatus, ClientChannel, ZigbeeChannel, parse_and_log_command
+from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
@@ -174,11 +174,6 @@ class LevelControlChannel(ZigbeeChannel):
         """Dispatch level change."""
         self.async_send_signal(f"{self.unique_id}_{command}", level)
 
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.get_attribute_value(self.CURRENT_LEVEL, from_cache=from_cache)
-        await super().async_initialize(from_cache)
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateInput.cluster_id)
 class MultistateInput(ZigbeeChannel):
@@ -269,12 +264,9 @@ class OnOffChannel(ZigbeeChannel):
             )
             self._state = bool(value)
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel."""
-        await super().async_initialize(from_cache)
-        state = await self.get_attribute_value(self.ON_OFF, from_cache=True)
-        if state is not None:
-            self._state = bool(state)
+        self._state = self.on_off
 
     async def async_update(self):
         """Initialize channel."""
@@ -359,16 +351,13 @@ class PowerConfigurationChannel(ZigbeeChannel):
         {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
     )
 
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
+        """Initialize channel specific attrs."""
         attributes = [
             "battery_size",
-            "battery_percentage_remaining",
-            "battery_voltage",
             "battery_quantity",
         ]
-        await self.get_attributes(attributes, from_cache=from_cache)
-        self._status = ChannelStatus.INITIALIZED
+        return self.get_attributes(attributes, from_cache=from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)

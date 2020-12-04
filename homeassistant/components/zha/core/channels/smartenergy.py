@@ -100,10 +100,9 @@ class Metering(ZigbeeChannel):
         """Configure channel."""
         return self.fetch_config(False)
 
-    async def async_initialize(self, from_cache: bool) -> None:
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
+        return self.fetch_config(True)
 
     @callback
     def attribute_updated(self, attrid: int, value: int) -> None:

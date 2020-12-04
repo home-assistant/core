@@ -79,10 +79,9 @@ class ColorChannel(ZigbeeChannel):
         """Configure channel."""
         return self.fetch_color_capabilities(False)
 
-    async def async_initialize(self, from_cache: bool) -> None:
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
-        await self.fetch_color_capabilities(True)
-        await super().async_initialize(from_cache)
+        return self.fetch_color_capabilities(True)
 
     async def fetch_color_capabilities(self, from_cache: bool) -> None:
         """Get the color configuration."""
