@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info["mac"])
-                self._abort_if_unique_id_configured({CONF_HOST: host})
+                self._abort_if_unique_id_configured({CONF_HOST: host}, True, True)
                 self.host = host
                 if info["auth"]:
                     return await self.async_step_credentials()
