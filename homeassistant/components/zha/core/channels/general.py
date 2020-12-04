@@ -34,11 +34,74 @@ class AnalogInput(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
+@registries.BINDABLE_CLUSTERS.register(general.AnalogOutput.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogOutput.cluster_id)
 class AnalogOutput(ZigbeeChannel):
     """Analog Output channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+    @property
+    def present_value(self) -> Optional[float]:
+        """Return cached value of present_value."""
+        return self.cluster.get("present_value")
+
+    @property
+    def min_present_value(self) -> Optional[float]:
+        """Return cached value of min_present_value."""
+        return self.cluster.get("min_present_value")
+
+    @property
+    def max_present_value(self) -> Optional[float]:
+        """Return cached value of max_present_value."""
+        return self.cluster.get("max_present_value")
+
+    @property
+    def resolution(self) -> Optional[float]:
+        """Return cached value of resolution."""
+        return self.cluster.get("resolution")
+
+    @property
+    def relinquish_default(self) -> Optional[float]:
+        """Return cached value of relinquish_default."""
+        return self.cluster.get("relinquish_default")
+
+    @property
+    def description(self) -> Optional[str]:
+        """Return cached value of description."""
+        return self.cluster.get("description")
+
+    @property
+    def engineering_units(self) -> Optional[int]:
+        """Return cached value of engineering_units."""
+        return self.cluster.get("engineering_units")
+
+    @property
+    def application_type(self) -> Optional[int]:
+        """Return cached value of application_type."""
+        return self.cluster.get("application_type")
+
+    def async_configure_channel_specific(self) -> Coroutine:
+        """Configure channel."""
+        return self.fetch_config(False)
+
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
+        """Initialize channel."""
+        return self.fetch_config(from_cache)
+
+    async def fetch_config(self, from_cache: bool) -> None:
+        """Get the color configuration."""
+        attributes = [
+            "min_present_value",
+            "max_present_value",
+            "resolution",
+            "relinquish_default",
+            "description",
+            "engineering_units",
+            "application_type",
+        ]
+        # just populates the cache, if not already done
+        await self.get_attributes(attributes, from_cache=from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)
