@@ -4,13 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+# TODO PASSWORD needs to be optional
+STEP_USER_DATA_SCHEMA = vol.Schema({CONF_IP_ADDRESS: str, CONF_PASSWORD: str})
 
 
 class PlaceholderHub:
@@ -41,10 +42,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    # hub = PlaceholderHub(data["host"])
 
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+    # if not await hub.authenticate(data["username"], data["password"]):
+    #     raise InvalidAuth
 
     # If you cannot connect:
     # throw CannotConnect
@@ -59,8 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for devolo Home Network."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
