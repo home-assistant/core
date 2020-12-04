@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "comfoconnect"
+PLATFORMS = ["climate", "fan"]
 
 SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received_{}"
 
@@ -80,8 +81,8 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     # Load platforms
-    discovery.load_platform(hass, "fan", DOMAIN, {}, config)
-    discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

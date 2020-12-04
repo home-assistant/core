@@ -19,6 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
+HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -92,7 +93,7 @@ class ComfoConnectBypass(ClimateEntity):
             _LOGGER.debug("Send command: CMD_BYPASS_ON")
             self._ccb.comfoconnect.cmd_rmi_request(CMD_BYPASS_ON)
         else:
-            raise Exception("Unsupported hvac_mode: %s" % hvac_mode)
+            _LOGGER.error("Unsupported hvac_mode: %s" % hvac_mode)
 
         # Update current mode
         self.schedule_update_ha_state()
@@ -100,13 +101,13 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def hvac_modes(self):
         """List of available bypass modes."""
-        return [HVAC_MODE_HEAT, HVAC_MODE_COOL]
+        return HVAC_MODES
 
     @property
     def hvac_mode(self):
         """Return the current bypass mode. If the bypass state > 0 ComfoConenct started enabling bypass. 100% of bypass state = minimal heat recovery."""
         bypass = self._ccb.data[SENSOR_BYPASS_STATE]
-        if bypass > 0:
+        if bypass:
             _LOGGER.debug(
                 "Current bypass state: %s, return: %s", bypass, HVAC_MODE_COOL
             )
@@ -128,5 +129,4 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def current_temperature(self):
         """Return current supply temperature."""
-        temp = self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] * 0.1
-        return temp
+        return self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] * 0.1
