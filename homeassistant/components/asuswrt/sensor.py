@@ -207,7 +207,7 @@ class AsuswrtSensor(CoordinatorEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the name of the sensor."""
+        """Return the unique_id of the sensor."""
         return f"{DOMAIN} {self._type.sensor_name}"
 
     @property
