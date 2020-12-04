@@ -25,6 +25,8 @@ class ConnectMotionGateway:
         """Update all information of the gateway."""
         self.gateway_device.GetDeviceList()
         self.gateway_device.Update()
+        for blind in self.gateway_device.device_list.values():
+            blind.Update_from_cache()
 
     async def async_connect_gateway(self, host, key):
         """Connect to the Motion Gateway."""
