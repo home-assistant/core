@@ -147,9 +147,10 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.network_key = user_input[CONF_NETWORK_KEY]
             self.usb_path = user_input[CONF_USB_PATH]
 
-            new_addon_config = {CONF_ADDON_DEVICE: self.usb_path}
-            if self.network_key:
-                new_addon_config[CONF_ADDON_NETWORK_KEY] = self.network_key
+            new_addon_config = {
+                CONF_ADDON_DEVICE: self.usb_path,
+                CONF_ADDON_NETWORK_KEY: self.network_key,
+            }
 
             if new_addon_config != self.addon_config:
                 await self._async_set_addon_config(new_addon_config)
