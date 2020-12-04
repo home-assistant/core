@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback
+from homeassistant.core import DOMAIN as HA_DOMAIN, callback, CoreState
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -255,6 +255,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if not self._hvac_mode:
             self._hvac_mode = HVAC_MODE_OFF
 
+        # current_temperature is currently Null, lets fix that
+        if self.hass.state == CoreState.running:
+            # Already running, we should be able to get the current temp
+            await self._async_refresh_current_temp()
+        else:
+            # Wait until the sensor entity is definitely set up, then get the current temp
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, self._async_refresh_current_temp
+            )
+
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -383,6 +393,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if new_state is None:
             return
         self.async_write_ha_state()
+
+    @callback
+    async def _async_refresh_current_temp(self, *_):
+        """Get the current temperature from the sensor. Used during startup."""
+        state = self.hass.states.get(self.sensor_entity_id)
+        if state is not None:
+            self._async_update_temp(state)
 
     @callback
     def _async_update_temp(self, state):
