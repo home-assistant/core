@@ -333,11 +333,12 @@ class MqttCover(
                     float(payload), COVER_PAYLOAD
                 )
                 self._position = percentage_payload
-                self._state = (
-                    STATE_CLOSED
-                    if percentage_payload == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
-                )
+                if self._config.get(CONF_STATE_TOPIC) is None:
+                    self._state = (
+                        STATE_CLOSED
+                        if percentage_payload == DEFAULT_POSITION_CLOSED
+                        else STATE_OPEN
+                    )
             else:
                 _LOGGER.warning("Payload is not integer within range: %s", payload)
                 return
@@ -349,13 +350,17 @@ class MqttCover(
                 "msg_callback": position_message_received,
                 "qos": self._config[CONF_QOS],
             }
-        elif self._config.get(CONF_STATE_TOPIC):
+        if self._config.get(CONF_STATE_TOPIC):
             topics["state_topic"] = {
                 "topic": self._config.get(CONF_STATE_TOPIC),
                 "msg_callback": state_message_received,
                 "qos": self._config[CONF_QOS],
             }
-        else:
+
+        if (
+            self._config.get(CONF_GET_POSITION_TOPIC) is None
+            and self._config.get(CONF_STATE_TOPIC) is None
+        ):
             # Force into optimistic mode.
             self._optimistic = True
 
