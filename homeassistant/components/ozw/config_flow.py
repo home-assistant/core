@@ -67,8 +67,9 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_hassio_confirm(self, user_input=None):
         """Confirm the add-on discovery."""
         if user_input is not None:
-            self.use_addon = True
-            return self._async_create_entry_from_vars()
+            return await self.async_step_on_supervisor(
+                user_input={CONF_USE_ADDON: True}
+            )
 
         return self.async_show_form(step_id="hassio_confirm")
 
