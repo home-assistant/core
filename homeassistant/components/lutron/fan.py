@@ -1,4 +1,4 @@
-"""Support for Lutron switches."""
+"""Support for Lutron fans."""
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -32,7 +32,7 @@ FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
-    """Set up the Lutron switches."""
+    """Set up the Lutron fans."""
     devs = []
 
     # Add Lutron Fans
