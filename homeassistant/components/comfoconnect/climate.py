@@ -93,7 +93,7 @@ class ComfoConnectBypass(ClimateEntity):
             _LOGGER.debug("Send command: CMD_BYPASS_ON")
             self._ccb.comfoconnect.cmd_rmi_request(CMD_BYPASS_ON)
         else:
-            _LOGGER.error("Unsupported hvac_mode: %s" % hvac_mode)
+            _LOGGER.error("Unsupported hvac_mode: %s", hvac_mode)
 
         # Update current mode
         self.schedule_update_ha_state()
