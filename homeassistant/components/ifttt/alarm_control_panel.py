@@ -123,7 +123,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
 
     def __init__(
-        self, 
+        self,
         name,
         code,
         code_arm_required,
