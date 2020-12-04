@@ -21,6 +21,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
+    SUPPORT_TARGET_HUMIDITY,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -86,7 +87,7 @@ ECOBEE_HVAC_ACTION_TO_HASS = {
     "auxHeat2": CURRENT_HVAC_HEAT,
     "auxHeat3": CURRENT_HVAC_HEAT,
     "fan": CURRENT_HVAC_FAN,
-    "humidifier": None,
+    "humidifier": CURRENT_HVAC_DRY,
     "dehumidifier": CURRENT_HVAC_DRY,
     "ventilator": CURRENT_HVAC_FAN,
     "economizer": CURRENT_HVAC_FAN,
@@ -161,6 +162,7 @@ SUPPORT_FLAGS = (
     | SUPPORT_AUX_HEAT
     | SUPPORT_TARGET_TEMPERATURE_RANGE
     | SUPPORT_FAN_MODE
+    | SUPPORT_TARGET_HUMIDITY
 )
 
 
@@ -651,7 +653,7 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity):
         """Set the humidity level."""
-        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
+        self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
 
     def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
