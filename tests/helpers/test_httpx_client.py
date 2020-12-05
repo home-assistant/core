@@ -1,7 +1,5 @@
 """Test the httpx client helper."""
 
-from functools import partial
-
 import httpx
 import pytest
 
@@ -143,83 +141,3 @@ async def test_warning_close_session_custom(hass, caplog):
         "Please report issue to the custom component author for hue using this method at "
         "custom_components/hue/light.py, line 23: await session.aclose()" in caplog.text
     )
-
-
-async def test_async_get_client_with_ssl(hass):
-    """Test init client with ssl from async."""
-    client.async_get_client(hass)
-
-    assert isinstance(hass.data[client.DATA_CLIENT], httpx.Client)
-
-
-async def test_get_client_with_ssl(hass):
-    """Test init client with ssl."""
-
-    await hass.async_add_executor_job(client.get_client, hass)
-
-    assert isinstance(hass.data[client.DATA_CLIENT], httpx.Client)
-
-
-async def test_async_get_client_without_ssl(hass):
-    """Test init client without ssl from async."""
-    client.async_get_client(hass, verify_ssl=False)
-
-    assert isinstance(hass.data[client.DATA_CLIENT_NOVERIFY], httpx.Client)
-
-
-async def test_get_client_without_ssl(hass):
-    """Test init client without ssl."""
-
-    await hass.async_add_executor_job(
-        partial(client.get_client, hass, verify_ssl=False)
-    )
-
-    assert isinstance(hass.data[client.DATA_CLIENT_NOVERIFY], httpx.Client)
-
-
-async def test_create_httpx_client_with_ssl_and_cookies(hass):
-    """Test init client with ssl and cookies."""
-    client.async_get_client(hass)
-
-    httpx_client = await hass.async_add_executor_job(
-        partial(client.create_httpx_client, hass, cookies={"bla": True})
-    )
-    assert isinstance(httpx_client, httpx.Client)
-    assert hass.data[client.DATA_CLIENT] != httpx_client
-
-
-async def test_async_get_client_cleanup(hass):
-    """Test init client with ssl."""
-    client.async_get_client(hass)
-
-    assert isinstance(hass.data[client.DATA_CLIENT], httpx.Client)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-    await hass.async_block_till_done()
-
-    assert hass.data[client.DATA_CLIENT].is_closed
-
-
-async def test_async_get_client_cleanup_without_ssl(hass):
-    """Test init client without ssl."""
-    client.async_get_client(hass, verify_ssl=False)
-
-    assert isinstance(hass.data[client.DATA_CLIENT_NOVERIFY], httpx.Client)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-    await hass.async_block_till_done()
-
-    assert hass.data[client.DATA_CLIENT_NOVERIFY].is_closed
-
-
-async def test_async_get_client_patched_close(hass):
-    """Test closing the client does not work."""
-
-    with patch("httpx.Client.close") as mock_close:
-        httpx_session = client.async_get_client(hass)
-        assert isinstance(hass.data[client.DATA_CLIENT], httpx.Client)
-
-        with pytest.raises(RuntimeError):
-            await hass.async_add_executor_job(httpx_session.close)
-
-        assert mock_close.call_count == 0
