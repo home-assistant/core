@@ -911,8 +911,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
-                if entry.source == SOURCE_IGNORE:
-                    asyncio.create_task(entry.async_remove(self.hass))
+                # allow ignored entries to be configured
+                if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
                     continue
                 raise data_entry_flow.AbortFlow("already_configured")
 
