@@ -69,7 +69,7 @@ class LcnServiceCall:
 
         return connection.get_address_conn(addr)
 
-    def async_call_service(self, service):
+    async def async_call_service(self, service):
         """Execute service call."""
         raise NotImplementedError
 
