@@ -1,6 +1,5 @@
 """The motion_blinds component."""
 import asyncio
-from asyncio import TimeoutError as AsyncioTimeoutError
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -104,21 +103,22 @@ async def async_setup_entry(
 
     def update_gateway():
         """Call all updates using one async_add_executor_job."""
-        error = False
-
         motion_gateway.Update()
         for blind in motion_gateway.device_list.values():
             try:
                 blind.Update()
             except timeout as socket_timeout:
-                error = True
-
-        if error:
-            raise AsyncioTimeoutError from socket_timeout
+                # let the error be logged and handled by the motionblinds library
+                pass
 
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
-        await hass.async_add_executor_job(update_gateway)
+        try:
+            await hass.async_add_executor_job(update_gateway)
+        except timeout as socket_timeout:
+            # let the error be logged and handled by the motionblinds library
+            for blind in motion_gateway.device_list.values():
+                blind._available = False
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -127,7 +127,7 @@ async def async_setup_entry(
         name=entry.title,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=900),
+        update_interval=timedelta(seconds=600),
     )
 
     # Fetch initial data so we have data when entities subscribe

@@ -144,6 +144,11 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         return f"{self._blind.blind_type}-{self._blind.mac[12:]}"
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._blind.available
+
+    @property
     def current_cover_position(self):
         """
         Return current position of cover.
@@ -172,8 +177,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
         self._blind.Register_callback("cover", self.push_callback)
-
         async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+        await super().async_added_to_hass()
 
     def signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""

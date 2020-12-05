@@ -73,6 +73,11 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
         return f"{self._blind.blind_type}-battery-{self._blind.mac[12:]}"
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._blind.available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return PERCENTAGE
@@ -100,6 +105,7 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes."""
         self._blind.Register_callback("battery", self.push_callback)
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -176,6 +182,11 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
         return f"{self._device.blind_type} signal strength - {self._device.mac[12:]}"
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._device.available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -203,6 +214,7 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes."""
         self._device.Register_callback("RSSI", self.push_callback)
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
