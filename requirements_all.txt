@@ -625,7 +625,7 @@ freesms==0.1.2
 fritzconnection==1.3.4
 
 # homeassistant.components.google_translate
-gTTS-token==1.1.4
+gTTS==2.2.1
 
 # homeassistant.components.garmin_connect
 garminconnect==0.1.16
@@ -1274,7 +1274,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.2.0
+pyatmo==4.2.1
 
 # homeassistant.components.atome
 pyatome==0.1.1
