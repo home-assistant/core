@@ -54,11 +54,11 @@ def _get_colors(file_handler, light_count) -> tuple:
 
     if light_count == 1:
         # get_color returns a single RGB value for the given image
-        colors = [color_thief.get_color(quality=10)]
+        colors = [color_thief.get_color(quality=1)]
         _LOGGER.debug("get_palette response: %s", colors)
     else:
         # get_color returns a single RGB value for the given image
-        colors = color_thief.get_palette(quality=10, color_count=light_count)
+        colors = color_thief.get_palette(quality=1, color_count=light_count)
         _LOGGER.debug("get_palette response: %s", colors)
 
     _LOGGER.debug("Extracted %d RGB colors from image", len(colors))

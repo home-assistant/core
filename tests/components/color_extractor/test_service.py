@@ -27,6 +27,11 @@ import homeassistant.util.color as color_util
 from tests.common import load_fixture
 
 LIGHT_ENTITY = "light.kitchen_lights"
+MULTIPLE_LIGHT_ENTITIES = (
+    "light.kitchen_lights",
+    "light.ceiling_lights",
+    "light.bed_light",
+)
 CLOSE_THRESHOLD = 10
 
 
@@ -169,6 +174,46 @@ async def test_url_success(hass, aioclient_mock):
 
     # Ensure the RGB values are correct
     assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
+
+
+async def test_url_success_multiple_lights(hass, aioclient_mock):
+    """Test that a successful image GET translate to multiple light RGBs."""
+    service_data = {
+        ATTR_URL: "http://example.com/images/multiple-logo.png",
+        ATTR_ENTITY_ID: MULTIPLE_LIGHT_ENTITIES,
+        # Standard light service data which we pass
+        ATTR_BRIGHTNESS_PCT: 50,
+    }
+
+    # Mock the HTTP Response with a base64 encoded 6x1 pixels (3 red, 2 green, 1 blue)
+    aioclient_mock.get(
+        url=service_data[ATTR_URL],
+        content=base64.b64decode(load_fixture("color_extractor_url_multiple.txt")),
+    )
+
+    # Allow access to this URL using the proper mechanism
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
+
+    await _async_load_color_extractor_url(hass, service_data)
+
+    expected_rgbs = [
+        (0, 255, 0),
+        (0, 0, 255),
+        (255, 0, 0),
+    ]
+
+    for index, light in enumerate(MULTIPLE_LIGHT_ENTITIES):
+        state = hass.states.get(light)
+        assert state
+
+        # Ensure we turned it on
+        assert state.state == STATE_ON
+
+        # Brightness has changed, optional service call field
+        assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+        # Ensure the RGB values are correct
+        assert _close_enough(state.attributes[ATTR_RGB_COLOR], expected_rgbs[index])
 
 
 async def test_url_not_allowed(hass, aioclient_mock):
