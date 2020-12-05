@@ -104,7 +104,7 @@ async def async_setup_entry(
         )
 
         sensor = GoogleTravelTimeSensor(
-            hass, name, api_key, origin, destination, options
+            hass, config_entry.unique_id, name, api_key, origin, destination, options
         )
         hass.data[DATA_KEY].append(sensor)
 
@@ -137,13 +137,15 @@ async def async_setup_platform(
 class GoogleTravelTimeSensor(Entity):
     """Representation of a Google travel time sensor."""
 
-    def __init__(self, hass, name, api_key, origin, destination, options):
+    def __init__(self, hass, unique_id, name, api_key, origin, destination, options):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
         self._options = options
         self._unit_of_measurement = TIME_MINUTES
         self._matrix = None
+        self._api_key = api_key
+        self._unique_id = unique_id
         self.valid_api_connection = True
 
         # Check if location is a trackable entity
@@ -177,6 +179,20 @@ class GoogleTravelTimeSensor(Entity):
         if "duration" in _data:
             return round(_data["duration"]["value"] / 60)
         return None
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": DOMAIN,
+            "identifiers": {(DOMAIN, self._api_key)},
+            "entry_type": "service",
+        }
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID of entity."""
+        return self._unique_id
 
     @property
     def name(self):
