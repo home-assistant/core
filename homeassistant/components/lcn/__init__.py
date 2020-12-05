@@ -27,7 +27,7 @@ from .const import (
     DATA_LCN,
     DOMAIN,
 )
-from .schemes import CONFIG_SCHEMA  # noqa: 401
+from .schemas import CONFIG_SCHEMA  # noqa: 401
 from .services import (
     DynText,
     Led,
