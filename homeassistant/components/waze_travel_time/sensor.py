@@ -250,6 +250,7 @@ class WazeTravelTime(Entity):
         """Return device specific attributes."""
         return {
             "name": "Waze",
+            "identifiers": {(DOMAIN)},
             "entry_type": "service",
         }
 
