@@ -159,8 +159,10 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        override_precision = self._get_device_config().get(CONF_PRECISION_OVERRIDE)
-        if override_precision and override_precision != CONF_DEFAULT:
+        override_precision = self._get_device_config().get(
+            CONF_PRECISION_OVERRIDE, CONF_DEFAULT
+        )
+        if override_precision != CONF_DEFAULT:
             return override_precision
         if self._tuya.has_decimal():
             return PRECISION_TENTHS
