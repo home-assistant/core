@@ -389,10 +389,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=curr_conf.get(CONF_PRECISION_OVERRIDE, CONF_DEFAULT),
                 ): vol.In(
                     {
+                        CONF_DEFAULT: "Default",
                         PRECISION_TENTHS: "Tenths",
                         PRECISION_HALVES: "Halves",
                         PRECISION_WHOLE: "Whole",
-                        CONF_DEFAULT: "Default",
                     }
                 ),
                 vol.Optional(
