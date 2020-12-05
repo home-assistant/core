@@ -3,7 +3,6 @@ import logging
 
 import httpx
 
-from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import async_get_async_client
 
 DEFAULT_TIMEOUT = 10
@@ -42,13 +41,13 @@ class RestData:
         """Set url."""
         self._resource = url
 
-    @callback
-    def async_setup(self, hass):
-        """Create the async client."""
-        self._async_client = async_get_async_client(hass, verify_ssl=self._verify_ssl)
-
-    async def async_update(self):
+    async def async_update(self, hass):
         """Get the latest data from REST service with provided method."""
+        if not self._async_client:
+            self._async_client = async_get_async_client(
+                hass, verify_ssl=self._verify_ssl
+            )
+
         _LOGGER.debug("Updating from %s", self._resource)
         try:
             response = await self._async_client.request(

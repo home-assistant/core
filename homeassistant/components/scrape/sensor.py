@@ -79,8 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         auth = None
     rest = RestData(method, resource, auth, headers, None, payload, verify_ssl)
-    rest.async_setup(hass)
-    await rest.async_update()
+    await rest.async_update(hass)
 
     if rest.data is None:
         raise PlatformNotReady
@@ -137,7 +136,7 @@ class ScrapeSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the source and updates the state."""
-        await self.rest.async_update()
+        await self.rest.async_update(self.hass)
         await self._async_update_from_rest_data()
 
     async def async_added_to_hass(self):
