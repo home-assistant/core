@@ -207,6 +207,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
+        if self._override_precision != CONF_DEFAULT:
+            return self._override_precision
         return self._tuya.target_temperature_step()
 
     @property
