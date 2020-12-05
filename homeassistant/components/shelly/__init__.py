@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from socket import gethostbyname
+from socket import gaierror, gethostbyname
 
 import aioshelly
 import async_timeout
@@ -66,7 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Shelly from a config entry."""
     temperature_unit = "C" if hass.config.units.is_metric else "F"
 
-    ip_address = await hass.async_add_executor_job(gethostbyname, entry.data[CONF_HOST])
+    try:
+        ip_address = await hass.async_add_executor_job(
+            gethostbyname, entry.data[CONF_HOST]
+        )
+    except gaierror as err:
+        raise ConfigEntryNotReady from err
 
     options = aioshelly.ConnectionOptions(
         ip_address,
