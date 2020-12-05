@@ -87,7 +87,7 @@ ECOBEE_HVAC_ACTION_TO_HASS = {
     "auxHeat2": CURRENT_HVAC_HEAT,
     "auxHeat3": CURRENT_HVAC_HEAT,
     "fan": CURRENT_HVAC_FAN,
-    "humidifier": CURRENT_HVAC_DRY,
+    "humidifier": None,
     "dehumidifier": CURRENT_HVAC_DRY,
     "ventilator": CURRENT_HVAC_FAN,
     "economizer": CURRENT_HVAC_FAN,
