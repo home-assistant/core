@@ -10,6 +10,7 @@ from homeassistant.components.fan import (
     DOMAIN,
     SERVICE_SET_SPEED,
     SPEED_HIGH,
+    SPEED_LOW,
     SPEED_MEDIUM,
     SPEED_OFF,
 )
@@ -49,7 +50,9 @@ def zigpy_device(zigpy_device_mock):
             "device_type": zha.DeviceType.ON_OFF_SWITCH,
         }
     }
-    return zigpy_device_mock(endpoints)
+    return zigpy_device_mock(
+        endpoints, node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00"
+    )
 
 
 @pytest.fixture
@@ -273,3 +276,33 @@ async def async_test_zha_group_fan_entity(
 
     # test that group fan is now off
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "plug_read, expected_state, expected_speed",
+    (
+        (None, STATE_OFF, None),
+        ({"fan_mode": 0}, STATE_OFF, SPEED_OFF),
+        ({"fan_mode": 1}, STATE_ON, SPEED_LOW),
+        ({"fan_mode": 2}, STATE_ON, SPEED_MEDIUM),
+        ({"fan_mode": 3}, STATE_ON, SPEED_HIGH),
+    ),
+)
+async def test_fan_init(
+    hass,
+    zha_device_joined_restored,
+    zigpy_device,
+    plug_read,
+    expected_state,
+    expected_speed,
+):
+    """Test zha fan platform."""
+
+    cluster = zigpy_device.endpoints.get(1).fan
+    cluster.PLUGGED_ATTR_READS = plug_read
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == expected_state
+    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == expected_speed
