@@ -119,8 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         method, resource, auth, headers, params, payload, verify_ssl, timeout
     )
 
-    rest.async_setup(hass)
-    await rest.async_update()
+    await rest.async_update(hass)
 
     if rest.data is None:
         raise PlatformNotReady
@@ -210,7 +209,7 @@ class RestSensor(Entity):
         if self._resource_template is not None:
             self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
-        await self.rest.async_update()
+        await self.rest.async_update(self.hass)
         self._update_from_rest_data()
 
     async def async_added_to_hass(self):

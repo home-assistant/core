@@ -121,9 +121,11 @@ class DeconzGateway:
         async_dispatcher_send(self.hass, self.signal_reachable, True)
 
     @callback
-    def async_add_device_callback(self, device_type, device=None) -> None:
+    def async_add_device_callback(
+        self, device_type, device=None, force: bool = False
+    ) -> None:
         """Handle event of new device creation in deCONZ."""
-        if not self.option_allow_new_devices:
+        if not force and not self.option_allow_new_devices:
             return
 
         args = []

@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "connection_upgrade": "\u7531\u65bc\u9700\u8981\u5148\u5347\u7d1a\u9023\u7dda\u3001\u9023\u7dda\u81f3\u5370\u8868\u6a5f\u5931\u6557\u3002",
             "ipp_error": "\u767c\u751f IPP \u932f\u8aa4\u3002",
             "ipp_version_error": "\u4e0d\u652f\u63f4\u5370\u8868\u6a5f\u7684 IPP \u7248\u672c\u3002",
             "parse_error": "\u7372\u5f97\u5370\u8868\u6a5f\u56de\u61c9\u5931\u6557\u3002",
-            "unique_id_required": "\u8a2d\u5099\u7f3a\u5c11\u641c\u5c0b\u6240\u9700\u7368\u4e00\u8b58\u5225\u3002"
+            "unique_id_required": "\u88dd\u7f6e\u7f3a\u5c11\u641c\u5c0b\u6240\u9700\u7368\u4e00\u8b58\u5225\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
