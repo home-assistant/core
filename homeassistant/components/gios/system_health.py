@@ -1,8 +1,8 @@
 """Provide info to system health."""
-from gios import URL_STATIONS
-
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
+
+API_ENDPOINT = "http://api.gios.gov.pl/"
 
 
 @callback
@@ -16,5 +16,5 @@ def async_register(
 async def system_health_info(hass):
     """Get info for the info page."""
     return {
-        "can_reach_server": system_health.async_check_can_reach_url(hass, URL_STATIONS)
+        "can_reach_server": system_health.async_check_can_reach_url(hass, API_ENDPOINT)
     }
