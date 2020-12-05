@@ -141,6 +141,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._async_remove_input_events_handler = self.async_add_listener(
             self._async_input_events_handler
         )
+        self._last_input_value = dict()
         self._last_input_events_count = dict()
 
     @callback
@@ -150,13 +151,28 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             if (
                 "inputEvent" not in block.sensor_ids
                 or "inputEventCnt" not in block.sensor_ids
+                or "input" not in block.sensor_ids
             ):
                 continue
 
             channel = int(block.channel or 0) + 1
+            input_value = block.input
             event_type = block.inputEvent
             last_event_count = self._last_input_events_count.get(channel)
+            last_input_value = self._last_input_value.get(channel)
             self._last_input_events_count[channel] = block.inputEventCnt
+            self._last_input_value[channel] = input_value
+
+            if last_input_value is not None and input_value != last_input_value:
+                self.hass.bus.async_fire(
+                    "shelly.input_changed",
+                    {
+                        "device_id": self.device_id,
+                        "device": self.device.settings["device"]["hostname"],
+                        "channel": channel,
+                        "value": input_value,
+                    },
+                )
 
             if last_event_count == block.inputEventCnt or event_type == "":
                 continue
