@@ -33,9 +33,12 @@ def async_get_async_client(
     """
     key = DATA_ASYNC_CLIENT if verify_ssl else DATA_ASYNC_CLIENT_NOVERIFY
 
-    hass.data.setdefault(key, async_create_async_httpx_client(hass, verify_ssl))
+    client: Optional[httpx.AsyncClient] = hass.data.get(key)
+    
+    if client is None:
+        client = hass.data[key] = async_create_async_httpx_client(hass, verify_ssl)
 
-    return cast(httpx.AsyncClient, hass.data[key])
+    return client
 
 
 @callback
