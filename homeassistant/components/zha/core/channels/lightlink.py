@@ -28,7 +28,7 @@ class LightLink(ZigbeeChannel):
             return
 
         try:
-            supported_groups, idx, groups = await self.cluster.get_group_identifiers(0)
+            _, _, groups = await self.cluster.get_group_identifiers(0)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as exc:
             self.warning("Couldn't get list of groups: %s", str(exc))
             return
