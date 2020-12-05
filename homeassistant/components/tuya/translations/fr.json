@@ -40,7 +40,8 @@
                     "support_color": "Forcer la prise en charge des couleurs",
                     "temp_divider": "Diviseur de valeurs de temp\u00e9rature (0 = utiliser la valeur par d\u00e9faut)",
                     "tuya_max_coltemp": "Temp\u00e9rature de couleur maximale rapport\u00e9e par l'appareil",
-                    "unit_of_measurement": "Unit\u00e9 de temp\u00e9rature utilis\u00e9e par l'appareil"
+                    "unit_of_measurement": "Unit\u00e9 de temp\u00e9rature utilis\u00e9e par l'appareil",
+                    "precision_override": "Pr\u00e9cision de temp\u00e9rature"
                 },
                 "description": "Configurer les options pour ajuster les informations affich\u00e9es pour l'appareil {device_type} ` {device_name} `",
                 "title": "Configurer l'appareil Tuya"

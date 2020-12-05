@@ -40,7 +40,8 @@
                     "support_color": "Luba v\u00e4rvuse juhtimine",
                     "temp_divider": "Temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
                     "tuya_max_coltemp": "Seadme teatatud maksimaalne v\u00e4rvitemperatuur",
-                    "unit_of_measurement": "Seadme temperatuuri\u00fchik"
+                    "unit_of_measurement": "Seadme temperatuuri\u00fchik",
+                    "precision_override": "Temperatuuri t\u00e4psus"
                 },
                 "description": "Suvandid \u00fcksuse {device_type} {device_name} kuvatava teabe muutmiseks",
                 "title": "H\u00e4\u00e4lesta Tuya seade"

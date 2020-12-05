@@ -21,6 +21,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_DEFAULT,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     PRECISION_TENTHS,
@@ -36,6 +37,7 @@ from .const import (
     CONF_CURR_TEMP_DIVIDER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_PRECISION_OVERRIDE,
     CONF_TEMP_DIVIDER,
     DOMAIN,
     SIGNAL_CONFIG_ENTITY,
@@ -157,6 +159,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        override_precision = self._get_device_config().get(CONF_PRECISION_OVERRIDE)
+        if override_precision and override_precision != CONF_DEFAULT:
+            return override_precision
         if self._tuya.has_decimal():
             return PRECISION_TENTHS
         return PRECISION_WHOLE

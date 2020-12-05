@@ -7,11 +7,15 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_DEFAULT,
     CONF_PASSWORD,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     ENTITY_MATCH_NONE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -28,6 +32,7 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_KELVIN,
     CONF_MIN_TEMP,
+    CONF_PRECISION_OVERRIDE,
     CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     CONF_SUPPORT_COLOR,
@@ -379,6 +384,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CURR_TEMP_DIVIDER,
                     default=curr_conf.get(CONF_CURR_TEMP_DIVIDER, 0),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
+                vol.Optional(
+                    CONF_PRECISION_OVERRIDE,
+                    default=curr_conf.get(CONF_PRECISION_OVERRIDE, CONF_DEFAULT),
+                ): vol.In(
+                    {
+                        PRECISION_TENTHS: "Tenths",
+                        PRECISION_HALVES: "Halves",
+                        PRECISION_WHOLE: "Whole",
+                        CONF_DEFAULT: "Default",
+                    }
+                ),
                 vol.Optional(
                     CONF_MIN_TEMP,
                     default=curr_conf.get(CONF_MIN_TEMP, 0),

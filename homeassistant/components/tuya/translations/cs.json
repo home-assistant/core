@@ -38,7 +38,8 @@
                     "min_temp": "Minim\u00e1ln\u00ed c\u00edlov\u00e1 teplota (pou\u017eijte min a max = 0 jako v\u00fdchoz\u00ed)",
                     "support_color": "Vynutit podporu barev",
                     "tuya_max_coltemp": "Maxim\u00e1ln\u00ed teplota barev nahl\u00e1\u0161en\u00e1 za\u0159\u00edzen\u00edm",
-                    "unit_of_measurement": "Jednotka teploty pou\u017e\u00edvan\u00e1 za\u0159\u00edzen\u00edm"
+                    "unit_of_measurement": "Jednotka teploty pou\u017e\u00edvan\u00e1 za\u0159\u00edzen\u00edm",
+                    "precision_override": "P\u0159esnost teploty"
                 },
                 "title": "Nastavte za\u0159\u00edzen\u00ed Tuya"
             },
