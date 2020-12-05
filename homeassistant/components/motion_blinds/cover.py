@@ -176,7 +176,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
-        self._blind.Register_callback("cover", self.push_callback)
+        self._blind.Register_callback(self.unique_id, self.push_callback)
         async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
         await super().async_added_to_hass()
 
@@ -197,7 +197,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._blind.Remove_callback("cover")
+        self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
 
     def open_cover(self, **kwargs):

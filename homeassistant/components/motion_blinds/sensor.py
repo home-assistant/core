@@ -104,12 +104,12 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes."""
-        self._blind.Register_callback("battery", self.push_callback)
+        self._blind.Register_callback(self.unique_id, self.push_callback)
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._blind.Remove_callback("battery")
+        self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
 
 
@@ -213,10 +213,10 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes."""
-        self._device.Register_callback("RSSI", self.push_callback)
+        self._device.Register_callback(self.unique_id, self.push_callback)
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._device.Remove_callback("RSSI")
+        self._device.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
