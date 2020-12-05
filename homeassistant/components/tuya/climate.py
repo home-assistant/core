@@ -112,6 +112,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._def_hvac_mode = HVAC_MODE_AUTO
         self._min_temp = None
         self._max_temp = None
+        self._override_precision = CONF_DEFAULT
 
     @callback
     def _process_config(self):
@@ -131,6 +132,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         else:
             self._min_temp = min_temp
             self._max_temp = max_temp
+        self._override_precision = config.get(CONF_PRECISION_OVERRIDE, CONF_DEFAULT)
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
@@ -159,11 +161,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        override_precision = self._get_device_config().get(
-            CONF_PRECISION_OVERRIDE, CONF_DEFAULT
-        )
-        if override_precision != CONF_DEFAULT:
-            return override_precision
+        if self._override_precision != CONF_DEFAULT:
+            return self._override_precision
         if self._tuya.has_decimal():
             return PRECISION_TENTHS
         return PRECISION_WHOLE
