@@ -21,6 +21,7 @@ from homeassistant.components.light import (
     LIGHT_TURN_ON_SCHEMA,
     SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
@@ -47,16 +48,22 @@ def _get_file(file_path):
     return file_path
 
 
-def _get_color(file_handler) -> tuple:
+def _get_colors(file_handler, light_count) -> tuple:
     """Given an image file, extract the predominant color from it."""
     color_thief = ColorThief(file_handler)
 
-    # get_color returns a SINGLE RGB value for the given image
-    color = color_thief.get_color(quality=1)
+    if light_count == 1:
+        # get_color returns a single RGB value for the given image
+        colors = [color_thief.get_color(quality=10)]
+        _LOGGER.debug("get_palette response: %s", colors)
+    else:
+        # get_color returns a single RGB value for the given image
+        colors = color_thief.get_palette(quality=10, color_count=light_count)
+        _LOGGER.debug("get_palette response: %s", colors)
 
-    _LOGGER.debug("Extracted RGB color %s from image", color)
+    _LOGGER.debug("Extracted %d RGB colors from image", len(colors))
 
-    return color
+    return colors
 
 
 async def async_setup(hass, hass_config):
@@ -65,18 +72,23 @@ async def async_setup(hass, hass_config):
     async def async_handle_service(service_call):
         """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
+        number_of_lights = len(service_data[ATTR_ENTITY_ID])
+
+        _LOGGER.debug("Number of lights: %d", number_of_lights)
 
         try:
             if ATTR_URL in service_data:
                 image_type = "URL"
                 image_reference = service_data.pop(ATTR_URL)
-                color = await async_extract_color_from_url(image_reference)
+                colors = await async_extract_colors_from_url(
+                    image_reference, number_of_lights
+                )
 
             elif ATTR_PATH in service_data:
                 image_type = "file path"
                 image_reference = service_data.pop(ATTR_PATH)
-                color = await hass.async_add_executor_job(
-                    extract_color_from_path, image_reference
+                colors = await hass.async_add_executor_job(
+                    extract_colors_from_path, image_reference, number_of_lights
                 )
 
         except UnidentifiedImageError as ex:
@@ -88,12 +100,19 @@ async def async_setup(hass, hass_config):
             )
             return
 
-        if color:
-            service_data[ATTR_RGB_COLOR] = color
+        if colors:
+            if isinstance(service_data[ATTR_ENTITY_ID], list):
+                lights = service_data[ATTR_ENTITY_ID]
+            else:
+                lights = [service_data[ATTR_ENTITY_ID]]
 
-            await hass.services.async_call(
-                LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
-            )
+            for _, (entity_id, color) in enumerate(zip(lights, colors)):
+                service_data[ATTR_ENTITY_ID] = entity_id
+                service_data[ATTR_RGB_COLOR] = color
+
+                await hass.services.async_call(
+                    LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
+                )
 
     hass.services.async_register(
         DOMAIN,
@@ -102,7 +121,7 @@ async def async_setup(hass, hass_config):
         schema=SERVICE_SCHEMA,
     )
 
-    async def async_extract_color_from_url(url):
+    async def async_extract_colors_from_url(url, light_count):
         """Handle call for URL based image."""
         if not hass.config.is_allowed_external_url(url):
             _LOGGER.error(
@@ -130,9 +149,9 @@ async def async_setup(hass, hass_config):
             _file.name = "color_extractor.jpg"
             _file.seek(0)
 
-            return _get_color(_file)
+            return _get_colors(_file, light_count)
 
-    def extract_color_from_path(file_path):
+    def extract_colors_from_path(file_path, light_count):
         """Handle call for local file based image."""
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error(
@@ -144,6 +163,6 @@ async def async_setup(hass, hass_config):
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
         _file = _get_file(file_path)
-        return _get_color(_file)
+        return _get_colors(_file, light_count)
 
     return True
