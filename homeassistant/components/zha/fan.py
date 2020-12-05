@@ -172,14 +172,15 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: List[State] = list(filter(None, all_states))
         on_states: List[State] = [state for state in states if state.state != SPEED_OFF]
+
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
         # for now just use first non off state since its kind of arbitrary
         if not on_states:
             self._state = SPEED_OFF
         else:
-            self._state = states[0].state
+            self._state = on_states[0].state
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        await super().async_added_to_hass()
         await self.async_update()
+        await super().async_added_to_hass()
