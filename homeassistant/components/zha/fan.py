@@ -62,7 +62,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            discovery.async_add_entities, async_add_entities, entities_to_create
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            update_before_add=False,
         ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
@@ -175,3 +178,8 @@ class FanGroup(BaseFan, ZhaGroupEntity):
             self._state = SPEED_OFF
         else:
             self._state = states[0].state
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = VALUE_TO_SPEED.get(last_state.state, self._state)

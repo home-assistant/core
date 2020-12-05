@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.setup import async_setup_component
 
 from .common import (
     async_enable_traffic,
@@ -306,3 +307,39 @@ async def test_fan_init(
     assert entity_id is not None
     assert hass.states.get(entity_id).state == expected_state
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == expected_speed
+
+
+async def test_fan_update_entity(
+    hass,
+    zha_device_joined_restored,
+    zigpy_device,
+):
+    """Test zha fan platform."""
+
+    cluster = zigpy_device.endpoints.get(1).fan
+    cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
+    assert cluster.read_attributes.await_count == 1
+
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
+    assert cluster.read_attributes.await_count == 2
+
+    cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_LOW
+    assert cluster.read_attributes.await_count == 3
