@@ -40,8 +40,7 @@
                     "support_color": "Sz\u00ednt\u00e1mogat\u00e1s k\u00e9nyszer\u00edt\u00e9se",
                     "temp_divider": "Sz\u00ednh\u0151m\u00e9rs\u00e9klet-\u00e9rt\u00e9kek oszt\u00f3ja (0 = alap\u00e9rtelmezett)",
                     "tuya_max_coltemp": "Az eszk\u00f6z \u00e1ltal megadott maxim\u00e1lis sz\u00ednh\u0151m\u00e9rs\u00e9klet",
-                    "unit_of_measurement": "Az eszk\u00f6z \u00e1ltal haszn\u00e1lt h\u0151m\u00e9rs\u00e9kleti egys\u00e9g",
-                    "precision_override": "A h\u0151m\u00e9rs\u00e9klet pontoss\u00e1ga"
+                    "unit_of_measurement": "Az eszk\u00f6z \u00e1ltal haszn\u00e1lt h\u0151m\u00e9rs\u00e9kleti egys\u00e9g"
                 },
                 "description": "Konfigur\u00e1lja a(z) {device_type} eszk\u00f6zt \" {device_name} {device_type} \" megjelen\u00edtett inform\u00e1ci\u00f3inak be\u00e1ll\u00edt\u00e1s\u00e1hoz",
                 "title": "Konfigur\u00e1lja a Tuya eszk\u00f6zt"

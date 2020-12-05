@@ -40,8 +40,7 @@
                     "support_color": "Tving fargest\u00f8tte",
                     "temp_divider": "Deler temperaturverdier (0 = bruk standard)",
                     "tuya_max_coltemp": "Maks fargetemperatur rapportert av enheten",
-                    "unit_of_measurement": "Temperaturenhet som brukes av enheten",
-                    "precision_override": "Temperatur presisjon"
+                    "unit_of_measurement": "Temperaturenhet som brukes av enheten"
                 },
                 "description": "Konfigurer alternativer for \u00e5 justere vist informasjon for {device_type} device ` {device_name} `",
                 "title": "Konfigurere Tuya-enhet"

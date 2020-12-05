@@ -40,8 +40,7 @@
                     "support_color": "Force color support",
                     "temp_divider": "Temperature values divider (0 = use default)",
                     "tuya_max_coltemp": "Max color temperature reported by device",
-                    "unit_of_measurement": "Temperature unit used by device",
-                    "precision_override": "Temperature precision"
+                    "unit_of_measurement": "Temperature unit used by device"
                 },
                 "description": "Configure options to adjust displayed information for {device_type} device `{device_name}`",
                 "title": "Configure Tuya Device"
