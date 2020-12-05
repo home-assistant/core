@@ -476,7 +476,6 @@ homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts @bdraco @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
-homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery

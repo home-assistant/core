@@ -1,8 +1,20 @@
 {
   "domain": "tahoma",
-  "name": "Tahoma",
+  "name": "Somfy TaHoma",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tahoma",
-  "requirements": ["tahoma-api==0.0.16"],
-  "codeowners": ["@philklei"],
-  "iot_class": "cloud_polling"
+  "requirements": [
+    "pyhoma==0.5.9"
+  ],
+  "codeowners": [
+    "@imicknl",
+    "@vlebourl",
+    "@tetienne"
+  ],
+  "dhcp": [
+    {
+      "hostname": "gateway*",
+      "macaddress": "F8811A*"
+    }
+  ]
 }

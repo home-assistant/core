@@ -971,7 +971,6 @@ omit =
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*
     homeassistant/components/tado/device_tracker.py
-    homeassistant/components/tahoma/*
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py

@@ -2180,9 +2180,6 @@ synology-srm==0.2.0
 # homeassistant.components.synology_dsm
 synologydsm-api==1.0.2
 
-# homeassistant.components.tahoma
-tahoma-api==0.0.16
-
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
 
