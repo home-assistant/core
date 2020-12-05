@@ -179,7 +179,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         else:
             self._state = states[0].state
 
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._state = VALUE_TO_SPEED.get(last_state.state, self._state)
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_update()
