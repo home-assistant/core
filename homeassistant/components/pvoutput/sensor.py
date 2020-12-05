@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -60,7 +59,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await rest.async_update()
 
     if rest.data is None:
-        raise PlatformNotReady
+        _LOGGER.error("Unable to fetch data from PVOutput")
+        return False
 
     async_add_entities([PvoutputSensor(rest, name)])
 
