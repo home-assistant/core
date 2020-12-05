@@ -155,6 +155,10 @@ async def test_setup_get(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
+    assert hass.states.get("sensor.foo").state == ""
+    await hass.helpers.entity_component.async_update_entity("sensor.sensor")
+    assert hass.states.get("sensor.foo").state == ""
+
 
 @respx.mock
 async def test_setup_get_digest_auth(hass):
