@@ -932,7 +932,7 @@ pywebpush==1.9.2
 pywilight==0.0.65
 
 # homeassistant.components.zerproc
-pyzerproc==0.2.5
+pyzerproc==0.3.0
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
