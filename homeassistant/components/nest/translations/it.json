@@ -36,5 +36,13 @@
                 "title": "Scegli il metodo di autenticazione"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Movimento rilevato",
+            "camera_person": "Persona rilevata",
+            "camera_sound": "Suono rilevato",
+            "doorbell_chime": "Campanello premuto"
+        }
     }
 }
