@@ -126,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     country_code = entry.data[CONF_COUNTRYCODE]
     platform = entry.data[CONF_PLATFORM]
 
-    if tuya == None:
+    if tuya is None:
         try:
             tuya = TuyaApi()
             await hass.async_add_executor_job(
@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except (
             TuyaNetException,
             TuyaServerException,
-            TuyaFrequentlyInvokeException
+            TuyaFrequentlyInvokeException,
         ) as exc:
             raise ConfigEntryNotReady() from exc
 
