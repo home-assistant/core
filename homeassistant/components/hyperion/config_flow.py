@@ -476,9 +476,7 @@ class HyperionOptionsFlow(OptionsFlow):
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
                     vol.Optional(
                         CONF_MODE,
-                        default=self._config_entry.options.get(
-                            CONF_MODE_COMPONENT, DEFAULT_MODE
-                        ),
+                        default=self._config_entry.options.get(CONF_MODE, DEFAULT_MODE),
                     ): vol.In([CONF_MODE_COMPONENT, CONF_MODE_PRIORITY]),
                 }
             ),

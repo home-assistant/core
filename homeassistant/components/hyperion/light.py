@@ -344,15 +344,9 @@ class HyperionLight(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        if not bool(self._client.is_on()):
-            return False
-        priority = self._get_active_priority()
-        if not priority:
-            return False
-        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
-            if priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB) == COLOR_BLACK:
-                return False
-        return True
+        return bool(self._client.is_on()) and self._is_priority_on(
+            self._get_active_priority()
+        )
 
     @property
     def icon(self) -> str:
@@ -553,6 +547,16 @@ class HyperionLight(LightEntity):
             )
             self.async_write_ha_state()
 
+    def _is_priority_on(self, priority: Optional[Dict[str, Any]]) -> bool:
+        """Determine if a given priority reflects the light being 'on'."""
+        if not priority:
+            return False
+        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+            rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
+            if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
+                return False
+        return True
+
     def _get_active_priority(self) -> Optional[Dict[str, Any]]:
         """Get the appropriate active priority."""
         if self._get_option(CONF_MODE) == CONF_MODE_PRIORITY:
@@ -568,7 +572,13 @@ class HyperionLight(LightEntity):
     def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion priorities."""
         priority = self._get_active_priority()
-        if priority:
+
+        # Black is treated as 'off' (and Home Assistant does not support selecting black
+        # from the color selector). Do not set our internal state if the priority is
+        # 'off' (i.e. if black is active, as we want to ensure it seamlessly turns back
+        # on at the correct prior color on the next 'on' call.
+        if self._is_priority_on(priority):
+            assert priority
             componentid = priority.get(const.KEY_COMPONENTID)
             if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
                 self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
@@ -579,16 +589,10 @@ class HyperionLight(LightEntity):
                     rgb_color=DEFAULT_COLOR, effect=priority[const.KEY_OWNER]
                 )
             elif componentid == const.KEY_COMPONENTID_COLOR:
-                rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
-                # Black is treated as 'off' (and Home Assistant does not support
-                # selecting black from the color selector). Do not set our internal
-                # state if black is active so it seamlessly turns back on at the correct
-                # prior color on the next 'on' call.
-                if rgb_color != COLOR_BLACK:
-                    self._set_internal_state(
-                        rgb_color=priority[const.KEY_VALUE][const.KEY_RGB],
-                        effect=KEY_EFFECT_SOLID,
-                    )
+                self._set_internal_state(
+                    rgb_color=priority[const.KEY_VALUE][const.KEY_RGB],
+                    effect=KEY_EFFECT_SOLID,
+                )
         self.async_write_ha_state()
 
     def _update_effect_list(self, _: Optional[Dict[str, Any]] = None) -> None:
