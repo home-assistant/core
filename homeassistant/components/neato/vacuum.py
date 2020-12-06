@@ -109,7 +109,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
     def __init__(self, neato, robot, mapdata, persistent_maps):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self._available = neato.logged_in if neato is not None else False
+        self._available = neato is not None
         self._mapdata = mapdata
         self._name = f"{self.robot.name}"
         self._robot_has_map = self.robot.has_persistent_maps

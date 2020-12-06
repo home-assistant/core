@@ -37,7 +37,7 @@ class NeatoSensor(Entity):
     def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self._available = neato.logged_in if neato is not None else False
+        self._available = neato is not None
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
         self._state = None
