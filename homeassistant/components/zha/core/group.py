@@ -195,7 +195,9 @@ class ZHAGroup(LogMixin):
         domain_entity_ids: List[str] = []
         for member in self.members:
             entities = async_entries_for_device(
-                self._zha_gateway.ha_entity_registry, member.device.device_id
+                self._zha_gateway.ha_entity_registry,
+                member.device.device_id,
+                include_disabled_entities=True,
             )
             domain_entity_ids.extend(
                 [entity.entity_id for entity in entities if entity.domain == domain]

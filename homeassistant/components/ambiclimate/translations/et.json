@@ -3,11 +3,7 @@
         "abort": {
             "access_token": "Tundmatu t\u00f5rge juurdep\u00e4\u00e4suloa loomisel.",
             "already_configured": "Konto on juba seadistatud",
-            "already_configured_account": "Kasutaja on juba lisatud",
-            "already_setup": "Ambiclimate'i konto on seadistatud.",
-            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
-            "no_config": "Enne autentimist pead konfigureerima Ambiclimate konto. [Palun loe juhiseid] (https://www.home-assistant.io/components/ambiclimate/) (https://www.home-assistant.io/components/ambiclimate/).",
-            "oauth2_missing_configuration": "Osis pole h\u00e4\u00e4lestatud. Lisainfot saad dokumentatsioonist."
+            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni."
         },
         "create_entry": {
             "default": "Ambiclimate autentimine \u00f5nnestus"

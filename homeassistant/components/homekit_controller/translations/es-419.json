@@ -11,9 +11,7 @@
         },
         "error": {
             "authentication_error": "C\u00f3digo de HomeKit incorrecto. Por favor revisalo e int\u00e9ntalo de nuevo.",
-            "busy_error": "El dispositivo se neg\u00f3 a agregar el emparejamiento ya que ya se est\u00e1 emparejando con otro controlador.",
             "max_peers_error": "El dispositivo se neg\u00f3 a agregar emparejamiento ya que no tiene almacenamiento de emparejamiento libre.",
-            "max_tries_error": "El dispositivo se neg\u00f3 a agregar el emparejamiento ya que recibi\u00f3 m\u00e1s de 100 intentos de autenticaci\u00f3n fallidos.",
             "pairing_failed": "Se produjo un error no controlado al intentar vincularse con este dispositivo. Esto puede ser una falla temporal o su dispositivo puede no ser compatible actualmente.",
             "unable_to_pair": "No se puede vincular, por favor intente nuevamente.",
             "unknown_error": "El dispositivo inform\u00f3 un error desconocido. Vinculaci\u00f3n fallida."

@@ -25,8 +25,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
     ACTION,
@@ -39,7 +38,6 @@ from .const import (
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
-    SERVICE_NEATO_CUSTOM_CLEANING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,16 +71,6 @@ ATTR_NAVIGATION = "navigation"
 ATTR_CATEGORY = "category"
 ATTR_ZONE = "zone"
 
-SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(ATTR_MODE, default=2): cv.positive_int,
-        vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
-        vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
-        vol.Optional(ATTR_ZONE): cv.string,
-    }
-)
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato vacuum with config entry."""
@@ -99,30 +87,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Adding vacuums %s", dev)
     async_add_entities(dev, True)
 
-    def neato_custom_cleaning_service(call):
-        """Zone cleaning service that allows user to change options."""
-        for robot in service_to_entities(call):
-            if call.service == SERVICE_NEATO_CUSTOM_CLEANING:
-                mode = call.data.get(ATTR_MODE)
-                navigation = call.data.get(ATTR_NAVIGATION)
-                category = call.data.get(ATTR_CATEGORY)
-                zone = call.data.get(ATTR_ZONE)
-                try:
-                    robot.neato_custom_cleaning(mode, navigation, category, zone)
-                except NeatoRobotException as ex:
-                    _LOGGER.error("Neato vacuum connection error: %s", ex)
+    platform = entity_platform.current_platform.get()
+    assert platform is not None
 
-    def service_to_entities(call):
-        """Return the known devices that a service call mentions."""
-        entity_ids = extract_entity_ids(hass, call)
-        entities = [entity for entity in dev if entity.entity_id in entity_ids]
-        return entities
-
-    hass.services.async_register(
-        NEATO_DOMAIN,
-        SERVICE_NEATO_CUSTOM_CLEANING,
-        neato_custom_cleaning_service,
-        schema=SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA,
+    platform.async_register_entity_service(
+        "custom_cleaning",
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(ATTR_MODE, default=2): cv.positive_int,
+            vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
+            vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
+            vol.Optional(ATTR_ZONE): cv.string,
+        },
+        "neato_custom_cleaning",
     )
 
 
@@ -407,7 +384,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def neato_custom_cleaning(self, mode, navigation, category, zone=None, **kwargs):
+    def neato_custom_cleaning(self, mode, navigation, category, zone=None):
         """Zone cleaning service call."""
         boundary_id = None
         if zone is not None:

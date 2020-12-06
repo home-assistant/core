@@ -39,17 +39,17 @@
                     "ignore_wired_bug": "\u95dc\u9589 UniFi \u6709\u7dda\u932f\u8aa4\u908f\u8f2f",
                     "ssid_filter": "\u9078\u64c7\u6240\u8981\u8ffd\u8e64\u7684\u7121\u7dda\u7db2\u8def",
                     "track_clients": "\u8ffd\u8e64\u7db2\u8def\u5ba2\u6236\u7aef",
-                    "track_devices": "\u8ffd\u8e64\u7db2\u8def\u8a2d\u5099\uff08Ubiquiti \u8a2d\u5099\uff09",
+                    "track_devices": "\u8ffd\u8e64\u7db2\u8def\u88dd\u7f6e\uff08Ubiquiti \u88dd\u7f6e\uff09",
                     "track_wired_clients": "\u5305\u542b\u6709\u7dda\u7db2\u8def\u5ba2\u6236\u7aef"
                 },
-                "description": "\u8a2d\u5b9a\u8a2d\u5099\u8ffd\u8e64",
+                "description": "\u8a2d\u5b9a\u88dd\u7f6e\u8ffd\u8e64",
                 "title": "UniFi \u9078\u9805 1/3"
             },
             "simple_options": {
                 "data": {
                     "block_client": "\u7db2\u8def\u5b58\u53d6\u63a7\u5236\u5ba2\u6236\u7aef",
                     "track_clients": "\u8ffd\u8e64\u7db2\u8def\u5ba2\u6236\u7aef",
-                    "track_devices": "\u8ffd\u8e64\u7db2\u8def\u8a2d\u5099\uff08Ubiquiti \u8a2d\u5099\uff09"
+                    "track_devices": "\u8ffd\u8e64\u7db2\u8def\u88dd\u7f6e\uff08Ubiquiti \u88dd\u7f6e\uff09"
                 },
                 "description": "\u8a2d\u5b9a UniFi \u6574\u5408"
             },

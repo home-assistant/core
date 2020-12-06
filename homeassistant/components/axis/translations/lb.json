@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "bad_config_file": "Feelerhaft Donn\u00e9e\u00eb aus der Konfiguratioun's Datei",
             "link_local_address": "Lokal Link Adressen ginn net \u00ebnnerst\u00ebtzt",
             "not_axis_device": "Entdeckten Apparat ass keen Axis Apparat"
         },
@@ -10,8 +9,6 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "already_in_progress": "Konfiguratioun's Oflas ass schon am gaang",
             "cannot_connect": "Feeler beim verbannen",
-            "device_unavailable": "Apparat ass net erreechbar",
-            "faulty_credentials": "Ong\u00eblteg Login Informatioune",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "flow_title": "Axis Apparat: {name} ({host})",

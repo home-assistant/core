@@ -8,8 +8,7 @@
             "onvif_error": "Error durant la configuraci\u00f3 del dispositiu ONVIF. Consulta els registres per a m\u00e9s informaci\u00f3."
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_failed": "No s'ha pogut connectar al servei ONVIF amb les credencials proporcionades."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "auth": {

@@ -1,12 +1,12 @@
-"""Asyncio backports for Python 3.6 compatibility."""
-from asyncio import coroutines, ensure_future, get_running_loop
+"""Asyncio utilities."""
+from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
 import concurrent.futures
 import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, Callable, Coroutine, TypeVar
+from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,3 +121,21 @@ def protect_loop(func: Callable) -> Callable:
         return func(*args, **kwargs)
 
     return protected_loop_func
+
+
+async def gather_with_concurrency(
+    limit: int, *tasks: Any, return_exceptions: bool = False
+) -> Any:
+    """Wrap asyncio.gather to limit the number of concurrent tasks.
+
+    From: https://stackoverflow.com/a/61478547/9127614
+    """
+    semaphore = Semaphore(limit)
+
+    async def sem_task(task: Awaitable[Any]) -> Any:
+        async with semaphore:
+            return await task
+
+    return await gather(
+        *(sem_task(task) for task in tasks), return_exceptions=return_exceptions
+    )

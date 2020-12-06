@@ -2,7 +2,7 @@
   "domain": "knx",
   "name": "KNX",
   "documentation": "https://www.home-assistant.io/integrations/knx",
-  "requirements": ["xknx==0.15.0"],
+  "requirements": ["xknx==0.15.6"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "quality_scale": "silver"
 }

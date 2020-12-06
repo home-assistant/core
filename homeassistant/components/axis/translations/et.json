@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "bad_config_file": "Vigane konfiguratsioonikirje",
             "link_local_address": "Kohtv\u00f5rgu linke ei toetata",
             "not_axis_device": "Avastatud seade pole Axise seade"
         },
@@ -10,8 +9,6 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendamine nurjus",
-            "device_unavailable": "Seade pole saadaval",
-            "faulty_credentials": "Sobimatu mandaat.",
             "invalid_auth": "Tuvastamise viga"
         },
         "flow_title": "Axise seade: {name} ({host})",

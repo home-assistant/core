@@ -2,8 +2,10 @@
 from datetime import timedelta
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import automation, sensor
+from homeassistant.components.homeassistant.triggers import time
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -492,3 +494,93 @@ async def test_if_fires_using_at_sensor(hass, calls):
 
     # We should not have listened to anything
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    "conf",
+    [
+        {"platform": "time", "at": "input_datetime.bla"},
+        {"platform": "time", "at": "sensor.bla"},
+        {"platform": "time", "at": "12:34"},
+    ],
+)
+def test_schema_valid(conf):
+    """Make sure we don't accept number for 'at' value."""
+    time.TRIGGER_SCHEMA(conf)
+
+
+@pytest.mark.parametrize(
+    "conf",
+    [
+        {"platform": "time", "at": "binary_sensor.bla"},
+        {"platform": "time", "at": 745},
+        {"platform": "time", "at": "25:00"},
+    ],
+)
+def test_schema_invalid(conf):
+    """Make sure we don't accept number for 'at' value."""
+    with pytest.raises(vol.Invalid):
+        time.TRIGGER_SCHEMA(conf)
+
+
+async def test_datetime_in_past_on_load(hass, calls):
+    """Test time trigger works if input_datetime is in past."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {"input_datetime": {"my_trigger": {"has_date": True, "has_time": True}}},
+    )
+
+    now = dt_util.now()
+    past = now - timedelta(days=2)
+    future = now + timedelta(days=1)
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.my_trigger",
+            "datetime": str(past.replace(tzinfo=None)),
+        },
+        blocking=True,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": "input_datetime.my_trigger"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+                    },
+                },
+            }
+        },
+    )
+
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.my_trigger",
+            "datetime": str(future.replace(tzinfo=None)),
+        },
+        blocking=True,
+    )
+
+    async_fire_time_changed(hass, future + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert (
+        calls[0].data["some"]
+        == f"time-{future.day}-{future.hour}-input_datetime.my_trigger"
+    )

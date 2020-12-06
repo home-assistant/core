@@ -10,9 +10,7 @@
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
         },
         "error": {
-            "already_configured": "Account is al geconfigureerd",
-            "already_configured_account": "Account is al geconfigureerd",
-            "profile_exists": "Het gebruikersprofiel is al geconfigureerd. Geef een unieke profielnaam op."
+            "already_configured": "Account is al geconfigureerd"
         },
         "step": {
             "pick_implementation": {

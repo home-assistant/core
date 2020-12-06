@@ -28,9 +28,12 @@ async def async_setup_entry(hass, config, async_add_entities):
     """Initialize a Spider thermostat."""
     api = hass.data[DOMAIN][config.entry_id]
 
-    entities = [SpiderThermostat(api, entity) for entity in api.get_thermostats()]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            SpiderThermostat(api, entity)
+            for entity in await hass.async_add_executor_job(api.get_thermostats)
+        ]
+    )
 
 
 class SpiderThermostat(ClimateEntity):

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "conn_error": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
-        },
         "step": {
             "user": {
                 "data": {

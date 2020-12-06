@@ -1,5 +1,4 @@
 {
-  "title": "devolo Home Control",
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -14,8 +13,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]",
           "home_control_url": "Home Control [%key:common::config_flow::data::url%]"
-        },
-        "title": "devolo Home Control"
+        }
       }
     }
   }

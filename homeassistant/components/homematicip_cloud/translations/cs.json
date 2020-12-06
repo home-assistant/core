@@ -6,7 +6,6 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "error": {
-            "invalid_pin": "Neplatn\u00fd PIN, zkuste to pros\u00edm znovu.",
             "invalid_sgtin_or_pin": "Neplatn\u00fd k\u00f3d SGTIN nebo PIN, zkuste to pros\u00edm znovu.",
             "press_the_button": "Stiskn\u011bte modr\u00e9 tla\u010d\u00edtko.",
             "register_failed": "Registrace se nezda\u0159ila, zkuste to znovu.",

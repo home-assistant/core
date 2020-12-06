@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "login": "Sisselogimise viga: palun kontrolli oma e-posti ja salas\u00f5na",
             "send_verification_code": "Kinnituskoodi saatmine nurjus",
             "validate_verification_code": "Tuvastuskoodi kinnitamine nurjus. Vali usaldusseade ja proovi uuesti"
         },

@@ -4,11 +4,9 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
-            "not_found": "W sieci nie znaleziono obs\u0142ugiwanego urz\u0105dzenia AVM FRITZ!Box",
             "not_supported": "Po\u0142\u0105czony z AVM FRITZ!Box, ale nie jest w stanie kontrolowa\u0107 urz\u0105dze\u0144 Smart Home"
         },
         "error": {
-            "auth_failed": "Nazwa u\u017cytkownika i/lub has\u0142o s\u0105 nieprawid\u0142owe",
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "flow_title": "AVM FRITZ!Box: {name}",

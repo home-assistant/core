@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Account is al geconfigureerd"
         },
-        "error": {
-            "connection_error": "Kon niet verbinden"
-        },
         "step": {
             "user": {
                 "data": {

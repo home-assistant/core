@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Konto ass scho registr\u00e9iert",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
             "still_awaiting_mfa": "Waart nach den MFA E-Mail Klick.",
             "unknown": "Onerwaarte Feeler"
         },

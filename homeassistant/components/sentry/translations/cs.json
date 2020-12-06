@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry je ji\u017e nastaveno",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {

@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert",
-            "already_configured_account": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "account_error": "Ugyldig godkjenning",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
-            "session_error": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
         "step": {

@@ -10,10 +10,6 @@
         "flow_title": "Roku: {name}",
         "step": {
             "ssdp_confirm": {
-                "data": {
-                    "one": "uno",
-                    "other": "altri"
-                },
                 "description": "Vuoi impostare {name}?",
                 "title": "Roku"
             },

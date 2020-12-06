@@ -4,8 +4,7 @@
             "already_configured": "Konto on juba seadistatud"
         },
         "error": {
-            "cannot_connect": "\u00dchendus nurjus",
-            "connection_error": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendus nurjus"
         },
         "step": {
             "user": {

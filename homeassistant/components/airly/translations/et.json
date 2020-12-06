@@ -4,7 +4,6 @@
             "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
         },
         "error": {
-            "auth": "API v\u00f5ti on vale.",
             "invalid_api_key": "Vigane API v\u00f5ti",
             "wrong_location": "Selles piirkonnas pole Airly m\u00f5\u00f5tejaamu."
         },
@@ -19,6 +18,11 @@
                 "description": "Seadista Airly \u00f5hukvaliteedi andmete sidumine. API v\u00f5tme loomiseks mine aadressile https://developer.airly.eu/register",
                 "title": ""
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u00dchendus Airly serveriga"
         }
     }
 }

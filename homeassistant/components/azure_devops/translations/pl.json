@@ -5,9 +5,7 @@
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "authorization_error": "B\u0142\u0105d autoryzacji. Sprawd\u017a, czy masz dost\u0119p do projektu i masz prawid\u0142owe po\u015bwiadczenia.",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z Azure DevOps",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "project_error": "Nie mo\u017cna uzyska\u0107 informacji o projekcie"
         },
@@ -30,6 +28,5 @@
                 "title": "Dodaj projekt Azure DevOps"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

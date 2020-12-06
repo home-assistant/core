@@ -12,10 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tilkoblingstype",
-                    "host": "IP adresse",
-                    "password": "",
-                    "port": "Port"
+                    "flow_type": "Tilkoblingstype"
                 },
                 "description": "Produkt:",
                 "title": ""

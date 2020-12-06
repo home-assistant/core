@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "Feeler beim verbannen"
         },
-        "flow_title": "Advantage Air ariichten",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "Verbannen"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

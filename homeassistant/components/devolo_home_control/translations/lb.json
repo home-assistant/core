@@ -4,8 +4,7 @@
             "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00ebltege Benotzernumm an/oder Passwuert"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "user": {
@@ -14,10 +13,8 @@
                     "mydevolo_url": "mydevolo URL",
                     "password": "Passwuert",
                     "username": "E-Mail / devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

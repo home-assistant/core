@@ -3,8 +3,7 @@
         "abort": {
             "already_configured": "Dit Guardian-apparaat is al geconfigureerd.",
             "already_in_progress": "De configuratie van het Guardian-apparaat is al bezig.",
-            "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Kan geen verbinding maken met het Guardian-apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
@@ -18,6 +17,5 @@
                 "description": "Wilt u dit Guardian-apparaat instellen?"
             }
         }
-    },
-    "title": "Elexa Guardian"
+    }
 }

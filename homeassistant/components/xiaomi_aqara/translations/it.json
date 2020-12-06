@@ -10,8 +10,7 @@
             "invalid_host": "Nome host o indirizzo IP non valido, vedere https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Interfaccia di rete non valida",
             "invalid_key": "Chiave gateway non valida",
-            "invalid_mac": "Indirizzo Mac non valido",
-            "not_found_error": "Zeroconf ha scoperto che non \u00e8 stato possibile trovare il gateway per ottenere le informazioni necessarie, provare a utilizzare l'IP del dispositivo che esegue HomeAssistant come interfaccia"
+            "invalid_mac": "Indirizzo Mac non valido"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {

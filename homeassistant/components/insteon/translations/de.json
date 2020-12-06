@@ -7,12 +7,6 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
-            "hub2": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername"
-                }
-            },
             "hubv1": {
                 "data": {
                     "host": "IP-Adresse",
@@ -26,9 +20,6 @@
                     "port": "Port",
                     "username": "Benutzername"
                 }
-            },
-            "init": {
-                "title": "Insteon"
             },
             "plm": {
                 "title": "Insteon PLM"

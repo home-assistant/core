@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive Dialogflow messages.",
-            "one_instance_allowed": "Only a single instance is necessary.",
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
             "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
         },

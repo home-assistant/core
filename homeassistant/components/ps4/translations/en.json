@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Device is already configured",
             "credential_error": "Error fetching credentials.",
-            "devices_configured": "All devices found are already configured.",
             "no_devices_found": "No devices found on the network",
             "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
             "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
@@ -12,8 +11,7 @@
             "cannot_connect": "Failed to connect",
             "credential_timeout": "Credential service timed out. Press submit to restart.",
             "login_failed": "Failed to pair to PlayStation 4. Verify PIN Code is correct.",
-            "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure.",
-            "not_ready": "PlayStation 4 is not on or connected to network."
+            "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure."
         },
         "step": {
             "creds": {

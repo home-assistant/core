@@ -1,7 +1,6 @@
 """Flo device object."""
 import asyncio
 from datetime import datetime, timedelta
-import logging
 from typing import Any, Dict, Optional
 
 from aioflo.api import API
@@ -12,9 +11,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as FLO_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
 
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
@@ -33,7 +30,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._water_usage: Optional[Dict[str, Any]] = None
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=f"{FLO_DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )
@@ -195,7 +192,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._device_information = await self.api_client.device.get_info(
             self._flo_device_id
         )
-        _LOGGER.debug("Flo device data: %s", self._device_information)
+        LOGGER.debug("Flo device data: %s", self._device_information)
 
     async def _update_consumption_data(self, *_) -> None:
         """Update water consumption data from the API."""
@@ -205,4 +202,4 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._water_usage = await self.api_client.water.get_consumption_info(
             self._flo_location_id, start_date, end_date
         )
-        _LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)
+        LOGGER.debug("Updated Flo consumption data: %s", self._water_usage)

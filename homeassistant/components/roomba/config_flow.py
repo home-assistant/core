@@ -1,5 +1,5 @@
 """Config flow to configure roomba component."""
-from roomba import Roomba
+from roombapy import Roomba
 import voluptuous as vol
 
 from homeassistant import config_entries, core

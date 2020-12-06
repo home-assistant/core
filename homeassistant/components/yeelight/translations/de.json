@@ -8,8 +8,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "IP-Addresse"
+                    "host": "Host"
                 }
             }
         }
@@ -24,6 +23,5 @@
                 }
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

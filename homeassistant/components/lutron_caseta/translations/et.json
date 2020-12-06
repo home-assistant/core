@@ -9,7 +9,8 @@
         },
         "step": {
             "import_failed": {
-                "description": "Silla (host: {host} ) seadistamine configuration.yaml kirje teabest nurjus."
+                "description": "Silla (host: {host} ) seadistamine configuration.yaml kirje teabest nurjus.",
+                "title": "Cas\u00e9ta Bridge seadete importimine nurjus."
             }
         }
     }

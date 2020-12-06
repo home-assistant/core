@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "M\u016f\u017eete nastavit pouze jeden \u00fa\u010det Almond.",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
             "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})",

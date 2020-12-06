@@ -2,13 +2,8 @@
     "config": {
         "error": {
             "already_configured": "\u00da\u010det je ji\u017e nastaven",
-            "already_configured_account": "\u00da\u010det je ji\u017e nastaven",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "Chyba p\u0159ipojen\u00ed; zkontrolujte s\u00ed\u0165 a zkuste to znovu",
-            "identifier_exists": "E-mail je ji\u017e zaregistrov\u00e1n",
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
-            "unknown_error": "Nezn\u00e1m\u00e1 chyba, nahlaste pros\u00edm informace z logu"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
             "user": {

@@ -5,7 +5,6 @@
             "already_in_progress": "Samsung TV configuratie is al in uitvoering.",
             "auth_missing": "Home Assistant is niet geautoriseerd om verbinding te maken met deze Samsung TV.",
             "cannot_connect": "Kan geen verbinding maken",
-            "not_successful": "Niet in staat om verbinding te maken met dit Samsung TV toestel.",
             "not_supported": "Deze Samsung TV wordt momenteel niet ondersteund."
         },
         "flow_title": "Samsung TV: {model}",

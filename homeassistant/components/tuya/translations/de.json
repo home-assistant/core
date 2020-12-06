@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "conn_error": "Verbindung fehlgeschlagen"
-        },
         "flow_title": "Tuya Konfiguration",
         "step": {
             "user": {
