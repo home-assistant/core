@@ -21,7 +21,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_DEFAULT,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     PRECISION_TENTHS,
@@ -40,6 +39,7 @@ from .const import (
     CONF_PRECISION_OVERRIDE,
     CONF_TEMP_DIVIDER,
     DOMAIN,
+    PRECISION_DEFAULT,
     SIGNAL_CONFIG_ENTITY,
     TUYA_DATA,
     TUYA_DISCOVERY_NEW,
@@ -112,7 +112,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._def_hvac_mode = HVAC_MODE_AUTO
         self._min_temp = None
         self._max_temp = None
-        self._override_precision = CONF_DEFAULT
+        self._override_precision = PRECISION_DEFAULT
 
     @callback
     def _process_config(self):
@@ -132,7 +132,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         else:
             self._min_temp = min_temp
             self._max_temp = max_temp
-        self._override_precision = config.get(CONF_PRECISION_OVERRIDE, CONF_DEFAULT)
+        self._override_precision = config.get(
+            CONF_PRECISION_OVERRIDE, PRECISION_DEFAULT
+        )
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
@@ -161,7 +163,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        if self._override_precision != CONF_DEFAULT:
+        if self._override_precision != PRECISION_DEFAULT:
             return self._override_precision
         if self._tuya.has_decimal():
             return PRECISION_TENTHS
@@ -207,7 +209,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        if self._override_precision != CONF_DEFAULT:
+        if self._override_precision != PRECISION_DEFAULT:
             return self._override_precision
         return self._tuya.target_temperature_step()
 

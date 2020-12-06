@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEFAULT,
     CONF_PASSWORD,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
@@ -42,6 +41,7 @@ from .const import (
     DEFAULT_QUERY_INTERVAL,
     DEFAULT_TUYA_MAX_COLTEMP,
     DOMAIN,
+    PRECISION_DEFAULT,
     TUYA_DATA,
     TUYA_PLATFORMS,
     TUYA_TYPE_NOT_QUERY,
@@ -386,10 +386,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
                 vol.Optional(
                     CONF_PRECISION_OVERRIDE,
-                    default=curr_conf.get(CONF_PRECISION_OVERRIDE, CONF_DEFAULT),
+                    default=curr_conf.get(CONF_PRECISION_OVERRIDE, PRECISION_DEFAULT),
                 ): vol.In(
                     {
-                        CONF_DEFAULT: "Default",
+                        PRECISION_DEFAULT: "Default",
                         PRECISION_TENTHS: "Tenths",
                         PRECISION_HALVES: "Halves",
                         PRECISION_WHOLE: "Whole",
