@@ -90,7 +90,7 @@ class RachioPerson:
             self._controllers.append(rachio_iro)
             all_devices.append(rachio_iro.name)
             # Generation 1 controllers don't support pause or resume
-            if not rachio_iro.model.split("_")[0] == MODEL_GENERATION_1:
+            if rachio_iro.model.split("_")[0] != MODEL_GENERATION_1:
                 can_pause = True
 
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
@@ -98,22 +98,14 @@ class RachioPerson:
         def pause_water(service):
             """Service to pause watering on all or specific controllers."""
             duration = service.data[ATTR_DURATION]
-            if ATTR_DEVICES in service.data:
-                devices = service.data[ATTR_DEVICES]
-            else:
-                devices = all_devices
-
+            devices = service.data.get(ATTR_DEVICES, all_devices)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.pause_watering(duration)
 
         def resume_water(service):
             """Service to resume watering on all or specific controllers."""
-            if ATTR_DEVICES in service.data:
-                devices = service.data[ATTR_DEVICES]
-            else:
-                devices = all_devices
-
+            devices = service.data.get(ATTR_DEVICES, all_devices)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.resume_watering()
@@ -165,7 +157,7 @@ class RachioIro:
         self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
         self._webhooks = webhooks
-        _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
+        _LOGGER.debug('%s has ID "%s"', self, self.controller_id)
 
     def setup(self):
         """Rachio Iro setup for webhooks."""
@@ -258,14 +250,14 @@ class RachioIro:
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
         self.rachio.device.stop_water(self.controller_id)
-        _LOGGER.info("Stopped watering of all zones on %s", str(self))
+        _LOGGER.info("Stopped watering of all zones on %s", self)
 
     def pause_watering(self, duration) -> None:
         """Pause watering on this controller."""
         self.rachio.device.pause_zone_run(self.controller_id, duration * 60)
-        _LOGGER.debug("Paused watering on %s for %s minutes", str(self), duration)
+        _LOGGER.debug("Paused watering on %s for %s minutes", self, duration)
 
     def resume_watering(self) -> None:
         """Resume paused watering on this controller."""
         self.rachio.device.resume_zone_run(self.controller_id)
-        _LOGGER.debug("Resuming watering on %s", str(self))
+        _LOGGER.debug("Resuming watering on %s", self)
