@@ -107,7 +107,7 @@ async def async_setup_entry(
         for blind in motion_gateway.device_list.values():
             try:
                 blind.Update()
-            except timeout as socket_timeout:
+            except timeout:
                 # let the error be logged and handled by the motionblinds library
                 pass
 
@@ -115,10 +115,9 @@ async def async_setup_entry(
         """Fetch data from the gateway and blinds."""
         try:
             await hass.async_add_executor_job(update_gateway)
-        except timeout as socket_timeout:
+        except timeout:
             # let the error be logged and handled by the motionblinds library
-            for blind in motion_gateway.device_list.values():
-                blind._available = False
+            pass
 
     coordinator = DataUpdateCoordinator(
         hass,
