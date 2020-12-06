@@ -278,7 +278,7 @@ class ControllerDevice(ClimateEntity):
                 self.hass,
                 self.control_zone_setpoint,
                 self.temperature_unit,
-                PRECISION_HALVES
+                PRECISION_HALVES,
             ),
         }
 
@@ -330,7 +330,9 @@ class ControllerDevice(ClimateEntity):
         """Return the zone that currently controls the AC unit."""
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             zone_ctrl = self._controller.zone_ctrl
-            zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+            zone = next(
+                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
+            )
             if zone is None:
                 return None
             return zone.name
@@ -341,7 +343,9 @@ class ControllerDevice(ClimateEntity):
         """Return the temperature setpoint of the zone that currently controls the AC unit."""
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             zone_ctrl = self._controller.zone_ctrl
-            zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+            zone = next(
+                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
+            )
             if zone is None:
                 return None
             return zone._zone.temp_setpoint
@@ -351,7 +355,7 @@ class ControllerDevice(ClimateEntity):
     @_return_on_connection_error()
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach (ether from control zone or master unit)."""
-        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:            
+        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return self.control_zone_setpoint
         return self._controller.temp_setpoint
 
