@@ -210,7 +210,7 @@ async def test_setup_defaults_to_unknown(hass):
 
 
 async def test_setup_gets_current_temp_from_sensor(hass):
-    """Test the setting of defaults to unknown."""
+    """Test that current temperature is updated on entity addition."""
     hass.config.units = METRIC_SYSTEM
     _setup_sensor(hass, 18)
     await hass.async_block_till_done()
