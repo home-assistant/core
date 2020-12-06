@@ -93,6 +93,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform.async_register_entity_service(
         "custom_cleaning",
         {
+            # TODO: Is it possible to drop this line?
             vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(ATTR_MODE, default=2): cv.positive_int,
             vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
