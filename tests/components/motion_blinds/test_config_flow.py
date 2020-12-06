@@ -67,12 +67,6 @@ def motion_blinds_connect_fixture():
         "homeassistant.components.motion_blinds.gateway.MotionGateway.Update",
         return_value=True,
     ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionBlind.Update",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.gateway.MotionBlind.Update_from_cache",
-        return_value=True,
-    ), patch(
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
