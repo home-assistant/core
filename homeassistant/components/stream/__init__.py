@@ -179,7 +179,7 @@ class Stream:
             worker = StreamWorker(self.hass, self)
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
-                name="stream_worker", target=worker.run, args=(self._thread_quit)
+                name="stream_worker", target=worker.run, args=(self._thread_quit,)
             )
             self._thread.start()
             _LOGGER.info("Started stream: %s", self.source)
