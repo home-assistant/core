@@ -911,7 +911,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
-                # allow ignored entries to be configured
+                # Allow ignored entries to be configured on manual user step
                 if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
                     continue
                 raise data_entry_flow.AbortFlow("already_configured")
