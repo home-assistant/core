@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Account ist bereits konfiguriert"
         },
-        "error": {
-            "connection_error": "Verbindung fehlgeschlagen"
-        },
         "step": {
             "user": {
                 "data": {

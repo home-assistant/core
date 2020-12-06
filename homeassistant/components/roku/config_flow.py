@@ -56,14 +56,10 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors or {},
         )
-
-    async def async_step_import(
-        self, user_input: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: Optional[Dict] = None
@@ -129,5 +125,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=self.discovery_info[CONF_NAME], data=self.discovery_info,
+            title=self.discovery_info[CONF_NAME],
+            data=self.discovery_info,
         )

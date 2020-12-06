@@ -38,7 +38,8 @@
                 "data": {
                     "resources": "Ressources",
                     "scan_interval": "Intervalle de balayage (secondes)"
-                }
+                },
+                "description": "Choisissez les ressources des capteurs."
             }
         }
     }

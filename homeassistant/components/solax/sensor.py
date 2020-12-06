@@ -1,7 +1,6 @@
 """Support for Solax inverter via local API."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from solax import real_time_api
 from solax.inverter import InverterError
@@ -13,8 +12,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 80
 
@@ -64,11 +61,11 @@ class RealTimeDataEndpoint:
         try:
             api_response = await self.api.get_data()
             self.ready.set()
-        except InverterError:
+        except InverterError as err:
             if now is not None:
                 self.ready.clear()
                 return
-            raise PlatformNotReady
+            raise PlatformNotReady from err
         data = api_response.data
         for sensor in self.sensors:
             if sensor.key in data:

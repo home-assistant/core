@@ -1,18 +1,15 @@
 """Support for sensors from the Dovado router."""
 from datetime import timedelta
-import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, UNIT_PERCENTAGE
+from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DOVADO_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -27,7 +24,7 @@ SENSORS = {
     SENSOR_SIGNAL: (
         "signal strength",
         "Signal Strength",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:signal",
     ),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),

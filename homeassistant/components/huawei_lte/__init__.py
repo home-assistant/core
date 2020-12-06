@@ -6,7 +6,7 @@ from functools import partial
 import ipaddress
 import logging
 import time
-from typing import Any, Callable, Dict, List, Set, Tuple
+from typing import Any, Callable, Dict, List, Set, Tuple, cast
 from urllib.parse import urlparse
 
 import attr
@@ -23,7 +23,9 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.const import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -36,7 +38,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -50,7 +52,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     ADMIN_SERVICES,
@@ -63,6 +65,7 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_MONTH_STATISTICS,
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
@@ -81,10 +84,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-# https://github.com/quandyfactory/dicttoxml/issues/60
-logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -149,7 +148,7 @@ class Router:
     suspended = attr.ib(init=False, default=False)
     notify_last_attempt: float = attr.ib(init=False, default=-1)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Set up internal state on init."""
         self.client = Client(self.connection)
 
@@ -161,17 +160,25 @@ class Router:
             (KEY_DEVICE_INFORMATION, "DeviceName"),
         ):
             try:
-                return self.data[key][item]
+                return cast(str, self.data[key][item])
             except (KeyError, TypeError):
                 pass
         return DEFAULT_DEVICE_NAME
+
+    @property
+    def device_identifiers(self) -> Set[Tuple[str, str]]:
+        """Get router identifiers for device registry."""
+        try:
+            return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
+        except (KeyError, TypeError):
+            return set()
 
     @property
     def device_connections(self) -> Set[Tuple[str, str]]:
         """Get router connections for device registry."""
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
-    def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
+    def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
             return
         if key in self.inflight_gets:
@@ -191,7 +198,8 @@ class Router:
                 _LOGGER.debug("Trying to authorize again...")
                 if self.connection.enforce_authorized_connection():
                     _LOGGER.debug(
-                        "...success, %s will be updated by a future periodic run", key,
+                        "...success, %s will be updated by a future periodic run",
+                        key,
                     )
                 else:
                     _LOGGER.debug("...failed")
@@ -238,6 +246,10 @@ class Router:
         self._get_data(
             KEY_MONITORING_MONTH_STATISTICS, self.client.monitoring.month_statistics
         )
+        self._get_data(
+            KEY_MONITORING_CHECK_NOTIFICATIONS,
+            self.client.monitoring.check_notifications,
+        )
         self._get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
         self._get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
@@ -265,7 +277,7 @@ class Router:
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
 
-    def cleanup(self, *_) -> None:
+    def cleanup(self, *_: Any) -> None:
         """Clean up resources."""
 
         self.subscriptions.clear()
@@ -349,7 +361,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         username = config_entry.data.get(CONF_USERNAME)
         password = config_entry.data.get(CONF_PASSWORD)
         if username or password:
-            connection = AuthorizedConnection(
+            connection: Connection = AuthorizedConnection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
             )
         else:
@@ -380,9 +392,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     sw_version = None
     if router.data.get(KEY_DEVICE_INFORMATION):
         device_info = router.data[KEY_DEVICE_INFORMATION]
-        serial_number = device_info.get("SerialNumber")
-        if serial_number:
-            device_data["identifiers"] = {(DOMAIN, serial_number)}
         sw_version = device_info.get("SoftwareVersion")
         if device_info.get("DeviceName"):
             device_data["model"] = device_info["DeviceName"]
@@ -394,6 +403,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections=router.device_connections,
+        identifiers=router.device_identifiers,
         name=router.device_name,
         manufacturer="Huawei",
         **device_data,
@@ -457,17 +467,21 @@ async def async_unload_entry(
     return True
 
 
-async def async_setup(hass: HomeAssistantType, config) -> bool:
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
 
+    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
+    # https://github.com/quandyfactory/dicttoxml/issues/60
+    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
+
     # Arrange our YAML config to dict with normalized URLs as keys
-    domain_config = {}
+    domain_config: Dict[str, Dict[str, Any]] = {}
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
     for router_config in config.get(DOMAIN, []):
         domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
 
-    def service_handler(service) -> None:
+    def service_handler(service: ServiceCall) -> None:
         """Apply a service."""
         url = service.data.get(CONF_URL)
         routers = hass.data[DOMAIN].routers
@@ -514,7 +528,10 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
 
     for service in ADMIN_SERVICES:
         hass.helpers.service.async_register_admin_service(
-            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
+            DOMAIN,
+            service,
+            service_handler,
+            schema=SERVICE_SCHEMA,
         )
 
     for url, router_config in domain_config.items():
@@ -540,10 +557,12 @@ async def async_signal_options_update(
     async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
 
 
-async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+async def async_migrate_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
     """Migrate config entry to new version."""
     if config_entry.version == 1:
-        options = config_entry.options
+        options = dict(config_entry.options)
         recipient = options.get(CONF_RECIPIENT)
         if isinstance(recipient, str):
             options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
@@ -594,7 +613,10 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Get info for matching with parent router."""
-        return {"connections": self.router.device_connections}
+        return {
+            "identifiers": self.router.device_identifiers,
+            "connections": self.router.device_connections,
+        }
 
     async def async_update(self) -> None:
         """Update state."""
@@ -605,6 +627,7 @@ class HuaweiLteBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to update signals."""
+        assert self.hass is not None
         self._unsub_handlers.append(
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
         )

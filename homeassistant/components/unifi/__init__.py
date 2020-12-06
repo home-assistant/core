@@ -1,9 +1,6 @@
 """Support for devices connected to UniFi POE."""
-import voluptuous as vol
-
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .config_flow import get_controller_id_from_config_entry
@@ -18,11 +15,6 @@ from .controller import UniFiController
 SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
-
-CONFIG_SCHEMA = vol.Schema(
-    cv.deprecated(UNIFI_DOMAIN, invalidation_version="0.109"),
-    {UNIFI_DOMAIN: cv.match_all},
-)
 
 
 async def async_setup(hass, config):
@@ -54,10 +46,9 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
-        manufacturer=ATTR_MANUFACTURER,
-        model="UniFi Controller",
-        name="UniFi Controller",
-        # sw_version=config.raw['swversion'],
+        default_manufacturer=ATTR_MANUFACTURER,
+        default_model="UniFi Controller",
+        default_name="UniFi Controller",
     )
 
     return True

@@ -5,7 +5,7 @@
             "already_configured": "En ElkM1 med dette prefikset er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -15,7 +15,7 @@
                     "address": "IP-adressen eller domenet eller seriell port hvis du kobler til via seriell.",
                     "password": "Passord",
                     "prefix": "Et unikt prefiks (la v\u00e6re tomt hvis du bare har en ElkM1).",
-                    "protocol": "protokoll",
+                    "protocol": "Protokoll",
                     "temperature_unit": "Temperaturenheten ElkM1 bruker.",
                     "username": "Brukernavn"
                 },

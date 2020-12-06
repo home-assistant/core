@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Echec de connexion",
+            "unknown": "Erreur inatendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Appareil"
+                },
+                "title": "Se connecter au modem"
+            }
+        }
+    }
+}

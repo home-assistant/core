@@ -15,9 +15,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    CONTENT_TYPE_JSON,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -26,12 +28,7 @@ PORT = 8989
 BASE_PATH = "/api"
 API_KEY = "MOCK_API_KEY"
 
-MOCK_SENSOR_CONFIG = {
-    "platform": DOMAIN,
-    "host": HOST,
-    "api_key": API_KEY,
-    "days": 3,
-}
+MOCK_REAUTH_INPUT = {CONF_API_KEY: "test-api-key-reauth"}
 
 MOCK_USER_INPUT = {
     CONF_HOST: HOST,
@@ -54,19 +51,28 @@ def mock_connection(
     """Mock Sonarr connection."""
     if error:
         mock_connection_error(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
     if invalid_auth:
         mock_connection_invalid_auth(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
     if server_error:
         mock_connection_server_error(
-            aioclient_mock, host=host, port=port, base_path=base_path,
+            aioclient_mock,
+            host=host,
+            port=port,
+            base_path=base_path,
         )
         return
 
@@ -75,43 +81,43 @@ def mock_connection(
     aioclient_mock.get(
         f"{sonarr_url}/system/status",
         text=load_fixture("sonarr/system-status.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/diskspace",
         text=load_fixture("sonarr/diskspace.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/calendar",
         text=load_fixture("sonarr/calendar.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/command",
         text=load_fixture("sonarr/command.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/queue",
         text=load_fixture("sonarr/queue.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/series",
         text=load_fixture("sonarr/series.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/wanted/missing",
         text=load_fixture("sonarr/wanted-missing.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
 
@@ -196,6 +202,10 @@ async def setup_integration(
             CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
             CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
         },
+        options={
+            CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
+            CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
+        },
     )
 
     entry.add_to_hass(hass)
@@ -215,3 +225,18 @@ async def setup_integration(
         await hass.async_block_till_done()
 
     return entry
+
+
+def _patch_async_setup(return_value=True):
+    """Patch the async setup of sonarr."""
+    return patch(
+        "homeassistant.components.sonarr.async_setup", return_value=return_value
+    )
+
+
+def _patch_async_setup_entry(return_value=True):
+    """Patch the async entry setup of sonarr."""
+    return patch(
+        "homeassistant.components.sonarr.async_setup_entry",
+        return_value=return_value,
+    )

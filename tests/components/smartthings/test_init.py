@@ -118,7 +118,8 @@ async def test_base_url_no_longer_https_does_not_load(
 ):
     """Test base_url no longer valid creates a new flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.local:8123"},
+        hass,
+        {"external_url": "http://example.local:8123"},
     )
     config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app

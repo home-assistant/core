@@ -1,13 +1,12 @@
 """Provides device automations for MQTT."""
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import attr
 import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.automation import AutomationActionType
-import homeassistant.components.automation.mqtt as automation_mqtt
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -27,6 +26,7 @@ from . import (
     DOMAIN,
     cleanup_device_registry,
     debug_info,
+    trigger as mqtt_trigger,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
@@ -75,25 +75,28 @@ DEVICE_TRIGGERS = "mqtt_device_triggers"
 class TriggerInstance:
     """Attached trigger settings."""
 
-    action = attr.ib(type=AutomationActionType)
-    automation_info = attr.ib(type=dict)
-    trigger = attr.ib(type="Trigger")
-    remove = attr.ib(type=CALLBACK_TYPE, default=None)
+    action: AutomationActionType = attr.ib()
+    automation_info: dict = attr.ib()
+    trigger: "Trigger" = attr.ib()
+    remove: Optional[CALLBACK_TYPE] = attr.ib(default=None)
 
     async def async_attach_trigger(self):
         """Attach MQTT trigger."""
         mqtt_config = {
-            automation_mqtt.CONF_TOPIC: self.trigger.topic,
-            automation_mqtt.CONF_ENCODING: DEFAULT_ENCODING,
-            automation_mqtt.CONF_QOS: self.trigger.qos,
+            mqtt_trigger.CONF_TOPIC: self.trigger.topic,
+            mqtt_trigger.CONF_ENCODING: DEFAULT_ENCODING,
+            mqtt_trigger.CONF_QOS: self.trigger.qos,
         }
         if self.trigger.payload:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
 
         if self.remove:
             self.remove()
-        self.remove = await automation_mqtt.async_attach_trigger(
-            self.trigger.hass, mqtt_config, self.action, self.automation_info,
+        self.remove = await mqtt_trigger.async_attach_trigger(
+            self.trigger.hass,
+            mqtt_config,
+            self.action,
+            self.automation_info,
         )
 
 
@@ -101,16 +104,16 @@ class TriggerInstance:
 class Trigger:
     """Device trigger settings."""
 
-    device_id = attr.ib(type=str)
-    discovery_data = attr.ib(type=dict)
-    hass = attr.ib(type=HomeAssistantType)
-    payload = attr.ib(type=str)
-    qos = attr.ib(type=int)
-    remove_signal = attr.ib(type=Callable[[], None])
-    subtype = attr.ib(type=str)
-    topic = attr.ib(type=str)
-    type = attr.ib(type=str)
-    trigger_instances = attr.ib(type=[TriggerInstance], default=attr.Factory(list))
+    device_id: str = attr.ib()
+    discovery_data: dict = attr.ib()
+    hass: HomeAssistantType = attr.ib()
+    payload: str = attr.ib()
+    qos: int = attr.ib()
+    remove_signal: Callable[[], None] = attr.ib()
+    subtype: str = attr.ib()
+    topic: str = attr.ib()
+    type: str = attr.ib()
+    trigger_instances: List[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
         """Add MQTT trigger."""
@@ -256,7 +259,10 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             clear_discovery_hash(hass, discovery_hash)
             device_trigger.remove_signal()
             mqtt.publish(
-                hass, discovery_topic, "", retain=True,
+                hass,
+                discovery_topic,
+                "",
+                retain=True,
             )
 
 

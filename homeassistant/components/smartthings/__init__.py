@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     HTTP_FORBIDDEN,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -158,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
-        if ex.status in (401, HTTP_FORBIDDEN):
+        if ex.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
             _LOGGER.exception(
                 "Unable to setup configuration entry '%s' - please reconfigure the integration",
                 entry.title,
@@ -166,10 +167,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             remove_entry = True
         else:
             _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.debug(ex, exc_info=True)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     if remove_entry:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
@@ -315,7 +316,8 @@ class DeviceBroker:
         async def regenerate_refresh_token(now):
             """Generate a new refresh token and update the config entry."""
             await self._token.refresh(
-                self._entry.data[CONF_CLIENT_ID], self._entry.data[CONF_CLIENT_SECRET],
+                self._entry.data[CONF_CLIENT_ID],
+                self._entry.data[CONF_CLIENT_SECRET],
             )
             self._hass.config_entries.async_update_entry(
                 self._entry,

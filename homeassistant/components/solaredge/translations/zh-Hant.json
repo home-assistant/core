@@ -1,10 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "site_exists": "site_id \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "site_exists": "site_id \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "could_not_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 solaredge API",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
+            "site_exists": "site_id \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "site_not_active": "\u7db2\u7ad9\u672a\u555f\u7528"
         },
         "step": {
             "user": {

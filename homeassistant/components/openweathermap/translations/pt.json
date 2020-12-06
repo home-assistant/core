@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Idioma",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "mode": "Modo",
+                    "name": "Nome da integra\u00e7\u00e3o"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Idioma",
+                    "mode": "Modo"
+                }
+            }
+        }
+    }
+}

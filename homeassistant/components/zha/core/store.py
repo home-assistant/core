@@ -2,9 +2,8 @@
 # pylint: disable=unused-import
 from collections import OrderedDict
 import datetime
-import logging
 import time
-from typing import MutableMapping, cast
+from typing import MutableMapping, Optional, cast
 
 import attr
 
@@ -13,8 +12,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 from .typing import ZhaDeviceType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "zha_storage"
 
@@ -28,9 +25,9 @@ TOMBSTONE_LIFETIME = datetime.timedelta(days=60).total_seconds()
 class ZhaDeviceEntry:
     """Zha Device storage Entry."""
 
-    name = attr.ib(type=str, default=None)
-    ieee = attr.ib(type=str, default=None)
-    last_seen = attr.ib(type=float, default=None)
+    name: Optional[str] = attr.ib(default=None)
+    ieee: Optional[str] = attr.ib(default=None)
+    last_seen: Optional[float] = attr.ib(default=None)
 
 
 class ZhaStorage:

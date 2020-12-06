@@ -1,5 +1,4 @@
 """Support for Toon binary sensors."""
-import logging
 from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -24,8 +23,6 @@ from .models import (
     ToonDisplayDeviceEntity,
     ToonEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

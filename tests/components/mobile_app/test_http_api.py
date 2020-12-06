@@ -59,8 +59,8 @@ async def test_registration(hass, hass_client, hass_admin_user):
 async def test_registration_encryption(hass, hass_client):
     """Test that registrations happen."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return

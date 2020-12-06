@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "pin": "PIN Code",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "risco_to_ha": {
+                "data": {
+                    "A": "Gruppe A",
+                    "B": "Gruppe B",
+                    "C": "Gruppe C",
+                    "D": "Gruppe D"
+                }
+            }
+        }
+    }
+}

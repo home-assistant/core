@@ -1,12 +1,11 @@
 {
-  "title": "Universal Devices ISY994",
   "config": {
     "flow_title": "Universal Devices ISY994 {name} ({host})",
     "step": {
       "user": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "host": "URL",
+          "host": "[%key:common::config_flow::data::url%]",
           "password": "[%key:common::config_flow::data::password%]",
           "tls": "The TLS version of the ISY controller."
         },

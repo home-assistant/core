@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "BleBox seade {address} on juba m\u00e4\u00e4ratud",
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Tundmatu viga",
+            "unsupported_version": "BleBoxi seadmel on vananenud p\u00fcsivara. Esmalt v\u00e4rskenda seda."
+        },
+        "flow_title": "BleBoxi seade: {name} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP aadress",
+                    "port": ""
+                },
+                "description": "Seadista oma BleBox sidumine Home Assistant-iga.",
+                "title": "Seadista BleBox seade"
+            }
+        }
+    }
+}

@@ -40,7 +40,7 @@ ACTION_DELETE = "delete"
 async def async_setup(hass, config):
     """Set up the config component."""
     hass.components.frontend.async_register_built_in_panel(
-        "config", "config", "hass:settings", require_admin=True
+        "config", "config", "hass:cog", require_admin=True
     )
 
     async def setup_panel(panel_name):
@@ -189,7 +189,7 @@ class BaseEditConfigView(HomeAssistantView):
 
     async def read_config(self, hass):
         """Read the config."""
-        current = await hass.async_add_job(_read, hass.config.path(self.path))
+        current = await hass.async_add_executor_job(_read, hass.config.path(self.path))
         if not current:
             current = self._empty_config()
         return current

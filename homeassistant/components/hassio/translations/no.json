@@ -1,3 +1,19 @@
 {
+    "system_health": {
+        "info": {
+            "board": "Styret",
+            "disk_total": "Disk totalt",
+            "disk_used": "Disk brukt",
+            "docker_version": "Docker-versjon",
+            "healthy": "Sunn",
+            "host_os": "Vertsoperativsystem",
+            "installed_addons": "Installerte tillegg",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor versjon",
+            "supported": "St\u00f8ttet",
+            "update_channel": "Oppdater kanal",
+            "version_api": "Versjon API"
+        }
+    },
     "title": ""
 }

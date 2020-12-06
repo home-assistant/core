@@ -5,7 +5,11 @@ import logging
 from meteoalertapi import Meteoalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SAFETY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -17,7 +21,6 @@ CONF_COUNTRY = "country"
 CONF_LANGUAGE = "language"
 CONF_PROVINCE = "province"
 
-DEFAULT_DEVICE_CLASS = "safety"
 DEFAULT_NAME = "meteoalarm"
 
 SCAN_INTERVAL = timedelta(minutes=30)
@@ -78,7 +81,7 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the device class of this binary sensor."""
-        return DEFAULT_DEVICE_CLASS
+        return DEVICE_CLASS_SAFETY
 
     def update(self):
         """Update device state."""

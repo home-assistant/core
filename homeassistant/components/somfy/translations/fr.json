@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Somfy.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration d'url autoriser.",
-            "missing_configuration": "Le composant Somfy n'est pas configur\u00e9. Veuillez suivre la documentation."
+            "missing_configuration": "Le composant Somfy n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "create_entry": {
             "default": "Authentifi\u00e9 avec succ\u00e8s avec Somfy."

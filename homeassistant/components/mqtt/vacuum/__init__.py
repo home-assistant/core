@@ -10,7 +10,9 @@ from homeassistant.components.mqtt.discovery import (
 )
 from homeassistant.components.vacuum import DOMAIN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 
+from .. import DOMAIN as MQTT_DOMAIN, PLATFORMS
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy
 from .schema_state import PLATFORM_SCHEMA_STATE, async_setup_entity_state
@@ -31,6 +33,7 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up MQTT vacuum through configuration.yaml."""
+    await async_setup_reload_service(hass, MQTT_DOMAIN, PLATFORMS)
     await _async_setup_entity(config, async_add_entities, discovery_info)
 
 

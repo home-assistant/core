@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Apaga {entity_name}",
+            "turn_on": "Engega {entity_name}"
+        }
+    }
+}

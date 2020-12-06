@@ -47,5 +47,25 @@
             "button_short_release": "\"{subtype}\" losgelassen",
             "button_triple_press": "\"{subtype}\" dreifach geklickt"
         }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            },
+            "options": {
+                "data": {
+                    "will_enable": "Letzten Willen aktivieren"
+                }
+            }
+        }
     }
 }

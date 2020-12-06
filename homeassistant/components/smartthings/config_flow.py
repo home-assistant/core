@@ -80,7 +80,8 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Show the confirmation
         if user_input is None:
             return self.async_show_form(
-                step_id="user", description_placeholders={"webhook_url": webhook_url},
+                step_id="user",
+                description_placeholders={"webhook_url": webhook_url},
             )
 
         # Show the next screen

@@ -82,7 +82,8 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await fbx.close()
 
             return self.async_create_entry(
-                title=self._host, data={CONF_HOST: self._host, CONF_PORT: self._port},
+                title=self._host,
+                data={CONF_HOST: self._host, CONF_PORT: self._port},
             )
 
         except AuthorizationError as error:
@@ -91,7 +92,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         except HttpRequestError:
             _LOGGER.error("Error connecting to the Freebox router at %s", self._host)
-            errors["base"] = "connection_failed"
+            errors["base"] = "cannot_connect"
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(

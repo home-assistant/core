@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "requests_exceeded": "Det tillatte antallet foresp\u00f8rsler til Accuweather API er overskredet. Du m\u00e5 vente eller endre API-n\u00f8kkel."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                },
+                "description": "Hvis du trenger hjelp med konfigurasjonen, kan du se her: https://www.home-assistant.io/integrations/accuweather/ \n\nNoen sensorer er ikke aktivert som standard. Du kan aktivere dem i entitetsregisteret etter integrasjonskonfigurasjonen. \nV\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integrasjonsalternativene.",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "V\u00e6rmelding"
+                },
+                "description": "P\u00e5 grunn av begrensningene i gratisversjonen av AccuWeather API-n\u00f8kkelen, n\u00e5r du aktiverer v\u00e6rmelding, vil dataoppdateringer bli utf\u00f8rt hvert 64. minutt i stedet for hvert 32. minutt.",
+                "title": "AccuWeather-alternativer"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "N\u00e5 AccuWeather-serveren",
+            "remaining_requests": "Gjenv\u00e6rende tillatte foresp\u00f8rsler"
+        }
+    }
+}

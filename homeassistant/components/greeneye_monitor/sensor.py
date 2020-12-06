@@ -1,6 +1,4 @@
 """Support for the sensors in a GreenEye Monitor."""
-import logging
-
 from homeassistant.const import (
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
@@ -26,8 +24,6 @@ from . import (
     SENSOR_TYPE_TEMPERATURE,
     SENSOR_TYPE_VOLTAGE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_PULSES = "pulses"
 DATA_WATT_SECONDS = "watt_seconds"

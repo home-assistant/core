@@ -1,0 +1,10 @@
+{
+    "state": {
+        "wolflink__state": {
+            "standby": "Bekleme",
+            "start": "Ba\u015flat",
+            "storung": "Hata",
+            "test": "Test"
+        }
+    }
+}

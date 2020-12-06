@@ -1,6 +1,5 @@
 """Locks on Zigbee Home Automation networks."""
 import functools
-import logging
 
 from zigpy.zcl.foundation import Status
 
@@ -24,10 +23,7 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-""" The first state is Zigbee 'Not fully locked' """
-
+# The first state is Zigbee 'Not fully locked'
 STATE_LIST = [STATE_UNLOCKED, STATE_LOCKED, STATE_UNLOCKED]
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
@@ -60,7 +56,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._doorlock_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 

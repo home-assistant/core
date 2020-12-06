@@ -17,7 +17,8 @@ async def test_init_success(hass):
     mock_nuheat = _get_mock_nuheat()
 
     with patch(
-        "homeassistant.components.nuheat.nuheat.NuHeat", return_value=mock_nuheat,
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
     ):
         assert await async_setup_component(hass, DOMAIN, VALID_CONFIG)
         await hass.async_block_till_done()

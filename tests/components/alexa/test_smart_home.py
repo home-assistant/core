@@ -310,29 +310,10 @@ async def test_script(hass):
         appliance, "Alexa.SceneController", "Alexa"
     )
     scene_capability = get_capability(capabilities, "Alexa.SceneController")
-    assert not scene_capability["supportsDeactivation"]
-
-    await assert_scene_controller_works("script#test", "script.turn_on", None, hass)
-
-
-async def test_cancelable_script(hass):
-    """Test cancalable script discovery."""
-    device = (
-        "script.test_2",
-        "off",
-        {"friendly_name": "Test script 2", "can_cancel": True},
-    )
-    appliance = await discovery_test(device, hass)
-
-    assert appliance["endpointId"] == "script#test_2"
-    capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.SceneController", "Alexa"
-    )
-    scene_capability = get_capability(capabilities, "Alexa.SceneController")
     assert scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works(
-        "script#test_2", "script.turn_on", "script.turn_off", hass
+        "script#test", "script.turn_on", "script.turn_off", hass
     )
 
 
@@ -1509,7 +1490,7 @@ async def test_automation(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "automation#test"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
     assert appliance["friendlyName"] == "Test automation"
     assert_endpoint_capabilities(
         appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
@@ -3315,7 +3296,7 @@ async def test_media_player_sound_mode_list_unsupported(hass):
 
     # Test equalizer controller is not there
     assert_endpoint_capabilities(
-        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth",
+        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth"
     )
 
 
@@ -3475,7 +3456,7 @@ async def test_vacuum_discovery(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "vacuum#test_1"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "VACUUM_CLEANER"
     assert appliance["friendlyName"] == "Test vacuum 1"
 
     assert_endpoint_capabilities(
@@ -3518,7 +3499,7 @@ async def test_vacuum_fan_speed(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "vacuum#test_2"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "VACUUM_CLEANER"
     assert appliance["friendlyName"] == "Test vacuum 2"
 
     capabilities = assert_endpoint_capabilities(
@@ -3850,9 +3831,7 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    await async_process_ha_core_config(
-        hass, {"external_url": url},
-    )
+    await async_process_ha_core_config(hass, {"external_url": url})
 
     appliance = await discovery_test(device, hass)
     assert len(appliance["capabilities"]) == result
@@ -3865,7 +3844,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     )
 
     await async_process_ha_core_config(
-        hass, {"external_url": "https://mycamerastream.test"},
+        hass, {"external_url": "https://mycamerastream.test"}
     )
 
     with patch(

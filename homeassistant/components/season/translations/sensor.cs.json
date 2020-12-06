@@ -1,5 +1,11 @@
 {
     "state": {
+        "season__season": {
+            "autumn": "Podzim",
+            "spring": "Jaro",
+            "summer": "L\u00e9to",
+            "winter": "Zima"
+        },
         "season__season__": {
             "autumn": "Podzim",
             "spring": "Jaro",

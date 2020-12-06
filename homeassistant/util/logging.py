@@ -34,7 +34,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         """Emit a log record."""
         try:
             self.enqueue(record)
-        except asyncio.CancelledError:  # pylint: disable=try-except-raise
+        except asyncio.CancelledError:
             raise
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
@@ -98,7 +98,7 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
     else:
         # If Python is unable to access the sources files, the call stack frame
         # will be missing information, so let's guard.
-        # https://github.com/home-assistant/home-assistant/issues/24982
+        # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
 
     # Do not print the wrapper in the traceback
@@ -172,7 +172,7 @@ def async_create_catching_coro(target: Coroutine) -> Coroutine:
     wrapped_target = catch_log_coro_exception(
         target,
         lambda *args: "Exception in {} called from\n {}".format(
-            target.__name__,  # type: ignore
+            target.__name__,
             "".join(traceback.format_list(trace[:-1])),
         ),
     )

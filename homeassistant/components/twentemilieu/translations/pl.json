@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Adres jest ju\u017c skonfigurowany."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
-            "invalid_address": "Nie znaleziono adresu w obszarze us\u0142ugi Twente Milieu."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_address": "Nie znaleziono adresu w obszarze us\u0142ugi Twente Milieu"
         },
         "step": {
             "user": {

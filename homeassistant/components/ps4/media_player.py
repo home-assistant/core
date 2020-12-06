@@ -49,7 +49,7 @@ SUPPORT_PS4 = (
     | SUPPORT_SELECT_SOURCE
 )
 
-ICON = "mdi:playstation"
+ICON = "mdi:sony-playstation"
 MEDIA_IMAGE_DEFAULT = None
 
 DEFAULT_RETRIES = 2

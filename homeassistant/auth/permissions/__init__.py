@@ -72,4 +72,4 @@ class _OwnerPermissions(AbstractPermissions):
         return lambda entity_id, key: True
 
 
-OwnerPermissions = _OwnerPermissions()  # pylint: disable=invalid-name
+OwnerPermissions = _OwnerPermissions()

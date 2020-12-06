@@ -4,9 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "unknown": "Error inesperat"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {
@@ -14,6 +12,7 @@
                     "email": "Correu electr\u00f2nic",
                     "password": "Contrasenya"
                 },
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?",
                 "title": "PoolSense"
             }
         }

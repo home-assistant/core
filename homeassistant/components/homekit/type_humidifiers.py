@@ -17,10 +17,10 @@ from homeassistant.components.humidifier.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -88,17 +88,21 @@ class HumidifierDehumidifier(HomeAccessory):
         )
 
         # Current and target mode characteristics
-        self.char_current_humidifier_dehumidifier = serv_humidifier_dehumidifier.configure_char(
-            CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER, value=0
+        self.char_current_humidifier_dehumidifier = (
+            serv_humidifier_dehumidifier.configure_char(
+                CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER, value=0
+            )
         )
-        self.char_target_humidifier_dehumidifier = serv_humidifier_dehumidifier.configure_char(
-            CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
-            value=self._hk_device_class,
-            valid_values={
-                HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
-                    device_class
-                ]: self._hk_device_class
-            },
+        self.char_target_humidifier_dehumidifier = (
+            serv_humidifier_dehumidifier.configure_char(
+                CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
+                value=self._hk_device_class,
+                valid_values={
+                    HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
+                        device_class
+                    ]: self._hk_device_class
+                },
+            )
         )
 
         # Current and target humidity characteristics
@@ -211,7 +215,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
                 f"{self._target_humidity_char_name} to "
-                f"{char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
+                f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}",
             )
 
     @callback

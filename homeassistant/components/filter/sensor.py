@@ -24,9 +24,12 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,6 +153,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
 
@@ -173,46 +179,51 @@ class SensorFilter(Entity):
         self._filters = filters
         self._icon = None
 
+    @callback
+    def _update_filter_sensor_state_event(self, event):
+        """Handle device state changes."""
+        self._update_filter_sensor_state(event.data.get("new_state"))
+
+    @callback
+    def _update_filter_sensor_state(self, new_state, update_ha=True):
+        """Process device state changes."""
+        if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            return
+
+        temp_state = new_state
+
+        try:
+            for filt in self._filters:
+                filtered_state = filt.filter_state(copy(temp_state))
+                _LOGGER.debug(
+                    "%s(%s=%s) -> %s",
+                    filt.name,
+                    self._entity,
+                    temp_state.state,
+                    "skip" if filt.skip_processing else filtered_state.state,
+                )
+                if filt.skip_processing:
+                    return
+                temp_state = filtered_state
+        except ValueError:
+            _LOGGER.error("Could not convert state: %s to number", self._state)
+            return
+
+        self._state = temp_state.state
+
+        if self._icon is None:
+            self._icon = new_state.attributes.get(ATTR_ICON, ICON)
+
+        if self._unit_of_measurement is None:
+            self._unit_of_measurement = new_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT
+            )
+
+        if update_ha:
+            self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def filter_sensor_state_listener(entity, old_state, new_state, update_ha=True):
-            """Handle device state changes."""
-            if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-                return
-
-            temp_state = new_state
-
-            try:
-                for filt in self._filters:
-                    filtered_state = filt.filter_state(copy(temp_state))
-                    _LOGGER.debug(
-                        "%s(%s=%s) -> %s",
-                        filt.name,
-                        self._entity,
-                        temp_state.state,
-                        "skip" if filt.skip_processing else filtered_state.state,
-                    )
-                    if filt.skip_processing:
-                        return
-                    temp_state = filtered_state
-            except ValueError:
-                _LOGGER.error("Could not convert state: %s to number", self._state)
-                return
-
-            self._state = temp_state.state
-
-            if self._icon is None:
-                self._icon = new_state.attributes.get(ATTR_ICON, ICON)
-
-            if self._unit_of_measurement is None:
-                self._unit_of_measurement = new_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-
-            if update_ha:
-                self.async_write_ha_state()
 
         if "recorder" in self.hass.config.components:
             history_list = []
@@ -234,7 +245,7 @@ class SensorFilter(Entity):
 
             # Retrieve the largest window_size of each type
             if largest_window_items > 0:
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.get_last_state_changes,
                         self.hass,
@@ -246,7 +257,7 @@ class SensorFilter(Entity):
                     history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.state_changes_during_period,
                         self.hass,
@@ -271,12 +282,14 @@ class SensorFilter(Entity):
             )
 
             # Replay history through the filter chain
-            prev_state = None
             for state in history_list:
-                filter_sensor_state_listener(self._entity, prev_state, state, False)
-                prev_state = state
+                self._update_filter_sensor_state(state, False)
 
-        async_track_state_change(self.hass, self._entity, filter_sensor_state_listener)
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._entity], self._update_filter_sensor_state_event
+            )
+        )
 
     @property
     def name(self):
@@ -306,8 +319,7 @@ class SensorFilter(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {ATTR_ENTITY_ID: self._entity}
-        return state_attr
+        return {ATTR_ENTITY_ID: self._entity}
 
 
 class FilterState:

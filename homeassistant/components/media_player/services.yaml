@@ -156,3 +156,13 @@ shuffle_set:
     shuffle:
       description: True/false for enabling/disabling shuffle.
       example: true
+
+repeat_set:
+  description: Set repeat mode.
+  fields:
+    entity_id:
+      description: Name(s) of entities to set.
+      example: "media_player.sonos"
+    repeat:
+      description: Repeat mode to set (off, all, one).
+      example: "off"

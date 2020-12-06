@@ -1,6 +1,4 @@
 """Support for interfacing with NAD receivers through RS-232."""
-import logging
-
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
 import voluptuous as vol
 
@@ -15,8 +13,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "RS232"
 DEFAULT_SERIAL_PORT = "/dev/ttyUSB0"
@@ -66,11 +62,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NAD platform."""
     if config.get(CONF_TYPE) in ("RS232", "Telnet"):
         add_entities(
-            [NAD(config)], True,
+            [NAD(config)],
+            True,
         )
     else:
         add_entities(
-            [NADtcp(config)], True,
+            [NADtcp(config)],
+            True,
         )
 
 
@@ -165,7 +163,7 @@ class NAD(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return sorted(list(self._reverse_mapping.keys()))
+        return sorted(list(self._reverse_mapping))
 
     @property
     def available(self):

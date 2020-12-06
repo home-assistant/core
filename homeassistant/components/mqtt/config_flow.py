@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PAYLOAD,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
@@ -23,9 +24,10 @@ from .const import (
     CONF_BROKER,
     CONF_DISCOVERY,
     CONF_WILL_MESSAGE,
+    DATA_MQTT_CONFIG,
+    DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
-    DEFAULT_QOS,
-    DEFAULT_RETAIN,
+    DEFAULT_WILL,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
@@ -161,6 +163,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
+        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
@@ -177,31 +180,36 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             errors["base"] = "cannot_connect"
 
         fields = OrderedDict()
-        fields[vol.Required(CONF_BROKER, default=current_config[CONF_BROKER])] = str
-        fields[vol.Required(CONF_PORT, default=current_config[CONF_PORT])] = vol.Coerce(
-            int
-        )
+        current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
+        current_port = current_config.get(CONF_PORT, yaml_config.get(CONF_PORT))
+        current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
+        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+        fields[vol.Required(CONF_BROKER, default=current_broker)] = str
+        fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
         fields[
             vol.Optional(
                 CONF_USERNAME,
-                description={"suggested_value": current_config.get(CONF_USERNAME)},
+                description={"suggested_value": current_user},
             )
         ] = str
         fields[
             vol.Optional(
                 CONF_PASSWORD,
-                description={"suggested_value": current_config.get(CONF_PASSWORD)},
+                description={"suggested_value": current_pass},
             )
         ] = str
 
         return self.async_show_form(
-            step_id="broker", data_schema=vol.Schema(fields), errors=errors,
+            step_id="broker",
+            data_schema=vol.Schema(fields),
+            errors=errors,
         )
 
     async def async_step_options(self, user_input=None):
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
+        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
         options_config = {}
         if user_input is not None:
             bad_birth = False
@@ -220,6 +228,8 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 except vol.Invalid:
                     errors["base"] = "bad_birth"
                     bad_birth = True
+            if not user_input["birth_enable"]:
+                options_config[CONF_BIRTH_MESSAGE] = {}
 
             if "will_topic" in user_input:
                 will_message = {
@@ -234,6 +244,8 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 except vol.Invalid:
                     errors["base"] = "bad_will"
                     bad_will = True
+            if not user_input["will_enable"]:
+                options_config[CONF_WILL_MESSAGE] = {}
 
             options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
 
@@ -246,58 +258,71 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 )
                 return self.async_create_entry(title="", data=None)
 
-        birth_topic = None
-        birth_payload = None
-        birth_qos = DEFAULT_QOS
-        birth_retain = DEFAULT_RETAIN
-        if CONF_BIRTH_MESSAGE in current_config:
-            birth_topic = current_config[CONF_BIRTH_MESSAGE][ATTR_TOPIC]
-            birth_payload = current_config[CONF_BIRTH_MESSAGE][ATTR_PAYLOAD]
-            birth_qos = current_config[CONF_BIRTH_MESSAGE].get(ATTR_QOS, DEFAULT_QOS)
-            birth_retain = current_config[CONF_BIRTH_MESSAGE].get(
-                ATTR_RETAIN, DEFAULT_RETAIN
-            )
-
-        will_topic = None
-        will_payload = None
-        will_qos = DEFAULT_QOS
-        will_retain = DEFAULT_RETAIN
-        if CONF_WILL_MESSAGE in current_config:
-            will_topic = current_config[CONF_WILL_MESSAGE][ATTR_TOPIC]
-            will_payload = current_config[CONF_WILL_MESSAGE][ATTR_PAYLOAD]
-            will_qos = current_config[CONF_WILL_MESSAGE].get(ATTR_QOS, DEFAULT_QOS)
-            will_retain = current_config[CONF_WILL_MESSAGE].get(
-                ATTR_RETAIN, DEFAULT_RETAIN
-            )
+        birth = {
+            **DEFAULT_BIRTH,
+            **current_config.get(
+                CONF_BIRTH_MESSAGE, yaml_config.get(CONF_BIRTH_MESSAGE, {})
+            ),
+        }
+        will = {
+            **DEFAULT_WILL,
+            **current_config.get(
+                CONF_WILL_MESSAGE, yaml_config.get(CONF_WILL_MESSAGE, {})
+            ),
+        }
+        discovery = current_config.get(
+            CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        )
 
         fields = OrderedDict()
+        fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
+
+        # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
             vol.Optional(
-                CONF_DISCOVERY,
-                default=current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
+                "birth_enable",
+                default=CONF_BIRTH_MESSAGE not in current_config
+                or current_config[CONF_BIRTH_MESSAGE] != {},
             )
         ] = bool
         fields[
-            vol.Optional("birth_topic", description={"suggested_value": birth_topic})
+            vol.Optional(
+                "birth_topic", description={"suggested_value": birth[ATTR_TOPIC]}
+            )
         ] = str
         fields[
             vol.Optional(
-                "birth_payload", description={"suggested_value": birth_payload}
+                "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = str
-        fields[vol.Optional("birth_qos", default=birth_qos)] = vol.In([0, 1, 2])
-        fields[vol.Optional("birth_retain", default=birth_retain)] = bool
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = vol.In([0, 1, 2])
+        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = bool
+
+        # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
-            vol.Optional("will_topic", description={"suggested_value": will_topic})
+            vol.Optional(
+                "will_enable",
+                default=CONF_WILL_MESSAGE not in current_config
+                or current_config[CONF_WILL_MESSAGE] != {},
+            )
+        ] = bool
+        fields[
+            vol.Optional(
+                "will_topic", description={"suggested_value": will[ATTR_TOPIC]}
+            )
         ] = str
         fields[
-            vol.Optional("will_payload", description={"suggested_value": will_payload})
+            vol.Optional(
+                "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
+            )
         ] = str
-        fields[vol.Optional("will_qos", default=will_qos)] = vol.In([0, 1, 2])
-        fields[vol.Optional("will_retain", default=will_retain)] = bool
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = vol.In([0, 1, 2])
+        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = bool
 
         return self.async_show_form(
-            step_id="options", data_schema=vol.Schema(fields), errors=errors,
+            step_id="options",
+            data_schema=vol.Schema(fields),
+            errors=errors,
         )
 
 
