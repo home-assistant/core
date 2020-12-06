@@ -6,12 +6,17 @@ from aioshelly import Block
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    SUPPORT_WHITE_VALUE,
     LightEntity,
 )
 from homeassistant.core import callback
 from homeassistant.util.color import (
+    color_hs_to_RGB,
+    color_RGB_to_hs,
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
@@ -20,6 +25,9 @@ from . import ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 from .utils import async_remove_shelly_entity
+
+SUPPORT_SHELLYRGB_COLOR = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+SUPPORT_SHELLYRGB_WHITE = SUPPORT_BRIGHTNESS
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -59,6 +67,13 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             self._supported_features |= SUPPORT_BRIGHTNESS
         if hasattr(block, "colorTemp"):
             self._supported_features |= SUPPORT_COLOR_TEMP
+        if hasattr(block, "white"):
+            self._supported_features |= SUPPORT_WHITE_VALUE
+        if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
+            if wrapper.device.settings["mode"] == "color":
+                self._supported_features |= SUPPORT_SHELLYRGB_COLOR
+            elif wrapper.device.settings["mode"] == "white":
+                self._supported_features |= SUPPORT_SHELLYRGB_WHITE
 
     @property
     def supported_features(self) -> int:
@@ -76,11 +91,41 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def brightness(self) -> Optional[int]:
         """Brightness of light."""
+
+        key = "brightness"
+        if self.wrapper.device.settings.get("mode") == "color":
+            key = "gain"
+
         if self.control_result:
-            brightness = self.control_result["brightness"]
+            brightness = self.control_result[key]
         else:
-            brightness = self.block.brightness
+            if key == "brightness":
+                brightness = self.block.brightness
+            else:
+                brightness = self.block.gain
         return int(brightness / 100 * 255)
+
+    @property
+    def white_value(self) -> Optional[int]:
+        """White value of light."""
+        if self.control_result:
+            white = self.control_result["white"]
+        else:
+            white = self.block.white
+        return int(white)
+
+    @property
+    def hs_color(self):
+        """Return the hue and saturation color value of light."""
+        if self.control_result:
+            red = self.control_result["red"]
+            green = self.control_result["green"]
+            blue = self.control_result["blue"]
+        else:
+            red = self.block.red
+            green = self.block.green
+            blue = self.block.blue
+        return color_RGB_to_hs(red, green, blue)
 
     @property
     def color_temp(self) -> Optional[float]:
@@ -112,7 +157,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         params = {"turn": "on"}
         if ATTR_BRIGHTNESS in kwargs:
             tmp_brightness = kwargs[ATTR_BRIGHTNESS]
-            params["brightness"] = int(tmp_brightness / 255 * 100)
+            params["brightness"] = params["gain"] = int(tmp_brightness / 255 * 100)
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             if color_temp > 6500:
@@ -120,6 +165,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             elif color_temp < 2700:
                 color_temp = 2700
             params["temp"] = int(color_temp)
+        if ATTR_HS_COLOR in kwargs:
+            red, green, blue = color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            params["red"] = red
+            params["green"] = green
+            params["blue"] = blue
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
 
