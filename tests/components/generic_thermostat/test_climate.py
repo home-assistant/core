@@ -230,7 +230,7 @@ async def test_setup_gets_current_temp_from_sensor(hass):
         },
     )
     await hass.async_block_till_done()
-    assert 18 == hass.states.get(ENTITY).attributes["current_temperature"]
+    assert hass.states.get(ENTITY).attributes["current_temperature"] == 18
 
 
 async def test_default_setup_params(hass, setup_comp_2):
