@@ -169,18 +169,17 @@ class Stream:
         """Start a stream."""
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
-        from .worker import stream_worker
+        from .worker import StreamWorker
 
         if self._thread is None or not self._thread.is_alive():
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
                 self._thread.join(timeout=0)
+            worker = StreamWorker(self.hass, self)
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
-                name="stream_worker",
-                target=stream_worker,
-                args=(self.hass, self, self._thread_quit),
+                name="stream_worker", target=worker.run, args=(self._thread_quit)
             )
             self._thread.start()
             _LOGGER.info("Started stream: %s", self.source)
