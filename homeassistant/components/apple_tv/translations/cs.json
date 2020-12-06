@@ -14,6 +14,9 @@
         },
         "flow_title": "Apple TV: {name}",
         "step": {
+            "confirm": {
+                "title": "Potvrzen\u00ed p\u0159id\u00e1n\u00ed Apple TV"
+            },
             "pair_no_pin": {
                 "title": "P\u00e1rov\u00e1n\u00ed"
             },
