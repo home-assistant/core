@@ -344,9 +344,15 @@ class HyperionLight(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        if self._get_option(CONF_MODE) == CONF_MODE_PRIORITY:
-            return tuple(self._rgb_color) != COLOR_BLACK
-        return bool(self._client.is_on()) and self._client.visible_priority is not None
+        if not bool(self._client.is_on()):
+            return False
+        priority = self._get_active_priority()
+        if not priority:
+            return False
+        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+            if priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB) == COLOR_BLACK:
+                return False
+        return True
 
     @property
     def icon(self) -> str:
@@ -397,7 +403,7 @@ class HyperionLight(LightEntity):
         # preferable to enable LEDDEVICE after the settings (e.g. brightness,
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
-        if not self.is_on:
+        if not bool(self._client.is_on()):
             for component in [
                 const.KEY_COMPONENTID_ALL,
                 const.KEY_COMPONENTID_LEDDEVICE,
@@ -573,10 +579,16 @@ class HyperionLight(LightEntity):
                     rgb_color=DEFAULT_COLOR, effect=priority[const.KEY_OWNER]
                 )
             elif componentid == const.KEY_COMPONENTID_COLOR:
-                self._set_internal_state(
-                    rgb_color=priority[const.KEY_VALUE][const.KEY_RGB],
-                    effect=KEY_EFFECT_SOLID,
-                )
+                rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
+                # Black is treated as 'off' (and Home Assistant does not support
+                # selecting black from the color selector). Do not set our internal
+                # state if black is active so it seamlessly turns back on at the correct
+                # prior color on the next 'on' call.
+                if rgb_color != COLOR_BLACK:
+                    self._set_internal_state(
+                        rgb_color=priority[const.KEY_VALUE][const.KEY_RGB],
+                        effect=KEY_EFFECT_SOLID,
+                    )
         self.async_write_ha_state()
 
     def _update_effect_list(self, _: Optional[Dict[str, Any]] = None) -> None:
