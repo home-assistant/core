@@ -7,6 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -170,6 +171,8 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             params["red"] = red
             params["green"] = green
             params["blue"] = blue
+        if ATTR_WHITE_VALUE in kwargs:
+            params["white"] = int(kwargs[ATTR_WHITE_VALUE])
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
 
