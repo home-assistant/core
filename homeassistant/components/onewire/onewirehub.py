@@ -73,8 +73,9 @@ class OneWireHub:
         for device_path in self.owproxy.dir(path):
             device_family = self.owproxy.read(f"{device_path}family").decode()
             device_type = self.owproxy.read(f"{device_path}type").decode()
-            if device_family == "1F":
-                for branch in DEVICE_COUPLERS[device_family]:
+            device_branches = DEVICE_COUPLERS.get(device_family)
+            if device_branches:
+                for branch in device_branches:
                     devices += self._discover_devices_owserver(f"{device_path}{branch}")
             else:
                 devices.append(
