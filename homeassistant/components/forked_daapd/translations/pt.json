@@ -7,8 +7,11 @@
             "user": {
                 "data": {
                     "host": "Servidor",
-                    "password": "Palavra-passe da API (deixar em branco se sem palavra-passe)"
-                }
+                    "name": "Nome amig\u00e1vel",
+                    "password": "Palavra-passe da API (deixar em branco se sem palavra-passe)",
+                    "port": "Porta da API"
+                },
+                "title": "Configurar dispositivo forked-daapd"
             }
         }
     }

@@ -117,7 +117,7 @@ async def async_setup(hass, config):
         ("pck", Pck),
     ):
         hass.services.async_register(
-            DOMAIN, service_name, service(hass), service.schema
+            DOMAIN, service_name, service(hass).async_call_service, service.schema
         )
 
     return True
