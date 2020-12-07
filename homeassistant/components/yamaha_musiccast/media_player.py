@@ -70,18 +70,6 @@ async def async_setup_entry(
 SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
 DEFAULT_SOUND_MODE = "Dummy Music"
 
-YOUTUBE_PLAYER_SUPPORT = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_SELECT_SOUND_MODE
-    | SUPPORT_SEEK
-)
 
 MUSIC_PLAYER_SUPPORT = (
     SUPPORT_PAUSE
@@ -93,19 +81,6 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_REPEAT_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SELECT_SOUND_MODE
-)
-
-NETFLIX_PLAYER_SUPPORT = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_SHUFFLE_SET
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
@@ -144,7 +119,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Initialize the demo device."""
         self._name = name
         self._player_state = STATE_PLAYING
-        self._volume_level = 1.0
+        self._volume_level = 0.0
         self._volume_muted = False
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
@@ -204,8 +179,10 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
-        vol = self.get_zone_status().get("volume")
-        return (vol - self._volume_min) / (self._volume_max - self._volume_min)
+        self._volume_level = self.get_zone_status().get("volume")
+        return (self._volume_level - self._volume_min) / (
+            self._volume_max - self._volume_min
+        )
 
     @property
     def is_volume_muted(self):
@@ -251,16 +228,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     def mute_volume(self, mute):
         """Mute the volume."""
         self._volume_muted = mute
-        self.schedule_update_ha_state()
-
-    def volume_up(self):
-        """Increase volume."""
-        self._volume_level = min(1.0, self._volume_level + 0.1)
-        self.schedule_update_ha_state()
-
-    def volume_down(self):
-        """Decrease volume."""
-        self._volume_level = max(0.0, self._volume_level - 0.1)
         self.schedule_update_ha_state()
 
     async def async_set_volume_level(self, volume):
