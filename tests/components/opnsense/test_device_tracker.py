@@ -5,9 +5,14 @@ from unittest import mock
 import pytest
 
 from homeassistant.components import opnsense
-from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
+from homeassistant.components.opnsense.const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mocked_opnsense")
@@ -19,6 +24,17 @@ def mocked_opnsense():
 
 async def test_get_scanner(hass, mocked_opnsense, mock_device_tracker_conf):
     """Test creating an opnsense scanner."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "https://fake_host_fun/api",
+            CONF_API_KEY: "fake_key",
+            CONF_API_SECRET: "fake_secret",
+            CONF_VERIFY_SSL: False,
+            CONF_TRACKER_INTERFACE: ["LAN"],
+        },
+    )
+
     interface_client = mock.MagicMock()
     mocked_opnsense.InterfaceClient.return_value = interface_client
     interface_client.get_arp.return_value = [
@@ -43,18 +59,8 @@ async def test_get_scanner(hass, mocked_opnsense, mock_device_tracker_conf):
     mocked_opnsense.NetworkInsightClient.return_value = network_insight_client
     network_insight_client.get_interfaces.return_value = {"igb0": "WAN", "igb1": "LAN"}
 
-    result = await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_URL: "https://fake_host_fun/api",
-                CONF_API_KEY: "fake_key",
-                CONF_API_SECRET: "fake_secret",
-                CONF_VERIFY_SSL: False,
-            }
-        },
-    )
+    opnsense.OPNsenseData.hass_config = {"foo": "bar"}
+    result = await opnsense.async_setup_entry(hass, entry)
     await hass.async_block_till_done()
     assert result
     device_1 = hass.states.get("device_tracker.desktop")
