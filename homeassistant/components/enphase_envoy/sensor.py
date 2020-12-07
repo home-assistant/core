@@ -135,7 +135,7 @@ async def async_setup_platform(
                     )
                 )
                 _LOGGER.debug(
-                    "Adding inverter SN: %s - Type: %s.",
+                    "Adding inverter SN: %s - Type: %s",
                     f"{name}{SENSORS[condition][0]} {inverter}",
                     condition,
                 )
@@ -149,7 +149,7 @@ async def async_setup_platform(
                 )
             )
             _LOGGER.debug(
-                "Adding sensor: %s - Type: %s.",
+                "Adding sensor: %s - Type: %s",
                 f"{name}{SENSORS[condition][0]})",
                 condition,
             )
