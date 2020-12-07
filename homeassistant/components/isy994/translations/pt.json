@@ -3,7 +3,9 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Palavra-passe"
+                    "host": "",
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
                 }
             }
         }
