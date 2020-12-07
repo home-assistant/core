@@ -249,6 +249,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
+
+        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+            _LOGGER.error("Tuya integration not yet loaded")
+            return self.async_abort(reason="cannot_connect")
+
         if user_input is not None:
             dev_ids = user_input.get(CONF_LIST_DEVICES)
             if dev_ids:
