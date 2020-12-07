@@ -234,7 +234,7 @@ class OpenSkySensor(Entity):
             states = request.json().get(ATTR_STATES)
             if states is None:
                 states = []
-            _LOGGER.debug(str(len(states)) + " flights parsed")
+            _LOGGER.debug("%d flights parsed", len(states))
             for state in states:
                 flight = dict(zip(OPENSKY_API_FIELDS, state))
                 callsign = flight[ATTR_CALLSIGN].strip()
