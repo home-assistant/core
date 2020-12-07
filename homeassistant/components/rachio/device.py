@@ -1,11 +1,14 @@
 """Adapter to wrap the rachiopy api for home assistant."""
-
 import logging
 from typing import Optional
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    DOMAIN,
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
@@ -19,10 +22,25 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
     KEY_ZONES,
+    MODEL_GENERATION_1,
+    SERVICE_PAUSE_WATERING,
+    SERVICE_RESUME_WATERING,
 )
 from .webhooks import LISTEN_EVENT_TYPES, WEBHOOK_CONST_ID
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DEVICES = "devices"
+ATTR_DURATION = "duration"
+
+PAUSE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DEVICES): cv.string,
+        vol.Optional(ATTR_DURATION, default=60): cv.positive_int,
+    }
+)
+
+RESUME_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
 
 
 class RachioPerson:
@@ -39,6 +57,8 @@ class RachioPerson:
 
     def setup(self, hass):
         """Rachio device setup."""
+        all_devices = []
+        can_pause = False
         response = self.rachio.person.info()
         assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
         self._id = response[1][KEY_ID]
@@ -68,7 +88,42 @@ class RachioPerson:
             rachio_iro = RachioIro(hass, self.rachio, controller, webhooks)
             rachio_iro.setup()
             self._controllers.append(rachio_iro)
+            all_devices.append(rachio_iro.name)
+            # Generation 1 controllers don't support pause or resume
+            if rachio_iro.model.split("_")[0] != MODEL_GENERATION_1:
+                can_pause = True
+
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
+
+        def pause_water(service):
+            """Service to pause watering on all or specific controllers."""
+            duration = service.data[ATTR_DURATION]
+            devices = service.data.get(ATTR_DEVICES, all_devices)
+            for iro in self._controllers:
+                if iro.name in devices:
+                    iro.pause_watering(duration)
+
+        def resume_water(service):
+            """Service to resume watering on all or specific controllers."""
+            devices = service.data.get(ATTR_DEVICES, all_devices)
+            for iro in self._controllers:
+                if iro.name in devices:
+                    iro.resume_watering()
+
+        if can_pause:
+            hass.services.register(
+                DOMAIN,
+                SERVICE_PAUSE_WATERING,
+                pause_water,
+                schema=PAUSE_SERVICE_SCHEMA,
+            )
+
+            hass.services.register(
+                DOMAIN,
+                SERVICE_RESUME_WATERING,
+                resume_water,
+                schema=RESUME_SERVICE_SCHEMA,
+            )
 
     @property
     def user_id(self) -> str:
@@ -102,7 +157,7 @@ class RachioIro:
         self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
         self._webhooks = webhooks
-        _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
+        _LOGGER.debug('%s has ID "%s"', self, self.controller_id)
 
     def setup(self):
         """Rachio Iro setup for webhooks."""
@@ -195,4 +250,14 @@ class RachioIro:
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
         self.rachio.device.stop_water(self.controller_id)
-        _LOGGER.info("Stopped watering of all zones on %s", str(self))
+        _LOGGER.info("Stopped watering of all zones on %s", self)
+
+    def pause_watering(self, duration) -> None:
+        """Pause watering on this controller."""
+        self.rachio.device.pause_zone_run(self.controller_id, duration * 60)
+        _LOGGER.debug("Paused watering on %s for %s minutes", self, duration)
+
+    def resume_watering(self) -> None:
+        """Resume paused watering on this controller."""
+        self.rachio.device.resume_zone_run(self.controller_id)
+        _LOGGER.debug("Resuming watering on %s", self)
