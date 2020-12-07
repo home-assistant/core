@@ -47,7 +47,7 @@ async def async_validate_trigger_config(hass, config):
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    # if device is avialable verify parameters against device capabilites
+    # if device is available verify parameters against device capabilities
     wrapper = get_device_wrapper(hass, config[CONF_DEVICE_ID])
     if not wrapper:
         return config
