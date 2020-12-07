@@ -6,7 +6,6 @@ import logging
 import async_timeout
 from envoy_reader.envoy_reader import EnvoyReader
 import httpx
-from requests_async.exceptions import HTTPError, RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -83,7 +82,7 @@ async def async_setup_platform(
         async with async_timeout.timeout(30):
             try:
                 await envoy_reader.getData()
-            except (HTTPError, RequestException) as err:
+            except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
             for condition in monitored_conditions:
@@ -97,7 +96,7 @@ async def async_setup_platform(
                     except httpx.HTTPStatusError as err:
                         _LOGGER.error("Authentication error: %s", err)
                         continue
-                    except httpx.RemoteProtocolError as err:
+                    except httpx.HTTPError as err:
                         _LOGGER.error("Protocol Error: %s", err)
                         continue
                     except KeyError as err:
