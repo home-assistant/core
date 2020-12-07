@@ -61,16 +61,19 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         super().__init__(wrapper, block)
         self.control_result = None
         self._supported_features = 0
-        has_rgb = (
-            hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue")
+        color_mode = (
+            hasattr(block, "red")
+            and hasattr(block, "green")
+            and hasattr(block, "blue")
+            and wrapper.device.settings["mode"] == "color"
         )
         if hasattr(block, "brightness") or hasattr(block, "gain"):
             self._supported_features |= SUPPORT_BRIGHTNESS
-        if hasattr(block, "colorTemp") and not has_rgb:
+        if hasattr(block, "colorTemp") and not color_mode:
             self._supported_features |= SUPPORT_COLOR_TEMP
-        if hasattr(block, "white") and has_rgb:
+        if hasattr(block, "white") and color_mode:
             self._supported_features |= SUPPORT_WHITE_VALUE
-        if has_rgb and wrapper.device.settings["mode"] == "color":
+        if color_mode:
             self._supported_features |= SUPPORT_COLOR
 
     @property
