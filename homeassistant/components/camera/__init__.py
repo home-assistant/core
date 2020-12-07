@@ -8,6 +8,7 @@ import hashlib
 import logging
 import os
 from random import SystemRandom
+from typing import Awaitable, Callable
 
 from aiohttp import web
 import async_timeout
@@ -276,13 +277,14 @@ async def async_setup(hass, config):
             if not camera_prefs.preload_stream:
                 continue
 
-            async def async_update_stream_source() -> StreamSource:
-                return await _async_get_request_stream_source(camera)
+            # Double callback to bind loop variable camera
+            def stream_source_cb(camera) -> Callable[[], Awaitable[StreamSource]]:
+                async def callback() -> StreamSource:
+                    return await _async_get_request_stream_source(camera)
 
-            await request_stream(
-                hass,
-                async_update_stream_source,
-            )
+                return callback
+
+            await request_stream(hass, stream_source_cb(camera))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
