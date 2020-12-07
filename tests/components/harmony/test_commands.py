@@ -7,7 +7,7 @@ from homeassistant.components.harmony.const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from homeassistant.components.harmony.remote import ATTR_CHANNEL
+from homeassistant.components.harmony.remote import ATTR_CHANNEL, ATTR_DELAY_SECS
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     ATTR_DEVICE,
@@ -183,6 +183,53 @@ async def test_async_send_command(mock_hc, hass):
     await hass.async_block_till_done()
 
     send_commands_mock.assert_not_awaited()
+    send_commands_mock.reset_mock()
+
+
+@patch(
+    "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
+)
+async def test_async_send_command_custom_delay(mock_hc, hass):
+    """Ensure calls to send remote commands properly propagate to devices with custom delays."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.0.2.0",
+            CONF_NAME: HUB_NAME,
+            ATTR_DELAY_SECS: DEFAULT_DELAY_SECS + 2,
+        },
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = hass.data[DOMAIN][entry.entry_id]
+    send_commands_mock = data._client.send_commands
+
+    # Tell the TV to play by id
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: ENTITY_REMOTE,
+            ATTR_COMMAND: PLAY_COMMAND,
+            ATTR_DEVICE: TV_DEVICE_ID,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    send_commands_mock.assert_awaited_once_with(
+        [
+            SendCommandDevice(
+                device=str(TV_DEVICE_ID),
+                command=PLAY_COMMAND,
+                delay=float(DEFAULT_HOLD_SECS),
+            ),
+            DEFAULT_DELAY_SECS + 2,
+        ]
+    )
     send_commands_mock.reset_mock()
 
 
