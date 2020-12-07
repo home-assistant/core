@@ -71,7 +71,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version < 2:
-        _LOGGER.warn(
+        _LOGGER.warning(
             "Your configuration is outdated. Please delete the integration and add neato botvac again."
         )
         return False
