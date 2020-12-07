@@ -25,6 +25,17 @@ IDS_TO_ACTIVITIES = {
     PLAY_MUSIC_ACTIVITY_ID: "Play Music",
 }
 
+TV_DEVICE_ID = 1234
+TV_DEVICE_NAME = "My TV"
+
+DEVICES_TO_IDS = {
+    TV_DEVICE_NAME: TV_DEVICE_ID,
+}
+
+IDS_TO_DEVICES = {
+    TV_DEVICE_ID: TV_DEVICE_NAME,
+}
+
 
 class FakeHarmonyClient:
     """FakeHarmonyClient to mock away network calls."""
@@ -35,6 +46,8 @@ class FakeHarmonyClient:
         """Initialize FakeHarmonyClient class."""
         self._activity_name = "Watch TV"
         self.close = AsyncMock()
+        self.send_commands = AsyncMock()
+        self.change_channel = AsyncMock()
         self._callbacks = callbacks
 
     async def connect(self):
@@ -45,6 +58,18 @@ class FakeHarmonyClient:
     def get_activity_name(self, activity_id):
         """Return the activity name with the given activity_id."""
         return IDS_TO_ACTIVITIES.get(activity_id)
+
+    def get_activity_id(self, activity_name):
+        """Return the mapping of an activity name to the internal id."""
+        return ACTIVITIES_TO_IDS.get(activity_name)
+
+    def get_device_name(self, device_id):
+        """Return the device name with the given device_id."""
+        return IDS_TO_DEVICES.get(device_id)
+
+    def get_device_id(self, device_name):
+        """Return the device id with the given device_name."""
+        return DEVICES_TO_IDS.get(device_name)
 
     async def start_activity(self, activity_id):
         """Update the current activity and call the appropriate callbacks."""
@@ -58,10 +83,6 @@ class FakeHarmonyClient:
     async def power_off(self):
         """Power off all activities."""
         await self.start_activity(-1)
-
-    def get_activity_id(self, activity_name):
-        """Return the mapping of an activity name to the internal id."""
-        return ACTIVITIES_TO_IDS.get(activity_name)
 
     @property
     def current_activity(self):
@@ -92,7 +113,7 @@ class FakeHarmonyClient:
             ]
         )
         type(config).devices = PropertyMock(
-            return_value=[{"name": "My TV", "id": 1234}]
+            return_value=[{"name": TV_DEVICE_NAME, "id": TV_DEVICE_ID}]
         )
         type(config).info = PropertyMock(return_value={})
         type(config).hub_state = PropertyMock(return_value={})
