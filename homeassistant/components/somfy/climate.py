@@ -85,8 +85,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-        return supported_features
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
