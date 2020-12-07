@@ -220,6 +220,11 @@ class WemoSwitch(SwitchEntity):
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Wemo switch removed from hass."""
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
+        await self.hass.async_add_executor_job(registry.unregister, self.wemo)
+
     async def async_update(self):
         """Update WeMo state.
 
