@@ -1,2 +1,6 @@
 reboot:
-  description: Sends reboot command to the Obihai device
+  description: Sends reboot command to the Obihai device.
+  fields:
+    entity_id:
+      description: Any obihai sensor entity.
+      example: sensor.obihai_last_reboot
