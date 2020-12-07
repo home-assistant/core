@@ -108,7 +108,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except TuyaAPIException:
             return RESULT_AUTH_FAILED
 
-        self.hass.data[DOMAIN] = {TUYA_DATA: tuya}
         return RESULT_SUCCESS
 
     async def async_step_import(self, user_input=None):

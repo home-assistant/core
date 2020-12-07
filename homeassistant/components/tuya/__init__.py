@@ -120,37 +120,34 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tuya platform."""
 
-    # Attempt to re-use the session created during config flow.
-    tuya = hass.data.get(DOMAIN, {}).get(TUYA_DATA)
+    tuya = TuyaApi()
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     country_code = entry.data[CONF_COUNTRYCODE]
     platform = entry.data[CONF_PLATFORM]
 
-    if tuya is None:
-        try:
-            tuya = TuyaApi()
-            await hass.async_add_executor_job(
-                tuya.init, username, password, country_code, platform
-            )
-        except (
-            TuyaNetException,
-            TuyaServerException,
-            TuyaFrequentlyInvokeException,
-        ) as exc:
+    try:
+        await hass.async_add_executor_job(
+            tuya.init, username, password, country_code, platform
+        )
+    except (
+        TuyaNetException,
+        TuyaServerException,
+        TuyaFrequentlyInvokeException,
+    ) as exc:
+        raise ConfigEntryNotReady() from exc
+
+    except TuyaAPIException as exc:
+        # Workaround until https://github.com/PaulAnnekov/tuyaha/pull/60 or similar is merged
+        if str(exc) == "you cannot auth exceed once in 60 seconds":
+            _LOGGER.error("Tuya login ratelimited")
             raise ConfigEntryNotReady() from exc
 
-        except TuyaAPIException as exc:
-            # Workaround until https://github.com/PaulAnnekov/tuyaha/pull/60 or similar is merged
-            if str(exc) == "you cannot auth exceed once in 60 seconds":
-                _LOGGER.error("Tuya login ratelimited")
-                raise ConfigEntryNotReady() from exc
-
-            _LOGGER.error(
-                "Connection error during integration setup. Error: %s",
-                exc,
-            )
-            return False
+        _LOGGER.error(
+            "Connection error during integration setup. Error: %s",
+            exc,
+        )
+        return False
 
     hass.data[DOMAIN] = {
         TUYA_DATA: tuya,
