@@ -561,68 +561,55 @@ async def test_reconnect(hass, dsmr_connection_fixture):
 async def test_timer():
     """Test if the timer handles starting, stopping and resetting correctly"""
     delay = 1
-    # deltaDelay must be delay >> deltaDelay and deltaDelay >> code runtime
-    deltaDelay = 0.04
+    # delta_delay must be delay >> delta_delay and delta_delay >> code runtime
+    delta_delay = 0.04
 
     loop = asyncio.get_event_loop()
-    timerRanOut = loop.create_future()
+    timer_ran_out = loop.create_future()
 
-    def timerCallback():
-        if timerRanOut.done():
+    def timer_callback():
+        if timer_ran_out.done():
             raise Exception("Timer future already set")
-        timerRanOut.set_result(True)
-        print("Timer ran out at: ", datetime.now().time())
+        timer_ran_out.set_result(True)
 
-    testTimer = Timer(delay, timerCallback, loop=loop)
-    assert not testTimer.TimerHandle
+    test_timer_instance = Timer(delay, timer_callback, loop=loop)
+    assert not test_timer_instance.timerhandle
 
-    testTimer.start()
-    assert testTimer.TimerHandle
-    assert not testTimer._timerDone()
-    assert testTimer._timerActive()
-    assert not timerRanOut.done()
+    test_timer_instance.start()
+    assert test_timer_instance.timerhandle
+    assert not test_timer_instance._timer_done()
+    assert test_timer_instance._timer_active()
+    assert not timer_ran_out.done()
 
-    await asyncio.sleep(delay + deltaDelay)
-    assert testTimer.TimerHandle
-    assert testTimer._timerDone()
-    assert not testTimer._timerActive()
-    assert timerRanOut.done()
+    await asyncio.sleep(delay + delta_delay)
+    assert timer_ran_out.done()
 
-    timerRanOut = loop.create_future()
-    testTimer.start()
-    testTimer.stop()
-    assert not testTimer._timerActive()
-    assert not timerRanOut.done()
+    timer_ran_out = loop.create_future()
+    test_timer_instance.start()
+    test_timer_instance.stop()
+    assert not timer_ran_out.done()
 
-    await asyncio.sleep(delay + deltaDelay)
-    assert not timerRanOut.done()
+    await asyncio.sleep(delay + delta_delay)
+    assert not timer_ran_out.done()
 
-    timerRanOut = loop.create_future()
-    testTimer.start()
+    timer_ran_out = loop.create_future()
+    test_timer_instance.start()
 
-    await asyncio.sleep(2 * deltaDelay)
-    testTimer.reset()
+    await asyncio.sleep(2 * delta_delay)
+    test_timer_instance.reset()
 
     # Test if the timer is still running
-    assert testTimer.TimerHandle
-    assert not testTimer._timerDone()
-    assert testTimer._timerActive()
-    assert not timerRanOut.done()
+    assert not timer_ran_out.done()
 
     # Test if the timer is still running when it should have gone off before reset
-    await asyncio.sleep(delay - deltaDelay)
-    assert testTimer.TimerHandle
-    assert not testTimer._timerDone()
-    assert testTimer._timerActive()
-    assert not timerRanOut.done()
+    await asyncio.sleep(delay - delta_delay)
+    assert not timer_ran_out.done()
 
     # Test if the timer has gone off after it should have
-    await asyncio.sleep(2 * deltaDelay)
-    assert testTimer.TimerHandle
-    assert testTimer._timerDone()
-    assert not testTimer._timerActive()
-    assert timerRanOut.done()
+    await asyncio.sleep(2 * delta_delay)
+    assert timer_ran_out.done()
 
-    timerRanOut = loop.create_future()
+    # Test if the timer has not off twice
+    timer_ran_out = loop.create_future()
     await asyncio.sleep(2 * delay)
-    assert not timerRanOut.done()
+    assert not timer_ran_out.done()

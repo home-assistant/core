@@ -161,7 +161,7 @@ async def async_setup_entry(
             update_timeout.set_result(True)
         else:
             raise Exception("Future " "update_timeout" " Already set")
-        _LOGGER.warninging("Connection timed out")
+        _LOGGER.warning("Connection timed out")
 
     update_timer = Timer(30, timer_callback, loop=hass.loop)
 
@@ -208,8 +208,9 @@ async def async_setup_entry(
                 update_timeout = hass.loop.create_future()
                 transport, protocol = await hass.loop.create_task(reader_factory())
 
-                update_timer.set_timeout(config[CONF_RECONNECT_INTERVAL])
-                update_timer.start()
+                if CONF_HOST in config:
+                    update_timer.set_timeout(config[CONF_RECONNECT_INTERVAL])
+                    update_timer.start()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
