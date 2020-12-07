@@ -1,5 +1,4 @@
-"""Support for tracking MQTT enabled devices."""
-import logging
+"""Support for tracking MQTT enabled devices defined in YAML."""
 
 import voluptuous as vol
 
@@ -9,15 +8,13 @@ from homeassistant.const import CONF_DEVICES, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_QOS
-
-_LOGGER = logging.getLogger(__name__)
+from ..const import CONF_QOS
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA_YAML = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
     {
         vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
@@ -27,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
 )
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner_from_yaml(hass, config, async_see, discovery_info=None):
     """Set up the MQTT tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
