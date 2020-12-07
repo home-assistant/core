@@ -120,7 +120,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tuya platform."""
 
-    # Attempt to re-use the session created during config flow. 
+    # Attempt to re-use the session created during config flow.
     tuya = hass.data.get(DOMAIN, {}).get(TUYA_DATA)
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
