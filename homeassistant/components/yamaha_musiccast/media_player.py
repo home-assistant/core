@@ -34,6 +34,8 @@ from .const import DOMAIN
 
 PARALLEL_UPDATES = 1
 
+DEFAULT_ZONE = "main"
+
 
 async def async_setup_entry(
     hass: HomeAssistantType,
@@ -43,9 +45,18 @@ async def async_setup_entry(
     """Set up MusicCast sensor based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    media_players = [
-        DemoMusicPlayer("Test Music Player", entry.entry_id, coordinator),
-    ]
+    features = coordinator.data.get("features", {})
+    name = coordinator.data.get("network_status").get("network_name", "Unknown")
+
+    media_players = []
+
+    for zone in features.get("zone", []):
+        zone_id = zone.get("id")
+        zone_name = name if zone_id == DEFAULT_ZONE else f"{name} {zone_id}"
+
+        media_players.append(
+            DemoMusicPlayer(zone_id, zone_name, entry.entry_id, coordinator)
+        )
 
     async_add_entities(media_players, True)
 
@@ -100,7 +111,7 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
     # We only implement the methods that we support
 
-    def __init__(self, name, entry_id, coordinator, device_class=None):
+    def __init__(self, zone_id, name, entry_id, coordinator, device_class=None):
         """Initialize the demo device."""
         self._name = name
         self._player_state = STATE_PLAYING
@@ -110,6 +121,7 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
         self._device_class = device_class
+        self._zone_id = zone_id
 
         super().__init__(
             entry_id=entry_id,
@@ -167,7 +179,7 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
         mac = self.coordinator.data.get("network_status").get("mac_address")
-        return f"{mac}_media_player"
+        return f"{mac}_{self._zone_id}"
 
     def turn_on(self):
         """Turn the media player on."""
@@ -248,9 +260,9 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         ),
     ]
 
-    def __init__(self, name, entry_id, coordinator):
+    def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the demo device."""
-        super().__init__(name, entry_id, coordinator)
+        super().__init__(zone_id, name, entry_id, coordinator)
         self._cur_track = 0
         self._repeat = REPEAT_MODE_OFF
 

@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict
 
-from pyamaha import AsyncDevice, System
+from pyamaha import AsyncDevice, System, Zone
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -94,18 +94,47 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = client
         self.platforms = []
 
+        # the following data must not be updated frequently
+        self._zone_ids = None
+        self._network_status = None
+        self._device_info = None
+        self._features = None
+
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self):
         """Update data via library."""
         try:
 
-            network_status = await self.api.request(System.get_network_status())
-            device_info = await self.api.request(System.get_device_info())
+            if not self._network_status:
+                self._network_status = await (
+                    await self.api.request(System.get_network_status())
+                ).json()
+
+            if not self._device_info:
+                self._device_info = await (
+                    await self.api.request(System.get_device_info())
+                ).json()
+
+            if not self._features:
+                self._features = await (
+                    await self.api.request(System.get_features())
+                ).json()
+
+                self._zone_ids = [
+                    zone.get("id") for zone in self._features.get("zone", [])
+                ]
+
+            zones = [
+                await (await self.api.request(Zone.get_status(zone))).json()
+                for zone in self._zone_ids
+            ]
 
             return {
-                "network_status": await network_status.json(),
-                "device_info": await device_info.json(),
+                "network_status": self._network_status,
+                "device_info": self._device_info,
+                "features": self._features,
+                "zones": zones,
             }
         except Exception as exception:
             raise UpdateFailed() from exception
