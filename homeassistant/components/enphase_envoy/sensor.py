@@ -49,7 +49,7 @@ SENSORS = {
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,7 +78,7 @@ async def async_setup_platform(
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        data = dict()
+        data = {}
         async with async_timeout.timeout(30):
             try:
                 await envoy_reader.getData()
@@ -95,12 +95,11 @@ async def async_setup_platform(
                         )()
                     except httpx.HTTPStatusError as err:
                         _LOGGER.error("Authentication error: %s", err)
+                        data["inverters_production"] = None
                         continue
                     except httpx.HTTPError as err:
                         _LOGGER.error("Protocol Error: %s", err)
-                        continue
-                    except KeyError as err:
-                        _LOGGER.error("Error reading Inverter data: %s", err)
+                        data["inverters_production"] = None
                         continue
 
             _LOGGER.debug("Retrieved data from API: %s", data)
@@ -121,32 +120,25 @@ async def async_setup_platform(
         raise PlatformNotReady
 
     entities = []
-    # Iterate through the list of sensors
     for condition in monitored_conditions:
-        # If inverter condition is found with no data (None) than Authentication failed
-        # during setup and will not be added to the list of created entities.
         if (
             condition == "inverters"
             and coordinator.data.get("inverters_production") is not None
         ):
-            inverters = coordinator.data.get("inverters_production")
-            coordinator.data["inverters_production"] = inverters
-            _LOGGER.debug("Inverter data: %s", inverters)
-            if isinstance(inverters, dict):
-                for inverter in inverters:
-                    entities.append(
-                        Envoy(
-                            condition,
-                            f"{name}{SENSORS[condition][0]} {inverter}",
-                            SENSORS[condition][1],
-                            coordinator,
-                        )
-                    )
-                    _LOGGER.debug(
-                        "Adding inverter SN: %s - Type: %s.",
-                        f"{name}{SENSORS[condition][0]} {inverter}",
+            for inverter in coordinator.data["inverters_production"]:
+                entities.append(
+                    Envoy(
                         condition,
+                        f"{name}{SENSORS[condition][0]} {inverter}",
+                        SENSORS[condition][1],
+                        coordinator,
                     )
+                )
+                _LOGGER.debug(
+                    "Adding inverter SN: %s - Type: %s.",
+                    f"{name}{SENSORS[condition][0]} {inverter}",
+                    condition,
+                )
         elif condition != "inverters":
             entities.append(
                 Envoy(
@@ -185,34 +177,20 @@ class Envoy(CoordinatorEntity):
     def state(self):
         """Return the state of the sensor."""
         if self._type != "inverters":
-            try:
-                value = self.coordinator.data.get(self._type)
-            except AttributeError:
-                _LOGGER.debug("Data for sensor %s is not a number.", self._type)
-                return
+            value = self.coordinator.data.get(self._type)
 
-            _LOGGER.debug("Updating: %s - %s", self._type, value)
-
-        elif self._type == "inverters":
+        elif (
+            self._type == "inverters"
+            and self.coordinator.data.get("inverters_production") is not None
+        ):
             split_name = self._name.split(" ")
-            serial_number = split_name[(len(split_name) - 1)]
-            try:
-                value = self.coordinator.data.get("inverters_production").get(
-                    serial_number
-                )[0]
-            except AttributeError:
-                _LOGGER.debug(
-                    "Data received from inverter %s was an unsupported format.",
-                    serial_number,
-                )
-                return
+            serial_number = split_name[-1]
 
-            _LOGGER.debug(
-                "Updating: %s (%s) - %s.",
-                self._type,
-                serial_number,
-                value,
-            )
+            value = self.coordinator.data.get("inverters_production").get(
+                serial_number
+            )[0]
+        else:
+            return None
 
         return value
 
@@ -229,17 +207,16 @@ class Envoy(CoordinatorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._type == "inverters":
-            serial_number = self._name.split(" ")[(len(self._name.split(" ")) - 1)]
-            try:
-                value = self.coordinator.data.get("inverters_production").get(
-                    serial_number
-                )[1]
-                return {"last_reported": value}
-            except AttributeError:
-                _LOGGER.debug(
-                    "Data received from inverter for last reported time was an unsupported format."
-                )
-                return
+        if (
+            self._type == "inverters"
+            and self.coordinator.data.get("inverters_production") is not None
+        ):
+            split_name = self._name.split(" ")
+            serial_number = split_name[-1]
+
+            value = self.coordinator.data.get("inverters_production").get(
+                serial_number
+            )[1]
+            return {"last_reported": value}
 
         return None
