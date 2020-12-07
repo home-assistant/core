@@ -12,7 +12,7 @@ PROJECT_LICENSE = "Apache License 2.0"
 PROJECT_AUTHOR = "AI-Speaker team"
 PROJECT_COPYRIGHT = f" 2016-{dt.now().year}, {PROJECT_AUTHOR}"
 PROJECT_URL = "https://www.ai-speaker.com"
-PROJECT_EMAIL = "info@sviete.pl"
+PROJECT_EMAIL = "info@ai-speaker.com"
 
 PROJECT_GITHUB_USERNAME = "sviete"
 PROJECT_GITHUB_REPOSITORY = "AIS-home-assistant"
