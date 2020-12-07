@@ -3,16 +3,8 @@
 from homeassistant.const import CONF_DEVICE, CONF_DEVICE_ID
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=relative-beyond-top-level
-    ATTR_CHANNEL,
-    ATTR_CLICK_TYPE,
-    DOMAIN,
-    EVENT_SHELLY_CLICK,
-)
-from .utils import (  # pylint: disable=relative-beyond-top-level
-    get_device_name,
-    get_device_wrapper,
-)
+from .const import ATTR_CHANNEL, ATTR_CLICK_TYPE, DOMAIN, EVENT_SHELLY_CLICK
+from .utils import get_device_name, get_device_wrapper
 
 
 @callback

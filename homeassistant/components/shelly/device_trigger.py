@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # pylint: disable=relative-beyond-top-level
+from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     DOMAIN,
@@ -28,10 +28,7 @@ from .const import (  # pylint: disable=relative-beyond-top-level
     SUPPORTED_TRIGGER_TYPES,
     TRIGGER_SUBTYPES,
 )
-from .utils import (  # pylint: disable=relative-beyond-top-level
-    get_device_wrapper,
-    get_input_triggers,
-)
+from .utils import get_device_wrapper, get_input_triggers
 
 CONF_SUBTYPE = "subtype"
 

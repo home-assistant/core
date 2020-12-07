@@ -10,7 +10,7 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import parse_datetime, utcnow
 
-from .const import (  # pylint: disable=relative-beyond-top-level
+from .const import (
     BASIC_TRIGGER_TYPES,
     COAP,
     DATA_CONFIG_ENTRY,
