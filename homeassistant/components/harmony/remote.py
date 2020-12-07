@@ -37,7 +37,7 @@ from .const import (
     SERVICE_SYNC,
     UNIQUE_ID,
 )
-from .data import HarmonyCallback
+from .subscriber import HarmonyCallback
 from .util import (
     find_best_name_for_remote,
     find_matching_config_entries_for_host,

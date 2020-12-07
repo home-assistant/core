@@ -5,7 +5,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
 from .const import DOMAIN
-from .data import HarmonyCallback, HarmonyData
+from .data import HarmonyData
+from .subscriber import HarmonyCallback
 
 _LOGGER = logging.getLogger(__name__)
 

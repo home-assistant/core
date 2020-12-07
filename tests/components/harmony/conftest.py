@@ -47,6 +47,7 @@ class FakeHarmonyClient:
         self.close = AsyncMock()
         self.send_commands = AsyncMock()
         self.change_channel = AsyncMock()
+        self.sync = AsyncMock()
         self._callbacks = callbacks
 
     async def connect(self):
