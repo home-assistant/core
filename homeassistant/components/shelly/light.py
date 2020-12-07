@@ -23,12 +23,9 @@ from homeassistant.util.color import (
 )
 
 from . import ShellyDeviceWrapper
-from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
+from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, KELVIN_MAX_VALUE
 from .entity import ShellyBlockEntity
-from .utils import async_remove_shelly_entity
-
-SUPPORT_SHELLYRGB_COLOR = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-SUPPORT_SHELLYRGB_WHITE = SUPPORT_BRIGHTNESS
+from .utils import async_remove_shelly_entity, min_kelvin
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -64,17 +61,17 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         super().__init__(wrapper, block)
         self.control_result = None
         self._supported_features = 0
-        if hasattr(block, "brightness"):
+        has_rgb = (
+            hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue")
+        )
+        if hasattr(block, "brightness") or hasattr(block, "gain"):
             self._supported_features |= SUPPORT_BRIGHTNESS
-        if hasattr(block, "colorTemp"):
+        if hasattr(block, "colorTemp") and not has_rgb:
             self._supported_features |= SUPPORT_COLOR_TEMP
-        if hasattr(block, "white"):
+        if hasattr(block, "white") and has_rgb:
             self._supported_features |= SUPPORT_WHITE_VALUE
-        if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
-            if wrapper.device.settings["mode"] == "color":
-                self._supported_features |= SUPPORT_SHELLYRGB_COLOR
-            elif wrapper.device.settings["mode"] == "white":
-                self._supported_features |= SUPPORT_SHELLYRGB_WHITE
+        if has_rgb and wrapper.device.settings["mode"] == "color":
+            self._supported_features |= SUPPORT_COLOR
 
     @property
     def supported_features(self) -> int:
@@ -146,12 +143,12 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def min_mireds(self) -> float:
         """Return the coldest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(6500)
+        return color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
 
     @property
     def max_mireds(self) -> float:
         """Return the warmest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(2700)
+        return color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model))
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
@@ -161,10 +158,10 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             params["brightness"] = params["gain"] = int(tmp_brightness / 255 * 100)
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            if color_temp > 6500:
-                color_temp = 6500
-            elif color_temp < 2700:
-                color_temp = 2700
+            if color_temp > KELVIN_MAX_VALUE:
+                color_temp = KELVIN_MAX_VALUE
+            elif color_temp < min_kelvin(self.wrapper.model):
+                color_temp = min_kelvin(self.wrapper.model)
             params["temp"] = int(color_temp)
         if ATTR_HS_COLOR in kwargs:
             red, green, blue = color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
