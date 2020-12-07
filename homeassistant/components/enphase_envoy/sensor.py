@@ -49,7 +49,7 @@ SENSORS = {
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
