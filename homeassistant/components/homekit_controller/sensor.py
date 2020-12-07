@@ -35,7 +35,7 @@ SIMPLE_SENSOR = {
         "device_class": DEVICE_CLASS_POWER,
         "unit": "watts",
         "icon": "mdi:chart-line",
-    }
+    },
 }
 
 
