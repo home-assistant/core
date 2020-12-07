@@ -2,7 +2,11 @@
 
 from aioharmony.const import SendCommandDevice
 
-from homeassistant.components.harmony.const import DOMAIN, SERVICE_CHANGE_CHANNEL
+from homeassistant.components.harmony.const import (
+    DOMAIN,
+    SERVICE_CHANGE_CHANNEL,
+    SERVICE_SYNC,
+)
 from homeassistant.components.harmony.remote import ATTR_CHANNEL
 from homeassistant.components.remote import (
     ATTR_COMMAND,
@@ -208,3 +212,31 @@ async def test_change_channel(mock_hc, hass):
     await hass.async_block_till_done()
 
     change_channel_mock.assert_awaited_once_with(100)
+
+
+@patch(
+    "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
+)
+async def test_sync(mock_hc, hass):
+    """Test the sync command."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = hass.data[DOMAIN][entry.entry_id]
+    sync_mock = data._client.sync
+
+    # Tell the remote to change channels
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SYNC,
+        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    sync_mock.assert_awaited_once()

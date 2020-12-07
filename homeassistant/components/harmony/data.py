@@ -1,42 +1,26 @@
 """Harmony data object which contains the Harmony Client."""
 
-import asyncio
 import logging
-from typing import Any, Callable, Iterable, NamedTuple, Optional
+from typing import Iterable
 
-from aioharmony.const import ClientCallbackType, ClientConfigType, SendCommandDevice
+from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
-from homeassistant.core import callback
-
 from .const import ACTIVITY_POWER_OFF
+from .subscriber import HarmonySubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-NoParamCallback = Optional[Callable[[object], Any]]
-ActivityCallback = Optional[Callable[[object, tuple], Any]]
-ConfigCallback = Optional[Callable[[object, ClientConfigType], Any]]
 
-
-class HarmonyCallback(NamedTuple):
-    """Callback type for Harmony Hub notifications."""
-
-    connected: NoParamCallback
-    disconnected: NoParamCallback
-    config_updated: ConfigCallback
-    activity_starting: ActivityCallback
-    activity_started: ActivityCallback
-
-
-class HarmonyData:
+class HarmonyData(HarmonySubscriberMixin):
     """HarmonyData registers for Harmony hub updates."""
 
     def __init__(self, address: str, name: str, unique_id: str):
-        """Initialize a subscriber."""
+        """Initialize a data object."""
+        super().__init__()
         self._name = name
         self._unique_id = unique_id
-        self._subscriptions = []
         self._available = False
 
         callbacks = {
@@ -257,70 +241,3 @@ class HarmonyData:
             return False
         else:
             return True
-
-    @callback
-    def async_subscribe(self, update_callback: HarmonyCallback) -> Callable:
-        """Add a callback subscriber."""
-        self._subscriptions.append(update_callback)
-
-        def _unsubscribe():
-            self.async_unsubscribe(update_callback)
-
-        return _unsubscribe
-
-    @callback
-    def async_unsubscribe(self, update_callback: HarmonyCallback):
-        """Remove a callback subscriber."""
-        self._subscriptions.remove(update_callback)
-
-    def _config_updated(self, _=None) -> None:
-        _LOGGER.debug("config_updated")
-        for subscription in self._subscriptions:
-            current_callback = subscription.config_updated
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback(self._client.hub_config))
-                else:
-                    current_callback(self._client.hub_config)
-
-    def _connected(self, _=None) -> None:
-        _LOGGER.debug("connected")
-        self._available = True
-        for subscription in self._subscriptions:
-            current_callback = subscription.connected
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback())
-                else:
-                    current_callback()
-
-    def _disconnected(self, _=None) -> None:
-        _LOGGER.debug("disconnected")
-        self._available = False
-        for subscription in self._subscriptions:
-            current_callback = subscription.disconnected
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback())
-                else:
-                    current_callback()
-
-    def _activity_starting(self, activity_info: tuple) -> None:
-        _LOGGER.debug("activity %s starting", activity_info)
-        for subscription in self._subscriptions:
-            current_callback = subscription.activity_starting
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback(activity_info))
-                else:
-                    current_callback(activity_info)
-
-    def _activity_started(self, activity_info: tuple) -> None:
-        _LOGGER.debug("activity %s started", activity_info)
-        for subscription in self._subscriptions:
-            current_callback = subscription.activity_started
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback(activity_info))
-                else:
-                    current_callback(activity_info)
