@@ -725,6 +725,9 @@ ha-ffmpeg==3.0.2
 # homeassistant.components.microsoft_graph
 ha-graphapi==0.0.18
 
+# homeassistant.components.microsoft_graph
+ha-graphapi==0.0.18
+
 # homeassistant.components.philips_js
 ha-philipsjs==0.0.8
 
