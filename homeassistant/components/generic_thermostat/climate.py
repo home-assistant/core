@@ -241,8 +241,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
             if old_state.attributes.get(ATTR_PRESET_MODE) == PRESET_AWAY:
                 self._is_away = True
-            if not self._hvac_mode and old_state.state:
-                self._hvac_mode = old_state.state
 
         else:
             # No previous state, try and restore defaults
@@ -255,9 +253,22 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 "No previously saved temperature, setting to %s", self._target_temp
             )
 
-        # Set default state to off
+        # hvac_mode not initialized
         if not self._hvac_mode:
-            self._hvac_mode = HVAC_MODE_OFF
+            # Set hvac_mode from 'real' switch state
+            if self._is_device_active:
+                if not self.ac_mode:
+                    self._hvac_mode = HVAC_MODE_HEAT
+                else:
+                    self._hvac_mode = HVAC_MODE_COOL
+            else:
+                # Set default state to off
+                self._hvac_mode = HVAC_MODE_OFF
+
+        # Prevent the device from keep running if the thermostat is stopped
+        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
+            await self._async_heater_turn_off()
+            _LOGGER.warning("turning off heater %s", self.heater_entity_id)
 
     @property
     def should_poll(self):
