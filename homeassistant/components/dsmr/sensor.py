@@ -4,8 +4,8 @@ from asyncio import CancelledError
 from datetime import timedelta
 from functools import partial
 import logging
-import warnings
 from typing import Dict
+import warnings
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -220,7 +220,7 @@ async def async_setup_entry(
 
                     # Wait for reader to close
                     await asyncio.wait(
-                        [protocol.wait_closed(), update_timeout],
+                        [protocol.wait_closed()],
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
@@ -481,7 +481,7 @@ class Timer:
         if self._timer_active():
             warnings.warn(
                 """A timer was still running with the old delay.
-                 delay won't be changed untill next reset()"""
+                 delay won't be changed until next reset()"""
             )
         self.delay = delay
 
@@ -495,7 +495,7 @@ class Timer:
             if self._timer_active():
                 warnings.warn(
                     """A timer was still running with the old callback.
-                     callback won't be changed untill next reset()"""
+                     callback won't be changed until next reset()"""
                 )
             self.timer_callback = timer_callback
         else:
