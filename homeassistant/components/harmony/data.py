@@ -92,13 +92,6 @@ class HarmonyData:
         """Return the current activity tuple."""
         return self._client.current_activity
 
-    @property
-    def json_config(self) -> dict:
-        """Return the hub config as json."""
-        if self._client.config is None:
-            return None
-        return self._client.json_config
-
     def device_info(self, domain: str):
         """Return hub device info."""
         model = "Harmony Hub"
