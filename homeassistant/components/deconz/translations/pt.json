@@ -2,10 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Bridge j\u00e1 est\u00e1 configurada",
-            "no_bridges": "Nenhum hub deCONZ descoberto"
+            "no_bridges": "Nenhum hub deCONZ descoberto",
+            "not_deconz_bridge": "N\u00e3o \u00e9 uma bridge deCONZ"
         },
         "error": {
-            "no_key": "N\u00e3o foi poss\u00edvel obter uma chave de API"
+            "no_key": "N\u00e3o foi poss\u00edvel obter uma API Key"
         },
         "step": {
             "link": {
@@ -48,7 +49,8 @@
             "remote_awakened": "Dispositivo acordou",
             "remote_button_double_press": "Bot\u00e3o \"{subtype}\" clicado duas vezes",
             "remote_button_long_press": "Bot\u00e3o \"{subtype}\" pressionado continuamente",
-            "remote_falling": "Dispositivo em queda livre"
+            "remote_falling": "Dispositivo em queda livre",
+            "remote_gyro_activated": "Dispositivo agitado"
         }
     }
 }
