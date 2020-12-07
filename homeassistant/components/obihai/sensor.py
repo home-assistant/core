@@ -69,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
     async_add_entities(sensors)
-    
+
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
@@ -77,6 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         {},
         "reboot",
     )
+
 
 class ObihaiServiceSensors(Entity):
     """Get the status of each Obihai Lines."""
@@ -164,7 +165,7 @@ class ObihaiServiceSensors(Entity):
 
         if self._service_name in call_direction:
             self._state = call_direction.get(self._service_name)
-            
+
     def reboot(self):
         """Send API call to reboot device."""
         success = self._pyobihai.call_reboot()
