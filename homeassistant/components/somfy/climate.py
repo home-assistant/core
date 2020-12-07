@@ -208,7 +208,3 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         self._climate.set_target(
             REVERSE_PRESET_MAPPING[preset_mode], temperature, DurationType.NEXT_MODE
         )
-        target_mode = next(
-            state for state in self.device.states if state.name == "target_mode"
-        )
-        target_mode.value = REVERSE_PRESET_MAPPING[preset_mode]
