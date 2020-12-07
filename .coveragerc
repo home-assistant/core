@@ -389,6 +389,9 @@ omit =
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
+    homeassistant/components/homepluscontrol/api.py
+    homeassistant/components/homepluscontrol/helpers.py
+    homeassistant/components/homepluscontrol/switch.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
     homeassistant/components/horizon/media_player.py
