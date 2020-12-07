@@ -27,5 +27,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unsupported_firmware": "The device is using an unsupported firmware version."
     }
+  },
+  "device_automation":{
+      "trigger_subtype": {
+          "button": "Button",
+          "button1": "First button",
+          "button2": "Second button",
+          "button3": "Third button"
+      },
+      "trigger_type": {
+          "single_click": "{subtype} single clicked",
+          "double_click": "{subtype} double clicked",
+          "triple_click": "{subtype} triple clicked",
+          "long_click": " {subtype} long clicked",
+          "single_long_click": "{subtype} single clicked and then long clicked",
+          "long_single_click": "{subtype} long clicked and then single clicked"
+      }
   }
 }
