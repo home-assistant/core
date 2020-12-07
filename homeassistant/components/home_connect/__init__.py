@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "sensor", "switch", "light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -105,4 +105,4 @@ async def update_all_devices(hass, entry):
         for device_dict in hc_api.devices:
             await hass.async_add_executor_job(device_dict["device"].initialize)
     except HTTPError as err:
-        _LOGGER.warning("Cannot update devices: %s.", err.response.status_code)
+        _LOGGER.warning("Cannot update devices: %s", err.response.status_code)

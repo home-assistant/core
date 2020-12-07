@@ -57,13 +57,13 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Start the program."""
-        _LOGGER.debug("Tried to turn on program %s.", self.program_name)
+        _LOGGER.debug("Tried to turn on program %s", self.program_name)
         try:
             await self.hass.async_add_executor_job(
                 self.device.appliance.start_program, self.program_name
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to start program: %s.", err)
+            _LOGGER.error("Error while trying to start program: %s", err)
         self.async_entity_update()
 
     async def async_turn_off(self, **kwargs):
@@ -72,7 +72,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         try:
             await self.hass.async_add_executor_job(self.device.appliance.stop_program)
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to stop program: %s.", err)
+            _LOGGER.error("Error while trying to stop program: %s", err)
         self.async_entity_update()
 
     async def async_update(self):
@@ -82,7 +82,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             self._state = True
         else:
             self._state = False
-        _LOGGER.debug("Updated, new state: %s.", self._state)
+        _LOGGER.debug("Updated, new state: %s", self._state)
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
@@ -100,7 +100,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Switch the device on."""
-        _LOGGER.debug("Tried to switch on %s.", self.name)
+        _LOGGER.debug("Tried to switch on %s", self.name)
         try:
             await self.hass.async_add_executor_job(
                 self.device.appliance.set_setting,
@@ -108,13 +108,13 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 BSH_POWER_ON,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on device: %s.", err)
+            _LOGGER.error("Error while trying to turn on device: %s", err)
             self._state = False
         self.async_entity_update()
 
     async def async_turn_off(self, **kwargs):
         """Switch the device off."""
-        _LOGGER.debug("tried to switch off %s.", self.name)
+        _LOGGER.debug("tried to switch off %s", self.name)
         try:
             await self.hass.async_add_executor_job(
                 self.device.appliance.set_setting,
@@ -122,7 +122,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 self.device.power_off_state,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn off device: %s.", err)
+            _LOGGER.error("Error while trying to turn off device: %s", err)
             self._state = True
         self.async_entity_update()
 
@@ -157,4 +157,4 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._state = False
         else:
             self._state = None
-        _LOGGER.debug("Updated, new state: %s.", self._state)
+        _LOGGER.debug("Updated, new state: %s", self._state)

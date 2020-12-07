@@ -20,6 +20,7 @@ class HomeConnectEntity(Entity):
         self.device = device
         self.desc = desc
         self._name = f"{self.device.appliance.name} {desc}"
+        self.device.entities.append(self)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -63,5 +64,5 @@ class HomeConnectEntity(Entity):
     @callback
     def async_entity_update(self):
         """Update the entity."""
-        _LOGGER.debug("Entity update triggered on %s.", self)
+        _LOGGER.debug("Entity update triggered on %s", self)
         self.async_schedule_update_ha_state(True)
