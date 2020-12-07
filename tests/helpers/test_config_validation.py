@@ -710,13 +710,13 @@ def test_deprecated_with_invalidation_version(caplog, schema, version):
             is detected
     """
     deprecated_schema = vol.All(
-        cv.deprecated("mars", invalidation_version="1.0.0"), schema
+        cv.deprecated("mars", invalidation_version="9999.99.9"), schema
     )
 
     message = (
         "The 'mars' option is deprecated, "
         "please remove it from your configuration. "
-        "This option will become invalid in version 1.0.0"
+        "This option will become invalid in version 9999.99.9"
     )
 
     test_data = {"mars": True}
@@ -763,14 +763,16 @@ def test_deprecated_with_replacement_key_and_invalidation_version(
         is detected
     """
     deprecated_schema = vol.All(
-        cv.deprecated("mars", replacement_key="jupiter", invalidation_version="1.0.0"),
+        cv.deprecated(
+            "mars", replacement_key="jupiter", invalidation_version="9999.99.9"
+        ),
         schema,
     )
 
     warning = (
         "The 'mars' option is deprecated, "
         "please replace it with 'jupiter'. This option will become "
-        "invalid in version 1.0.0"
+        "invalid in version 9999.99.9"
     )
 
     test_data = {"mars": True}
@@ -912,7 +914,7 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
         cv.deprecated(
             "mars",
             replacement_key="jupiter",
-            invalidation_version="1.0.0",
+            invalidation_version="9999.99.9",
             default=False,
         ),
         schema,
@@ -924,7 +926,7 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
     assert (
         "The 'mars' option is deprecated, "
         "please replace it with 'jupiter'. This option will become "
-        "invalid in version 1.0.0"
+        "invalid in version 9999.99.9"
     ) in caplog.text
     assert {"jupiter": True} == output
 

@@ -8,5 +8,10 @@
                 "description": "Do you want to set up the Mobile App component?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Send a notification"
+        }
     }
 }

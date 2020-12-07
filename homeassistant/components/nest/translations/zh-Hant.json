@@ -5,7 +5,7 @@
             "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
             "missing_configuration": "\u5143\u4ef6\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002",
             "no_url_available": "\u6c92\u6709\u53ef\u7528\u7684\u7db2\u5740\u3002\u95dc\u65bc\u6b64\u932f\u8aa4\u66f4\u8a73\u7d30\u8a0a\u606f\uff0c[\u9ede\u9078\u5354\u52a9\u7ae0\u7bc0]({docs_url})",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
             "unknown_authorize_url_generation": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
         },
         "create_entry": {
@@ -35,6 +35,14 @@
             "pick_implementation": {
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "\u5075\u6e2c\u5230\u52d5\u4f5c",
+            "camera_person": "\u5075\u6e2c\u5230\u4eba\u54e1",
+            "camera_sound": "\u5075\u6e2c\u5230\u8072\u97f3",
+            "doorbell_chime": "\u9580\u9234\u6309\u4e0b"
         }
     }
 }

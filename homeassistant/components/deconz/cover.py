@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(lights):
+    def async_add_cover(lights=gateway.api.lights.values()):
         """Add cover from deCONZ."""
         entities = []
 
@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_cover(gateway.api.lights.values())
+    async_add_cover()
 
 
 class DeconzCover(DeconzDevice, CoverEntity):

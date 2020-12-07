@@ -4,13 +4,24 @@
             "addon_info_failed": "Nie uda\u0142o si\u0119 pobra\u0107 informacji o dodatku OpenZWave",
             "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku OpenZWave",
             "addon_set_config_failed": "Nie uda\u0142o si\u0119 ustawi\u0107 konfiguracji OpenZWave",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "mqtt_required": "Integracja MQTT nie jest skonfigurowana",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku OpenZWave. Sprawd\u017a konfiguracj\u0119."
         },
+        "progress": {
+            "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku OpenZWave. Mo\u017ce to potrwa\u0107 kilka minut."
+        },
         "step": {
+            "hassio_confirm": {
+                "title": "Konfiguracja integracji OpenZWave z dodatkiem OpenZWave"
+            },
+            "install_addon": {
+                "title": "Rozpocz\u0119\u0142a si\u0119 instalacja dodatku OpenZWave"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "U\u017cyj dodatku OpenZWave Supervisor"

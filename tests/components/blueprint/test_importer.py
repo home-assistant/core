@@ -57,9 +57,9 @@ def test_extract_blueprint_from_community_topic(community_post):
     )
     assert imported_blueprint is not None
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "service_to_call",
-        "trigger_event",
+    assert imported_blueprint.blueprint.inputs == {
+        "service_to_call": None,
+        "trigger_event": None,
     }
 
 
@@ -103,9 +103,9 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
     )
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "service_to_call",
-        "trigger_event",
+    assert imported_blueprint.blueprint.inputs == {
+        "service_to_call": None,
+        "trigger_event": None,
     }
     assert imported_blueprint.suggested_filename == "balloob/test-topic"
     assert (
@@ -133,9 +133,9 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "service_to_call",
-        "trigger_event",
+    assert imported_blueprint.blueprint.inputs == {
+        "service_to_call": None,
+        "trigger_event": None,
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url
@@ -152,9 +152,14 @@ async def test_fetch_blueprint_from_github_gist_url(hass, aioclient_mock):
     imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.placeholders == {
-        "motion_entity",
-        "light_entity",
+    assert imported_blueprint.blueprint.inputs == {
+        "motion_entity": {
+            "name": "Motion Sensor",
+            "selector": {
+                "entity": {"domain": "binary_sensor", "device_class": "motion"}
+            },
+        },
+        "light_entity": {"name": "Light", "selector": {"entity": {"domain": "light"}}},
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url

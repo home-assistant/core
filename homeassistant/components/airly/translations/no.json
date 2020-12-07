@@ -19,5 +19,10 @@
                 "title": ""
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "N\u00e5 Airly-serveren"
+        }
     }
 }

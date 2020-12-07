@@ -257,6 +257,21 @@ async def test_discovery_ignored_model(hass, controller):
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info["properties"]["md"] = "HHKBridge1,1"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "ignored_model"
+
+
+async def test_discovery_ignored_hk_bridge(hass, controller):
+    """Already paired."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
     formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
