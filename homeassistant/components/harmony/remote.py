@@ -328,7 +328,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
 
     async def change_channel(self, channel):
         """Change the channel using Harmony remote."""
-        self._data.change_channel(channel)
+        await self._data.change_channel(channel)
 
     async def sync(self):
         """Sync the Harmony device with the web service."""
