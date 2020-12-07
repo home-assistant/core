@@ -437,7 +437,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
                 "Consumption",
             ]:
                 continue
-            if len(meter["values"][0].keys()) == 2:
+            if len(meter["values"][0]) == 2:
                 self.data[meter["type"]] = meter["values"][0]["value"]
                 self.attributes[meter["type"]] = {"date": meter["values"][0]["date"]}
 
