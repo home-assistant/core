@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import entity_platform, service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 OBIHAI = "Obihai"
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
+SERVICE_REBOOT = "reboot"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -32,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Obihai sensor platform."""
 
     username = config[CONF_USERNAME]
@@ -47,14 +49,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not login:
         _LOGGER.error("Invalid credentials")
         return
-
-    def _reboot(call):
-        """Send API call to reboot device."""
-        success = pyobihai.call_reboot()
-        if not success:
-            _LOGGER.error("Failed to reboot")
-
-    hass.services.register("obihai", "reboot", _reboot)
 
     serial = pyobihai.get_device_serial()
 
@@ -74,8 +68,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for key in call_direction:
         sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
-    add_entities(sensors)
+    async_add_entities(sensors)
+    
+    platform = entity_platform.current_platform.get()
 
+    platform.async_register_entity_service(
+        SERVICE_REBOOT,
+        {},
+        "reboot",
+    )
 
 class ObihaiServiceSensors(Entity):
     """Get the status of each Obihai Lines."""
@@ -163,3 +164,9 @@ class ObihaiServiceSensors(Entity):
 
         if self._service_name in call_direction:
             self._state = call_direction.get(self._service_name)
+            
+    def reboot(self):
+        """Send API call to reboot device."""
+        success = self._pyobihai.call_reboot()
+        if not success:
+            _LOGGER.error("Failed to reboot")
