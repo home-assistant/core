@@ -159,7 +159,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self._last_input_events_count[channel] = block.inputEventCnt
 
             if (
-                not last_event_count
+                last_event_count is None
                 or last_event_count == block.inputEventCnt
                 or event_type == ""
             ):
