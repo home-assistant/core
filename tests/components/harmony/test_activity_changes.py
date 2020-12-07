@@ -45,40 +45,19 @@ async def test_switch_toggles(_, hass):
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
     # turn off watch tv switch
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_WATCH_TV},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
+    await _toggle_switch_and_wait(hass, SERVICE_TURN_OFF, ENTITY_WATCH_TV)
     assert hass.states.is_state(ENTITY_REMOTE, STATE_OFF)
     assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
     # turn on play music switch
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_PLAY_MUSIC},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
+    await _toggle_switch_and_wait(hass, SERVICE_TURN_ON, ENTITY_PLAY_MUSIC)
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
     assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_ON)
 
     # turn on watch tv switch
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_WATCH_TV},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
+    await _toggle_switch_and_wait(hass, SERVICE_TURN_ON, ENTITY_WATCH_TV)
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
     assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
@@ -153,3 +132,13 @@ async def test_remote_toggles(_, hass):
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
     assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+
+
+async def _toggle_switch_and_wait(hass, service_name, entity):
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service_name,
+        {ATTR_ENTITY_ID: entity},
+        blocking=True,
+    )
+    await hass.async_block_till_done()

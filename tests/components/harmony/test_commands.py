@@ -46,28 +46,20 @@ async def test_async_send_command(mock_hc, hass):
     send_commands_mock = data._client.send_commands
 
     # No device provided
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_COMMAND: PLAY_COMMAND},
-        blocking=True,
+    await _send_commands_and_wait(
+        hass, {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_COMMAND: PLAY_COMMAND}
     )
-    await hass.async_block_till_done()
-
     send_commands_mock.assert_not_awaited()
 
     # Tell the TV to play by id
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+    await _send_commands_and_wait(
+        hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
             ATTR_COMMAND: PLAY_COMMAND,
             ATTR_DEVICE: TV_DEVICE_ID,
         },
-        blocking=True,
     )
-    await hass.async_block_till_done()
 
     send_commands_mock.assert_awaited_once_with(
         [
@@ -82,17 +74,14 @@ async def test_async_send_command(mock_hc, hass):
     send_commands_mock.reset_mock()
 
     # Tell the TV to play by name
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+    await _send_commands_and_wait(
+        hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
             ATTR_COMMAND: PLAY_COMMAND,
             ATTR_DEVICE: TV_DEVICE_NAME,
         },
-        blocking=True,
     )
-    await hass.async_block_till_done()
 
     send_commands_mock.assert_awaited_once_with(
         [
@@ -107,17 +96,14 @@ async def test_async_send_command(mock_hc, hass):
     send_commands_mock.reset_mock()
 
     # Tell the TV to play and stop by name
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+    await _send_commands_and_wait(
+        hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
             ATTR_COMMAND: [PLAY_COMMAND, STOP_COMMAND],
             ATTR_DEVICE: TV_DEVICE_NAME,
         },
-        blocking=True,
     )
-    await hass.async_block_till_done()
 
     send_commands_mock.assert_awaited_once_with(
         [
@@ -138,18 +124,15 @@ async def test_async_send_command(mock_hc, hass):
     send_commands_mock.reset_mock()
 
     # Tell the TV to play by name multiple times
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+    await _send_commands_and_wait(
+        hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
             ATTR_COMMAND: PLAY_COMMAND,
             ATTR_DEVICE: TV_DEVICE_NAME,
             ATTR_NUM_REPEATS: 2,
         },
-        blocking=True,
     )
-    await hass.async_block_till_done()
 
     send_commands_mock.assert_awaited_once_with(
         [
@@ -170,18 +153,14 @@ async def test_async_send_command(mock_hc, hass):
     send_commands_mock.reset_mock()
 
     # Send commands to an unknown device
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+    await _send_commands_and_wait(
+        hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
             ATTR_COMMAND: PLAY_COMMAND,
             ATTR_DEVICE: "no-such-device",
         },
-        blocking=True,
     )
-    await hass.async_block_till_done()
-
     send_commands_mock.assert_not_awaited()
     send_commands_mock.reset_mock()
 
@@ -208,17 +187,14 @@ async def test_async_send_command_custom_delay(mock_hc, hass):
     send_commands_mock = data._client.send_commands
 
     # Tell the TV to play by id
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+    await _send_commands_and_wait(
+        hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
             ATTR_COMMAND: PLAY_COMMAND,
             ATTR_DEVICE: TV_DEVICE_ID,
         },
-        blocking=True,
     )
-    await hass.async_block_till_done()
 
     send_commands_mock.assert_awaited_once_with(
         [
@@ -287,3 +263,13 @@ async def test_sync(mock_hc, hass):
     await hass.async_block_till_done()
 
     sync_mock.assert_awaited_once()
+
+
+async def _send_commands_and_wait(hass, service_data):
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        service_data,
+        blocking=True,
+    )
+    await hass.async_block_till_done()
