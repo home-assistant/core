@@ -29,7 +29,7 @@ class _SensorTypes(enum.Enum):
     UPLOAD_SPEED = "upload_speed"
 
     @property
-    def unit(self) -> Optional[str]:
+    def unit_of_measurement(self) -> Optional[str]:
         """Return a string with the unit of the sensortype."""
         if self in (_SensorTypes.UPLOAD, _SensorTypes.DOWNLOAD):
             return DATA_GIGABYTES
@@ -161,3 +161,8 @@ class AsuswrtSensor(CoordinatorEntity):
     def icon(self) -> Optional[str]:
         """Return the icon to use in the frontend."""
         return self._type.icon
+
+    @property
+    def unit_of_measurement(self) -> Optional[str]:
+        """Return the unit of measurement of this entity, if any."""
+        return self._type.unit_of_measurement
