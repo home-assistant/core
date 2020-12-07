@@ -22,6 +22,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.const import (
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers import config_validation as cv, entity_platform
 import homeassistant.util.dt as dt_util
@@ -31,6 +36,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import DOMAIN
+from pyamaha import Zone
 
 PARALLEL_UPDATES = 1
 
@@ -55,7 +61,7 @@ async def async_setup_entry(
         zone_name = name if zone_id == DEFAULT_ZONE else f"{name} {zone_id}"
 
         media_players.append(
-            DemoMusicPlayer(zone_id, zone_name, entry.entry_id, coordinator)
+            MusicCastMediaPlayer(zone_id, zone_name, entry.entry_id, coordinator)
         )
 
     async_add_entities(media_players, True)
@@ -106,10 +112,33 @@ NETFLIX_PLAYER_SUPPORT = (
 )
 
 
-class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
+class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     """A demo media players."""
 
     # We only implement the methods that we support
+
+    tracks = [
+        ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
+        ("Paul Elstak", "Luv U More"),
+        ("Dune", "Hardcore Vibes"),
+        ("Nakatomi", "Children Of The Night"),
+        ("Party Animals", "Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)"),
+        ("Rob G.*", "Ecstasy, You Got What I Need"),
+        ("Lipstick", "I'm A Raver"),
+        ("4 Tune Fairytales", "My Little Fantasy (Radio Edit)"),
+        ("Prophet", "The Big Boys Don't Cry"),
+        ("Lovechild", "All Out Of Love (DJ Weirdo & Sim Remix)"),
+        ("Stingray & Sonic Driver", "Cold As Ice (El Bruto Remix)"),
+        ("Highlander", "Hold Me Now (Bass-D & King Matthew Remix)"),
+        ("Juggernaut", 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
+        ("Diss Reaction", "Jiiieehaaaa "),
+        ("Flamman And Abraxas", "Good To Go (Radio Mix)"),
+        ("Critical Mass", "Dancing Together"),
+        (
+            "Charly Lownoise & Mental Theo",
+            "Ultimate Sex Track (Bass-D & King Matthew Remix)",
+        ),
+    ]
 
     def __init__(self, zone_id, name, entry_id, coordinator, device_class=None):
         """Initialize the demo device."""
@@ -122,13 +151,33 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         self._sound_mode = DEFAULT_SOUND_MODE
         self._device_class = device_class
         self._zone_id = zone_id
+        self.coordinator = coordinator
+
+        zone_features = next(
+            item
+            for item in self.coordinator.data.get("features", {}).get("zone")
+            if item["id"] == self._zone_id
+        )
+
+        range_steps = zone_features.get("range_step")
+        range_volume = next(item for item in range_steps if item["id"] == "volume")
+
+        self._volume_min = range_volume.get("min")
+        self._volume_max = range_volume.get("max")
+        self._volume_step = range_volume.get("step")
+
+        self._cur_track = 0
+        self._repeat = REPEAT_MODE_OFF
 
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
             name=name,
-            icon="mdi:led-strip-variant",
+            icon="mdi:speaker",
         )
+
+    def get_zone_status(self):
+        return self.coordinator.data.get("zones", {}).get(self._zone_id, {})
 
     @property
     def should_poll(self):
@@ -143,12 +192,20 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def state(self):
         """Return the state of the player."""
-        return self._player_state
+        return (
+            STATE_PLAYING
+            if self.coordinator.data.get("zones", {})
+            .get(self._zone_id, {})
+            .get("power")
+            == "on"
+            else STATE_IDLE
+        )
 
     @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
-        return self._volume_level
+        vol = self.get_zone_status().get("volume")
+        return (vol - self._volume_min) / (self._volume_max - self._volume_min)
 
     @property
     def is_volume_muted(self):
@@ -206,9 +263,15 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         self._volume_level = max(0.0, self._volume_level - 0.1)
         self.schedule_update_ha_state()
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set the volume level, range 0..1."""
         self._volume_level = volume
+
+        vol = self._volume_min + (self._volume_max - self._volume_min) * volume
+        await self.coordinator.api.request(
+            Zone.set_volume(self._zone_id, round(vol), 1)
+        )
+
         self.schedule_update_ha_state()
 
     def media_play(self):
@@ -230,41 +293,6 @@ class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Select sound mode."""
         self._sound_mode = sound_mode
         self.schedule_update_ha_state()
-
-
-class DemoMusicPlayer(AbstractDemoPlayer):
-    """A Demo media player that only supports YouTube."""
-
-    # We only implement the methods that we support
-
-    tracks = [
-        ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
-        ("Paul Elstak", "Luv U More"),
-        ("Dune", "Hardcore Vibes"),
-        ("Nakatomi", "Children Of The Night"),
-        ("Party Animals", "Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)"),
-        ("Rob G.*", "Ecstasy, You Got What I Need"),
-        ("Lipstick", "I'm A Raver"),
-        ("4 Tune Fairytales", "My Little Fantasy (Radio Edit)"),
-        ("Prophet", "The Big Boys Don't Cry"),
-        ("Lovechild", "All Out Of Love (DJ Weirdo & Sim Remix)"),
-        ("Stingray & Sonic Driver", "Cold As Ice (El Bruto Remix)"),
-        ("Highlander", "Hold Me Now (Bass-D & King Matthew Remix)"),
-        ("Juggernaut", 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
-        ("Diss Reaction", "Jiiieehaaaa "),
-        ("Flamman And Abraxas", "Good To Go (Radio Mix)"),
-        ("Critical Mass", "Dancing Together"),
-        (
-            "Charly Lownoise & Mental Theo",
-            "Ultimate Sex Track (Bass-D & King Matthew Remix)",
-        ),
-    ]
-
-    def __init__(self, zone_id, name, entry_id, coordinator):
-        """Initialize the demo device."""
-        super().__init__(zone_id, name, entry_id, coordinator)
-        self._cur_track = 0
-        self._repeat = REPEAT_MODE_OFF
 
     @property
     def media_content_id(self):

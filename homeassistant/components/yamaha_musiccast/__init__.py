@@ -125,10 +125,10 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator):
                     zone.get("id") for zone in self._features.get("zone", [])
                 ]
 
-            zones = [
-                await (await self.api.request(Zone.get_status(zone))).json()
+            zones = {
+                zone: await (await self.api.request(Zone.get_status(zone))).json()
                 for zone in self._zone_ids
-            ]
+            }
 
             return {
                 "network_status": self._network_status,
