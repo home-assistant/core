@@ -279,10 +279,10 @@ async def async_setup(hass, config):
 
             # Double callback to bind loop variable camera
             def stream_source_cb(camera) -> Callable[[], Awaitable[StreamSource]]:
-                async def callback() -> StreamSource:
+                async def source_callback() -> StreamSource:
                     return await _async_get_request_stream_source(camera)
 
-                return callback
+                return source_callback
 
             await request_stream(hass, stream_source_cb(camera))
 
