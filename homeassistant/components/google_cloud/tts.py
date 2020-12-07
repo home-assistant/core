@@ -151,15 +151,15 @@ async def async_get_engine(hass, config, discovery_info=None):
     return GoogleCloudTTSProvider(
         hass,
         key_file,
-        config.get(CONF_LANG),
-        config.get(CONF_GENDER),
-        config.get(CONF_VOICE),
-        config.get(CONF_ENCODING),
-        config.get(CONF_SPEED),
-        config.get(CONF_PITCH),
-        config.get(CONF_GAIN),
-        config.get(CONF_PROFILES),
-        config.get(CONF_TEXT_TYPE),
+        config[CONF_LANG],
+        config[CONF_GENDER],
+        config[CONF_VOICE],
+        config[CONF_ENCODING],
+        config[CONF_SPEED],
+        config[CONF_PITCH],
+        config[CONF_GAIN],
+        config[CONF_PROFILES],
+        config[CONF_TEXT_TYPE],
     )
 
 
@@ -237,7 +237,7 @@ class GoogleCloudTTSProvider(Provider):
                 vol.Optional(CONF_VOICE, default=self._voice): VOICE_SCHEMA,
                 vol.Optional(CONF_ENCODING, default=self._encoding): SCHEMA_ENCODING,
                 vol.Optional(CONF_SPEED, default=self._speed): SPEED_SCHEMA,
-                vol.Optional(CONF_PITCH, default=self._pitch): SPEED_SCHEMA,
+                vol.Optional(CONF_PITCH, default=self._pitch): PITCH_SCHEMA,
                 vol.Optional(CONF_GAIN, default=self._gain): GAIN_SCHEMA,
                 vol.Optional(CONF_PROFILES, default=self._profiles): PROFILES_SCHEMA,
                 vol.Optional(CONF_TEXT_TYPE, default=self._text_type): TEXT_TYPE_SCHEMA,
@@ -263,10 +263,10 @@ class GoogleCloudTTSProvider(Provider):
 
             audio_config = texttospeech.types.AudioConfig(
                 audio_encoding=texttospeech.enums.AudioEncoding[_encoding],
-                speaking_rate=options.get(CONF_SPEED),
-                pitch=options.get(CONF_PITCH),
-                volume_gain_db=options.get(CONF_GAIN),
-                effects_profile_id=options.get(CONF_PROFILES),
+                speaking_rate=options[CONF_SPEED],
+                pitch=options[CONF_PITCH],
+                volume_gain_db=options[CONF_GAIN],
+                effects_profile_id=options[CONF_PROFILES],
             )
             # pylint: enable=no-member
 
