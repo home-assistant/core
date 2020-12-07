@@ -1,5 +1,5 @@
 """Test the Microsoft Graph config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.microsoft_graph.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -8,9 +8,21 @@ from homeassistant.components.microsoft_graph.const import (
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+async def test_abort_if_existing_entry(hass):
+    """Check flow abort when an entry already exist."""
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "microsoft_graph", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
@@ -29,10 +41,12 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
+    scope = "+".join(["https://graph.microsoft.com/.default", "offline_access"])
+
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://graph.microsoft.com/.default+offline_access"
+        f"&state={state}&scope={scope}"
     )
 
     client = await aiohttp_client(hass.http.app)
