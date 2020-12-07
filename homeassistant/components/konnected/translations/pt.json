@@ -8,5 +8,44 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "options_binary": {
+                "data": {
+                    "name": "Nome (opcional)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nome (opcional)"
+                }
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zona 1",
+                    "2": "Zona 2",
+                    "3": "Zona 3",
+                    "4": "Zona 4",
+                    "5": "Zona 5",
+                    "6": "Zona 6",
+                    "7": "Zona 7"
+                }
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zona 10",
+                    "11": "Zona 11",
+                    "12": "Zona 12",
+                    "8": "Zona 8",
+                    "9": "Zona 9"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Nome (opcional)"
+                }
+            }
+        }
     }
 }

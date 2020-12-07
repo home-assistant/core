@@ -171,7 +171,7 @@ arcam-fmj==0.5.3
 async-upnp-client==0.14.13
 
 # homeassistant.components.aurora
-auroranoaa==0.0.1
+auroranoaa==0.0.2
 
 # homeassistant.components.stream
 av==8.0.2
@@ -376,7 +376,7 @@ hangups==0.4.11
 hass-nabucasa==0.38.0
 
 # homeassistant.components.tasmota
-hatasmota==0.1.2
+hatasmota==0.1.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -394,7 +394,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201203.0
+home-assistant-frontend==20201204.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -782,7 +782,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.10
+pymyq==2.0.11
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -932,7 +932,7 @@ pywebpush==1.9.2
 pywilight==0.0.65
 
 # homeassistant.components.zerproc
-pyzerproc==0.2.5
+pyzerproc==0.3.0
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
@@ -947,7 +947,7 @@ restrictedpython==5.0
 rflink==0.0.55
 
 # homeassistant.components.ring
-ring_doorbell==0.6.0
+ring_doorbell==0.6.2
 
 # homeassistant.components.roku
 rokuecp==0.6.0
