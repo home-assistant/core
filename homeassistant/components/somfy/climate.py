@@ -75,12 +75,12 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     def __init__(self, coordinator, device_id, api):
         """Initialize the Somfy device."""
         super().__init__(coordinator, device_id, api)
-        self.climate = None
+        self._climate = None
         self._create_device()
 
     def _create_device(self):
         """Update the device with the latest data."""
-        self.climate = Thermostat(self.device, self.api)
+        self._climate = Thermostat(self.device, self.api)
 
     @property
     def supported_features(self) -> int:
@@ -90,7 +90,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the device."""
-        return {ATTR_BATTERY_LEVEL: self.climate.get_battery()}
+        return {ATTR_BATTERY_LEVEL: self._climate.get_battery()}
 
     @property
     def temperature_unit(self):
@@ -100,12 +100,12 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.climate.get_ambient_temperature()
+        return self._climate.get_ambient_temperature()
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.climate.get_target_temperature()
+        return self._climate.get_target_temperature()
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
@@ -113,7 +113,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         if temperature is None:
             return
 
-        self.climate.set_target(TargetMode.MANUAL, temperature, DurationType.NEXT_MODE)
+        self._climate.set_target(TargetMode.MANUAL, temperature, DurationType.NEXT_MODE)
 
     @property
     def max_temp(self) -> float:
@@ -128,19 +128,19 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        return self.climate.get_humidity()
+        return self._climate.get_humidity()
 
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        if self.climate.get_regulation_state() == RegulationState.TIMETABLE:
+        if self._climate.get_regulation_state() == RegulationState.TIMETABLE:
             return HVAC_MODE_AUTO
-        return HVAC_MODES_MAPPING.get(self.climate.get_hvac_state())
+        return HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
 
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        hvac_state = HVAC_MODES_MAPPING.get(self.climate.get_hvac_state())
+        hvac_state = HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
         return [HVAC_MODE_AUTO, hvac_state]
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
@@ -148,9 +148,9 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         if hvac_mode == self.hvac_mode:
             return
         if hvac_mode == HVAC_MODE_AUTO:
-            self.climate.cancel_target()
+            self._climate.cancel_target()
         else:
-            self.climate.set_target(
+            self._climate.set_target(
                 TargetMode.MANUAL, self.target_temperature, DurationType.FURTHER_NOTICE
             )
 
@@ -177,7 +177,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode."""
-        mode = self.climate.get_target_mode()
+        mode = self._climate.get_target_mode()
         return PRESETS_MAPPING.get(mode)
 
     @property
@@ -191,20 +191,20 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
             return
 
         if preset_mode == PRESET_HOME:
-            temperature = self.climate.get_at_home_temperature()
+            temperature = self._climate.get_at_home_temperature()
         elif preset_mode == PRESET_AWAY:
-            temperature = self.climate.get_away_temperature()
+            temperature = self._climate.get_away_temperature()
         elif preset_mode == PRESET_SLEEP:
-            temperature = self.climate.get_night_temperature()
+            temperature = self._climate.get_night_temperature()
         elif preset_mode == PRESET_FROST_GUARD:
-            temperature = self.climate.get_frost_protection_temperature()
+            temperature = self._climate.get_frost_protection_temperature()
         elif preset_mode in [PRESET_MANUAL, PRESET_GEOFENCING]:
             temperature = self.target_temperature
         else:
             _LOGGER.error("Preset mode not supported: %s", preset_mode)
             return
 
-        self.climate.set_target(
+        self._climate.set_target(
             REVERSE_PRESET_MAPPING[preset_mode], temperature, DurationType.NEXT_MODE
         )
         target_mode = next(
