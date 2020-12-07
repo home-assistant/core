@@ -715,6 +715,9 @@ pyairvisual==5.0.8
 # homeassistant.components.almond
 pyalmond==0.0.2
 
+# homeassistant.components.yamaha_musiccast
+pyamaha==0.3.0
+
 # homeassistant.components.arlo
 pyarlo==0.2.4
 

@@ -1,291 +1,329 @@
-"""Support for Yamaha MusicCast Receivers."""
-import logging
-import socket
-
-import pymusiccast
-import voluptuous as vol
-
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+"""Demo implementation of the media player."""
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TVSHOW,
+    REPEAT_MODE_OFF,
+    SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
+    SUPPORT_SEEK,
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNKNOWN,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.helpers import config_validation as cv, entity_platform
 import homeassistant.util.dt as dt_util
+from typing import Any, Callable, Dict, List, Optional
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
-SUPPORTED_FEATURES = (
-    SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
+
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up MusicCast sensor based on a config entry."""
+    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    media_players = [
+        DemoMusicPlayer("Test Music Player", entry.entry_id, coordinator),
+    ]
+
+    async_add_entities(media_players, True)
+
+
+SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
+DEFAULT_SOUND_MODE = "Dummy Music"
+
+YOUTUBE_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_SEEK
+)
+
+MUSIC_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_REPEAT_SET
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_SELECT_SOUND_MODE
+)
+
+NETFLIX_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
-)
-
-KNOWN_HOSTS_KEY = "data_yamaha_musiccast"
-INTERVAL_SECONDS = "interval_seconds"
-
-DEFAULT_PORT = 5005
-DEFAULT_INTERVAL = 480
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(INTERVAL_SECONDS, default=DEFAULT_INTERVAL): cv.positive_int,
-    }
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_SELECT_SOUND_MODE
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Yamaha MusicCast platform."""
+class AbstractDemoPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
+    """A demo media players."""
 
-    known_hosts = hass.data.get(KNOWN_HOSTS_KEY)
-    if known_hosts is None:
-        known_hosts = hass.data[KNOWN_HOSTS_KEY] = []
-    _LOGGER.debug("known_hosts: %s", known_hosts)
+    # We only implement the methods that we support
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    interval = config.get(INTERVAL_SECONDS)
+    def __init__(self, name, entry_id, coordinator, device_class=None):
+        """Initialize the demo device."""
+        self._name = name
+        self._player_state = STATE_PLAYING
+        self._volume_level = 1.0
+        self._volume_muted = False
+        self._shuffle = False
+        self._sound_mode_list = SOUND_MODE_LIST
+        self._sound_mode = DEFAULT_SOUND_MODE
+        self._device_class = device_class
 
-    # Get IP of host to prevent duplicates
-    try:
-        ipaddr = socket.gethostbyname(host)
-    except (OSError) as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-        return
+        super().__init__(
+            entry_id=entry_id,
+            coordinator=coordinator,
+            name=name,
+            icon="mdi:led-strip-variant",
+        )
 
-    if [item for item in known_hosts if item[0] == ipaddr]:
-        _LOGGER.warning("Host %s:%d already registered", host, port)
-        return
-
-    if [item for item in known_hosts if item[1] == port]:
-        _LOGGER.warning("Port %s:%d already registered", host, port)
-        return
-
-    reg_host = (ipaddr, port)
-    known_hosts.append(reg_host)
-
-    try:
-        receiver = pymusiccast.McDevice(ipaddr, udp_port=port, mc_interval=interval)
-    except pymusiccast.exceptions.YMCInitError as err:
-        _LOGGER.error(err)
-        receiver = None
-
-    if receiver:
-        for zone in receiver.zones:
-            _LOGGER.debug("Receiver: %s / Port: %d / Zone: %s", receiver, port, zone)
-            add_entities([YamahaDevice(receiver, receiver.zones[zone])], True)
-    else:
-        known_hosts.remove(reg_host)
-
-
-class YamahaDevice(MediaPlayerEntity):
-    """Representation of a Yamaha MusicCast device."""
-
-    def __init__(self, recv, zone):
-        """Initialize the Yamaha MusicCast device."""
-        self._recv = recv
-        self._name = recv.name
-        self._source = None
-        self._source_list = []
-        self._zone = zone
-        self.mute = False
-        self.media_status = None
-        self.media_status_received = None
-        self.power = STATE_UNKNOWN
-        self.status = STATE_UNKNOWN
-        self.volume = 0
-        self.volume_max = 0
-        self._recv.set_yamaha_device(self)
-        self._zone.set_yamaha_device(self)
+    @property
+    def should_poll(self):
+        """Push an update after each command."""
+        return False
 
     @property
     def name(self):
-        """Return the name of the device."""
-        return f"{self._name} ({self._zone.zone_id})"
+        """Return the name of the media player."""
+        return self._name
 
     @property
     def state(self):
-        """Return the state of the device."""
-        if self.power == STATE_ON and self.status != STATE_UNKNOWN:
-            return self.status
-        return self.power
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self.mute
+        """Return the state of the player."""
+        return self._player_state
 
     @property
     def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self.volume
+        """Return the volume level of the media player (0..1)."""
+        return self._volume_level
 
     @property
-    def supported_features(self):
-        """Flag of features that are supported."""
-        return SUPPORTED_FEATURES
+    def is_volume_muted(self):
+        """Return boolean if volume is currently muted."""
+        return self._volume_muted
 
     @property
-    def source(self):
-        """Return the current input source."""
-        return self._source
+    def shuffle(self):
+        """Boolean if shuffling is enabled."""
+        return self._shuffle
 
     @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_list
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._sound_mode
 
-    @source_list.setter
-    def source_list(self, value):
-        """Set source_list attribute."""
-        self._source_list = value
+    @property
+    def sound_mode_list(self):
+        """Return a list of available sound modes."""
+        return self._sound_mode_list
+
+    @property
+    def device_class(self):
+        """Return the device class of the media player."""
+        return self._device_class
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        mac = self.coordinator.data.get("network_status").get("mac_address")
+        return f"{mac}_media_player"
+
+    def turn_on(self):
+        """Turn the media player on."""
+        self._player_state = STATE_PLAYING
+        self.schedule_update_ha_state()
+
+    def turn_off(self):
+        """Turn the media player off."""
+        self._player_state = STATE_OFF
+        self.schedule_update_ha_state()
+
+    def mute_volume(self, mute):
+        """Mute the volume."""
+        self._volume_muted = mute
+        self.schedule_update_ha_state()
+
+    def volume_up(self):
+        """Increase volume."""
+        self._volume_level = min(1.0, self._volume_level + 0.1)
+        self.schedule_update_ha_state()
+
+    def volume_down(self):
+        """Decrease volume."""
+        self._volume_level = max(0.0, self._volume_level - 0.1)
+        self.schedule_update_ha_state()
+
+    def set_volume_level(self, volume):
+        """Set the volume level, range 0..1."""
+        self._volume_level = volume
+        self.schedule_update_ha_state()
+
+    def media_play(self):
+        """Send play command."""
+        self._player_state = STATE_PLAYING
+        self.schedule_update_ha_state()
+
+    def media_pause(self):
+        """Send pause command."""
+        self._player_state = STATE_PAUSED
+        self.schedule_update_ha_state()
+
+    def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        self._shuffle = shuffle
+        self.schedule_update_ha_state()
+
+    def select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        self._sound_mode = sound_mode
+        self.schedule_update_ha_state()
+
+
+class DemoMusicPlayer(AbstractDemoPlayer):
+    """A Demo media player that only supports YouTube."""
+
+    # We only implement the methods that we support
+
+    tracks = [
+        ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
+        ("Paul Elstak", "Luv U More"),
+        ("Dune", "Hardcore Vibes"),
+        ("Nakatomi", "Children Of The Night"),
+        ("Party Animals", "Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)"),
+        ("Rob G.*", "Ecstasy, You Got What I Need"),
+        ("Lipstick", "I'm A Raver"),
+        ("4 Tune Fairytales", "My Little Fantasy (Radio Edit)"),
+        ("Prophet", "The Big Boys Don't Cry"),
+        ("Lovechild", "All Out Of Love (DJ Weirdo & Sim Remix)"),
+        ("Stingray & Sonic Driver", "Cold As Ice (El Bruto Remix)"),
+        ("Highlander", "Hold Me Now (Bass-D & King Matthew Remix)"),
+        ("Juggernaut", 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
+        ("Diss Reaction", "Jiiieehaaaa "),
+        ("Flamman And Abraxas", "Good To Go (Radio Mix)"),
+        ("Critical Mass", "Dancing Together"),
+        (
+            "Charly Lownoise & Mental Theo",
+            "Ultimate Sex Track (Bass-D & King Matthew Remix)",
+        ),
+    ]
+
+    def __init__(self, name, entry_id, coordinator):
+        """Initialize the demo device."""
+        super().__init__(name, entry_id, coordinator)
+        self._cur_track = 0
+        self._repeat = REPEAT_MODE_OFF
+
+    @property
+    def media_content_id(self):
+        """Return the content ID of current playing media."""
+        return "bounzz-1"
 
     @property
     def media_content_type(self):
-        """Return the media content type."""
+        """Return the content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self.media_status.media_duration if self.media_status else None
+        """Return the duration of current playing media in seconds."""
+        return 213
 
     @property
     def media_image_url(self):
-        """Image url of current playing media."""
-        return self.media_status.media_image_url if self.media_status else None
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self.media_status.media_artist if self.media_status else None
-
-    @property
-    def media_album(self):
-        """Album of current playing media, music track only."""
-        return self.media_status.media_album if self.media_status else None
-
-    @property
-    def media_track(self):
-        """Track number of current playing media, music track only."""
-        return self.media_status.media_track if self.media_status else None
+        """Return the image url of current playing media."""
+        return "https://graph.facebook.com/v2.5/107771475912710/picture?type=large"
 
     @property
     def media_title(self):
-        """Title of current playing media."""
-        return self.media_status.media_title if self.media_status else None
+        """Return the title of current playing media."""
+        return self.tracks[self._cur_track][1] if self.tracks else ""
 
     @property
-    def media_position(self):
-        """Position of current playing media in seconds."""
-        if self.media_status and self.state in [
-            STATE_PLAYING,
-            STATE_PAUSED,
-            STATE_IDLE,
-        ]:
-            return self.media_status.media_position
+    def media_artist(self):
+        """Return the artist of current playing media (Music track only)."""
+        return self.tracks[self._cur_track][0] if self.tracks else ""
 
     @property
-    def media_position_updated_at(self):
-        """When was the position of the current playing media valid.
+    def media_album_name(self):
+        """Return the album of current playing media (Music track only)."""
+        return "Bounzz"
 
-        Returns value from homeassistant.util.dt.utcnow().
-        """
-        return self.media_status_received if self.media_status else None
+    @property
+    def media_track(self):
+        """Return the track number of current media (Music track only)."""
+        return self._cur_track + 1
 
-    def update(self):
-        """Get the latest details from the device."""
-        _LOGGER.debug("update: %s", self.entity_id)
-        self._recv.update_status()
-        self._zone.update_status()
+    @property
+    def repeat(self):
+        """Return current repeat mode."""
+        return self._repeat
 
-    def update_hass(self):
-        """Push updates to Home Assistant."""
-        if self.entity_id:
-            _LOGGER.debug("update_hass: pushing updates")
-            self.schedule_update_ha_state()
-            return True
-
-    def turn_on(self):
-        """Turn on specified media player or all."""
-        _LOGGER.debug("Turn device: on")
-        self._zone.set_power(True)
-
-    def turn_off(self):
-        """Turn off specified media player or all."""
-        _LOGGER.debug("Turn device: off")
-        self._zone.set_power(False)
-
-    def media_play(self):
-        """Send the media player the command for play/pause."""
-        _LOGGER.debug("Play")
-        self._recv.set_playback("play")
-
-    def media_pause(self):
-        """Send the media player the command for pause."""
-        _LOGGER.debug("Pause")
-        self._recv.set_playback("pause")
-
-    def media_stop(self):
-        """Send the media player the stop command."""
-        _LOGGER.debug("Stop")
-        self._recv.set_playback("stop")
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return MUSIC_PLAYER_SUPPORT
 
     def media_previous_track(self):
-        """Send the media player the command for prev track."""
-        _LOGGER.debug("Previous")
-        self._recv.set_playback("previous")
+        """Send previous track command."""
+        if self._cur_track > 0:
+            self._cur_track -= 1
+            self.schedule_update_ha_state()
 
     def media_next_track(self):
-        """Send the media player the command for next track."""
-        _LOGGER.debug("Next")
-        self._recv.set_playback("next")
+        """Send next track command."""
+        if self._cur_track < len(self.tracks) - 1:
+            self._cur_track += 1
+            self.schedule_update_ha_state()
 
-    def mute_volume(self, mute):
-        """Send mute command."""
-        _LOGGER.debug("Mute volume: %s", mute)
-        self._zone.set_mute(mute)
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self.tracks = []
+        self._cur_track = 0
+        self._player_state = STATE_OFF
+        self.schedule_update_ha_state()
 
-    def set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        _LOGGER.debug("Volume level: %.2f / %d", volume, volume * self.volume_max)
-        self._zone.set_volume(volume * self.volume_max)
-
-    def select_source(self, source):
-        """Send the media player the command to select input source."""
-        _LOGGER.debug("select_source: %s", source)
-        self.status = STATE_UNKNOWN
-        self._zone.set_input(source)
-
-    def new_media_status(self, status):
-        """Handle updates of the media status."""
-        _LOGGER.debug("new media_status arrived")
-        self.media_status = status
-        self.media_status_received = dt_util.utcnow()
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._repeat = repeat
+        self.schedule_update_ha_state()

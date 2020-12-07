@@ -1290,6 +1290,9 @@ pyairvisual==5.0.8
 # homeassistant.components.almond
 pyalmond==0.0.2
 
+# homeassistant.components.yamaha_musiccast
+pyamaha==0.3.0
+
 # homeassistant.components.arlo
 pyarlo==0.2.4
 
@@ -1581,9 +1584,6 @@ pymonoprice==0.3
 
 # homeassistant.components.msteams
 pymsteams==0.1.12
-
-# homeassistant.components.yamaha_musiccast
-pymusiccast==0.1.6
 
 # homeassistant.components.myq
 pymyq==3.0.4
