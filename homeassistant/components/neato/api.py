@@ -51,7 +51,6 @@ class NeatoImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
         """Generate a url for the user to authorize.
 
         We must make sure that the plus signs are not encoded.
-        TODO: Is there a better way to achieve this?
         """
         url = await super().async_generate_authorize_url(flow_id)
         return url + "&scope=public_profile+control_robots+maps"

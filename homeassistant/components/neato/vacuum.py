@@ -24,7 +24,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.const import ATTR_MODE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -93,8 +93,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform.async_register_entity_service(
         "custom_cleaning",
         {
-            # TODO: Is it possible to drop this line?
-            vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(ATTR_MODE, default=2): cv.positive_int,
             vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
             vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
