@@ -11,9 +11,13 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 VENDOR = Neato()
+OAUTH2_AUTHORIZE = VENDOR.auth_endpoint
+OAUTH2_TOKEN = VENDOR.token_endpoint
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_full_flow(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -27,10 +31,16 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     result = await hass.config_entries.flow.async_init(
         "neato", context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["url"] == (
-        f"{VENDOR.auth_endpoint}?response_type=code&client_id={CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         f"&client_secret={CLIENT_SECRET}"
@@ -43,7 +53,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        VENDOR.token_endpoint,
+        OAUTH2_TOKEN,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
