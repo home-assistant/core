@@ -1,17 +1,11 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 from datetime import datetime, timedelta
 import logging
-from socket import (
-    AF_INET,
-    SO_KEEPALIVE,
-    SOCK_STREAM,
-    SOL_SOCKET,
-    socket,
-    timeout as SocketTimeout,
-)
+import queue
 from threading import Event as ThreadingEvent, Thread
 from time import sleep
 
+from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, PLATFORM_SCHEMA
@@ -55,7 +49,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-RECONNECT_INTERVAL = 60
 SCAN_INTERVAL = timedelta(hours=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -150,9 +143,12 @@ class FritzBoxCallSensor(Entity):
             self._monitor
             and self._monitor.stopped
             and not self._monitor.stopped.is_set()
+            and self._monitor.connection
+            and self._monitor.connection.is_alive
         ):
-            _LOGGER.debug("Stopping monitor for: %s", self.entity_id)
             self._monitor.stopped.set()
+            self._monitor.connection.stop()
+            _LOGGER.debug("Stopped monitor for: %s", self.entity_id)
 
     def set_state(self, state):
         """Set the state."""
@@ -219,48 +215,37 @@ class FritzBoxCallMonitor:
         """Initialize Fritz!Box monitor instance."""
         self.host = host
         self.port = port
-        self.sock = None
-        self._sensor = sensor
+        self.connection = None
         self.stopped = ThreadingEvent()
+        self._sensor = sensor
 
     def connect(self):
         """Connect to the Fritz!Box."""
-        _LOGGER.debug("Setting up socket...")
-        self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.settimeout(10)
-        self.sock.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+        _LOGGER.debug("Setting up socket connection")
         try:
-            self.sock.connect((self.host, self.port))
-            Thread(target=self._listen).start()
+            self.connection = FritzMonitor(address=self.host, port=self.port)
+            kwargs = {"event_queue": self.connection.start()}
+            Thread(target=self._process_events, kwargs=kwargs).start()
         except OSError as err:
-            self.sock = None
+            self.connection = None
             _LOGGER.error(
                 "Cannot connect to %s on port %s: %s", self.host, self.port, err
             )
 
-    def _listen(self):
+    def _process_events(self, event_queue):
         """Listen to incoming or outgoing calls."""
-        _LOGGER.debug("Connection established, waiting for response...")
+        _LOGGER.debug("Connection established, waiting for events")
         while not self.stopped.is_set():
             try:
-                response = self.sock.recv(2048)
-            except SocketTimeout:
-                # if no response after 10 seconds, just recv again
+                event = event_queue.get(timeout=10)
+            except queue.Empty:
+                if not self.connection.is_alive and not self.stopped.is_set():
+                    _LOGGER.error("Connection has abruptly ended")
+                _LOGGER.debug("Empty event queue")
                 continue
-            response = str(response, "utf-8")
-            _LOGGER.debug("Received %s", response)
-
-            if not response:
-                # if the response is empty, the connection has been lost.
-                # try to reconnect
-                _LOGGER.warning("Connection lost, reconnecting...")
-                self.sock = None
-                while self.sock is None:
-                    self.connect()
-                    sleep(RECONNECT_INTERVAL)
             else:
-                line = response.split("\n", 1)[0]
-                self._parse(line)
+                _LOGGER.debug("Received event: %s", event)
+                self._parse(event)
                 sleep(1)
 
     def _parse(self, line):
