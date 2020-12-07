@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Servidor j\u00e1 configurado"
         },
+        "error": {
+            "unknown": "Erro inesperado"
+        },
         "step": {
             "user": {
                 "data": {

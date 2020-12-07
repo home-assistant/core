@@ -425,22 +425,21 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         self.data = {}
         self.attributes = {}
         self.unit = energy_details["unit"]
-        meters = energy_details["meters"]
 
-        for entity in meters:
-            for key, data in entity.items():
-                if key == "type" and data in [
-                    "Production",
-                    "SelfConsumption",
-                    "FeedIn",
-                    "Purchased",
-                    "Consumption",
-                ]:
-                    energy_type = data
-                if key == "values":
-                    for row in data:
-                        self.data[energy_type] = row["value"]
-                        self.attributes[energy_type] = {"date": row["date"]}
+        for meter in energy_details["meters"]:
+            if "type" not in meter or "values" not in meter:
+                continue
+            if meter["type"] not in [
+                "Production",
+                "SelfConsumption",
+                "FeedIn",
+                "Purchased",
+                "Consumption",
+            ]:
+                continue
+            if len(meter["values"][0]) == 2:
+                self.data[meter["type"]] = meter["values"][0]["value"]
+                self.attributes[meter["type"]] = {"date": meter["values"][0]["date"]}
 
         _LOGGER.debug(
             "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
