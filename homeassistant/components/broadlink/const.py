@@ -16,4 +16,4 @@ DOMAINS_AND_TYPES = (
     (SWITCH_DOMAIN, ("BG1", "MP1", "RM2", "RM4", "SP1", "SP2", "SP4", "SP4B")),
 )
 
-SUPPORTED_TYPES = ["A1", "MP1", "RM2", "RM4", "SP1", "SP2"]
+SUPPORTED_TYPES = ["A1", "BG1", "MP1", "RM2", "RM4", "SP1", "SP2", "SP4", "SP4B"]
