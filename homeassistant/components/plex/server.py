@@ -146,7 +146,7 @@ class PlexServer:
             available_servers = [
                 (x.name, x.clientIdentifier)
                 for x in self.account.resources()
-                if "server" in x.provides
+                if "server" in x.provides and x.presence
             ]
 
             if not available_servers:
