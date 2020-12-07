@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "access_token": "Token de Acesso",
                     "host": "Servidor"
                 }
             }

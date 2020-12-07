@@ -63,7 +63,11 @@
             "options": {
                 "data": {
                     "birth_enable": "Povolit zpr\u00e1vu p\u0159i p\u0159ipojen\u00ed",
-                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed"
+                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed",
+                    "will_payload": "Obsah zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_qos": "QoS zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_retain": "Zachov\u00e1n\u00ed zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_topic": "T\u00e9ma zpr\u00e1vy se z\u00e1v\u011bt\u00ed (will message)"
                 },
                 "description": "Zvolte mo\u017enosti MQTT."
             }

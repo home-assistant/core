@@ -12,5 +12,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone2": "Configurar a Zona 2",
+                    "zone3": "Configurar a Zona 3"
+                }
+            }
+        }
     }
 }
