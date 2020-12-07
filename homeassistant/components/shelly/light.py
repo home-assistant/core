@@ -23,9 +23,23 @@ from homeassistant.util.color import (
 )
 
 from . import ShellyDeviceWrapper
-from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, KELVIN_MAX_VALUE
+from .const import (
+    COAP,
+    DATA_CONFIG_ENTRY,
+    DOMAIN,
+    KELVIN_MAX_VALUE,
+    KELVIN_MIN_VALUE,
+    KELVIN_MIN_VALUE_SHBLB_1,
+)
 from .entity import ShellyBlockEntity
-from .utils import async_remove_shelly_entity, min_kelvin
+from .utils import async_remove_shelly_entity
+
+
+def min_kelvin(self):
+    """Kelvin (min) for colorTemp."""
+    if self.wrapper.model in ["SHBLB-1"]:
+        return KELVIN_MIN_VALUE_SHBLB_1
+    return KELVIN_MIN_VALUE
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
