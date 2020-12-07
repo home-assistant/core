@@ -1,4 +1,4 @@
-"""Support for Somfy Covers."""
+"""Support for Somfy Thermostat."""
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -52,7 +52,7 @@ HVAC_MODES_MAPPING = {HvacState.COOL: HVAC_MODE_COOL, HvacState.HEAT: HVAC_MODE_
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Somfy cover platform."""
+    """Set up the Somfy climate platform."""
 
     def get_thermostats():
         """Retrieve thermostats."""
