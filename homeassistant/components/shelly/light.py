@@ -35,9 +35,9 @@ from .entity import ShellyBlockEntity
 from .utils import async_remove_shelly_entity
 
 
-def min_kelvin(self):
+def min_kelvin(model: str):
     """Kelvin (min) for colorTemp."""
-    if self.wrapper.model in ["SHBLB-1"]:
+    if model in ["SHBLB-1"]:
         return KELVIN_MIN_VALUE_SHBLB_1
     return KELVIN_MIN_VALUE
 
@@ -153,7 +153,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         # If you set DUO to max mireds in Shelly app, 2700K,
         # It reports 0 temp
         if color_temp == 0:
-            return self.max_mireds
+            return min_kelvin(self.wrapper.model)
 
         return int(color_temperature_kelvin_to_mired(color_temp))
 
