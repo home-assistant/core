@@ -1,5 +1,5 @@
 """Light for Shelly."""
-from typing import Optional
+from typing import Optional, Tuple
 
 from aioshelly import Block
 
@@ -130,7 +130,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(white)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the hue and saturation color value of light."""
         if self.control_result:
             red = self.control_result["red"]
@@ -158,12 +158,12 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
-    def min_mireds(self) -> float:
+    def min_mireds(self) -> Optional[float]:
         """Return the coldest color_temp that this light supports."""
         return color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
 
     @property
-    def max_mireds(self) -> float:
+    def max_mireds(self) -> Optional[float]:
         """Return the warmest color_temp that this light supports."""
         return color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model))
 
