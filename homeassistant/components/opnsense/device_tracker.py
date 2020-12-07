@@ -6,9 +6,9 @@ from .const import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
 
 async def async_get_scanner(hass, config, discovery_info=None):
     """Configure the OPNsense device_tracker."""
-    interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
     scanner = OPNsenseDeviceScanner(
-        interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
+        hass.data[OPNSENSE_DATA]["interface_client"],
+        hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE],
     )
     return scanner
 
