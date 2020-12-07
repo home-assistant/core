@@ -76,13 +76,8 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
-    # Suppress logging
-    logger = logging.getLogger("dsmr_parser")
-    logger.setLevel(logging.INFO)
     config = entry.data
-    
     options = entry.options
-
     dsmr_version = config[CONF_DSMR_VERSION]
 
     # Define list of name,obis mappings to generate entities
@@ -155,27 +150,26 @@ async def async_setup_entry(
     min_time_between_updates = timedelta(
         seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
-    updateTimeout = None
-    updateCount = 0
+    update_timeout = None
+    update_count = 0
 
-    def timerCallback():
-        nonlocal updateTimeout
-        nonlocal updateCount
-        updateCount += 1
-        if not updateTimeout.done():
-            updateTimeout.set_result(True)
+    def timer_callback():
+        nonlocal update_timeout
+        nonlocal update_count
+        update_count += 1
+        if not update_timeout.done():
+            update_timeout.set_result(True)
         else:
-            raise Exception('Future ''updateTimeout'' Already set')
-        _LOGGER.warn("Connection timed out")
+            raise Exception("Future " "update_timeout" " Already set")
+        _LOGGER.warninging("Connection timed out")
 
-    updateTimer = Timer(30, timerCallback, loop=hass.loop)
+    update_timer = Timer(30, timer_callback, loop=hass.loop)
 
-    def tcp_dsmr_reader_cb(telegram)
-        nonlocal updateTimer
-        nonlocal updateCount
-        updateTimer.reset()
+    def tcp_dsmr_reader_cb(telegram):
+        nonlocal update_timer
+        nonlocal update_count
+        update_timer.reset()
         update_entities_telegram(telegram)
-    
 
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
@@ -206,18 +200,16 @@ async def async_setup_entry(
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
-        nonlocal updateTimeout
-        nonlocal updateTimer
+        nonlocal update_timeout
+        nonlocal update_timer
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
-                logger.info("Connecting...")
-                updateTimeout = hass.loop.create_future()
+                update_timeout = hass.loop.create_future()
                 transport, protocol = await hass.loop.create_task(reader_factory())
-                logger.info("Connected")                
 
-                updateTimer.setTimeout(config[CONF_RECONNECT_INTERVAL])
-                updateTimer.start()
+                update_timer.set_timeout(config[CONF_RECONNECT_INTERVAL])
+                update_timer.start()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
@@ -226,19 +218,21 @@ async def async_setup_entry(
                     )
 
                     # Wait for reader to close
-                    await asyncio.wait([protocol.wait_closed(), updateTimeout], return_when=asyncio.FIRST_COMPLETED)
+                    await asyncio.wait(
+                        [protocol.wait_closed(), update_timeout],
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
 
                 # Unexpected disconnect
                 if transport:
                     # remove listener
                     stop_listener()
 
-                # Need to stop the timer after we close transport or otherwise the telegramcb might reset it after stopping    
-                if not updateTimer.done():
-                    updateTimer.stop()
-                    _LOGGER.warn("Connection lost")
-                    
-                logger.info("Resetting connection")
+                # Need to stop the timer after we close transport
+                # Otherwise the telegramcb might reset it after stopping
+                if not update_timer.done():
+                    update_timer.stop()
+                    _LOGGER.warning("Connection lost")
 
                 transport = None
                 protocol = None
@@ -451,68 +445,121 @@ class DerivativeDSMREntity(DSMREntity):
         if unit:
             return f"{unit}/{TIME_HOURS}"
 
-class Timer(object):
-#async Timer object with start, stop reset and garbage collection using futures and and loop.call_later
-    def __init__(self, delay, callback, *args, loop=None):
-        self.TimerHandle = None
-        self.setTimeout(delay)
-        self.setCallback(callback)
-        self.callback = callback
+
+class Timer:
+    """async Timer object with reset.
+
+    a resettable timer is not present in asyncio, however this integration
+    needs one to timeout faulty connections. It includes
+    garbage collection uses loop.call_later.
+
+    """
+
+    def __init__(self, delay, timer_callback, *args, loop=None):
+        """Create a timer with confingurable timeout and callback.
+
+        Has no timerhandle  on creation(will be created on start) and the
+        callback and delay will be used to create this timerhandle.
+
+        """
+        self.timerhandle = None
+        self.set_timeout(delay)
+        self.set_callback(timer_callback)
         self.args = args
         if loop:
             self.loop = loop
         else:
             self.loop = asyncio.get_event_loop()
 
-    def setTimeout(self, delay):
-        if self._timerActive():
-            warnings.warn("A timer was still running with the old delay. delay won't be changed untill next reset()")
+    def set_timeout(self, delay):
+        """Set the timeout of the timer to a certain delay in float seconds.
+
+        will not change the timeout of a running timer.
+
+        """
+        if self._timer_active():
+            warnings.warn(
+                """A timer was still running with the old delay.
+                 delay won't be changed untill next reset()"""
+            )
         self.delay = delay
-    
-    def setCallback(self, callback):
-        if callable(callback):
-            if self._timerActive():
-                warnings.warn("A timer was still running with the old callback. callback won't be changed untill next reset()")
-            self.callback = callback
+
+    def set_callback(self, timer_callback):
+        """Set the callback method for the timer to call when it runs out.
+
+        Will not change the callback of a running timer.
+
+        """
+        if callable(timer_callback):
+            if self._timer_active():
+                warnings.warn(
+                    """A timer was still running with the old callback.
+                     callback won't be changed untill next reset()"""
+                )
+            self.timer_callback = timer_callback
         else:
             raise Exception("callback for Timer is not callable")
 
-
     def start(self):
-        if not self._timerActive():
-            self.TimerHandle = self.loop.call_later(self.delay, self.callback, *self.args)
+        """Start the timer by creating a task to be called on."""
+        if not self._timer_active():
+            self.timerhandle = self.loop.call_later(
+                self.delay, self.timer_callback, *self.args
+            )
         else:
             raise Exception("Timer already started")
 
     def stop(self):
-        if not self.TimerHandle:
+        """Stop the running timer by canceling the task."""
+        if not self.timerhandle:
             raise Exception("Timer was stopped before being started")
-        elif self.TimerHandle.cancelled():
+        if self.timerhandle.cancelled():
             warnings.warn("Timer was stopped, before being stopped again")
-        elif self._timerDone():
+        elif self._timer_done():
             warnings.warn("Timer was finished, before being stopped")
-        self.TimerHandle.cancel()
+        self.timerhandle.cancel()
 
     def reset(self):
-        if not self.TimerHandle:
+        """Reset the timer and start it.
+
+        This is done by canceling the previous task and creating a new one.
+
+        """
+        if not self.timerhandle:
             warnings.warn("Timer was not started while being reset")
-        elif not self._timerDone():
+        elif not self._timer_done():
             self.stop()
-        self.TimerHandle = None
+        self.timerhandle = None
         self.start()
 
     def done(self):
-        return not self._timerActive()
+        """Check if the timer is inactive.
 
-    def _timerDone(self):
-        if self.TimerHandle:
-            return ((self.loop.time() - self.TimerHandle.when()) >= 0)
-        else:
-            return False
+        This is done by evaluating if it ran out, was canceled
+        or was never started in the first place.
 
-    def _timerActive(self):
-        return (self.TimerHandle and not self.TimerHandle.cancelled() and not self._timerDone())
+        """
+        return not self._timer_active()
+
+    def _timer_done(self):
+        if self.timerhandle:
+            return (self.loop.time() - self.timerhandle.when()) >= 0
+
+        return False
+
+    def _timer_active(self):
+        return (
+            self.timerhandle
+            and not self.timerhandle.cancelled()
+            and not self._timer_done()
+        )
 
     def __del__(self):
-        if self._timerActive():
-            self.TimerHandle.cancel()
+        """Delete timerhandle on garbage collection.
+
+        When the object gets deleted but there is still an active task,
+        delete it on garbage collection.
+
+        """
+        if self._timer_active():
+            self.timerhandle.cancel()
