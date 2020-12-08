@@ -1,13 +1,14 @@
 """Test the Qbittorrent Flow."""
 
+from requests.exceptions import RequestException
+
 from homeassistant import data_entry_flow
 from homeassistant.components.qbittorrent.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.data_entry_flow import RESULT_TYPE_FORM
 
-from . import _create_mocked_client
-
-from tests.async_mock import patch
+from tests.async_mock import MagicMock, patch
 
 
 async def test_show_form(hass):
@@ -24,18 +25,41 @@ async def test_invalid_credentials(hass):
     """Test handle invalid credentials."""
     mocked_client = _create_mocked_client(True)
     with patch(
-        "homeassistant.components.qbittorrent.client.create_client",
+        "homeassistant.components.qbittorrent.client.Client",
         return_value=mocked_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        _flow_next(hass, result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
                 CONF_URL: "http://testurl.org",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
             },
         )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "cannot_connect"}
 
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "cannot_connect"}
+
+def _create_mocked_client(raise_exception=False):
+    mocked_client = MagicMock()
+    mocked_client.login.side_effect = (
+        RequestException("Mocked Exception") if raise_exception else None
+    )
+    return mocked_client
+
+
+def _flow_next(hass, flow_id):
+    return next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == flow_id
+    )

@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_PASSWORD],
         )
     except LoginRequired:
-        _LOGGER.error("Intvalid authentication")
+        _LOGGER.error("Invalid authentication")
         return
     except RequestException as err:
         _LOGGER.error("Connection failed")
