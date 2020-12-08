@@ -220,6 +220,7 @@ FLOWS = [
     "prosegur",
     "ps4",
     "pvpc_hourly_pricing",
+    "qnap",
     "rachio",
     "rainforest_eagle",
     "rainmachine",

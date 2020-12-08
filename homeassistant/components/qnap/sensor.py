@@ -261,6 +261,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up entry."""
+    async_add_entities([], True)
+
+
 def round_nicely(number):
     """Round a number based on its size (so it looks nice)."""
     if number < 10:
