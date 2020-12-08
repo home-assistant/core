@@ -6,7 +6,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-mkdir -p /data/data/pl.sviete.dom/files/home/AIS
+mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/img
 mkdir -p /data/data/pl.sviete.dom/files/home/dom
 mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
 

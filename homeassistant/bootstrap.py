@@ -14,11 +14,8 @@ import voluptuous as vol
 import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    REQUIRED_NEXT_PYTHON_DATE,
-    REQUIRED_NEXT_PYTHON_VER,
-)
+from homeassistant.components import http
+from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
@@ -114,8 +111,7 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Activating safe mode",
-                err,
+                "Failed to parse configuration.yaml: %s. Activating safe mode", err
             )
         else:
             if not is_virtual_env():
@@ -141,11 +137,9 @@ async def async_setup_hass(
         _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
-        hass.async_track_tasks()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
         with contextlib.suppress(asyncio.TimeoutError):
             async with hass.timeout.async_timeout(10):
-                await hass.async_block_till_done()
+                await hass.async_stop()
 
         safe_mode = True
         old_config = hass.config
@@ -163,10 +157,7 @@ async def async_setup_hass(
         http_conf = await (conf_util.async_ais_config_yaml(hass)) or {}
         # http_conf = (await http.async_get_last_config(hass)) or {}
 
-        await async_from_config_dict(
-            {"safe_mode": {}, "http": http_conf},
-            hass,
-        )
+        await async_from_config_dict({"safe_mode": {}, "http": http_conf}, hass)
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -429,8 +420,7 @@ async def _async_log_pending_setups(
 
         if remaining:
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
-                ", ".join(remaining),
+                "Waiting on integrations to complete setup: %s", ", ".join(remaining)
             )
 
 

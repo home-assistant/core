@@ -18,5 +18,10 @@
                 "title": "Bekreft integrering p\u00e5 nytt"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API-endepunkt n\u00e5s"
+        }
     }
 }

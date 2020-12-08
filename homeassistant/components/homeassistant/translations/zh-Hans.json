@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "CPU \u67b6\u6784",
+            "chassis": "\u673a\u7bb1",
+            "dev": "\u5f00\u53d1\u7248",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Home Assistant OS",
+            "installation_type": "\u5b89\u88c5\u7c7b\u578b",
+            "os_name": "\u64cd\u4f5c\u7cfb\u7edf\u7cfb\u5217",
+            "os_version": "\u64cd\u4f5c\u7cfb\u7edf\u7248\u672c",
+            "python_version": "Python \u7248\u672c",
+            "supervisor": "Supervisor",
+            "timezone": "\u65f6\u533a",
+            "version": "\u7248\u672c",
+            "virtualenv": "\u865a\u62df\u73af\u5883"
+        }
+    }
+}

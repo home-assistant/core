@@ -28,6 +28,7 @@ from homeassistant.components.ozw.websocket_api import (
     NODE_ID,
     OZW_INSTANCE,
     PARAMETER,
+    SCHEMA,
     TYPE,
     VALUE,
 )
@@ -152,16 +153,17 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
 
     # Test set config parameter
     config_param = result[0]
+    print(config_param)
     current_val = config_param[ATTR_VALUE]
     new_val = next(
-        option["Value"]
-        for option in config_param[ATTR_OPTIONS]
-        if option["Label"] != current_val
+        option[0]
+        for option in config_param[SCHEMA][0][ATTR_OPTIONS]
+        if option[0] != current_val
     )
     new_label = next(
-        option["Label"]
-        for option in config_param[ATTR_OPTIONS]
-        if option["Label"] != current_val and option["Value"] != new_val
+        option[1]
+        for option in config_param[SCHEMA][0][ATTR_OPTIONS]
+        if option[1] != current_val and option[0] != new_val
     )
     await client.send_json(
         {

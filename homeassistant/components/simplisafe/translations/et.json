@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
-            "reauth_successful": "Taasautentimine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "identifier_exists": "Konto on juba registreeritud",
