@@ -1271,7 +1271,7 @@ pyairvisual==5.0.4
 pyalmond==0.0.2
 
 # homeassistant.components.arlo
-pyarlo==0.2.3
+pyarlo==0.2.4
 
 # homeassistant.components.atag
 pyatag==0.3.4.4
