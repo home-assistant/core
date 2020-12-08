@@ -1,4 +1,4 @@
-"""Helpers for device automations."""
+"""Helpers for device."""
 import asyncio
 from functools import wraps
 import logging
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
-    """Set up device automation."""
+    """Set up device."""
     hass.components.websocket_api.async_register_command(
         websocket_device_get_device_info
     )
@@ -61,7 +61,7 @@ async def _async_get_device_info_from_domain(hass, domain, device_id, entry_id):
 
 
 async def _async_get_device_info(hass, device_id):
-    """List device automations."""
+    """List device info."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
     domains = set()
@@ -89,7 +89,7 @@ async def _async_get_device_info(hass, device_id):
 
 
 def handle_device_errors(func):
-    """Handle device automation errors."""
+    """Handle device API errors."""
 
     @wraps(func)
     async def with_error_handling(hass, connection, msg):

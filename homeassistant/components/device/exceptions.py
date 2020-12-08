@@ -1,4 +1,4 @@
-"""Device automation exceptions."""
+"""Device exceptions."""
 from homeassistant.exceptions import HomeAssistantError
 
 
