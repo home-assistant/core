@@ -84,10 +84,10 @@ async def async_setup_entry(
     )
 
     if len(hass.data[DOMAIN]) == 1:
-        # start listining for local pushes (only once)
+        # start listening for local pushes (only once)
         await hass.async_add_executor_job(multicast.Start_listen)
 
-        # register stop callback to shutdown listining for local pushes
+        # register stop callback to shutdown listening for local pushes
         def stop_motion_multicast(event):
             """Stop multicast thread."""
             _LOGGER.debug("Shutting down Motion Listener")
