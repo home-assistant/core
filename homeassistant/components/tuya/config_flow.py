@@ -2,7 +2,12 @@
 import logging
 
 from tuyaha import TuyaApi
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
+from tuyaha.tuyaapi import (
+    TuyaAPIException,
+    TuyaAPIRateLimitException,
+    TuyaNetException,
+    TuyaServerException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -103,7 +108,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             tuya.init(
                 self._username, self._password, self._country_code, self._platform
             )
-        except (TuyaNetException, TuyaServerException):
+        except (TuyaAPIRateLimitException, TuyaNetException, TuyaServerException):
             return RESULT_CONN_ERROR
         except TuyaAPIException:
             return RESULT_AUTH_FAILED
