@@ -20,7 +20,7 @@ USER_AGENT = "User-Agent"
 
 @callback
 @bind_hass
-def async_get_async_client(
+def get_async_client(
     hass: HomeAssistantType, verify_ssl: bool = True
 ) -> httpx.AsyncClient:
     """Return default httpx AsyncClient.
