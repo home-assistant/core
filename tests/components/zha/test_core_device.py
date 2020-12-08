@@ -1,4 +1,4 @@
-"""Test zha device switch."""
+"""Test zha core device."""
 from datetime import timedelta
 import time
 from unittest import mock
