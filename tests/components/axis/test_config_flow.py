@@ -31,8 +31,7 @@ from tests.common import MockConfigEntry
 
 async def test_flow_manual_configuration(hass):
     """Test that config flow works."""
-    entry = MockConfigEntry(domain=AXIS_DOMAIN, data={}, source=SOURCE_IGNORE)
-    entry.add_to_hass(hass)
+    MockConfigEntry(domain=AXIS_DOMAIN, data={}, source=SOURCE_IGNORE).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
