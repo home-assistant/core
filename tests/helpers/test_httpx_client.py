@@ -23,20 +23,20 @@ async def test_async_get_async_client_without_ssl(hass):
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY], httpx.AsyncClient)
 
 
-async def test__async_create_async_httpx_client_with_ssl_and_cookies(hass):
+async def test_async_create_async_httpx_client_with_ssl_and_cookies(hass):
     """Test init async client with ssl and cookies."""
     client.async_get_async_client(hass)
 
-    httpx_client = client._async_create_async_httpx_client(hass, cookies={"bla": True})
+    httpx_client = client.async_create_async_httpx_client(hass, cookies={"bla": True})
     assert isinstance(httpx_client, httpx.AsyncClient)
     assert hass.data[client.DATA_ASYNC_CLIENT] != httpx_client
 
 
-async def test__async_create_async_httpx_client_without_ssl_and_cookies(hass):
+async def test_async_create_async_httpx_client_without_ssl_and_cookies(hass):
     """Test init async client without ssl and cookies."""
     client.async_get_async_client(hass, verify_ssl=False)
 
-    httpx_client = client._async_create_async_httpx_client(
+    httpx_client = client.async_create_async_httpx_client(
         hass, verify_ssl=False, cookies={"bla": True}
     )
     assert isinstance(httpx_client, httpx.AsyncClient)
