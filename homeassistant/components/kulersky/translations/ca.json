@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'ha trobat cap dispositiu a la xarxa",
+            "single_instance_allowed": "Ja est\u00e0 configurat. Nom\u00e9s una configuraci\u00f3 \u00e9s possible"
+        }
+    }
+}
