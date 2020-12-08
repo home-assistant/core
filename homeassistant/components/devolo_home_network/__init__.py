@@ -30,8 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device.password = conf.get(CONF_PASSWORD) or ""
 
     hass.data[DOMAIN][entry.entry_id] = device
+    print(device)
     await device.async_connect()
-
     # This should be done in validate_input
     entry.title = device.hostname.split(".")[0]
 
