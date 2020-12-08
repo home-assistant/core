@@ -413,7 +413,7 @@ caldav==0.6.1
 circuit-webhook==1.0.1
 
 # homeassistant.components.cisco_mobility_express
-ciscomobilityexpress==0.3.3
+ciscomobilityexpress==0.3.9
 
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
