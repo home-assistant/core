@@ -1073,7 +1073,7 @@ total_connect_client==0.55
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.8
+tuyaha==0.0.9
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
