@@ -6,6 +6,7 @@ import logging
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import (
     TuyaAPIException,
+    TuyaAPIRateLimitException,
     TuyaFrequentlyInvokeException,
     TuyaNetException,
     TuyaServerException,
@@ -137,12 +138,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     ) as exc:
         raise ConfigEntryNotReady() from exc
 
-    except TuyaAPIException as exc:
-        # Workaround until https://github.com/PaulAnnekov/tuyaha/pull/60 or similar is merged
-        if str(exc) == "you cannot auth exceed once in 60 seconds":
-            _LOGGER.error("Tuya login ratelimited")
-            raise ConfigEntryNotReady() from exc
+    except TuyaAPIRateLimitException as exc:
+        _LOGGER.error("Tuya login ratelimited")
+        raise ConfigEntryNotReady() from exc
 
+    except TuyaAPIException as exc:
         _LOGGER.error(
             "Connection error during integration setup. Error: %s",
             exc,
