@@ -9,23 +9,23 @@ import homeassistant.helpers.httpx_client as client
 from tests.async_mock import Mock, patch
 
 
-async def test_async_get_async_client_with_ssl(hass):
+async def test_get_async_client_with_ssl(hass):
     """Test init async client with ssl."""
-    client.async_get_async_client(hass)
+    client.get_async_client(hass)
 
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT], httpx.AsyncClient)
 
 
-async def test_async_get_async_client_without_ssl(hass):
+async def test_get_async_client_without_ssl(hass):
     """Test init async client without ssl."""
-    client.async_get_async_client(hass, verify_ssl=False)
+    client.get_async_client(hass, verify_ssl=False)
 
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY], httpx.AsyncClient)
 
 
 async def test_async_create_async_httpx_client_with_ssl_and_cookies(hass):
     """Test init async client with ssl and cookies."""
-    client.async_get_async_client(hass)
+    client.get_async_client(hass)
 
     httpx_client = client.async_create_async_httpx_client(hass, cookies={"bla": True})
     assert isinstance(httpx_client, httpx.AsyncClient)
@@ -34,7 +34,7 @@ async def test_async_create_async_httpx_client_with_ssl_and_cookies(hass):
 
 async def test_async_create_async_httpx_client_without_ssl_and_cookies(hass):
     """Test init async client without ssl and cookies."""
-    client.async_get_async_client(hass, verify_ssl=False)
+    client.get_async_client(hass, verify_ssl=False)
 
     httpx_client = client.async_create_async_httpx_client(
         hass, verify_ssl=False, cookies={"bla": True}
@@ -43,9 +43,9 @@ async def test_async_create_async_httpx_client_without_ssl_and_cookies(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY] != httpx_client
 
 
-async def test_async_get_async_client_cleanup(hass):
+async def test_get_async_client_cleanup(hass):
     """Test init async client with ssl."""
-    client.async_get_async_client(hass)
+    client.get_async_client(hass)
 
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT], httpx.AsyncClient)
 
@@ -55,9 +55,9 @@ async def test_async_get_async_client_cleanup(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT].is_closed
 
 
-async def test_async_get_async_client_cleanup_without_ssl(hass):
+async def test_get_async_client_cleanup_without_ssl(hass):
     """Test init async client without ssl."""
-    client.async_get_async_client(hass, verify_ssl=False)
+    client.get_async_client(hass, verify_ssl=False)
 
     assert isinstance(hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY], httpx.AsyncClient)
 
@@ -67,11 +67,11 @@ async def test_async_get_async_client_cleanup_without_ssl(hass):
     assert hass.data[client.DATA_ASYNC_CLIENT_NOVERIFY].is_closed
 
 
-async def test_async_get_async_client_patched_close(hass):
+async def test_get_async_client_patched_close(hass):
     """Test closing the async client does not work."""
 
     with patch("httpx.AsyncClient.aclose") as mock_aclose:
-        httpx_session = client.async_get_async_client(hass)
+        httpx_session = client.get_async_client(hass)
         assert isinstance(hass.data[client.DATA_ASYNC_CLIENT], httpx.AsyncClient)
 
         with pytest.raises(RuntimeError):
@@ -102,7 +102,7 @@ async def test_warning_close_session_integration(hass, caplog):
             ),
         ],
     ):
-        httpx_session = client.async_get_async_client(hass)
+        httpx_session = client.get_async_client(hass)
         await httpx_session.aclose()
 
     assert (
@@ -134,7 +134,7 @@ async def test_warning_close_session_custom(hass, caplog):
             ),
         ],
     ):
-        httpx_session = client.async_get_async_client(hass)
+        httpx_session = client.get_async_client(hass)
         await httpx_session.aclose()
     assert (
         "Detected integration that closes the Home Assistant httpx client. "
