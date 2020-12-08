@@ -177,7 +177,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
         self._blind.Register_callback(self.unique_id, self._push_callback)
-        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler))
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+        )
         await super().async_added_to_hass()
 
     def signal_handler(self, data):
