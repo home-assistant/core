@@ -1,5 +1,5 @@
 pipeline {
-   agent any
+   agent { dockerfile true }
    environment {
        registry = "audiofanjo/k8scicd"
        GOCACHE = "/tmp"
