@@ -1,8 +1,9 @@
 """MusicCast Device."""
 
+import asyncio
 from typing import Dict
 
-from pyamaha import AsyncDevice, System, Zone
+from pyamaha import AsyncDevice, NetUSB, System, Zone
 
 
 class MusicCastData:
@@ -21,6 +22,16 @@ class MusicCastData:
         # features
         self.zones: Dict[str, MusicCastZoneData] = {}
 
+        # NetUSB data
+        self.netusb_input = None
+        self.netusb_playback = None
+        self.netusb_repeat = None
+        self.netusb_shuffle = None
+        self.netusb_artist = None
+        self.netusb_album = None
+        self.netusb_track = None
+        self.netusb_albumart_url = None
+
 
 class MusicCastZoneData:
     """Object that holds data for a MusicCast device zone."""
@@ -33,13 +44,16 @@ class MusicCastZoneData:
         self.current_volume = 0
         self.mute: bool = False
         self.input = None
+        self.sound_program_list = []
+        self.sound_program = None
 
 
 class MusicCastDevice:
     """Dummy MusicCastDevice (device for HA) for Hello World example."""
 
-    def __init__(self, client, ip):
+    def __init__(self, hass, client, ip):
         """Init dummy MusicCastDevice."""
+        self.hass = hass
         self.client = client
         self.ip = ip
         self.device = AsyncDevice(client, ip, self.handle)
@@ -51,6 +65,7 @@ class MusicCastDevice:
         self._network_status = None
         self._device_info = None
         self._features = None
+        self._netusb_play_info = None
 
         print(f"HANDLE UDP ON {self.device._udp_port}")
 
@@ -81,6 +96,18 @@ class MusicCastDevice:
                     "input", self.data.zones[parameter].input
                 )
 
+                if new_zone_data.get("play_info_updated") or new_zone_data.get(
+                    "status_updated"
+                ):
+                    asyncio.run_coroutine_threadsafe(
+                        self._fetch_zone(parameter), self.hass.loop
+                    ).result()
+
+        if "netusb" in message.keys():
+            asyncio.run_coroutine_threadsafe(
+                self._fetch_netusb(), self.hass.loop
+            ).result()
+
         for callback in self._callbacks:
             callback()
 
@@ -91,6 +118,51 @@ class MusicCastDevice:
     def remove_callback(self, callback):
         """Remove previously registered callback."""
         self._callbacks.discard(callback)
+
+    async def _fetch_netusb(self):
+        """Fetch NetUSB data."""
+        print("Fetching netusb...")
+        self._netusb_play_info = await (
+            await self.device.request(NetUSB.get_play_info())
+        ).json()
+
+        self.data.netusb_input = self._netusb_play_info.get(
+            "input", self.data.netusb_input
+        )
+        self.data.netusb_playback = self._netusb_play_info.get(
+            "playback", self.data.netusb_playback
+        )
+        self.data.netusb_repeat = self._netusb_play_info.get(
+            "repeat", self.data.netusb_repeat
+        )
+        self.data.netusb_shuffle = self._netusb_play_info.get(
+            "shuffle", self.data.netusb_shuffle
+        )
+        self.data.netusb_artist = self._netusb_play_info.get(
+            "artist", self.data.netusb_artist
+        )
+        self.data.netusb_album = self._netusb_play_info.get(
+            "album", self.data.netusb_album
+        )
+        self.data.netusb_track = self._netusb_play_info.get(
+            "track", self.data.netusb_track
+        )
+        self.data.netusb_albumart_url = self._netusb_play_info.get(
+            "albumart_url", self.data.netusb_albumart_url
+        )
+
+    async def _fetch_zone(self, zone_id):
+        print(f"Fetching zone {zone_id}...")
+        zone = await (await self.device.request(Zone.get_status(zone_id))).json()
+        zone_data: MusicCastZoneData = self.data.zones.get(zone_id, MusicCastZoneData())
+
+        zone_data.power = zone.get("power")
+        zone_data.current_volume = zone.get("volume")
+        zone_data.mute = zone.get("mute")
+        zone_data.input = zone.get("input")
+        zone_data.sound_program = zone.get("sound_program")
+
+        self.data.zones[zone_id] = zone_data
 
     async def fetch(self):
         """Fetch data from musiccast device."""
@@ -131,22 +203,11 @@ class MusicCastDevice:
                 zone_data.min_volume = range_volume.get("min")
                 zone_data.max_volume = range_volume.get("max")
 
+                zone_data.sound_program_list = zone.get("sound_program_list", [])
+
                 self.data.zones[zone_id] = zone_data
 
-        zones = {
-            zone: await (await self.device.request(Zone.get_status(zone))).json()
-            for zone in self._zone_ids
-        }
+        await self._fetch_netusb()
 
-        for zone_id in zones:
-            zone = zones[zone_id]
-            zone_data: MusicCastZoneData = self.data.zones.get(
-                zone_id, MusicCastZoneData()
-            )
-
-            zone_data.power = zone.get("power")
-            zone_data.current_volume = zone.get("volume")
-            zone_data.mute = zone.get("mute")
-            zone_data.input = zone.get("input")
-
-            self.data.zones[zone_id] = zone_data
+        for zone in self._zone_ids:
+            await self._fetch_zone(zone)

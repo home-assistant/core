@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(async_get_clientsession(hass), entry.data[CONF_HOST])
+    client = MusicCastDevice(hass, async_get_clientsession(hass), entry.data[CONF_HOST])
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_refresh()
 
@@ -101,6 +101,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
             await self.musiccast.fetch()
             return self.musiccast.data
         except Exception as exception:
+            print(exception)
             raise UpdateFailed() from exception
 
 

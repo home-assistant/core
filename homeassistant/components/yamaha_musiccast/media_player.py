@@ -4,7 +4,9 @@ from typing import Callable, List
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -22,7 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from pyamaha import Zone
+from pyamaha import NetUSB, Zone
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import DOMAIN
@@ -55,10 +57,6 @@ async def async_setup_entry(
         )
 
     async_add_entities(media_players, True)
-
-
-SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
-DEFAULT_SOUND_MODE = "Dummy Music"
 
 
 MUSIC_PLAYER_SUPPORT = (
@@ -111,8 +109,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         self._player_state = STATE_PLAYING
         self._volume_muted = False
         self._shuffle = False
-        self._sound_mode_list = SOUND_MODE_LIST
-        self._sound_mode = DEFAULT_SOUND_MODE
         self._device_class = device_class
         self._zone_id = zone_id
         self.coordinator: MusicCastDataUpdateCoordinator = coordinator
@@ -146,6 +142,13 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         return False
 
     @property
+    def _is_netusb(self):
+        return (
+            self.coordinator.data.netusb_input
+            == self.coordinator.data.zones[self._zone_id].input
+        )
+
+    @property
     def name(self):
         """Return the name of the media player."""
         return self._name
@@ -153,11 +156,11 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def state(self):
         """Return the state of the player."""
-        return (
-            STATE_PLAYING
-            if self.coordinator.data.zones[self._zone_id].power == "on"
-            else STATE_OFF
-        )
+        if self.coordinator.data.zones[self._zone_id].power == "on":
+            if self._is_netusb and self.coordinator.data.netusb_playback == "pause":
+                return STATE_PAUSED
+            return STATE_PLAYING
+        return STATE_OFF
 
     @property
     def volume_level(self):
@@ -173,17 +176,19 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def shuffle(self):
         """Boolean if shuffling is enabled."""
-        return self._shuffle
+        return (
+            self.coordinator.data.netusb_shuffle == "on" if self._is_netusb else False
+        )
 
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-        return self._sound_mode
+        return self.coordinator.data.zones[self._zone_id].sound_program
 
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return self._sound_mode_list
+        return self.coordinator.data.zones[self._zone_id].sound_program_list
 
     @property
     def device_class(self):
@@ -229,30 +234,35 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
         self.schedule_update_ha_state()
 
-    def media_play(self):
+    async def async_media_play(self):
         """Send play command."""
-        self._player_state = STATE_PLAYING
-        self.schedule_update_ha_state()
 
-    def media_pause(self):
+        if self._is_netusb:
+            await self.coordinator.musiccast.device.request(NetUSB.set_playback("play"))
+
+    async def async_media_pause(self):
         """Send pause command."""
-        self._player_state = STATE_PAUSED
-        self.schedule_update_ha_state()
+        if self._is_netusb:
+            await self.coordinator.musiccast.device.request(
+                NetUSB.set_playback("pause")
+            )
 
-    def set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        self._shuffle = shuffle
-        self.schedule_update_ha_state()
+        if self._is_netusb and self.shuffle != shuffle:
+            await self.coordinator.musiccast.device.request(NetUSB.toggle_shuffle())
 
-    def select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
-        self._sound_mode = sound_mode
-        self.schedule_update_ha_state()
+        print(f'CHANGING TO SOUND MODE "{sound_mode}"')
+        await self.coordinator.musiccast.device.request(
+            Zone.set_sound_program(self._zone_id, sound_mode)
+        )
 
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return "bounzz-1"
+        return None
 
     @property
     def media_content_type(self):
@@ -267,49 +277,61 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return "https://graph.facebook.com/v2.5/107771475912710/picture?type=large"
+        return (
+            f"http://{self.coordinator.musiccast.ip}{self.coordinator.data.netusb_albumart_url}"
+            if self._is_netusb and self.coordinator.data.netusb_albumart_url
+            else ""
+        )
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return self.tracks[self._cur_track][1] if self.tracks else ""
+        return self.coordinator.data.netusb_track if self._is_netusb else ""
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self.tracks[self._cur_track][0] if self.tracks else ""
+        return self.coordinator.data.netusb_artist if self._is_netusb else ""
 
     @property
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
-        return "Bounzz"
+        return self.coordinator.data.netusb_album if self._is_netusb else ""
 
     @property
     def media_track(self):
         """Return the track number of current media (Music track only)."""
-        return self._cur_track + 1
+        return -1
 
     @property
     def repeat(self):
         """Return current repeat mode."""
-        return self._repeat
+        return (
+            {
+                "off": REPEAT_MODE_OFF,
+                "one": REPEAT_MODE_ONE,
+                "all": REPEAT_MODE_ALL,
+            }.get(self.coordinator.data.netusb_repeat)
+            if self._is_netusb
+            else REPEAT_MODE_OFF
+        )
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return MUSIC_PLAYER_SUPPORT
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send previous track command."""
-        if self._cur_track > 0:
-            self._cur_track -= 1
-            self.schedule_update_ha_state()
+        if self._is_netusb:
+            await self.coordinator.musiccast.device.request(
+                NetUSB.set_playback("previous")
+            )
 
-    def media_next_track(self):
+    async def async_media_next_track(self):
         """Send next track command."""
-        if self._cur_track < len(self.tracks) - 1:
-            self._cur_track += 1
-            self.schedule_update_ha_state()
+        if self._is_netusb:
+            await self.coordinator.musiccast.device.request(NetUSB.set_playback("next"))
 
     def clear_playlist(self):
         """Clear players playlist."""
@@ -318,7 +340,8 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
-    def set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat):
         """Enable/disable repeat mode."""
-        self._repeat = repeat
-        self.schedule_update_ha_state()
+        print([self.repeat, repeat])
+        if self._is_netusb and self.repeat != repeat and self.repeat != REPEAT_MODE_ONE:
+            await self.coordinator.musiccast.device.request(NetUSB.toggle_repeat())
