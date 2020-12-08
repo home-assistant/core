@@ -336,14 +336,11 @@ class Profiles:
     @callback
     def apply_default(self, entity_id, params):
         """Return the default turn-on profile for the given light."""
-        name = f"{entity_id}.default"
-        if name in self.data:
-            self.apply_profile(name, params)
-            return
-
-        name = "group.all_lights.default"
-        if name in self.data:
-            self.apply_profile(name, params)
+        for entity_id in (entity_id, "group.all_lights"):
+            name = f"{entity_id}.default"
+            if name in self.data:
+                self.apply_profile(name, params)
+                return
 
     @callback
     def apply_profile(self, name, params):
