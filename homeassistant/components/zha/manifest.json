@@ -6,13 +6,14 @@
   "requirements": [
     "bellows==0.21.0",
     "pyserial==3.4",
-    "zha-quirks==0.0.47",
+    "pyserial-asyncio==0.4",
+    "zha-quirks==0.0.48",
     "zigpy-cc==0.5.2",
     "zigpy-deconz==0.11.0",
-    "zigpy==0.28.1",
+    "zigpy==0.28.2",
     "zigpy-xbee==0.13.0",
     "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.2.2"
+    "zigpy-znp==0.3.0"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"]
 }
