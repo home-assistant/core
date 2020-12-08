@@ -1,42 +1,32 @@
 """Demo implementation of the media player."""
+from typing import Callable, List
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
     REPEAT_MODE_OFF,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
-from homeassistant.helpers import config_validation as cv, entity_platform
-import homeassistant.util.dt as dt_util
-from typing import Any, Callable, Dict, List, Optional
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity, MusicCastData
-from .const import DOMAIN
 from pyamaha import Zone
+
+from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
+from .const import DOMAIN
+from .musiccast_device import MusicCastData
 
 PARALLEL_UPDATES = 1
 
@@ -140,6 +130,16 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             icon="mdi:speaker",
         )
 
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        # Sensors should also register callbacks to HA when their state changes
+        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        # The opposite of async_added_to_hass. Remove any registered call backs here.
+        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
+
     @property
     def should_poll(self):
         """Push an update after each command."""
@@ -156,7 +156,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         return (
             STATE_PLAYING
             if self.coordinator.data.zones[self._zone_id].power == "on"
-            else STATE_IDLE
+            else STATE_OFF
         )
 
     @property
@@ -168,7 +168,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
-        return self._volume_muted
+        return self.coordinator.data.zones[self._zone_id].mute
 
     @property
     def shuffle(self):
@@ -196,26 +196,34 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         macs = self.coordinator.data.mac_addresses
         return f"{macs}_{self._zone_id}"
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        self._player_state = STATE_PLAYING
+        await self.coordinator.musiccast.device.request(
+            Zone.set_power(self._zone_id, "on")
+        )
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn the media player off."""
-        self._player_state = STATE_OFF
+        await self.coordinator.musiccast.device.request(
+            Zone.set_power(self._zone_id, "standby")
+        )
         self.schedule_update_ha_state()
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Mute the volume."""
-        self._volume_muted = mute
+
+        await self.coordinator.musiccast.device.request(
+            Zone.set_mute(self._zone_id, mute)
+        )
+
         self.schedule_update_ha_state()
 
     async def async_set_volume_level(self, volume):
         """Set the volume level, range 0..1."""
         vol = self._volume_min + (self._volume_max - self._volume_min) * volume
 
-        await self.coordinator.api.device.request(
+        await self.coordinator.musiccast.device.request(
             Zone.set_volume(self._zone_id, round(vol), 1)
         )
 
