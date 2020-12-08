@@ -15,6 +15,7 @@ class RestData:
 
     def __init__(
         self,
+        hass,
         method,
         resource,
         auth,
@@ -25,6 +26,7 @@ class RestData:
         timeout=DEFAULT_TIMEOUT,
     ):
         """Initialize the data object."""
+        self._hass = hass
         self._method = method
         self._resource = resource
         self._auth = auth
@@ -41,10 +43,12 @@ class RestData:
         """Set url."""
         self._resource = url
 
-    async def async_update(self, hass):
+    async def async_update(self):
         """Get the latest data from REST service with provided method."""
         if not self._async_client:
-            self._async_client = get_async_client(hass, verify_ssl=self._verify_ssl)
+            self._async_client = get_async_client(
+                self._hass, verify_ssl=self._verify_ssl
+            )
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:

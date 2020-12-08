@@ -54,8 +54,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     verify_ssl = DEFAULT_VERIFY_SSL
     headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
 
-    rest = RestData(method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
-    await rest.async_update(hass)
+    rest = RestData(hass, method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
+    await rest.async_update()
 
     if rest.data is None:
         _LOGGER.error("Unable to fetch data from PVOutput")
