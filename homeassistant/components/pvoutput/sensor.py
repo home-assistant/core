@@ -115,7 +115,7 @@ class PvoutputSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the PVOutput API and updates the state."""
-        await self.rest.async_update(self.hass)
+        await self.rest.async_update()
         self._async_update_from_rest_data()
 
     async def async_added_to_hass(self):
