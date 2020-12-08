@@ -21,12 +21,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
     """Representation of a Gree HVAC device."""
 
-    def __init__(self, device):
+    def __init__(self, coordo):
         """Initialize the Gree device."""
-        super().__init__(device)
-        self._device = device
-        self._name = device.device_info.name + " Panel Light"
-        self._mac = device.device_info.mac
+        super().__init__(coordo)
+        self._coordo = coordo
+        self._name = coordo.device.device_info.name + " Panel Light"
+        self._mac = coordo.device.device_info.mac
 
     @property
     def name(self) -> str:
@@ -61,16 +61,16 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the light is turned on."""
-        return self._device.light
+        return self._coordo.device.light
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._device.light = True
-        await self._device.push_state_update()
+        self._coordo.device.light = True
+        await self._coordo.push_state_update()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        self._device.light = False
-        await self._device.push_state_update()
+        self._coordo.device.light = False
+        await self._coordo.push_state_update()
         self.async_write_ha_state()
