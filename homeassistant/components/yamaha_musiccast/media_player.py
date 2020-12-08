@@ -215,7 +215,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Set the volume level, range 0..1."""
         vol = self._volume_min + (self._volume_max - self._volume_min) * volume
 
-        await self.coordinator.api.request(
+        await self.coordinator.api.device.request(
             Zone.set_volume(self._zone_id, round(vol), 1)
         )
 

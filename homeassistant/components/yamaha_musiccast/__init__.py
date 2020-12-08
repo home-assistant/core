@@ -5,6 +5,7 @@ import logging
 from typing import Any, Dict
 
 from pyamaha import AsyncDevice, System, Zone
+from .musiccast_device import MusicCastDevice
 import voluptuous as vol
 import json
 from homeassistant.config_entries import ConfigEntry
@@ -43,8 +44,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MusicCast from a config entry."""
 
-    client = AsyncDevice(async_get_clientsession(hass), entry.data[CONF_HOST])
-
+    client = MusicCastDevice(async_get_clientsession(hass), entry.data[CONF_HOST])
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_refresh()
 
@@ -111,7 +111,7 @@ class MusicCastZoneData:
 class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
     """Class to manage fetching data from the API."""
 
-    def __init__(self, hass: HomeAssistant, client: AsyncDevice) -> None:
+    def __init__(self, hass: HomeAssistant, client: MusicCastDevice) -> None:
         """Initialize."""
         self.api = client
         self.platforms = []
@@ -132,7 +132,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
 
             if not self._network_status:
                 self._network_status = await (
-                    await self.api.request(System.get_network_status())
+                    await self.api.device.request(System.get_network_status())
                 ).json()
 
                 self._data.network_name = self._network_status.get("network_name")
@@ -140,7 +140,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
 
             if not self._device_info:
                 self._device_info = await (
-                    await self.api.request(System.get_device_info())
+                    await self.api.device.request(System.get_device_info())
                 ).json()
 
                 self._data.model_name = self._device_info.get("model_name")
@@ -148,7 +148,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
 
             if not self._features:
                 self._features = await (
-                    await self.api.request(System.get_features())
+                    await self.api.device.request(System.get_features())
                 ).json()
 
                 self._zone_ids = [
@@ -174,7 +174,9 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
                     self._data.zones[zone_id] = zone_data
 
             zones = {
-                zone: await (await self.api.request(Zone.get_status(zone))).json()
+                zone: await (
+                    await self.api.device.request(Zone.get_status(zone))
+                ).json()
                 for zone in self._zone_ids
             }
 
