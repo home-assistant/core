@@ -438,38 +438,6 @@ def fetch_album_tracks(key):
     return media_container(ALBUM_TRACKS_ATTRIBS, *nodes)
 
 
-def fetch_grandchildren(key):
-    """Return payload for a media item's grandchildren."""
-    if key == 300:
-        return fetch_artist_tracks(key)
-
-
-def fetch_children(key):
-    """Return payload for a media item's children."""
-    if key == 20:
-        return fetch_season()
-    elif key == 30:
-        return SHOW_SEASONS_PAYLOAD
-    elif key == 200:
-        return fetch_album_tracks(key)
-    elif key == 300:
-        return ARTIST_ALBUMS_PAYLOAD
-
-
-def fetch_media(key):
-    """Return payload for a media item."""
-    if key < 10:
-        return fetch_movie(key)
-    elif key < 20:
-        return fetch_episode(key)
-    elif key == 30:
-        return fetch_show(key)
-    elif key < 200:
-        return fetch_track(key)
-    elif key == 200:
-        return ALBUM_PAYLOAD
-
-
 def fetch_playlist(key):
     """Return payload for a playlist."""
     node = fetch_video_element(1, MOVIE_COMMON)
@@ -483,6 +451,22 @@ def fetch_playlist(key):
         "title": f"Playlist {key}",
     }
     return media_container(attribs, node)
+
+
+# Media item payloads
+MEDIA_1 = fetch_movie(1)
+MEDIA_30 = fetch_show(30)
+MEDIA_100 = fetch_track(100)
+MEDIA_200 = ALBUM_PAYLOAD
+
+CHILDREN_20 = fetch_season()
+CHILDREN_30 = SHOW_SEASONS_PAYLOAD
+CHILDREN_200 = fetch_album_tracks(200)
+CHILDREN_300 = ARTIST_ALBUMS_PAYLOAD
+
+GRANDCHILDREN_300 = fetch_artist_tracks(300)
+
+PLAYLIST_500 = fetch_playlist(500)
 
 
 def generate_photo_session(session_key, player, user):
@@ -661,6 +645,11 @@ def generate_library_all(kind):
         return MUSIC_LIBRARY_ALL
 
     return media_container(attribs, *payloads)
+
+
+LIBRARY_MOVIES_ALL = generate_library_all("movie")
+LIBRARY_TVSHOWS_ALL = generate_library_all("show")
+LIBRARY_MUSIC_ALL = generate_library_all("artist")
 
 
 # Plex Server

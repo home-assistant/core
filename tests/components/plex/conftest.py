@@ -10,11 +10,24 @@ from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import websocket_connected
 from .mock_classes import MockGDM
 from .payloads import (
+    CHILDREN_20,
+    CHILDREN_30,
+    CHILDREN_200,
+    CHILDREN_300,
     EMPTY_LIBRARY,
     EMPTY_PAYLOAD,
+    GRANDCHILDREN_300,
+    LIBRARY_MOVIES_ALL,
     LIBRARY_MOVIES_SORT,
+    LIBRARY_MUSIC_ALL,
     LIBRARY_MUSIC_SORT,
+    LIBRARY_TVSHOWS_ALL,
     LIBRARY_TVSHOWS_SORT,
+    MEDIA_1,
+    MEDIA_30,
+    MEDIA_100,
+    MEDIA_200,
+    PLAYLIST_500,
     PLAYLISTS_PAYLOAD,
     PLEX_SERVER_PAYLOAD,
     PLEXTV_ACCOUNT_PAYLOAD,
@@ -24,11 +37,6 @@ from .payloads import (
     PMS_LIBRARY_PAYLOAD,
     PMS_LIBRARY_SECTIONS_PAYLOAD,
     SECURITY_TOKEN,
-    fetch_children,
-    fetch_grandchildren,
-    fetch_media,
-    fetch_playlist,
-    generate_library_all,
     generate_session,
 )
 
@@ -79,32 +87,24 @@ def mock_plex_calls(entry, requests_mock):
     requests_mock.get(f"{url}/library/sections/2/sorts", text=LIBRARY_TVSHOWS_SORT)
     requests_mock.get(f"{url}/library/sections/3/sorts", text=LIBRARY_MUSIC_SORT)
 
-    requests_mock.get(
-        f"{url}/library/sections/1/all", text=generate_library_all("movie")
-    )
-    requests_mock.get(
-        f"{url}/library/sections/2/all", text=generate_library_all("show")
-    )
-    requests_mock.get(
-        f"{url}/library/sections/3/all", text=generate_library_all("artist")
-    )
+    requests_mock.get(f"{url}/library/sections/1/all", text=LIBRARY_MOVIES_ALL)
+    requests_mock.get(f"{url}/library/sections/2/all", text=LIBRARY_TVSHOWS_ALL)
+    requests_mock.get(f"{url}/library/sections/3/all", text=LIBRARY_MUSIC_ALL)
 
-    requests_mock.get(f"{url}/library/metadata/200/children", text=fetch_children(200))
-    requests_mock.get(f"{url}/library/metadata/300/children", text=fetch_children(300))
-    requests_mock.get(
-        f"{url}/library/metadata/300/allLeaves", text=fetch_grandchildren(300)
-    )
+    requests_mock.get(f"{url}/library/metadata/200/children", text=CHILDREN_200)
+    requests_mock.get(f"{url}/library/metadata/300/children", text=CHILDREN_300)
+    requests_mock.get(f"{url}/library/metadata/300/allLeaves", text=GRANDCHILDREN_300)
 
-    for media_key in [1, 30, 100, 200]:
-        requests_mock.get(
-            f"{url}/library/metadata/{media_key}", text=fetch_media(media_key)
-        )
+    requests_mock.get(f"{url}/library/metadata/1", text=MEDIA_1)
+    requests_mock.get(f"{url}/library/metadata/30", text=MEDIA_30)
+    requests_mock.get(f"{url}/library/metadata/100", text=MEDIA_100)
+    requests_mock.get(f"{url}/library/metadata/200", text=MEDIA_200)
 
-    requests_mock.get(f"{url}/library/metadata/20/children", text=fetch_children(20))
-    requests_mock.get(f"{url}/library/metadata/30/children", text=fetch_children(30))
+    requests_mock.get(f"{url}/library/metadata/20/children", text=CHILDREN_20)
+    requests_mock.get(f"{url}/library/metadata/30/children", text=CHILDREN_30)
 
     requests_mock.get(f"{url}/playlists", text=PLAYLISTS_PAYLOAD)
-    requests_mock.get(f"{url}/playlists/500/items", text=fetch_playlist(500))
+    requests_mock.get(f"{url}/playlists/500/items", text=PLAYLIST_500)
     requests_mock.get(f"{url}/security/token", text=SECURITY_TOKEN)
 
 
