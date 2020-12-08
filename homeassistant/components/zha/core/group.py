@@ -194,6 +194,8 @@ class ZHAGroup(LogMixin):
         """Return entity ids from the entity domain for this group."""
         domain_entity_ids: List[str] = []
         for member in self.members:
+            if member.device.is_coordinator:
+                continue
             entities = async_entries_for_device(
                 self._zha_gateway.ha_entity_registry,
                 member.device.device_id,
