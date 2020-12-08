@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
-DEVICE_INITIALIZED = f"{DOMAIN}_device_initialized"
+DEVICE_INITIALIZED = "yeelight_{}_device_initialized"
 
 DEFAULT_NAME = "Yeelight"
 DEFAULT_TRANSITION = 350
@@ -181,8 +181,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
     async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
+        async_dispatcher_connect(
+            hass,
+            DEVICE_INITIALIZED.format(host),
+            load_platforms,
+        )
+
         device = await _async_setup_device(hass, host, entry, capabilities)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
+
+    async def load_platforms():
         for component in PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
@@ -374,6 +382,7 @@ class YeelightDevice:
         self._device_type = None
         self._available = False
         self._remove_time_tracker = None
+        self._initialized = False
 
         self._name = host  # Default name is host
         if capabilities:
@@ -495,6 +504,8 @@ class YeelightDevice:
         try:
             self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
+            if not self._initialized:
+                self._initialize_device()
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
@@ -521,6 +532,11 @@ class YeelightDevice:
                 self.name,
                 ex,
             )
+
+    def _initialize_device(self):
+        self._get_capabilities()
+        self._initialized = True
+        dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
 
     def update(self):
         """Update device properties and send data updated signal."""
