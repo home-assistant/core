@@ -24,6 +24,7 @@ from homeassistant.components.media_source.models import (
 )
 
 from .const import (
+    MAX_STREAMING_BITRATE,
     SUPPORTED_COLLECTION_TYPES,
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_TVSHOWS,
@@ -105,6 +106,7 @@ class JellyfinSource(MediaSource):
 
         server_id = client.auth.server_id
         self._name = client.auth.get_server_info(server_id)["Name"]
+        self.play_id = "abc"
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         _, item_id = parse_identifier(item)
@@ -219,13 +221,29 @@ class JellyfinSource(MediaSource):
         return media
 
     def _get_stream_url(self, media_item: dict) -> str:
-        id = media_item["Id"]
         media_type = media_item["MediaType"]
 
         if media_type == "Video":
-            return f"{self.url}/Videos/{id}/stream"
+            return self._get_video_stream_url(media_item)
         else:
-            return f"{self.url}/Audio/{id}/stream"
+            return self._get_audio_stream_url(media_item)
+
+    def _get_video_stream_url(self, media_item: dict) -> str:
+        id = media_item["Id"]
+        media_source = media_item["MediaSources"][0]
+        media_source_id = media_source["Id"]
+        api_key = self.client.config.data["auth.token"]
+
+        # return f"{self.url}Videos/{id}/stream?Id={id}&MediaSourceId={media_source_id}&PlaySessionId={self.play_id}&static=true"
+        return f"{self.url}Items/{id}/Download?api_key={api_key}"
+
+    def _get_audio_stream_url(self, media_item: dict) -> str:
+        id = media_item["Id"]
+        user_id = self.client.config.data["auth.user_id"]
+        device_id = self.client.config.data["app.device_id"]
+        api_key = self.client.config.data["auth.token"]
+
+        return f"{self.url}Audio/{id}/universal?UserId={user_id}&DeviceId={device_id}&api_key={api_key}&MaxStreamingBitrate={MAX_STREAMING_BITRATE}"
 
 
 class JellyfinMediaView(HomeAssistantView):
