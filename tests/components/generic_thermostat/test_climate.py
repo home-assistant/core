@@ -1252,6 +1252,7 @@ async def test_turn_on_while_restarting(hass):
                 "platform": "generic_thermostat",
                 "name": "test_thermostat",
                 "heater": ENT_SWITCH,
+                "ac_mode": True,
                 "target_sensor": ENT_SENSOR,
                 "target_temp": 20,
             }
@@ -1260,7 +1261,7 @@ async def test_turn_on_while_restarting(hass):
     await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
     # NO initial_hvac_mode -> thermostat status must be ON
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVAC_MODE_COOL
     assert STATE_ON == hass.states.get(ENT_SWITCH).state
 
 
