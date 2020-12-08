@@ -34,7 +34,7 @@ from typing import Any, Callable, Dict, List, Optional
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
+from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity, MusicCastData
 from .const import DOMAIN
 from pyamaha import Zone
 
@@ -49,19 +49,19 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up MusicCast sensor based on a config entry."""
-    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: MusicCastDataUpdateCoordinator[MusicCastData] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
 
-    features = coordinator.data.get("features", {})
-    name = coordinator.data.get("network_status").get("network_name", "Unknown")
+    name = coordinator.data.network_name
 
     media_players = []
 
-    for zone in features.get("zone", []):
-        zone_id = zone.get("id")
-        zone_name = name if zone_id == DEFAULT_ZONE else f"{name} {zone_id}"
+    for zone in coordinator.data.zones:
+        zone_name = name if zone == DEFAULT_ZONE else f"{name} {zone}"
 
         media_players.append(
-            MusicCastMediaPlayer(zone_id, zone_name, entry.entry_id, coordinator)
+            MusicCastMediaPlayer(zone, zone_name, entry.entry_id, coordinator)
         )
 
     async_add_entities(media_players, True)
@@ -119,27 +119,16 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Initialize the demo device."""
         self._name = name
         self._player_state = STATE_PLAYING
-        self._volume_level = 0.0
         self._volume_muted = False
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
         self._device_class = device_class
         self._zone_id = zone_id
-        self.coordinator = coordinator
+        self.coordinator: MusicCastDataUpdateCoordinator = coordinator
 
-        zone_features = next(
-            item
-            for item in self.coordinator.data.get("features", {}).get("zone")
-            if item["id"] == self._zone_id
-        )
-
-        range_steps = zone_features.get("range_step")
-        range_volume = next(item for item in range_steps if item["id"] == "volume")
-
-        self._volume_min = range_volume.get("min")
-        self._volume_max = range_volume.get("max")
-        self._volume_step = range_volume.get("step")
+        self._volume_min = self.coordinator.data.zones[self._zone_id].min_volume
+        self._volume_max = self.coordinator.data.zones[self._zone_id].max_volume
 
         self._cur_track = 0
         self._repeat = REPEAT_MODE_OFF
@@ -150,9 +139,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             name=name,
             icon="mdi:speaker",
         )
-
-    def get_zone_status(self):
-        return self.coordinator.data.get("zones", {}).get(self._zone_id, {})
 
     @property
     def should_poll(self):
@@ -169,20 +155,15 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Return the state of the player."""
         return (
             STATE_PLAYING
-            if self.coordinator.data.get("zones", {})
-            .get(self._zone_id, {})
-            .get("power")
-            == "on"
+            if self.coordinator.data.zones[self._zone_id].power == "on"
             else STATE_IDLE
         )
 
     @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
-        self._volume_level = self.get_zone_status().get("volume")
-        return (self._volume_level - self._volume_min) / (
-            self._volume_max - self._volume_min
-        )
+        volume = self.coordinator.data.zones[self._zone_id].current_volume
+        return (volume - self._volume_min) / (self._volume_max - self._volume_min)
 
     @property
     def is_volume_muted(self):
@@ -211,9 +192,9 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        mac = self.coordinator.data.get("network_status").get("mac_address")
-        return f"{mac}_{self._zone_id}"
+        """Return the unique ID for this media_player."""
+        macs = self.coordinator.data.mac_addresses
+        return f"{macs}_{self._zone_id}"
 
     def turn_on(self):
         """Turn the media player on."""
@@ -232,9 +213,8 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
     async def async_set_volume_level(self, volume):
         """Set the volume level, range 0..1."""
-        self._volume_level = volume
-
         vol = self._volume_min + (self._volume_max - self._volume_min) * volume
+
         await self.coordinator.api.request(
             Zone.set_volume(self._zone_id, round(vol), 1)
         )

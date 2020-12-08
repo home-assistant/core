@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from pyamaha import AsyncDevice, System, Zone
 import voluptuous as vol
-
+import json
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["media_player"]
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -86,7 +86,29 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await async_setup_entry(hass, entry)
 
 
-class MusicCastDataUpdateCoordinator(DataUpdateCoordinator):
+class MusicCastData:
+    def __init__(self):
+        # device info
+        self.model_name = None
+        self.system_version = None
+
+        # network status
+        self.mac_addresses = None
+        self.network_name = None
+
+        # features
+        self.zones: Dict[str, MusicCastZoneData] = {}
+
+
+class MusicCastZoneData:
+    def __init__(self):
+        self.power = None
+        self.min_volume = 0
+        self.max_volume = 100
+        self.current_volume = 0
+
+
+class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
     """Class to manage fetching data from the API."""
 
     def __init__(self, hass: HomeAssistant, client: AsyncDevice) -> None:
@@ -100,9 +122,11 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator):
         self._device_info = None
         self._features = None
 
+        self._data: MusicCastData = MusicCastData()
+
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> MusicCastData:
         """Update data via library."""
         try:
 
@@ -111,10 +135,16 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator):
                     await self.api.request(System.get_network_status())
                 ).json()
 
+                self._data.network_name = self._network_status.get("network_name")
+                self._data.mac_addresses = self._network_status.get("mac_address")
+
             if not self._device_info:
                 self._device_info = await (
                     await self.api.request(System.get_device_info())
                 ).json()
+
+                self._data.model_name = self._device_info.get("model_name")
+                self._data.system_version = self._device_info.get("system_version")
 
             if not self._features:
                 self._features = await (
@@ -125,17 +155,42 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator):
                     zone.get("id") for zone in self._features.get("zone", [])
                 ]
 
+                for zone in self._features.get("zone", []):
+                    zone_id = zone.get("id")
+
+                    zone_data: MusicCastZoneData = self._data.zones.get(
+                        zone_id, MusicCastZoneData()
+                    )
+
+                    range_volume = next(
+                        item
+                        for item in zone.get("range_step")
+                        if item["id"] == "volume"
+                    )
+
+                    zone_data.min_volume = range_volume.get("min")
+                    zone_data.max_volume = range_volume.get("max")
+
+                    self._data.zones[zone_id] = zone_data
+
             zones = {
                 zone: await (await self.api.request(Zone.get_status(zone))).json()
                 for zone in self._zone_ids
             }
 
-            return {
-                "network_status": self._network_status,
-                "device_info": self._device_info,
-                "features": self._features,
-                "zones": zones,
-            }
+            for zone_id in zones:
+                zone = zones[zone_id]
+                zone_data: MusicCastZoneData = self._data.zones.get(
+                    zone_id, MusicCastZoneData()
+                )
+
+                zone_data.power = zone.get("power")
+                zone_data.current_volume = zone.get("volume")
+
+                self._data.zones[zone_id] = zone_data
+
+            return self._data
+
         except Exception as exception:
             raise UpdateFailed() from exception
 
@@ -186,19 +241,11 @@ class MusicCastDeviceEntity(MusicCastEntity):
             ATTR_IDENTIFIERS: {
                 (
                     DOMAIN,
-                    "".join(
-                        self.coordinator.data.get("network_status")
-                        .get("mac_address")
-                        .values()
-                    ),
+                    "".join(self.coordinator.data.mac_addresses.values()),
                 )
             },
-            ATTR_NAME: self.coordinator.data.get("network_status").get(
-                "network_name", "Unknown"
-            ),
+            ATTR_NAME: self.coordinator.data.network_name,
             ATTR_MANUFACTURER: BRAND,
-            ATTR_MODEL: self.coordinator.data.get("device_info").get("model_name"),
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.get("device_info").get(
-                "system_version"
-            ),
+            ATTR_MODEL: self.coordinator.data.model_name,
+            ATTR_SOFTWARE_VERSION: self.coordinator.data.system_version,
         }
