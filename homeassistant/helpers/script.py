@@ -26,6 +26,7 @@ import homeassistant.components.device_automation as device_automation
 from homeassistant.components.logger import LOGSEVERITY
 import homeassistant.components.scene as scene
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
@@ -44,6 +45,7 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
+    CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNTIL,
     CONF_VARIABLES,
@@ -755,6 +757,23 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[Dict[str, Any], MappingProxyType]
 
 
+def _referenced_extract_ids(data: Dict, key: str, found: Set[str]) -> None:
+    """Extract referenced IDs."""
+    if not data:
+        return
+
+    item_ids = data.get(key)
+
+    if item_ids is None or isinstance(item_ids, template.Template):
+        return
+
+    if isinstance(item_ids, str):
+        item_ids = [item_ids]
+
+    for item_id in item_ids:
+        found.add(item_id)
+
+
 class Script:
     """Representation of a script."""
 
@@ -889,7 +908,12 @@ class Script:
         for step in self.sequence:
             action = cv.determine_script_action(step)
 
-            if action == cv.SCRIPT_ACTION_CHECK_CONDITION:
+            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                _referenced_extract_ids(
+                    step.get(CONF_TARGET), ATTR_DEVICE_ID, referenced
+                )
+
+            elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_devices(step)
 
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
@@ -910,20 +934,8 @@ class Script:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
-                data = step.get(CONF_SERVICE_DATA)
-                if not data:
-                    continue
-
-                entity_ids = data.get(ATTR_ENTITY_ID)
-
-                if entity_ids is None or isinstance(entity_ids, template.Template):
-                    continue
-
-                if isinstance(entity_ids, str):
-                    entity_ids = [entity_ids]
-
-                for entity_id in entity_ids:
-                    referenced.add(entity_id)
+                for data in (step, step.get(CONF_TARGET), step.get(CONF_SERVICE_DATA)):
+                    _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_entities(step)
