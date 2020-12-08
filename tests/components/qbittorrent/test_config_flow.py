@@ -1,5 +1,6 @@
 """Test the Qbittorrent Flow."""
 
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
 from homeassistant import data_entry_flow
@@ -21,9 +22,9 @@ async def test_show_form(hass):
     assert result["step_id"] == SOURCE_USER
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_server(hass):
     """Test handle invalid credentials."""
-    mocked_client = _create_mocked_client(True)
+    mocked_client = _create_mocked_client(True, False)
     with patch(
         "homeassistant.components.qbittorrent.client.Client",
         return_value=mocked_client,
@@ -49,11 +50,40 @@ async def test_invalid_credentials(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-def _create_mocked_client(raise_exception=False):
+async def test_invalid_credentials(hass):
+    """Test handle invalid credentials."""
+    mocked_client = _create_mocked_client(False, True)
+    with patch(
+        "homeassistant.components.qbittorrent.client.Client",
+        return_value=mocked_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        _flow_next(hass, result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_URL: "http://testurl.org",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+
+def _create_mocked_client(raise_request_exception=False, raise_login_exception=False):
     mocked_client = MagicMock()
-    mocked_client.login.side_effect = (
-        RequestException("Mocked Exception") if raise_exception else None
-    )
+    if raise_request_exception:
+        mocked_client.login.side_effect = RequestException("Mocked Exception")
+    if raise_login_exception:
+        mocked_client.login.side_effect = LoginRequired()
     return mocked_client
 
 
