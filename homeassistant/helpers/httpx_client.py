@@ -32,13 +32,13 @@ def get_async_client(
     client: Optional[httpx.AsyncClient] = hass.data.get(key)
 
     if client is None:
-        client = hass.data[key] = _async_create_async_httpx_client(hass, verify_ssl)
+        client = hass.data[key] = create_async_httpx_client(hass, verify_ssl)
 
     return client
 
 
 @callback
-def _async_create_async_httpx_client(
+def create_async_httpx_client(
     hass: HomeAssistantType,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
