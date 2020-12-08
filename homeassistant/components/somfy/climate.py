@@ -140,7 +140,11 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
 
     @property
     def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
+        """Return the list of available hvac operation modes.
+
+        HEAT and COOL mode are exclusive. End user has to enable a mode manually within the Somfy application.
+        So only one mode can be displayed. Auto mode is a scheduler.
+        """
         hvac_state = HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
         return [HVAC_MODE_AUTO, hvac_state]
 
