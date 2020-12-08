@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady() from exc
 
     except TuyaAPIRateLimitException as exc:
-        _LOGGER.error("Tuya login ratelimited")
+        _LOGGER.error("Tuya login rate limited")
         raise ConfigEntryNotReady() from exc
 
     except TuyaAPIException as exc:
