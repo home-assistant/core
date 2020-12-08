@@ -7,7 +7,7 @@ sensor:
     sensors:
       daytodisplay:
         friendly_name: 'Data'
-        value_template: "{{ as_timestamp(states('sensor.date')) | timestamp_custom('%-d/%-m')  }}"
+        value_template: '{{ as_timestamp(now()) | timestamp_custom("%d/%m", True)  }}'
 binary_sensor:
   - platform: workday
     name: "Dzień pracujący"

@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "authorization_error": "Autoriseringsfeil. Sjekk legitimasjonsbeskrivelsen.",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
@@ -13,8 +11,8 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Sett opp en OVO Energy-forekomst for \u00e5 f\u00e5 tilgang til energibruken din.",
-                "title": "Legg til OVO Energikonto"
+                "description": "Sett opp en OVO Energy-forekomst for \u00e5 f\u00e5 tilgang til effektbruken din",
+                "title": "Legg til OVO Energy-konto"
             }
         }
     }

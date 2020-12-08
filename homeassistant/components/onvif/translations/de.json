@@ -7,9 +7,6 @@
             "no_mac": "Die eindeutige ID f\u00fcr das ONVIF-Ger\u00e4t konnte nicht konfiguriert werden.",
             "onvif_error": "Fehler beim Einrichten des ONVIF-Ger\u00e4ts. \u00dcberpr\u00fcfen Sie die Protokolle auf weitere Informationen."
         },
-        "error": {
-            "connection_failed": "Es konnte keine Verbindung zum ONVIF-Dienst mit den angegebenen Anmeldeinformationen hergestellt werden."
-        },
         "step": {
             "auth": {
                 "data": {

@@ -1,6 +1,7 @@
 """Constants for AccuWeather integration."""
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    CONCENTRATION_PARTS_PER_CUBIC_METER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -13,7 +14,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
     UV_INDEX,
-    VOLUME_CUBIC_METERS,
 )
 
 ATTRIBUTION = "Data provided by AccuWeather"
@@ -22,7 +22,6 @@ ATTR_FORECAST = CONF_FORECAST = "forecast"
 ATTR_LABEL = "label"
 ATTR_UNIT_IMPERIAL = "Imperial"
 ATTR_UNIT_METRIC = "Metric"
-CONCENTRATION_PARTS_PER_CUBIC_METER = f"p/{VOLUME_CUBIC_METERS}"
 COORDINATOR = "coordinator"
 DOMAIN = "accuweather"
 MANUFACTURER = "AccuWeather, Inc."

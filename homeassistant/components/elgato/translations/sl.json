@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta naprava Elgato Key Light je \u017ee nastavljena.",
-            "connection_error": "Povezava z napravo Elgato Key Light ni uspela."
-        },
-        "error": {
-            "connection_error": "Povezava z napravo Elgato Key Light ni uspela."
+            "already_configured": "Ta naprava Elgato Key Light je \u017ee nastavljena."
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {

@@ -50,6 +50,7 @@ async def test_form(hass):
                 CONF_MANUAL_RUN_MINS: 5,
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "myusername"
@@ -58,7 +59,6 @@ async def test_form(hass):
         CONF_CUSTOM_URL: "http://custom.url",
         CONF_MANUAL_RUN_MINS: 5,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -4,7 +4,6 @@
             "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "auth": "La chiave API non \u00e8 corretta.",
             "invalid_api_key": "Chiave API non valida",
             "wrong_location": "Nessuna stazione di misurazione Airly in quest'area."
         },

@@ -7,7 +7,6 @@
             "unknown": "Error inesperat"
         },
         "error": {
-            "auth_error": "Error d'autenticaci\u00f3, torna-ho a provar",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {

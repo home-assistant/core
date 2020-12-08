@@ -89,8 +89,8 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
             **connection,
             CONF_PROTOCOL: protocol,
         }
+        await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

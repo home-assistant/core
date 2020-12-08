@@ -4,8 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "BSB-Lan seadmega \u00fchenduse loomine nurjus."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
@@ -19,6 +18,5 @@
                 "title": "\u00dchendu BSB-Lan seadmega"
             }
         }
-    },
-    "title": ""
+    }
 }

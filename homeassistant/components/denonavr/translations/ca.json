@@ -4,7 +4,6 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "No s'ha pogut connectar, torna-ho a provar. Pot ser \u00fatil desconnectar i tornar a connectar els cables d'Ethernet i d'alimentaci\u00f3",
-            "connection_error": "No s'ha pogut connectar, torna-ho a provar. \u00c9s possible que s'arregli si desconnectes i tornes a connectar els cables d'Ethernet i d'alimentaci\u00f3.",
             "not_denonavr_manufacturer": "No \u00e9s un receptor de xarxa Denon AVR, no coincideix el fabricant descobert",
             "not_denonavr_missing": "No \u00e9s un receptor de xarxa Denon AVR, informaci\u00f3 de descobriment no completa"
         },

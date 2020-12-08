@@ -9,6 +9,7 @@ from homeassistant.util.dt import utcnow
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 def create_rfx_test_cfg(device="abcd", automatic_add=False, devices=None):

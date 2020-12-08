@@ -7,9 +7,6 @@
             "no_mac": "No se pudo configurar una identificaci\u00f3n \u00fanica para el dispositivo ONVIF.",
             "onvif_error": "Error al configurar el dispositivo ONVIF. Consulte los registros para obtener m\u00e1s informaci\u00f3n."
         },
-        "error": {
-            "connection_failed": "No se pudo conectar al servicio ONVIF con las credenciales proporcionadas."
-        },
         "step": {
             "auth": {
                 "data": {

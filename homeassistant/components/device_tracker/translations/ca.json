@@ -3,6 +3,10 @@
         "condition_type": {
             "is_home": "{entity_name} \u00e9s a casa",
             "is_not_home": "{entity_name} no \u00e9s a casa"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} entri a una zona",
+            "leaves": "{entity_name} surti d'una zona"
         }
     },
     "state": {

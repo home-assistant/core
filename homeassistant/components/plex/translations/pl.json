@@ -25,7 +25,7 @@
                     "token": "Token dost\u0119pu (opcjonalnie)",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
-                "title": "Manualna konfiguracja Plex"
+                "title": "R\u0119czna konfiguracja Plex"
             },
             "select_server": {
                 "data": {

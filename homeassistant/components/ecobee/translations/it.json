@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Questa integrazione supporta attualmente una sola istanza ecobee.",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {

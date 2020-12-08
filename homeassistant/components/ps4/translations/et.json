@@ -2,25 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "no_devices_found": "V\u00f5rgust ei leitud seadmeid"
+            "credential_error": "Viga volituste hankimisel.",
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
+            "port_987_bind_error": "Ei saa siduda pordiga 987. Lisateavet leiad aadressilt [documentation](https://www.home-assistant.io/components/ps4/).",
+            "port_997_bind_error": "Ei saa siduda pordiga 997. Lisateavet leiad aadressilt [documentation](https://www.home-assistant.io/components/ps4/)."
         },
         "error": {
             "cannot_connect": "\u00dchendus nurjus",
+            "credential_timeout": "Mandaaditeenus aegus. Taask\u00e4ivitamiseks vajuta nuppu Esita.",
             "login_failed": "PlayStation 4-ga sidumine nurjus. Veendu, et PIN kood on \u00f5ige.",
             "no_ipaddress": "Sisesta Playstation, 4 mida soovid seadistada, IP-aadress."
         },
         "step": {
+            "creds": {
+                "description": "Vaja on volitusi. Vajuta nuppu Esita ja seej\u00e4rel v\u00e4rskenda PS4 2nd Screen rakenduses seadmeid ning vali j\u00e4tkamiseks seade \u201eHome-Assistant\u201d.",
+                "title": ""
+            },
             "link": {
                 "data": {
                     "code": "PIN kood",
                     "ip_address": "IP aadress",
-                    "name": "Nimi"
+                    "name": "Nimi",
+                    "region": "Piirkond"
                 },
-                "description": "Sisesta oma PlayStation 4 teave. PIN koodi saamiseks mine PlayStation 4 konsooli  \u201eSeaded\u201d. Seej\u00e4rel liigu jaotisse \u201eMobiilirakenduse \u00fchenduse seaded\u201d ja vali \u201eLisa seade\u201d. SisestaPIN kood . Lisateavet leiad [dokumentatsioonist] (https://www.home-assistant.io/components/ps4/)."
+                "description": "Sisesta oma PlayStation 4 teave. PIN koodi saamiseks mine PlayStation 4 konsooli  \u201eSeaded\u201d. Seej\u00e4rel liigu jaotisse \u201eMobiilirakenduse \u00fchenduse seaded\u201d ja vali \u201eLisa seade\u201d. SisestaPIN kood . Lisateavet leiad [dokumentatsioonist] (https://www.home-assistant.io/components/ps4/).",
+                "title": ""
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP-aadress (J\u00e4tke t\u00fchjaks, kui kasutate automaatset tuvastamist)"
+                    "ip_address": "IP-aadress (J\u00e4tke t\u00fchjaks, kui kasutate automaatset tuvastamist)",
+                    "mode": "Seadistuste re\u017eiim"
                 },
                 "description": "Valikonfigureerimise re\u017eiim. V\u00e4lja IP-aadress saab automaatse tuvastamise valimisel t\u00fchjaks j\u00e4tta, kuna seadmed avastatakse automaatselt.",
                 "title": ""

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ja hi ha una connexi\u00f3 amb un m\u00f2dem Insteon configurada",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
@@ -10,24 +9,6 @@
             "select_single": "Selecciona una opci\u00f3."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Adre\u00e7a IP del Hub",
-                    "port": "Port IP"
-                },
-                "description": "Configura l'Insteon Hub versi\u00f3 1 (anterior a 2014).",
-                "title": "Insteon Hub versi\u00f3 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Adre\u00e7a IP del Hub",
-                    "password": "Contrasenya",
-                    "port": "Port IP",
-                    "username": "Nom d'usuari"
-                },
-                "description": "Configura l'Insteon Hub versi\u00f3 2.",
-                "title": "Insteon Hub versi\u00f3 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "Adre\u00e7a IP",
@@ -46,15 +27,6 @@
                 "description": "Configura l'Insteon Hub versi\u00f3 2.",
                 "title": "Insteon Hub versi\u00f3 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub versi\u00f3 1 (anterior a 2014)",
-                    "hubv2": "Hub versi\u00f3 2",
-                    "plm": "M\u00f2dem PowerLink (PLM)"
-                },
-                "description": "Selecciona el tipus de m\u00f2dem Insteon.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "Ruta del port USB del dispositiu"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Ja hi ha una connexi\u00f3 amb un m\u00f2dem Insteon configurada",
-            "cannot_connect": "No es pot connectar amb el m\u00f2dem Insteon"
-        },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "input_error": "Entrades inv\u00e0lides, revisa els valors.",

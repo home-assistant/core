@@ -10,9 +10,7 @@
             "default": "Autenticado correctamente con Withings."
         },
         "error": {
-            "already_configured": "La cuenta ya ha sido configurada",
-            "already_configured_account": "La cuenta ya ha sido configurada",
-            "profile_exists": "El perfil de usuario ya est\u00e1 configurado. Por favor, proporciona un nombre de perfil \u00fanico."
+            "already_configured": "La cuenta ya ha sido configurada"
         },
         "flow_title": "Withings: {profile}",
         "step": {

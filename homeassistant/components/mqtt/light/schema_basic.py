@@ -546,12 +546,21 @@ class MqttLight(
     @property
     def hs_color(self):
         """Return the hs color value."""
+        if self._white_value:
+            return None
         return self._hs
 
     @property
     def color_temp(self):
         """Return the color temperature in mired."""
-        return self._color_temp
+        supports_color = (
+            self._topic[CONF_RGB_COMMAND_TOPIC]
+            or self._topic[CONF_HS_COMMAND_TOPIC]
+            or self._topic[CONF_XY_COMMAND_TOPIC]
+        )
+        if self._white_value or not supports_color:
+            return self._color_temp
+        return None
 
     @property
     def min_mireds(self):
@@ -569,7 +578,8 @@ class MqttLight(
         white_value = self._white_value
         if white_value:
             white_value = min(round(white_value), 255)
-        return white_value
+            return white_value
+        return None
 
     @property
     def should_poll(self):

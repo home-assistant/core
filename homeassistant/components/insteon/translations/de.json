@@ -1,12 +1,12 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
-            "hub2": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername"
-                }
-            },
             "hubv1": {
                 "data": {
                     "host": "IP-Adresse",
@@ -21,9 +21,6 @@
                     "username": "Benutzername"
                 }
             },
-            "init": {
-                "title": "Insteon"
-            },
             "plm": {
                 "title": "Insteon PLM"
             },
@@ -34,6 +31,7 @@
     },
     "options": {
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "select_single": "W\u00e4hle eine Option aus."
         },
         "step": {

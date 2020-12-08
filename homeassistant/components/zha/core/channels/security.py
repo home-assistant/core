@@ -155,6 +155,15 @@ class IASZoneChannel(ZigbeeChannel):
                 self._cluster.ep_attribute,
                 str(ex),
             )
+
+        try:
+            self.debug("Sending pro-active IAS enroll response")
+            await self._cluster.enroll_response(0, 0)
+        except ZigbeeException as ex:
+            self.debug(
+                "Failed to send pro-active IAS enroll response: %s",
+                str(ex),
+            )
         self.debug("finished IASZoneChannel configuration")
 
     @callback

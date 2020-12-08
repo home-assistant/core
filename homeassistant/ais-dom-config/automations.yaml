@@ -228,17 +228,6 @@
   action:
     - service: ais_shell_command.flush_logs
 
-- id: '20181205122942123'
-  alias: 'AIS Execute process command web hook'
-  initial_state: True
-  trigger:
-     platform: webhook
-     webhook_id: aisdomprocesscommandfromframe
-  action:
-    - service: ais_ai_service.process_command_from_frame
-      data_template:
-        web_hook_json: '{{ trigger.json }}'
-
 - id: '201902030742123'
   alias: 'AIS Change remote web access'
   initial_state: True
@@ -259,6 +248,10 @@
       data:
         payload: 1
         topic: dom/cmnd/SetOption19
+    - service: mqtt.publish
+      data:
+        payload: 1
+        topic: cmnd/dom/SetOption19
 
 - id: '201905201824123'
   alias: 'AIS Check WiFi Connection'

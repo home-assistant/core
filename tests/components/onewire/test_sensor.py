@@ -7,7 +7,7 @@ from tests.common import assert_setup_component
 
 
 async def test_setup_minimum(hass):
-    """Test setup with minimum configuration."""
+    """Test old platform setup with minimum configuration."""
     config = {"sensor": {"platform": "onewire"}}
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
@@ -15,7 +15,7 @@ async def test_setup_minimum(hass):
 
 
 async def test_setup_sysbus(hass):
-    """Test setup with SysBus configuration."""
+    """Test old platform setup with SysBus configuration."""
     config = {
         "sensor": {
             "platform": "onewire",
@@ -28,7 +28,7 @@ async def test_setup_sysbus(hass):
 
 
 async def test_setup_owserver(hass):
-    """Test setup with OWServer configuration."""
+    """Test old platform setup with OWServer configuration."""
     config = {"sensor": {"platform": "onewire", "host": "localhost"}}
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
@@ -36,7 +36,7 @@ async def test_setup_owserver(hass):
 
 
 async def test_setup_owserver_with_port(hass):
-    """Test setup with OWServer configuration."""
+    """Test old platform setup with OWServer configuration."""
     config = {"sensor": {"platform": "onewire", "host": "localhost", "port": "1234"}}
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, sensor.DOMAIN, config)

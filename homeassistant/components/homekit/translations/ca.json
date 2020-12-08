@@ -35,13 +35,6 @@
                 "description": "Comprova les c\u00e0meres que suporten fluxos nadius H.264. Si alguna c\u00e0mera not proporciona una sortida H.264, el sistema transcodificar\u00e0 el v\u00eddeo a H.264 per a HomeKit. La transcodificaci\u00f3 necessita una CPU potent i probablement no funcioni en ordinadors petits (SBC).",
                 "title": "Selecci\u00f3 del c\u00f2dec de v\u00eddeo de c\u00e0mera"
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Entitats a excloure"
-                },
-                "description": "Selecciona les entitats que NO vulguis que siguin enlla\u00e7ades.",
-                "title": "Exclusi\u00f3 d'entitats de l'enlla\u00e7 en dominis seleccionats"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Entitats",
@@ -63,6 +56,5 @@
                 "title": "Ajusta les opcions de HomeKit"
             }
         }
-    },
-    "title": "Enlla\u00e7 HomeKit"
+    }
 }

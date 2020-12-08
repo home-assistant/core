@@ -6,9 +6,11 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-mkdir -p config
+mkdir -p /data/data/pl.sviete.dom/files/home/AIS
+mkdir -p /data/data/pl.sviete.dom/files/home/dom
+mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
 
-python3 -m venv venv
+python3.9 -m venv venv
 source venv/bin/activate
 
 script/bootstrap
@@ -16,11 +18,9 @@ script/bootstrap
 pre-commit install
 python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
 
-hass --script ensure_config -c config
+hass --script ensure_config -c /data/data/pl.sviete.dom/files/home/AIS
 
 echo "
 logger:
   default: info
-  logs:
-    homeassistant.components.cloud: debug
-" >> config/configuration.yaml
+" >> /data/data/pl.sviete.dom/files/home/AIS/configuration.yaml

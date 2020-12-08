@@ -3,11 +3,9 @@
         "abort": {
             "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
-            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed",
-            "not_found": "V s\u00edti nebyl nalezen \u017e\u00e1dn\u00fd podporovan\u00fd AVM FRITZ!Box."
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
         },
         "error": {
-            "auth_failed": "U\u017eivatelsk\u00e9 jm\u00e9no nebo heslo je nespr\u00e1vn\u00e9.",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "flow_title": "AVM FRITZ!Box: {name}",

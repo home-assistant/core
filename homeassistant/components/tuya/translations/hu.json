@@ -1,12 +1,7 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
-            "conn_error": "Sikertelen csatlakoz\u00e1s",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
-        },
-        "error": {
-            "auth_failed": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
             "user": {

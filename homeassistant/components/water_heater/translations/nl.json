@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Schakel {entity_name} uit",
+            "turn_on": "Schakel {entity_name} in"
+        }
+    }
+}

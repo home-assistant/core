@@ -16,7 +16,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
-                "description": "Hvis du trenger hjelp med konfigurasjonen, kan du se her: https://www.home-assistant.io/integrations/accuweather/ \n\n Noen sensorer er ikke aktivert som standard. Du kan aktivere dem i enhetsregisteret etter integrasjonskonfigurasjonen. \n V\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integrasjonsalternativene.",
+                "description": "Hvis du trenger hjelp med konfigurasjonen, kan du se her: https://www.home-assistant.io/integrations/accuweather/ \n\nNoen sensorer er ikke aktivert som standard. Du kan aktivere dem i entitetsregisteret etter integrasjonskonfigurasjonen. \nV\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integrasjonsalternativene.",
                 "title": ""
             }
         }

@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     "orderBy": "startTime",
-    "maxResults": 5,
+    "maxResults": 100,
     "singleEvents": True,
 }
 
@@ -156,7 +156,7 @@ class GoogleCalendarData:
         items = result.get("items", [])
         event_list = []
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     event_list.append(item)
             else:
@@ -178,7 +178,7 @@ class GoogleCalendarData:
 
         new_event = None
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     new_event = item
                     break

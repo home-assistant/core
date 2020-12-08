@@ -33,6 +33,8 @@ DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 
+CLOCK_OUT_OF_SYNC_MAX_SEC = 20
+
 
 class AbstractOAuth2Implementation(ABC):
     """Base class to abstract OAuth2 authentication."""
@@ -231,7 +233,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "implementation", default=list(implementations.keys())[0]
+                        "implementation", default=list(implementations)[0]
                     ): vol.In({key: impl.name for key, impl in implementations.items()})
                 }
             ),
@@ -435,7 +437,10 @@ class OAuth2Session:
     @property
     def valid_token(self) -> bool:
         """Return if token is still valid."""
-        return cast(float, self.token["expires_at"]) > time.time()
+        return (
+            cast(float, self.token["expires_at"])
+            > time.time() + CLOCK_OUT_OF_SYNC_MAX_SEC
+        )
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""

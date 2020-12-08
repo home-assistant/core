@@ -4,7 +4,7 @@ import logging
 
 from httpcore import ConnectError, ConnectTimeout
 from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import WolfClient
+from wolf_smartset.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -55,6 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except ConnectError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
+            ) from exception
+        except FetchFailed as exception:
+            raise UpdateFailed(
+                f"Could not fetch values from server due to: {exception}"
             ) from exception
         except InvalidAuth as exception:
             raise UpdateFailed("Invalid authentication during update.") from exception

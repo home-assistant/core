@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hostitel",
-                    "ip_address": "IP adresa"
+                    "host": "Hostitel"
                 },
                 "description": "Pokud z\u016fstane hostitel pr\u00e1zdn\u00fd, k vyhled\u00e1n\u00ed za\u0159\u00edzen\u00ed se pou\u017eije zji\u0161\u0165ov\u00e1n\u00ed."
             }
@@ -29,9 +28,9 @@
                     "model": "Model (voliteln\u00fd)",
                     "save_on_change": "Ulo\u017eit stav p\u0159i zm\u011bn\u011b",
                     "transition": "\u010cas p\u0159echodu (v ms)"
-                }
+                },
+                "description": "Pokud ponech\u00e1te model pr\u00e1zdn\u00fd, bude automaticky rozpozn\u00e1n."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

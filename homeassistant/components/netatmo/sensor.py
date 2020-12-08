@@ -15,6 +15,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_MBAR,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -91,9 +92,21 @@ SENSOR_TYPES = {
     ],
     "reachable": ["Reachability", None, "mdi:signal", None, False],
     "rf_status": ["Radio", None, "mdi:signal", None, False],
-    "rf_status_lvl": ["Radio Level", "", None, DEVICE_CLASS_SIGNAL_STRENGTH, False],
+    "rf_status_lvl": [
+        "Radio Level",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        False,
+    ],
     "wifi_status": ["Wifi", None, "mdi:wifi", None, False],
-    "wifi_status_lvl": ["Wifi Level", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH, False],
+    "wifi_status_lvl": [
+        "Wifi Level",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        False,
+    ],
     "health_idx": ["Health", None, "mdi:cloud", None, True],
 }
 

@@ -1,9 +1,11 @@
 """Allow to set up simple automation rules via the config file."""
 import logging
-from typing import Any, Awaitable, Callable, List, Optional, Set, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
+from homeassistant.components import blueprint
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -47,6 +49,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -58,7 +61,7 @@ from homeassistant.util.dt import parse_datetime
 DOMAIN = "automation"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-GROUP_NAME_ALL_AUTOMATIONS = "all automations"
+DATA_BLUEPRINTS = "automation_blueprints"
 
 CONF_DESCRIPTION = "description"
 CONF_HIDE_ENTITY = "hide_entity"
@@ -70,13 +73,9 @@ CONF_CONDITION_TYPE = "condition_type"
 CONF_INITIAL_STATE = "initial_state"
 CONF_SKIP_CONDITION = "skip_condition"
 CONF_STOP_ACTIONS = "stop_actions"
+CONF_BLUEPRINT = "blueprint"
+CONF_INPUT = "input"
 
-CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
-CONDITION_TYPE_AND = "and"
-CONDITION_TYPE_NOT = "not"
-CONDITION_TYPE_OR = "or"
-
-DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
 DEFAULT_STOP_ACTIONS = True
 
@@ -112,6 +111,13 @@ PLATFORM_SCHEMA = vol.All(
         SCRIPT_MODE_SINGLE,
     ),
 )
+
+
+@singleton(DATA_BLUEPRINTS)
+@callback
+def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:  # type: ignore
+    """Get automation blueprints."""
+    return blueprint.DomainBlueprints(hass, DOMAIN, _LOGGER)  # type: ignore
 
 
 @bind_hass
@@ -221,6 +227,7 @@ async def async_setup(hass, config):
         conf = await component.async_prepare_reload()
         if conf is None:
             return
+        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
@@ -506,7 +513,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         return {CONF_ID: self._id}
 
 
-async def _async_process_config(hass, config, component):
+async def _async_process_config(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    component: EntityComponent,
+) -> None:
     """Process config and add automations.
 
     This method is a coroutine.
@@ -514,9 +525,28 @@ async def _async_process_config(hass, config, component):
     entities = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf = config[config_key]
+        conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[  # type: ignore
+            config_key
+        ]
 
         for list_no, config_block in enumerate(conf):
+            if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+                blueprint_inputs = config_block
+
+                try:
+                    config_block = cast(
+                        Dict[str, Any],
+                        PLATFORM_SCHEMA(blueprint_inputs.async_substitute()),
+                    )
+                except vol.Invalid as err:
+                    _LOGGER.error(
+                        "Blueprint %s generated invalid automation with inputs %s: %s",
+                        blueprint_inputs.blueprint.name,
+                        blueprint_inputs.inputs,
+                        humanize_error(config_block, err),
+                    )
+                    continue
+
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 

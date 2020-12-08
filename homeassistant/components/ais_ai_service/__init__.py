@@ -3238,11 +3238,7 @@ def _publish_wifi_status(hass, service):
 
 
 def _process_command_from_frame(hass, service):
-    # process from frame
-    if "web_hook_json" in service.data:
-        import ast
-
-        service.data = ast.literal_eval(service.data["web_hook_json"])
+    # process the message from frame
     if "topic" not in service.data:
         return
 

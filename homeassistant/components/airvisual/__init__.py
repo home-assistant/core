@@ -10,9 +10,8 @@ from pyairvisual.errors import (
     KeyExpiredError,
     NodeProError,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -45,36 +44,12 @@ from .const import (
 
 PLATFORMS = ["air_quality", "sensor"]
 
+DATA_LISTENER = "listener"
+
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
-DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
 
-GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
-    }
-)
-
-GEOGRAPHY_PLACE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CITY): cv.string,
-        vol.Required(CONF_STATE): cv.string,
-        vol.Required(CONF_COUNTRY): cv.string,
-    }
-)
-
-CLOUD_API_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_GEOGRAPHIES, default=[]): vol.All(
-            cv.ensure_list,
-            [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA)],
-        ),
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
 
 
 @callback
@@ -151,25 +126,7 @@ def async_sync_geo_coordinator_update_intervals(hass, api_key):
 
 async def async_setup(hass, config):
     """Set up the AirVisual component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    for geography in conf.get(
-        CONF_GEOGRAPHIES,
-        [{CONF_LATITUDE: hass.config.latitude, CONF_LONGITUDE: hass.config.longitude}],
-    ):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_API_KEY: conf[CONF_API_KEY], **geography},
-            )
-        )
-
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_LISTENER: {}}
     return True
 
 
@@ -281,7 +238,9 @@ async def async_setup_entry(hass, config_entry):
         )
 
         # Only geography-based entries have options:
-        config_entry.add_update_listener(async_reload_entry)
+        hass.data[DOMAIN][DATA_LISTENER][
+            config_entry.entry_id
+        ] = config_entry.add_update_listener(async_reload_entry)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
 
@@ -343,7 +302,7 @@ async def async_migrate_entry(hass, config_entry):
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_IMPORT},
+                    context={"source": "geography"},
                     data={CONF_API_KEY: config_entry.data[CONF_API_KEY], **geography},
                 )
             )
@@ -365,9 +324,12 @@ async def async_unload_entry(hass, config_entry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
+        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
+        remove_listener()
+
         if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
-            # Re-calculate the update interval period for any remaining consumes of this
-            # API key:
+            # Re-calculate the update interval period for any remaining consumers of
+            # this API key:
             async_sync_geo_coordinator_update_intervals(
                 hass, config_entry.data[CONF_API_KEY]
             )

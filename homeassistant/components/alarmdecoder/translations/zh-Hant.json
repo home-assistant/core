@@ -7,8 +7,7 @@
             "default": "\u6210\u529f\u9023\u7dda\u81f3 AlarmDecoder\u3002"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "service_unavailable": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "protocol": {

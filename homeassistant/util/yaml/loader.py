@@ -4,14 +4,14 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import Dict, Iterator, List, TypeVar, Union, overload
+from typing import Dict, Iterator, List, TextIO, TypeVar, Union, overload
 
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass
+from .objects import NodeListClass, NodeStrClass, Placeholder
 
 try:
     import keyring
@@ -56,14 +56,20 @@ def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
-    except yaml.YAMLError as exc:
-        _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc) from exc
+            return parse_yaml(conf_file)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
+        raise HomeAssistantError(exc) from exc
+
+
+def parse_yaml(content: Union[str, TextIO]) -> JSON_TYPE:
+    """Load a YAML file."""
+    try:
+        # If configuration file is empty YAML returns None
+        # We convert that to an empty dict
+        return yaml.load(content, Loader=SafeLineLoader) or OrderedDict()
+    except yaml.YAMLError as exc:
+        _LOGGER.error(str(exc))
         raise HomeAssistantError(exc) from exc
 
 
@@ -325,3 +331,4 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
+yaml.SafeLoader.add_constructor("!placeholder", Placeholder.from_node)

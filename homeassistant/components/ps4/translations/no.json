@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "credential_error": "Feil ved henting av legitimasjon.",
-            "devices_configured": "Alle enheter som ble funnet er allerede konfigurert.",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
             "port_987_bind_error": "Kunne ikke binde til port 987. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for mer info.",
             "port_997_bind_error": "Kunne ikke binde til port 997. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for videre informasjon."
@@ -12,8 +11,7 @@
             "cannot_connect": "Tilkobling mislyktes",
             "credential_timeout": "Legitimasjonstjenesten ble tidsavbrutt. Trykk send for \u00e5 starte p\u00e5 nytt.",
             "login_failed": "Kunne ikke koble til PlayStation 4. Bekreft at PIN-kode er riktig.",
-            "no_ipaddress": "Skriv inn IP adresse til PlayStation 4 du vil konfigurere.",
-            "not_ready": "PlayStation 4 er ikke p\u00e5sl\u00e5tt eller koblet til nettverk."
+            "no_ipaddress": "Skriv inn IP adresse til PlayStation 4 du vil konfigurere."
         },
         "step": {
             "creds": {

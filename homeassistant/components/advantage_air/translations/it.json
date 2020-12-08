@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "Configurazione di Advantage Air",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "Connetti"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

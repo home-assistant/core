@@ -9,9 +9,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (  # pylint:disable=unused-import
-    CONF_HOMECONTROL,
     CONF_MYDEVOLO,
-    DEFAULT_MPRM,
     DEFAULT_MYDEVOLO,
     DOMAIN,
 )
@@ -39,24 +37,18 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
-                vol.Required(CONF_HOMECONTROL, default=DEFAULT_MPRM): str,
             }
         if user_input is None:
             return self._show_form(user_input)
         user = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        try:
-            mydevolo = Mydevolo.get_instance()
-        except SyntaxError:
-            mydevolo = Mydevolo()
+        mydevolo = Mydevolo()
         mydevolo.user = user
         mydevolo.password = password
         if self.show_advanced_options:
             mydevolo.url = user_input[CONF_MYDEVOLO]
-            mprm = user_input[CONF_HOMECONTROL]
         else:
             mydevolo.url = DEFAULT_MYDEVOLO
-            mprm = DEFAULT_MPRM
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
@@ -73,7 +65,6 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: password,
                 CONF_USERNAME: user,
                 CONF_MYDEVOLO: mydevolo.url,
-                CONF_HOMECONTROL: mprm,
             },
         )
 

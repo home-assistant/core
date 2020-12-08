@@ -50,6 +50,8 @@ CUSTOM_WARNING = (
 )
 _UNDEF = object()
 
+MAX_LOAD_CONCURRENTLY = 4
+
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
     """Generate a manifest from a legacy module."""

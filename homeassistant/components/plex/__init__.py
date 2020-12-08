@@ -227,7 +227,7 @@ async def async_setup_entry(hass, entry):
     play_on_sonos_schema = vol.Schema(
         {
             vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+            vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
         }
     )

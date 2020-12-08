@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "En kontroller er allerede konfigurert.",
             "cannot_connect": "Kunne ikke koble til kontrolleren med url {base_url}"
         },
         "step": {

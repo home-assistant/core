@@ -92,6 +92,7 @@ HA_OPMODES_HVAC = {
     HVAC_MODE_FAN_ONLY: 6,
 }
 
+
 # Ais dom
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Fibaro controller devices."""

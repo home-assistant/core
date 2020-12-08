@@ -7,8 +7,7 @@
             "default": "S'ha connectat correctament amb AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "service_unavailable": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "protocol": {

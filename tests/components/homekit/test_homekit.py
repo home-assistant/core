@@ -747,7 +747,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver, caplog):
     ):
         await homekit.async_start()
         await hass.async_block_till_done()
-        assert "would exceeded" in caplog.text
+        assert "would exceed" in caplog.text
 
 
 async def test_homekit_finds_linked_batteries(

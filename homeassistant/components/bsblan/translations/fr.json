@@ -4,8 +4,7 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "cannot_connect": "\u00c9chec de connexion",
-            "connection_error": "Impossible de se connecter \u00e0 l'appareil BSB-Lan."
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
@@ -19,6 +18,5 @@
                 "title": "Connectez-vous \u00e0 l'appareil BSB-Lan"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

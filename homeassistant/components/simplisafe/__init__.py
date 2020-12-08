@@ -178,6 +178,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SimpliSafe as config entry."""
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
+
     entry_updates = {}
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -313,7 +315,9 @@ async def async_setup_entry(hass, config_entry):
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    config_entry.add_update_listener(async_reload_entry)
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id].append(
+        config_entry.add_update_listener(async_reload_entry)
+    )
 
     return True
 
@@ -330,8 +334,8 @@ async def async_unload_entry(hass, entry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        remove_listener()
+        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
+            remove_listener()
 
     return unload_ok
 
@@ -461,10 +465,10 @@ class SimpliSafe:
             """Define an event handler to disconnect from the websocket."""
             await self.websocket.async_disconnect()
 
-        self._hass.data[DOMAIN][DATA_LISTENER][
-            self.config_entry.entry_id
-        ] = self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+            )
         )
 
         self.systems = await self._api.get_systems()
@@ -530,8 +534,7 @@ class SimpliSafe:
                             )
                         )
 
-                    LOGGER.error("Update failed with stored refresh token")
-                    raise UpdateFailed from result
+                    raise UpdateFailed("Update failed with stored refresh token")
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
@@ -542,23 +545,18 @@ class SimpliSafe:
                     )
                     return
                 except SimplipyError as err:
-                    LOGGER.error("Error while using stored refresh token: %s", err)
-                    raise UpdateFailed from err
+                    raise UpdateFailed(  # pylint: disable=raise-missing-from
+                        f"Error while using stored refresh token: {err}"
+                    )
 
             if isinstance(result, EndpointUnavailable):
-                # In case the user attempt an action not allowed in their current plan,
+                # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
                 LOGGER.info(result)
-                raise UpdateFailed from result
 
             if isinstance(result, SimplipyError):
-                LOGGER.error("SimpliSafe error while updating: %s", result)
-                raise UpdateFailed from result
-
-            if isinstance(result, Exception):
-                LOGGER.error("Unknown error while updating: %s", result)
-                raise UpdateFailed from result
+                raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
         if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
             _async_save_refresh_token(

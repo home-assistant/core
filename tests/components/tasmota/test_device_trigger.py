@@ -142,6 +142,7 @@ async def test_discover_bad_triggers(
                 mac=None,
                 source=None,
                 subtype=None,
+                switchname=None,
                 trigger_topic=None,
                 type=None,
             )
@@ -245,6 +246,7 @@ async def test_if_fires_on_mqtt_message(
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 0
     config["swc"][2] = 9
+    config["swn"][2] = "custom_switch"
     mac = config["mac"]
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
@@ -289,13 +291,17 @@ async def test_if_fires_on_mqtt_message(
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH3T", '{"TRIG":"HOLD"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"custom_switch":{"Action":"HOLD"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
@@ -314,6 +320,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
     config2 = copy.deepcopy(DEFAULT_CONFIG)
     config2["swc"][0] = 0
     config2["swc"][3] = 9
+    config2["swn"][3] = "custom_switch"
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config1))
     await hass.async_block_till_done()
@@ -361,13 +368,17 @@ async def test_if_fires_on_mqtt_message_late_discover(
     await hass.async_block_till_done()
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH4T", '{"TRIG":"HOLD"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"custom_switch":{"Action":"HOLD"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "double_press"
@@ -414,7 +425,9 @@ async def test_if_fires_on_mqtt_message_after_update(
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -422,11 +435,15 @@ async def test_if_fires_on_mqtt_message_after_update(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config2))
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/status/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/status/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 2
 
@@ -434,11 +451,15 @@ async def test_if_fires_on_mqtt_message_after_update(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config2))
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 2
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/status/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/status/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 3
 
@@ -527,7 +548,9 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -536,7 +559,9 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -545,7 +570,9 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 2
 
@@ -590,7 +617,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -598,7 +627,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -637,7 +668,9 @@ async def test_attach_remove(hass, device_reg, mqtt_mock, setup_tasmota):
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0] == "event 'tasmota_event'"
@@ -647,7 +680,9 @@ async def test_attach_remove(hass, device_reg, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     # Verify the triggers are no longer active
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -688,7 +723,9 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock, setup_tasmota):
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 0
 
@@ -696,7 +733,9 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0] == "event 'tasmota_event'"
@@ -706,7 +745,9 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     # Verify the triggers are no longer active
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -754,7 +795,9 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     # Verify the triggers is not active
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 0
 
@@ -866,7 +909,9 @@ async def test_attach_remove_config_entry(hass, device_reg, mqtt_mock, setup_tas
     )
 
     # Fake short press.
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0] == "event 'tasmota_event'"
@@ -877,6 +922,8 @@ async def test_attach_remove_config_entry(hass, device_reg, mqtt_mock, setup_tas
     await hass.async_block_till_done()
 
     # Verify the triggers are no longer active
-    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1

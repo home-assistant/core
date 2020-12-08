@@ -107,9 +107,18 @@ async def async_handle_webhook(hass, webhook_id, request):
             # except ais/register_wear_os
             import homeassistant.components.ais_ai_service as ai
 
-            rj = await request.json()
-            if "ais_gate_client_id" in rj:
-                response = await ai.async_process_json_from_frame(hass, rj)
+            try:
+                rj = await request.json()
+                if "ais_gate_client_id" in rj:
+                    # new way with answer
+                    response = await ai.async_process_json_from_frame(hass, rj)
+                else:
+                    # TODO remove this old way
+                    await hass.services.async_call(
+                        "ais_ai_service", "process_command_from_frame", rj
+                    )
+            except Exception:
+                response = None
         if response is None and webhook is not None:
             response = await webhook["handler"](hass, webhook_id, request)
         if response is None:

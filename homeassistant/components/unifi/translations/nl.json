@@ -53,7 +53,8 @@
             "simple_options": {
                 "data": {
                     "block_client": "Cli\u00ebnten met netwerktoegang",
-                    "track_clients": "Volg netwerkclients"
+                    "track_clients": "Volg netwerkclients",
+                    "track_devices": "Volg netwerkapparaten (Ubiquiti-apparaten)"
                 },
                 "description": "Configureer UniFi-integratie"
             },

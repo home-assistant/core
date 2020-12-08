@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "address_already_configured": "En UPB PIM med denna adress \u00e4r redan konfigurerad."
-        },
         "error": {
             "cannot_connect": "Det gick inte att ansluta till UPB PIM, f\u00f6rs\u00f6k igen.",
             "invalid_upb_file": "Saknar eller ogiltig UPB UPStart-exportfil, kontrollera filens namn och s\u00f6kv\u00e4g.",

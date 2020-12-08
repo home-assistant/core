@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse",
             "not_supported": "Ger\u00e4t nicht unterst\u00fctzt"
+        },
+        "error": {
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse"
         },
         "step": {
             "auth": {

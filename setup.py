@@ -12,7 +12,7 @@ PROJECT_LICENSE = "Apache License 2.0"
 PROJECT_AUTHOR = "AI-Speaker team"
 PROJECT_COPYRIGHT = f" 2016-{dt.now().year}, {PROJECT_AUTHOR}"
 PROJECT_URL = "https://www.ai-speaker.com"
-PROJECT_EMAIL = "info@sviete.pl"
+PROJECT_EMAIL = "info@ai-speaker.com"
 
 PROJECT_GITHUB_USERNAME = "sviete"
 PROJECT_GITHUB_REPOSITORY = "AIS-home-assistant"
@@ -32,11 +32,11 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
-    "aiohttp==3.6.2",
+    "aiohttp==3.7.1",
     "astral==1.10.1",
     "async_timeout==3.0.1",
     "attrs==19.3.0",
-    # "bcrypt==3.1.7",
+    "bcrypt==3.1.7",
     "certifi>=2020.6.20",
     "ciso8601==2.1.3",
     "httpx==0.16.1",
@@ -49,11 +49,11 @@ REQUIRES = [
     "python-slugify==4.0.1",
     "pytz>=2020.1",
     "pyyaml==5.3.1",
-    "requests==2.24.0",
+    "requests==2.25.0",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.12.0",
     "voluptuous-serialize==2.4.0",
-    "ais-dom-frontend==20201022.3",
+    "ais-dom-frontend==20201111.7",
     "yarl==1.4.2",
 ]
 

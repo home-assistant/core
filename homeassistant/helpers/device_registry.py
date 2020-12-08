@@ -47,12 +47,12 @@ class DeletedDeviceEntry:
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
-    def to_device_entry(self):
+    def to_device_entry(self, config_entry_id, connections, identifiers):
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
+            config_entries={config_entry_id},
+            connections=self.connections & connections,
+            identifiers=self.identifiers & identifiers,
             id=self.id,
             is_new=True,
         )
@@ -236,7 +236,9 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
         if default_manufacturer is not _UNDEF and device.manufacturer is None:
@@ -338,7 +340,7 @@ class DeviceRegistry:
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
 
         for attr_name, value in (

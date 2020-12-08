@@ -71,10 +71,9 @@ class LcnOutputLight(LcnDevice, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = SUPPORT_TRANSITION
         if self.dimmable:
-            features |= SUPPORT_BRIGHTNESS
-        return features
+            return SUPPORT_TRANSITION | SUPPORT_BRIGHTNESS
+        return SUPPORT_TRANSITION
 
     @property
     def brightness(self):

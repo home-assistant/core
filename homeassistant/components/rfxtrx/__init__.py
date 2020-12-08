@@ -27,16 +27,15 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_HOURS,
     UV_INDEX,
     VOLT,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -70,7 +69,7 @@ DATA_TYPES = OrderedDict(
         ("Humidity", PERCENTAGE),
         ("Barometer", PRESSURE_HPA),
         ("Wind direction", DEGREE),
-        ("Rain rate", f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"),
+        ("Rain rate", PRECIPITATION_MILLIMETERS_PER_HOUR),
         ("Energy usage", POWER_WATT),
         ("Total usage", ENERGY_KILO_WATT_HOUR),
         ("Sound", None),
@@ -191,7 +190,14 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
 
-    await async_setup_internal(hass, entry)
+    try:
+        await async_setup_internal(hass, entry)
+    except asyncio.TimeoutError:
+        # Library currently doesn't support reload
+        _LOGGER.error(
+            "Connection timeout: failed to receive response from RFXtrx device"
+        )
+        return False
 
     for domain in DOMAINS:
         hass.async_create_task(
@@ -263,11 +269,8 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    try:
-        async with async_timeout.timeout(5):
-            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
+    async with async_timeout.timeout(30):
+        rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])

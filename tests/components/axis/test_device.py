@@ -29,6 +29,7 @@ from homeassistant.components.axis.const import (
     DOMAIN as AXIS_DOMAIN,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -36,6 +37,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_ON,
 )
 
 from tests.async_mock import AsyncMock, Mock, patch
@@ -229,7 +231,6 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
         data=deepcopy(config),
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
-        entry_id="1",
         version=2,
     )
     config_entry.add_to_hass(hass)
@@ -241,7 +242,7 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return hass.data[AXIS_DOMAIN].get(config_entry.unique_id)
+    return config_entry
 
 
 async def test_device_setup(hass):
@@ -250,7 +251,8 @@ async def test_device_setup(hass):
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
-        device = await setup_axis_integration(hass)
+        config_entry = await setup_axis_integration(hass)
+        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     assert device.api.vapix.firmware_version == "9.10.1"
     assert device.api.vapix.product_number == "M1065-LW"
@@ -277,7 +279,8 @@ async def test_device_info(hass):
     api_discovery["data"]["apiList"].append(API_DISCOVERY_BASIC_DEVICE_INFO)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        device = await setup_axis_integration(hass)
+        config_entry = await setup_axis_integration(hass)
+        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     assert device.api.vapix.firmware_version == "9.80.1"
     assert device.api.vapix.product_number == "M1065-LW"
@@ -303,14 +306,15 @@ async def test_device_support_mqtt(hass, mqtt_mock):
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
 
-    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
-    assert pir.state == "on"
+    pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
+    assert pir.state == STATE_ON
     assert pir.name == f"{NAME} PIR 0"
 
 
 async def test_update_address(hass):
     """Test update address works."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.api.config.host == "1.2.3.4"
 
     with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
@@ -325,7 +329,7 @@ async def test_update_address(hass):
                 "hostname": "name",
                 "properties": {"macaddress": MAC},
             },
-            context={"source": "zeroconf"},
+            context={"source": SOURCE_ZEROCONF},
         )
         await hass.async_block_till_done()
 
@@ -335,14 +339,16 @@ async def test_update_address(hass):
 
 async def test_device_unavailable(hass):
     """Successful setup."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     device.async_connection_status_callback(status=False)
     assert not device.available
 
 
 async def test_device_reset(hass):
     """Successfully reset device."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     result = await device.async_reset()
     assert result is True
 

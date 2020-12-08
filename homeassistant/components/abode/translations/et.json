@@ -5,10 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "\u00dchendus Abode-iga nurjus.",
-            "identifier_exists": "Konto on juba seadistatud",
-            "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat."
+            "invalid_auth": "Tuvastamise viga"
         },
         "step": {
             "user": {

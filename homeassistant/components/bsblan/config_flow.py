@@ -75,7 +75,5 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get device information from an BSBLan device."""
         session = async_get_clientsession(self.hass)
         _LOGGER.debug("request bsblan.info:")
-        bsblan = BSBLan(
-            host, passkey=passkey, port=port, session=session, loop=self.hass.loop
-        )
+        bsblan = BSBLan(host, passkey=passkey, port=port, session=session)
         return await bsblan.info()

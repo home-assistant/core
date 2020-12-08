@@ -946,3 +946,40 @@ async def test_self_referencing_icon_with_no_loop(hass, caplog):
     assert state.state == "extreme"
     assert state.attributes[ATTR_ICON] == "mdi:hazard-lights"
     assert "Template loop detected" not in caplog.text
+
+
+async def test_duplicate_templates(hass):
+    """Test template entity where the value and friendly name as the same template."""
+    hass.states.async_set("sensor.test_state", "Abc")
+
+    with assert_setup_component(1, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            sensor.DOMAIN,
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "{{ states.sensor.test_state.state }}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state.attributes["friendly_name"] == "Abc"
+    assert state.state == "Abc"
+
+    hass.states.async_set("sensor.test_state", "Def")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state.attributes["friendly_name"] == "Def"
+    assert state.state == "Def"

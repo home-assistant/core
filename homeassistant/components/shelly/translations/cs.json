@@ -5,7 +5,6 @@
             "unsupported_firmware": "Za\u0159\u00edzen\u00ed pou\u017e\u00edv\u00e1 nepodporovanou verzi firmwaru."
         },
         "error": {
-            "auth_not_supported": "Za\u0159\u00edzen\u00ed Shelly vy\u017eaduj\u00edc\u00ed autentizaci nejsou aktu\u00e1ln\u011b podporov\u00e1na.",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
@@ -28,6 +27,5 @@
                 "description": "P\u0159ed nastaven\u00edm mus\u00ed b\u00fdt za\u0159\u00edzen\u00ed nap\u00e1jen\u00e9 z baterie probuzeno stisknut\u00edm tla\u010d\u00edtka na dan\u00e9m za\u0159\u00edzen\u00ed."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

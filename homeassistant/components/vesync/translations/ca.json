@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s es permet una \u00fanica inst\u00e0ncia de VeSync",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_login": "Nom d'usuari o contrasenya incorrectes"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {

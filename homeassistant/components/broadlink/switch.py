@@ -121,6 +121,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif device.api.type == "SP2":
         switches = [BroadlinkSP2Switch(device)]
 
+    elif device.api.type in {"SP4", "SP4B"}:
+        switches = [BroadlinkSP4Switch(device)]
+
     elif device.api.type == "MP1":
         switches = [BroadlinkMP1Slot(device, slot) for slot in range(1, 5)]
 
@@ -291,6 +294,27 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         if self._coordinator.last_update_success:
             self._state = self._coordinator.data["state"]
             self._load_power = self._coordinator.data["load_power"]
+        self.async_write_ha_state()
+
+
+class BroadlinkSP4Switch(BroadlinkSP1Switch):
+    """Representation of a Broadlink SP4 switch."""
+
+    def __init__(self, device, *args, **kwargs):
+        """Initialize the switch."""
+        super().__init__(device, *args, **kwargs)
+        self._state = self._coordinator.data["pwr"]
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the switch."""
+        return False
+
+    @callback
+    def update_data(self):
+        """Update data."""
+        if self._coordinator.last_update_success:
+            self._state = self._coordinator.data["pwr"]
         self.async_write_ha_state()
 
 

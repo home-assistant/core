@@ -7,7 +7,6 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "auth_error": "Authentication error, please try again",
             "invalid_auth": "Invalid authentication"
         },
         "step": {

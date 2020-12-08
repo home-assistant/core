@@ -47,8 +47,8 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict[str, Any]:
 
         info_object["supervisor"] = info.get("supervisor")
         info_object["host_os"] = host.get("operating_system")
-        info_object["chassis"] = host.get("chassis")
         info_object["docker_version"] = info.get("docker")
+        info_object["chassis"] = host.get("chassis")
 
         if info.get("hassos") is not None:
             info_object["installation_type"] = "Home Assistant OS"

@@ -16,6 +16,7 @@ from homeassistant.components.zerproc.light import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
@@ -82,6 +83,7 @@ async def test_init(hass):
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_ICON: "mdi:string-lights",
     }
 
     state = hass.states.get("light.ledblue_33445566")
@@ -89,6 +91,7 @@ async def test_init(hass):
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_ICON: "mdi:string-lights",
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (221.176, 100.0),
         ATTR_RGB_COLOR: (0, 80, 255),
@@ -260,6 +263,7 @@ async def test_light_update(hass, mock_light):
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_ICON: "mdi:string-lights",
     }
 
     # Make sure no discovery calls are made while we emulate time passing
@@ -277,6 +281,7 @@ async def test_light_update(hass, mock_light):
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_ICON: "mdi:string-lights",
         }
 
         with patch.object(
@@ -293,6 +298,7 @@ async def test_light_update(hass, mock_light):
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_ICON: "mdi:string-lights",
         }
 
         with patch.object(
@@ -309,6 +315,7 @@ async def test_light_update(hass, mock_light):
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_ICON: "mdi:string-lights",
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),
             ATTR_RGB_COLOR: (202, 173, 255),

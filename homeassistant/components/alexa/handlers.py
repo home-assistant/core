@@ -488,7 +488,7 @@ async def async_api_select_input(hass, config, directive, context):
         )
         media_input = media_input.lower().replace(" ", "")
         if (
-            formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys()
+            formatted_source in Inputs.VALID_SOURCE_NAME_MAP
             and formatted_source == media_input
         ) or (
             media_input.endswith("1") and formatted_source == media_input.rstrip("1")

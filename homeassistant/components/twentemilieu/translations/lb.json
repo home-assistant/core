@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Adresse ass scho ageriicht."
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
         },
         "error": {
-            "connection_error": "Feeler beim verbannen.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_address": "Adresse net am Twente Milieu Service Ber\u00e4ich fonnt"
         },
         "step": {

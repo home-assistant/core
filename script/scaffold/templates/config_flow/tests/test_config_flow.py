@@ -32,6 +32,7 @@ async def test_form(hass):
                 "password": "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Name of the device"
@@ -40,7 +41,6 @@ async def test_form(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

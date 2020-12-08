@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "To-faktorskode"
                 },
-                "description": "Skriv inn pin-koden som sendes til e-posten din",
+                "description": "Skriv inn pin-koden som ble sendt til din e-posten",
                 "title": "Totrinnsverifisering"
             },
             "user": {

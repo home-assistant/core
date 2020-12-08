@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "already_configured": "Account is al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "user": {

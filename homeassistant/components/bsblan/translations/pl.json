@@ -4,8 +4,7 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem BSB_LAN"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
@@ -19,6 +18,5 @@
                 "title": "Po\u0142\u0105czenie z urz\u0105dzeniem BSB-Lan"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

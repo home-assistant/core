@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 )
+from homeassistant.helpers.network import is_internal_request
 
 LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
@@ -47,10 +48,7 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_ARTIST: {"item": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
     MEDIA_TYPE_TRACK: {"item": MEDIA_CLASS_TRACK, "children": None},
     MEDIA_TYPE_GENRE: {"item": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
-    MEDIA_TYPE_PLAYLIST: {
-        "item": MEDIA_CLASS_PLAYLIST,
-        "children": MEDIA_CLASS_TRACK,
-    },
+    MEDIA_TYPE_PLAYLIST: {"item": MEDIA_CLASS_PLAYLIST, "children": MEDIA_CLASS_TRACK},
 }
 
 CONTENT_TYPE_TO_CHILD_TYPE = {
@@ -68,8 +66,10 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
 BROWSE_LIMIT = 1000
 
 
-async def build_item_response(player, payload):
+async def build_item_response(entity, player, payload):
     """Create response payload for search described by payload."""
+    internal_request = is_internal_request(entity.hass)
+
     search_id = payload["search_id"]
     search_type = payload["search_type"]
 
@@ -94,15 +94,29 @@ async def build_item_response(player, payload):
 
         children = []
         for item in result["items"]:
+            item_id = str(item["id"])
+            item_thumbnail = None
+
+            artwork_track_id = item.get("artwork_track_id")
+            if artwork_track_id:
+                if internal_request:
+                    item_thumbnail = player.generate_image_url_from_track_id(
+                        artwork_track_id
+                    )
+                else:
+                    item_thumbnail = entity.get_browse_image_url(
+                        item_type, item_id, artwork_track_id
+                    )
+
             children.append(
                 BrowseMedia(
                     title=item["title"],
                     media_class=child_media_class["item"],
-                    media_content_id=str(item["id"]),
+                    media_content_id=item_id,
                     media_content_type=item_type,
                     can_play=True,
                     can_expand=child_media_class["children"] is not None,
-                    thumbnail=item.get("image_url"),
+                    thumbnail=item_thumbnail,
                 )
             )
 
