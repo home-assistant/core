@@ -74,6 +74,10 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     }
 )
 
+SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
+    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
 )
@@ -434,3 +438,42 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             self.hass.components.persistent_notification.async_dismiss(
                 notification_id="learn_command"
             )
+
+    async def async_delete_command(self, **kwargs):
+        """Delete a list of commands from a remote."""
+        kwargs = SERVICE_DELETE_SCHEMA(kwargs)
+        commands = kwargs[ATTR_COMMAND]
+        device = kwargs[ATTR_DEVICE]
+
+        if not self._state:
+            _LOGGER.warning(
+                "remote.delete_command canceled: %s entity is turned off",
+                self.entity_id,
+            )
+            return
+
+        try:
+            codes = self._codes[device]
+        except KeyError:
+            _LOGGER.error("Failed to delete command. Device not found: %s", device)
+            return
+
+        should_store = False
+
+        for command in commands:
+            try:
+                del codes[command]
+            except KeyError:
+                _LOGGER.error(
+                    "Failed to delete command. Command not found: %s", command
+                )
+            else:
+                should_store = True
+
+        if not codes:
+            del self._codes[device]
+            if self._flags.pop(device, None) is not None:
+                await self._flag_storage.async_save(self._flags)
+
+        if should_store:
+            await self._code_storage.async_save(self._codes)
