@@ -1347,6 +1347,10 @@ async def test_referenced_entities(hass):
                     "target": {"entity_id": "light.entity_in_target"},
                 },
                 {
+                    "service": "test.script",
+                    "data_template": {"entity_id": "light.entity_in_data_template"},
+                },
+                {
                     "condition": "state",
                     "entity_id": "sensor.condition",
                     "state": "100",
@@ -1367,6 +1371,7 @@ async def test_referenced_entities(hass):
         "scene.hello",
         "light.direct_entity_referenced",
         "light.entity_in_target",
+        "light.entity_in_data_template",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -1386,6 +1391,14 @@ async def test_referenced_devices(hass):
                 },
                 {
                     "service": "test.script",
+                    "data": {"device_id": "data-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"device_id": "data-template-string-id"},
+                },
+                {
+                    "service": "test.script",
                     "target": {"device_id": "target-string-id"},
                 },
                 {
@@ -1400,6 +1413,8 @@ async def test_referenced_devices(hass):
     assert script_obj.referenced_devices == {
         "script-dev-id",
         "condition-dev-id",
+        "data-string-id",
+        "data-template-string-id",
         "target-string-id",
         "target-list-id-1",
         "target-list-id-2",
