@@ -3,21 +3,14 @@
 
 from typing import Any, Dict, Optional
 
-from pyamaha import AsyncDevice, System
 from requests.exceptions import ConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    SOURCE_ZEROCONF,
-    ConfigFlow,
-)
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.typing import ConfigType
+from pyamaha import AsyncDevice, System
 
 from .const import DOMAIN
 
@@ -53,7 +46,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         device = AsyncDevice(async_get_clientsession(self.hass), user_input[CONF_HOST])
 
         try:
-            device.request(System.get_device_info())
+            await device.request(System.get_device_info())
         except ConnectionError:
             errors["base"] = "cannot_connect"
 
