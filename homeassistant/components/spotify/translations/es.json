@@ -18,5 +18,10 @@
                 "title": "Volver a autenticar con Spotify"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Se puede acceder al punto de conexi\u00f3n de la API de Spotify"
+        }
     }
 }

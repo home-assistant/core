@@ -1,8 +1,7 @@
 """Constants used by Home Assistant components."""
-
-MAJOR_VERSION = 0
-MINOR_VERSION = 118
-PATCH_VERSION = "5"
+MAJOR_VERSION = 1
+MINOR_VERSION = 0
+PATCH_VERSION = "0b2"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
@@ -131,6 +130,7 @@ CONF_NAME = "name"
 CONF_OFFSET = "offset"
 CONF_OPTIMISTIC = "optimistic"
 CONF_PACKAGES = "packages"
+CONF_PARAMS = "params"
 CONF_PASSWORD = "password"
 CONF_PATH = "path"
 CONF_PAYLOAD = "payload"
@@ -156,6 +156,7 @@ CONF_RGB = "rgb"
 CONF_ROOM = "room"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_SCENE = "scene"
+CONF_SELECTOR = "selector"
 CONF_SENDER = "sender"
 CONF_SENSORS = "sensors"
 CONF_SENSOR_TYPE = "sensor_type"
@@ -171,6 +172,7 @@ CONF_STATE = "state"
 CONF_STATE_TEMPLATE = "state_template"
 CONF_STRUCTURE = "structure"
 CONF_SWITCHES = "switches"
+CONF_TARGET = "target"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_TIMEOUT = "timeout"
 CONF_TIME_ZONE = "time_zone"

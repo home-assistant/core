@@ -433,6 +433,8 @@ class HomeAssistantHTTP:
                 "Failed to create HTTP server at port %d: %s", self.server_port, error
             )
 
+        _LOGGER.info("Now listening on port %d", self.server_port)
+
     async def stop(self):
         """Stop the aiohttp server."""
         await self.site.stop()

@@ -8,6 +8,8 @@ from . import LcnDevice
 from .const import CONF_CONNECTIONS, CONF_MOTOR, CONF_REVERSE_TIME, DATA_LCN
 from .helpers import get_connection
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_platform(
     hass, hass_config, async_add_entities, discovery_info=None
@@ -86,27 +88,34 @@ class LcnOutputsCover(LcnDevice, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
+        state = pypck.lcn_defs.MotorStateModifier.DOWN
+        if not await self.address_connection.control_motors_outputs(
+            state, self.reverse_time
+        ):
+            return
         self._is_opening = False
         self._is_closing = True
-        state = pypck.lcn_defs.MotorStateModifier.DOWN
-        self.address_connection.control_motors_outputs(state, self.reverse_time)
         self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
+        state = pypck.lcn_defs.MotorStateModifier.UP
+        if not await self.address_connection.control_motors_outputs(
+            state, self.reverse_time
+        ):
+            return
         self._is_closed = False
         self._is_opening = True
         self._is_closing = False
-        state = pypck.lcn_defs.MotorStateModifier.UP
-        self.address_connection.control_motors_outputs(state, self.reverse_time)
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
+        state = pypck.lcn_defs.MotorStateModifier.STOP
+        if not await self.address_connection.control_motors_outputs(state):
+            return
         self._is_closing = False
         self._is_opening = False
-        state = pypck.lcn_defs.MotorStateModifier.STOP
-        self.address_connection.control_motors_outputs(state)
         self.async_write_ha_state()
 
     def input_received(self, input_obj):
@@ -176,30 +185,33 @@ class LcnRelayCover(LcnDevice, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self._is_opening = False
-        self._is_closing = True
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.DOWN
-        self.address_connection.control_motors_relays(states)
+        if not await self.address_connection.control_motors_relays(states):
+            return
+        self._is_opening = False
+        self._is_closing = True
         self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
+        states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
+        states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.UP
+        if not await self.address_connection.control_motors_relays(states):
+            return
         self._is_closed = False
         self._is_opening = True
         self._is_closing = False
-        states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
-        states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.UP
-        self.address_connection.control_motors_relays(states)
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._is_closing = False
-        self._is_opening = False
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
         states[self.motor.value] = pypck.lcn_defs.MotorStateModifier.STOP
-        self.address_connection.control_motors_relays(states)
+        if not await self.address_connection.control_motors_relays(states):
+            return
+        self._is_closing = False
+        self._is_opening = False
         self.async_write_ha_state()
 
     def input_received(self, input_obj):

@@ -334,6 +334,7 @@ class MockPlexSession:
         self.usernames = [list(MOCK_USERS)[index]]
         self.players = [player]
         self._section = MockPlexLibrarySection("Movies")
+        self.sessionKey = index + 1
 
     @property
     def duration(self):

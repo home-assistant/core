@@ -15,12 +15,13 @@ from openzwavemqtt.util.node import (
     set_config_parameter,
 )
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER, OPTIONS
+from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER
 from .lock import ATTR_USERCODE
 
 TYPE = "type"
@@ -29,6 +30,7 @@ OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
 PARAMETER = ATTR_CONFIG_PARAMETER
 VALUE = ATTR_CONFIG_VALUE
+SCHEMA = "schema"
 
 ATTR_NODE_QUERY_STAGE = "node_query_stage"
 ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
@@ -104,6 +106,59 @@ def _call_util_function(hass, connection, msg, send_result, function, *args):
         return
 
     connection.send_result(msg[ID])
+
+
+def _get_config_params(node, *args):
+    raw_values = get_config_parameters(node)
+    config_params = []
+
+    for param in raw_values:
+        schema = {}
+
+        if param["type"] in ["Byte", "Int", "Short"]:
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"], default=param["value"]): vol.All(
+                        vol.Coerce(int), vol.Range(min=param["min"], max=param["max"])
+                    )
+                }
+            )
+            data = {param["label"]: param["value"]}
+
+        if param["type"] == "List":
+
+            for options in param["options"]:
+                if options["Label"] == param["value"]:
+                    selected = options
+                    break
+
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"],): vol.In(
+                        {
+                            option["Value"]: option["Label"]
+                            for option in param["options"]
+                        }
+                    )
+                }
+            )
+            data = {param["label"]: selected["Value"]}
+
+        config_params.append(
+            {
+                "type": param["type"],
+                "label": param["label"],
+                "parameter": param["parameter"],
+                "help": param["help"],
+                "value": param["value"],
+                "schema": voluptuous_serialize.convert(
+                    schema, custom_serializer=cv.custom_serializer
+                ),
+                "data": data,
+            }
+        )
+
+    return config_params
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
@@ -213,7 +268,7 @@ def websocket_get_code_slots(hass, connection, msg):
 )
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
-    _call_util_function(hass, connection, msg, True, get_config_parameters)
+    _call_util_function(hass, connection, msg, True, _get_config_params)
 
 
 @websocket_api.websocket_command(
@@ -245,7 +300,7 @@ def websocket_get_config_parameters(hass, connection, msg):
 def websocket_set_config_parameter(hass, connection, msg):
     """Set a config parameter to a node."""
     _call_util_function(
-        hass, connection, msg, False, set_config_parameter, msg[PARAMETER], msg[VALUE]
+        hass, connection, msg, True, set_config_parameter, msg[PARAMETER], msg[VALUE]
     )
 
 
@@ -406,7 +461,7 @@ def websocket_refresh_node_info(hass, connection, msg):
     """Tell OpenZWave to re-interview a node."""
 
     manager = hass.data[DOMAIN][MANAGER]
-    options = hass.data[DOMAIN][OPTIONS]
+    options = manager.options
 
     @callback
     def forward_node(node):

@@ -152,6 +152,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
+                    "disabled_by": "user",
                 }
             ],
             "deleted_devices": [
@@ -180,6 +181,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.entry_type == "service"
+    assert entry.disabled_by == "user"
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
@@ -445,6 +447,7 @@ async def test_loading_saving_data(hass, registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
+        disabled_by="user",
     )
 
     orig_light2 = registry.async_get_or_create(
@@ -581,6 +584,7 @@ async def test_update(registry):
             name_by_user="Test Friendly Name",
             new_identifiers=new_identifiers,
             via_device_id="98765B",
+            disabled_by="user",
         )
 
     assert mock_save.call_count == 1
@@ -591,6 +595,7 @@ async def test_update(registry):
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
+    assert updated_entry.disabled_by == "user"
 
     assert registry.async_get_device({("hue", "456")}, {}) is None
     assert registry.async_get_device({("bla", "123")}, {}) is None

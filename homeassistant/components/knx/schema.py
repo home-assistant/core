@@ -77,6 +77,7 @@ class CoverSchema:
             ): cv.positive_int,
             vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
             vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
         }
     )
 

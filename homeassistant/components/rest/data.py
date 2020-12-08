@@ -17,6 +17,7 @@ class RestData:
         resource,
         auth,
         headers,
+        params,
         data,
         verify_ssl,
         timeout=DEFAULT_TIMEOUT,
@@ -26,6 +27,7 @@ class RestData:
         self._resource = resource
         self._auth = auth
         self._headers = headers
+        self._params = params
         self._request_data = data
         self._timeout = timeout
         self._verify_ssl = verify_ssl
@@ -53,6 +55,7 @@ class RestData:
                 self._method,
                 self._resource,
                 headers=self._headers,
+                params=self._params,
                 auth=self._auth,
                 data=self._request_data,
                 timeout=self._timeout,
