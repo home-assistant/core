@@ -413,7 +413,7 @@ caldav==0.6.1
 circuit-webhook==1.0.1
 
 # homeassistant.components.cisco_mobility_express
-ciscomobilityexpress==0.3.3
+ciscomobilityexpress==0.3.9
 
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
@@ -771,7 +771,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.12.1
+homematicip==0.13.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1280,7 +1280,7 @@ pyatmo==4.2.1
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.7.3
+pyatv==0.7.5
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1658,6 +1658,7 @@ pysdcp==1
 pysensibo==1.0.3
 
 # homeassistant.components.serial
+# homeassistant.components.zha
 pyserial-asyncio==0.4
 
 # homeassistant.components.acer_projector
@@ -2018,7 +2019,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.0
+simplisafe-python==9.6.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2204,7 +2205,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.8
+tuyaha==0.0.9
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2341,7 +2342,7 @@ zengge==0.2
 zeroconf==0.28.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.47
+zha-quirks==0.0.48
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2362,10 +2363,10 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.2.2
+zigpy-znp==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.28.1
+zigpy==0.28.2
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
