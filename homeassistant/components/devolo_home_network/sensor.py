@@ -1,127 +1,91 @@
 """Platform for sensor integration."""
 from datetime import timedelta
-import logging
+
+from devolo_plc_api.device import Device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .device import DevoloDevice
 
 SCAN_INTERVAL = timedelta(seconds=5)
-
-
-SENSORS = [
-    {
-        "plc": {
-            "name": "Home Network Devices",
-            "update_call": "async_get_network_overview",
-            "value_expression": lambda x: len(
-                {y["mac_address_from"] for y in x["network"]["data_rates"]}
-            ),
-        }
-    },
-    {
-        "device": {
-            "name": "Wifi Clients",
-            "update_call": "async_get_wifi_connected_station",
-            "value_expression": lambda x: (len(x["connected_stations"])),
-        }
-    },
-    # "Neighbor Wifi Networks",
-]
 
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    entities = []
     device = hass.data[DOMAIN][entry.entry_id]
-    for idx, sensor in enumerate(SENSORS):
-        try:
-            properties = sensor["plc"]
-            entities.append(
-                DevoloPlcEntity(
-                    hass.data[DOMAIN][entry.entry_id], idx, properties, entry.title
-                )
-            )
-        except KeyError:
-            properties = sensor["device"]
-            entities.append(
-                DevoloDeviceEntity(
-                    hass.data[DOMAIN][entry.entry_id], idx, properties, entry.title
-                )
-            )
+    plc_entities = [DevoloNetworkOverviewEntity]
+    wifi_entities = [DevoloWifiClientsEntity, DevoloWifiNetworksEntity]
+
+    entities = []
+    for entity in plc_entities:
+        entities.append(entity(device, entry.title))
+    if "wifi1" in device.device.features:
+        for entity in wifi_entities:
+            entities.append(entity(device, entry.title))
     async_add_entities(entities, True)
 
 
-class DevoloDevice(Entity):
-    """Representation of a devolo home network device."""
+class DevoloNetworkOverviewEntity(DevoloDevice):
+    """PLC network overview sensor."""
 
-    def __init__(self, device, index, sensor, device_name):
-        """Initialize a devolo home network device."""
-        self.device = device
-        self._state = ""
-        self._index = index
-        self.device_name = device_name
-        self._name = sensor["name"]
-        self._unique_id = f"{self.device.serial_number}_{self._name}"
-        self._sensor = sensor
-        self._update_call = sensor["update_call"]
-        self._value_expression = sensor["value_expression"]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device.serial_number)},
-            "name": self.device_name,
-        }
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._unique_id
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        # print(f"STATE {self._name} {self.device_name}")
-        return self._state
-
-
-class DevoloPlcEntity(DevoloDevice):
-    def __init__(self, device, index, sensor, device_name):
-        super(self.__class__, self).__init__(device, index, sensor, device_name)
+    def __init__(self, device: Device, device_name: str):
+        """Initialize entity."""
+        super().__init__(device, device_name)
+        self._enabled_default = False
+        self._icon = "mdi:lan"
+        self._name = "Connected PLC devices"
+        self._unique_id = f"{self._device.serial_number}_connected_plc_devices"
 
     async def async_update(self):
         """Update the value async."""
-        call = getattr(self.device.plcnet, self._update_call)
-        value = await call()
-        try:
-            self._state = self._value_expression(value)
-        except KeyError:
-            self._state = 0
+        network_overview = await self._device.plcnet.async_get_network_overview()
+        self._state = len(
+            {
+                device["mac_address_from"]
+                for device in network_overview["network"]["data_rates"]
+            }
+        )
+
+    # TODO add device_state_attributes
 
 
-class DevoloDeviceEntity(DevoloDevice):
-    def __init__(self, device, index, sensor, device_name):
-        super(self.__class__, self).__init__(device, index, sensor, device_name)
-        self._update_call = sensor["update_call"]
+class DevoloWifiClientsEntity(DevoloDevice):
+    """Wifi network overview sensor."""
+
+    def __init__(self, device: Device, device_name: str):
+        """Initialize entity."""
+        super().__init__(device, device_name)
+        self._enabled_default = True
+        self._icon = "mdi:wifi"
+        self._name = "Connected wifi clients"
+        self._unique_id = f"{self._device.serial_number}_connected_wifi_clients"
 
     async def async_update(self):
         """Update the value async."""
-        call = getattr(self.device.device, self._update_call)
-        value = await call()
-        try:
-            self._state = self._value_expression(value)
-        except KeyError:
-            self._state = 0
+        network_overview = await self._device.device.async_get_wifi_connected_station()
+        self._state = len(network_overview["connected_stations"])
+
+    # TODO add device_state_attributes
+
+
+class DevoloWifiNetworksEntity(DevoloDevice):
+    """Neighboring wifi networks sensor."""
+
+    def __init__(self, device: Device, device_name: str):
+        """Initialize entity."""
+        super().__init__(device, device_name)
+        self._enabled_default = False
+        self._icon = "mdi:wifi-marker"
+        self._name = "Neighboring wifi networks"
+        self._unique_id = f"{self._device.serial_number}_neighboring_wifi_networks"
+
+    async def async_update(self):
+        """Update the value async."""
+        neighbors = await self._device.device.async_get_wifi_neighbor_access_points()
+        self._state = len(neighbors["neighbor_aps"])
+
+    # TODO add device_state_attributes
