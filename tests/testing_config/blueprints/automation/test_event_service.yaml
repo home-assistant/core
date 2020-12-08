@@ -9,3 +9,4 @@ trigger:
   event_type: !input trigger_event
 action:
   service: !input service_to_call
+  entity_id: light.kitchen
