@@ -1,0 +1,7 @@
+{
+  "domain": "device",
+  "name": "Device",
+  "documentation": "https://www.home-assistant.io/integrations/device",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}
