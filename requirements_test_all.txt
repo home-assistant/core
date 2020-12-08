@@ -834,6 +834,10 @@ pyrisco==0.3.1
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
+# homeassistant.components.serial
+# homeassistant.components.zha
+pyserial-asyncio==0.4
+
 # homeassistant.components.acer_projector
 # homeassistant.components.zha
 pyserial==3.4
@@ -1140,7 +1144,7 @@ zeep[async]==4.0.0
 zeroconf==0.28.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.47
+zha-quirks==0.0.48
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
@@ -1155,7 +1159,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.2.2
+zigpy-znp==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.28.1
+zigpy==0.28.2
