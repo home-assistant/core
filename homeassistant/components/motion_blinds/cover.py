@@ -170,13 +170,13 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         return self._blind.position == 100
 
     @callback
-    def push_callback(self):
+    def _push_callback(self):
         """Update entity state when a push has been received."""
         self.schedule_update_ha_state(force_refresh=False)
 
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
-        self._blind.Register_callback(self.unique_id, self.push_callback)
+        self._blind.Register_callback(self.unique_id, self._push_callback)
         async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
         await super().async_added_to_hass()
 
