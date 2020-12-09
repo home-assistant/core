@@ -8,15 +8,22 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{product}: {name}",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
-                }
+                    "password": "Password"
+                },
+                "description": "Do you want to start set up?"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",
+                "title": "Discovered devolo home network device"
             }
         }
-    },
-    "title": "devolo Home Network"
+    }
 }

@@ -5,6 +5,7 @@ from devolo_plc_api.device import Device
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -74,8 +75,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
-        """Initialize."""
-        self.device = None
+        """Set up the instance."""
+        self._discovery_info = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -124,29 +125,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info["properties"]["SN"])
         self._abort_if_unique_id_configured()
 
-        # self.device = Device(ip=discovery_info['host'], deviceapi=discovery_info['properties'])
-        self.device = Device(ip=discovery_info["host"])
-
+        self._discovery_info = discovery_info
         self.context["title_placeholders"] = {
+            "product": discovery_info["properties"]["Product"],
             "name": discovery_info["hostname"].split(".")[0],
-            "serial_number": discovery_info["properties"]["SN"],
         }
-        print(self.context)
+
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
-            self.device.password = user_input[CONF_PASSWORD]
-            await self.device.async_connect()
-            title = f"{self.device.ip}"
+            zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+            device = Device(
+                ip=self._discovery_info["host"], zeroconf_instance=zeroconf_instance
+            )  # , deviceapi=self._discovery_info)
+            device.password = user_input[CONF_PASSWORD]
+            await device.async_connect()
+            title = f"{device.ip}"
             return self.async_create_entry(
-                title=title, data={CONF_IP_ADDRESS: self.device.ip}
+                title=title, data={CONF_IP_ADDRESS: device.ip}
             )
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD, default=""): str}),
-            description_placeholders={"host_name": self.device.ip},
+            description_placeholders={"host_name": self._discovery_info["host"]},
         )
 
 

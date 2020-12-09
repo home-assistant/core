@@ -16,7 +16,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device = hass.data[DOMAIN][entry.entry_id]
+    device = hass.data[DOMAIN][entry.entry_id]["device"]
     plc_entities = [DevoloNetworkOverviewEntity]
     wifi_entities = [DevoloWifiClientsEntity, DevoloWifiNetworksEntity]
 
