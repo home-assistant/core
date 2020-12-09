@@ -1,5 +1,6 @@
 """Support for Synology DSM cameras."""
 from typing import Dict
+from urllib.parse import urlparse, urlsplit
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
@@ -55,6 +56,7 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
             },
         )
         self._camera = camera
+        self._hostname = urlsplit(self._api.dsm._base_url).hostname
 
     @property
     def device_info(self) -> Dict[str, any]:
@@ -100,7 +102,11 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
         """Return the source of the stream."""
         if not self.available:
             return None
-        return self._camera.live_view.rtsp
+
+        url = urlparse(self._camera.live_view.rtsp)
+        return url._replace(
+            netloc=self._hostname.join(url.netloc.rsplit(url.hostname, 1))
+        ).geturl()
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
