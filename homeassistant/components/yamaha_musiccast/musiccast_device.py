@@ -1,10 +1,13 @@
 """MusicCast Device."""
 
 import asyncio
+import logging
 from typing import Dict
 
 from homeassistant.util import dt
 from pyamaha import AsyncDevice, NetUSB, System, Tuner, Zone
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MusicCastData:
@@ -99,11 +102,11 @@ class MusicCastDevice:
         """Handle udp events."""
         # update data...
 
-        print()
-        print("=== INCOMING UDP EVENT FROM MUSICCAST ===")
-        print(message)
-        print("=========================================")
-        print()
+        # print()
+        # print("=== INCOMING UDP EVENT FROM MUSICCAST ===")
+        # print(message)
+        # print("=========================================")
+        # print()
 
         for parameter in message:
             if parameter in ["main", "zone2", "zone3", "zone4"]:
@@ -159,7 +162,7 @@ class MusicCastDevice:
 
     async def _fetch_netusb(self):
         """Fetch NetUSB data."""
-        print("Fetching netusb...")
+        _LOGGER.debug("Fetching netusb...")
         self._netusb_play_info = await (
             await self.device.request(NetUSB.get_play_info())
         ).json()
@@ -195,7 +198,7 @@ class MusicCastDevice:
 
     async def _fetch_tuner(self):
         """Fetch tuner data."""
-        print("Fetching tuner...")
+        _LOGGER.debug("Fetching tuner...")
         self._tuner_play_info = await (
             await self.device.request(Tuner.get_play_info())
         ).json()
@@ -228,7 +231,7 @@ class MusicCastDevice:
         )
 
     async def _fetch_zone(self, zone_id):
-        print(f"Fetching zone {zone_id}...")
+        _LOGGER.debug(f"Fetching zone {zone_id}...")
         zone = await (await self.device.request(Zone.get_status(zone_id))).json()
         zone_data: MusicCastZoneData = self.data.zones.get(zone_id, MusicCastZoneData())
 

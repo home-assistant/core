@@ -1,16 +1,21 @@
 """Demo implementation of the media player."""
 from typing import Callable, List
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TRACK,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SELECT_SOUND_MODE,
@@ -76,36 +81,13 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
+    | SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PLAY_MEDIA
 )
 
 
 class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     """A demo media players."""
-
-    # We only implement the methods that we support
-
-    tracks = [
-        ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
-        ("Paul Elstak", "Luv U More"),
-        ("Dune", "Hardcore Vibes"),
-        ("Nakatomi", "Children Of The Night"),
-        ("Party Animals", "Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)"),
-        ("Rob G.*", "Ecstasy, You Got What I Need"),
-        ("Lipstick", "I'm A Raver"),
-        ("4 Tune Fairytales", "My Little Fantasy (Radio Edit)"),
-        ("Prophet", "The Big Boys Don't Cry"),
-        ("Lovechild", "All Out Of Love (DJ Weirdo & Sim Remix)"),
-        ("Stingray & Sonic Driver", "Cold As Ice (El Bruto Remix)"),
-        ("Highlander", "Hold Me Now (Bass-D & King Matthew Remix)"),
-        ("Juggernaut", 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
-        ("Diss Reaction", "Jiiieehaaaa "),
-        ("Flamman And Abraxas", "Good To Go (Radio Mix)"),
-        ("Critical Mass", "Dancing Together"),
-        (
-            "Charly Lownoise & Mental Theo",
-            "Ultimate Sex Track (Bass-D & King Matthew Remix)",
-        ),
-    ]
 
     def __init__(self, zone_id, name, entry_id, coordinator, device_class=None):
         """Initialize the demo device."""
@@ -440,3 +422,140 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         Returns value from homeassistant.util.dt.utcnow().
         """
         return self.coordinator.data.netusb_play_time_updated
+
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+        """Play media."""
+
+        print(f"PLAY MEDIA ({media_type} / {media_id})")
+
+        if media_id:
+            parts = media_id.split(":")
+
+            if parts[0] == "list":
+                index = parts[3]
+
+                if index == "-1":
+                    index = "0"
+
+                await self.coordinator.musiccast.device.request(
+                    NetUSB.set_list_control("main", "play", index, self._zone_id)
+                )
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+
+        print(f"BROWSE MEDIA ({media_content_type} / {media_content_id})")
+
+        list_info = None
+        menu_layer = None
+        list_type = self.source
+
+        if list_type in [
+            "usb",
+            "bluetooth",
+            "server",
+            "net_radio",
+            "rhapsody",
+            "napster",
+            "pandora",
+            "siriusxm",
+            "spotify",
+            "juke",
+            "airplay",
+            "radiko",
+            "qobuz",
+            "mc_link",
+        ]:
+            if media_content_id:
+                parts = media_content_id.split(":")
+
+                if parts[3] == "-1":
+                    await self.coordinator.musiccast.device.request(
+                        NetUSB.set_list_control(
+                            "main", "return", parts[3], self._zone_id
+                        )
+                    )
+                else:
+                    await self.coordinator.musiccast.device.request(
+                        NetUSB.set_list_control(
+                            "main", "select", parts[3], self._zone_id
+                        )
+                    )
+
+                list_info = await (
+                    await self.coordinator.musiccast.device.request(
+                        NetUSB.get_list_info(list_type, 0, 8, "en", "main")
+                    )
+                ).json()
+
+                menu_layer = list_info.get("menu_layer")
+            else:
+                # reset list info
+
+                while True:
+                    list_info = await (
+                        await self.coordinator.musiccast.device.request(
+                            NetUSB.get_list_info(list_type, 0, 8, "en", "main")
+                        )
+                    ).json()
+
+                    menu_layer = list_info.get("menu_layer")
+                    if menu_layer == 0:
+                        break
+                    else:
+                        await self.coordinator.musiccast.device.request(
+                            NetUSB.set_list_control("main", "return", "", self._zone_id)
+                        )
+
+            children = []
+
+            parent_is_directory = False
+
+            for i, info in enumerate(list_info.get("list_info", [])):
+
+                # b[1]     Capable of Select(common for all Net/USB sources
+                # b[2]     Capable of Play(common for all Net/USB sources)
+
+                is_selectable = info.get("attribute") & 0b10 == 0b10
+                is_playable = info.get("attribute") & 0b100 == 0b100
+
+                child = BrowseMedia(
+                    title=info.get("text"),
+                    media_class=MEDIA_CLASS_DIRECTORY
+                    if is_selectable
+                    else MEDIA_CLASS_TRACK,
+                    media_content_id=f"list:{list_type}:{menu_layer+1}:{i}",
+                    media_content_type=MEDIA_CLASS_DIRECTORY
+                    if is_selectable
+                    else MEDIA_TYPE_TRACK,
+                    can_play=is_playable,
+                    can_expand=is_selectable,
+                    thumbnail=info.get("thumbnail"),
+                )
+                children.append(child)
+
+                parent_is_directory = parent_is_directory or is_selectable
+
+            subfolder = BrowseMedia(
+                title=list_info.get("menu_name"),
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id=f"list:{list_type}:{menu_layer}:-1",
+                media_content_type="categories",
+                can_play=not parent_is_directory,
+                can_expand=True,
+                children=children,
+                children_media_class=MEDIA_CLASS_DIRECTORY
+                if parent_is_directory
+                else MEDIA_CLASS_TRACK,
+            )
+
+            return subfolder
+
+        return BrowseMedia(
+            title=self.source,
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="empty",
+            can_play=False,
+            can_expand=False,
+        )
