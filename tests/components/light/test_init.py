@@ -433,6 +433,8 @@ async def test_light_profiles(hass, mock_light_profiles):
     mock_light_profiles[profile.name] = profile
     profile = light.Profile("test_off", 0, 0, 0, 0)
     mock_light_profiles[profile.name] = profile
+    profile = light.Profile("no brightness", 0.4, 0.6, None)
+    mock_light_profiles[profile.name] = profile
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -486,6 +488,23 @@ async def test_light_profiles(hass, mock_light_profiles):
     _, data = ent1.last_call("turn_off")
     assert not light.is_on(hass, ent1.entity_id)
     assert data == {light.ATTR_TRANSITION: 0}
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ent1.entity_id,
+            light.ATTR_PROFILE: "no brightness",
+        },
+        blocking=True,
+    )
+
+    _, data = ent1.last_call("turn_on")
+    assert light.is_on(hass, ent1.entity_id)
+    assert data == {
+        light.ATTR_HS_COLOR: (71.059, 100),
+        light.ATTR_TRANSITION: 0,
+    }
 
 
 async def test_default_profiles_group(hass, mock_light_profiles):
@@ -728,6 +747,8 @@ no_color,,,100,1
 no_color_no_transition,,,110
 color,0.5119,0.4147,120,2
 color_no_transition,0.4448,0.4066,130
+only_brightness,,,140
+only_transition,,,,150
 invalid_profile_1,
 invalid_color_2,,0.1,1,2
 invalid_color_3,,0.1,1
@@ -735,6 +756,7 @@ invalid_color_4,0.1,,1,3
 invalid_color_5,0.1,,1
 invalid_brightness,0,0,256,4
 invalid_brightness_2,0,0,256
+invalid_no_brightness_no_color_no_transition,,,
 """
 
     profiles = orig_Profiles(hass)
@@ -758,6 +780,14 @@ invalid_brightness_2,0,0,256
     assert profiles.data["color_no_transition"].brightness == 130
     assert profiles.data["color_no_transition"].transition == 0
 
+    assert profiles.data["only_brightness"].hs_color is None
+    assert profiles.data["only_brightness"].brightness == 140
+    assert profiles.data["only_brightness"].transition == 0
+
+    assert profiles.data["only_transition"].hs_color is None
+    assert profiles.data["only_transition"].brightness is None
+    assert profiles.data["only_transition"].transition == 150
+
     for invalid_profile_name in (
         "invalid_profile_1",
         "invalid_color_2",
@@ -766,5 +796,6 @@ invalid_brightness_2,0,0,256
         "invalid_color_5",
         "invalid_brightness",
         "invalid_brightness_2",
+        "invalid_no_brightness_no_color_no_transition",
     ):
         assert invalid_profile_name not in profiles.data
