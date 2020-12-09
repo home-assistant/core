@@ -550,7 +550,8 @@ class HyperionLight(LightEntity):
             )
             self.async_write_ha_state()
 
-    def _is_priority_black(self, priority: Optional[Dict[str, Any]]) -> bool:
+    @classmethod
+    def _is_priority_black(cls, priority: Optional[Dict[str, Any]]) -> bool:
         """Determine if a given priority is the color black."""
         if not priority:
             return False
