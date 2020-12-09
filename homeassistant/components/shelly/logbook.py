@@ -1,9 +1,15 @@
-"""Describe logbook events."""
+"""Describe Shelly logbook events."""
 
-from homeassistant.const import CONF_DEVICE, CONF_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
 
-from .const import ATTR_CHANNEL, ATTR_CLICK_TYPE, DOMAIN, EVENT_SHELLY_CLICK
+from .const import (
+    ATTR_CHANNEL,
+    ATTR_CLICK_TYPE,
+    ATTR_DEVICE,
+    DOMAIN,
+    EVENT_SHELLY_CLICK,
+)
 from .utils import get_device_name, get_device_wrapper
 
 
@@ -12,13 +18,13 @@ def async_describe_events(hass, async_describe_event):
     """Describe logbook events."""
 
     @callback
-    def async_describe_logbook_event(event):
-        """Describe a logbook event."""
-        wrapper = get_device_wrapper(hass, event.data[CONF_DEVICE_ID])
+    def async_describe_shelly_click_event(event):
+        """Describe shelly.click logbook event."""
+        wrapper = get_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
         if wrapper:
             device_name = get_device_name(wrapper.device)
         else:
-            device_name = event.data[CONF_DEVICE]
+            device_name = event.data[ATTR_DEVICE]
 
         channel = event.data[ATTR_CHANNEL]
         click_type = event.data[ATTR_CLICK_TYPE]
@@ -28,4 +34,4 @@ def async_describe_events(hass, async_describe_event):
             "message": f"'{click_type}' click event for {device_name} channel {channel} was fired.",
         }
 
-    async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_logbook_event)
+    async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_shelly_click_event)

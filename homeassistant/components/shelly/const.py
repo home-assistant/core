@@ -41,6 +41,7 @@ EVENT_SHELLY_CLICK = "shelly.click"
 ATTR_CLICK_TYPE = "click_type"
 ATTR_CHANNEL = "channel"
 ATTR_DEVICE = "device"
+CONF_SUBTYPE = "subtype"
 
 BASIC_TRIGGER_TYPES = {
     "single_click",

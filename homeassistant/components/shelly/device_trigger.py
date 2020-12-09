@@ -23,14 +23,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    CONF_SUBTYPE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
     SUPPORTED_TRIGGER_TYPES,
     TRIGGER_SUBTYPES,
 )
 from .utils import get_device_wrapper, get_input_triggers
-
-CONF_SUBTYPE = "subtype"
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
