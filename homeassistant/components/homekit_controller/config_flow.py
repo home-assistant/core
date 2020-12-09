@@ -22,8 +22,9 @@ HOMEKIT_BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 HOMEKIT_BRIDGE_MODEL = "Home Assistant HomeKit Bridge"
 
 HOMEKIT_IGNORE = [
-    # eufy Indoor Cam 2K Pan & Tilt
+    # eufy Indoor Cam 2K and 2K Pan & Tilt
     # https://github.com/home-assistant/core/issues/42307
+    "T8400",
     "T8410",
     # Hive Hub - vendor does not give user a pairing code
     "HHKBridge1,1",
