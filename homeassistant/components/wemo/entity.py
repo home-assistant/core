@@ -8,6 +8,7 @@ from pywemo import WeMoDevice
 
 from homeassistant.helpers.entity import Entity
 
+from . import async_get_registry
 from .const import DOMAIN as WEMO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,13 +98,13 @@ class WemoSubscriptionEntity(WemoEntity):
         """Wemo device added to Home Assistant."""
         await super().async_added_to_hass()
 
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
+        registry = await async_get_registry(self.hass)
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Wemo device removed from hass."""
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
+        registry = await async_get_registry(self.hass)
         await self.hass.async_add_executor_job(registry.unregister, self.wemo)
 
     def _subscription_callback(

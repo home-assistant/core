@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import List
 
 from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
@@ -15,8 +16,10 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.singleton import singleton
 
 from .const import (
     DOMAIN as WEMO_DOMAIN,
@@ -93,24 +96,14 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
 RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up WeMo binary sensors."""
+@singleton(f"{__name__}.service")
+async def _async_get_humidifiers(hass: HomeAssistant) -> List["WemoHumidifier"]:
+    """Singleton containing humidifier services.
+
+    Returns:
+      List of humidifiers used by the services.
+    """
     entities = []
-
-    async def _discovered_wemo(device):
-        """Handle a discovered Wemo device."""
-        entity = WemoHumidifier(device)
-        entities.append(entity)
-        async_add_entities([entity])
-
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
-
-    await asyncio.gather(
-        *[
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        ]
-    )
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
@@ -140,6 +133,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_RESET_FILTER_LIFE,
         service_handle,
         schema=RESET_FILTER_LIFE_SCHEMA,
+    )
+
+    return entities
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo binary sensors."""
+
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
+        async_add_entities([WemoHumidifier(device)])
+
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
+
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
+        ]
     )
 
 
@@ -188,6 +200,16 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORTED_FEATURES
+
+    async def async_added_to_hass(self) -> None:
+        """Wemo humidifier added to Home Assistant."""
+        await super().async_added_to_hass()
+        (await _async_get_humidifiers(self.hass)).append(self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Wemo humidifier removed from hass."""
+        await super().async_will_remove_from_hass()
+        (await _async_get_humidifiers(self.hass)).remove(self)
 
     def _update(self, force_update=True):
         """Update the device state."""
