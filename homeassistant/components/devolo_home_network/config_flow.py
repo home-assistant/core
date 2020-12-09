@@ -1,6 +1,7 @@
 """Config flow for devolo Home Network integration."""
 import logging
 
+from devolo_plc_api.device import Device
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -36,6 +37,13 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    device = Device(data[CONF_IP_ADDRESS])
+
+    if data.get(CONF_PASSWORD):
+        device.password = data.get(CONF_PASSWORD)
+
+    await device.async_connect()
+
     # TODO validate the data can be used to set up a connection.
 
     # If your PyPI package is not built with async, pass your methods
@@ -75,6 +83,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+
+            # TODO: Move this to another place --> validate input
+            # Can't be moved atm because we have not function for validating the input.
+            device = Device(user_input[CONF_IP_ADDRESS])
+
+            if user_input.get(CONF_PASSWORD):
+                device.password = user_input.get(CONF_PASSWORD)
+
+            await device.async_connect()
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -83,6 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(device.serial_number)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
