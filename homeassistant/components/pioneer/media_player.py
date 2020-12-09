@@ -28,11 +28,15 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = "sources"
+CONF_ALTERNATIVE_VOLUME_CONTROL = "alternative_volume_control"
+CONF_MAX_VOLUME = "max_volume"
 
 DEFAULT_NAME = "Pioneer AVR"
 DEFAULT_PORT = 23  # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
 DEFAULT_SOURCES = {}
+DEFAULT_ALTERNATIVE_VOLUME_CONTROL = False
+DEFAULT_MAX_VOLUME = 185
 
 SUPPORT_PIONEER = (
     SUPPORT_PAUSE
@@ -45,7 +49,6 @@ SUPPORT_PIONEER = (
     | SUPPORT_PLAY
 )
 
-MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -55,6 +58,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
+        vol.Optional(
+            CONF_ALTERNATIVE_VOLUME_CONTROL, default=DEFAULT_ALTERNATIVE_VOLUME_CONTROL
+        ): cv.boolean,
+        vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): cv.positive_int,
     }
 )
 
@@ -67,6 +74,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config[CONF_PORT],
         config[CONF_TIMEOUT],
         config[CONF_SOURCES],
+        config[CONF_ALTERNATIVE_VOLUME_CONTROL],
+        config[CONF_MAX_VOLUME],
     )
 
     if pioneer.update():
@@ -76,7 +85,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout, sources):
+    def __init__(
+        self, name, host, port, timeout, sources, alternative_volume_control, max_volume
+    ):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
@@ -88,6 +99,8 @@ class PioneerDevice(MediaPlayerEntity):
         self._selected_source = ""
         self._source_name_to_number = sources
         self._source_number_to_name = {v: k for k, v in sources.items()}
+        self._alternative_volume_control = alternative_volume_control
+        self._max_volume = max_volume
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -134,7 +147,7 @@ class PioneerDevice(MediaPlayerEntity):
             self._pwstate = pwstate
 
         volume_str = self.telnet_request(telnet, "?V", "VOL")
-        self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
+        self._volume = int(volume_str[3:]) / self._max_volume if volume_str else None
 
         muted_value = self.telnet_request(telnet, "?M", "MUT")
         self._muted = (muted_value == "MUT0") if muted_value else None
@@ -224,8 +237,11 @@ class PioneerDevice(MediaPlayerEntity):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        # 60dB max
-        self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
+        target_level_in_pioneer_format = round(volume * self._max_volume)
+        if self._alternative_volume_control:
+            self.alternative_set_volume_level(target_level_in_pioneer_format)
+        else:
+            self.telnet_command(f"{target_level_in_pioneer_format:03}VL")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -238,3 +254,19 @@ class PioneerDevice(MediaPlayerEntity):
     def select_source(self, source):
         """Select input source."""
         self.telnet_command(f"{self._source_name_to_number.get(source)}FN")
+
+    def alternative_set_volume_level(self, target_level_in_pioneer_format):
+        """ Alternative method for devices that do not support ___VL commands """
+        current_level_in_pioneer_format = int(self.volume_level * self._max_volume)
+        if current_level_in_pioneer_format > target_level_in_pioneer_format:
+            # VD decreases volume in steps of 2, so we account for that here
+            for _ in range(
+                current_level_in_pioneer_format, target_level_in_pioneer_format, -2
+            ):
+                self.volume_down()
+        else:
+            # VU increases volume in steps of 2, so we account for that here
+            for _ in range(
+                current_level_in_pioneer_format, target_level_in_pioneer_format, 2
+            ):
+                self.volume_up()
