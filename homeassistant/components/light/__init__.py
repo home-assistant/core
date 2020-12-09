@@ -4,7 +4,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 import voluptuous as vol
 
@@ -23,6 +23,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -297,7 +298,7 @@ class Profile:
         self.hs_color = color_util.color_xy_to_hs(self.color_x, self.color_y)
 
     @classmethod
-    def from_csv_row(cls, csv_row: Tuple) -> "Profile":
+    def from_csv_row(cls, csv_row: List[str]) -> "Profile":
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 
@@ -305,12 +306,12 @@ class Profile:
 class Profiles:
     """Representation of available color profiles."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistantType):
         """Initialize profiles."""
         self.hass = hass
-        self.data = None
+        self.data: Dict[str, Profile] = {}
 
-    def _load_profile_data(self):
+    def _load_profile_data(self) -> Dict[str, Profile]:
         """Load built-in profiles and custom profiles."""
         profile_paths = [
             os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
@@ -339,12 +340,12 @@ class Profiles:
                     continue
         return profiles
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Load and cache profiles."""
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id, params):
+    def apply_default(self, entity_id: str, params: Dict) -> None:
         """Return the default turn-on profile for the given light."""
         for entity_id in (entity_id, "group.all_lights"):
             name = f"{entity_id}.default"
@@ -353,7 +354,7 @@ class Profiles:
                 return
 
     @callback
-    def apply_profile(self, name, params):
+    def apply_profile(self, name: str, params: Dict) -> None:
         """Apply a profile."""
         profile = self.data.get(name)
 
