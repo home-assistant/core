@@ -5,6 +5,7 @@ from qnapstats import QNAPStats
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.persistent_notification import create as notify_create
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -69,9 +70,9 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
-        return await self.async_step_user(import_info)
+        return await self.async_step_user(import_info, is_imported=True)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None, is_imported=False):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -96,6 +97,13 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 title = stats.get("system", {}).get("name", host).capitalize()
+                if is_imported:
+                    notify_create(
+                        self.hass,
+                        "The import of the Qnap configuration was successful. \
+                        Please remove the platform from the YAML configuration file",
+                        "QNAP Import",
+                    )
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
