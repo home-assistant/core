@@ -41,8 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    async def disconnect(event):
-        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
+    def disconnect(event):
+        hass.data[DOMAIN][entry.entry_id]["device"].disconnect()
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
@@ -63,7 +63,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id]["listener"]()
+        hass.data[DOMAIN][entry.entry_id]["listener"]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
