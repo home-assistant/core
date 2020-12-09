@@ -1,7 +1,9 @@
 """Config flow for devolo Home Network integration."""
 import logging
+from typing import Dict
 
 from devolo_plc_api.device import Device
+from devolo_plc_api.exceptions.device import DeviceNotFound
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -19,53 +21,31 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host):
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
-
-
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: Dict, discovery_data: Dict = None
+):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    device = Device(data[CONF_IP_ADDRESS])
-
-    if data.get(CONF_PASSWORD):
-        device.password = data.get(CONF_PASSWORD)
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+    device = Device(
+        data[CONF_IP_ADDRESS],
+        zeroconf_instance=zeroconf_instance,
+        deviceapi=discovery_data,
+    )
+    device.password = data.get(CONF_PASSWORD, "")
 
     await device.async_connect()
+    await device.async_disconnect()
 
-    # TODO validate the data can be used to set up a connection.
+    # TODO Use function to validate password
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
-    # hub = PlaceholderHub(data["host"])
-
-    # if not await hub.authenticate(data["username"], data["password"]):
-    #     raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {
+        # TODO Use constants
+        "serial_number": device.serial_number,
+        "title": device.hostname.split(".")[0],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,16 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-
-            # TODO: Move this to another place --> validate input
-            # Can't be moved atm because we have not function for validating the input.
-            device = Device(user_input[CONF_IP_ADDRESS])
-
-            if user_input.get(CONF_PASSWORD):
-                device.password = user_input.get(CONF_PASSWORD)
-
-            await device.async_connect()
-        except CannotConnect:
+        except DeviceNotFound:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
@@ -106,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(device.serial_number)
+            await self.async_set_unique_id(info["serial_number"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -126,6 +97,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         self._discovery_info = discovery_info
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "product": discovery_info["properties"]["Product"],
             "name": discovery_info["hostname"].split(".")[0],
@@ -136,25 +109,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
-            zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-            device = Device(
-                ip=self._discovery_info["host"], zeroconf_instance=zeroconf_instance
-            )  # , deviceapi=self._discovery_info)
-            device.password = user_input[CONF_PASSWORD]
-            await device.async_connect()
-            title = f"{device.ip}"
-            return self.async_create_entry(
-                title=title, data={CONF_IP_ADDRESS: device.ip}
+            data = {
+                CONF_IP_ADDRESS: self._discovery_info["host"],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            # TODO Handle exceptions
+            info = await validate_input(
+                self.hass,
+                data=data,
+                discovery_data=self._discovery_info,
             )
+            return self.async_create_entry(title=info["title"], data=data)
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD, default=""): str}),
             description_placeholders={"host_name": self._discovery_info["host"]},
         )
 
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    # TODO Add options flow for ability to change password
 
 
 class InvalidAuth(exceptions.HomeAssistantError):
