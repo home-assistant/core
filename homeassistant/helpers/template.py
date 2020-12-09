@@ -50,7 +50,7 @@ _ENVIRONMENT = "template.environment"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
-_IS_NUMERIC = re.compile(r"^[+-]?\d*(?:\.\d*)?$")
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 

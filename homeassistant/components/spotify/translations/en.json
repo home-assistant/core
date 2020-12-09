@@ -18,5 +18,10 @@
                 "title": "Reauthenticate Integration"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API endpoint reachable"
+        }
     }
 }

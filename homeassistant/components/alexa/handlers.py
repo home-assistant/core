@@ -995,14 +995,14 @@ async def async_api_set_mode(hass, config, directive, context):
 
     # Fan Direction
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        _, direction = mode.split(".")
+        direction = mode.split(".")[1]
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        _, position = mode.split(".")
+        position = mode.split(".")[1]
 
         if position == cover.STATE_CLOSED:
             service = cover.SERVICE_CLOSE_COVER

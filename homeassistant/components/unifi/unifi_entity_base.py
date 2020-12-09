@@ -95,7 +95,16 @@ class UniFiBase(Entity):
             entity_registry.async_remove(self.entity_id)
             return
 
-        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
+        if (
+            len(
+                async_entries_for_device(
+                    entity_registry,
+                    entity_entry.device_id,
+                    include_disabled_entities=True,
+                )
+            )
+            == 1
+        ):
             device_registry.async_remove_device(device_entry.id)
             return
 

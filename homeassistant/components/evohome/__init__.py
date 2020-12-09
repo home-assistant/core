@@ -34,7 +34,7 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
+from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +145,6 @@ def _handle_exception(err) -> bool:
             "Message is: %s",
             err,
         )
-        return False
 
     except aiohttp.ClientConnectionError:
         # this appears to be a common occurrence with the vendor's servers
@@ -155,7 +154,6 @@ def _handle_exception(err) -> bool:
             "Message is: %s",
             err,
         )
-        return False
 
     except aiohttp.ClientResponseError:
         if err.status == HTTP_SERVICE_UNAVAILABLE:
@@ -163,17 +161,16 @@ def _handle_exception(err) -> bool:
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
-            return False
 
-        if err.status == HTTP_TOO_MANY_REQUESTS:
+        elif err.status == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "If this message persists, consider increasing the %s",
                 CONF_SCAN_INTERVAL,
             )
-            return False
 
-        raise  # we don't expect/handle any other Exceptions
+        else:
+            raise  # we don't expect/handle any other Exceptions
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -427,8 +424,8 @@ class EvoBroker:
         try:
             result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            if not _handle_exception(err):
-                return
+            _handle_exception(err)
+            return
 
         if update_state:  # wait a moment for system to quiesce before updating state
             self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
@@ -631,11 +628,11 @@ class EvoChild(EvoDevice):
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
-        if not self._schedule["DailySchedules"]:
-            return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
+        if not self._schedule or not self._schedule.get("DailySchedules"):
+            return {}  # no scheduled setpoints when {'DailySchedules': []}
 
         day_time = dt_util.now()
-        day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
+        day_of_week = day_time.weekday()  # for evohome, 0 is Monday
         time_of_day = day_time.strftime("%H:%M:%S")
 
         try:
@@ -682,10 +679,6 @@ class EvoChild(EvoDevice):
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
-        if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
-            if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-                return  # avoid unnecessary I/O - there's nothing to update
-
         self._schedule = await self._evo_broker.call_client_api(
             self._evo_device.schedule(), update_state=False
         )

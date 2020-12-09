@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry, entity, update_coordinator
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
-from .utils import get_entity_name, get_rest_value_from_path
+from .utils import async_remove_shelly_entity, get_entity_name
 
 
 async def async_setup_entry_attribute_entities(
@@ -31,7 +31,17 @@ async def async_setup_entry_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            blocks.append((block, sensor_id, description))
+            # Filter and remove entities that according to settings should not create an entity
+            if description.removal_condition and description.removal_condition(
+                wrapper.device.settings, block
+            ):
+                domain = sensor_class.__module__.split(".")[-1]
+                unique_id = sensor_class(
+                    wrapper, block, sensor_id, description
+                ).unique_id
+                await async_remove_shelly_entity(hass, domain, unique_id)
+            else:
+                blocks.append((block, sensor_id, description))
 
     if not blocks:
         return
@@ -54,15 +64,20 @@ async def async_setup_entry_rest(
 
     entities = []
     for sensor_id in sensors:
-        _desc = sensors.get(sensor_id)
+        description = sensors.get(sensor_id)
 
         if not wrapper.device.settings.get("sleep_mode"):
-            entities.append(_desc)
+            entities.append((sensor_id, description))
 
     if not entities:
         return
 
-    async_add_entities([sensor_class(wrapper, description) for description in entities])
+    async_add_entities(
+        [
+            sensor_class(wrapper, sensor_id, description)
+            for sensor_id, description in entities
+        ]
+    )
 
 
 @dataclass
@@ -77,6 +92,8 @@ class BlockAttributeDescription:
     device_class: Optional[str] = None
     default_enabled: bool = True
     available: Optional[Callable[[aioshelly.Block], bool]] = None
+    # Callable (settings, block), return true if entity should be removed
+    removal_condition: Optional[Callable[[dict, aioshelly.Block], bool]] = None
     device_state_attributes: Optional[
         Callable[[aioshelly.Block], Optional[dict]]
     ] = None
@@ -86,15 +103,13 @@ class BlockAttributeDescription:
 class RestAttributeDescription:
     """Class to describe a REST sensor."""
 
-    path: str
     name: str
-    # Callable = lambda attr_info: unit
     icon: Optional[str] = None
-    unit: Union[None, str, Callable[[dict], str]] = None
-    value: Callable[[Any], Any] = lambda val: val
+    unit: Optional[str] = None
+    value: Callable[[dict, Any], Any] = None
     device_class: Optional[str] = None
     default_enabled: bool = True
-    attributes: Optional[dict] = None
+    device_state_attributes: Optional[Callable[[dict], Optional[dict]]] = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -104,7 +119,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper, block)
+        self._name = get_entity_name(wrapper.device, block)
 
     @property
     def name(self):
@@ -170,7 +185,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-        self._name = get_entity_name(wrapper, block, self.description.name)
+        self._name = get_entity_name(wrapper.device, block, self.description.name)
 
     @property
     def unique_id(self):
@@ -235,17 +250,18 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
     """Class to load info from REST."""
 
     def __init__(
-        self, wrapper: ShellyDeviceWrapper, description: RestAttributeDescription
+        self,
+        wrapper: ShellyDeviceWrapper,
+        attribute: str,
+        description: RestAttributeDescription,
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper)
         self.wrapper = wrapper
+        self.attribute = attribute
         self.description = description
-
-        self._unit = self.description.unit
-        self._name = get_entity_name(wrapper, None, self.description.name)
-        self.path = self.description.path
-        self._attributes = self.description.attributes
+        self._name = get_entity_name(wrapper.device, None, self.description.name)
+        self._last_value = None
 
     @property
     def name(self):
@@ -271,10 +287,11 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
     @property
     def attribute_value(self):
-        """Attribute."""
-        return get_rest_value_from_path(
-            self.wrapper.device.status, self.description.device_class, self.path
+        """Value of sensor."""
+        self._last_value = self.description.value(
+            self.wrapper.device.status, self._last_value
         )
+        return self._last_value
 
     @property
     def unit_of_measurement(self):
@@ -294,20 +311,12 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
     @property
     def unique_id(self):
         """Return unique ID of entity."""
-        return f"{self.wrapper.mac}-{self.description.path}"
+        return f"{self.wrapper.mac}-{self.attribute}"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-
-        if self._attributes is None:
+        if self.description.device_state_attributes is None:
             return None
 
-        _description = self._attributes.get("description")
-        _attribute_value = get_rest_value_from_path(
-            self.wrapper.device.status,
-            self.description.device_class,
-            self._attributes.get("path"),
-        )
-
-        return {_description: _attribute_value}
+        return self.description.device_state_attributes(self.wrapper.device.status)

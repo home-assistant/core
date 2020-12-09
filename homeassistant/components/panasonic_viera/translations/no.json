@@ -7,14 +7,14 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "invalid_pin_code": "PIN-kode du skrev inn var ugyldig"
+            "invalid_pin_code": "PIN kode du skrev inn var ugyldig"
         },
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN-kode"
+                    "pin": "PIN kode"
                 },
-                "description": "Skriv inn PIN-kode som vises p\u00e5 TV-en",
+                "description": "Skriv inn PIN kode som vises p\u00e5 TV-en",
                 "title": "Sammenkobling"
             },
             "user": {

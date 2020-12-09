@@ -32,15 +32,12 @@ def convert_speed(speed: int) -> str:
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
-    """Set up fans for deCONZ component.
-
-    Fans are based on the same device class as lights in deCONZ.
-    """
+    """Set up fans for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(lights) -> None:
+    def async_add_fan(lights=gateway.api.lights.values()) -> None:
         """Add fan from deCONZ."""
         entities = []
 
@@ -58,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         )
     )
 
-    async_add_fan(gateway.api.lights.values())
+    async_add_fan()
 
 
 class DeconzFan(DeconzDevice, FanEntity):
@@ -108,9 +105,7 @@ class DeconzFan(DeconzDevice, FanEntity):
         if speed not in SPEEDS:
             raise ValueError(f"Unsupported speed {speed}")
 
-        data = {"speed": SPEEDS[speed]}
-
-        await self._device.async_set_state(data)
+        await self._device.set_speed(SPEEDS[speed])
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on fan."""

@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "unknown": "Erro inesperado",
             "unsupported_version": "O dispositivo BleBox possui firmware desatualizado. Atualize-o primeiro."
         },
         "step": {

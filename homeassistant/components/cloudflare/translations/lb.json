@@ -11,16 +11,24 @@
         },
         "flow_title": "Cloudflare: {name}",
         "step": {
+            "records": {
+                "data": {
+                    "records": "Enregistrement"
+                },
+                "title": "Wiel d'Enregistrments aus fir ze ver\u00e4nneren"
+            },
             "user": {
                 "data": {
                     "api_token": "API Jeton"
                 },
+                "description": "D\u00ebs Integratioun ben\u00e9idget een API Jeton dee mat Zone:Zone:Read a Zone:DNS:Edit Rechter fir all Zone an dengem Kont erstallt gouf.",
                 "title": "Mat Cloudflare verbannen"
             },
             "zone": {
                 "data": {
                     "zone": "Zon"
-                }
+                },
+                "title": "Wiel d'Zone aus d\u00e9i aktualis\u00e9iert soll ginn."
             }
         }
     }

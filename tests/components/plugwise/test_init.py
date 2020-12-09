@@ -2,9 +2,9 @@
 
 import asyncio
 
-from Plugwise_Smile.Smile import Smile
+from plugwise.exceptions import XMLDataMissingError
 
-from homeassistant.components.plugwise import DOMAIN
+from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
@@ -43,7 +43,7 @@ async def test_smile_timeout(hass, mock_smile_notconnect):
 
 async def test_smile_adam_xmlerror(hass, mock_smile_adam):
     """Detect malformed XML by Smile in Adam environment."""
-    mock_smile_adam.full_update_device.side_effect = Smile.XMLDataMissingError
+    mock_smile_adam.full_update_device.side_effect = XMLDataMissingError
     entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 

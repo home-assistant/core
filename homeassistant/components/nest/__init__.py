@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 import logging
 import threading
 
-from google_nest_sdm.event import EventCallback, EventMessage
+from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
 from nest.nest import APIError, AuthorizationError
@@ -25,6 +26,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -41,17 +43,20 @@ from . import api, config_flow, local_auth
 from .const import (
     API_URL,
     DATA_SDM,
+    DATA_SUBSCRIBER,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     SIGNAL_NEST_UPDATE,
 )
+from .events import EVENT_NAME_MAP, NEST_EVENT
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
+
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -158,30 +163,45 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-class SignalUpdateCallback(EventCallback):
+class SignalUpdateCallback(AsyncEventCallback):
     """An EventCallback invoked when new events arrive from subscriber."""
 
     def __init__(self, hass: HomeAssistant):
         """Initialize EventCallback."""
         self._hass = hass
 
-    def handle_event(self, event_message: EventMessage):
+    async def async_handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
-        _LOGGER.debug("Update %s @ %s", event_message.event_id, event_message.timestamp)
+        if not event_message.resource_update_name:
+            _LOGGER.debug("Ignoring event with no device_id")
+            return
+        device_id = event_message.resource_update_name
+        _LOGGER.debug("Update for %s @ %s", device_id, event_message.timestamp)
         traits = event_message.resource_update_traits
         if traits:
             _LOGGER.debug("Trait update %s", traits.keys())
+            # This event triggered an update to a device that changed some
+            # properties which the DeviceManager should already have received.
+            # Send a signal to refresh state of all listening devices.
+            async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
         events = event_message.resource_update_events
-        if events:
-            _LOGGER.debug("Event Update %s", events.keys())
-
-        if not event_message.resource_update_traits:
-            # Note: Currently ignoring events like camera motion
+        if not events:
             return
-        # This event triggered an update to a device that changed some
-        # properties which the DeviceManager should already have received.
-        # Send a signal to refresh state of all listening devices.
-        async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
+        _LOGGER.debug("Event Update %s", events.keys())
+        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        if not device_entry:
+            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
+            return
+        for event in events:
+            event_type = EVENT_NAME_MAP.get(event)
+            if not event_type:
+                continue
+            message = {
+                "device_id": device_entry.id,
+                "type": event_type,
+            }
+            self._hass.bus.async_fire(NEST_EVENT, message)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -208,8 +228,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
     subscriber.set_update_callback(SignalUpdateCallback(hass))
-    asyncio.create_task(subscriber.start_async())
-    hass.data[DOMAIN][entry.entry_id] = subscriber
+
+    try:
+        await subscriber.start_async()
+    except GoogleNestException as err:
+        _LOGGER.error("Subscriber error: %s", err)
+        subscriber.stop_async()
+        raise ConfigEntryNotReady from err
+
+    try:
+        await subscriber.async_get_device_manager()
+    except GoogleNestException as err:
+        _LOGGER.error("Device Manager error: %s", err)
+        subscriber.stop_async()
+        raise ConfigEntryNotReady from err
+
+    hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -225,7 +259,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         # Legacy API
         return True
 
-    subscriber = hass.data[DOMAIN][entry.entry_id]
+    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = all(
         await asyncio.gather(
@@ -236,7 +270,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
 
     return unload_ok
 

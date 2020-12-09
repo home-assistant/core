@@ -10,7 +10,8 @@
             },
             "user": {
                 "data": {
-                    "password": "Palavra-passe"
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
                 }
             }
         }

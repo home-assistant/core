@@ -217,7 +217,9 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             if not set(met_item).issuperset(required_keys):
                 continue
             ha_item = {
-                k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
+                k: met_item[v]
+                for k, v in FORECAST_MAP.items()
+                if met_item.get(v) is not None
             }
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
