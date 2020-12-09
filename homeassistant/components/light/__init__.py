@@ -293,19 +293,23 @@ class Profile:
     color_x: Optional[float] = dataclasses.field(repr=False)
     color_y: Optional[float] = dataclasses.field(repr=False)
     brightness: Optional[int]
-    transition: int = 0
+    transition: Optional[int] = None
     hs_color: Optional[Tuple[float, float]] = dataclasses.field(init=False)
 
     _OPT_BRIGHTNESS = vol.Any(cv.byte, _coerce_none)
+    _OPT_TRANSITION = vol.Any(VALID_TRANSITION, _coerce_none)
     SCHEMA = vol.Schema(
         vol.Any(
             vol.ExactSequence((str, _coerce_none, _coerce_none, cv.byte)),
             vol.ExactSequence((str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS)),
             vol.ExactSequence(
-                (str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS, VALID_TRANSITION)
+                (str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS, _OPT_TRANSITION)
             ),
             vol.ExactSequence(
                 (str, _coerce_none, _coerce_none, _OPT_BRIGHTNESS, VALID_TRANSITION)
+            ),
+            vol.ExactSequence(
+                (str, _coerce_none, _coerce_none, cv.byte, _OPT_TRANSITION)
             ),
         )
     )
@@ -391,7 +395,8 @@ class Profiles:
             params.setdefault(ATTR_HS_COLOR, profile.hs_color)
         if profile.brightness is not None:
             params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
-        params.setdefault(ATTR_TRANSITION, profile.transition)
+        if profile.transition is not None:
+            params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
 class LightEntity(ToggleEntity):

@@ -422,19 +422,92 @@ async def test_services(hass, mock_light_profiles):
     assert data == {}
 
 
-async def test_light_profiles(hass, mock_light_profiles):
+@pytest.mark.parametrize(
+    "profile_name, last_call, expected_data",
+    (
+        (
+            "test",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 0,
+            },
+        ),
+        (
+            "color_no_brightness_no_transition",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+            },
+        ),
+        (
+            "no color",
+            "turn_on",
+            {
+                light.ATTR_BRIGHTNESS: 110,
+                light.ATTR_TRANSITION: 0,
+            },
+        ),
+        (
+            "test_off",
+            "turn_off",
+            {
+                light.ATTR_TRANSITION: 0,
+            },
+        ),
+        (
+            "no brightness",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+            },
+        ),
+        (
+            "color_and_brightness",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+                light.ATTR_BRIGHTNESS: 120,
+            },
+        ),
+        (
+            "color_and_transition",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+                light.ATTR_TRANSITION: 4.2,
+            },
+        ),
+        (
+            "brightness_and_transition",
+            "turn_on",
+            {
+                light.ATTR_BRIGHTNESS: 130,
+                light.ATTR_TRANSITION: 5.3,
+            },
+        ),
+    ),
+)
+async def test_light_profiles(
+    hass, mock_light_profiles, profile_name, expected_data, last_call
+):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    profile = light.Profile("test", 0.4, 0.6, 100, 0)
-    mock_light_profiles[profile.name] = profile
-    profile = light.Profile("no color", None, None, 100, 0)
-    mock_light_profiles[profile.name] = profile
-    profile = light.Profile("test_off", 0, 0, 0, 0)
-    mock_light_profiles[profile.name] = profile
-    profile = light.Profile("no brightness", 0.4, 0.6, None)
-    mock_light_profiles[profile.name] = profile
+    profile_mock_data = {
+        "test": (0.4, 0.6, 100, 0),
+        "color_no_brightness_no_transition": (0.4, 0.6, None, None),
+        "no color": (None, None, 110, 0),
+        "test_off": (0, 0, 0, 0),
+        "no brightness": (0.4, 0.6, None),
+        "color_and_brightness": (0.4, 0.6, 120),
+        "color_and_transition": (0.4, 0.6, None, 4.2),
+        "brightness_and_transition": (None, None, 130, 5.3),
+    }
+    for name, data in profile_mock_data.items():
+        mock_light_profiles[name] = light.Profile(*(name, *data))
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -448,63 +521,17 @@ async def test_light_profiles(hass, mock_light_profiles):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_PROFILE: "test",
+            light.ATTR_PROFILE: profile_name,
         },
         blocking=True,
     )
 
-    _, data = ent1.last_call("turn_on")
-    assert light.is_on(hass, ent1.entity_id)
-    assert data == {
-        light.ATTR_HS_COLOR: (71.059, 100),
-        light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_TRANSITION: 0,
-    }
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_PROFILE: "no color",
-        },
-        blocking=True,
-    )
-
-    _, data = ent1.last_call("turn_on")
-    assert light.is_on(hass, ent1.entity_id)
-    assert data == {
-        light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_TRANSITION: 0,
-    }
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: "test_off"},
-        blocking=True,
-    )
-
-    _, data = ent1.last_call("turn_off")
-    assert not light.is_on(hass, ent1.entity_id)
-    assert data == {light.ATTR_TRANSITION: 0}
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_PROFILE: "no brightness",
-        },
-        blocking=True,
-    )
-
-    _, data = ent1.last_call("turn_on")
-    assert light.is_on(hass, ent1.entity_id)
-    assert data == {
-        light.ATTR_HS_COLOR: (71.059, 100),
-        light.ATTR_TRANSITION: 0,
-    }
+    _, data = ent1.last_call(last_call)
+    if last_call == "turn_on":
+        assert light.is_on(hass, ent1.entity_id)
+    else:
+        assert not light.is_on(hass, ent1.entity_id)
+    assert data == expected_data
 
 
 async def test_default_profiles_group(hass, mock_light_profiles):
@@ -727,10 +754,10 @@ async def test_profiles(hass):
     profiles = orig_Profiles(hass)
     await profiles.async_initialize()
     assert profiles.data == {
-        "concentrate": light.Profile("concentrate", 0.5119, 0.4147, 219, 0),
-        "energize": light.Profile("energize", 0.368, 0.3686, 203, 0),
-        "reading": light.Profile("reading", 0.4448, 0.4066, 240, 0),
-        "relax": light.Profile("relax", 0.5119, 0.4147, 144, 0),
+        "concentrate": light.Profile("concentrate", 0.5119, 0.4147, 219, None),
+        "energize": light.Profile("energize", 0.368, 0.3686, 203, None),
+        "reading": light.Profile("reading", 0.4448, 0.4066, 240, None),
+        "relax": light.Profile("relax", 0.5119, 0.4147, 144, None),
     }
     assert profiles.data["concentrate"].hs_color == (35.932, 69.412)
     assert profiles.data["energize"].hs_color == (43.333, 21.176)
@@ -747,8 +774,10 @@ no_color,,,100,1
 no_color_no_transition,,,110
 color,0.5119,0.4147,120,2
 color_no_transition,0.4448,0.4066,130
+color_and_brightness,0.4448,0.4066,170,
 only_brightness,,,140
 only_transition,,,,150
+transition_float,,,,1.6
 invalid_profile_1,
 invalid_color_2,,0.1,1,2
 invalid_color_3,,0.1,1
@@ -770,7 +799,7 @@ invalid_no_brightness_no_color_no_transition,,,
 
     assert profiles.data["no_color_no_transition"].hs_color is None
     assert profiles.data["no_color_no_transition"].brightness == 110
-    assert profiles.data["no_color_no_transition"].transition == 0
+    assert profiles.data["no_color_no_transition"].transition is None
 
     assert profiles.data["color"].hs_color == (35.932, 69.412)
     assert profiles.data["color"].brightness == 120
@@ -778,15 +807,23 @@ invalid_no_brightness_no_color_no_transition,,,
 
     assert profiles.data["color_no_transition"].hs_color == (38.88, 49.02)
     assert profiles.data["color_no_transition"].brightness == 130
-    assert profiles.data["color_no_transition"].transition == 0
+    assert profiles.data["color_no_transition"].transition is None
+
+    assert profiles.data["color_and_brightness"].hs_color == (38.88, 49.02)
+    assert profiles.data["color_and_brightness"].brightness == 170
+    assert profiles.data["color_and_brightness"].transition is None
 
     assert profiles.data["only_brightness"].hs_color is None
     assert profiles.data["only_brightness"].brightness == 140
-    assert profiles.data["only_brightness"].transition == 0
+    assert profiles.data["only_brightness"].transition is None
 
     assert profiles.data["only_transition"].hs_color is None
     assert profiles.data["only_transition"].brightness is None
     assert profiles.data["only_transition"].transition == 150
+
+    assert profiles.data["transition_float"].hs_color is None
+    assert profiles.data["transition_float"].brightness is None
+    assert profiles.data["transition_float"].transition == 1.6
 
     for invalid_profile_name in (
         "invalid_profile_1",
