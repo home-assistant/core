@@ -302,10 +302,10 @@ class Profile:
             vol.ExactSequence((str, _coerce_none, _coerce_none, cv.byte)),
             vol.ExactSequence((str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS)),
             vol.ExactSequence(
-                (str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS, cv.positive_int)
+                (str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS, VALID_TRANSITION)
             ),
             vol.ExactSequence(
-                (str, _coerce_none, _coerce_none, _OPT_BRIGHTNESS, cv.positive_int)
+                (str, _coerce_none, _coerce_none, _OPT_BRIGHTNESS, VALID_TRANSITION)
             ),
         )
     )
