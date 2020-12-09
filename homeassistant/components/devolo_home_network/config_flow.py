@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -72,6 +73,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize."""
+        self.device = None
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if user_input is None:
@@ -106,6 +111,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+        """Handle zerooconf discovery."""
+        if discovery_info is None:
+            return self.async_abort(reason="cannot_connect")
+
+        if discovery_info["properties"]["MT"] in ["2600", "2601"]:
+            return self.async_abort(reason="devolo Home Control Gateway")
+
+        await self.async_set_unique_id(discovery_info["properties"]["SN"])
+        self._abort_if_unique_id_configured()
+
+        # self.device = Device(ip=discovery_info['host'], deviceapi=discovery_info['properties'])
+        self.device = Device(ip=discovery_info["host"])
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(self, user_input=None):
+        """Handle a flow initiated by zeroconf."""
+        if user_input is not None:
+            self.device.password = user_input[CONF_PASSWORD]
+            await self.device.async_connect()
+            title = f"{self.device.ip}"
+            return self.async_create_entry(
+                title=title, data={CONF_IP_ADDRESS: self.device.ip}
+            )
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=vol.Schema({vol.Optional(CONF_PASSWORD, default=""): str}),
         )
 
 
