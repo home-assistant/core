@@ -63,7 +63,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id].async_disconnect()
+        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
         # TODO Remove listener
         hass.data[DOMAIN].pop(entry.entry_id)
 
