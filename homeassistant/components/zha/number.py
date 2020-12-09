@@ -258,7 +258,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         """Init this entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._analog_output_channel = self.cluster_channels.get(CHANNEL_ANALOG_OUTPUT)
-        self._present_value = self._analaog_output_channel.cluster.get["present_value"]
+        self._present_value = self._analog_output_channel.present_value
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
