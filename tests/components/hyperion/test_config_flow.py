@@ -9,9 +9,10 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
-    CONF_MODE_PRIORITY,
+    CONF_MODE_OFF,
+    CONF_MODE_OFF_PRIORITY,
     CONF_PRIORITY,
-    DEFAULT_MODE,
+    DEFAULT_MODE_OFF,
     DOMAIN,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -24,7 +25,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
-    CONF_MODE,
     CONF_PORT,
     CONF_TOKEN,
     SERVICE_TURN_ON,
@@ -683,7 +683,7 @@ async def test_options_priority(hass: HomeAssistantType) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
             CONF_PRIORITY: new_priority,
-            CONF_MODE: DEFAULT_MODE,
+            CONF_MODE_OFF: DEFAULT_MODE_OFF,
         }
 
         # Turn the light on and ensure the new priority is used.
@@ -756,8 +756,9 @@ async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-async def test_options_mode(hass: HomeAssistantType) -> None:
-    """Check mode option."""
+
+async def test_options_mode_off(hass: HomeAssistantType) -> None:
+    """Check mode off option."""
 
     config_entry = add_test_config_entry(hass)
 
@@ -771,10 +772,10 @@ async def test_options_mode(hass: HomeAssistantType) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
 
-        new_mode = CONF_MODE_PRIORITY
+        new_mode = CONF_MODE_OFF_PRIORITY
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_MODE: new_mode}
+            result["flow_id"], user_input={CONF_MODE_OFF: new_mode}
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_MODE] == new_mode
+        assert result["data"][CONF_MODE_OFF] == new_mode

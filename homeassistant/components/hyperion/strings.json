@@ -46,7 +46,7 @@
       "init": {
         "data": {
           "priority": "Hyperion priority to use for colors and effects",
-          "mode": "Mode: Component control or priority friendly (for interoperability with other Hyperion-NG remotes)"
+          "mode_off": "Off Mode: Component control or priority (for interoperability with other Hyperion-NG remotes)"
         }
       }
     }

@@ -35,10 +35,11 @@ from . import create_hyperion_client
 from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
-    CONF_MODE_COMPONENT,
-    CONF_MODE_PRIORITY,
+    CONF_MODE_OFF,
+    CONF_MODE_OFF_COMPONENT,
+    CONF_MODE_OFF_PRIORITY,
     CONF_PRIORITY,
-    DEFAULT_MODE,
+    DEFAULT_MODE_OFF,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
@@ -475,9 +476,11 @@ class HyperionOptionsFlow(OptionsFlow):
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
                     vol.Optional(
-                        CONF_MODE,
-                        default=self._config_entry.options.get(CONF_MODE, DEFAULT_MODE),
-                    ): vol.In([CONF_MODE_COMPONENT, CONF_MODE_PRIORITY]),
+                        CONF_MODE_OFF,
+                        default=self._config_entry.options.get(
+                            CONF_MODE_OFF, DEFAULT_MODE_OFF
+                        ),
+                    ): vol.In([CONF_MODE_OFF_COMPONENT, CONF_MODE_OFF_PRIORITY]),
                 }
             ),
         )
