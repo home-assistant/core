@@ -55,5 +55,3 @@ class DevoloDevice(Entity):
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
         return self._unique_id
-
-    # TODO evaluate entity_picture
