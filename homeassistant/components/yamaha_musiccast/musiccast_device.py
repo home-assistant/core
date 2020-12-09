@@ -3,6 +3,7 @@
 import asyncio
 from typing import Dict
 
+from homeassistant.util import dt
 from pyamaha import AsyncDevice, NetUSB, System, Zone
 
 
@@ -31,6 +32,9 @@ class MusicCastData:
         self.netusb_album = None
         self.netusb_track = None
         self.netusb_albumart_url = None
+        self.netusb_play_time = None
+        self.netusb_play_time_updated = None
+        self.netusb_total_time = None
 
 
 class MusicCastZoneData:
@@ -104,12 +108,16 @@ class MusicCastDevice:
                         self._fetch_zone(parameter), self.hass.loop
                     ).result()
 
-        if "netusb" in message.keys() and message.get("netusb").get(
-            "play_info_updated"
-        ):
-            asyncio.run_coroutine_threadsafe(
-                self._fetch_netusb(), self.hass.loop
-            ).result()
+        if "netusb" in message.keys():
+            if message.get("netusb").get("play_info_updated"):
+                asyncio.run_coroutine_threadsafe(
+                    self._fetch_netusb(), self.hass.loop
+                ).result()
+
+            play_time = message.get("netusb").get("play_time")
+            if play_time:
+                self.data.netusb_play_time = play_time
+                self.data.netusb_play_time_updated = dt.utcnow()
 
         for callback in self._callbacks:
             callback()
@@ -153,6 +161,10 @@ class MusicCastDevice:
         self.data.netusb_albumart_url = self._netusb_play_info.get(
             "albumart_url", self.data.netusb_albumart_url
         )
+        self.data.netusb_total_time = self._netusb_play_info.get("total_time", None)
+        self.data.netusb_play_time = self._netusb_play_info.get("play_time", None)
+
+        self.data.netusb_play_time_updated = dt.utcnow()
 
     async def _fetch_zone(self, zone_id):
         print(f"Fetching zone {zone_id}...")

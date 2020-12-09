@@ -281,11 +281,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         return MEDIA_TYPE_MUSIC
 
     @property
-    def media_duration(self):
-        """Return the duration of current playing media in seconds."""
-        return 213
-
-    @property
     def media_image_url(self):
         """Return the image url of current playing media."""
         return (
@@ -372,3 +367,21 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     def source_list(self):
         """List of available input sources."""
         return self.coordinator.data.zones[self._zone_id].input_list
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        return self.coordinator.data.netusb_total_time
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self.coordinator.data.netusb_play_time
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self.coordinator.data.netusb_play_time_updated
