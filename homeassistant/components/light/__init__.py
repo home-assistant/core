@@ -1,8 +1,10 @@
 """Provides functionality to interact with lights."""
 import csv
+import dataclasses
 from datetime import timedelta
 import logging
 import os
+from typing import Tuple
 
 import voluptuous as vol
 
@@ -270,8 +272,16 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class Profiles:
-    """Representation of available color profiles."""
+@dataclasses.dataclass
+class Profile:
+    """Representation of a profile."""
+
+    name: str
+    color_x: float = dataclasses.field(repr=False)
+    color_y: float = dataclasses.field(repr=False)
+    brightness: int
+    transition: int = 0
+    hs_color: Tuple[float, float] = dataclasses.field(init=False)
 
     SCHEMA = vol.Schema(
         vol.Any(
@@ -281,6 +291,19 @@ class Profiles:
             ),
         )
     )
+
+    def __post_init__(self) -> None:
+        """Convert xy to hs color."""
+        self.hs_color = color_util.color_xy_to_hs(self.color_x, self.color_y)
+
+    @classmethod
+    def from_csv_row(cls, csv_row: Tuple) -> "Profile":
+        """Create profile from a CSV row tuple."""
+        return cls(*cls.SCHEMA(csv_row))
+
+
+class Profiles:
+    """Representation of available color profiles."""
 
     def __init__(self, hass):
         """Initialize profiles."""
@@ -306,22 +329,9 @@ class Profiles:
 
                 try:
                     for rec in reader:
-                        (
-                            profile,
-                            color_x,
-                            color_y,
-                            brightness,
-                            *transition,
-                        ) = Profiles.SCHEMA(rec)
+                        profile = Profile.from_csv_row(rec)
+                        profiles[profile.name] = profile
 
-                        transition = transition[0] if transition else 0
-
-                        profiles[profile] = color_util.color_xy_to_hs(
-                            color_x, color_y
-                        ) + (
-                            brightness,
-                            transition,
-                        )
                 except vol.MultipleInvalid as ex:
                     _LOGGER.error(
                         "Error parsing light profile from %s: %s", profile_path, ex
@@ -350,9 +360,9 @@ class Profiles:
         if profile is None:
             return
 
-        params.setdefault(ATTR_HS_COLOR, profile[:2])
-        params.setdefault(ATTR_BRIGHTNESS, profile[2])
-        params.setdefault(ATTR_TRANSITION, profile[3])
+        params.setdefault(ATTR_HS_COLOR, profile.hs_color)
+        params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
+        params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
 class LightEntity(ToggleEntity):

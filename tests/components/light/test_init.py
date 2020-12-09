@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
-from homeassistant.util import color
 
 from tests.common import async_mock_service
 
@@ -280,14 +279,14 @@ async def test_services(hass, mock_light_profiles):
     assert data == {}
 
     # One of the light profiles
-    mock_light_profiles["relax"] = (35.932, 69.412, 144, 0)
-    prof_name, prof_h, prof_s, prof_bri, prof_t = "relax", 35.932, 69.412, 144, 0
+    profile = light.Profile("relax", 0.513, 0.413, 144, 0)
+    mock_light_profiles[profile.name] = profile
 
     # Test light profiles
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: prof_name},
+        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: profile.name},
         blocking=True,
     )
     # Specify a profile and a brightness attribute to overwrite it
@@ -296,7 +295,7 @@ async def test_services(hass, mock_light_profiles):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ent2.entity_id,
-            light.ATTR_PROFILE: prof_name,
+            light.ATTR_PROFILE: profile.name,
             light.ATTR_BRIGHTNESS: 100,
             light.ATTR_TRANSITION: 1,
         },
@@ -305,15 +304,15 @@ async def test_services(hass, mock_light_profiles):
 
     _, data = ent1.last_call("turn_on")
     assert data == {
-        light.ATTR_BRIGHTNESS: prof_bri,
-        light.ATTR_HS_COLOR: (prof_h, prof_s),
-        light.ATTR_TRANSITION: prof_t,
+        light.ATTR_BRIGHTNESS: profile.brightness,
+        light.ATTR_HS_COLOR: profile.hs_color,
+        light.ATTR_TRANSITION: profile.transition,
     }
 
     _, data = ent2.last_call("turn_on")
     assert data == {
         light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_HS_COLOR: (prof_h, prof_s),
+        light.ATTR_HS_COLOR: profile.hs_color,
         light.ATTR_TRANSITION: 1,
     }
 
@@ -323,7 +322,7 @@ async def test_services(hass, mock_light_profiles):
         SERVICE_TOGGLE,
         {
             ATTR_ENTITY_ID: ent3.entity_id,
-            light.ATTR_PROFILE: prof_name,
+            light.ATTR_PROFILE: profile.name,
             light.ATTR_BRIGHTNESS_PCT: 100,
         },
         blocking=True,
@@ -332,8 +331,8 @@ async def test_services(hass, mock_light_profiles):
     _, data = ent3.last_call("turn_on")
     assert data == {
         light.ATTR_BRIGHTNESS: 255,
-        light.ATTR_HS_COLOR: (prof_h, prof_s),
-        light.ATTR_TRANSITION: prof_t,
+        light.ATTR_HS_COLOR: profile.hs_color,
+        light.ATTR_TRANSITION: profile.transition,
     }
 
     await hass.services.async_call(
@@ -392,7 +391,7 @@ async def test_services(hass, mock_light_profiles):
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: ent1.entity_id,
-                light.ATTR_PROFILE: prof_name,
+                light.ATTR_PROFILE: profile.name,
                 light.ATTR_BRIGHTNESS: "bright",
             },
             blocking=True,
@@ -427,8 +426,10 @@ async def test_light_profiles(hass, mock_light_profiles):
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    mock_light_profiles["test"] = color.color_xy_to_hs(0.4, 0.6) + (100, 0)
-    mock_light_profiles["test_off"] = 0, 0, 0, 0
+    profile = light.Profile("test", 0.4, 0.6, 100, 0)
+    mock_light_profiles[profile.name] = profile
+    profile = light.Profile("test_off", 0, 0, 0, 0)
+    mock_light_profiles[profile.name] = profile
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -477,10 +478,8 @@ async def test_default_profiles_group(hass, mock_light_profiles):
     )
     await hass.async_block_till_done()
 
-    mock_light_profiles["group.all_lights.default"] = color.color_xy_to_hs(0.4, 0.6) + (
-        99,
-        2,
-    )
+    profile = light.Profile("group.all_lights.default", 0.4, 0.6, 99, 2)
+    mock_light_profiles[profile.name] = profile
 
     ent, _, _ = platform.ENTITIES
     await hass.services.async_call(
@@ -505,14 +504,10 @@ async def test_default_profiles_light(hass, mock_light_profiles):
     )
     await hass.async_block_till_done()
 
-    mock_light_profiles["group.all_lights.default"] = color.color_xy_to_hs(0.3, 0.5) + (
-        200,
-        0,
-    )
-    mock_light_profiles["light.ceiling_2.default"] = color.color_xy_to_hs(0.6, 0.6) + (
-        100,
-        3,
-    )
+    profile = light.Profile("group.all_lights.default", 0.3, 0.5, 200, 0)
+    mock_light_profiles[profile.name] = profile
+    profile = light.Profile("light.ceiling_2.default", 0.6, 0.6, 100, 3)
+    mock_light_profiles[profile.name] = profile
 
     dev = next(filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES))
     await hass.services.async_call(
@@ -693,8 +688,12 @@ async def test_profiles(hass):
     profiles = orig_Profiles(hass)
     await profiles.async_initialize()
     assert profiles.data == {
-        "concentrate": (35.932, 69.412, 219, 0),
-        "energize": (43.333, 21.176, 203, 0),
-        "reading": (38.88, 49.02, 240, 0),
-        "relax": (35.932, 69.412, 144, 0),
+        "concentrate": light.Profile("concentrate", 0.5119, 0.4147, 219, 0),
+        "energize": light.Profile("energize", 0.368, 0.3686, 203, 0),
+        "reading": light.Profile("reading", 0.4448, 0.4066, 240, 0),
+        "relax": light.Profile("relax", 0.5119, 0.4147, 144, 0),
     }
+    assert profiles.data["concentrate"].hs_color == (35.932, 69.412)
+    assert profiles.data["energize"].hs_color == (43.333, 21.176)
+    assert profiles.data["reading"].hs_color == (38.88, 49.02)
+    assert profiles.data["relax"].hs_color == (35.932, 69.412)
