@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PLATFORMS
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = Device(ip=conf[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
     device.password = conf.get(CONF_PASSWORD) or ""
 
-    hass.data[DOMAIN][entry.entry_id] = device
+    hass.data[DOMAIN][entry.entry_id] = {"device": device, "listener": None}
     await device.async_connect()
     # This should be done in validate_input
     entry.title = device.hostname.split(".")[0]
@@ -41,7 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    # TODO Listen to EVENT_HOMEASSISTANT_STOP
+    async def disconnect(event):
+        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
+
+    # Listen when EVENT_HOMEASSISTANT_STOP is fired
+    hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, disconnect
+    )
 
     return True
 
