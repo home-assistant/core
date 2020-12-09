@@ -1,10 +1,7 @@
 """Test zha analog output."""
-import asyncio
-
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
@@ -16,12 +13,11 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_zcl_header,
     send_attributes_report,
 )
 
-from tests.async_mock import AsyncMock, call, patch
-from tests.common import async_capture_events, mock_coro, mock_restore_cache
+from tests.async_mock import call, patch
+from tests.common import mock_coro, mock_restore_cache
 
 
 @pytest.fixture
@@ -124,7 +120,9 @@ async def test_restore_state(hass, zha_device_restored, zigpy_analog_output_devi
         hass,
         (
             State(
-                "number.fakemanufacturer_fakemodel_e769900a_analog_output", "42.0", {},
+                "number.fakemanufacturer_fakemodel_e769900a_analog_output",
+                "42.0",
+                {},
             ),
         ),
     )

@@ -1,19 +1,14 @@
 """Support for ZHA AnalogOutput cluster."""
-import asyncio
 import functools
 import logging
-from typing import List, Optional
 
+from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.number import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_STEP,
     DOMAIN,
     NumberEntity,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -24,10 +19,8 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_SET_LEVEL,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
