@@ -1,6 +1,7 @@
 {
-  "title": "devolo Home Network",
+  
   "config": {
+    "flow_title": "{product} ({name})",
     "step": {
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]",
