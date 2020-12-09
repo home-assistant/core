@@ -571,8 +571,8 @@ class HyperionLight(LightEntity):
                 if candidate[const.KEY_PRIORITY] == self._get_option(
                     CONF_PRIORITY
                 ) and candidate.get(const.KEY_ACTIVE, False):
-                    return cast(Optional[Dict[str, Any]], candidate)
-        return cast(Optional[Dict[str, Any]], self._client.visible_priority)
+                    return candidate  # type: ignore[no-any-return]
+        return self._client.visible_priority  # type: ignore[no-any-return]
 
     def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion priorities."""
