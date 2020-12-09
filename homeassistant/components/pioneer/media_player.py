@@ -256,7 +256,7 @@ class PioneerDevice(MediaPlayerEntity):
         self.telnet_command(f"{self._source_name_to_number.get(source)}FN")
 
     def alternative_set_volume_level(self, target_level_in_pioneer_format):
-        """ Alternative method for devices that do not support ___VL commands """
+        """Alternative method for devices that do not support ___VL commands."""
         current_level_in_pioneer_format = int(self.volume_level * self._max_volume)
         if current_level_in_pioneer_format > target_level_in_pioneer_format:
             # VD decreases volume in steps of 2, so we account for that here
