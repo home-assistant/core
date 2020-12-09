@@ -126,6 +126,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # self.device = Device(ip=discovery_info['host'], deviceapi=discovery_info['properties'])
         self.device = Device(ip=discovery_info["host"])
+
+        self.context["title_placeholders"] = {
+            "name": discovery_info["hostname"].split(".")[0],
+            "serial_number": discovery_info["properties"]["SN"],
+        }
+        print(self.context)
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(self, user_input=None):
@@ -140,6 +146,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD, default=""): str}),
+            description_placeholders={"host_name": self.device.ip},
         )
 
 
