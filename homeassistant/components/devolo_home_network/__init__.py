@@ -21,28 +21,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up devolo Home Network from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
     conf = entry.data
     hass.data.setdefault(DOMAIN, {})
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
-    # TODO Reuse zeroconf data (detection code needed)
     device = Device(ip=conf[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
     device.password = conf.get(CONF_PASSWORD) or ""
+    await device.async_connect()
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device, "listener": None}
-    await device.async_connect()
-    # This should be done in validate_input
-    entry.title = device.hostname.split(".")[0]
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    def disconnect(event):
-        hass.data[DOMAIN][entry.entry_id]["device"].disconnect()
+    async def disconnect(event):
+        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
@@ -63,6 +58,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
         hass.data[DOMAIN][entry.entry_id]["listener"]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
