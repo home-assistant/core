@@ -1,4 +1,5 @@
 """Constants used by Home Assistant components."""
+
 MAJOR_VERSION = 0
 MINOR_VERSION = 119
 PATCH_VERSION = "0b0"
