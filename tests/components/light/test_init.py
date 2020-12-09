@@ -724,13 +724,47 @@ async def test_profile_load_optional_hs_color(hass):
     """Test profile loading with profiles containing no xy color."""
 
     csv_file = """the first line is skipped
-    "no_color",,,100,1
-    "no_color_no_transition",,,110
-    "color",0.5119,0.4117.120,2
-    "color_no_transition",0.5119,0.4117,120
-    """
+no_color,,,100,1
+no_color_no_transition,,,110
+color,0.5119,0.4147,120,2
+color_no_transition,0.4448,0.4066,130
+invalid_profile_1,
+invalid_color_2,,0.1,1,2
+invalid_color_3,,0.1,1
+invalid_color_4,0.1,,1,3
+invalid_color_5,0.1,,1
+invalid_brightness,0,0,256,4
+invalid_brightness_2,0,0,256
+"""
 
     profiles = orig_Profiles(hass)
-    with patch("__builtins__.open", mock_open(read_data=csv_file)):
+    with patch("builtins.open", mock_open(read_data=csv_file)):
         await profiles.async_initialize()
         await hass.async_block_till_done()
+
+    assert profiles.data["no_color"].hs_color is None
+    assert profiles.data["no_color"].brightness == 100
+    assert profiles.data["no_color"].transition == 1
+
+    assert profiles.data["no_color_no_transition"].hs_color is None
+    assert profiles.data["no_color_no_transition"].brightness == 110
+    assert profiles.data["no_color_no_transition"].transition == 0
+
+    assert profiles.data["color"].hs_color == (35.932, 69.412)
+    assert profiles.data["color"].brightness == 120
+    assert profiles.data["color"].transition == 2
+
+    assert profiles.data["color_no_transition"].hs_color == (38.88, 49.02)
+    assert profiles.data["color_no_transition"].brightness == 130
+    assert profiles.data["color_no_transition"].transition == 0
+
+    for invalid_profile_name in (
+        "invalid_profile_1",
+        "invalid_color_2",
+        "invalid_color_3",
+        "invalid_color_4",
+        "invalid_color_5",
+        "invalid_brightness",
+        "invalid_brightness_2",
+    ):
+        assert invalid_profile_name not in profiles.data
