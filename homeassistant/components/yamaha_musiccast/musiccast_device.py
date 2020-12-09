@@ -43,6 +43,7 @@ class MusicCastZoneData:
         self.max_volume = 100
         self.current_volume = 0
         self.mute: bool = False
+        self.input_list = []
         self.input = None
         self.sound_program_list = []
         self.sound_program = None
@@ -103,7 +104,9 @@ class MusicCastDevice:
                         self._fetch_zone(parameter), self.hass.loop
                     ).result()
 
-        if "netusb" in message.keys():
+        if "netusb" in message.keys() and message.get("netusb").get(
+            "play_info_updated"
+        ):
             asyncio.run_coroutine_threadsafe(
                 self._fetch_netusb(), self.hass.loop
             ).result()
@@ -204,6 +207,7 @@ class MusicCastDevice:
                 zone_data.max_volume = range_volume.get("max")
 
                 zone_data.sound_program_list = zone.get("sound_program_list", [])
+                zone_data.input_list = zone.get("input_list", [])
 
                 self.data.zones[zone_id] = zone_data
 

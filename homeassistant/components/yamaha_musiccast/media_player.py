@@ -14,14 +14,16 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from pyamaha import NetUSB, Zone
@@ -72,6 +74,8 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_STOP
 )
 
 
@@ -159,6 +163,8 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         if self.coordinator.data.zones[self._zone_id].power == "on":
             if self._is_netusb and self.coordinator.data.netusb_playback == "pause":
                 return STATE_PAUSED
+            elif self._is_netusb and self.coordinator.data.netusb_playback == "stop":
+                return STATE_IDLE
             return STATE_PLAYING
         return STATE_OFF
 
@@ -246,6 +252,11 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             await self.coordinator.musiccast.device.request(
                 NetUSB.set_playback("pause")
             )
+
+    async def async_media_stop(self):
+        """Send stop command."""
+        if self._is_netusb:
+            await self.coordinator.musiccast.device.request(NetUSB.set_playback("stop"))
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -345,3 +356,19 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         print([self.repeat, repeat])
         if self._is_netusb and self.repeat != repeat and self.repeat != REPEAT_MODE_ONE:
             await self.coordinator.musiccast.device.request(NetUSB.toggle_repeat())
+
+    async def async_select_source(self, source):
+        """Select input source."""
+        await self.coordinator.musiccast.device.request(
+            Zone.set_input(self._zone_id, source, "")
+        )
+
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self.coordinator.data.zones[self._zone_id].input
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self.coordinator.data.zones[self._zone_id].input_list
