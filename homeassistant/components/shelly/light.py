@@ -75,7 +75,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         super().__init__(wrapper, block)
         self.control_result = None
         self._supported_features = 0
-        color_mode = (
+        self._color_mode = (
             hasattr(block, "red")
             and hasattr(block, "green")
             and hasattr(block, "blue")
@@ -83,11 +83,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         )
         if hasattr(block, "brightness") or hasattr(block, "gain"):
             self._supported_features |= SUPPORT_BRIGHTNESS
-        if hasattr(block, "colorTemp") and not color_mode:
+        if hasattr(block, "colorTemp") and not self._color_mode:
             self._supported_features |= SUPPORT_COLOR_TEMP
-        if hasattr(block, "white") and color_mode:
+        if hasattr(block, "white") and self._color_mode:
             self._supported_features |= SUPPORT_WHITE_VALUE
-        if color_mode:
+        if self._color_mode:
             self._supported_features |= SUPPORT_COLOR
 
     @property
@@ -106,18 +106,16 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def brightness(self) -> Optional[int]:
         """Brightness of light."""
-
-        key = "brightness"
-        if self.wrapper.device.settings.get("mode") == "color":
-            key = "gain"
-
-        if self.control_result:
-            brightness = self.control_result[key]
-        else:
-            if key == "brightness":
-                brightness = self.block.brightness
+        if self._color_mode:
+            if self.control_result:
+                brightness = self.control_result["gain"]
             else:
                 brightness = self.block.gain
+        else:
+            if self.control_result:
+                brightness = self.control_result["brightness"]
+            else:
+                brightness = self.block.brightness
         return int(brightness / 100 * 255)
 
     @property
