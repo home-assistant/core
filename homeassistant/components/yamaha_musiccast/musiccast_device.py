@@ -4,7 +4,7 @@ import asyncio
 from typing import Dict
 
 from homeassistant.util import dt
-from pyamaha import AsyncDevice, NetUSB, System, Zone
+from pyamaha import AsyncDevice, NetUSB, System, Tuner, Zone
 
 
 class MusicCastData:
@@ -35,6 +35,26 @@ class MusicCastData:
         self.netusb_play_time = None
         self.netusb_play_time_updated = None
         self.netusb_total_time = None
+
+        # Tuner
+        self.band = None
+        self._am_freq = 1
+        self._fm_freq = 1
+        self.rds_text_a = ""
+        self.rds_text_b = ""
+
+        self.dab_service_label = ""
+        self.dab_dls = ""
+
+    @property
+    def fm_freq(self):
+        """Return a formatted string with fm frequency."""
+        return "FM {:.2f} MHz".format(self._fm_freq / 1000)
+
+    @property
+    def am_freq(self):
+        """Return a formatted string with am frequency."""
+        return f"AM {self._am_freq:.2f} KHz"
 
 
 class MusicCastZoneData:
@@ -71,6 +91,7 @@ class MusicCastDevice:
         self._device_info = None
         self._features = None
         self._netusb_play_info = None
+        self._tuner_play_info = None
 
         print(f"HANDLE UDP ON {self.device._udp_port}")
 
@@ -119,6 +140,12 @@ class MusicCastDevice:
                 self.data.netusb_play_time = play_time
                 self.data.netusb_play_time_updated = dt.utcnow()
 
+        if "tuner" in message.keys():
+            if message.get("tuner").get("play_info_updated"):
+                asyncio.run_coroutine_threadsafe(
+                    self._fetch_tuner(), self.hass.loop
+                ).result()
+
         for callback in self._callbacks:
             callback()
 
@@ -165,6 +192,40 @@ class MusicCastDevice:
         self.data.netusb_play_time = self._netusb_play_info.get("play_time", None)
 
         self.data.netusb_play_time_updated = dt.utcnow()
+
+    async def _fetch_tuner(self):
+        """Fetch tuner data."""
+        print("Fetching tuner...")
+        self._tuner_play_info = await (
+            await self.device.request(Tuner.get_play_info())
+        ).json()
+
+        self.data.band = self._tuner_play_info.get("band", self.data.band)
+
+        self.data._fm_freq = self._tuner_play_info.get("fm", {}).get(
+            "freq", self.data._fm_freq
+        )
+        self.data._am_freq = self._tuner_play_info.get("am", {}).get(
+            "freq", self.data._am_freq
+        )
+        self.data.rds_text_a = (
+            self._tuner_play_info.get("rds", {})
+            .get("radio_text_a", self.data.rds_text_a)
+            .strip()
+        )
+        self.data.rds_text_b = (
+            self._tuner_play_info.get("rds", {})
+            .get("radio_text_b", self.data.rds_text_b)
+            .strip()
+        )
+        self.data.dab_service_label = (
+            self._tuner_play_info.get("dab", {})
+            .get("service_label", self.data.dab_service_label)
+            .strip()
+        )
+        self.data.dab_dls = (
+            self._tuner_play_info.get("dab", {}).get("dls", self.data.dab_dls).strip()
+        )
 
     async def _fetch_zone(self, zone_id):
         print(f"Fetching zone {zone_id}...")
@@ -224,6 +285,7 @@ class MusicCastDevice:
                 self.data.zones[zone_id] = zone_data
 
         await self._fetch_netusb()
+        await self._fetch_tuner()
 
         for zone in self._zone_ids:
             await self._fetch_zone(zone)

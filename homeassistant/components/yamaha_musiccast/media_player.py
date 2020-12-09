@@ -26,7 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from pyamaha import NetUSB, Zone
+from pyamaha import NetUSB, Tuner, Zone
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import DOMAIN
@@ -151,6 +151,10 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             self.coordinator.data.netusb_input
             == self.coordinator.data.zones[self._zone_id].input
         )
+
+    @property
+    def _is_tuner(self):
+        return self.coordinator.data.zones[self._zone_id].input == "tuner"
 
     @property
     def name(self):
@@ -292,17 +296,50 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return self.coordinator.data.netusb_track if self._is_netusb else ""
+        if self._is_netusb:
+            return self.coordinator.data.netusb_track
+        elif self._is_tuner:
+            if self.coordinator.data.band == "dab":
+                return self.coordinator.data.dab_dls
+            else:
+                if (
+                    self.coordinator.data.rds_text_a == ""
+                    and self.coordinator.data.rds_text_b != ""
+                ):
+                    return self.coordinator.data.rds_text_b
+                elif (
+                    self.coordinator.data.rds_text_a != ""
+                    and self.coordinator.data.rds_text_b == ""
+                ):
+                    return self.coordinator.data.rds_text_a
+                elif (
+                    self.coordinator.data.rds_text_a != ""
+                    and self.coordinator.data.rds_text_b != ""
+                ):
+                    return f"{self.coordinator.data.rds_text_a} / {self.coordinator.data.rds_text_b}"
+
+        return None
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self.coordinator.data.netusb_artist if self._is_netusb else ""
+
+        if self._is_netusb:
+            return self.coordinator.data.netusb_artist
+        elif self._is_tuner:
+            if self.coordinator.data.band == "dab":
+                return self.coordinator.data.dab_service_label
+            elif self.coordinator.data.band == "fm":
+                return self.coordinator.data.fm_freq
+            elif self.coordinator.data.band == "am":
+                return self.coordinator.data.am_freq
+
+        return None
 
     @property
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
-        return self.coordinator.data.netusb_album if self._is_netusb else ""
+        return self.coordinator.data.netusb_album if self._is_netusb else None
 
     @property
     def media_track(self):
@@ -333,11 +370,29 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             await self.coordinator.musiccast.device.request(
                 NetUSB.set_playback("previous")
             )
+        elif self._is_tuner:
+            if self.coordinator.data.band in ("fm", "am"):
+                await self.coordinator.musiccast.device.request(
+                    Tuner.set_freq(self.coordinator.data.band, "auto_down", 0)
+                )
+            elif self.coordinator.data.band == "dab":
+                await self.coordinator.musiccast.device.request(
+                    Tuner.set_dab_service("previous")
+                )
 
     async def async_media_next_track(self):
         """Send next track command."""
         if self._is_netusb:
             await self.coordinator.musiccast.device.request(NetUSB.set_playback("next"))
+        elif self._is_tuner:
+            if self.coordinator.data.band in ("fm", "am"):
+                await self.coordinator.musiccast.device.request(
+                    Tuner.set_freq(self.coordinator.data.band, "auto_up", 0)
+                )
+            elif self.coordinator.data.band == "dab":
+                await self.coordinator.musiccast.device.request(
+                    Tuner.set_dab_service("next")
+                )
 
     def clear_playlist(self):
         """Clear players playlist."""
