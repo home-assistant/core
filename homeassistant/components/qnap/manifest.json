@@ -2,6 +2,7 @@
   "domain": "qnap",
   "name": "QNAP",
   "config_flow": true,
+  "dependencies": ["persistent_notification"],
   "documentation": "https://www.home-assistant.io/integrations/qnap",
   "requirements": ["qnapstats==0.4.0"],
   "codeowners": ["@colinodell"],
