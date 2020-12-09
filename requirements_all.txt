@@ -830,6 +830,9 @@ influxdb-client==1.8.0
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
+# homeassistant.components.investec
+investec==0.1.0
+
 # homeassistant.components.iperf3
 iperf3==0.1.11
 

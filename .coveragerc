@@ -432,6 +432,8 @@ omit =
     homeassistant/components/isy994/switch.py
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
+    homeassistant/components/investec/*
+    homeassistant/components/investec/sensor.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
     homeassistant/components/juicenet/const.py

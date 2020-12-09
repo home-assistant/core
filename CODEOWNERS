@@ -221,6 +221,7 @@ homeassistant/components/insteon/* @teharris1
 homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo
+homeassistant/components/investec/* @Aurelian-Shuttleworth
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes @abmantis
