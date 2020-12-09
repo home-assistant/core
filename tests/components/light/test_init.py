@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock, mock_open, patch
 from tests.common import async_mock_service
 
 orig_Profiles = light.Profiles
@@ -428,6 +429,8 @@ async def test_light_profiles(hass, mock_light_profiles):
 
     profile = light.Profile("test", 0.4, 0.6, 100, 0)
     mock_light_profiles[profile.name] = profile
+    profile = light.Profile("no color", None, None, 100, 0)
+    mock_light_profiles[profile.name] = profile
     profile = light.Profile("test_off", 0, 0, 0, 0)
     mock_light_profiles[profile.name] = profile
 
@@ -452,6 +455,23 @@ async def test_light_profiles(hass, mock_light_profiles):
     assert light.is_on(hass, ent1.entity_id)
     assert data == {
         light.ATTR_HS_COLOR: (71.059, 100),
+        light.ATTR_BRIGHTNESS: 100,
+        light.ATTR_TRANSITION: 0,
+    }
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ent1.entity_id,
+            light.ATTR_PROFILE: "no color",
+        },
+        blocking=True,
+    )
+
+    _, data = ent1.last_call("turn_on")
+    assert light.is_on(hass, ent1.entity_id)
+    assert data == {
         light.ATTR_BRIGHTNESS: 100,
         light.ATTR_TRANSITION: 0,
     }
@@ -697,3 +717,20 @@ async def test_profiles(hass):
     assert profiles.data["energize"].hs_color == (43.333, 21.176)
     assert profiles.data["reading"].hs_color == (38.88, 49.02)
     assert profiles.data["relax"].hs_color == (35.932, 69.412)
+
+
+@patch("os.path.isfile", MagicMock(side_effect=(True, False)))
+async def test_profile_load_optional_hs_color(hass):
+    """Test profile loading with profiles containing no xy color."""
+
+    csv_file = """the first line is skipped
+    "no_color",,,100,1
+    "no_color_no_transition",,,110
+    "color",0.5119,0.4117.120,2
+    "color_no_transition",0.5119,0.4117,120
+    """
+
+    profiles = orig_Profiles(hass)
+    with patch("__builtins__.open", mock_open(read_data=csv_file)):
+        await profiles.async_initialize()
+        await hass.async_block_till_done()

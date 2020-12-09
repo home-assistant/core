@@ -4,7 +4,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, cast
 
 import voluptuous as vol
 
@@ -273,29 +273,51 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
+def _coerce_none(value: str) -> None:
+    """Coerce an empty string as None."""
+
+    if not isinstance(value, str):
+        raise vol.Invalid("Expected a string")
+
+    if value:
+        raise vol.Invalid("Not an empty string")
+
+    return None
+
+
 @dataclasses.dataclass
 class Profile:
     """Representation of a profile."""
 
     name: str
-    color_x: float = dataclasses.field(repr=False)
-    color_y: float = dataclasses.field(repr=False)
+    color_x: Optional[float] = dataclasses.field(repr=False)
+    color_y: Optional[float] = dataclasses.field(repr=False)
     brightness: int
     transition: int = 0
-    hs_color: Tuple[float, float] = dataclasses.field(init=False)
+    hs_color: Optional[Tuple[float, float]] = dataclasses.field(init=False)
 
     SCHEMA = vol.Schema(
         vol.Any(
+            vol.ExactSequence((str, _coerce_none, _coerce_none, cv.byte)),
             vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte)),
             vol.ExactSequence(
                 (str, cv.small_float, cv.small_float, cv.byte, cv.positive_int)
+            ),
+            vol.ExactSequence(
+                (str, _coerce_none, _coerce_none, cv.byte, cv.positive_int)
             ),
         )
     )
 
     def __post_init__(self) -> None:
         """Convert xy to hs color."""
-        self.hs_color = color_util.color_xy_to_hs(self.color_x, self.color_y)
+        if None in (self.color_x, self.color_y):
+            self.hs_color = None
+            return
+
+        self.hs_color = color_util.color_xy_to_hs(
+            cast(float, self.color_x), cast(float, self.color_y)
+        )
 
     @classmethod
     def from_csv_row(cls, csv_row: List[str]) -> "Profile":
@@ -335,7 +357,10 @@ class Profiles:
 
                 except vol.MultipleInvalid as ex:
                     _LOGGER.error(
-                        "Error parsing light profile from %s: %s", profile_path, ex
+                        "Error parsing light profile row '%s' from %s: %s",
+                        rec,
+                        profile_path,
+                        ex,
                     )
                     continue
         return profiles
@@ -361,7 +386,8 @@ class Profiles:
         if profile is None:
             return
 
-        params.setdefault(ATTR_HS_COLOR, profile.hs_color)
+        if profile.hs_color is not None:
+            params.setdefault(ATTR_HS_COLOR, profile.hs_color)
         params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
         params.setdefault(ATTR_TRANSITION, profile.transition)
 
