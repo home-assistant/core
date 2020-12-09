@@ -1,6 +1,4 @@
 """The Qnap constants."""
-from datetime import timedelta
-
 from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
@@ -8,32 +6,15 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-ATTR_DRIVE = "Drive"
-ATTR_DRIVE_SIZE = "Drive Size"
-ATTR_IP = "IP Address"
-ATTR_MAC = "MAC Address"
-ATTR_MASK = "Mask"
-ATTR_MAX_SPEED = "Max Speed"
-ATTR_MEMORY_SIZE = "Memory Size"
-ATTR_MODEL = "Model"
-ATTR_PACKETS_TX = "Packets (TX)"
-ATTR_PACKETS_RX = "Packets (RX)"
-ATTR_PACKETS_ERR = "Packets (Err)"
-ATTR_SERIAL = "Serial #"
-ATTR_TYPE = "Type"
-ATTR_UPTIME = "Uptime"
-ATTR_VOLUME_SIZE = "Volume Size"
-
 CONF_DRIVES = "drives"
 CONF_NICS = "nics"
 CONF_VOLUMES = "volumes"
 COMPONENTS = ["sensor"]
-DEFAULT_NAME = "QNAP"
+DEFAULT_NAME = "Qnap"
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 5
 DOMAIN = "qnap"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
