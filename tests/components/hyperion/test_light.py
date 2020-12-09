@@ -856,17 +856,6 @@ async def test_light_async_updates_from_hyperion_client(
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EFFECT
     assert entity_state.attributes["hs_color"] == (0.0, 0.0)
 
-    # Update priorities (Black Color)
-    client.visible_priority = {
-        const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
-        const.KEY_VALUE: {const.KEY_RGB: COLOR_BLACK},
-    }
-
-    _call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID_1)
-    assert entity_state
-    assert entity_state.state == "off"
-
     # Update priorities (Color)
     rgb = (0, 100, 100)
     client.visible_priority = {

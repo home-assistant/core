@@ -344,9 +344,12 @@ class HyperionLight(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return bool(self._client.is_on()) and self._is_priority_on(
-            self._get_active_priority()
-        )
+        if not bool(self._client.is_on()):
+            return False
+        priority = self._get_active_priority()
+        if self._get_option(CONF_MODE) == CONF_MODE_PRIORITY:
+            return self._is_priority_on(priority)
+        return priority is not None
 
     @property
     def icon(self) -> str:
@@ -577,8 +580,10 @@ class HyperionLight(LightEntity):
         # from the color selector). Do not set our internal state if the priority is
         # 'off' (i.e. if black is active, as we want to ensure it seamlessly turns back
         # on at the correct prior color on the next 'on' call.
-        if self._is_priority_on(priority):
-            assert priority
+        if priority and (
+            self._get_option(CONF_MODE) != CONF_MODE_PRIORITY
+            or self._is_priority_on(priority)
+        ):
             componentid = priority.get(const.KEY_COMPONENTID)
             if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
                 self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
