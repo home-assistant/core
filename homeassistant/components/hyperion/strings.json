@@ -44,9 +44,10 @@
   "options": {
     "step": {
       "init": {
+        "description": "See the [Hyperion Integration documentation](https://www.home-assistant.io/integrations/hyperion/) for more information.",
         "data": {
           "priority": "Hyperion priority to use for colors and effects",
-          "mode_off": "Off Mode: Component control or priority (for interoperability with other Hyperion-NG remotes)"
+          "mode_off": "Off Mode: Component control or priority"
         }
       }
     }
