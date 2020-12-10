@@ -1,5 +1,4 @@
 """Fixtures for pywemo."""
-import asynctest
 import pytest
 import pywemo
 
@@ -7,7 +6,7 @@ from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+from tests.async_mock import create_autospec, patch
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -24,7 +23,7 @@ def pywemo_model_fixture():
 @pytest.fixture(name="pywemo_registry")
 def pywemo_registry_fixture():
     """Fixture for SubscriptionRegistry instances."""
-    registry = asynctest.create_autospec(pywemo.SubscriptionRegistry)
+    registry = create_autospec(pywemo.SubscriptionRegistry)
 
     registry.callbacks = {}
 
@@ -40,7 +39,7 @@ def pywemo_registry_fixture():
 @pytest.fixture(name="pywemo_device")
 def pywemo_device_fixture(pywemo_registry, pywemo_model):
     """Fixture for WeMoDevice instances."""
-    device = asynctest.create_autospec(getattr(pywemo, pywemo_model))
+    device = create_autospec(getattr(pywemo, pywemo_model))
     device.host = MOCK_HOST
     device.port = MOCK_PORT
     device.name = MOCK_NAME
