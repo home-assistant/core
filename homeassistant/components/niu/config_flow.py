@@ -7,15 +7,19 @@ from voluptuous.schema_builder import Required
 from homeassistant import config_entries, core, exceptions
 
 from .const import DOMAIN  # pylint:disable=unused-import
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
 from niu import NiuCloud
 from niu import NiuAPIException, NiuNetException, NiuServerException
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
+# Define data schema to be used and displayed by the config screen
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required("username"): str, vol.Required("password"): str}
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
@@ -27,9 +31,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         # Create new object with user data
         hub = NiuCloud(
-            username=data["username"],
-            password=data["password"],
-            token=None,
+            username=data[CONF_USERNAME],
+            password=data[CONF_PASSWORD],
             lang="en-US",
         )
         # Check if this action have given us a correct auth token
@@ -48,7 +51,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": data["username"]}
+    return {"title": data[CONF_USERNAME]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
