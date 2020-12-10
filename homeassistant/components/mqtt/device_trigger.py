@@ -5,7 +5,6 @@ from typing import Callable, List, Optional
 import attr
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -28,6 +27,7 @@ from . import (
     debug_info,
     trigger as mqtt_trigger,
 )
+from .. import mqtt
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
