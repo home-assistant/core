@@ -32,7 +32,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
+from .const import (
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,6 +228,11 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
                 for k, v in FORECAST_MAP.items()
                 if met_item.get(v) is not None
             }
+            if not self._is_metric:
+                if ATTR_FORECAST_PRECIPITATION in ha_item:
+                    ha_item[ATTR_FORECAST_PRECIPITATION] = round(
+                        ha_item.get(ATTR_FORECAST_PRECIPITATION) / 25.4, 2
+                    )
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]
