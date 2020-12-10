@@ -187,8 +187,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             load_platforms,
         )
 
-        device = await _async_setup_device(hass, host, entry, capabilities)
+        device = await _async_get_device(hass, host, entry, capabilities)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
+        await device.async_setup()
 
     async def load_platforms():
         for component in PLATFORMS:
@@ -255,28 +256,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             scanner.async_unregister_callback(entry.data[CONF_ID])
 
     return unload_ok
-
-
-async def _async_setup_device(
-    hass: HomeAssistant,
-    host: str,
-    entry: ConfigEntry,
-    capabilities: Optional[dict],
-) -> None:
-    # Get model from config and capabilities
-    model = entry.options.get(CONF_MODEL)
-    if not model and capabilities is not None:
-        model = capabilities.get("model")
-
-    # Set up device
-    bulb = Bulb(host, model=model or None)
-    if capabilities is None:
-        capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
-
-    device = YeelightDevice(hass, host, entry.options, bulb, capabilities)
-    await hass.async_add_executor_job(device.update)
-    await device.async_setup()
-    return device
 
 
 @callback
@@ -600,3 +579,22 @@ class YeelightEntity(Entity):
     def update(self) -> None:
         """Update the entity."""
         self._device.update()
+
+
+async def _async_get_device(
+    hass: HomeAssistant,
+    host: str,
+    entry: ConfigEntry,
+    capabilities: Optional[dict],
+) -> YeelightDevice:
+    # Get model from config and capabilities
+    model = entry.options.get(CONF_MODEL)
+    if not model and capabilities is not None:
+        model = capabilities.get("model")
+
+    # Set up device
+    bulb = Bulb(host, model=model or None)
+    if capabilities is None:
+        capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
+
+    return YeelightDevice(hass, host, entry.options, bulb, capabilities)
