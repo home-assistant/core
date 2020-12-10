@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt, scene
+from homeassistant.components import scene
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_PAYLOAD_ON, CONF_UNIQUE_ID
 import homeassistant.helpers.config_validation as cv
@@ -21,6 +21,7 @@ from . import (
     MqttAvailability,
     MqttDiscoveryUpdate,
 )
+from .. import mqtt
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
