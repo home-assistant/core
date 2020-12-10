@@ -117,6 +117,7 @@ class UtilityMeterSensor(RestoreEntity):
     ):
         """Initialize the Utility Meter sensor."""
         self._sensor_source_id = source_entity
+        self._base = 0
         self._state = 0
         self._last_period = 0
         self._last_reset = dt_util.now()
@@ -159,7 +160,8 @@ class UtilityMeterSensor(RestoreEntity):
             if (not self._sensor_net_consumption) and diff < 0:
                 # Source sensor just rolled over for unknown reasons,
                 return
-            self._state += diff
+            self._state = self._base + diff
+            self._base = self._state
 
         except ValueError as err:
             _LOGGER.warning("While processing state changes: %s", err)
@@ -229,7 +231,7 @@ class UtilityMeterSensor(RestoreEntity):
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.now()
         self._last_period = str(self._state)
-        self._state = 0
+        self._base = 0
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
