@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
 
@@ -24,6 +23,7 @@ from .const import (
     SERVICE_RESET_FILTER_LIFE,
     SERVICE_SET_HUMIDITY,
 )
+from .entity import WemoSubscriptionEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -143,15 +143,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoHumidifier(FanEntity):
+class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
     def __init__(self, device):
         """Initialize the WeMo switch."""
-        self.wemo = device
-        self._state = None
-        self._available = True
-        self._update_lock = None
+        super().__init__(device)
         self._fan_mode = None
         self._target_humidity = None
         self._current_humidity = None
@@ -159,54 +156,6 @@ class WemoHumidifier(FanEntity):
         self._filter_life = None
         self._filter_expired = None
         self._last_fan_on_mode = WEMO_FAN_MEDIUM
-        self._model_name = self.wemo.model_name
-        self._name = self.wemo.name
-        self._serialnumber = self.wemo.serialnumber
-
-    def _subscription_callback(self, _device, _type, _params):
-        """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for %s", self.name)
-        updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(self._async_locked_subscription_callback(not updated))
-
-    async def _async_locked_subscription_callback(self, force_update):
-        """Handle an update from a subscription."""
-        # If an update is in progress, we don't do anything
-        if self._update_lock.locked():
-            return
-
-        await self._async_locked_update(force_update)
-        self.async_write_ha_state()
-
-    @property
-    def unique_id(self):
-        """Return the ID of this WeMo humidifier."""
-        return self._serialnumber
-
-    @property
-    def name(self):
-        """Return the name of the humidifier if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on. Standby is on."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return true if switch is available."""
-        return self._available
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "name": self._name,
-            "identifiers": {(WEMO_DOMAIN, self._serialnumber)},
-            "model": self._model_name,
-            "manufacturer": "Belkin",
-        }
 
     @property
     def icon(self):
@@ -239,44 +188,6 @@ class WemoHumidifier(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORTED_FEATURES
-
-    async def async_added_to_hass(self):
-        """Wemo humidifier added to Home Assistant."""
-        # Define inside async context so we know our event loop
-        self._update_lock = asyncio.Lock()
-
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.register, self.wemo)
-        registry.on(self.wemo, None, self._subscription_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Wemo humidifier removed from hass."""
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.unregister, self.wemo)
-
-    async def async_update(self):
-        """Update WeMo state.
-
-        Wemo has an aggressive retry logic that sometimes can take over a
-        minute to return. If we don't get a state after 5 seconds, assume the
-        Wemo humidifier is unreachable. If update goes through, it will be made
-        available again.
-        """
-        # If an update is in progress, we don't do anything
-        if self._update_lock.locked():
-            return
-
-        try:
-            with async_timeout.timeout(5):
-                await asyncio.shield(self._async_locked_update(True))
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Lost connection to %s", self.name)
-            self._available = False
-
-    async def _async_locked_update(self, force_update):
-        """Try updating within an async lock."""
-        async with self._update_lock:
-            await self.hass.async_add_executor_job(self._update, force_update)
 
     def _update(self, force_update=True):
         """Update the device state."""
