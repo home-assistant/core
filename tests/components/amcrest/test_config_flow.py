@@ -81,158 +81,158 @@ async def test_flow_manual_configuration(hass):
     }
 
 
-async def test_flow_fails_already_configured(hass):
-    """Test that config flow fails on already configured device."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SERIALNUMBER,
-        data={
-            CONF_NAME: TEST_NAME,
-            CONF_HOST: TEST_HOST,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_PORT: TEST_PORT,
-        },
-        title=TEST_NAME,
-    )
-    config_entry.add_to_hass(hass)
+# async def test_flow_fails_already_configured(hass):
+#     """Test that config flow fails on already configured device."""
+#     config_entry = MockConfigEntry(
+#         domain=DOMAIN,
+#         unique_id=TEST_SERIALNUMBER,
+#         data={
+#             CONF_NAME: TEST_NAME,
+#             CONF_HOST: TEST_HOST,
+#             CONF_USERNAME: TEST_USERNAME,
+#             CONF_PASSWORD: TEST_PASSWORD,
+#             CONF_PORT: TEST_PORT,
+#         },
+#         title=TEST_NAME,
+#     )
+#     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+#     assert await hass.config_entries.async_setup(config_entry.entry_id)
+#     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
+#     result = await hass.config_entries.flow.async_init(
+#         DOMAIN, context={"source": "user"}
+#     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+#     assert result["type"] == "form"
+#     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.amcrest.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.amcrest.config_flow.AmcrestChecker",
-        new=AmcrestChecker,
-    ) as mock_my_class:
-        mock_my_class.serial_number = TEST_SERIALNUMBER
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_NAME: TEST_NAME,
-                CONF_HOST: TEST_HOST,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
+#     with patch(
+#         "homeassistant.components.amcrest.async_setup_entry",
+#         return_value=True,
+#     ), patch(
+#         "homeassistant.components.amcrest.config_flow.AmcrestChecker",
+#         new=AmcrestChecker,
+#     ) as mock_my_class:
+#         mock_my_class.serial_number = TEST_SERIALNUMBER
+#         result = await hass.config_entries.flow.async_configure(
+#             result["flow_id"],
+#             user_input={
+#                 CONF_NAME: TEST_NAME,
+#                 CONF_HOST: TEST_HOST,
+#                 CONF_USERNAME: TEST_USERNAME,
+#                 CONF_PASSWORD: TEST_PASSWORD,
+#                 CONF_PORT: TEST_PORT,
+#             },
+#         )
+#         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_flow_fails_faulty_credentials(hass):
-    """Test that config flow fails on faulty credentials."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.amcrest.config_flow.AmcrestChecker",
-        side_effect=LoginError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_NAME: TEST_NAME,
-                CONF_HOST: TEST_HOST,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-
-    assert result["errors"] == {"base": "invalid_auth"}
+#     assert result["type"] == "abort"
+#     assert result["reason"] == "already_configured"
 
 
-async def test_flow_fails_device_unavailable(hass):
-    """Test that config flow fails on device unavailable."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
+# async def test_flow_fails_faulty_credentials(hass):
+#     """Test that config flow fails on faulty credentials."""
+#     result = await hass.config_entries.flow.async_init(
+#         DOMAIN, context={"source": "user"}
+#     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+#     assert result["type"] == "form"
+#     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.amcrest.config_flow.AmcrestChecker",
-        side_effect=AmcrestError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_NAME: TEST_NAME,
-                CONF_HOST: TEST_HOST,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_PORT: TEST_PORT,
-            },
-        )
+#     with patch(
+#         "homeassistant.components.amcrest.config_flow.AmcrestChecker",
+#         side_effect=LoginError,
+#     ):
+#         result = await hass.config_entries.flow.async_configure(
+#             result["flow_id"],
+#             user_input={
+#                 CONF_NAME: TEST_NAME,
+#                 CONF_HOST: TEST_HOST,
+#                 CONF_USERNAME: TEST_USERNAME,
+#                 CONF_PASSWORD: TEST_PASSWORD,
+#                 CONF_PORT: TEST_PORT,
+#             },
+#         )
 
-    assert result["errors"] == {"base": "device_unavailable"}
+#     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_option_flow(hass):
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SERIALNUMBER,
-        data={
-            CONF_NAME: TEST_NAME,
-            CONF_HOST: TEST_HOST,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_PORT: TEST_PORT,
-        },
-        title=TEST_NAME,
-    )
-    config_entry.add_to_hass(hass)
+# async def test_flow_fails_device_unavailable(hass):
+#     """Test that config flow fails on device unavailable."""
+#     result = await hass.config_entries.flow.async_init(
+#         DOMAIN, context={"source": "user"}
+#     )
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+#     assert result["type"] == "form"
+#     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+#     with patch(
+#         "homeassistant.components.amcrest.config_flow.AmcrestChecker",
+#         side_effect=AmcrestError,
+#     ):
+#         result = await hass.config_entries.flow.async_configure(
+#             result["flow_id"],
+#             user_input={
+#                 CONF_NAME: TEST_NAME,
+#                 CONF_HOST: TEST_HOST,
+#                 CONF_USERNAME: TEST_USERNAME,
+#                 CONF_PASSWORD: TEST_PASSWORD,
+#                 CONF_PORT: TEST_PORT,
+#             },
+#         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "configure_stream"
+#     assert result["errors"] == {"base": "device_unavailable"}
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_STREAM_SOURCE: DEFAULT_STREAM_SOURCE,
-            CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
-            CONF_RESOLUTION: DEFAULT_RESOLUTION,
-            CONF_AUTHENTICATION: DEFAULT_AUTHENTICATION,
-            CONF_CONTROL_LIGHT: DEFAULT_CONTROL_LIGHT,
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            CONF_BINARY_SENSORS: [],
-            CONF_SENSORS: [],
-            CONF_EVENTS: "",
-        },
-    )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert config_entry.options == {
-        CONF_STREAM_SOURCE: DEFAULT_STREAM_SOURCE,
-        CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
-        CONF_RESOLUTION: DEFAULT_RESOLUTION,
-        CONF_AUTHENTICATION: DEFAULT_AUTHENTICATION,
-        CONF_CONTROL_LIGHT: DEFAULT_CONTROL_LIGHT,
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-        CONF_BINARY_SENSORS: [],
-        CONF_SENSORS: [],
-        CONF_EVENTS: "",
-    }
+# async def test_option_flow(hass):
+#     """Test config flow options."""
+#     config_entry = MockConfigEntry(
+#         domain=DOMAIN,
+#         unique_id=TEST_SERIALNUMBER,
+#         data={
+#             CONF_NAME: TEST_NAME,
+#             CONF_HOST: TEST_HOST,
+#             CONF_USERNAME: TEST_USERNAME,
+#             CONF_PASSWORD: TEST_PASSWORD,
+#             CONF_PORT: TEST_PORT,
+#         },
+#         title=TEST_NAME,
+#     )
+#     config_entry.add_to_hass(hass)
+
+#     await hass.config_entries.async_setup(config_entry.entry_id)
+#     await hass.async_block_till_done()
+
+#     result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+#     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+#     assert result["step_id"] == "configure_stream"
+
+#     result = await hass.config_entries.options.async_configure(
+#         result["flow_id"],
+#         user_input={
+#             CONF_STREAM_SOURCE: DEFAULT_STREAM_SOURCE,
+#             CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
+#             CONF_RESOLUTION: DEFAULT_RESOLUTION,
+#             CONF_AUTHENTICATION: DEFAULT_AUTHENTICATION,
+#             CONF_CONTROL_LIGHT: DEFAULT_CONTROL_LIGHT,
+#             CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+#             CONF_BINARY_SENSORS: [],
+#             CONF_SENSORS: [],
+#             CONF_EVENTS: "",
+#         },
+#     )
+
+#     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+#     assert config_entry.options == {
+#         CONF_STREAM_SOURCE: DEFAULT_STREAM_SOURCE,
+#         CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
+#         CONF_RESOLUTION: DEFAULT_RESOLUTION,
+#         CONF_AUTHENTICATION: DEFAULT_AUTHENTICATION,
+#         CONF_CONTROL_LIGHT: DEFAULT_CONTROL_LIGHT,
+#         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+#         CONF_BINARY_SENSORS: [],
+#         CONF_SENSORS: [],
+#         CONF_EVENTS: "",
+#     }

@@ -57,7 +57,7 @@ from .helpers import service_signal
 _LOGGER = logging.getLogger(__name__)
 
 
-def _monitor_events(hass, name, api, event_codes):
+def _monitor_events(hass, unique_id, name, api, event_codes):
     if "All" in event_codes["events"]:
         event_codes_list = "All"
     else:
@@ -79,6 +79,14 @@ def _monitor_events(hass, name, api, event_codes):
                     dispatcher_send(hass, signal, start)
 
                 if code in event_codes["events"] or "All" in event_codes["events"]:
+                    if "data" in payload:
+                        tmpData = payload["data"]
+                        _LOGGER.debug("tmpData: %s", tmpData)
+                        payload.pop("data")
+                        payload.update(tmpData)
+                        payload.update({"serial": unique_id})
+                        payload.update({"name": name})
+
                     _LOGGER.debug(
                         "Sending event to bus, event name: %s, payload: %s",
                         code,
@@ -92,11 +100,11 @@ def _monitor_events(hass, name, api, event_codes):
             )
 
 
-def _start_event_monitor(hass, name, api, event_codes):
+def _start_event_monitor(hass, unique_id, name, api, event_codes):
     thread = threading.Thread(
         target=_monitor_events,
         name=f"Amcrest {name}",
-        args=(hass, name, api, event_codes),
+        args=(hass, unique_id, name, api, event_codes),
         daemon=True,
     )
     thread.start()
@@ -143,6 +151,7 @@ async def async_setup_entry(hass, config_entry):
     _LOGGER.debug("read config entry name : %s", name)
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
+    unique_id = config_entry.unique_id
 
     api = AmcrestChecker(
         hass,
@@ -203,7 +212,7 @@ async def async_setup_entry(hass, config_entry):
         event_codes["events"] = [event.strip() for event in events.split(",")]
 
     if event_codes["binary_sensors"] or event_codes["events"]:
-        _start_event_monitor(hass, name, api, event_codes)
+        _start_event_monitor(hass, unique_id, name, api, event_codes)
 
     if sensors:
         hass.async_create_task(
