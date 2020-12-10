@@ -26,8 +26,8 @@ from .const import (
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
-    DOMAIN,
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 NICS_SCHEMA = vol.Schema(
     {
@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Roomba configuration flow."""
+    """Qnap configuration flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
@@ -88,7 +88,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 stats = await self.hass.async_add_executor_job(api.get_system_stats)
-            except:  # noqa: E722 pylint: disable=bare-except
+            except Exception:  # noqa: E722 pylint: disable=broad-except
                 _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)" % host)
                 errors["base"] = "cannot_connect"
 
