@@ -1,5 +1,4 @@
 """Websocket API for blueprint."""
-import html
 import logging
 from typing import Dict, Optional
 
@@ -117,7 +116,7 @@ async def ws_save_blueprint(hass, connection, msg):
 
     try:
         blueprint = models.Blueprint(
-            yaml.parse_yaml(html.unescape(msg["yaml"])), expected_domain=domain
+            yaml.parse_yaml(msg["yaml"]), expected_domain=domain
         )
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
