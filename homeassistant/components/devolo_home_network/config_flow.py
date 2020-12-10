@@ -7,7 +7,6 @@ from devolo_plc_api.exceptions.device import DeviceNotFound
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -28,24 +27,19 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-    device = Device(
+    valid = await Device.async_validate_password(
         data[CONF_IP_ADDRESS],
-        zeroconf_instance=zeroconf_instance,
-        deviceapi=discovery_data,
+        data.get(CONF_PASSWORD),
+        "wifi" if "wifi" in discovery_data["name"].lower() else "lan",
     )
-    device.password = data.get(CONF_PASSWORD, "")
-
-    await device.async_connect()
-    await device.async_disconnect()
 
     # TODO Use function to validate password
-
-    return {
-        # TODO Use constants
-        "serial_number": device.serial_number,
-        "title": device.hostname.split(".")[0],
-    }
+    return valid
+    # return {
+    #     # TODO Use constants
+    #     "serial_number": device.serial_number,
+    #     "title": device.hostname.split(".")[0],
+    # },
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
