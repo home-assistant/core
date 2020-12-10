@@ -258,7 +258,6 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         """Init this entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._analog_output_channel = self.cluster_channels.get(CHANNEL_ANALOG_OUTPUT)
-        self._present_value = self._analog_output_channel.present_value
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -267,15 +266,10 @@ class ZhaNumber(ZhaEntity, NumberEntity):
             self._analog_output_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._present_value = last_state.state
-
     @property
     def value(self):
         """Return the current value."""
-        return self._present_value
+        return self._analog_output_channel.present_value
 
     @property
     def min_value(self):
@@ -328,9 +322,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle value update from channel."""
-        if attr_name == "present_value":
-            self._present_value = value
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_value(self, value):
         """Update the current value from HA."""
@@ -346,7 +338,6 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         if isinstance(res, list) and all(
             [record.status == Status.SUCCESS for record in res[0]]
         ):
-            self._present_value = num_value
             self.async_write_ha_state()
 
     async def async_update(self):
@@ -358,8 +349,3 @@ class ZhaNumber(ZhaEntity, NumberEntity):
                 "present_value"
             )
             _LOGGER.debug("read value=%s", value)
-
-            if value is not None:
-                self._present_value = float(value)
-            else:
-                self._present_value = None

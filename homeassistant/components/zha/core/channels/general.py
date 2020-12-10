@@ -92,6 +92,7 @@ class AnalogOutput(ZigbeeChannel):
     async def fetch_config(self, from_cache: bool) -> None:
         """Get the color configuration."""
         attributes = [
+            "present_value",
             "min_present_value",
             "max_present_value",
             "resolution",
