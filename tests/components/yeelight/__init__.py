@@ -55,7 +55,8 @@ PROPERTIES = {
     "current_brightness": "30",
 }
 
-ENTITY_BINARY_SENSOR = f"binary_sensor.{UNIQUE_NAME}_nightlight"
+ENTITY_BINARY_SENSOR_TEMPLATE = "binary_sensor.{}_nightlight"
+ENTITY_BINARY_SENSOR = ENTITY_BINARY_SENSOR_TEMPLATE.format(UNIQUE_NAME)
 ENTITY_LIGHT = f"light.{UNIQUE_NAME}"
 ENTITY_NIGHTLIGHT = f"light.{UNIQUE_NAME}_nightlight"
 ENTITY_AMBILIGHT = f"light.{UNIQUE_NAME}_ambilight"
