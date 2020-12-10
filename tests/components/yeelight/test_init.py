@@ -1,21 +1,27 @@
 """Test Yeelight."""
+from unittest.mock import MagicMock
+
 from yeelight import BulbType
 
 from homeassistant.components.yeelight import (
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
+    DATA_CONFIG_ENTRIES,
+    DATA_DEVICE,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from . import (
+    CAPABILITIES,
     CONFIG_ENTRY_DATA,
     ENTITY_AMBILIGHT,
     ENTITY_BINARY_SENSOR,
+    ENTITY_BINARY_SENSOR_TEMPLATE,
     ENTITY_LIGHT,
     ENTITY_NIGHTLIGHT,
     ID,
@@ -115,6 +121,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
+
     with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -132,3 +139,40 @@ async def test_unique_ids_entry(hass: HomeAssistant):
     assert (
         er.async_get(ENTITY_AMBILIGHT).unique_id == f"{config_entry.entry_id}-ambilight"
     )
+
+
+async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
+    """Test Yeelight off while adding to ha, for example on HA start."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **CONFIG_ENTRY_DATA,
+            CONF_HOST: IP_ADDRESS,
+        },
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(True)
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+        f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
+        IP_ADDRESS.replace(".", "_")
+    )
+    er = await entity_registry.async_get_registry(hass)
+    assert er.async_get(binary_sensor_entity_id) is None
+
+    type(mocked_bulb).get_capabilities = MagicMock(CAPABILITIES)
+    type(mocked_bulb).get_properties = MagicMock(None)
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.async_block_till_done()
+
+    er = await entity_registry.async_get_registry(hass)
+    assert er.async_get(binary_sensor_entity_id) is not None
