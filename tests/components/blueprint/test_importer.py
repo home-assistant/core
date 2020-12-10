@@ -173,6 +173,7 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
         imported_blueprint.blueprint.metadata["source_url"]
         == "https://community.home-assistant.io/t/test-topic/123/2"
     )
+    assert "gt;" not in imported_blueprint.raw_data
 
 
 @pytest.mark.parametrize(
