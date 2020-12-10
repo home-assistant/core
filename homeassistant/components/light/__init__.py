@@ -282,8 +282,6 @@ def _coerce_none(value: str) -> None:
     if value:
         raise vol.Invalid("Not an empty string")
 
-    return None
-
 
 @dataclasses.dataclass
 class Profile:
@@ -296,9 +294,11 @@ class Profile:
     transition: Optional[int] = None
     hs_color: Optional[Tuple[float, float]] = dataclasses.field(init=False)
 
-    _OPT_BRIGHTNESS = vol.Any(cv.byte, _coerce_none)
-    _OPT_TRANSITION = vol.Any(VALID_TRANSITION, _coerce_none)
-    SCHEMA = vol.Schema(
+    _OPT_BRIGHTNESS = vol.Any(cv.byte, _coerce_none)  # pylint: disable=invalid-name
+    _OPT_TRANSITION = vol.Any(  # pylint: disable=invalid-name
+        VALID_TRANSITION, _coerce_none
+    )
+    SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         vol.Any(
             vol.ExactSequence((str, _coerce_none, _coerce_none, cv.byte)),
             vol.ExactSequence((str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS)),
@@ -377,8 +377,8 @@ class Profiles:
     @callback
     def apply_default(self, entity_id: str, params: Dict) -> None:
         """Return the default turn-on profile for the given light."""
-        for entity_id in (entity_id, "group.all_lights"):
-            name = f"{entity_id}.default"
+        for _entity_id in (entity_id, "group.all_lights"):
+            name = f"{_entity_id}.default"
             if name in self.data:
                 self.apply_profile(name, params)
                 return
