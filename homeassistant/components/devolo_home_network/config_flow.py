@@ -123,7 +123,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD, default=""): str}),
-            description_placeholders={"host_name": self._discovery_info["host"]},
+            description_placeholders={
+                "host_name": self._discovery_info["hostname"].split(".")[0]
+            },
         )
 
     # TODO Add options flow for ability to change password
