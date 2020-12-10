@@ -46,8 +46,9 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
     device.serialnumber = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model
 
-    with patch(
-        "homeassistant.components.wemo.validate_static_config", return_value=device
+    url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
+    with patch("pywemo.setup_url_for_address", return_value=url), patch(
+        "pywemo.discovery.device_from_description", return_value=device
     ):
         yield device
 
