@@ -224,13 +224,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def hb_info_from_type(dev_type="std"):
+def get_sensor_types(device_sub_type="std"):
     """Return the proper info array for the device type."""
-    if "std" in dev_type:
+    if "std" in device_sub_type:
         return DEVICE_SENSORS
-    if "HobbyBoard" in dev_type:
+    if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
-    if "EDS" in dev_type:
+    if "EDS" in device_sub_type:
         return EDS_SENSORS
 
 
@@ -298,19 +298,19 @@ def get_entities(onewirehub: OneWireHub, config):
                 "model": device_type,
                 "name": device_id,
             }
-            for entity_specs in hb_info_from_type(dev_type)[family]:
+            for entity_specs in get_sensor_types(device_sub_type)[family]:
                 if entity_specs["type"] == SENSOR_TYPE_MOISTURE:
                     s_id = entity_specs["path"].split(".")[1]
                     is_leaf = int(
                         onewirehub.owproxy.read(
-                            f"{device['path']}moisture/is_leaf.{s_id}"
+                            f"{device_path}moisture/is_leaf.{s_id}"
                         ).decode()
                     )
                     if is_leaf:
                         entity_specs["type"] = SENSOR_TYPE_WETNESS
                         entity_specs["name"] = f"Wetness {s_id}"
                 entity_path = os.path.join(
-                    os.path.split(device["path"])[0], entity_specs["path"]
+                    os.path.split(device_path)[0], entity_specs["path"]
                 )
                 entities.append(
                     OneWireProxySensor(
