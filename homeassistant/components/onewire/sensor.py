@@ -276,7 +276,7 @@ def get_entities(onewirehub: OneWireHub, config):
             family = device["family"]
             device_type = device["type"]
             device_id = os.path.split(os.path.split(device["path"])[0])[1]
-            dev_type = "std"
+            device_sub_type = "std"
             device_path = device["path"]
             if "EF" in family:
                 dev_type = "HobbyBoard"
