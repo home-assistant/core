@@ -54,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry, discovery_data=None
+    config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT vacuum."""
     setup_entity = {LEGACY: async_setup_entity_legacy, STATE: async_setup_entity_state}
