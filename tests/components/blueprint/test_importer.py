@@ -58,8 +58,66 @@ def test_extract_blueprint_from_community_topic(community_post):
     assert imported_blueprint is not None
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.inputs == {
-        "service_to_call": None,
-        "trigger_event": None,
+        "remote": {
+            "name": "Remote",
+            "description": "IKEA remote to use",
+            "selector": {
+                "device": {
+                    "integration": "zha",
+                    "manufacturer": "IKEA of Sweden",
+                    "model": "TRADFRI remote control",
+                }
+            },
+        },
+        "light": {
+            "name": "Light(s)",
+            "description": "The light(s) to control",
+            "selector": {"target": {"entity": {"domain": "light"}}},
+        },
+        "force_brightness": {
+            "name": "Force turn on brightness",
+            "description": 'Force the brightness to the set level below, when the "on" button on the remote is pushed and lights turn on.\n',
+            "default": False,
+            "selector": {"boolean": {}},
+        },
+        "brightness": {
+            "name": "Brightness",
+            "description": "Brightness of the light(s) when turning on",
+            "default": 50,
+            "selector": {
+                "number": {
+                    "min": 0.0,
+                    "max": 100.0,
+                    "mode": "slider",
+                    "step": 1.0,
+                    "unit_of_measurement": "%",
+                }
+            },
+        },
+        "button_left_short": {
+            "name": "Left button - short press",
+            "description": "Action to run on short left button press",
+            "default": [],
+            "selector": {"action": {}},
+        },
+        "button_left_long": {
+            "name": "Left button - long press",
+            "description": "Action to run on long left button press",
+            "default": [],
+            "selector": {"action": {}},
+        },
+        "button_right_short": {
+            "name": "Right button - short press",
+            "description": "Action to run on short right button press",
+            "default": [],
+            "selector": {"action": {}},
+        },
+        "button_right_long": {
+            "name": "Right button - long press",
+            "description": "Action to run on long right button press",
+            "default": [],
+            "selector": {"action": {}},
+        },
     }
 
 
