@@ -295,6 +295,22 @@ async def test_get_controller_login_failed(hass):
         await get_controller(hass, **CONTROLLER_DATA)
 
 
+async def test_get_controller_controller_bad_gateway(hass):
+    """Check that get_controller can handle controller being unavailable."""
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", side_effect=aiounifi.BadGateway
+    ), pytest.raises(CannotConnect):
+        await get_controller(hass, **CONTROLLER_DATA)
+
+
+async def test_get_controller_controller_service_unavailable(hass):
+    """Check that get_controller can handle controller being unavailable."""
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", side_effect=aiounifi.ServiceUnavailable
+    ), pytest.raises(CannotConnect):
+        await get_controller(hass, **CONTROLLER_DATA)
+
+
 async def test_get_controller_controller_unavailable(hass):
     """Check that get_controller can handle controller being unavailable."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
