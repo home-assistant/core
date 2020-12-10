@@ -74,7 +74,7 @@ async def async_wemo_entity_fixture(hass, pywemo_device):
     await hass.async_block_till_done()
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    entities = list(entity_registry.entities.values())
-    assert len(entities) == 1
+    entity_entries = list(entity_registry.entities.values())
+    assert len(entity_entries) == 1
 
-    yield entities[0]
+    yield entity_entries[0]
