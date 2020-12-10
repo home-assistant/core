@@ -177,7 +177,7 @@ async def test_invalid_fan_speed(hass, mqtt_mock, setup_tasmota):
     with pytest.raises(ValueError) as excinfo:
         await common.async_set_speed(hass, "fan.tasmota", "no_such_speed")
     assert "Unsupported speed no_such_speed" in str(excinfo.value)
-    mqtt_mock.async_publish.assert_not_called
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_availability_when_connection_lost(
