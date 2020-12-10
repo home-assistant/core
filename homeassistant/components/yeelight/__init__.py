@@ -184,14 +184,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_dispatcher_connect(
             hass,
             DEVICE_INITIALIZED.format(host),
-            load_platforms,
+            _load_platforms,
         )
 
         device = await _async_get_device(hass, host, entry, capabilities)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
+
         await device.async_setup()
 
-    async def load_platforms():
+    async def _load_platforms():
+
         for component in PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
