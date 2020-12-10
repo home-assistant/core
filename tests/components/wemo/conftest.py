@@ -52,12 +52,6 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
         yield device
 
 
-@pytest.fixture
-def event_loop(hass):
-    """Allow async fixtures to execute within the hass.loop."""
-    return hass.loop
-
-
 @pytest.fixture(name="wemo_entity")
 async def async_wemo_entity_fixture(hass, pywemo_device):
     """Fixture for a Wemo entity in hass."""
