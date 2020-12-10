@@ -230,7 +230,7 @@ def hb_info_from_type(dev_type="std"):
         return DEVICE_SENSORS
     if "HobbyBoard" in dev_type:
         return HOBBYBOARD_EF
-    if "EDS00xx" in dev_type:
+    if "EDS" in dev_type:
         return EDS_SENSORS
 
 
