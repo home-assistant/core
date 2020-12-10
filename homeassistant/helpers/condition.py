@@ -36,7 +36,7 @@ from homeassistant.const import (
     WEEKDAYS,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import ConditionError, HomeAssistantError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.template import Template
@@ -204,11 +204,22 @@ def async_numeric_state(
     attribute: Optional[str] = None,
 ) -> bool:
     """Test a numeric state condition."""
+    if entity is None:
+        raise ConditionError("No entity specified")
+
     if isinstance(entity, str):
+        entity_id = entity
         entity = hass.states.get(entity)
 
-    if entity is None or (attribute is not None and attribute not in entity.attributes):
-        return False
+        if entity is None:
+            raise ConditionError(f"Unknown entity {entity_id}")
+    else:
+        entity_id = entity.entity_id
+
+    if attribute is not None and attribute not in entity.attributes:
+        raise ConditionError(
+            f"Attribute '{attribute}' (of entity {entity_id}) does not exist"
+        )
 
     value: Any = None
     if value_template is None:
@@ -222,30 +233,27 @@ def async_numeric_state(
         try:
             value = value_template.async_render(variables)
         except TemplateError as ex:
-            _LOGGER.error("Template error: %s", ex)
-            return False
+            raise ConditionError(f"Template error: {ex}") from ex
 
     if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        return False
+        raise ConditionError("State is not available")
 
     try:
         fvalue = float(value)
-    except ValueError:
-        _LOGGER.warning(
-            "Value cannot be processed as a number: %s (Offending entity: %s)",
-            entity,
-            value,
-        )
-        return False
+    except ValueError as ex:
+        raise ConditionError(
+            f"Entity {entity_id} state '{value}' cannot be processed as a number"
+        ) from ex
 
     if below is not None:
         if isinstance(below, str):
             below_entity = hass.states.get(below)
-            if (
-                not below_entity
-                or below_entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-                or fvalue >= float(below_entity.state)
+            if not below_entity or below_entity.state in (
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
             ):
+                raise ConditionError(f"The below entity {below} is not available")
+            if fvalue >= float(below_entity.state):
                 return False
         elif fvalue >= below:
             return False
@@ -253,11 +261,12 @@ def async_numeric_state(
     if above is not None:
         if isinstance(above, str):
             above_entity = hass.states.get(above)
-            if (
-                not above_entity
-                or above_entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-                or fvalue <= float(above_entity.state)
+            if not above_entity or above_entity.state in (
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
             ):
+                raise ConditionError(f"The above entity {above} is not available")
+            if fvalue <= float(above_entity.state):
                 return False
         elif fvalue <= above:
             return False

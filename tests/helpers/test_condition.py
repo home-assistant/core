@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import condition
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -338,8 +338,8 @@ async def test_time_using_input_datetime(hass):
     assert not condition.time(hass, before="input_datetime.not_existing")
 
 
-async def test_if_numeric_state_not_raise_on_unavailable(hass):
-    """Test numeric_state doesn't raise on unavailable/unknown state."""
+async def test_if_numeric_state_raises_on_unavailable(hass):
+    """Test numeric_state raises on unavailable/unknown state."""
     test = await condition.async_from_config(
         hass,
         {"condition": "numeric_state", "entity_id": "sensor.temperature", "below": 42},
@@ -347,11 +347,13 @@ async def test_if_numeric_state_not_raise_on_unavailable(hass):
 
     with patch("homeassistant.helpers.condition._LOGGER.warning") as logwarn:
         hass.states.async_set("sensor.temperature", "unavailable")
-        assert not test(hass)
+        with pytest.raises(ConditionError):
+            test(hass)
         assert len(logwarn.mock_calls) == 0
 
         hass.states.async_set("sensor.temperature", "unknown")
-        assert not test(hass)
+        with pytest.raises(ConditionError):
+            test(hass)
         assert len(logwarn.mock_calls) == 0
 
 
@@ -660,12 +662,14 @@ async def test_numeric_state_using_input_number(hass):
     )
     assert test(hass)
 
-    assert not condition.async_numeric_state(
-        hass, entity="sensor.temperature", below="input_number.not_exist"
-    )
-    assert not condition.async_numeric_state(
-        hass, entity="sensor.temperature", above="input_number.not_exist"
-    )
+    with pytest.raises(ConditionError):
+        condition.async_numeric_state(
+            hass, entity="sensor.temperature", below="input_number.not_exist"
+        )
+    with pytest.raises(ConditionError):
+        condition.async_numeric_state(
+            hass, entity="sensor.temperature", above="input_number.not_exist"
+        )
 
 
 async def test_zone_multiple_entities(hass):

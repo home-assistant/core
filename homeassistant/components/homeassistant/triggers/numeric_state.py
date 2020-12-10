@@ -96,12 +96,19 @@ async def async_attach_trigger(
     @callback
     def check_numeric_state(entity_id, from_s, to_s):
         """Return True if criteria are now met."""
-        if to_s is None:
+        try:
+            return condition.async_numeric_state(
+                hass,
+                to_s,
+                below,
+                above,
+                value_template,
+                variables(entity_id),
+                attribute,
+            )
+        except exceptions.ConditionError as err:
+            _LOGGER.warning("%s", err)
             return False
-
-        return condition.async_numeric_state(
-            hass, to_s, below, above, value_template, variables(entity_id), attribute
-        )
 
     @callback
     def state_automation_listener(event):

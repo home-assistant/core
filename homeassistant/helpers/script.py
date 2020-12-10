@@ -519,7 +519,12 @@ class _ScriptRun:
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
         cond = await self._async_get_condition(self._action)
-        check = cond(self._hass, self._variables)
+        try:
+            check = cond(self._hass, self._variables)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in 'condition' evaluation: %s", ex)
+            check = False
+
         self._log("Test condition %s: %s", self._script.last_action, check)
         if not check:
             raise _StopScript
@@ -570,10 +575,15 @@ class _ScriptRun:
             ]
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
-                if self._stop.is_set() or not all(
-                    cond(self._hass, self._variables) for cond in conditions
-                ):
+                try:
+                    if self._stop.is_set() or not all(
+                        cond(self._hass, self._variables) for cond in conditions
+                    ):
+                        break
+                except exceptions.ConditionError as ex:
+                    _LOGGER.warning("Error in 'while' evaluation: %s", ex)
                     break
+
                 await async_run_sequence(iteration)
 
         elif CONF_UNTIL in repeat:
@@ -583,9 +593,13 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
-                if self._stop.is_set() or all(
-                    cond(self._hass, self._variables) for cond in conditions
-                ):
+                try:
+                    if self._stop.is_set() or all(
+                        cond(self._hass, self._variables) for cond in conditions
+                    ):
+                        break
+                except exceptions.ConditionError as ex:
+                    _LOGGER.warning("Error in 'until' evaluation: %s", ex)
                     break
 
         if saved_repeat_vars:
@@ -599,9 +613,14 @@ class _ScriptRun:
         choose_data = await self._script._async_get_choose_data(self._step)
 
         for conditions, script in choose_data["choices"]:
-            if all(condition(self._hass, self._variables) for condition in conditions):
-                await self._async_run_script(script)
-                return
+            try:
+                if all(
+                    condition(self._hass, self._variables) for condition in conditions
+                ):
+                    await self._async_run_script(script)
+                    return
+            except exceptions.ConditionError as ex:
+                _LOGGER.warning("Error in 'choose' evaluation: %s", ex)
 
         if choose_data["default"]:
             await self._async_run_script(choose_data["default"])
