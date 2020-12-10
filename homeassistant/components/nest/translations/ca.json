@@ -36,5 +36,13 @@
                 "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Moviment detectat",
+            "camera_person": "Persona detectada",
+            "camera_sound": "So detectat",
+            "doorbell_chime": "Timbre premut"
+        }
     }
 }
