@@ -34,6 +34,9 @@ from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, is
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALLOW_UNLOCK = "allow_unlock"
+CONF_API_KEY = "api_key"
+
 ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
@@ -73,8 +76,9 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
-            vol.Remove("allow_unlock"): cv.boolean,
-            vol.Remove("api_key"): cv.string,
+            # deprecated configuration options
+            vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
+            vol.Remove(CONF_API_KEY): cv.string,
         },
         extra=vol.PREVENT_EXTRA,
     ),
