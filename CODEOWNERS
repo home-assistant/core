@@ -299,6 +299,7 @@ homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
+homeassistant/components/niu/* @rmettes
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/noaa_tides/* @jdelaney72
