@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up MQTT vacuum through configuration.yaml."""
     await async_setup_reload_service(hass, MQTT_DOMAIN, PLATFORMS)
-    await _async_setup_entity(config, async_add_entities, discovery_info)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
