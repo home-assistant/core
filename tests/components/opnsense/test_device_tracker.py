@@ -1,70 +1,36 @@
 """The tests for the opnsense device tracker platform."""
-
-from unittest import mock
-
-import pytest
-
 from homeassistant.components import opnsense
-from homeassistant.components.opnsense.const import (
-    CONF_API_SECRET,
-    CONF_TRACKER_INTERFACE,
-    DOMAIN,
-)
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.components.opnsense.const import DOMAIN
 
+from . import CONFIG_DATA_IMPORT, setup_mock_diagnostics
+
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="mocked_opnsense")
-def mocked_opnsense():
-    """Mock for pyopnense.diagnostics."""
-    with mock.patch.object(opnsense, "diagnostics") as mocked_opn:
-        yield mocked_opn
-
-
-async def test_get_scanner(hass, mocked_opnsense, mock_device_tracker_conf):
+async def test_get_scanner(hass, mock_device_tracker_conf):
     """Test creating an opnsense scanner."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_URL: "https://fake_host_fun/api",
-            CONF_API_KEY: "fake_key",
-            CONF_API_SECRET: "fake_secret",
-            CONF_VERIFY_SSL: False,
-            CONF_TRACKER_INTERFACE: ["LAN"],
-        },
-    )
-
-    interface_client = mock.MagicMock()
-    mocked_opnsense.InterfaceClient.return_value = interface_client
-    interface_client.get_arp.return_value = [
-        {
-            "hostname": "",
-            "intf": "igb1",
-            "intf_description": "LAN",
-            "ip": "192.168.0.123",
-            "mac": "ff:ff:ff:ff:ff:ff",
-            "manufacturer": "",
-        },
-        {
-            "hostname": "Desktop",
-            "intf": "igb1",
-            "intf_description": "LAN",
-            "ip": "192.168.0.167",
-            "mac": "ff:ff:ff:ff:ff:fe",
-            "manufacturer": "OEM",
-        },
-    ]
-    network_insight_client = mock.MagicMock()
-    mocked_opnsense.NetworkInsightClient.return_value = network_insight_client
-    network_insight_client.get_interfaces.return_value = {"igb0": "WAN", "igb1": "LAN"}
-
     opnsense.OPNsenseData.hass_config = {"foo": "bar"}
-    result = await opnsense.async_setup_entry(hass, entry)
-    await hass.async_block_till_done()
-    assert result
-    device_1 = hass.states.get("device_tracker.desktop")
-    assert device_1 is not None
-    assert device_1.state == "home"
-    device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
-    assert device_2.state == "home"
+
+    with patch(
+        "homeassistant.components.opnsense.diagnostics"
+    ) as mock_diagnostics, patch(
+        "homeassistant.components.opnsense.config_flow.diagnostics"
+    ) as mock_diagnostics_config_flow:
+        setup_mock_diagnostics(mock_diagnostics)
+        setup_mock_diagnostics(mock_diagnostics_config_flow)
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=CONFIG_DATA_IMPORT,
+        )
+        config_entry.add_to_hass(hass)
+
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert result
+        device_1 = hass.states.get("device_tracker.desktop")
+        assert device_1 is not None
+        assert device_1.state == "home"
+        device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
+        assert device_2.state == "home"

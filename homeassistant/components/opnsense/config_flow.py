@@ -102,7 +102,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for interface in tracker_interfaces:
                     if interface not in interfaces_names:
                         errors["base"] = "invalid_interface"
-                        return await self._show_setup_form(errors)
+                        return await self._show_setup_form(user_input, errors)
 
                 return self.async_create_entry(title="OPNsense", data=user_input)
 
