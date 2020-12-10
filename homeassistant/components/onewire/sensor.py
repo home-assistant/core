@@ -285,7 +285,7 @@ def get_entities(onewirehub: OneWireHub, config):
                 dev_type = "EDS00xx"
                 family = onewirehub.owproxy.read(f"{device_path}device_type").decode()
 
-            if family not in hb_info_from_type(dev_type):
+            if family not in get_sensor_types(device_sub_type):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
