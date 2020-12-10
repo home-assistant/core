@@ -73,6 +73,8 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            vol.Remove("allow_unlock"): cv.boolean,
+            vol.Remove("api_key"): cv.string,
         },
         extra=vol.PREVENT_EXTRA,
     ),
