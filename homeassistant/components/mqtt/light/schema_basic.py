@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -16,17 +15,6 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     LightEntity,
-)
-from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -43,6 +31,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from .. import (
+    CONF_COMMAND_TOPIC,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
+from ... import mqtt
 from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
