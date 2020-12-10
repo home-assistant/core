@@ -281,8 +281,8 @@ def get_entities(onewirehub: OneWireHub, config):
             if "EF" in family:
                 device_sub_type = "HobbyBoard"
                 family = device_type
-            if "7E" in family:
-                dev_type = "EDS00xx"
+            elif "7E" in family:
+                device_sub_type = "EDS"
                 family = onewirehub.owproxy.read(f"{device_path}device_type").decode()
 
             if family not in get_sensor_types(device_sub_type):
