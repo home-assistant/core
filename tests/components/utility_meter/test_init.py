@@ -108,7 +108,7 @@ async def test_services(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_peak")
-    assert state.state == "0"
+    assert state.state == "3"
 
     state = hass.states.get("sensor.energy_bill_offpeak")
-    assert state.state == "0"
+    assert state.state == "1"
