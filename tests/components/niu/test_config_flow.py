@@ -2,6 +2,7 @@
 from homeassistant import config_entries, setup
 from homeassistant.components.niu.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.niu.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
 
@@ -13,11 +14,10 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.niu.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.niu.config_flow.validate_input",
+        return_value={"title": "test-username"},
     ), patch(
         "homeassistant.components.niu.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -27,7 +27,6 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -35,9 +34,8 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "test-username"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
     }
@@ -52,13 +50,12 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.niu.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.niu.config_flow.validate_input",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -75,13 +72,12 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.niu.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.niu.config_flow.validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
