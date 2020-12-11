@@ -56,7 +56,7 @@ STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)

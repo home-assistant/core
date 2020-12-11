@@ -37,6 +37,7 @@ homeassistant/components/amcrest/* @pnbruckner
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
+homeassistant/components/apple_tv/* @postlund
 homeassistant/components/apprise/* @caronc
 homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
@@ -117,7 +118,6 @@ homeassistant/components/dunehd/* @bieniu
 homeassistant/components/dwd_weather_warnings/* @runningman84 @stephan192 @Hummel95
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/dynalite/* @ziv1234
-homeassistant/components/dyson/* @etheralm
 homeassistant/components/eafm/* @Jc2k
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
@@ -242,6 +242,7 @@ homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
 homeassistant/components/konnected/* @heythisisnate @kit-klein
+homeassistant/components/kulersky/* @emlove
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
@@ -309,6 +310,7 @@ homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuheat/* @bdraco
 homeassistant/components/nuki/* @pschmitt @pvizeli
 homeassistant/components/numato/* @clssn
+homeassistant/components/number/* @home-assistant/core @Shulyaka
 homeassistant/components/nut/* @bdraco
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
@@ -402,6 +404,7 @@ homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
 homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
+homeassistant/components/slack/* @bachya
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smappee/* @bsmappee
@@ -475,7 +478,6 @@ homeassistant/components/tts/* @pvizeli
 homeassistant/components/tuya/* @ollo69
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twinkly/* @dr1rrb
-homeassistant/components/ubee/* @mzdrale
 homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
 homeassistant/components/upb/* @gwww

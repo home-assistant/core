@@ -5,7 +5,8 @@
             "authorize_url_timeout": "Tuvastamise URL-i loomise ajal\u00f5pp.",
             "missing_configuration": "Osis pole seadistatud. Vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "unknown_authorize_url_generation": "Tundmatu viga tuvastamise URL-i loomisel."
         },
         "create_entry": {
             "default": "Tuvastamine \u00f5nnestus"
@@ -34,6 +35,14 @@
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Tuvastati liikumine",
+            "camera_person": "Isik tuvastatud",
+            "camera_sound": "Tuvastati heli",
+            "doorbell_chime": "Uksekell helises"
         }
     }
 }

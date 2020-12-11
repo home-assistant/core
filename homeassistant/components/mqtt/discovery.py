@@ -6,12 +6,12 @@ import logging
 import re
 import time
 
-from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_mqtt
 
+from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -34,9 +34,11 @@ SUPPORTED_COMPONENTS = [
     "climate",
     "cover",
     "device_automation",
+    "device_tracker",
     "fan",
     "light",
     "lock",
+    "scene",
     "sensor",
     "switch",
     "tag",

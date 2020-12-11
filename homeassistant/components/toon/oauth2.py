@@ -90,8 +90,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         """Initialize local Toon auth implementation."""
         data = {
             "grant_type": "authorization_code",
-            "code": external_data,
-            "redirect_uri": self.redirect_uri,
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
             "tenant_id": self.tenant_id,
         }
 

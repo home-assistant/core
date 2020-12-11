@@ -16,5 +16,10 @@
       "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
     },
     "create_entry": { "default": "Successfully authenticated with Spotify." }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "Spotify API endpoint reachable"
+    }
   }
 }

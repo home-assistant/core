@@ -24,7 +24,7 @@ def validate_selector(config: Any) -> Dict:
     if selector_class is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    # Seletors can be empty
+    # Selectors can be empty
     if config[selector_type] is None:
         return {selector_type: {}}
 
@@ -67,6 +67,34 @@ class DeviceSelector(Selector):
             vol.Optional("manufacturer"): str,
             # Model of device
             vol.Optional("model"): str,
+            # Device has to contain entities matching this selector
+            vol.Optional(
+                "entity"
+            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=no-member
+        }
+    )
+
+
+@SELECTORS.register("area")
+class AreaSelector(Selector):
+    """Selector of a single area."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.Schema(
+                {
+                    vol.Optional("domain"): str,
+                    vol.Optional("device_class"): str,
+                    vol.Optional("integration"): str,
+                }
+            ),
+            vol.Optional("device"): vol.Schema(
+                {
+                    vol.Optional("integration"): str,
+                    vol.Optional("manufacturer"): str,
+                    vol.Optional("model"): str,
+                }
+            ),
         }
     )
 
@@ -95,13 +123,42 @@ class BooleanSelector(Selector):
     CONFIG_SCHEMA = vol.Schema({})
 
 
-@SELECTORS.register("datetime")
-class DateTimeSelector(Selector):
-    """Selector of a date and or time value."""
+@SELECTORS.register("time")
+class TimeSelector(Selector):
+    """Selector of a time value."""
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+
+@SELECTORS.register("target")
+class TargetSelector(Selector):
+    """Selector of a target value (area ID, device ID, entity ID etc).
+
+    Value should follow cv.ENTITY_SERVICE_FIELDS format.
+    """
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("has_date", default=False): bool,
-            vol.Optional("has_time", default=False): bool,
+            vol.Optional("entity"): vol.Schema(
+                {
+                    vol.Optional("domain"): str,
+                    vol.Optional("device_class"): str,
+                    vol.Optional("integration"): str,
+                }
+            ),
+            vol.Optional("device"): vol.Schema(
+                {
+                    vol.Optional("integration"): str,
+                    vol.Optional("manufacturer"): str,
+                    vol.Optional("model"): str,
+                }
+            ),
         }
     )
+
+
+@SELECTORS.register("action")
+class ActionSelector(Selector):
+    """Selector of an action sequence (script syntax)."""
+
+    CONFIG_SCHEMA = vol.Schema({})

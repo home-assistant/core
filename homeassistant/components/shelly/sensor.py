@@ -21,7 +21,7 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
-from .utils import temperature_unit
+from .utils import get_device_uptime, temperature_unit
 
 SENSORS = {
     ("device", "battery"): BlockAttributeDescription(
@@ -170,15 +170,15 @@ REST_SENSORS = {
     "rssi": RestAttributeDescription(
         name="RSSI",
         unit=SIGNAL_STRENGTH_DECIBELS,
+        value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
-        path="wifi_sta/rssi",
     ),
     "uptime": RestAttributeDescription(
         name="Uptime",
+        value=get_device_uptime,
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
-        path="uptime",
     ),
 }
 

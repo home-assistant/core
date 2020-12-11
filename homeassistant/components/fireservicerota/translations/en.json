@@ -1,30 +1,29 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "title": "FireServiceRota",
-                "data": {
-                    "password": "Password",
-                    "username": "Username",
-                    "url": "Website"
-                }
-            },
-            "reauth": {
-                "description": "Authentication tokens became invalid, login to recreate them.",
-                "data": {
-                    "password": "Password"
-                }
-            }
-        },
-        "error": {
-            "invalid_auth": "Invalid authentication."
-        },
         "abort": {
             "already_configured": "Account is already configured",
             "reauth_successful": "Re-authentication was successful"
         },
         "create_entry": {
             "default": "Successfully authenticated"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Authentication tokens baceame invalid, login to recreate them."
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "Website",
+                    "username": "Username"
+                }
+            }
         }
     }
 }

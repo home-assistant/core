@@ -40,7 +40,9 @@ async def test_zeroconf_abort_if_existing_entry(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_full_flow(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Check a full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -56,7 +58,13 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -103,7 +111,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
 
 
 async def test_abort_if_spotify_error(
-    hass, aiohttp_client, aioclient_mock, current_request
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Check Spotify errors causes flow to abort."""
     await setup.async_setup_component(
@@ -120,7 +128,13 @@ async def test_abort_if_spotify_error(
     )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     client = await aiohttp_client(hass.http.app)
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
@@ -144,7 +158,9 @@ async def test_abort_if_spotify_error(
     assert result["reason"] == "connection_error"
 
 
-async def test_reauthentication(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_reauthentication(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Test Spotify reauthentication."""
     await setup.async_setup_component(
         hass,
@@ -173,7 +189,13 @@ async def test_reauthentication(hass, aiohttp_client, aioclient_mock, current_re
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     client = await aiohttp_client(hass.http.app)
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
@@ -202,7 +224,7 @@ async def test_reauthentication(hass, aiohttp_client, aioclient_mock, current_re
 
 
 async def test_reauth_account_mismatch(
-    hass, aiohttp_client, aioclient_mock, current_request
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Test Spotify reauthentication with different account."""
     await setup.async_setup_component(
@@ -230,7 +252,13 @@ async def test_reauth_account_mismatch(
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
     client = await aiohttp_client(hass.http.app)
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 

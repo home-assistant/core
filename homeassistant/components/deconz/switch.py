@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_switch(lights):
+    def async_add_switch(lights=gateway.api.lights.values()):
         """Add switch from deCONZ."""
         entities = []
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_switch(gateway.api.lights.values())
+    async_add_switch()
 
 
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):

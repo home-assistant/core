@@ -1,9 +1,9 @@
 """Helper to check the configuration file."""
 from collections import OrderedDict
+import logging
 import os
 from typing import List, NamedTuple, Optional
 
-import attr
 import voluptuous as vol
 
 from homeassistant import loader
@@ -36,11 +36,13 @@ class CheckConfigError(NamedTuple):
     config: Optional[ConfigType]
 
 
-@attr.s
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors: List[CheckConfigError] = attr.ib(factory=list)
+    def __init__(self) -> None:
+        """Initialize HA config."""
+        super().__init__()
+        self.errors: List[CheckConfigError] = []
 
     def add_error(
         self,
@@ -139,14 +141,24 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             config_validator, "async_validate_config"
         ):
             try:
-                return await config_validator.async_validate_config(  # type: ignore
-                    hass, config
-                )
+                result[domain] = (
+                    await config_validator.async_validate_config(  # type: ignore
+                        hass, config
+                    )
+                )[domain]
+                continue
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config)
                 continue
-            except Exception:  # pylint: disable=broad-except
-                result.add_error("Unknown error calling %s config validator", domain)
+            except Exception as err:  # pylint: disable=broad-except
+                logging.getLogger(__name__).exception(
+                    "Unexpected error validating config"
+                )
+                result.add_error(
+                    f"Unexpected error calling config validator: {err}",
+                    domain,
+                    config.get(domain),
+                )
                 continue
 
         config_schema = getattr(component, "CONFIG_SCHEMA", None)

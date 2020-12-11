@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, mqtt
+from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
@@ -40,6 +40,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 

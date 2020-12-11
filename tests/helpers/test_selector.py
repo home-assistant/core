@@ -47,6 +47,13 @@ def test_validate_selector():
         {"model": "mock-model"},
         {"manufacturer": "mock-manuf", "model": "mock-model"},
         {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
+        {"entity": {"device_class": "motion"}},
+        {
+            "integration": "zha",
+            "manufacturer": "mock-manuf",
+            "model": "mock-model",
+            "entity": {"domain": "binary_sensor", "device_class": "motion"},
+        },
     ),
 )
 def test_device_selector_schema(schema):
@@ -60,12 +67,40 @@ def test_device_selector_schema(schema):
         {},
         {"integration": "zha"},
         {"domain": "light"},
+        {"device_class": "motion"},
         {"integration": "zha", "domain": "light"},
+        {"integration": "zha", "domain": "binary_sensor", "device_class": "motion"},
     ),
 )
 def test_entity_selector_schema(schema):
     """Test entity selector."""
     selector.validate_selector({"entity": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {},
+        {"entity": {}},
+        {"entity": {"domain": "light"}},
+        {"entity": {"domain": "binary_sensor", "device_class": "motion"}},
+        {
+            "entity": {
+                "domain": "binary_sensor",
+                "device_class": "motion",
+                "integration": "demo",
+            }
+        },
+        {"device": {"integration": "demo", "model": "mock-model"}},
+        {
+            "entity": {"domain": "binary_sensor", "device_class": "motion"},
+            "device": {"integration": "demo", "model": "mock-model"},
+        },
+    ),
+)
+def test_area_selector_schema(schema):
+    """Test area selector."""
+    selector.validate_selector({"area": schema})
 
 
 @pytest.mark.parametrize(
@@ -94,14 +129,43 @@ def test_boolean_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
+    ({},),
+)
+def test_time_selector_schema(schema):
+    """Test time selector."""
+    selector.validate_selector({"time": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
     (
         {},
-        {"has_date": True, "has_time": True},
-        {"has_date": False, "has_time": False},
-        {"has_date": True, "has_time": False},
-        {"has_date": False, "has_time": True},
+        {"entity": {}},
+        {"entity": {"domain": "light"}},
+        {"entity": {"domain": "binary_sensor", "device_class": "motion"}},
+        {
+            "entity": {
+                "domain": "binary_sensor",
+                "device_class": "motion",
+                "integration": "demo",
+            }
+        },
+        {"device": {"integration": "demo", "model": "mock-model"}},
+        {
+            "entity": {"domain": "binary_sensor", "device_class": "motion"},
+            "device": {"integration": "demo", "model": "mock-model"},
+        },
     ),
 )
-def test_datetime_selector_schema(schema):
-    """Test datetime selector."""
-    selector.validate_selector({"datetime": schema})
+def test_target_selector_schema(schema):
+    """Test target selector."""
+    selector.validate_selector({"target": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({},),
+)
+def test_action_selector_schema(schema):
+    """Test action sequence selector."""
+    selector.validate_selector({"action": schema})

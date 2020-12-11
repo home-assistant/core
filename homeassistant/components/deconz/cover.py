@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(lights):
+    def async_add_cover(lights=gateway.api.lights.values()):
         """Add cover from deCONZ."""
         entities = []
 
@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_cover(gateway.api.lights.values())
+    async_add_cover()
 
 
 class DeconzCover(DeconzDevice, CoverEntity):
@@ -116,6 +116,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Return the current tilt position of the cover."""
         if self._device.tilt is not None:
             return 100 - self._device.tilt
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Tilt the cover to a specific position."""

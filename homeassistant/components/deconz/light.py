@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     other_light_resource_types = CONTROLLER + COVER_TYPES + LOCK_TYPES + SWITCH_TYPES
 
     @callback
-    def async_add_light(lights):
+    def async_add_light(lights=gateway.api.lights.values()):
         """Add light from deCONZ."""
         entities = []
 
@@ -66,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     @callback
-    def async_add_group(groups):
+    def async_add_group(groups=gateway.api.groups.values()):
         """Add group from deCONZ."""
         if not gateway.option_allow_deconz_groups:
             return
@@ -91,8 +91,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_light(gateway.api.lights.values())
-    async_add_group(gateway.api.groups.values())
+    async_add_light()
+    async_add_group()
 
 
 class DeconzBaseLight(DeconzDevice, LightEntity):
@@ -114,7 +114,9 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         if self._device.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
 
-        if self._device.xy is not None:
+        if self._device.xy is not None or (
+            self._device.hue is not None and self._device.sat is not None
+        ):
             self._features |= SUPPORT_COLOR
 
         if self._device.effect is not None:
@@ -141,8 +143,10 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def hs_color(self):
         """Return the hs color value."""
-        if self._device.colormode in ("xy", "hs") and self._device.xy:
-            return color_util.color_xy_to_hs(*self._device.xy)
+        if self._device.colormode in ("xy", "hs"):
+            if self._device.xy:
+                return color_util.color_xy_to_hs(*self._device.xy)
+            return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
         return None
 
     @property
@@ -163,7 +167,11 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["ct"] = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
-            data["xy"] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+            if self._device.xy is not None:
+                data["xy"] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+            else:
+                data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                data["sat"] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
 
         if ATTR_BRIGHTNESS in kwargs:
             data["bri"] = kwargs[ATTR_BRIGHTNESS]
