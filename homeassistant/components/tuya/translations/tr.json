@@ -1,5 +1,8 @@
 {
     "options": {
+        "abort": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
         "step": {
             "init": {
                 "data": {
