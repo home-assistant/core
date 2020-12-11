@@ -62,6 +62,10 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    def __init__(self):
+        """Initialize."""
+        self.is_imported = False
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -70,9 +74,10 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
-        return await self.async_step_user(import_info, is_imported=True)
+        self.is_imported = True
+        return await self.async_step_user(import_info)
 
-    async def async_step_user(self, user_input=None, is_imported=False):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -97,7 +102,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 title = stats.get("system", {}).get("name", host).capitalize()
-                if is_imported:
+                if self.is_imported:
                     notify_create(
                         self.hass,
                         "The import of the Qnap configuration was successful. \
