@@ -195,8 +195,10 @@ class AxisNetworkDevice:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.error("Unknown error connecting with Axis device on %s", self.host)
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error(
+                "Unknown error connecting with Axis device (%s): %s", self.host, err
+            )
             return False
 
         self.fw_version = self.api.vapix.firmware_version

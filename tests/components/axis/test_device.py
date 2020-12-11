@@ -4,24 +4,9 @@ from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
 import axis as axislib
-from axis.api_discovery import URL as API_DISCOVERY_URL
-from axis.applications import URL_LIST as APPLICATIONS_URL
-from axis.applications.vmd4 import URL as VMD4_URL
-from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.light_control import URL as LIGHT_CONTROL_URL
-from axis.mqtt import URL_CLIENT as MQTT_CLIENT_URL
-from axis.param_cgi import (
-    BRAND as BRAND_URL,
-    INPUT as INPUT_URL,
-    IOPORT as IOPORT_URL,
-    OUTPUT as OUTPUT_URL,
-    PROPERTIES as PROPERTIES_URL,
-    PTZ as PTZ_URL,
-    STREAM_PROFILES as STREAM_PROFILES_URL,
-)
-from axis.port_management import URL as PORT_MANAGEMENT_URL
 import pytest
+import respx
 
 from homeassistant import config_entries
 from homeassistant.components import axis
@@ -127,65 +112,6 @@ MQTT_CLIENT_RESPONSE = {
     "data": {"status": {"state": "active", "connectionStatus": "Connected"}},
 }
 
-OBJECT_ANALYTICS = {
-    "apiVersion": "1.0",
-    "context": "Axis library",
-    "data": {
-        "devices": [{"id": 1, "rotation": 180, "type": "camera"}],
-        "metadataOverlay": [],
-        "perspectives": [],
-        "scenarios": [
-            {
-                "devices": [{"id": 1}],
-                "filters": [
-                    {"distance": 5, "type": "distanceSwayingObject"},
-                    {"time": 1, "type": "timeShortLivedLimit"},
-                    {"height": 3, "type": "sizePercentage", "width": 3},
-                ],
-                "id": 1,
-                "name": "Scenario 1",
-                "objectClassifications": [],
-                "perspectives": [],
-                "presets": [],
-                "triggers": [
-                    {
-                        "type": "includeArea",
-                        "vertices": [
-                            [-0.97, -0.97],
-                            [-0.97, 0.97],
-                            [0.97, 0.97],
-                            [0.97, -0.97],
-                        ],
-                    }
-                ],
-                "type": "motion",
-            },
-            {
-                "devices": [{"id": 1}],
-                "filters": [
-                    {"time": 1, "type": "timeShortLivedLimit"},
-                    {"height": 3, "type": "sizePercentage", "width": 3},
-                ],
-                "id": 2,
-                "name": "Scenario 2",
-                "objectClassifications": [{"type": "human"}],
-                "perspectives": [],
-                "presets": [],
-                "triggers": [
-                    {
-                        "alarmDirection": "leftToRight",
-                        "type": "fence",
-                        "vertices": [[0, -0.7], [0, 0.7]],
-                    }
-                ],
-                "type": "fence",
-            },
-        ],
-        "status": {},
-    },
-    "method": "getConfiguration",
-}
-
 PORT_MANAGEMENT_RESPONSE = {
     "apiVersion": "1.0",
     "method": "getPorts",
@@ -261,32 +187,82 @@ root.StreamProfile.S1.Parameters=videocodec=h265
 """
 
 
-async def vapix_request(self, session, url, **kwargs):
-    """Return data based on url."""
-    if API_DISCOVERY_URL in url:
-        return API_DISCOVERY_RESPONSE
-    if APPLICATIONS_URL in url:
-        return APPLICATIONS_LIST_RESPONSE
-    if BASIC_DEVICE_INFO_URL in url:
-        return BASIC_DEVICE_INFO_RESPONSE
-    if LIGHT_CONTROL_URL in url:
-        return LIGHT_CONTROL_RESPONSE
-    if MQTT_CLIENT_URL in url:
-        return MQTT_CLIENT_RESPONSE
-    if PORT_MANAGEMENT_URL in url:
-        return PORT_MANAGEMENT_RESPONSE
-    if VMD4_URL in url:
-        return VMD4_RESPONSE
-    if BRAND_URL in url:
-        return BRAND_RESPONSE
-    if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
-        return PORTS_RESPONSE
-    if PROPERTIES_URL in url:
-        return PROPERTIES_RESPONSE
-    if PTZ_URL in url:
-        return PTZ_RESPONSE
-    if STREAM_PROFILES_URL in url:
-        return STREAM_PROFILES_RESPONSE
+def mock_default_vapix_requests(respx: respx, host: str = "1.2.3.4") -> None:
+    """Mock default Vapix requests responses."""
+    respx.post(f"http://{host}:80/axis-cgi/apidiscovery.cgi").respond(
+        json=API_DISCOVERY_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/basicdeviceinfo.cgi").respond(
+        json=BASIC_DEVICE_INFO_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/io/portmanagement.cgi").respond(
+        json=PORT_MANAGEMENT_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/lightcontrol.cgi").respond(
+        json=LIGHT_CONTROL_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/mqtt/client.cgi").respond(
+        json=MQTT_CLIENT_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/streamprofile.cgi").respond(
+        json=STREAM_PROFILES_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Brand"
+    ).respond(
+        text=BRAND_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Input"
+    ).respond(
+        text=PORTS_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.IOPort"
+    ).respond(
+        text=PORTS_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Output"
+    ).respond(
+        text=PORTS_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Properties"
+    ).respond(
+        text=PROPERTIES_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.PTZ"
+    ).respond(
+        text=PTZ_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.StreamProfile"
+    ).respond(
+        text=STREAM_PROFILES_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.post(f"http://{host}:80/axis-cgi/applications/list.cgi").respond(
+        text=APPLICATIONS_LIST_RESPONSE,
+        headers={"Content-Type": "text/xml"},
+    )
+    respx.post(f"http://{host}:80/local/vmd/control.cgi").respond(
+        json=VMD4_RESPONSE,
+        headers={"Content-Type": "application/json"},
+    )
 
 
 async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
@@ -300,10 +276,8 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
     )
     config_entry.add_to_hass(hass)
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
-        "axis.rtsp.RTSPClient.start",
-        return_value=True,
-    ):
+    with patch("axis.rtsp.RTSPClient.start", return_value=True), respx.mock:
+        mock_default_vapix_requests(respx)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -382,10 +356,11 @@ async def test_update_address(hass):
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.api.config.host == "1.2.3.4"
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
+    with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data={
