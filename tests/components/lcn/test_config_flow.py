@@ -2,7 +2,7 @@
 from homeassistant import data_entry_flow
 from homeassistant.components.lcn import config_flow
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -23,13 +23,13 @@ async def test_step_import(hass):
     with patch(
         "homeassistant.components.lcn.async_setup_entry", return_value=True
     ), patch("homeassistant.components.lcn.async_setup", return_value=True):
-        data = {CONF_HOST: "pchk", CONF_USERNAME: "lcn", CONF_PASSWORD: "lcn"}
+        data = {CONF_IP_ADDRESS: "127.0.0.1", CONF_PORT: 4114, CONF_HOST: "pchk"}
         result = await flow.async_step_import(data)
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "pchk"
-        assert result["data"] == {CONF_USERNAME: "lcn", CONF_PASSWORD: "lcn"}
+        assert result["data"] == {CONF_IP_ADDRESS: "127.0.0.1", CONF_PORT: 4114}
 
 
 async def test_step_import_existing_host(hass):
@@ -40,7 +40,11 @@ async def test_step_import_existing_host(hass):
         "homeassistant.config_entries.ConfigFlow.async_set_unique_id",
         return_value=MockConfigEntry(),
     ):
-        data = {"host": "pchk"}
+        data = {
+            CONF_IP_ADDRESS: "127.0.0.1",
+            CONF_PORT: 4114,
+            CONF_HOST: "pchk",
+        }
         result = await flow.async_step_import(data)
         await hass.async_block_till_done()
 
