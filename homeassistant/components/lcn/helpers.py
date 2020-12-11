@@ -84,27 +84,33 @@ def get_device_connection(hass, unique_device_id, config_entry):
     return None
 
 
-def generate_unique_id(address=None, domain_config=None):
+def get_resource(domain_name, domain_data):
+    """Return the reosurce for the specified domain_data."""
+    if domain_name in ["switch", "light"]:
+        return f'{domain_data["output"]}'
+    if domain_name in ["binary_sensor", "sensor"]:
+        return f'{domain_data["source"]}'
+    if domain_name == "cover":
+        return f'{domain_data["motor"]}'
+    if domain_name == "climate":
+        return f'{domain_data["source"]}.{domain_data["setpoint"]}'
+    if domain_name == "scene":
+        return f'{domain_data["register"]}.{domain_data["scene"]}'
+    raise ValueError("Unknown domain.")
+
+
+def generate_unique_id(
+    address=None,
+    domain_config=None,
+):
     """Generate a unique_id from the given parameters."""
     unique_id = ""
     if address:
         is_group = "g" if address[2] else "m"
         unique_id += f"{is_group}{address[0]:03d}{address[1]:03d}"
         if domain_config:
-            domain_name, domain_data = domain_config
-            if domain_name in ["switch", "light"]:
-                resource = f'{domain_data["output"]}'
-            elif domain_name in ["binary_sensor", "sensor"]:
-                resource = f'{domain_data["source"]}'
-            elif domain_name == "cover":
-                resource = f'{domain_data["motor"]}'
-            elif domain_name == "climate":
-                resource = f'{domain_data["source"]}.{domain_data["setpoint"]}'
-            elif domain_name == "scene":
-                resource = f'{domain_data["register"]}.{domain_data["scene"]}'
-            else:
-                raise ValueError("Unknown domain.")
-            unique_id += f"-{domain_name}-{resource}".lower()
+            resource = get_resource(*domain_config)
+            unique_id += f"-{resource}".lower()
     return unique_id
 
 
@@ -125,9 +131,10 @@ def import_lcn_config(lcn_config):
         }
         data[connection[CONF_NAME]] = host
 
-    for domain_name, domain_config in lcn_config.items():
-        if domain_name == CONF_CONNECTIONS:
+    for domain, domain_config in lcn_config.items():
+        if domain == CONF_CONNECTIONS:
             continue
+        domain_name = DOMAIN_LOOKUP[domain]
         # loop over entities in configuration.yaml
         for domain_data in domain_config:
             # remove name and address from domain_data
@@ -157,20 +164,20 @@ def import_lcn_config(lcn_config):
                 data[host_name][CONF_DEVICES].append(device_config)
 
             # insert entity config
-            unique_entity_id = generate_unique_id(
-                address, (DOMAIN_LOOKUP[domain_name], domain_data)
-            )
+            resource = get_resource(domain_name, domain_data).lower()
             for entity_config in data[host_name][CONF_ENTITIES]:
-                if unique_entity_id == entity_config[CONF_UNIQUE_ID]:
-                    _LOGGER.warning("Unique_id %s already defined.", unique_entity_id)
+                if (
+                    unique_device_id == entity_config[CONF_UNIQUE_DEVICE_ID]
+                    and resource == entity_config[CONF_RESOURCE]
+                    and domain_name == entity_config[CONF_DOMAIN]
+                ):
                     break
             else:  # create new entity_config
                 entity_config = {
-                    CONF_UNIQUE_ID: unique_entity_id,
                     CONF_UNIQUE_DEVICE_ID: unique_device_id,
                     CONF_NAME: entity_name,
-                    CONF_RESOURCE: unique_entity_id.split("-", 2)[2],
-                    CONF_DOMAIN: DOMAIN_LOOKUP[domain_name],
+                    CONF_RESOURCE: resource,
+                    CONF_DOMAIN: domain_name,
                     CONF_DOMAIN_DATA: domain_data.copy(),
                 }
                 data[host_name][CONF_ENTITIES].append(entity_config)
