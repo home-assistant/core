@@ -1,7 +1,13 @@
-"""General class for all entities."""
+"""General classes for all entities."""
+from datetime import timedelta
+
 from devolo_plc_api.device import Device
 
+from homeassistant.util import Throttle
+
 from .device import DevoloDevice
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
 class DevoloNetworkOverviewEntity(DevoloDevice):
@@ -15,6 +21,7 @@ class DevoloNetworkOverviewEntity(DevoloDevice):
         self._name = "Connected PLC devices"
         self._unique_id = f"{self._device.serial_number}_connected_plc_devices"
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update the value async."""
         network_overview = await self._device.plcnet.async_get_network_overview()
@@ -58,6 +65,7 @@ class DevoloWifiNetworksEntity(DevoloDevice):
         self._name = "Neighboring wifi networks"
         self._unique_id = f"{self._device.serial_number}_neighboring_wifi_networks"
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update the value async."""
         neighbors = await self._device.device.async_get_wifi_neighbor_access_points()

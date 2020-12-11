@@ -11,6 +11,7 @@ from .entity_classes import (
     DevoloWifiNetworksEntity,
 )
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
@@ -28,4 +29,4 @@ async def async_setup_entry(
     if "wifi1" in device.device.features:
         for entity in wifi_entities:
             entities.append(entity(device, entry.title))
-    async_add_entities(entities, True)
+    async_add_entities(entities)
