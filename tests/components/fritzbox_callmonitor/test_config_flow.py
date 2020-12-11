@@ -82,6 +82,7 @@ async def test_yaml_import(hass: HomeAssistant) -> None:
         return_value=None,
     ), patch(
         "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
+        new_callable=PropertyMock,
         return_value=[0],
     ), patch(
         "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
@@ -125,6 +126,7 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
         return_value=None,
     ), patch(
         "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
+        new_callable=PropertyMock,
         return_value=[0],
     ), patch(
         "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
