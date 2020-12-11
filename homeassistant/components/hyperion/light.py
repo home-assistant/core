@@ -41,7 +41,7 @@ from . import async_create_connect_hyperion_client, get_hyperion_unique_id
 from .const import (
     COLOR_BLACK,
     CONF_MODE_OFF,
-    CONF_MODE_OFF_PRIORITY,
+    CONF_MODE_OFF_SET_BLACK,
     CONF_ON_UNLOAD,
     CONF_PRIORITY,
     CONF_ROOT_CLIENT,
@@ -348,7 +348,7 @@ class HyperionLight(LightEntity):
         if not bool(self._client.is_on()):
             return False
         priority = self._get_active_priority()
-        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_PRIORITY:
+        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_SET_BLACK:
             return self._is_priority_black(priority)
         return priority is not None
 
@@ -492,7 +492,7 @@ class HyperionLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Hyperion light off."""
-        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_PRIORITY:
+        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_SET_BLACK:
             if not await self._client.async_send_clear(
                 **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
             ):
@@ -564,7 +564,7 @@ class HyperionLight(LightEntity):
 
     def _get_active_priority(self) -> Optional[Dict[str, Any]]:
         """Get the appropriate active priority."""
-        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_PRIORITY:
+        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_SET_BLACK:
             for candidate in self._client.priorities or []:
                 if const.KEY_PRIORITY not in candidate:
                     continue
@@ -583,7 +583,7 @@ class HyperionLight(LightEntity):
         # 'off' (i.e. if black is active, as we want to ensure it seamlessly turns back
         # on at the correct prior color on the next 'on' call.
         if priority and (
-            self._get_option(CONF_MODE_OFF) != CONF_MODE_OFF_PRIORITY
+            self._get_option(CONF_MODE_OFF) != CONF_MODE_OFF_SET_BLACK
             or self._is_priority_black(priority)
         ):
             componentid = priority.get(const.KEY_COMPONENTID)

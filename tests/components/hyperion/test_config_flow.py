@@ -10,7 +10,7 @@ from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_MODE_OFF,
-    CONF_MODE_OFF_PRIORITY,
+    CONF_MODE_OFF_SET_BLACK,
     CONF_PRIORITY,
     DEFAULT_MODE_OFF,
     DOMAIN,
@@ -772,7 +772,7 @@ async def test_options_mode_off(hass: HomeAssistantType) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
 
-        new_mode = CONF_MODE_OFF_PRIORITY
+        new_mode = CONF_MODE_OFF_SET_BLACK
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_MODE_OFF: new_mode}
         )

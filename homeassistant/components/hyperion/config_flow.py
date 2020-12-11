@@ -36,8 +36,8 @@ from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_MODE_OFF,
-    CONF_MODE_OFF_COMPONENT,
-    CONF_MODE_OFF_PRIORITY,
+    CONF_MODE_OFF_LED_DEVICE,
+    CONF_MODE_OFF_SET_BLACK,
     CONF_PRIORITY,
     DEFAULT_MODE_OFF,
     DEFAULT_ORIGIN,
@@ -480,7 +480,7 @@ class HyperionOptionsFlow(OptionsFlow):
                         default=self._config_entry.options.get(
                             CONF_MODE_OFF, DEFAULT_MODE_OFF
                         ),
-                    ): vol.In([CONF_MODE_OFF_COMPONENT, CONF_MODE_OFF_PRIORITY]),
+                    ): vol.In([CONF_MODE_OFF_LED_DEVICE, CONF_MODE_OFF_SET_BLACK]),
                 }
             ),
         )

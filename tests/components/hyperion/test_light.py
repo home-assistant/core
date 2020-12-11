@@ -13,7 +13,7 @@ from homeassistant.components.hyperion import (
 from homeassistant.components.hyperion.const import (
     COLOR_BLACK,
     CONF_MODE_OFF,
-    CONF_MODE_OFF_PRIORITY,
+    CONF_MODE_OFF_SET_BLACK,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -621,7 +621,7 @@ async def test_light_color_preserved_mode_off_priority(hass: HomeAssistantType) 
         hass,
         hyperion_client=client,
         options={
-            CONF_MODE_OFF: CONF_MODE_OFF_PRIORITY,
+            CONF_MODE_OFF: CONF_MODE_OFF_SET_BLACK,
             CONF_PRIORITY: TEST_PRIORITY,
         },
     )
@@ -769,7 +769,7 @@ async def test_light_async_turn_off_mode_off_priority(hass: HomeAssistantType) -
     ]
 
     await setup_test_config_entry(
-        hass, hyperion_client=client, options={CONF_MODE_OFF: CONF_MODE_OFF_PRIORITY}
+        hass, hyperion_client=client, options={CONF_MODE_OFF: CONF_MODE_OFF_SET_BLACK}
     )
 
     client.async_send_clear = AsyncMock(return_value=True)
@@ -927,7 +927,7 @@ async def test_light_async_updates_from_hyperion_client_mode_off_priority(
     client.priorities = [{**priority_template}]
 
     await setup_test_config_entry(
-        hass, hyperion_client=client, options={CONF_MODE_OFF: CONF_MODE_OFF_PRIORITY}
+        hass, hyperion_client=client, options={CONF_MODE_OFF: CONF_MODE_OFF_SET_BLACK}
     )
 
     # == Scenario: Color at HA priority will show light as on.
