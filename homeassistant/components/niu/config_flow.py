@@ -3,7 +3,6 @@ import logging
 
 from niu import NiuAPIException, NiuCloud, NiuNetException, NiuServerException
 import voluptuous as vol
-from voluptuous.schema_builder import Required
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

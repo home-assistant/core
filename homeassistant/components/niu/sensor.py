@@ -104,7 +104,6 @@ class NiuEntity(CoordinatorEntity, Entity):
 
     @property
     def device_info(self):
-        """TODO: this doesn't work yet"""
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
