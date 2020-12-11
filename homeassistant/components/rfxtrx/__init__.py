@@ -51,6 +51,8 @@ from .const import (
     DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
     DATA_RFXOBJECT,
+    CONF_VENETIAN_BLIND_MODE,
+    CONST_VENETIAN_BLIND_MODE_DEFAULT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -126,6 +128,7 @@ DEVICE_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
         vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
+        vol.Optional(CONF_VENETIAN_BLIND_MODE, default=CONST_VENETIAN_BLIND_MODE_DEFAULT): cv.string,
     }
 )
 
@@ -270,7 +273,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
     # Initialize library
     async with async_timeout.timeout(30):
-        rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])

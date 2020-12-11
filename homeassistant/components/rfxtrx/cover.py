@@ -14,7 +14,13 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import (
+    COMMAND_OFF_LIST, 
+    COMMAND_ON_LIST,
+    CONF_VENETIAN_BLIND_MODE,
+    CONST_VENETIAN_BLIND_MODE_US,
+    CONST_VENETIAN_BLIND_MODE_EU,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +56,7 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxCover(
-            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+            event.device, device_id, signal_repetitions=entity_info[CONF_SIGNAL_REPETITIONS], venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE)
         )
         entities.append(entity)
 
@@ -86,6 +92,10 @@ async def async_setup_entry(
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     """Representation of a RFXtrx cover."""
 
+    def __init__(self, device, device_id, signal_repetitions, event=None, venetian_blind_mode=None):
+            super().__init__(device, device_id, signal_repetitions, event)
+            self._venetian_blind_mode = venetian_blind_mode
+    
     async def async_added_to_hass(self):
         """Restore device state."""
         await super().async_added_to_hass()
@@ -96,19 +106,39 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
                 self._state = old_state.state == STATE_OPEN
 
     @property
+    def current_cover_tilt_position(self):
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        if self._venetian_blind_mode in (CONST_VENETIAN_BLIND_MODE_US,CONST_VENETIAN_BLIND_MODE_EU):
+            return 50
+        """Rfy does not support tilt position. The non-empty value is used to enable tilt support"""
+    
+    @property
     def is_closed(self):
         """Return if the cover is closed."""
         return not self._state
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
-        await self._async_send(self._device.send_open)
+        if (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US):
+            await self._async_send(self._device.send_up05sec)
+        elif (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU):
+            await self._async_send(self._device.send_up2sec)
+        else:
+            await self._async_send(self._device.send_open)
         self._state = True
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs):
         """Move the cover down."""
-        await self._async_send(self._device.send_close)
+        if (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US):
+            await self._async_send(self._device.send_down05sec)
+        elif (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU):
+            await self._async_send(self._device.send_down2sec)
+        else:
+            await self._async_send(self._device.send_close)
         self._state = False
         self.async_write_ha_state()
 
@@ -117,6 +147,20 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         await self._async_send(self._device.send_stop)
         self._state = True
         self.async_write_ha_state()
+
+    async def async_open_cover_tilt(self, **kwargs):
+        """Tilt the cover up"""
+        if (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US):
+            await self._async_send(self._device.send_up2sec)
+        elif (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU):
+            await self._async_send(self._device.send_up05sec)
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Tilt the cover down"""
+        if (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US):
+            await self._async_send(self._device.send_down2sec)
+        elif (self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU):
+            await self._async_send(self._device.send_down05sec)
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
