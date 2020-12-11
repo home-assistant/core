@@ -2,17 +2,14 @@
 import asyncio
 import logging
 
+from niu import NiuCloud
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from homeassistant.const import (
-    CONF_PASSWORD,
-)
-
-from niu import NiuCloud
 
 _LOGGER = logging.getLogger(__name__)
 

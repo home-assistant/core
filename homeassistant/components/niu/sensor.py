@@ -1,14 +1,16 @@
 """Platform for sensor integration."""
 from datetime import timedelta
-import async_timeout
 import logging
+
+import async_timeout
+from niu import NiuAPIException
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_KILOMETERS,
     PERCENTAGE,
     TEMP_CELSIUS,
-    LENGTH_KILOMETERS,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
@@ -18,7 +20,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from niu import NiuAPIException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +104,7 @@ class NiuEntity(CoordinatorEntity, Entity):
 
     @property
     def device_info(self):
+        """TODO: this doesn't work yet"""
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
