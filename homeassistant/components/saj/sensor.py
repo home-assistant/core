@@ -272,7 +272,7 @@ class SAJSensor(Entity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self._inverter.serialnumber)
             },
-            "name": "SAJ Solar Inverter",
+            "name": self._inverter.name or "SAJ Solar inverter",
             "manufacturer": "SAJ",
         }
 
