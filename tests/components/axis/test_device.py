@@ -33,10 +33,12 @@ MAC = "00408C12345"
 MODEL = "model"
 NAME = "name"
 
+DEFAULT_HOST = "1.2.3.4"
+
 ENTRY_OPTIONS = {CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
-    CONF_HOST: "1.2.3.4",
+    CONF_HOST: DEFAULT_HOST,
     CONF_USERNAME: "root",
     CONF_PASSWORD: "pass",
     CONF_PORT: 80,
@@ -187,31 +189,25 @@ root.StreamProfile.S1.Parameters=videocodec=h265
 """
 
 
-def mock_default_vapix_requests(respx: respx, host: str = "1.2.3.4") -> None:
+def mock_default_vapix_requests(respx: respx, host: str = DEFAULT_HOST) -> None:
     """Mock default Vapix requests responses."""
     respx.post(f"http://{host}:80/axis-cgi/apidiscovery.cgi").respond(
         json=API_DISCOVERY_RESPONSE,
-        headers={"Content-Type": "application/json"},
     )
     respx.post(f"http://{host}:80/axis-cgi/basicdeviceinfo.cgi").respond(
         json=BASIC_DEVICE_INFO_RESPONSE,
-        headers={"Content-Type": "application/json"},
     )
     respx.post(f"http://{host}:80/axis-cgi/io/portmanagement.cgi").respond(
         json=PORT_MANAGEMENT_RESPONSE,
-        headers={"Content-Type": "application/json"},
     )
     respx.post(f"http://{host}:80/axis-cgi/lightcontrol.cgi").respond(
         json=LIGHT_CONTROL_RESPONSE,
-        headers={"Content-Type": "application/json"},
     )
     respx.post(f"http://{host}:80/axis-cgi/mqtt/client.cgi").respond(
         json=MQTT_CLIENT_RESPONSE,
-        headers={"Content-Type": "application/json"},
     )
     respx.post(f"http://{host}:80/axis-cgi/streamprofile.cgi").respond(
         json=STREAM_PROFILES_RESPONSE,
-        headers={"Content-Type": "application/json"},
     )
     respx.get(
         f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Brand"
@@ -259,10 +255,7 @@ def mock_default_vapix_requests(respx: respx, host: str = "1.2.3.4") -> None:
         text=APPLICATIONS_LIST_RESPONSE,
         headers={"Content-Type": "text/xml"},
     )
-    respx.post(f"http://{host}:80/local/vmd/control.cgi").respond(
-        json=VMD4_RESPONSE,
-        headers={"Content-Type": "application/json"},
-    )
+    respx.post(f"http://{host}:80/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
 
 
 async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
