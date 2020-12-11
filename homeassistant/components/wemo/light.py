@@ -208,7 +208,7 @@ class WemoLight(LightEntity):
         except (AttributeError, ActionException) as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
-            self.wemo.reconnect_with_device()
+            self.wemo.bridge.reconnect_with_device()
         else:
             self._is_on = self._state.get("onoff") != WEMO_OFF
             self._brightness = self._state.get("level", 255)
