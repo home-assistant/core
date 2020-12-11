@@ -702,6 +702,9 @@ pyforked-daapd==0.1.11
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
 
+# homeassistant.components.fritzbox_callmonitor
+fritzconnection==1.4.0
+
 # homeassistant.components.ifttt
 pyfttt==0.3
 
