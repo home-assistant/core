@@ -42,6 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry):
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    config_entry.add_update_listener(async_entry_updated)
+
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
@@ -55,7 +58,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             settings=settings,
-            connection_id=config_entry.entry_id,
+            connection_id=config_entry.title,
         )
         try:
             # establish connection to PCHK server
@@ -150,6 +153,13 @@ async def async_setup(hass, config):
             )
         )
     return True
+
+
+async def async_entry_updated(hass, config_entry):
+    """Update listener to change connection name."""
+    hass.data[DOMAIN][config_entry.entry_id][
+        CONNECTION
+    ].connection_id = config_entry.title
 
 
 class LcnEntity(Entity):
