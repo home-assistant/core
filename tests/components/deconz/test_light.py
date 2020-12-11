@@ -353,3 +353,55 @@ async def test_configuration_tool(hass):
     await setup_deconz_integration(hass, get_state_response=data)
 
     assert len(hass.states.async_all()) == 0
+
+
+async def test_lidl_christmas_light(hass):
+    """Test that lights or groups entities are created."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["lights"] = {
+        "0": {
+            "etag": "87a89542bf9b9d0aa8134919056844f8",
+            "hascolor": True,
+            "lastannounced": None,
+            "lastseen": "2020-12-05T22:57Z",
+            "manufacturername": "_TZE200_s8gkrkxk",
+            "modelid": "TS0601",
+            "name": "xmas light",
+            "state": {
+                "bri": 25,
+                "colormode": "hs",
+                "effect": "none",
+                "hue": 53691,
+                "on": True,
+                "reachable": True,
+                "sat": 141,
+            },
+            "swversion": None,
+            "type": "Color dimmable light",
+            "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
+        }
+    }
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+    xmas_light_device = gateway.api.lights["0"]
+
+    assert len(hass.states.async_all()) == 1
+
+    with patch.object(xmas_light_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.xmas_light",
+                ATTR_HS_COLOR: (20, 30),
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with(
+            "put",
+            "/lights/0/state",
+            json={"on": True, "hue": 3640, "sat": 76},
+        )
+
+    assert hass.states.get("light.xmas_light")
