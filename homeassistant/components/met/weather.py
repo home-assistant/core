@@ -21,8 +21,10 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
     TEMP_CELSIUS,
@@ -230,9 +232,12 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             }
             if not self._is_metric:
                 if ATTR_FORECAST_PRECIPITATION in ha_item:
-                    ha_item[ATTR_FORECAST_PRECIPITATION] = round(
-                        ha_item.get(ATTR_FORECAST_PRECIPITATION) / 25.4, 2
+                    precip_inches = convert_distance(
+                        ha_item[ATTR_FORECAST_PRECIPITATION],
+                        LENGTH_MILLIMETERS,
+                        LENGTH_INCHES,
                     )
+                    ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]
