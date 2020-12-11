@@ -136,6 +136,7 @@ SENSOR_TYPES = {
         ATTR_ICON: "mdi:printer-3d",
         ATTR_LABEL: ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
+        ATTR_ENABLED: True,
     },
     ATTR_BLACK_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",

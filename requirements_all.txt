@@ -172,7 +172,7 @@ aioguardian==1.0.4
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.57
+aiohomekit==0.2.60
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -224,7 +224,7 @@ aioshelly==0.5.1
 aioswitcher==1.2.1
 
 # homeassistant.components.unifi
-aiounifi==25
+aiounifi==26
 
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
@@ -732,7 +732,7 @@ habitipy==0.2.0
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.38.0
+hass-nabucasa==0.39.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-ais-dom-frontend==20201204.0
+ais-dom-frontend==20201210.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1274,7 +1274,7 @@ pyairvisual==5.0.4
 pyalmond==0.0.2
 
 # homeassistant.components.arlo
-pyarlo==0.2.3
+pyarlo==0.2.4
 
 # homeassistant.components.atag
 pyatag==0.3.4.4
@@ -1286,7 +1286,7 @@ pyatmo==4.2.1
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.7.3
+pyatv==0.7.5
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1545,7 +1545,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.10
+pymyq==2.0.11
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1664,6 +1664,7 @@ pysdcp==1
 pysensibo==1.0.3
 
 # homeassistant.components.serial
+# homeassistant.components.zha
 pyserial-asyncio==0.4
 
 # homeassistant.components.acer_projector
@@ -2024,7 +2025,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.0
+simplisafe-python==9.6.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2210,7 +2211,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.8
+tuyaha==0.0.9
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2347,7 +2348,7 @@ zengge==0.2
 zeroconf==0.28.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.47
+zha-quirks==0.0.48
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2368,10 +2369,10 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.2.2
+zigpy-znp==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.28.1
+zigpy==0.28.2
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
