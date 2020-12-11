@@ -27,7 +27,7 @@ class SpiderPowerPlug(SwitchEntity):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.power_plug.id)},
             "name": self.power_plug.name,
             "manufacturer": self.power_plug.manufacturer,
             "model": self.power_plug.model,

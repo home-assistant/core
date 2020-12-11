@@ -48,7 +48,7 @@ class SpiderThermostat(ClimateEntity):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.thermostat.id)},
             "name": self.thermostat.name,
             "manufacturer": self.thermostat.manufacturer,
             "model": self.thermostat.model,
