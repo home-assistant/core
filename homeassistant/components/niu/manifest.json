@@ -1,0 +1,16 @@
+{
+  "domain": "niu",
+  "name": "Niu",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/niu",
+  "requirements": [
+    "niu==0.2.7"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@rmettes"
+  ]
+}
