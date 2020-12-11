@@ -94,7 +94,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 stats = await self.hass.async_add_executor_job(api.get_system_stats)
             except Exception:  # noqa: E722 pylint: disable=broad-except
-                _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)" % host)
+                _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)", host)
                 errors["base"] = "cannot_connect"
 
             if "base" not in errors:
@@ -133,7 +133,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             user_input[CONF_VOLUMES] = cv.ensure_list(user_input.get(CONF_VOLUMES))
             return self.async_create_entry(title="", data=user_input)
 
-        OPTIONS_SCHEMA = vol.Schema(
+        options_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_SSL,
@@ -173,5 +173,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init", data_schema=OPTIONS_SCHEMA, errors=errors
+            step_id="init", data_schema=options_schema, errors=errors
         )
