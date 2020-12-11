@@ -37,7 +37,7 @@ from .const import (
     CONF_INTEGRATION_TYPE,
     DATA_COORDINATOR,
     DOMAIN,
-    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     INTEGRATION_TYPE_NODE_PRO,
     LOGGER,
 )
@@ -145,7 +145,7 @@ def _standardize_geography_config_entry(hass, config_entry):
         # If the config entry data doesn't contain the integration type, add it:
         entry_updates["data"] = {
             **config_entry.data,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         }
 
     if not entry_updates:
@@ -299,10 +299,14 @@ async def async_migrate_entry(hass, config_entry):
 
         # For any geographies that remain, create a new config entry for each one:
         for geography in geographies:
+            if CONF_LATITUDE in geography:
+                source = "geography_by_coords"
+            else:
+                source = "geography_by_name"
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": "geography"},
+                    context={"source": source},
                     data={CONF_API_KEY: config_entry.data[CONF_API_KEY], **geography},
                 )
             )
@@ -327,7 +331,10 @@ async def async_unload_entry(hass, config_entry):
         remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
         remove_listener()
 
-        if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+        if (
+            config_entry.data[CONF_INTEGRATION_TYPE]
+            == INTEGRATION_TYPE_GEOGRAPHY_COORDS
+        ):
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:
             async_sync_geo_coordinator_update_intervals(
