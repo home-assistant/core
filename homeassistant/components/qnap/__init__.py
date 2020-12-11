@@ -87,7 +87,7 @@ async def async_setup_entry(hass, config_entry):
     try:
         system_info = await hass.async_add_executor_job(api.get_system_stats)
     except:  # noqa: E722 pylint: disable=bare-except
-        _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)" % host)
+        _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)", host)
         return False
 
     device_registry = await dr.async_get_registry(hass)
@@ -120,7 +120,7 @@ async def async_setup_entry(hass, config_entry):
                 )
                 return datas
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed("Error communicating with API") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
