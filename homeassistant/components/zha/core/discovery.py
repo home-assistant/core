@@ -22,6 +22,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     fan,
     light,
     lock,
+    number,
     sensor,
     switch,
 )
