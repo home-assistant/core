@@ -40,9 +40,11 @@ SECRET_GROUP = "Password or SSH Key"
 
 _LOGGER = logging.getLogger(__name__)
 
+INVALID_SCHEMA_VER = "0.121.0"
+
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN),
+        cv.deprecated(DOMAIN, invalidation_version=INVALID_SCHEMA_VER),
         {
             DOMAIN: vol.Schema(
                 {
@@ -74,17 +76,23 @@ async def async_setup(hass, config):
     """Set up the AsusWrt integration."""
 
     conf = config.get(DOMAIN)
-    if conf is not None:
-        pub_key = conf.get(CONF_PUB_KEY)
-        if pub_key:
-            conf[CONF_SSH_KEY] = pub_key
-        conf.pop(CONF_PUB_KEY, "")
-        conf.pop(CONF_SENSORS, {})
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
+    if conf is None:
+        return True
+
+    domains_list = hass.config_entries.async_domains()
+    if DOMAIN in domains_list:
+        return True
+
+    pub_key = conf.get(CONF_PUB_KEY)
+    if pub_key:
+        conf[CONF_SSH_KEY] = pub_key
+    conf.pop(CONF_PUB_KEY, "")
+    conf.pop(CONF_SENSORS, {})
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
+    )
 
     return True
 
