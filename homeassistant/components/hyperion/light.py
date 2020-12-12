@@ -348,8 +348,8 @@ class HyperionLight(LightEntity):
         if not bool(self._client.is_on()):
             return False
         priority = self._get_active_priority()
-        if self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_SET_BLACK:
-            return self._is_priority_black(priority)
+        if priority and self._get_option(CONF_MODE_OFF) == CONF_MODE_OFF_SET_BLACK:
+            return not self._is_priority_black(priority)
         return priority is not None
 
     @property
@@ -559,8 +559,8 @@ class HyperionLight(LightEntity):
         if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
             rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
             if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
-                return False
-        return True
+                return True
+        return False
 
     def _get_active_priority(self) -> Optional[Dict[str, Any]]:
         """Get the appropriate active priority."""
@@ -584,7 +584,7 @@ class HyperionLight(LightEntity):
         # on at the correct prior color on the next 'on' call.
         if priority and (
             self._get_option(CONF_MODE_OFF) != CONF_MODE_OFF_SET_BLACK
-            or self._is_priority_black(priority)
+            or not self._is_priority_black(priority)
         ):
             componentid = priority.get(const.KEY_COMPONENTID)
             if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:

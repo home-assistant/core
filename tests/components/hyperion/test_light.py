@@ -645,7 +645,9 @@ async def test_light_async_turn_off_error_conditions(hass: HomeAssistantType) ->
     )
 
 
-async def test_light_color_preserved_mode_off_priority(hass: HomeAssistantType) -> None:
+async def test_light_color_preserved_mode_off_set_black(
+    hass: HomeAssistantType,
+) -> None:
     """Test that color is preserved in an on->off->on cycle in priority mode.
 
     In priority mode the color black is used to indicate off. This test ensures that a
@@ -802,7 +804,7 @@ async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
     assert not client.async_send_set_component.called
 
 
-async def test_light_async_turn_off_mode_off_priority(hass: HomeAssistantType) -> None:
+async def test_light_async_turn_off_mode_off_set_black(hass: HomeAssistantType) -> None:
     """Test turning the light off in priority mode."""
     client = create_mock_client()
     client.priorities = [
@@ -958,7 +960,7 @@ async def test_light_async_updates_from_hyperion_client(
     assert entity_state.state == "on"
 
 
-async def test_light_async_updates_from_hyperion_client_mode_off_priority(
+async def test_light_async_updates_from_hyperion_client_mode_off_set_black(
     hass: HomeAssistantType,
 ) -> None:
     """Test receiving a variety of Hyperion client callbacks in priority mode."""
