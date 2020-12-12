@@ -251,7 +251,7 @@ class ThermostatEntity(ClimateEntity):
     def fan_mode(self):
         """Return the current fan mode."""
         if FanTrait.NAME in self._device.traits:
-            trait = self._device.traits.get(FanTrait.NAME, {})
+            trait = self._device.traits[FanTrait.NAME]
             return FAN_MODE_MAP.get(trait.timer_mode, FAN_OFF)
         return FAN_OFF
 
@@ -299,7 +299,6 @@ class ThermostatEntity(ClimateEntity):
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
-        print("async_set_temperature")
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             return
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
