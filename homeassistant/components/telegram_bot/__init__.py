@@ -767,12 +767,11 @@ class TelegramNotificationService:
                         "Error sending voice",
                         params[ATTR_MESSAGE_TAG],
                         chat_id=chat_id,
-                        document=file_content,
+                        voice=file_content,
                         caption=kwargs.get(ATTR_CAPTION),
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
-                        parse_mode=params[ATTR_PARSER],
                     )
 
                 file_content.seek(0)
