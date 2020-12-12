@@ -43,7 +43,7 @@ async def async_get_media_source(hass: HomeAssistant):
     client = data[DATA_CLIENT]
 
     source = JellyfinSource(hass, client)
-    hass.http.register_view(JellyfinMediaView(hass, source))
+    # hass.http.register_view(JellyfinMediaView(hass, source))
 
     return source
 
@@ -169,10 +169,17 @@ class JellyfinSource(MediaSource):
     async def _build_library(
         self, library: dict, media_class: str
     ) -> BrowseMediaSource:
+
+        if media_class == MEDIA_CLASS_MUSIC:
+            return await self._build_music_library(library)
+        else:
+            return await self._build_video_library(library)
+
+    async def _build_music_library(self, library) -> BrowseMediaSource:
         id = library["Id"]
         name = library["Name"]
 
-        _LOGGER.info(f"Bulding library {name} with media class {media_class}")
+        _LOGGER.info(f"Bulding library {name} with media class {MEDIA_CLASS_MUSIC}")
 
         librarySource = BrowseMediaSource(
             domain=DOMAIN,
@@ -182,7 +189,7 @@ class JellyfinSource(MediaSource):
             title=name,
             can_play=False,
             can_expand=True,
-            children_media_class=media_class,
+            children_media_class=MEDIA_CLASS_MUSIC,
         )
 
         library_members = await self._get_library_members(id)
@@ -190,7 +197,33 @@ class JellyfinSource(MediaSource):
         librarySource.children = []
         for library_member in library_members:
             if _is_playable(library_member):
-                child = self._processMediaItem(id, library_member, media_class)
+                child = self._processMediaItem(id, library_member, MEDIA_CLASS_MUSIC)
+                librarySource.children.append(child)
+        return librarySource
+
+    async def _build_video_library(self, library) -> BrowseMediaSource:
+        id = library["Id"]
+        name = library["Name"]
+
+        _LOGGER.info(f"Bulding library {name} with media class {MEDIA_CLASS_VIDEO}")
+
+        librarySource = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=id,
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_type=None,
+            title=name,
+            can_play=False,
+            can_expand=True,
+            children_media_class=MEDIA_CLASS_VIDEO,
+        )
+
+        library_members = await self._get_library_members(id)
+
+        librarySource.children = []
+        for library_member in library_members:
+            if _is_playable(library_member):
+                child = self._processMediaItem(id, library_member, MEDIA_CLASS_VIDEO)
                 librarySource.children.append(child)
         return librarySource
 
@@ -262,5 +295,8 @@ class JellyfinMediaView(HomeAssistantView):
         self.source = source
 
     async def get(self, request: web.Request, item_id: str) -> web.Response:
-        url = f"{self.source.url}/Items/{item_id}/Download"
-        return web.FileResponse(url)
+        media_item = await self.hass.async_add_executor_job(
+            self.source.api.get_item, item_id
+        )
+        stream_url = self.source._get_stream_url(media_item)
+        return web.FileResponse(stream_url)
