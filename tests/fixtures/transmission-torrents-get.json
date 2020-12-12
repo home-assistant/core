@@ -174,7 +174,7 @@
           "uploadLimit": 100,
           "uploadLimitMode": 0,
           "uploadLimited": false,
-          "uploadRatio": 0,
+          "uploadRatio": 0.04,
           "wanted": [
             1
           ],
@@ -324,7 +324,7 @@
           "uploadLimit": 100,
           "uploadLimitMode": 0,
           "uploadLimited": false,
-          "uploadRatio": 0,
+          "uploadRatio": 0.02,
           "wanted": [
             1
           ],
@@ -859,7 +859,7 @@
           "uploadLimit": 100,
           "uploadLimitMode": 0,
           "uploadLimited": false,
-          "uploadRatio": 0,
+          "uploadRatio": 0.03,
           "wanted": [
             1,
             1,
