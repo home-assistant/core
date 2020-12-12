@@ -3,7 +3,8 @@ import logging
 
 from telegram import Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
-from telegram.ext import Handler, Updater
+from telegram.ext import CallbackContext, Dispatcher, Handler, Updater
+from telegram.utils.types import HandlerArg
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -34,15 +35,15 @@ async def async_setup_platform(hass, config):
     return True
 
 
-def process_error(bot, update, error):
+def process_error(update: Update, context: CallbackContext):
     """Telegram bot error handler."""
     try:
-        raise error
+        raise context.error
     except (TimedOut, NetworkError, RetryAfter):
         # Long polling timeout or connection problem. Nothing serious.
         pass
     except TelegramError:
-        _LOGGER.error('Update "%s" caused error "%s"', update, error)
+        _LOGGER.error('Update "%s" caused error: "%s"', update, context.error)
 
 
 def message_handler(handler):
@@ -59,10 +60,17 @@ def message_handler(handler):
             """Check is update valid."""
             return isinstance(update, Update)
 
-        def handle_update(self, update, dispatcher):
+        def handle_update(
+            self,
+            update: HandlerArg,
+            dispatcher: Dispatcher,
+            check_result: object,
+            context: CallbackContext = None,
+        ):
             """Handle update."""
             optional_args = self.collect_optional_args(dispatcher, update)
-            return self.callback(dispatcher.bot, update, **optional_args)
+            context.args = optional_args
+            return self.callback(update, context)
 
     return MessageHandler()
 
