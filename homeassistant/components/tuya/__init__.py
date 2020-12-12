@@ -62,9 +62,11 @@ TUYA_TYPE_TO_HA = {
 
 TUYA_TRACKER = "tuya_tracker"
 
+INVALID_SCHEMA_VER = "0.121.0"
+
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN),
+        cv.deprecated(DOMAIN, invalidation_version=INVALID_SCHEMA_VER),
         {
             DOMAIN: vol.Schema(
                 {
@@ -108,12 +110,18 @@ async def async_setup(hass, config):
     """Set up the Tuya integration."""
 
     conf = config.get(DOMAIN)
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
+    if conf is None:
+        return True
+
+    domains_list = hass.config_entries.async_domains()
+    if DOMAIN in domains_list:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
+    )
 
     return True
 
