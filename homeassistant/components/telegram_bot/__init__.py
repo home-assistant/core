@@ -646,7 +646,7 @@ class TelegramNotificationService:
                 reply_markup=params[ATTR_REPLYMARKUP],
                 timeout=params[ATTR_TIMEOUT],
             )
-        elif type_edit == SERVICE_EDIT_CAPTION:
+        if type_edit == SERVICE_EDIT_CAPTION:
             return self._send_msg(
                 self.bot.edit_message_caption,
                 "Error editing message attributes",
@@ -659,17 +659,17 @@ class TelegramNotificationService:
                 timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
             )
-        else:
-            return self._send_msg(
-                self.bot.edit_message_reply_markup,
-                "Error editing message attributes",
-                params[ATTR_MESSAGE_TAG],
-                chat_id=chat_id,
-                message_id=message_id,
-                inline_message_id=inline_message_id,
-                reply_markup=params[ATTR_REPLYMARKUP],
-                timeout=params[ATTR_TIMEOUT],
-            )
+
+        return self._send_msg(
+            self.bot.edit_message_reply_markup,
+            "Error editing message attributes",
+            params[ATTR_MESSAGE_TAG],
+            chat_id=chat_id,
+            message_id=message_id,
+            inline_message_id=inline_message_id,
+            reply_markup=params[ATTR_REPLYMARKUP],
+            timeout=params[ATTR_TIMEOUT],
+        )
 
     def answer_callback_query(
         self, message, callback_query_id, show_alert=False, **kwargs
