@@ -249,13 +249,15 @@ class ZHADevice(LogMixin):
     @property
     def device_automation_triggers(self):
         """Return the device automation triggers for this device."""
-        triggers = {
-            ("device_offline", "device_offline"): {
-                "device_event_type": "device_offline"
-            }
-        }
+        triggers = {}
+
         if hasattr(self._zigpy_device, "device_automation_triggers"):
             triggers.update(self._zigpy_device.device_automation_triggers)
+
+        triggers[("device_offline", "device_offline")] = {
+            "device_event_type": "device_offline"
+        }
+
         return triggers
 
     @property
