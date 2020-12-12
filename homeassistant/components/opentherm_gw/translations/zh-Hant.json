@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "id_exists": "\u9598\u9053\u5668 ID \u5df2\u5b58\u5728"
         },

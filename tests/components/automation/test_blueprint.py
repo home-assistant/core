@@ -66,45 +66,63 @@ async def test_notify_leaving_zone(hass):
                         "input": {
                             "person_entity": "person.test_person",
                             "zone_entity": "zone.school",
-                            "notify_service": "notify.test_service",
+                            "notify_device": "abcdefgh",
                         },
                     }
                 }
             },
         )
 
-    calls = async_mock_service(hass, "notify", "test_service")
+    with patch(
+        "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
+    ) as mock_call_action:
+        # Leaving zone to no zone
+        set_person_state("not_home")
+        await hass.async_block_till_done()
 
-    # Leaving zone to no zone
-    set_person_state("not_home")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
+        _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
+        message_tpl = config.pop("message")
+        assert config == {
+            "domain": "mobile_app",
+            "type": "notify",
+            "device_id": "abcdefgh",
+        }
+        message_tpl.hass = hass
+        assert message_tpl.async_render(variables) == "Paulus has left School"
 
-    assert len(calls) == 1
-    assert calls[0].data["message"] == "Paulus has left School"
+        # Should not increase when we go to another zone
+        set_person_state("bla")
+        await hass.async_block_till_done()
 
-    # Should not increase when we go to another zone
-    set_person_state("bla")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
 
-    assert len(calls) == 1
+        # Should not increase when we go into the zone
+        set_person_state("School")
+        await hass.async_block_till_done()
 
-    # Should not increase when we go into the zone
-    set_person_state("School")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
 
-    assert len(calls) == 1
+        # Should not increase when we move in the zone
+        set_person_state("School", {"extra_key": "triggers change with same state"})
+        await hass.async_block_till_done()
 
-    # Should not increase when we move in the zone
-    set_person_state("School", {"extra_key": "triggers change with same state"})
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 1
 
-    assert len(calls) == 1
+        # Should increase when leaving zone for another zone
+        set_person_state("Just Outside School")
+        await hass.async_block_till_done()
 
-    # Should increase when leaving zone for another zone
-    set_person_state("Just Outside School")
-    await hass.async_block_till_done()
+        assert len(mock_call_action.mock_calls) == 2
 
-    assert len(calls) == 2
+        # Verify trigger works
+        await hass.services.async_call(
+            "automation",
+            "trigger",
+            {"entity_id": "automation.automation_0"},
+            blocking=True,
+        )
+        assert len(mock_call_action.mock_calls) == 3
 
 
 async def test_motion_light(hass):
@@ -123,7 +141,7 @@ async def test_motion_light(hass):
                     "use_blueprint": {
                         "path": "motion_light.yaml",
                         "input": {
-                            "light_entity": "light.kitchen",
+                            "light_target": {"entity_id": "light.kitchen"},
                             "motion_entity": "binary_sensor.kitchen",
                         },
                     }
@@ -131,8 +149,8 @@ async def test_motion_light(hass):
             },
         )
 
-    turn_on_calls = async_mock_service(hass, "homeassistant", "turn_on")
-    turn_off_calls = async_mock_service(hass, "homeassistant", "turn_off")
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+    turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
     # Turn on motion
     hass.states.async_set("binary_sensor.kitchen", "on")
@@ -183,3 +201,13 @@ async def test_motion_light(hass):
 
     assert len(turn_on_calls) == 3
     assert len(turn_off_calls) == 1
+
+    # Verify trigger works
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.automation_0"},
+    )
+    for _ in range(25):
+        await asyncio.sleep(0)
+    assert len(turn_on_calls) == 4

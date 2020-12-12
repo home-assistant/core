@@ -45,13 +45,13 @@ REQUIRES = [
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==3.2",
-    "pip>=8.0.3",
+    "pip>=8.0.3,<20.3",
     "python-slugify==4.0.1",
     "pytz>=2020.1",
     "pyyaml==5.3.1",
     "requests==2.25.0",
     "ruamel.yaml==0.15.100",
-    "voluptuous==0.12.0",
+    "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
     "yarl==1.4.2",
 ]

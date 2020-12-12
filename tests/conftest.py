@@ -400,7 +400,7 @@ def mqtt_client_mock(hass):
 async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     """Fixture to mock MQTT component."""
     if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
     result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
     assert result

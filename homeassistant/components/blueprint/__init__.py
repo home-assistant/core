@@ -7,7 +7,7 @@ from .errors import (  # noqa
     FailedToLoad,
     InvalidBlueprint,
     InvalidBlueprintInputs,
-    MissingPlaceholder,
+    MissingInput,
 )
 from .models import Blueprint, BlueprintInputs, DomainBlueprints  # noqa
 from .schemas import is_blueprint_instance_config  # noqa

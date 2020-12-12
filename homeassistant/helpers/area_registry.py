@@ -1,13 +1,13 @@
 """Provide a way to connect devices to one physical location."""
 from asyncio import Event, gather
 from collections import OrderedDict
-from typing import Dict, Iterable, List, MutableMapping, Optional, cast
+from typing import Container, Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
-import homeassistant.util.uuid as uuid_util
+from homeassistant.util import slugify
 
 from .typing import HomeAssistantType
 
@@ -22,8 +22,17 @@ SAVE_DELAY = 10
 class AreaEntry:
     """Area Registry Entry."""
 
-    name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    name: str = attr.ib()
+    id: Optional[str] = attr.ib(default=None)
+
+    def generate_id(self, existing_ids: Container) -> None:
+        """Initialize ID."""
+        suggestion = suggestion_base = slugify(self.name)
+        tries = 1
+        while suggestion in existing_ids:
+            tries += 1
+            suggestion = f"{suggestion_base}_{tries}"
+        object.__setattr__(self, "id", suggestion)
 
 
 class AreaRegistry:
@@ -51,16 +60,15 @@ class AreaRegistry:
         if self._async_is_registered(name):
             raise ValueError("Name is already in use")
 
-        area = AreaEntry()
+        area = AreaEntry(name=name)
+        area.generate_id(self.areas)
+        assert area.id is not None
         self.areas[area.id] = area
-
-        created = self._async_update(area.id, name=name)
-
+        self.async_schedule_save()
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": created.id}
+            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
         )
-
-        return created
+        return area
 
     async def async_delete(self, area_id: str) -> None:
         """Delete area."""

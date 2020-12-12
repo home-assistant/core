@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recollect_waste",
   "requirements": [
-    "aiorecollect==0.2.1"
+    "aiorecollect==0.2.2"
   ],
   "codeowners": [
     "@bachya"

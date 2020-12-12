@@ -2,6 +2,6 @@
   "domain": "lcn",
   "name": "LCN",
   "documentation": "https://www.home-assistant.io/integrations/lcn",
-  "requirements": ["pypck==0.7.4"],
+  "requirements": ["pypck==0.7.7"],
   "codeowners": ["@alengwenus"]
 }

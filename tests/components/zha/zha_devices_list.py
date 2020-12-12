@@ -1372,10 +1372,22 @@ DEVICES = [
             },
         },
         "entities": [
+            "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
+            "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
         ],
         "entity_map": {
+            ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
+            },
             ("switch", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["on_off"],
                 "entity_class": "Switch",
