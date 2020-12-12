@@ -48,7 +48,9 @@ omit =
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apcupsd/*
-    homeassistant/components/apple_tv/*
+    homeassistant/components/apple_tv/__init__.py
+    homeassistant/components/apple_tv/media_player.py
+    homeassistant/components/apple_tv/remote.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/media_player.py
@@ -266,6 +268,7 @@ omit =
     homeassistant/components/fireservicerota/binary_sensor.py
     homeassistant/components/fireservicerota/const.py
     homeassistant/components/fireservicerota/sensor.py
+    homeassistant/components/fireservicerota/switch.py
     homeassistant/components/firmata/__init__.py
     homeassistant/components/firmata/binary_sensor.py
     homeassistant/components/firmata/board.py
@@ -383,7 +386,6 @@ omit =
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
-    homeassistant/components/hyperion/light.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
@@ -540,11 +542,11 @@ omit =
     homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
-    homeassistant/components/mobile_app/*
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/switch.py
+    homeassistant/components/modbus/sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -571,7 +573,18 @@ omit =
     homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
-    homeassistant/components/nest/*
+    homeassistant/components/nest/__init__.py
+    homeassistant/components/nest/api.py
+    homeassistant/components/nest/binary_sensor.py
+    homeassistant/components/nest/camera.py
+    homeassistant/components/nest/camera_legacy.py
+    homeassistant/components/nest/camera_sdm.py
+    homeassistant/components/nest/climate.py
+    homeassistant/components/nest/climate_legacy.py
+    homeassistant/components/nest/climate_sdm.py
+    homeassistant/components/nest/local_auth.py
+    homeassistant/components/nest/sensor.py
+    homeassistant/components/nest/sensor_legacy.py
     homeassistant/components/netatmo/__init__.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
@@ -677,6 +690,7 @@ omit =
     homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/*
     homeassistant/components/plex/media_player.py
+    homeassistant/components/plex/models.py
     homeassistant/components/plex/sensor.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
@@ -947,7 +961,6 @@ omit =
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
     homeassistant/components/twitter/notify.py
-    homeassistant/components/ubee/device_tracker.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/unifiled/*
@@ -1001,7 +1014,6 @@ omit =
     homeassistant/components/watson_tts/tts.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/*
-    homeassistant/components/wemo/*
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wink/*

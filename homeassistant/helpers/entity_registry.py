@@ -311,11 +311,18 @@ class EntityRegistry:
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device = device_registry.async_get(event.data["device_id"])
         if not device.disabled:
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            for entity in entities:
+                if entity.disabled_by != DISABLED_DEVICE:
+                    continue
+                self.async_update_entity(  # type: ignore
+                    entity.entity_id, disabled_by=None
+                )
             return
 
-        entities = async_entries_for_device(
-            self, event.data["device_id"], include_disabled_entities=True
-        )
+        entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
             self.async_update_entity(  # type: ignore
                 entity.entity_id, disabled_by=DISABLED_DEVICE

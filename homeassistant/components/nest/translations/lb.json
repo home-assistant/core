@@ -31,5 +31,13 @@
                 "title": "Authentifikatioun's Method auswielen"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Bewegung erkannt",
+            "camera_person": "Persoun detekt\u00e9iert",
+            "camera_sound": "Toun detekt\u00e9iert",
+            "doorbell_chime": "Schell gedr\u00e9ckt"
+        }
     }
 }

@@ -39,7 +39,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, SIGNAL_NEST_UPDATE
+from .const import DATA_SUBSCRIBER, DOMAIN, SIGNAL_NEST_UPDATE
 from .device_info import DeviceInfo
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
@@ -81,7 +81,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the client entities."""
 
-    subscriber = hass.data[DOMAIN][entry.entry_id]
+    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
     except GoogleNestException as err:

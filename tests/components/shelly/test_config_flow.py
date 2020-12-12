@@ -5,7 +5,7 @@ import aiohttp
 import aioshelly
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.shelly.const import DOMAIN
 
 from tests.async_mock import AsyncMock, Mock, patch
@@ -36,7 +36,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("aioshelly.COAP", return_value=Mock(initialize=AsyncMock())), patch(
+    with patch(
         "aioshelly.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
@@ -226,6 +226,36 @@ async def test_form_already_configured(hass):
 
         assert result2["type"] == "abort"
         assert result2["reason"] == "already_configured"
+
+    # Test config entry got updated with latest IP
+    assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_user_setup_ignored_device(hass):
+    """Test user can successfully setup an ignored device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="test-mac",
+        data={"host": "0.0.0.0"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"

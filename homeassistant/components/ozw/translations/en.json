@@ -4,13 +4,24 @@
             "addon_info_failed": "Failed to get OpenZWave add-on info.",
             "addon_install_failed": "Failed to install the OpenZWave add-on.",
             "addon_set_config_failed": "Failed to set OpenZWave configuration.",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
             "mqtt_required": "The MQTT integration is not set up",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "addon_start_failed": "Failed to start the OpenZWave add-on. Check the configuration."
         },
+        "progress": {
+            "install_addon": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes."
+        },
         "step": {
+            "hassio_confirm": {
+                "title": "Set up OpenZWave integration with the OpenZWave add-on"
+            },
+            "install_addon": {
+                "title": "The OpenZWave add-on installation has started"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Use the OpenZWave Supervisor add-on"

@@ -172,9 +172,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_bridges")
 
-        if self.bridge_id == "0000000000000000":
-            return self.async_abort(reason="no_hardware_available")
-
         return self.async_create_entry(title=self.bridge_id, data=self.deconz_config)
 
     async def async_step_ssdp(self, discovery_info):

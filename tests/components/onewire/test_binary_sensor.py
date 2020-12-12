@@ -84,3 +84,6 @@ async def test_owserver_binary_sensor(owproxy, hass, device_id):
         assert registry_entry is not None
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
+        assert state.attributes["device_file"] == expected_sensor.get(
+            "device_file", registry_entry.unique_id
+        )
