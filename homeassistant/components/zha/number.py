@@ -326,18 +326,8 @@ class ZhaNumber(ZhaEntity, NumberEntity):
 
     async def async_set_value(self, value):
         """Update the current value from HA."""
-
         num_value = float(value)
-        try:
-            res = await self._analog_output_channel.cluster.write_attributes(
-                {"present_value": num_value}
-            )
-        except ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if isinstance(res, list) and all(
-            [record.status == Status.SUCCESS for record in res[0]]
-        ):
+        if await self._analog_output_channel.async_set_present_value(num_value):
             self.async_write_ha_state()
 
     async def async_update(self):

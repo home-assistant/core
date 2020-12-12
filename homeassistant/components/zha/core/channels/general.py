@@ -19,6 +19,7 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
 )
+from ..helpers import retryable_req
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
 
@@ -81,10 +82,24 @@ class AnalogOutput(ZigbeeChannel):
         """Return cached value of application_type."""
         return self.cluster.get("application_type")
 
+    async def async_set_present_value(self, value: float) -> bool:
+        """Update present_value."""
+        try:
+            res = await self.cluster.write_attributes({"present_value": value})
+        except ZigbeeException as ex:
+            self.error("Could not set value: %s", ex)
+            return False
+        if isinstance(res, list) and all(
+            [record.status == Status.SUCCESS for record in res[0]]
+        ):
+            return True
+        return False
+
     def async_configure_channel_specific(self) -> Coroutine:
         """Configure channel."""
         return self.fetch_config(False)
 
+    @retryable_req(delays=(1, 1, 3))
     def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
         return self.fetch_config(from_cache)
