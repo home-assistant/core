@@ -186,6 +186,7 @@ def _torrents_info(torrents, order, limit, statuses=None):
             "percent_done": f"{torrent.percentDone * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,
+            "ratio": torrent.uploadRatio,
         }
         try:
             info["eta"] = str(torrent.eta)
