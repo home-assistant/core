@@ -646,7 +646,7 @@ class TelegramNotificationService:
                 reply_markup=params[ATTR_REPLYMARKUP],
                 timeout=params[ATTR_TIMEOUT],
             )
-        if type_edit == SERVICE_EDIT_CAPTION:
+        elif type_edit == SERVICE_EDIT_CAPTION:
             return self._send_msg(
                 self.bot.edit_message_caption,
                 "Error editing message attributes",
