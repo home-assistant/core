@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
+from niu import NiuAPIException
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -17,8 +18,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-
-from niu import NiuAPIException
 
 from .const import DOMAIN
 
