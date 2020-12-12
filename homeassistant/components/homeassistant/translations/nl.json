@@ -1,7 +1,7 @@
 {
     "system_health": {
         "info": {
-            "dev": "Ontwikkelaarsmodus",
+            "dev": "Ontwikkeling",
             "docker": "Docker",
             "docker_version": "Docker",
             "os_version": "Versie van het besturingssysteem",

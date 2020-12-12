@@ -61,6 +61,9 @@ async def test_if_not_fires_on_entity_removal(hass, calls):
 
 async def test_if_fires_on_entity_change_below(hass, calls):
     """Test the firing with changed entity."""
+    hass.states.async_set("test.entity", 11)
+    await hass.async_block_till_done()
+
     context = Context()
     assert await async_setup_component(
         hass,
@@ -270,6 +273,9 @@ async def test_if_fires_on_initial_entity_above(hass, calls):
 
 async def test_if_fires_on_entity_change_above(hass, calls):
     """Test the firing with changed entity."""
+    hass.states.async_set("test.entity", 9)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -378,6 +384,9 @@ async def test_if_not_above_fires_on_entity_change_to_equal(hass, calls):
 
 async def test_if_fires_on_entity_change_below_range(hass, calls):
     """Test the firing with changed entity."""
+    hass.states.async_set("test.entity", 11)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -500,6 +509,9 @@ async def test_if_not_fires_if_entity_not_match(hass, calls):
 
 async def test_if_fires_on_entity_change_below_with_attribute(hass, calls):
     """Test attributes change."""
+    hass.states.async_set("test.entity", 11, {"test_attribute": 11})
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -544,6 +556,9 @@ async def test_if_not_fires_on_entity_change_not_below_with_attribute(hass, call
 
 async def test_if_fires_on_attribute_change_with_attribute_below(hass, calls):
     """Test attributes change."""
+    hass.states.async_set("test.entity", "entity", {"test_attribute": 11})
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -636,6 +651,10 @@ async def test_if_not_fires_on_entity_change_with_not_attribute_below(hass, call
 
 async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(hass, calls):
     """Test attributes change."""
+    hass.states.async_set(
+        "test.entity", "entity", {"test_attribute": 11, "not_test_attribute": 11}
+    )
+    await hass.async_block_till_done()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -661,6 +680,8 @@ async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(hass,
 
 async def test_template_list(hass, calls):
     """Test template list."""
+    hass.states.async_set("test.entity", "entity", {"test_attribute": [11, 15, 11]})
+    await hass.async_block_till_done()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -791,6 +812,9 @@ async def test_if_action(hass, calls):
 
 async def test_if_fails_setup_bad_for(hass, calls):
     """Test for setup failure for bad for."""
+    hass.states.async_set("test.entity", 5)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -863,6 +887,10 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
 
 async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     """Test for not firing on entities change with for after stop."""
+    hass.states.async_set("test.entity_1", 0)
+    hass.states.async_set("test.entity_2", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -906,6 +934,9 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
 
 async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
     """Test for firing on entity change with for and attribute change."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -941,6 +972,9 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
 
 async def test_if_fires_on_entity_change_with_for(hass, calls):
     """Test for firing on entity change with for."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -967,6 +1001,9 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
 
 async def test_wait_template_with_trigger(hass, calls):
     """Test using wait template with 'trigger.entity_id'."""
+    hass.states.async_set("test.entity", "0")
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1004,6 +1041,10 @@ async def test_wait_template_with_trigger(hass, calls):
 
 async def test_if_fires_on_entities_change_no_overlap(hass, calls):
     """Test for firing on entities change with no overlap."""
+    hass.states.async_set("test.entity_1", 0)
+    hass.states.async_set("test.entity_2", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1047,6 +1088,10 @@ async def test_if_fires_on_entities_change_no_overlap(hass, calls):
 
 async def test_if_fires_on_entities_change_overlap(hass, calls):
     """Test for firing on entities change with overlap."""
+    hass.states.async_set("test.entity_1", 0)
+    hass.states.async_set("test.entity_2", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1101,6 +1146,9 @@ async def test_if_fires_on_entities_change_overlap(hass, calls):
 
 async def test_if_fires_on_change_with_for_template_1(hass, calls):
     """Test for firing on  change with for template."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1128,6 +1176,9 @@ async def test_if_fires_on_change_with_for_template_1(hass, calls):
 
 async def test_if_fires_on_change_with_for_template_2(hass, calls):
     """Test for firing on  change with for template."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1155,6 +1206,9 @@ async def test_if_fires_on_change_with_for_template_2(hass, calls):
 
 async def test_if_fires_on_change_with_for_template_3(hass, calls):
     """Test for firing on  change with for template."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1182,6 +1236,9 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls):
 
 async def test_invalid_for_template(hass, calls):
     """Test for invalid for template."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1207,6 +1264,10 @@ async def test_invalid_for_template(hass, calls):
 
 async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
     """Test for firing on entities change with overlap and for template."""
+    hass.states.async_set("test.entity_1", 0)
+    hass.states.async_set("test.entity_2", 0)
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
