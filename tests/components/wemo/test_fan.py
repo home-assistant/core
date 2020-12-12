@@ -11,11 +11,33 @@ from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
+from . import entity_test_helpers
+
 
 @pytest.fixture
 def pywemo_model():
     """Pywemo Humidifier models use the fan platform."""
     return "Humidifier"
+
+
+# Tests that are in common among wemo platforms. These test methods will be run
+# in the scope of this test module. They will run using the pywemo_model from
+# this test module (Humidifier).
+test_async_update_locked_multiple_updates = (
+    entity_test_helpers.test_async_update_locked_multiple_updates
+)
+test_async_update_locked_multiple_callbacks = (
+    entity_test_helpers.test_async_update_locked_multiple_callbacks
+)
+test_async_update_locked_callback_and_update = (
+    entity_test_helpers.test_async_update_locked_callback_and_update
+)
+test_async_locked_update_with_exception = (
+    entity_test_helpers.test_async_locked_update_with_exception
+)
+test_async_update_with_timeout_and_recovery = (
+    entity_test_helpers.test_async_update_with_timeout_and_recovery
+)
 
 
 async def test_fan_registry_state_callback(
