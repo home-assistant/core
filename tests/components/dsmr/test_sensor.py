@@ -549,6 +549,8 @@ async def test_reconnect(hass, dsmr_connection_fixture):
 
     await hass.async_block_till_done()
 
+    # for some reason we need the tiniest nonzero of sleeps before asserting
+    await asyncio.sleep(1.4012985e-45)
     assert connection_factory.call_count >= 2, "connecting not retried"
     # setting it so teardown can be successful
     closed.set()
@@ -559,7 +561,7 @@ async def test_reconnect(hass, dsmr_connection_fixture):
 
 
 async def test_timer():
-    """Test if the timer handles starting, stopping and resetting correctly"""
+    """Test if the timer handles starting, stopping and resetting correctly."""
     delay = 1
     # delta_delay must be delay >> delta_delay and delta_delay >> code runtime
     delta_delay = 0.04
