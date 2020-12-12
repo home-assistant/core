@@ -33,8 +33,12 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE
 
 from .common import async_setup_sdm_platform
 
@@ -109,6 +113,10 @@ async def test_thermostat_off(hass):
     assert ATTR_PRESET_MODES not in thermostat.attributes
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
+    )
 
 
 async def test_thermostat_heat(hass):
@@ -277,6 +285,12 @@ async def test_thermostat_eco_off(hass):
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_NONE
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_PRESET_MODE
+    )
 
 
 async def test_thermostat_eco_on(hass):
@@ -324,6 +338,12 @@ async def test_thermostat_eco_on(hass):
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_ECO
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_PRESET_MODE
+    )
 
 
 async def test_thermostat_eco_heat_only(hass):
@@ -366,6 +386,10 @@ async def test_thermostat_eco_heat_only(hass):
     assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_ECO
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    )
 
 
 async def test_thermostat_set_hvac_mode(hass, auth):
@@ -508,6 +532,12 @@ async def test_thermostat_set_eco_preset(hass, auth):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_PRESET_MODE
+    )
 
     # Turn on eco mode
     await common.async_set_preset_mode(hass, PRESET_ECO)
@@ -703,6 +733,12 @@ async def test_thermostat_fan_off(hass):
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_FAN_MODE
+    )
 
 
 async def test_thermostat_fan_on(hass):
@@ -741,6 +777,12 @@ async def test_thermostat_fan_on(hass):
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_FAN_MODE
+    )
 
 
 async def test_thermostat_set_fan(hass, auth):
@@ -769,6 +811,12 @@ async def test_thermostat_set_fan(hass, auth):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_FAN_MODE
+    )
 
     # Turn off fan mode
     await common.async_set_fan_mode(hass, FAN_OFF)
@@ -813,6 +861,10 @@ async def test_thermostat_fan_empty(hass):
     }
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
+    assert (
+        thermostat.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
+    )
 
     # Ignores set_fan_mode since it is lacking SUPPORT_FAN_MODE
     await common.async_set_fan_mode(hass, FAN_ON)
