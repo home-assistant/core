@@ -158,7 +158,7 @@ SENSOR_TYPES = {
         ENTITY_API_DATA_PATH: "current_forecast:weather:desc",
     },
     "daily_condition": {
-        ENTITY_NAME: "Dalily condition",
+        ENTITY_NAME: "Daily condition",
         ENTITY_UNIT: None,
         ENTITY_ICON: None,
         ENTITY_DEVICE_CLASS: None,
