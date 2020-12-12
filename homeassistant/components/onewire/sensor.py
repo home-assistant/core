@@ -224,14 +224,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_sensor_types(device_sub_type="std"):
+def get_sensor_types(device_sub_type):
     """Return the proper info array for the device type."""
-    if "std" in device_sub_type:
-        return DEVICE_SENSORS
     if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
     if "EDS" in device_sub_type:
         return EDS_SENSORS
+    return DEVICE_SENSORS
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
