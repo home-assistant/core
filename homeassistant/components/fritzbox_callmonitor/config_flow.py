@@ -214,11 +214,13 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    def _are_prefixes_valid(self, prefixes):
+    @classmethod
+    def _are_prefixes_valid(cls, prefixes):
         """Check if prefixes are valid."""
         return prefixes.strip() if prefixes else prefixes is None
 
-    def _get_list_of_prefixes(self, prefixes):
+    @classmethod
+    def _get_list_of_prefixes(cls, prefixes):
         """Get list of prefixes."""
         if prefixes is None:
             return None
