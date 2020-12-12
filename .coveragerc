@@ -578,7 +578,6 @@ omit =
     homeassistant/components/nest/binary_sensor.py
     homeassistant/components/nest/camera.py
     homeassistant/components/nest/camera_legacy.py
-    homeassistant/components/nest/camera_sdm.py
     homeassistant/components/nest/climate.py
     homeassistant/components/nest/climate_legacy.py
     homeassistant/components/nest/climate_sdm.py
