@@ -40,11 +40,9 @@ SECRET_GROUP = "Password or SSH Key"
 
 _LOGGER = logging.getLogger(__name__)
 
-INVALID_SCHEMA_VER = "0.121.0"
-
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN, invalidation_version=INVALID_SCHEMA_VER),
+        cv.deprecated(DOMAIN, invalidation_version="0.121"),
         {
             DOMAIN: vol.Schema(
                 {
