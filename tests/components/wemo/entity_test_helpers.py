@@ -23,9 +23,6 @@ def _perform_registry_callback(hass, pywemo_registry, pywemo_device):
     def async_callback():
         # Cause a state update callback to be triggered by the device.
         pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
-
-        # One of these two calls will block on `event`. The other will return right
-        # away because the `_update_lock` is held.
         return hass.async_block_till_done()
 
     return async_callback
