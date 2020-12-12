@@ -33,10 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_EMAIL, invalidation_version="0.119"),
-            cv.deprecated(CONF_API_KEY, invalidation_version="0.119"),
-            cv.deprecated(CONF_ZONE, invalidation_version="0.119"),
-            cv.deprecated(CONF_RECORDS, invalidation_version="0.119"),
+            cv.deprecated(CONF_EMAIL),
+            cv.deprecated(CONF_API_KEY),
+            cv.deprecated(CONF_ZONE),
+            cv.deprecated(CONF_RECORDS),
             vol.Schema(
                 {
                     vol.Optional(CONF_EMAIL): cv.string,
