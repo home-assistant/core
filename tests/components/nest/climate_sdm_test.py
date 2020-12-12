@@ -7,6 +7,7 @@ pubsub subscriber.
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
+import pytest
 
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
@@ -453,8 +454,8 @@ async def test_thermostat_set_hvac_mode(hass, auth):
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
 
-async def test_thermostat_ignore_invalid_hvac_mode(hass, auth):
-    """Test a thermostat changing hvac modes."""
+async def test_thermostat_invalid_hvac_mode(hass, auth):
+    """Test setting an hvac_mode that is not supported."""
     await setup_climate(
         hass,
         {
@@ -473,8 +474,9 @@ async def test_thermostat_ignore_invalid_hvac_mode(hass, auth):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
 
-    await common.async_set_hvac_mode(hass, HVAC_MODE_DRY)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await common.async_set_hvac_mode(hass, HVAC_MODE_DRY)
+        await hass.async_block_till_done()
 
     assert thermostat.state == HVAC_MODE_OFF
     assert auth.method is None  # No communication with API
@@ -812,12 +814,52 @@ async def test_thermostat_fan_empty(hass):
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
 
-    # Set a fan mode that is not supported
-    await common.async_set_fan_mode(hass, FAN_LOW)
+    # Ignores set_fan_mode since it is lacking SUPPORT_FAN_MODE
+    await common.async_set_fan_mode(hass, FAN_ON)
     await hass.async_block_till_done()
 
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
+
+
+async def test_thermostat_invalid_fan_mode(hass):
+    """Test setting a fan mode that is not supported."""
+    await setup_climate(
+        hass,
+        {
+            "sdm.devices.traits.Fan": {
+                "timerMode": "ON",
+                "timerTimeout": "2019-05-10T03:22:54Z",
+            },
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "OFF",
+            },
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 16.2,
+            },
+        },
+    )
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_OFF,
+    }
+    assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
+    assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+
+    with pytest.raises(ValueError):
+        await common.async_set_fan_mode(hass, FAN_LOW)
+        await hass.async_block_till_done()
 
 
 async def test_thermostat_target_temp(hass, auth):
@@ -977,9 +1019,9 @@ async def test_thermostat_unexpected_hvac_status(hass):
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
 
-    # Attempt to set HVAC mode, temperature, etc doesn't do anything
-    await common.async_set_hvac_mode(hass, HVAC_MODE_DRY)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await common.async_set_hvac_mode(hass, HVAC_MODE_DRY)
+        await hass.async_block_till_done()
     assert thermostat.state == HVAC_MODE_OFF
 
 
@@ -1051,7 +1093,7 @@ async def test_thermostat_unexepected_hvac_mode(hass):
     assert ATTR_FAN_MODES not in thermostat.attributes
 
 
-async def test_thermostat_set_preset_invalid(hass, auth):
+async def test_thermostat_invalid_set_preset_mode(hass, auth):
     """Test a thermostat set with an invalid preset mode."""
     await setup_climate(
         hass,
@@ -1075,8 +1117,9 @@ async def test_thermostat_set_preset_invalid(hass, auth):
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
     # Set preset mode that is invalid
-    await common.async_set_preset_mode(hass, PRESET_SLEEP)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await common.async_set_preset_mode(hass, PRESET_SLEEP)
+        await hass.async_block_till_done()
 
     # No RPC sent
     assert auth.method is None

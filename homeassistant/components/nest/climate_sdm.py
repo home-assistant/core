@@ -287,9 +287,7 @@ class ThermostatEntity(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            return
-        if hvac_mode not in THERMOSTAT_INV_MODE_MAP:
-            return
+            raise ValueError(f"Unsupported hvac_mode '{hvac_mode}'")
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
         await trait.set_mode(api_mode)
@@ -313,13 +311,13 @@ class ThermostatEntity(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
-            return
+            raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
-            return
+            raise ValueError(f"Unsupported fan__mode '{fan_mode}'")
         trait = self._device.traits[FanTrait.NAME]
         await trait.set_timer(FAN_INV_MODE_MAP[fan_mode])
