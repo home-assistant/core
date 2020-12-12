@@ -13,7 +13,7 @@ from .const import (
     CONF_PHONEBOOK,
     CONF_PREFIXES,
     DOMAIN,
-    FRITZ_BOX_PHONEBOOK_OBJECT,
+    FRITZBOX_PHONEBOOK,
     PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
@@ -28,7 +28,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the fritzbox_callmonitor platforms."""
-    phonebook = FritzBoxPhonebook(
+    fritzbox_phonebook = FritzBoxPhonebook(
         host=config_entry.data[CONF_HOST],
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry):
     )
 
     try:
-        await hass.async_add_executor_job(phonebook.init_phonebook)
+        await hass.async_add_executor_job(fritzbox_phonebook.init_phonebook)
     except FritzSecurityError as ex:
         _LOGGER.error(
             "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks: %s",
@@ -55,7 +55,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
-        FRITZ_BOX_PHONEBOOK_OBJECT: phonebook,
+        FRITZBOX_PHONEBOOK: fritzbox_phonebook,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 

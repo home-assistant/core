@@ -186,7 +186,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "phonebook"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",

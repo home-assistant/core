@@ -38,4 +38,4 @@ MANUFACTURER = "AVM"
 
 PLATFORMS = ["sensor"]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-FRITZ_BOX_PHONEBOOK_OBJECT = "fritz_box_phonebook_object"
+FRITZBOX_PHONEBOOK = "fritzbox_phonebook"

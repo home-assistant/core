@@ -32,11 +32,11 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_ATTR_NAME,
-    FRITZ_BOX_PHONEBOOK_OBJECT,
     FRITZ_STATE_CALL,
     FRITZ_STATE_CONNECT,
     FRITZ_STATE_DISCONNECT,
     FRITZ_STATE_RING,
+    FRITZBOX_PHONEBOOK,
     ICON_PHONE,
     MANUFACTURER,
     SERIAL_NUMBER,
@@ -75,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the fritzbox_callmonitor sensor from config_entry."""
-    phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZ_BOX_PHONEBOOK_OBJECT]
+    fritzbox_phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZBOX_PHONEBOOK]
 
     phonebook_name = config_entry.title
     phonebook_id = config_entry.data[CONF_PHONEBOOK]
@@ -85,21 +85,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     port = config_entry.data[CONF_PORT]
 
     phonebook_info = await hass.async_add_executor_job(
-        phonebook.fph.phonebook_info, phonebook_id
+        fritzbox_phonebook.fph.phonebook_info, phonebook_id
     )
     actual_phonebook_name = phonebook_info[FRITZ_ATTR_NAME]
 
     if phonebook_name != actual_phonebook_name:
         name = phonebook_name
     else:
-        name = f"{phonebook.fph.modelname} Call Monitor {phonebook_name}"
+        name = f"{fritzbox_phonebook.fph.modelname} Call Monitor {phonebook_name}"
 
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(
         name=name,
         unique_id=unique_id,
-        phonebook=phonebook,
+        fritzbox_phonebook=fritzbox_phonebook,
         prefixes=prefixes,
         host=host,
         port=port,
@@ -115,13 +115,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FritzBoxCallSensor(Entity):
     """Implementation of a Fritz!Box call monitor."""
 
-    def __init__(self, name, unique_id, phonebook, prefixes, host, port):
+    def __init__(self, name, unique_id, fritzbox_phonebook, prefixes, host, port):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
         self.entity_id = f"{SENSOR_DOMAIN}.{name}"
         self._unique_id = unique_id
-        self._phonebook = phonebook
+        self._fritzbox_phonebook = fritzbox_phonebook
         self._prefixes = prefixes
         self._host = host
         self._port = port
@@ -161,7 +161,7 @@ class FritzBoxCallSensor(Entity):
     @property
     def should_poll(self):
         """Only poll to update phonebook, if defined."""
-        return self._phonebook is not None
+        return self._fritzbox_phonebook is not None
 
     @property
     def state(self):
@@ -184,11 +184,11 @@ class FritzBoxCallSensor(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "name": self._phonebook.fph.modelname,
+            "name": self._fritzbox_phonebook.fph.modelname,
             "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": MANUFACTURER,
-            "model": self._phonebook.fph.modelname,
-            "sw_version": self._phonebook.fph.fc.system_version,
+            "model": self._fritzbox_phonebook.fph.modelname,
+            "sw_version": self._fritzbox_phonebook.fph.fc.system_version,
         }
 
     @property
@@ -198,14 +198,14 @@ class FritzBoxCallSensor(Entity):
 
     def number_to_name(self, number):
         """Return a name for a given phone number."""
-        if self._phonebook is None:
+        if self._fritzbox_phonebook is None:
             return UNKOWN_NAME
-        return self._phonebook.get_name(number)
+        return self._fritzbox_phonebook.get_name(number)
 
     def update(self):
         """Update the phonebook if it is defined."""
-        if self._phonebook is not None:
-            self._phonebook.update_phonebook()
+        if self._fritzbox_phonebook is not None:
+            self._fritzbox_phonebook.update_phonebook()
 
 
 class FritzBoxCallMonitor:

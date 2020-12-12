@@ -62,10 +62,10 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = None
         self._password = None
         self._phonebook_name = None
+        self._phonebook_names = None
         self._phonebook_id = None
         self._phonebook_ids = None
-        self._phonebook = None
-        self._phonebooks = None
+        self._fritzbox_phonebook = None
         self._prefixes = None
         self._serial_number = None
 
@@ -86,7 +86,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        self._phonebook = FritzBoxPhonebook(
+        self._fritzbox_phonebook = FritzBoxPhonebook(
             host=self._host,
             username=self._username,
             password=self._password,
@@ -95,8 +95,8 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            self._phonebook.init_phonebook()
-            self._phonebook_ids = self._phonebook.get_phonebook_ids()
+            self._fritzbox_phonebook.init_phonebook()
+            self._phonebook_ids = self._fritzbox_phonebook.get_phonebook_ids()
 
             fritz_connection = FritzConnection(
                 address=self._host, user=self._username, password=self._password
@@ -117,9 +117,18 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _get_name_of_phonebook(self, phonebook_id):
         """Return name of phonebook for given phonebook_id."""
         phonebook_info = await self.hass.async_add_executor_job(
-            self._phonebook.fph.phonebook_info, phonebook_id
+            self._fritzbox_phonebook.fph.phonebook_info, phonebook_id
         )
         return phonebook_info[FRITZ_ATTR_NAME]
+
+    async def _get_list_of_phonebook_names(self):
+        """Return list of names for all available phonebooks."""
+        phonebook_names = []
+
+        for phonebook_id in self._phonebook_ids:
+            phonebook_names.append(await self._get_name_of_phonebook(phonebook_id))
+
+        return phonebook_names
 
     @staticmethod
     @callback
@@ -156,7 +165,9 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if result != RESULT_SUCCESS:
             return self.async_abort(reason=result)
 
-        if CONF_PHONEBOOK in user_input:
+        if (  # pylint: disable=no-member
+            self.context["source"] == config_entries.SOURCE_IMPORT
+        ):
             self._phonebook_id = user_input[CONF_PHONEBOOK]
             self._phonebook_name = user_input[CONF_NAME]
 
@@ -175,22 +186,20 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_phonebook(self, user_input=None):
         """Handle a flow to chose one of multiple available phonebooks."""
 
-        if self._phonebooks is None:
-            self._phonebooks = []
-
-            for phonebook_id in self._phonebook_ids:
-                self._phonebooks.append(await self._get_name_of_phonebook(phonebook_id))
+        if self._phonebook_names is None:
+            self._phonebook_names = await self._get_list_of_phonebook_names()
 
         if user_input is None:
             return self.async_show_form(
                 step_id="phonebook",
                 data_schema=vol.Schema(
-                    {vol.Required(CONF_PHONEBOOK): vol.In(self._phonebooks)}
+                    {vol.Required(CONF_PHONEBOOK): vol.In(self._phonebook_names)}
                 ),
+                errors={},
             )
 
         self._phonebook_name = user_input[CONF_PHONEBOOK]
-        self._phonebook_id = self._phonebooks.index(self._phonebook_name)
+        self._phonebook_id = self._phonebook_names.index(self._phonebook_name)
 
         await self.async_set_unique_id(f"{self._serial_number}-{self._phonebook_id}")
         self._abort_if_unique_id_configured()
@@ -204,22 +213,20 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize."""
         self.config_entry = config_entry
-        self._prefixes = None
 
-    def _are_prefixes_valid(self):
+    def _are_prefixes_valid(self, prefixes):
         """Check if prefixes are valid."""
-        return self._prefixes.strip() if self._prefixes else self._prefixes is None
+        return prefixes.strip() if prefixes else prefixes is None
 
-    def _get_list_of_prefixes(self):
+    def _get_list_of_prefixes(self, prefixes):
         """Get list of prefixes."""
-        if self._prefixes is None:
+        if prefixes is None:
             return None
-        return [prefix.strip() for prefix in self._prefixes.split(",")]
+        return [prefix.strip() for prefix in prefixes.split(",")]
 
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-
-        option_schema_prefixes = vol.Schema(
+    def _get_option_schema_prefixes(self):
+        """Get option schema for entering prefixes."""
+        return vol.Schema(
             {
                 vol.Optional(
                     CONF_PREFIXES,
@@ -230,6 +237,11 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+
+        option_schema_prefixes = self._get_option_schema_prefixes()
+
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
@@ -237,16 +249,15 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
                 errors={},
             )
 
-        self._prefixes = user_input.get(CONF_PREFIXES)
+        prefixes = user_input.get(CONF_PREFIXES)
 
-        if self._are_prefixes_valid():
-            self._prefixes = self._get_list_of_prefixes()
-            return self.async_create_entry(
-                title="", data={CONF_PREFIXES: self._prefixes}
+        if not self._are_prefixes_valid(prefixes):
+            return self.async_show_form(
+                step_id="init",
+                data_schema=option_schema_prefixes,
+                errors={"base": RESULT_MALFORMED_PREFIXES},
             )
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=option_schema_prefixes,
-            errors={"base": RESULT_MALFORMED_PREFIXES},
+        return self.async_create_entry(
+            title="", data={CONF_PREFIXES: self._get_list_of_prefixes(prefixes)}
         )
