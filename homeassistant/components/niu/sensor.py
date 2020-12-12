@@ -127,6 +127,11 @@ class NiuOdoMeter(NiuEntity):
         return f"{self.vehicle.name} ODO Meter"
 
     @property
+    def unique_id(self):
+        """Return unique ID."""
+        return f"{self.vehicle.serial_number}-ODO-METER"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self.vehicle.odometer
@@ -153,6 +158,14 @@ class NiuBatteryCharge(NiuEntity):
             f"{self.vehicle.name} Charge (Compartment "
             + self.battery_compartments[self.battery_index]
             + ")"
+        )
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return (
+            f"{self.vehicle.serial_number}-CHARGE-COMP-"
+            + self.battery_compartments[self.battery_index]
         )
 
     @property
@@ -190,6 +203,14 @@ class NiuBatteryTemp(NiuEntity):
         )
 
     @property
+    def unique_id(self):
+        """Return unique ID."""
+        return (
+            f"{self.vehicle.serial_number}-TEMP-COMP-"
+            + self.battery_compartments[self.battery_index]
+        )
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self.vehicle.battery_temp(self.battery_index)
@@ -221,6 +242,11 @@ class NiuRange(NiuEntity):
     def name(self):
         """Return the name of the sensor."""
         return f"{self.vehicle.name} Range"
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return f"{self.vehicle.serial_number}-RANGE"
 
     @property
     def state(self):
