@@ -65,7 +65,7 @@ from . import (
     setup_test_config_entry,
 )
 
-from tests.async_mock import AsyncMock, call, patch  # type: ignore[attr-defined]
+from tests.async_mock import AsyncMock, Mock, call, patch  # type: ignore[attr-defined]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -596,6 +596,53 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
 
     assert not client.async_send_clear.called
     assert not client.async_send_set_effect.called
+
+
+async def test_light_async_turn_on_error_conditions(hass: HomeAssistantType) -> None:
+    """Test turning the light on."""
+    client = create_mock_client()
+    client.async_send_set_component = AsyncMock(return_value=False)
+    client.is_on = Mock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    # On (=), 100% (=), solid (=), [255,255,255] (=)
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
+    )
+
+    assert client.async_send_set_component.call_args == call(
+        **{
+            const.KEY_COMPONENTSTATE: {
+                const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                const.KEY_STATE: True,
+            }
+        }
+    )
+
+
+async def test_light_async_turn_off_error_conditions(hass: HomeAssistantType) -> None:
+    """Test turning the light on."""
+    client = create_mock_client()
+    client.async_send_clear = AsyncMock(return_value=False)
+    await setup_test_config_entry(
+        hass,
+        hyperion_client=client,
+        options={
+            CONF_MODE_OFF: CONF_MODE_OFF_SET_BLACK,
+            CONF_PRIORITY: TEST_PRIORITY,
+        },
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+        blocking=True,
+    )
+
+    assert client.async_send_clear.call_args == call(
+        **{const.KEY_PRIORITY: TEST_PRIORITY}
+    )
 
 
 async def test_light_color_preserved_mode_off_priority(hass: HomeAssistantType) -> None:
