@@ -1,11 +1,12 @@
 """Config flow for Niu integration."""
 import logging
 
-from niu import NiuAPIException, NiuCloud, NiuNetException, NiuServerException
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from niu import NiuAPIException, NiuCloud, NiuNetException, NiuServerException
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -36,13 +37,13 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     except NiuAPIException as ex:
         _LOGGER.error("Error while authenticating with Niu API: %s", ex)
-        raise InvalidAuth
+        raise InvalidAuth from ex
     except NiuServerException as ex:
         _LOGGER.error("Error while making Niu API request: %s", ex)
-        raise InvalidAuth
+        raise InvalidAuth from ex
     except NiuNetException as ex:
         _LOGGER.error("Could not connect with Niu API: %s", ex)
-        raise CannotConnect
+        raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_USERNAME]}

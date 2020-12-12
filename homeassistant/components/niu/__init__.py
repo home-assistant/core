@@ -2,12 +2,13 @@
 import asyncio
 import logging
 
-from niu import NiuCloud
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+
+from niu import NiuCloud
 
 from .const import DOMAIN
 

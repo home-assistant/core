@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from niu import NiuAPIException
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -19,6 +18,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from niu import NiuAPIException
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ async def async_setup_entry(hass, config, async_add_entities):
     entities = []
 
     # Get Niu Api Object
-    niuApi = hass.data[DOMAIN][config.entry_id]
+    niu_api = hass.data[DOMAIN][config.entry_id]
 
     async def async_update_data():
         """Fetch data from API endpoint.
@@ -42,10 +43,10 @@ async def async_setup_entry(hass, config, async_add_entities):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                await niuApi.update_vehicles()
-                return niuApi.get_vehicles()
+                await niu_api.update_vehicles()
+                return niu_api.get_vehicles()
         except NiuAPIException as ex:
-            raise UpdateFailed(f"Error communicating with API: {ex}")
+            raise UpdateFailed(f"Error communicating with API: {ex}") from ex
 
     # Create coordinator that is used to update all the data
     coordinator = DataUpdateCoordinator(
@@ -62,18 +63,18 @@ async def async_setup_entry(hass, config, async_add_entities):
     await coordinator.async_refresh()
 
     # Get all scooters from Niu API and add the entities to the entity list
-    for sn, vehicle in coordinator.data.items():
+    for serno, vehicle in coordinator.data.items():
         _LOGGER.info("Found Niu vehicle: %s", vehicle.name)
 
         # Adding various sensors
-        entities.append(NiuOdoMeter(coordinator, sn))
-        entities.append(NiuRange(coordinator, sn))
+        entities.append(NiuOdoMeter(coordinator, serno))
+        entities.append(NiuRange(coordinator, serno))
 
         # Niu vehicles can contain multiple batteries
-        for x in range(0, vehicle.battery_count):
+        for bat_idx in range(0, vehicle.battery_count):
             # Add the charge and temp to the entities
-            entities.append(NiuBatteryCharge(coordinator, sn, x))
-            entities.append(NiuBatteryTemp(coordinator, sn, x))
+            entities.append(NiuBatteryCharge(coordinator, serno, bat_idx))
+            entities.append(NiuBatteryTemp(coordinator, serno, bat_idx))
 
     # Add all entities
     async_add_entities(entities)
@@ -104,6 +105,7 @@ class NiuEntity(CoordinatorEntity, Entity):
 
     @property
     def device_info(self):
+        """Return device registry information for this entity."""
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
@@ -118,11 +120,7 @@ class NiuEntity(CoordinatorEntity, Entity):
 
 
 class NiuOdoMeter(NiuEntity):
-    """Represents the ODO meter of a Niu Scooter"""
-
-    def __init__(self, coordinator, idx):
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator, idx)
+    """Represents the ODO meter of a Niu Scooter."""
 
     @property
     def name(self):
@@ -141,7 +139,7 @@ class NiuOdoMeter(NiuEntity):
 
 
 class NiuBatteryCharge(NiuEntity):
-    """Represents the Battery Charge of a Niu Scooter"""
+    """Represents the Battery Charge of a Niu Scooter."""
 
     def __init__(self, coordinator, idx, battidx):
         """Pass coordinator to CoordinatorEntity."""
@@ -152,7 +150,11 @@ class NiuBatteryCharge(NiuEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.vehicle.name} Charge (Compartment {self.battery_compartments[self.battery_index]})"
+        return (
+            f"{self.vehicle.name} Charge (Compartment "
+            + self.battery_compartments[self.battery_index]
+            + ")"
+        )
 
     @property
     def state(self):
@@ -171,7 +173,7 @@ class NiuBatteryCharge(NiuEntity):
 
 
 class NiuBatteryTemp(NiuEntity):
-    """Represents the Battery Temperature of a Niu Scooter"""
+    """Represents the Battery Temperature of a Niu Scooter."""
 
     def __init__(self, coordinator, idx, battidx):
         """Pass coordinator to CoordinatorEntity."""
@@ -182,7 +184,11 @@ class NiuBatteryTemp(NiuEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.vehicle.name} Temp (Compartment {self.battery_compartments[self.battery_index]})"
+        return (
+            f"{self.vehicle.name} Temp (Compartment "
+            + self.battery_compartments[self.battery_index]
+            + ")"
+        )
 
     @property
     def state(self):
@@ -210,11 +216,7 @@ class NiuBatteryTemp(NiuEntity):
 
 
 class NiuRange(NiuEntity):
-    """Represents the Range indicator of a Niu Scooter"""
-
-    def __init__(self, coordinator, idx):
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator, idx)
+    """Represents the Range indicator of a Niu Scooter."""
 
     @property
     def name(self):
