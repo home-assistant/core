@@ -72,7 +72,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the AsusWrt integration."""
-
     conf = config.get(DOMAIN)
     if conf is None:
         return True
