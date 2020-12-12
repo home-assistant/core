@@ -191,7 +191,7 @@ def embedded_broker_deprecated(value):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_TLS_VERSION, invalidation_version="0.115"),
+            cv.deprecated(CONF_TLS_VERSION),
             vol.Schema(
                 {
                     vol.Optional(CONF_CLIENT_ID): cv.string,
