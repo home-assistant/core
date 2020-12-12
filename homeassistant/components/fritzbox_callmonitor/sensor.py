@@ -8,7 +8,7 @@ from time import sleep
 from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
@@ -31,7 +31,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
-    FRITZ_ATTR_NAME,
     FRITZ_STATE_CALL,
     FRITZ_STATE_CONNECT,
     FRITZ_STATE_DISCONNECT,
@@ -84,16 +83,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
 
-    phonebook_info = await hass.async_add_executor_job(
-        fritzbox_phonebook.fph.phonebook_info, phonebook_id
-    )
-    actual_phonebook_name = phonebook_info[FRITZ_ATTR_NAME]
-
-    if phonebook_name != actual_phonebook_name:
-        name = phonebook_name
-    else:
-        name = f"{fritzbox_phonebook.fph.modelname} Call Monitor {phonebook_name}"
-
+    name = f"{fritzbox_phonebook.fph.modelname} Call Monitor {phonebook_name}"
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(
@@ -119,7 +109,7 @@ class FritzBoxCallSensor(Entity):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
-        self.entity_id = f"{SENSOR_DOMAIN}.{name}"
+        self._name = name.title()
         self._unique_id = unique_id
         self._fritzbox_phonebook = fritzbox_phonebook
         self._prefixes = prefixes
@@ -157,6 +147,11 @@ class FritzBoxCallSensor(Entity):
     def set_attributes(self, attributes):
         """Set the state attributes."""
         self._attributes = attributes
+
+    @property
+    def name(self):
+        """Return name of this sensor."""
+        return self._name
 
     @property
     def should_poll(self):
