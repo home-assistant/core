@@ -220,7 +220,7 @@ async def async_setup_entry(
 
                     # Wait for reader to close
                     await asyncio.wait(
-                        [protocol.wait_closed()],
+                        [protocol.wait_closed(), update_timeout],
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
