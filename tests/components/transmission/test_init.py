@@ -23,29 +23,6 @@ MOCK_ENTRY = MockConfigEntry(
 )
 
 
-@pytest.fixture(name="api")
-def mock_transmission_api():
-    """Mock an api."""
-    with patch("transmissionrpc.Client"):
-        yield
-
-
-@pytest.fixture(name="auth_error")
-def mock_api_authentication_error():
-    """Mock an api."""
-    with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
-    ):
-        yield
-
-
-@pytest.fixture(name="unknown_error")
-def mock_api_unknown_error():
-    """Mock an api."""
-    with patch("transmissionrpc.Client", side_effect=TransmissionError):
-        yield
-
-
 async def test_setup_with_no_config(hass):
     """Test that we do not discover anything or try to set up a Transmission client."""
     assert await async_setup_component(hass, transmission.DOMAIN, {}) is True
