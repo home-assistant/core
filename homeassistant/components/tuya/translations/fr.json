@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter"
+        },
         "error": {
             "dev_multi_type": "Plusieurs p\u00e9riph\u00e9riques s\u00e9lectionn\u00e9s \u00e0 configurer doivent \u00eatre du m\u00eame type",
             "dev_not_config": "Type d'appareil non configurable",

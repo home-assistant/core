@@ -19,5 +19,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Frequ\u00eancia de atualiza\u00e7\u00e3o"
+                }
+            }
+        }
     }
 }

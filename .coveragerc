@@ -386,7 +386,6 @@ omit =
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
-    homeassistant/components/hyperion/light.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
@@ -579,10 +578,8 @@ omit =
     homeassistant/components/nest/binary_sensor.py
     homeassistant/components/nest/camera.py
     homeassistant/components/nest/camera_legacy.py
-    homeassistant/components/nest/camera_sdm.py
     homeassistant/components/nest/climate.py
     homeassistant/components/nest/climate_legacy.py
-    homeassistant/components/nest/climate_sdm.py
     homeassistant/components/nest/local_auth.py
     homeassistant/components/nest/sensor.py
     homeassistant/components/nest/sensor_legacy.py
@@ -1015,7 +1012,6 @@ omit =
     homeassistant/components/watson_tts/tts.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/*
-    homeassistant/components/wemo/*
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wink/*

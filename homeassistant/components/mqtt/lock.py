@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import lock, mqtt
+from homeassistant.components import lock
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import (
     CONF_DEVICE,
@@ -32,6 +32,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
