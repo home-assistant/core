@@ -16,8 +16,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1_panel_light"
 
