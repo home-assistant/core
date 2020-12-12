@@ -169,7 +169,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             ):
                 handle = None
                 try:
-                    adapter.start(reset_on_start=True)
+                    adapter.start(reset_on_start=False)
                     _LOGGER.debug("Reading battery for Bluetooth LE device %s", mac)
                     bt_device = adapter.connect(mac)
                     # Try to get the handle; it will raise a BLEError exception if not available
