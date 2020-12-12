@@ -42,9 +42,9 @@ async def async_discover_and_construct(
     hass: HomeAssistantType, udn: str = None, st: str = None
 ) -> Device:
     """Discovery devices and construct a Device for one."""
+    # pylint: disable=invalid-name
     _LOGGER.debug("Constructing device: %s::%s", udn, st)
 
-    # pylint: disable=invalid-name
     discovery_infos = await Device.async_discover(hass)
     _LOGGER.debug("Discovered devices: %s", discovery_infos)
     if not discovery_infos:
@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         raise ConfigEntryNotReady
 
     # Save device.
-    hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device  # XXX TODO: device.unique_id
+    hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
 
     # Ensure entry has a unique_id.
     if not config_entry.unique_id:
