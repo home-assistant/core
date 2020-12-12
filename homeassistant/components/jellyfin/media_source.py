@@ -240,6 +240,7 @@ class JellyfinSource(MediaSource):
         id = item["Id"]
         title = item["Name"]
         mime_type = _media_mime_type(item)
+        thumbnail_url = self._get_thumbnail_url(item)
 
         media = BrowseMediaSource(
             domain=DOMAIN,
@@ -249,9 +250,19 @@ class JellyfinSource(MediaSource):
             title=title,
             can_play=True,
             can_expand=False,
+            thumbnail=thumbnail_url,
         )
 
         return media
+
+    def _get_thumbnail_url(self, media_item: dict) -> str:
+        id = media_item["Id"]
+        image_tags = media_item["ImageTags"]
+        api_key = self.client.config.data["auth.token"]
+
+        if "Primary" in image_tags:
+            tag = image_tags["Primary"]
+            return f"{self.url}Items/{id}/Images/Primary?Tag={tag}&api_key={api_key}"
 
     def _get_stream_url(self, media_item: dict) -> str:
         media_type = media_item["MediaType"]
