@@ -67,6 +67,7 @@ class WizBulb(LightEntity):
         self._scenes = []
         self._bulbtype = None
         self._bulblib = self.read_bulblib()
+        self._mac = None
 
     @property
     def brightness(self):
@@ -87,6 +88,11 @@ class WizBulb(LightEntity):
     def name(self):
         """Return the ip as name of the device if any."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return light unique_id."""
+        return self._mac
 
     @property
     def is_on(self):
@@ -199,6 +205,7 @@ class WizBulb(LightEntity):
 
         if self._state is not None and self._state is not False:
             await self.get_bulb_type()
+            await self.get_mac()
             self.update_brightness()
             self.update_temperature()
             self.update_color()
@@ -302,6 +309,10 @@ class WizBulb(LightEntity):
         self._scenes = []
         for number in SCENES:
             self._scenes.append(SCENES[number])
+
+    async def get_mac(self):
+        """Get the mac from the bulb."""
+        self._mac = await self._light.getMac()
 
     def read_bulblib(self):
         """Read the library of bulbs from YAML."""
