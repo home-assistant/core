@@ -6,6 +6,7 @@ import logging
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import (
     TuyaAPIException,
+    TuyaAPIRateLimitException,
     TuyaFrequentlyInvokeException,
     TuyaNetException,
     TuyaServerException,
@@ -135,6 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         TuyaServerException,
         TuyaFrequentlyInvokeException,
     ) as exc:
+        raise ConfigEntryNotReady() from exc
+
+    except TuyaAPIRateLimitException as exc:
+        _LOGGER.error("Tuya login rate limited")
         raise ConfigEntryNotReady() from exc
 
     except TuyaAPIException as exc:
@@ -269,7 +274,7 @@ async def cleanup_device_registry(hass: HomeAssistant, device_id):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     if device_id and not hass.helpers.entity_registry.async_entries_for_device(
-        entity_registry, device_id
+        entity_registry, device_id, include_disabled_entities=True
     ):
         device_registry.async_remove_device(device_id)
 

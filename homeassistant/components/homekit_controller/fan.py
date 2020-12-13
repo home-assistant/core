@@ -1,5 +1,6 @@
 """Support for Homekit fans."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -161,8 +162,8 @@ class HomeKitFanV2(BaseHomeKitFan):
 
 
 ENTITY_TYPES = {
-    "fan": HomeKitFanV1,
-    "fanv2": HomeKitFanV2,
+    ServicesTypes.FAN: HomeKitFanV1,
+    ServicesTypes.FAN_V2: HomeKitFanV2,
 }
 
 
@@ -172,11 +173,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 

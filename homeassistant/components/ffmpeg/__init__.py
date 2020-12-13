@@ -97,7 +97,7 @@ async def async_get_image(
 ):
     """Get an image from a frame of an RTSP stream."""
     manager = hass.data[DATA_FFMPEG]
-    ffmpeg = ImageFrame(manager.binary, loop=hass.loop)
+    ffmpeg = ImageFrame(manager.binary)
     image = await asyncio.shield(
         ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
     )
@@ -123,7 +123,7 @@ class FFmpegManager:
     async def async_get_version(self):
         """Return ffmpeg version."""
 
-        ffversion = FFVersion(self._bin, self.hass.loop)
+        ffversion = FFVersion(self._bin)
         self._version = await ffversion.get_version()
 
         self._major_version = None

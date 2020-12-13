@@ -92,7 +92,6 @@ class Pump(ZigbeeChannel):
     """Pump channel."""
 
 
-@registries.CLIMATE_CLUSTERS.register(hvac.Thermostat.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
 class ThermostatChannel(ZigbeeChannel):
     """Thermostat channel."""

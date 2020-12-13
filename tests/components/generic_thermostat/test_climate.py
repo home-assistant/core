@@ -209,6 +209,30 @@ async def test_setup_defaults_to_unknown(hass):
     assert HVAC_MODE_OFF == hass.states.get(ENTITY).state
 
 
+async def test_setup_gets_current_temp_from_sensor(hass):
+    """Test that current temperature is updated on entity addition."""
+    hass.config.units = METRIC_SYSTEM
+    _setup_sensor(hass, 18)
+    await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_temp": 16,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["current_temperature"] == 18
+
+
 async def test_default_setup_params(hass, setup_comp_2):
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY)

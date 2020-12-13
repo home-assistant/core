@@ -15,7 +15,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -23,7 +22,6 @@ from .const import (
     DATA_CONNECTION,
     DATA_KODI,
     DATA_REMOVE_LISTENER,
-    DATA_VERSION,
     DOMAIN,
 )
 
@@ -48,13 +46,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_SSL],
         session=async_get_clientsession(hass),
     )
+
+    kodi = Kodi(conn)
+
     try:
         await conn.connect()
-        kodi = Kodi(conn)
-        await kodi.ping()
-        raw_version = (await kodi.get_application_properties(["version"]))["version"]
-    except CannotConnectError as error:
-        raise ConfigEntryNotReady from error
+    except CannotConnectError:
+        pass
     except InvalidAuthError as error:
         _LOGGER.error(
             "Login to %s failed: [%s]",
@@ -68,12 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
-    version = f"{raw_version['major']}.{raw_version['minor']}"
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CONNECTION: conn,
         DATA_KODI: kodi,
         DATA_REMOVE_LISTENER: remove_stop_listener,
-        DATA_VERSION: version,
     }
 
     for component in PLATFORMS:

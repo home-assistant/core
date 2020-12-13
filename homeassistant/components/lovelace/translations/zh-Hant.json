@@ -3,7 +3,8 @@
         "info": {
             "dashboards": "\u4e3b\u9762\u677f",
             "mode": "\u6a21\u5f0f",
-            "resources": "\u8cc7\u6e90"
+            "resources": "\u8cc7\u6e90",
+            "views": "\u9762\u677f"
         }
     }
 }

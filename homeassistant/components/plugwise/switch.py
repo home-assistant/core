@@ -2,7 +2,7 @@
 
 import logging
 
-from Plugwise_Smile.Smile import Smile
+from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
@@ -14,6 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Smile switches from a config entry."""
+    # PLACEHOLDER USB entry setup
+    return await async_setup_entry_gateway(hass, config_entry, async_add_entities)
+
+
+async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     """Set up the Smile switches from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
@@ -37,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 model = "Switch Group"
 
             entities.append(
-                PwSwitch(
+                GwSwitch(
                     api, coordinator, device_properties["name"], dev_id, members, model
                 )
             )
@@ -45,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class PwSwitch(SmileGateway, SwitchEntity):
+class GwSwitch(SmileGateway, SwitchEntity):
     """Representation of a Plugwise plug."""
 
     def __init__(self, api, coordinator, name, dev_id, members, model):
@@ -79,7 +85,7 @@ class PwSwitch(SmileGateway, SwitchEntity):
             if state_on:
                 self._is_on = True
                 self.async_write_ha_state()
-        except Smile.PlugwiseError:
+        except PlugwiseException:
             _LOGGER.error("Error while communicating to device")
 
     async def async_turn_off(self, **kwargs):
@@ -91,7 +97,7 @@ class PwSwitch(SmileGateway, SwitchEntity):
             if state_off:
                 self._is_on = False
                 self.async_write_ha_state()
-        except Smile.PlugwiseError:
+        except PlugwiseException:
             _LOGGER.error("Error while communicating to device")
 
     @callback

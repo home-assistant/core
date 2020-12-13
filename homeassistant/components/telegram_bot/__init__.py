@@ -80,6 +80,7 @@ SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
 SERVICE_SEND_STICKER = "send_sticker"
 SERVICE_SEND_VIDEO = "send_video"
+SERVICE_SEND_VOICE = "send_voice"
 SERVICE_SEND_DOCUMENT = "send_document"
 SERVICE_SEND_LOCATION = "send_location"
 SERVICE_EDIT_MESSAGE = "edit_message"
@@ -224,6 +225,7 @@ SERVICE_MAP = {
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
@@ -366,6 +368,7 @@ async def async_setup(hass, config):
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_STICKER,
             SERVICE_SEND_VIDEO,
+            SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
         ]:
             await hass.async_add_executor_job(
@@ -672,6 +675,7 @@ class TelegramNotificationService:
             SERVICE_SEND_PHOTO: self.bot.sendPhoto,
             SERVICE_SEND_STICKER: self.bot.sendSticker,
             SERVICE_SEND_VIDEO: self.bot.sendVideo,
+            SERVICE_SEND_VOICE: self.bot.sendVoice,
             SERVICE_SEND_DOCUMENT: self.bot.sendDocument,
         }.get(file_type)
         file_content = load_data(
@@ -744,11 +748,12 @@ class BaseTelegramBotEntity:
             _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
             return False, None
 
-        if msg_data["from"].get("id") not in self.allowed_chat_ids or (
-            "chat" in msg_data
+        if (
+            msg_data["from"].get("id") not in self.allowed_chat_ids
             and msg_data["chat"].get("id") not in self.allowed_chat_ids
         ):
-            # Origin is not allowed.
+            # Neither from id nor chat id was in allowed_chat_ids,
+            # origin is not allowed.
             _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
             return True, None
 

@@ -92,6 +92,33 @@ async def test_get_image_http_remote(hass, aiohttp_client):
         assert content == b"image"
 
 
+async def test_get_async_get_browse_image(hass, aiohttp_client, hass_ws_client):
+    """Test get browse image."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_comp = hass.data.get("entity_components", {}).get("media_player")
+    assert entity_comp
+
+    player = entity_comp.get_entity("media_player.bedroom")
+    assert player
+
+    client = await aiohttp_client(hass.http.app)
+
+    with patch(
+        "homeassistant.components.media_player.MediaPlayerEntity."
+        "async_get_browse_image",
+        return_value=(b"image", "image/jpeg"),
+    ):
+        url = player.get_browse_image_url("album", "abcd")
+        resp = await client.get(url)
+        content = await resp.read()
+
+    assert content == b"image"
+
+
 def test_deprecated_base_class(caplog):
     """Test deprecated base class."""
 

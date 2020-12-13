@@ -11,7 +11,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Wilt u het {model} bij {host} instellen? Voordat het apparaat op batterijen kan worden ingesteld, moet het worden gewekt door op de knop op het apparaat te drukken."
+                "description": "Wilt u het {model} bij {host} instellen? Voordat apparaten op batterijen kunnen worden ingesteld, moet het worden gewekt door op de knop op het apparaat te drukken."
             },
             "credentials": {
                 "data": {

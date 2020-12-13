@@ -9,7 +9,7 @@ from io import StringIO
 import json
 import logging
 import os
-import sys
+import pathlib
 import threading
 import time
 import uuid
@@ -109,24 +109,21 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config directory."""
-    if sys.platform == "win32":
-        loop = asyncio.ProactorEventLoop()
-    else:
-        loop = asyncio.new_event_loop()
-
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
-    stop_event = threading.Event()
+    loop_stop_event = threading.Event()
 
     def run_loop():
         """Run event loop."""
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        stop_event.set()
+        loop_stop_event.set()
 
     orig_stop = hass.stop
+    hass._stopped = Mock(set=loop.stop)
 
     def start_hass(*mocks):
         """Start hass."""
@@ -135,7 +132,7 @@ def get_test_home_assistant():
     def stop_hass():
         """Stop hass."""
         orig_stop()
-        stop_event.wait()
+        loop_stop_event.wait()
         loop.close()
 
     hass.start = start_hass
@@ -197,6 +194,8 @@ async def async_test_home_assistant(loop):
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
+
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
     hass.config.location_name = "test home"
     hass.config.config_dir = get_test_config_dir()
@@ -708,6 +707,9 @@ def patch_yaml_files(files_dict, endswith=True):
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
+        if isinstance(fname, pathlib.Path):
+            fname = str(fname)
+
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])

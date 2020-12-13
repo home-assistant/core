@@ -1,7 +1,6 @@
 """Support for Notion."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
@@ -21,9 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_COORDINATOR, DOMAIN, LOGGER
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -33,7 +30,7 @@ ATTR_SYSTEM_NAME = "system_name"
 DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -56,10 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
         )
     except InvalidCredentialsError:
-        _LOGGER.error("Invalid username and/or password")
+        LOGGER.error("Invalid username and/or password")
         return False
     except NotionError as err:
-        _LOGGER.error("Config entry failed: %s", err)
+        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     async def async_update():
@@ -94,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.entry_id
     ] = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name=entry.data[CONF_USERNAME],
         update_interval=DEFAULT_SCAN_INTERVAL,
         update_method=async_update,

@@ -138,7 +138,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback

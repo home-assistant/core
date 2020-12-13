@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
             "updated_entry": "Esta entrada ya ha sido configurada pero el nombre y/o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n previamente importada, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia."
         },
         "error": {
