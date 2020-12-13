@@ -125,7 +125,7 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
-        _, unit = self._attribute_info.get(self._attribute, [None, None])
+        unit = self._attribute_info.get(self._attribute, [None, None])[1]
         return unit
 
     @property

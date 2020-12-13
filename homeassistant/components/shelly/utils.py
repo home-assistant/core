@@ -1,13 +1,13 @@
 """Shelly helpers functions."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Optional
 
 import aioshelly
 
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.util.dt import parse_datetime, utcnow
 
 from .const import DOMAIN
 
@@ -81,23 +81,6 @@ def get_entity_name(
     return entity_name
 
 
-def get_rest_value_from_path(status, device_class, path: str):
-    """Parser for REST path from device status."""
-
-    if "/" not in path:
-        attribute_value = status[path]
-    else:
-        attribute_value = status[path.split("/")[0]][path.split("/")[1]]
-    if device_class == DEVICE_CLASS_TIMESTAMP:
-        last_boot = datetime.utcnow() - timedelta(seconds=attribute_value)
-        attribute_value = last_boot.replace(microsecond=0).isoformat()
-
-    if "new_version" in path:
-        attribute_value = attribute_value.split("/")[1].split("@")[0]
-
-    return attribute_value
-
-
 def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
@@ -112,3 +95,16 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
         button_type = button[channel].get("btn_type")
 
     return button_type in ["momentary", "momentary_on_release"]
+
+
+def get_device_uptime(status: dict, last_uptime: str) -> str:
+    """Return device uptime string, tolerate up to 5 seconds deviation."""
+    uptime = utcnow() - timedelta(seconds=status["uptime"])
+
+    if not last_uptime:
+        return uptime.replace(microsecond=0).isoformat()
+
+    if abs((uptime - parse_datetime(last_uptime)).total_seconds()) > 5:
+        return uptime.replace(microsecond=0).isoformat()
+
+    return last_uptime

@@ -298,7 +298,9 @@ class EntityRegistry:
         the device is disabled.
         """
         if event.data["action"] == "remove":
-            entities = async_entries_for_device(self, event.data["device_id"])
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
             for entity in entities:
                 self.async_remove(entity.entity_id)
             return
@@ -309,6 +311,15 @@ class EntityRegistry:
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device = device_registry.async_get(event.data["device_id"])
         if not device.disabled:
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            for entity in entities:
+                if entity.disabled_by != DISABLED_DEVICE:
+                    continue
+                self.async_update_entity(  # type: ignore
+                    entity.entity_id, disabled_by=None
+                )
             return
 
         entities = async_entries_for_device(self, event.data["device_id"])
@@ -548,11 +559,14 @@ async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
 
 @callback
 def async_entries_for_device(
-    registry: EntityRegistry, device_id: str
+    registry: EntityRegistry, device_id: str, include_disabled_entities: bool = False
 ) -> List[RegistryEntry]:
     """Return entries that match a device."""
     return [
-        entry for entry in registry.entities.values() if entry.device_id == device_id
+        entry
+        for entry in registry.entities.values()
+        if entry.device_id == device_id
+        and (not entry.disabled_by or include_disabled_entities)
     ]
 
 

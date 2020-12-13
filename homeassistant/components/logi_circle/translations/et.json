@@ -8,7 +8,7 @@
         },
         "error": {
             "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
-            "follow_link": "Palun j\u00e4rgige linki ja tuvasta enne Submit vajutamist.",
+            "follow_link": "Palun j\u00e4rgi linki ja tuvasta enne Esita nupu vajutamist.",
             "invalid_auth": "Tuvastamine eba\u00f5nnestus"
         },
         "step": {

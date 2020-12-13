@@ -711,7 +711,57 @@ async def test_remove_device_removes_entities(hass, registry):
 
 
 async def test_disable_device_disables_entities(hass, registry):
-    """Test that we remove entities tied to a device."""
+    """Test that we disable entities tied to a device."""
+    device_registry = mock_device_registry(hass)
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+
+    entry1 = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    entry2 = registry.async_get_or_create(
+        "light",
+        "hue",
+        "ABCD",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by="user",
+    )
+
+    assert not entry1.disabled
+    assert entry2.disabled
+
+    device_registry.async_update_device(device_entry.id, disabled_by="user")
+    await hass.async_block_till_done()
+
+    entry1 = registry.async_get(entry1.entity_id)
+    assert entry1.disabled
+    assert entry1.disabled_by == "device"
+    entry2 = registry.async_get(entry2.entity_id)
+    assert entry2.disabled
+    assert entry2.disabled_by == "user"
+
+    device_registry.async_update_device(device_entry.id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    entry1 = registry.async_get(entry1.entity_id)
+    assert not entry1.disabled
+    entry2 = registry.async_get(entry2.entity_id)
+    assert entry2.disabled
+    assert entry2.disabled_by == "user"
+
+
+async def test_disabled_entities_excluded_from_entity_list(hass, registry):
+    """Test that disabled entities are exclduded from async_entries_for_device."""
     device_registry = mock_device_registry(hass)
     config_entry = MockConfigEntry(domain="light")
 
@@ -720,7 +770,7 @@ async def test_disable_device_disables_entities(hass, registry):
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
 
-    entry = registry.async_get_or_create(
+    entry1 = registry.async_get_or_create(
         "light",
         "hue",
         "5678",
@@ -728,11 +778,19 @@ async def test_disable_device_disables_entities(hass, registry):
         device_id=device_entry.id,
     )
 
-    assert not entry.disabled
+    entry2 = registry.async_get_or_create(
+        "light",
+        "hue",
+        "ABCD",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by="user",
+    )
 
-    device_registry.async_update_device(device_entry.id, disabled_by="user")
-    await hass.async_block_till_done()
+    entries = entity_registry.async_entries_for_device(registry, device_entry.id)
+    assert entries == [entry1]
 
-    entry = registry.async_get(entry.entity_id)
-    assert entry.disabled
-    assert entry.disabled_by == "device"
+    entries = entity_registry.async_entries_for_device(
+        registry, device_entry.id, include_disabled_entities=True
+    )
+    assert entries == [entry1, entry2]

@@ -79,7 +79,24 @@ class DeviceSelector(Selector):
 class AreaSelector(Selector):
     """Selector of a single area."""
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.Schema(
+                {
+                    vol.Optional("domain"): str,
+                    vol.Optional("device_class"): str,
+                    vol.Optional("integration"): str,
+                }
+            ),
+            vol.Optional("device"): vol.Schema(
+                {
+                    vol.Optional("integration"): str,
+                    vol.Optional("manufacturer"): str,
+                    vol.Optional("model"): str,
+                }
+            ),
+        }
+    )
 
 
 @SELECTORS.register("number")
@@ -109,5 +126,39 @@ class BooleanSelector(Selector):
 @SELECTORS.register("time")
 class TimeSelector(Selector):
     """Selector of a time value."""
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+
+@SELECTORS.register("target")
+class TargetSelector(Selector):
+    """Selector of a target value (area ID, device ID, entity ID etc).
+
+    Value should follow cv.ENTITY_SERVICE_FIELDS format.
+    """
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("entity"): vol.Schema(
+                {
+                    vol.Optional("domain"): str,
+                    vol.Optional("device_class"): str,
+                    vol.Optional("integration"): str,
+                }
+            ),
+            vol.Optional("device"): vol.Schema(
+                {
+                    vol.Optional("integration"): str,
+                    vol.Optional("manufacturer"): str,
+                    vol.Optional("model"): str,
+                }
+            ),
+        }
+    )
+
+
+@SELECTORS.register("action")
+class ActionSelector(Selector):
+    """Selector of an action sequence (script syntax)."""
 
     CONFIG_SCHEMA = vol.Schema({})

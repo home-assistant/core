@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
             "webhook_not_internet_accessible": "Home Assistant \u5be6\u9ad4\u5fc5\u9808\u8981\u80fd\u5f9e\u7db2\u969b\u7db2\u8def\u5b58\u53d6\u65b9\u80fd\u63a5\u6536 Webhook \u8a0a\u606f\u3002"
         },
         "create_entry": {

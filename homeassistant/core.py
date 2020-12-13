@@ -419,7 +419,9 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_hass_job(self, hassjob: HassJob, *args: Any) -> None:
+    def async_run_hass_job(
+        self, hassjob: HassJob, *args: Any
+    ) -> Optional[asyncio.Future]:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
@@ -429,13 +431,14 @@ class HomeAssistant:
         """
         if hassjob.job_type == HassJobType.Callback:
             hassjob.target(*args)
-        else:
-            self.async_add_hass_job(hassjob, *args)
+            return None
+
+        return self.async_add_hass_job(hassjob, *args)
 
     @callback
     def async_run_job(
         self, target: Callable[..., Union[None, Awaitable]], *args: Any
-    ) -> None:
+    ) -> Optional[asyncio.Future]:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -444,10 +447,9 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            self.async_create_task(cast(Coroutine, target))
-            return
+            return self.async_create_task(cast(Coroutine, target))
 
-        self.async_run_hass_job(HassJob(target), *args)
+        return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""

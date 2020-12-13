@@ -36,5 +36,10 @@
                 "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Detekov\u00e1n pohyb"
+        }
     }
 }

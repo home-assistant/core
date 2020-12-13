@@ -7,6 +7,7 @@ from hatasmota.utils import (
     get_topic_tele_state,
     get_topic_tele_will,
 )
+import pytest
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -150,6 +151,33 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
     )
+
+
+async def test_invalid_fan_speed(hass, mqtt_mock, setup_tasmota):
+    """Test the sending MQTT commands."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["if"] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    state = hass.states.get("fan.tasmota")
+    assert state.state == STATE_OFF
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set an unsupported speed and verify MQTT message is not sent
+    with pytest.raises(ValueError) as excinfo:
+        await common.async_set_speed(hass, "fan.tasmota", "no_such_speed")
+    assert "Unsupported speed no_such_speed" in str(excinfo.value)
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_availability_when_connection_lost(
