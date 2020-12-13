@@ -22,9 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if device.api.type in {"Hysen heating controller"}:
         climate_entities = [BroadlinkHysen(device)]
     else:
-        _LOGGER.warning(
-            "Unrecognised broadlink climate API."
-        )
+        _LOGGER.warning("Unrecognised broadlink climate API.")
     async_add_entities(climate_entities)
 
 
