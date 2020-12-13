@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.deprecated(CONF_PROFILES),
-            cv.deprecated(CONF_USE_WEBHOOK, invalidation_version="0.119"),
+            cv.deprecated(CONF_USE_WEBHOOK),
             vol.Schema(
                 {
                     vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
