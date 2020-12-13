@@ -10,7 +10,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 
-
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
