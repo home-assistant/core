@@ -45,7 +45,6 @@ from .const import (
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
     DEVICE_PACKET_TYPE_LIGHTING4,
-
 )
 from .cover import supported as cover_supported
 from .light import supported as light_supported
@@ -224,7 +223,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 if command_off:
                     device[CONF_COMMAND_OFF] = command_off
                 if user_input.get(CONF_VENETIAN_BLIND_MODE):
-                    device[CONF_VENETIAN_BLIND_MODE] = user_input[CONF_VENETIAN_BLIND_MODE]
+                    device[CONF_VENETIAN_BLIND_MODE] = user_input[
+                        CONF_VENETIAN_BLIND_MODE
+                    ]
 
                 self.update_config_data(
                     global_options=self._global_options, devices=devices
@@ -289,15 +290,20 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
-        if (
-            isinstance(self._selected_device_object.device, rfxtrxmod.RfyDevice)
-        ):
+        if isinstance(self._selected_device_object.device, rfxtrxmod.RfyDevice):
             data_schema.update(
                 {
                     vol.Optional(
                         CONF_VENETIAN_BLIND_MODE,
-                        default=device_data.get(CONF_VENETIAN_BLIND_MODE, CONST_VENETIAN_BLIND_MODE_DEFAULT),
-                    ): vol.In([CONST_VENETIAN_BLIND_MODE_DEFAULT, CONST_VENETIAN_BLIND_MODE_US, CONST_VENETIAN_BLIND_MODE_EU]),
+                        default=device_data.get(
+                            CONF_VENETIAN_BLIND_MODE, CONST_VENETIAN_BLIND_MODE_DEFAULT
+                        ),
+                    ): vol.In([
+                        CONST_VENETIAN_BLIND_MODE_DEFAULT,
+                        CONST_VENETIAN_BLIND_MODE_US,
+                        CONST_VENETIAN_BLIND_MODE_EU
+                        ]
+                    ),
                 }
             )
         devices = {

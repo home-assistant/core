@@ -18,8 +18,8 @@ from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
     CONF_VENETIAN_BLIND_MODE,
-    CONST_VENETIAN_BLIND_MODE_US,
     CONST_VENETIAN_BLIND_MODE_EU,
+    CONST_VENETIAN_BLIND_MODE_US,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,10 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxCover(
-            event.device, device_id, signal_repetitions=entity_info[CONF_SIGNAL_REPETITIONS], venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE)
+            event.device,
+            device_id,
+            signal_repetitions=entity_info[CONF_SIGNAL_REPETITIONS],
+            venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
         )
         entities.append(entity)
 
@@ -92,11 +95,18 @@ async def async_setup_entry(
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     """Representation of a RFXtrx cover."""
 
-    def __init__(self, device, device_id, signal_repetitions, event=None, venetian_blind_mode=None):
+    def __init__(
+        self,
+        device,
+        device_id,
+        signal_repetitions,
+        event=None,
+        venetian_blind_mode=None
+    ):
         """Initialize the RFXtrx cover device."""
         super().__init__(device, device_id, signal_repetitions, event)
         self._venetian_blind_mode = venetian_blind_mode
-    
+
     async def async_added_to_hass(self):
         """Restore device state."""
         await super().async_added_to_hass()
@@ -112,9 +122,11 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self._venetian_blind_mode in (CONST_VENETIAN_BLIND_MODE_US, CONST_VENETIAN_BLIND_MODE_EU):
-            return 50
-        """Rfy does not support tilt position. The non-empty value is used to enable tilt support"""
+        if self._venetian_blind_mode in (
+            CONST_VENETIAN_BLIND_MODE_US,
+            CONST_VENETIAN_BLIND_MODE_EU
+        ):
+            return 50  # Rfy does not support tilt position. The non-empty value is used to enable tilt support.
 
     @property
     def is_closed(self):
@@ -123,9 +135,9 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
-        if self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US:
+        if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_up05sec)
-        elif self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU:
+        elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_up2sec)
         else:
             await self._async_send(self._device.send_open)
@@ -134,9 +146,9 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Move the cover down."""
-        if self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US:
+        if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_down05sec)
-        elif self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU:
+        elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_down2sec)
         else:
             await self._async_send(self._device.send_close)
@@ -151,16 +163,16 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover up."""
-        if self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US:
+        if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_up2sec)
-        elif self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU:
+        elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_up05sec)
 
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover down."""
-        if self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_US:
+        if self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_US:
             await self._async_send(self._device.send_down2sec)
-        elif self._venetian_blind_mode==CONST_VENETIAN_BLIND_MODE_EU:
+        elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_down05sec)
 
     def _apply_event(self, event):

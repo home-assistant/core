@@ -128,7 +128,9 @@ DEVICE_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
         vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
-        vol.Optional(CONF_VENETIAN_BLIND_MODE, default=CONST_VENETIAN_BLIND_MODE_DEFAULT): cv.string,
+        vol.Optional(
+            CONF_VENETIAN_BLIND_MODE, default=CONST_VENETIAN_BLIND_MODE_DEFAULT
+        ): cv.string,
     }
 )
 
