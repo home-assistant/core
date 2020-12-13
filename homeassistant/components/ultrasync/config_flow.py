@@ -2,9 +2,6 @@
 import logging
 from typing import Any, Dict, Optional
 
-import ultrasync
-import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
@@ -15,6 +12,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+import ultrasync
+import voluptuous as vol
 
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -77,8 +76,7 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST],
-                    data=user_input,
+                    title=user_input[CONF_HOST], data=user_input,
                 )
 
         return self.async_show_form(

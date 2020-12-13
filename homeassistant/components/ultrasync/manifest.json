@@ -1,6 +1,6 @@
 {
   "domain": "ultrasync",
-  "name": "Interlogix Ultrasync Hub",
+  "name": "UltraSync Alarm Panel",
   "documentation": "https://www.home-assistant.io/integrations/ultrasync",
   "requirements": ["ultrasync==0.9.2"],
   "codeowners": ["@caronc"],

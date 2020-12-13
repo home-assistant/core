@@ -2,20 +2,20 @@
 
 import asyncio
 
-from ultrasync import AlarmScene
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from ultrasync import AlarmScene
+import voluptuous as vol
 
 from .const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    SENSORS,
     SERVICE_AWAY,
     SERVICE_DISARM,
     SERVICE_STAY,
@@ -43,9 +43,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, options=options)
 
     coordinator = UltraSyncDataUpdateCoordinator(
-        hass,
-        config=entry.data,
-        options=entry.options,
+        hass, config=entry.data, options=entry.options,
     )
 
     await coordinator.async_refresh()
@@ -57,7 +55,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+        DATA_UNDO_UPDATE_LISTENER: [undo_listener],
+        SENSORS: {},
     }
 
     for component in PLATFORMS:
@@ -82,15 +81,15 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     )
 
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
+        for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]:
+            unsub()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
 def _async_register_services(
-    hass: HomeAssistantType,
-    coordinator: UltraSyncDataUpdateCoordinator,
+    hass: HomeAssistantType, coordinator: UltraSyncDataUpdateCoordinator,
 ) -> None:
     """Register integration-level services."""
 
