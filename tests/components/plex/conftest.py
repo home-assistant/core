@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components.plex.const import DOMAIN
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
+from .helpers import websocket_connected
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
@@ -51,6 +52,8 @@ def setup_plex_server(hass, entry, mock_plex_account, mock_websocket):
         ):
             config_entry.add_to_hass(hass)
             assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+            websocket_connected(mock_websocket)
             await hass.async_block_till_done()
         return plex_server
 

@@ -384,6 +384,51 @@ async def test_startstop_vacuum(hass):
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
+async def test_startstop_covert(hass):
+    """Test startStop trait support for vacuum domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.StartStopTrait.supported(cover.DOMAIN, cover.SUPPORT_STOP, None)
+
+    state = State(
+        "cover.bla",
+        cover.STATE_CLOSED,
+        {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP},
+    )
+
+    trt = trait.StartStopTrait(
+        hass,
+        state,
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {}
+
+    for state_value in (cover.STATE_CLOSING, cover.STATE_OPENING):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": True}
+
+    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    assert len(stop_calls) == 1
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    for state_value in (cover.STATE_CLOSED, cover.STATE_OPEN):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": False}
+
+    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
+        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+
+    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
+        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+
+    with pytest.raises(
+        SmartHomeError,
+        match="Command action.devices.commands.PauseUnpause is not supported",
+    ):
+        await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
+
+
 async def test_color_setting_color_light(hass):
     """Test ColorSpectrum trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
@@ -1860,8 +1905,12 @@ async def test_openclose_cover(hass):
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
-    assert len(calls) == 1
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
+    )
+    assert len(calls) == 2
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
+    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 100}
 
 
 async def test_openclose_cover_unknown_state(hass):
@@ -1873,10 +1922,14 @@ async def test_openclose_cover_unknown_state(hass):
 
     # No state
     trt = trait.OpenCloseTrait(
-        hass, State("cover.bla", STATE_UNKNOWN, {}), BASIC_CONFIG
+        hass,
+        State(
+            "cover.bla", STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN}
+        ),
+        BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
 
     with pytest.raises(helpers.SmartHomeError):
         trt.query_attributes()
@@ -1886,7 +1939,8 @@ async def test_openclose_cover_unknown_state(hass):
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
-    assert trt.query_attributes() == {"openPercent": 100}
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
 
 
 async def test_openclose_cover_assumed_state(hass):
@@ -1909,37 +1963,90 @@ async def test_openclose_cover_assumed_state(hass):
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"commandOnlyOpenClose": True}
 
-    with pytest.raises(helpers.SmartHomeError):
-        trt.query_attributes()
+    assert trt.query_attributes() == {}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 40}
 
-    assert trt.query_attributes() == {"openPercent": 40}
+
+async def test_openclose_cover_query_only(hass):
+    """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN, 0, None)
+
+    state = State(
+        "cover.bla",
+        cover.STATE_OPEN,
+    )
+
+    trt = trait.OpenCloseTrait(
+        hass,
+        state,
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "discreteOnlyOpenClose": True,
+        "queryOnlyOpenClose": True,
+    }
+    assert trt.query_attributes() == {"openPercent": 100}
 
 
 async def test_openclose_cover_no_position(hass):
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
-        cover.DOMAIN, cover.SUPPORT_SET_POSITION, None
+        cover.DOMAIN, cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE, None
+    )
+
+    state = State(
+        "cover.bla",
+        cover.STATE_OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
+        },
     )
 
     trt = trait.OpenCloseTrait(
-        hass, State("cover.bla", cover.STATE_OPEN, {}), BASIC_CONFIG
+        hass,
+        state,
+        BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {}
+    assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
     assert trt.query_attributes() == {"openPercent": 100}
+
+    state.state = cover.STATE_CLOSED
+
+    assert trt.sync_attributes() == {"discreteOnlyOpenClose": True}
+    assert trt.query_attributes() == {"openPercent": 0}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    with pytest.raises(
+        SmartHomeError, match=r"Current position not know for relative command"
+    ):
+        await trt.execute(
+            trait.COMMAND_OPENCLOSE_RELATIVE,
+            BASIC_DATA,
+            {"openRelativePercent": 100},
+            {},
+        )
+
+    with pytest.raises(SmartHomeError, match=r"No support for partial open close"):
+        await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
 
 
 @pytest.mark.parametrize(
@@ -1998,10 +2105,9 @@ async def test_openclose_cover_secure(hass, device_class):
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
 
     # no challenge on close
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
     await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 0}, {})
-    assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert len(calls) == 2
+    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 0}
 
 
 @pytest.mark.parametrize(

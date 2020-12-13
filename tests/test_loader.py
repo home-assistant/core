@@ -1,9 +1,9 @@
 """Test to verify that we can load components."""
 import pytest
 
+from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
-import homeassistant.loader as loader
 
 from tests.async_mock import ANY, patch
 from tests.common import MockModule, async_mock_service, mock_integration
@@ -83,6 +83,7 @@ async def test_helpers_wrapper(hass):
 
     result = []
 
+    @core.callback
     def discovery_callback(service, discovered):
         """Handle discovery callback."""
         result.append(discovered)
@@ -149,7 +150,7 @@ async def test_get_integration_legacy(hass):
     assert integration.get_platform("switch") is not None
 
 
-async def test_get_integration_custom_component(hass):
+async def test_get_integration_custom_component(hass, enable_custom_integrations):
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
     print(integration)
@@ -293,7 +294,7 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-async def test_get_custom_components(hass):
+async def test_get_custom_components(hass, enable_custom_integrations):
     """Verify that custom components are cached."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)

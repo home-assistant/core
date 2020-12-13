@@ -23,7 +23,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def _await_cancel(task):

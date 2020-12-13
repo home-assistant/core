@@ -4,6 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_uuid": "Kodi Instanz huet keng eenzegarteg ID. D\u00ebst ass wahrscheinlech duerch eng al Kodi versioun (17.x oder dr\u00ebnner). Du kanns d'Integratioun manuell konfigur\u00e9ieren oder op m\u00e9i eng rezent Kodi Versioun aktualis\u00e9ieren.",
             "unknown": "Onerwaarte Feeler"
         },
         "error": {

@@ -69,7 +69,10 @@ class LuftdatenSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._data is not None:
-            return self._data[self.sensor_type]
+            try:
+                return self._data[self.sensor_type]
+            except KeyError:
+                return None
 
     @property
     def unit_of_measurement(self):
@@ -85,7 +88,10 @@ class LuftdatenSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
         if self._data is not None:
-            return f"{self._data['sensor_id']}_{self.sensor_type}"
+            try:
+                return f"{self._data['sensor_id']}_{self.sensor_type}"
+            except KeyError:
+                return None
 
     @property
     def device_state_attributes(self):
@@ -93,7 +99,10 @@ class LuftdatenSensor(Entity):
         self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
         if self._data is not None:
-            self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            try:
+                self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            except KeyError:
+                return None
 
             on_map = ATTR_LATITUDE, ATTR_LONGITUDE
             no_map = "lat", "long"

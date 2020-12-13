@@ -1,13 +1,28 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Reautentisering var vellykket",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "invalid_auth": "Ugyldig godkjenning"
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_mfa_code": "Ugyldig MFA-kode"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "MFA-kode (6-sifre)"
+                },
+                "title": "Skriv inn din MFA-kode for Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "E-post"
+                },
+                "title": "Fyll ut innloggingsinformasjonen for Abode"
+            },
             "user": {
                 "data": {
                     "password": "Passord",

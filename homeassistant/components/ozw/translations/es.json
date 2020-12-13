@@ -10,7 +10,13 @@
         "error": {
             "addon_start_failed": "No se pudo iniciar el complemento OpenZWave. Verifica la configuraci\u00f3n."
         },
+        "progress": {
+            "install_addon": "Espera mientras finaliza la instalaci\u00f3n del complemento OpenZWave. Esto puede tardar varios minutos."
+        },
         "step": {
+            "install_addon": {
+                "title": "La instalaci\u00f3n del complemento OpenZWave se ha iniciado"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Usar el complemento de supervisor de OpenZWave"

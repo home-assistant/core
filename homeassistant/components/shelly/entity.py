@@ -5,11 +5,11 @@ from typing import Any, Callable, Optional, Union
 import aioshelly
 
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry, entity
+from homeassistant.helpers import device_registry, entity, update_coordinator
 
-from . import ShellyDeviceWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
-from .utils import get_entity_name
+from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
+from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
+from .utils import async_remove_shelly_entity, get_entity_name
 
 
 async def async_setup_entry_attribute_entities(
@@ -18,7 +18,7 @@ async def async_setup_entry_attribute_entities(
     """Set up entities for block attributes."""
     wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
-    ]
+    ][COAP]
     blocks = []
 
     for block in wrapper.device.blocks:
@@ -31,7 +31,17 @@ async def async_setup_entry_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            blocks.append((block, sensor_id, description))
+            # Filter and remove entities that according to settings should not create an entity
+            if description.removal_condition and description.removal_condition(
+                wrapper.device.settings, block
+            ):
+                domain = sensor_class.__module__.split(".")[-1]
+                unique_id = sensor_class(
+                    wrapper, block, sensor_id, description
+                ).unique_id
+                await async_remove_shelly_entity(hass, domain, unique_id)
+            else:
+                blocks.append((block, sensor_id, description))
 
     if not blocks:
         return
@@ -44,20 +54,62 @@ async def async_setup_entry_attribute_entities(
     )
 
 
+async def async_setup_entry_rest(
+    hass, config_entry, async_add_entities, sensors, sensor_class
+):
+    """Set up entities for REST sensors."""
+    wrapper: ShellyDeviceRestWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][REST]
+
+    entities = []
+    for sensor_id in sensors:
+        description = sensors.get(sensor_id)
+
+        if not wrapper.device.settings.get("sleep_mode"):
+            entities.append((sensor_id, description))
+
+    if not entities:
+        return
+
+    async_add_entities(
+        [
+            sensor_class(wrapper, sensor_id, description)
+            for sensor_id, description in entities
+        ]
+    )
+
+
 @dataclass
 class BlockAttributeDescription:
     """Class to describe a sensor."""
 
     name: str
     # Callable = lambda attr_info: unit
+    icon: Optional[str] = None
     unit: Union[None, str, Callable[[dict], str]] = None
     value: Callable[[Any], Any] = lambda val: val
     device_class: Optional[str] = None
     default_enabled: bool = True
     available: Optional[Callable[[aioshelly.Block], bool]] = None
+    # Callable (settings, block), return true if entity should be removed
+    removal_condition: Optional[Callable[[dict, aioshelly.Block], bool]] = None
     device_state_attributes: Optional[
         Callable[[aioshelly.Block], Optional[dict]]
     ] = None
+
+
+@dataclass
+class RestAttributeDescription:
+    """Class to describe a REST sensor."""
+
+    name: str
+    icon: Optional[str] = None
+    unit: Optional[str] = None
+    value: Callable[[dict, Any], Any] = None
+    device_class: Optional[str] = None
+    default_enabled: bool = True
+    device_state_attributes: Optional[Callable[[dict], Optional[dict]]] = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -67,7 +119,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper, block)
+        self._name = get_entity_name(wrapper.device, block)
 
     @property
     def name(self):
@@ -133,7 +185,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
-        self._name = get_entity_name(wrapper, block, self.description.name)
+        self._name = get_entity_name(wrapper.device, block, self.description.name)
 
     @property
     def unique_id(self):
@@ -171,6 +223,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.device_class
 
     @property
+    def icon(self):
+        """Icon of sensor."""
+        return self.description.icon
+
+    @property
     def available(self):
         """Available."""
         available = super().available
@@ -187,3 +244,79 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
             return None
 
         return self.description.device_state_attributes(self.block)
+
+
+class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
+    """Class to load info from REST."""
+
+    def __init__(
+        self,
+        wrapper: ShellyDeviceWrapper,
+        attribute: str,
+        description: RestAttributeDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(wrapper)
+        self.wrapper = wrapper
+        self.attribute = attribute
+        self.description = description
+        self._name = get_entity_name(wrapper.device, None, self.description.name)
+        self._last_value = None
+
+    @property
+    def name(self):
+        """Name of sensor."""
+        return self._name
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
+        }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if it should be enabled by default."""
+        return self.description.default_enabled
+
+    @property
+    def available(self):
+        """Available."""
+        return self.wrapper.last_update_success
+
+    @property
+    def attribute_value(self):
+        """Value of sensor."""
+        self._last_value = self.description.value(
+            self.wrapper.device.status, self._last_value
+        )
+        return self._last_value
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self.description.unit
+
+    @property
+    def device_class(self):
+        """Device class of sensor."""
+        return self.description.device_class
+
+    @property
+    def icon(self):
+        """Icon of sensor."""
+        return self.description.icon
+
+    @property
+    def unique_id(self):
+        """Return unique ID of entity."""
+        return f"{self.wrapper.mac}-{self.attribute}"
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return the state attributes."""
+        if self.description.device_state_attributes is None:
+            return None
+
+        return self.description.device_state_attributes(self.wrapper.device.status)

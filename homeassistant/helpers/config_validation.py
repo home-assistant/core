@@ -28,12 +28,12 @@ from typing import (
 from urllib.parse import urlparse
 from uuid import UUID
 
-from pkg_resources import parse_version
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
@@ -62,6 +62,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
+    CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
@@ -78,7 +79,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     WEEKDAYS,
-    __version__,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -286,9 +286,12 @@ def entity_domain(domain: Union[str, List[str]]) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
     ent_domain = entities_domain(domain)
 
-    def validate(value: Any) -> str:
+    def validate(value: str) -> str:
         """Test if entity domain is domain."""
-        return ent_domain(value)[0]
+        validated = ent_domain(value)
+        if len(validated) != 1:
+            raise vol.Invalid(f"Expected exactly 1 entity, got {len(validated)}")
+        return validated[0]
 
     return validate
 
@@ -707,7 +710,6 @@ class multi_select:
 def deprecated(
     key: str,
     replacement_key: Optional[str] = None,
-    invalidation_version: Optional[str] = None,
     default: Optional[Any] = None,
 ) -> Callable[[Dict], Dict]:
     """
@@ -720,8 +722,6 @@ def deprecated(
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-        is detected
     """
     module = inspect.getmodule(inspect.stack()[1][0])
     if module is not None:
@@ -732,24 +732,10 @@ def deprecated(
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
 
-    if replacement_key and invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
-        )
-    elif replacement_key:
+    if replacement_key:
         warning = (
             "The '{key}' option is deprecated,"
             " please replace it with '{replacement_key}'"
-        )
-    elif invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
         )
     else:
         warning = (
@@ -757,31 +743,13 @@ def deprecated(
             " please remove it from your configuration"
         )
 
-    def check_for_invalid_version() -> None:
-        """Raise error if current version has reached invalidation."""
-        if not invalidation_version:
-            return
-
-        if parse_version(__version__) >= parse_version(invalidation_version):
-            raise vol.Invalid(
-                warning.format(
-                    key=key,
-                    replacement_key=replacement_key,
-                    invalidation_status="became",
-                    invalidation_version=invalidation_version,
-                )
-            )
-
     def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
-            check_for_invalid_version()
             KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
                 replacement_key=replacement_key,
-                invalidation_status="will become",
-                invalidation_version=invalidation_version,
             )
 
             value = config[key]
@@ -878,7 +846,13 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+ENTITY_SERVICE_FIELDS = {
+    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+    ),
+    vol.Optional(ATTR_AREA_ID): vol.Any(ENTITY_MATCH_NONE, vol.All(ensure_list, [str])),
+}
 
 
 def make_entity_service_schema(
@@ -889,10 +863,7 @@ def make_entity_service_schema(
         vol.Schema(
             {
                 **schema,
-                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.Any(
-                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
-                ),
+                **ENTITY_SERVICE_FIELDS,
             },
             extra=extra,
         ),
@@ -939,6 +910,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
+            vol.Optional(CONF_TARGET): ENTITY_SERVICE_FIELDS,
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),

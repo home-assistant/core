@@ -19,9 +19,9 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.network import NoURLAvailableError
 
 from .aiohttp_client import async_get_clientsession
 
@@ -32,6 +32,7 @@ DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
+HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
@@ -64,7 +65,7 @@ class AbstractOAuth2Implementation(ABC):
         Pass external data in with:
 
         await hass.config_entries.flow.async_configure(
-            flow_id=flow_id, user_input=external_data
+            flow_id=flow_id, user_input={'code': 'abcd', 'state': { … }
         )
 
         """
@@ -124,7 +125,17 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{get_url(self.hass, require_current_request=True)}{AUTH_CALLBACK_PATH}"
+        req = http.current_request.get()
+
+        if req is None:
+            raise RuntimeError("No current request in context")
+
+        ha_host = req.headers.get(HEADER_FRONTEND_BASE)
+
+        if ha_host is None:
+            raise RuntimeError("No header in request")
+
+        return f"{ha_host}{AUTH_CALLBACK_PATH}"
 
     @property
     def extra_authorize_data(self) -> dict:
@@ -133,14 +144,17 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
+        redirect_uri = self.redirect_uri
         return str(
             URL(self.authorize_url)
             .with_query(
                 {
                     "response_type": "code",
                     "client_id": self.client_id,
-                    "redirect_uri": self.redirect_uri,
-                    "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
+                    "redirect_uri": redirect_uri,
+                    "state": _encode_jwt(
+                        self.hass, {"flow_id": flow_id, "redirect_uri": redirect_uri}
+                    ),
                 }
             )
             .update_query(self.extra_authorize_data)
@@ -151,8 +165,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         return await self._token_request(
             {
                 "grant_type": "authorization_code",
-                "code": external_data,
-                "redirect_uri": self.redirect_uri,
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
             }
         )
 
@@ -384,7 +398,7 @@ def async_add_implementation_provider(
     ] = async_provide_implementation
 
 
-class OAuth2AuthorizeCallbackView(HomeAssistantView):
+class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
     """OAuth2 Authorization Callback View."""
 
     requires_auth = False
@@ -406,7 +420,8 @@ class OAuth2AuthorizeCallbackView(HomeAssistantView):
             return web.Response(text="Invalid state")
 
         await hass.config_entries.flow.async_configure(
-            flow_id=state["flow_id"], user_input=request.query["code"]
+            flow_id=state["flow_id"],
+            user_input={"state": state, "code": request.query["code"]},
         )
 
         return web.Response(

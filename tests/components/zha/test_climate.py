@@ -140,19 +140,8 @@ def device_climate_mock(hass, zigpy_device_mock, zha_device_joined):
         else:
             plugged_attrs = {**ZCL_ATTR_PLUG, **plug}
 
-        async def _read_attr(attrs, *args, **kwargs):
-            res = {}
-            failed = {}
-
-            for attr in attrs:
-                if attr in plugged_attrs:
-                    res[attr] = plugged_attrs[attr]
-                else:
-                    failed[attr] = zcl_f.Status.UNSUPPORTED_ATTRIBUTE
-            return res, failed
-
         zigpy_device = zigpy_device_mock(clusters, manufacturer=manuf)
-        zigpy_device.endpoints[1].thermostat.read_attributes.side_effect = _read_attr
+        zigpy_device.endpoints[1].thermostat.PLUGGED_ATTR_READS = plugged_attrs
         zha_device = await zha_device_joined(zigpy_device)
         await async_enable_traffic(hass, [zha_device])
         await hass.async_block_till_done()
@@ -1039,7 +1028,6 @@ async def test_occupancy_reset(hass, device_climate_sinope):
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
 
-    thrm_cluster.read_attributes.return_value = [True], {}
     await send_attributes_report(
         hass, thrm_cluster, {"occupied_heating_setpoint": 1950}
     )

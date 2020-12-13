@@ -1,5 +1,4 @@
 """Support for Notion sensors."""
-import logging
 from typing import Callable
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,9 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NotionEntity
-from .const import DATA_COORDINATOR, DOMAIN, SENSOR_TEMPERATURE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_COORDINATOR, DOMAIN, LOGGER, SENSOR_TEMPERATURE
 
 SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", TEMP_CELSIUS)}
 
@@ -84,7 +81,7 @@ class NotionSensor(NotionEntity):
         if task["task_type"] == SENSOR_TEMPERATURE:
             self._state = round(float(task["status"]["value"]), 1)
         else:
-            _LOGGER.error(
+            LOGGER.error(
                 "Unknown task type: %s: %s",
                 self.coordinator.data["sensors"][self._sensor_id],
                 task["task_type"],
