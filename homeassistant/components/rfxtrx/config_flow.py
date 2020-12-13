@@ -40,11 +40,12 @@ from .const import (
     CONF_REMOVE_DEVICE,
     CONF_REPLACE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
-    DEVICE_PACKET_TYPE_LIGHTING4,
     CONF_VENETIAN_BLIND_MODE,
+    CONST_VENETIAN_BLIND_MODE_DEFAULT,
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
-    CONST_VENETIAN_BLIND_MODE_DEFAULT,
+    DEVICE_PACKET_TYPE_LIGHTING4,
+
 )
 from .cover import supported as cover_supported
 from .light import supported as light_supported
@@ -290,7 +291,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         if (
             isinstance(self._selected_device_object.device, rfxtrxmod.RfyDevice)
-         ):
+        ):
             data_schema.update(
                 {
                     vol.Optional(
