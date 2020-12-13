@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.data[NEATO_LOGIN] = hub
 
-    for component in ("camera", "vacuum", "switch", "sensor"):
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -112,14 +112,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            hass.config_entries.async_forward_entry_unload(entry, "camera"),
-            hass.config_entries.async_forward_entry_unload(entry, "vacuum"),
-            hass.config_entries.async_forward_entry_unload(entry, "switch"),
-            hass.config_entries.async_forward_entry_unload(entry, "sensor"),
-        )
+    unload_functions = (
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
     )
+
+    unload_ok = all(await asyncio.gather(*unload_functions))
     if unload_ok:
         hass.data[NEATO_DOMAIN].pop(entry.entry_id)
 
