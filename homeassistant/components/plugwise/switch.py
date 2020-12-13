@@ -18,10 +18,10 @@ from .const import (
     PW_TYPE,
     STICK,
     SWITCH_ICON,
-    USB_SWITCHES,
     TODAY_ENERGY_SENSOR_ID,
     USB,
     USB_SENSORS,
+    USB_SWITCHES,
 )
 from .gateway import SmileGateway
 from .usb import NodeEntity
