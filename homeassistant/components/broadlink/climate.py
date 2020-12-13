@@ -1,24 +1,19 @@
 """Support for Broadlink climate devices."""
+import logging
 
-import voluptuous as vol
-
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
-)
-
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink climate entities."""
@@ -26,6 +21,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if device.api.type in {"Hysen heating controller"}:
         climate_entities = [BroadlinkHysen(device)]
+    else:
+        _LOGGER.warning(
+            "Unrecognised broadlink climate API."
+        )
     async_add_entities(climate_entities)
 
 
@@ -52,9 +51,7 @@ class BroadlinkHysen(ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        self._coordinator.data["thermostat_temp"] = temperature
-        if temperature is None:
-            return None
+        # self._coordinator.data["thermostat_temp"] = temperature // maybe useless
         if temperature < self.current_temperature + 0.5:
             self._coordinator.data["active"] = 0
         else:
@@ -88,12 +85,12 @@ class BroadlinkHysen(ClimateEntity):
             self._coordinator.data["power"]
             and self.current_temperature + 0.5 > self.target_temperature
         ):
-            return CURRENT_HVAC_IDLE
+            return HVAC_MODE_OFF
         if self._coordinator.data["active"]:
             return HVAC_MODE_HEAT
         if not self._coordinator.data["power"]:
             return HVAC_MODE_OFF
-        return CURRENT_HVAC_IDLE
+        return HVAC_MODE_OFF
 
     @property
     def hvac_modes(self):
