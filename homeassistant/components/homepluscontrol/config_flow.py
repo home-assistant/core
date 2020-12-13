@@ -1,5 +1,6 @@
 """Config flow for Legrand Home+ Control."""
 import logging
+import re
 
 import voluptuous as vol
 
@@ -35,17 +36,18 @@ class HomePlusControlFlowHandler(
             return self.async_abort(reason="single_instance_allowed")
 
         assert self.hass
+        errors = {}
 
         if user_input is not None:
             # Validate user input
-            # valid = await is_valid(user_input)
-            # if valid:
-            # self.logger.debug("User input received: " + str(user_input))
-            user_input["implementation"] = DOMAIN
-            self.async_register_implementation(
-                self.hass, HomePlusControlOAuth2Implementation(self.hass, user_input)
-            )
-            return await super().async_step_user(user_input)
+            valid = await self._is_valid(user_input, errors)
+            if valid:
+                user_input["implementation"] = DOMAIN
+                self.async_register_implementation(
+                    self.hass,
+                    HomePlusControlOAuth2Implementation(self.hass, user_input),
+                )
+                return await super().async_step_user(user_input)
 
         DOMAIN_SCHEMA = vol.Schema(
             {
@@ -60,7 +62,9 @@ class HomePlusControlFlowHandler(
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=DOMAIN_SCHEMA)
+        return self.async_show_form(
+            step_id="user", data_schema=DOMAIN_SCHEMA, errors=errors
+        )
 
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create the config entry for the flow.
@@ -77,3 +81,13 @@ class HomePlusControlFlowHandler(
         # self.logger.debug(f"Flow implementation: {self.flow_impl.name} ->  {data}")
 
         return self.async_create_entry(title=self.flow_impl.name, data=data)
+
+    async def _is_valid(self, user_input, errors):
+        """Validate the user input."""
+        # Subscription Key has to be a 32 alphanumeric string
+        regex = "[0-9a-zA-Z]{32}"
+        compiled = re.compile(regex)
+        if not compiled.match(user_input[CONF_SUBSCRIPTION_KEY]):
+            errors[CONF_SUBSCRIPTION_KEY] = "invalid_subscription_key"
+            return False
+        return True

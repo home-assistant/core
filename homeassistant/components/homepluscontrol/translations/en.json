@@ -9,6 +9,10 @@
         "create_entry": {
             "default": "Successfully authenticated"
         },
+        "error": {
+            "invalid_input": "Entered data is not valid",
+            "invalid_subscription_key": "Invalid Subscription Key [should be a 32-alphanumeric character string]"
+        },
         "step": {
             "pick_implementation": {
                 "title": "Pick Authentication Method"
