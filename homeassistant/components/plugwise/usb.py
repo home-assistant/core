@@ -10,17 +10,14 @@ from plugwise.exceptions import (
     StickInitError,
     TimeoutException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    ATTR_MAC_ADDRESS,
     AVAILABLE_SENSOR_ID,
     CONF_USB_PATH,
     DOMAIN,
