@@ -40,7 +40,6 @@ def zigpy_analog_output_device(zigpy_device_mock):
 async def test_number(m1, hass, zha_device_joined_restored, zigpy_analog_output_device):
     """Test zha number platform."""
 
-    # load up number domain
     cluster = zigpy_analog_output_device.endpoints.get(1).analog_output
     cluster.PLUGGED_ATTR_READS = {
         "present_value": 15.0,

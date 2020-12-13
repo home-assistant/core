@@ -2,8 +2,6 @@
 import functools
 import logging
 
-from zigpy.exceptions import ZigbeeException
-
 from homeassistant.components.number import DOMAIN, NumberEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

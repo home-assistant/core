@@ -87,7 +87,7 @@ class AnalogOutput(ZigbeeChannel):
         """Update present_value."""
         try:
             res = await self.cluster.write_attributes({"present_value": value})
-        except ZigbeeException as ex:
+        except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
             return False
         if isinstance(res, list) and all(
