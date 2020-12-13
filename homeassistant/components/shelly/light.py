@@ -107,6 +107,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Return the warmest color_temp that this light supports."""
         return color_temperature_kelvin_to_mired(2700)
 
+    @property
+    def device_state_attributes(self) -> dict:
+        """Additional light attributes."""
+        return {"appliance_type": self.wrapper.device.settings.get("appliance_type")}
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
         params = {"turn": "on"}
