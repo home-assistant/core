@@ -10,7 +10,10 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_MUSIC,
+    MEDIA_CLASS_TRACK,
     MEDIA_CLASS_VIDEO,
 )
 
@@ -29,6 +32,9 @@ from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_TVSHOWS,
     COLLECTION_TYPE_MUSIC,
+    ITEM_TYPE_ALBUM,
+    ITEM_TYPE_ARTIST,
+    ITEM_TYPE_AUDIO,
     DATA_CLIENT,
     DOMAIN,
 )  # pylint:disable=unused-import
@@ -129,11 +135,18 @@ class JellyfinSource(MediaSource):
         media_class = _media_class(library["CollectionType"])
 
         if not item_id:
-            return await self._build_library(library, media_class)
+            return await self._build_library(library, media_class, True)
 
-        media_item = self.api.get_item(item_id)
-
-        return self._processMediaItem(library_id, media_item, media_class)
+        media_item = await self.hass.async_add_executor_job(self.api.get_item, item_id)
+        item_type = media_item["Type"]
+        if item_type == ITEM_TYPE_ARTIST:
+            return await self._build_artist(library_id, media_item, True)
+        elif item_type == ITEM_TYPE_ALBUM:
+            return await self._build_album(library_id, media_item, True)
+        elif item_type == ITEM_TYPE_ARTIST:
+            return self._build_track(library_id, media_item)
+        else:
+            raise BrowseError("Unsupported item type %s" % item_type)
 
     async def _build_libraries(self) -> BrowseMediaSource:
         base = BrowseMediaSource(
@@ -153,7 +166,7 @@ class JellyfinSource(MediaSource):
 
         for library in libraries:
             media_class = _media_class(library["CollectionType"])
-            base.children.append(await self._build_library(library, media_class))
+            base.children.append(await self._build_library(library, media_class, False))
 
         return base
 
@@ -167,21 +180,23 @@ class JellyfinSource(MediaSource):
         return result
 
     async def _build_library(
-        self, library: dict, media_class: str
+        self, library: dict, media_class: str, include_children: bool
     ) -> BrowseMediaSource:
 
         if media_class == MEDIA_CLASS_MUSIC:
-            return await self._build_music_library(library)
+            return await self._build_music_library(library, include_children)
         else:
             return await self._build_video_library(library)
 
-    async def _build_music_library(self, library) -> BrowseMediaSource:
+    async def _build_music_library(
+        self, library: dict, include_children: bool
+    ) -> BrowseMediaSource:
         id = library["Id"]
         name = library["Name"]
 
         _LOGGER.info(f"Bulding library {name} with media class {MEDIA_CLASS_MUSIC}")
 
-        librarySource = BrowseMediaSource(
+        result = BrowseMediaSource(
             domain=DOMAIN,
             identifier=id,
             media_class=MEDIA_CLASS_DIRECTORY,
@@ -189,17 +204,92 @@ class JellyfinSource(MediaSource):
             title=name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_MUSIC,
         )
 
-        library_members = await self._get_library_members(id)
+        if include_children:
+            result.children_media_class = MEDIA_CLASS_ARTIST
+            result.children = await self._build_artists(id)
 
-        librarySource.children = []
-        for library_member in library_members:
-            if _is_playable(library_member):
-                child = self._processMediaItem(id, library_member, MEDIA_CLASS_MUSIC)
-                librarySource.children.append(child)
-        return librarySource
+        return result
+
+    async def _build_artists(self, library_id: str):
+        artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
+        return [
+            await self._build_artist(library_id, artist, False) for artist in artists
+        ]
+
+    async def _build_artist(
+        self, library_id: str, artist: dict, include_children: bool
+    ):
+        id = artist["Id"]
+        title = artist["Name"]
+        thumbnail_url = self._get_thumbnail_url(artist)
+
+        result = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=f"{library_id}~~{id}",
+            media_class=MEDIA_CLASS_ARTIST,
+            media_content_type=None,
+            title=title,
+            can_play=False,
+            can_expand=True,
+            thumbnail=thumbnail_url,
+        )
+
+        if include_children:
+            result.children_media_class = MEDIA_CLASS_ALBUM
+            result.children = await self._build_albums(library_id, id)
+
+        return result
+
+    async def _build_albums(self, library_id: str, artist_id: str):
+        albums = await self._get_children(artist_id, ITEM_TYPE_ALBUM)
+        return [await self._build_album(library_id, album, False) for album in albums]
+
+    async def _build_album(self, library_id: str, album: dict, include_children: bool):
+        id = album["Id"]
+        title = album["Name"]
+        thumbnail_url = self._get_thumbnail_url(album)
+
+        result = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=f"{library_id}~~{id}",
+            media_class=MEDIA_CLASS_ALBUM,
+            media_content_type=None,
+            title=title,
+            can_play=False,
+            can_expand=True,
+            thumbnail=thumbnail_url,
+        )
+
+        if include_children:
+            result.children_media_class = MEDIA_CLASS_TRACK
+            result.children = await self._build_tracks(library_id, id)
+
+        return result
+
+    async def _build_tracks(self, library_id: str, artist_id: str):
+        tracks = await self._get_children(artist_id, ITEM_TYPE_AUDIO)
+        return [self._build_track(library_id, track) for track in tracks]
+
+    def _build_track(self, library_id: str, track: dict):
+        id = track["Id"]
+        title = track["Name"]
+        mime_type = _media_mime_type(track)
+        thumbnail_url = self._get_thumbnail_url(track)
+
+        result = BrowseMediaSource(
+            domain=DOMAIN,
+            identifier=f"{library_id}~~{id}",
+            media_class=MEDIA_CLASS_TRACK,
+            media_content_type=mime_type,
+            title=title,
+            can_play=True,
+            can_expand=False,
+            thumbnail=thumbnail_url,
+        )
+
+        return result
 
     async def _build_video_library(self, library) -> BrowseMediaSource:
         id = library["Id"]
@@ -218,7 +308,7 @@ class JellyfinSource(MediaSource):
             children_media_class=MEDIA_CLASS_VIDEO,
         )
 
-        library_members = await self._get_library_members(id)
+        library_members = await self._get_children(id)
 
         librarySource.children = []
         for library_member in library_members:
@@ -227,8 +317,12 @@ class JellyfinSource(MediaSource):
                 librarySource.children.append(child)
         return librarySource
 
-    async def _get_library_members(self, library_id: str) -> List[dict]:
-        params = {"Recursive": "true", "ParentId": library_id, "Fields": "MediaSources"}
+    async def _get_children(self, parent_id: str, item_type=None) -> List[dict]:
+        params = {"Recursive": "true", "ParentId": parent_id}
+        if item_type:
+            params["IncludeItemTypes"] = item_type
+            if item_type == ITEM_TYPE_AUDIO:
+                params["Fields"] = "MediaSources"
 
         result = await self.hass.async_add_executor_job(self.api.user_items, "", params)
         return result["Items"]
