@@ -560,11 +560,63 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     assert mock_entry.state == "not_loaded"
 
 
+async def test_reconnect_tcp_timeout(hass, dsmr_connection_fixture):
+    """If transport disconnects, the connection should be retried."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        ELECTRICITY_ACTIVE_TARIFF,
+        HOURLY_GAS_METER_READING,
+    )
+    from dsmr_parser.objects import CosemObject, MBusObject
+
+    entry_data = {
+        "port": "23",
+        "host": "localhost",
+        "dsmr_version": "5",
+        "precision": 4,
+        "reconnect_interval": 1,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    telegram = {
+        HOURLY_GAS_METER_READING: MBusObject(
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+            ]
+        ),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="localhost:23", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][3]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # assert that we only connected once
+    assert connection_factory.call_count == 1
+
+    # after some sleep see if the connection timed out and reconnected once
+    await asyncio.sleep(1.1)
+    assert connection_factory.call_count == 2, "connecting not retried"
+
+
 async def test_timer():
     """Test if the timer handles starting, stopping and resetting correctly."""
-    delay = 1
+    delay = 0.2
     # delta_delay must be delay >> delta_delay and delta_delay >> code runtime
-    delta_delay = 0.04
+    delta_delay = 0.01
 
     loop = asyncio.get_event_loop()
     timer_ran_out = loop.create_future()
