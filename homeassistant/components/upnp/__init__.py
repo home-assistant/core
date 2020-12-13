@@ -43,6 +43,8 @@ async def async_discover_and_construct(
 ) -> Device:
     """Discovery devices and construct a Device for one."""
     # pylint: disable=invalid-name
+    _LOGGER.debug("Constructing device: %s::%s", udn, st)
+
     discovery_infos = await Device.async_discover(hass)
     _LOGGER.debug("Discovered devices: %s", discovery_infos)
     if not discovery_infos:
@@ -53,7 +55,7 @@ async def async_discover_and_construct(
         # Get the discovery info with specified UDN/ST.
         filtered = [di for di in discovery_infos if di[DISCOVERY_UDN] == udn]
         if st:
-            filtered = [di for di in discovery_infos if di[DISCOVERY_ST] == st]
+            filtered = [di for di in filtered if di[DISCOVERY_ST] == st]
         if not filtered:
             _LOGGER.warning(
                 'Wanted UPnP/IGD device with UDN/ST "%s"/"%s" not found, aborting',
@@ -74,6 +76,7 @@ async def async_discover_and_construct(
             )
             _LOGGER.info("Detected multiple UPnP/IGD devices, using: %s", device_name)
 
+    _LOGGER.debug("Constructing from discovery_info: %s", discovery_info)
     location = discovery_info[DISCOVERY_LOCATION]
     return await Device.async_create_device(hass, location)
 
@@ -104,7 +107,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
-    _LOGGER.debug("async_setup_entry, config_entry: %s", config_entry.data)
+    _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
     # Discover and construct.
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
@@ -123,6 +126,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     # Ensure entry has a unique_id.
     if not config_entry.unique_id:
+        _LOGGER.debug(
+            "Setting unique_id: %s, for config_entry: %s",
+            device.unique_id,
+            config_entry,
+        )
         hass.config_entries.async_update_entry(
             entry=config_entry,
             unique_id=device.unique_id,
@@ -152,6 +160,8 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
+    _LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
+
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
     if udn in hass.data[DOMAIN][DOMAIN_DEVICES]:
         del hass.data[DOMAIN][DOMAIN_DEVICES][udn]

@@ -30,7 +30,7 @@ from .coordinator import CanaryDataUpdateCoordinator
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_FFMPEG_ARGUMENTS, invalidation_version="0.118"),
+    cv.deprecated(CONF_FFMPEG_ARGUMENTS),
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(
