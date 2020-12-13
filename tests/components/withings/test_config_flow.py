@@ -2,6 +2,8 @@
 from aiohttp.test_utils import TestClient
 
 from homeassistant.components.withings import const
+from homeassistant.components.withings.config_flow import WithingsFlowHandler
+from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -11,6 +13,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 from homeassistant.setup import async_setup_component
@@ -104,3 +107,22 @@ async def test_config_reauth_profile(
     entries = hass.config_entries.async_entries(const.DOMAIN)
     assert entries
     assert entries[0].data["token"]["refresh_token"] == "mock-refresh-token"
+
+
+async def test_options() -> None:
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Person0",
+        data={},
+        options={CONF_USE_WEBHOOK: True},
+    )
+    flow = WithingsFlowHandler()
+    options_flow = flow.async_get_options_flow(entry)
+
+    result = await options_flow.async_step_init()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    result = await options_flow.async_step_init({CONF_USE_WEBHOOK: True})
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_USE_WEBHOOK] is True

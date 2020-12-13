@@ -7,6 +7,8 @@ from withings_api.common import AuthScope
 
 from homeassistant import config_entries
 from homeassistant.components.withings import const
+from homeassistant.components.withings.const import CONF_USE_WEBHOOK
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 
@@ -20,6 +22,12 @@ class WithingsFlowHandler(
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
     # Temporarily holds authorization data during the profile step.
     _current_data: Dict[str, Union[None, str, int]] = {}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return WithingsOptionsFlowHandler(config_entry)
 
     @property
     def logger(self) -> logging.Logger:
@@ -102,3 +110,28 @@ class WithingsFlowHandler(
         self._abort_if_unique_id_configured(data)
 
         return self.async_create_entry(title=data[const.PROFILE], data=data)
+
+
+class WithingsOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Withings profile options."""
+
+    def __init__(self, config_entry):
+        """Initialize Withings options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Withings options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USE_WEBHOOK,
+                        default=self.config_entry.options.get(CONF_USE_WEBHOOK, False),
+                    ): bool
+                }
+            ),
+        )

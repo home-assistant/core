@@ -12,14 +12,17 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .common import ComponentFactory, new_profile_config
 
+from tests.async_mock import patch
 
+
+@patch("homeassistant.components.withings.common.asyncio.sleep")
 async def test_binary_sensor(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    sleepmock, hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test binary sensor."""
     in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]
-    person0 = new_profile_config("person0", 0)
-    person1 = new_profile_config("person1", 1)
+    person0 = new_profile_config("person0", 0, True)
+    person1 = new_profile_config("person1", 1, True)
 
     entity_registry: EntityRegistry = (
         await hass.helpers.entity_registry.async_get_registry()
@@ -60,5 +63,5 @@ async def test_binary_sensor(
     assert hass.states.get(entity_id1).state == STATE_ON
 
     # Unload
-    await component_factory.unload(person0)
-    await component_factory.unload(person1)
+    await component_factory.remove(person0)
+    await component_factory.remove(person1)

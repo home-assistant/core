@@ -1,10 +1,11 @@
 """Common data for for the withings component tests."""
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, cast
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
 import arrow
+from asynctest import CoroutineMock
 import pytz
 from withings_api.common import (
     MeasureGetMeasResponse,
@@ -18,13 +19,15 @@ from homeassistant import data_entry_flow
 import homeassistant.components.api as api
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 import homeassistant.components.webhook as webhook
-from homeassistant.components.withings import async_unload_entry
+from homeassistant.components.withings import async_remove_entry, async_unload_entry
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
     DataManager,
+    EnabledWebhookConfig,
     get_all_data_managers,
 )
 import homeassistant.components.withings.const as const
+from homeassistant.components.withings.const import URL_ARG_APPLI
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import (
@@ -49,6 +52,7 @@ class ProfileConfig:
 
     profile: str
     user_id: int
+    use_webhook: bool
     api_response_user_get_device: Union[UserGetDeviceResponse, Exception]
     api_response_measure_get_meas: Union[MeasureGetMeasResponse, Exception]
     api_response_sleep_get_summary: Union[SleepGetSummaryResponse, Exception]
@@ -59,6 +63,7 @@ class ProfileConfig:
 def new_profile_config(
     profile: str,
     user_id: int,
+    use_webhook: bool = False,
     api_response_user_get_device: Optional[
         Union[UserGetDeviceResponse, Exception]
     ] = None,
@@ -75,6 +80,7 @@ def new_profile_config(
     return ProfileConfig(
         profile=profile,
         user_id=user_id,
+        use_webhook=use_webhook,
         api_response_user_get_device=api_response_user_get_device
         or UserGetDeviceResponse(devices=[]),
         api_response_measure_get_meas=api_response_measure_get_meas
@@ -144,6 +150,13 @@ class ComponentFactory:
             },
         }
 
+        self._hass.components.cloud.async_active_subscription = MagicMock(
+            return_value=False
+        )
+        self._hass.components.cloud.async_create_cloudhook = CoroutineMock(
+            return_value="http://localhost:8123"
+        )
+
         await async_process_ha_core_config(self._hass, hass_config.get("homeassistant"))
         assert await async_setup_component(self._hass, HA_DOMAIN, {})
         assert await async_setup_component(self._hass, webhook.DOMAIN, hass_config)
@@ -185,6 +198,22 @@ class ComponentFactory:
         )
         ComponentFactory._setup_api_method(
             api_mock.notify_revoke, profile_config.api_response_notify_revoke
+        )
+
+        self._hass.components.cloud.async_active_subscription.reset_mocks()
+        self._hass.components.cloud.async_active_subscription.side_effect = [
+            profile_config.use_webhook,  # Will set the config option during async_setup_entry.
+            False,  # Use a local webhook in async_register_webhook_config.
+            # Extra values if the function is used again.
+            profile_config.use_webhook,
+            profile_config.use_webhook,
+            profile_config.use_webhook,
+            profile_config.use_webhook,
+            profile_config.use_webhook,
+        ]
+        self._hass.components.cloud.async_create_cloudhook.reset_mocks()
+        self._hass.components.cloud.async_create_cloudhook.return_value = (
+            "http://127.0.0.1:8080"
         )
 
         self._api_class_mock.reset_mocks()
@@ -252,13 +281,21 @@ class ComponentFactory:
         # Wait for remaining tasks to complete.
         await self._hass.async_block_till_done()
 
+        # Wait for remaining tasks to complete.
+        await self._hass.async_block_till_done()
+
         # Mock the webhook.
         data_manager = get_data_manager_by_user_id(self._hass, user_id)
+        if data_manager.webhook_config.enabled:
+            enabled_webhook_config = cast(
+                EnabledWebhookConfig, data_manager.webhook_config
+            )
+            self._aioclient_mock.clear_requests()
+            self._aioclient_mock.request(
+                "HEAD",
+                enabled_webhook_config.url,
+            )
         self._aioclient_mock.clear_requests()
-        self._aioclient_mock.request(
-            "HEAD",
-            data_manager.webhook_config.url,
-        )
 
         return self._api_class_mock.return_value
 
@@ -266,10 +303,12 @@ class ComponentFactory:
         """Call the webhook to notify of data changes."""
         client: TestClient = await self._aiohttp_client(self._hass.http.app)
         data_manager = get_data_manager_by_user_id(self._hass, user_id)
+        enabled_webhook_config = cast(EnabledWebhookConfig, data_manager.webhook_config)
+        webhook_url = enabled_webhook_config.url
 
         resp = await client.post(
-            urlparse(data_manager.webhook_config.url).path,
-            data={"userid": user_id, "appli": appli.value},
+            urlparse(webhook_url).path,
+            data={"userid": user_id, URL_ARG_APPLI: appli.value},
         )
 
         # Wait for remaining tasks to complete.
@@ -280,12 +319,13 @@ class ComponentFactory:
 
         return WebhookResponse(message=data["message"], message_code=data["code"])
 
-    async def unload(self, profile: ProfileConfig) -> None:
+    async def remove(self, profile: ProfileConfig) -> None:
         """Unload the component for a specific user."""
         config_entries = get_config_entries_for_user_id(self._hass, profile.user_id)
 
         for config_entry in config_entries:
             await async_unload_entry(self._hass, config_entry)
+            await async_remove_entry(self._hass, config_entry)
 
         await self._hass.async_block_till_done()
 

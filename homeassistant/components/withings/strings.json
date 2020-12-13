@@ -25,5 +25,16 @@
     "create_entry": {
       "default": "Successfully authenticated with Withings."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Withings",
+        "description": "Changes will take approximately 45 seconds to complete.",
+        "data": {
+          "use_webhook": "Use Webhook"
+        }
+      }
+    }
   }
 }

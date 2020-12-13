@@ -1,6 +1,5 @@
 """Tests for the Withings component."""
 from typing import Any
-from unittest.mock import patch
 
 import arrow
 import pytz
@@ -31,9 +30,12 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .common import ComponentFactory, new_profile_config
 
+from tests.async_mock import patch
+
 PERSON0 = new_profile_config(
     "person0",
     0,
+    True,
     api_response_measure_get_meas=MeasureGetMeasResponse(
         measuregrps=(
             MeasureGetMeasGroup(
@@ -300,8 +302,9 @@ def async_assert_state_equals(
     )
 
 
+@patch("homeassistant.components.withings.common.asyncio.sleep")
 async def test_sensor_default_enabled_entities(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    sleepmock, hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test entities enabled by default."""
     entity_registry: EntityRegistry = (
@@ -340,49 +343,53 @@ async def test_sensor_default_enabled_entities(
             assert state_obj is None
 
     # Unload
-    await component_factory.unload(PERSON0)
+    await component_factory.remove(PERSON0)
 
 
+@patch("homeassistant.components.withings.common.asyncio.sleep")
+@patch(
+    "homeassistant.components.withings.sensor.BaseWithingsSensor.entity_registry_enabled_default"
+)
 async def test_all_entities(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    enabled_by_default_mock,
+    sleepmock,
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
 ) -> None:
     """Test all entities."""
     entity_registry: EntityRegistry = (
         await hass.helpers.entity_registry.async_get_registry()
     )
 
-    with patch(
-        "homeassistant.components.withings.sensor.BaseWithingsSensor.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = True
+    enabled_by_default_mock.return_value = True
 
-        await component_factory.configure_component(profile_configs=(PERSON0,))
+    await component_factory.configure_component(profile_configs=(PERSON0,))
 
-        # Assert entities should not exist yet.
-        for attribute in get_platform_attributes(SENSOR_DOMAIN):
-            assert not await async_get_entity_id(hass, attribute, PERSON0.user_id)
+    # Assert entities should not exist yet.
+    for attribute in get_platform_attributes(SENSOR_DOMAIN):
+        assert not await async_get_entity_id(hass, attribute, PERSON0.user_id)
 
-        # person 0
-        await component_factory.setup_profile(PERSON0.user_id)
+    # person 0
+    await component_factory.setup_profile(PERSON0.user_id)
 
-        # Assert entities should exist.
-        for attribute in get_platform_attributes(SENSOR_DOMAIN):
-            entity_id = await async_get_entity_id(hass, attribute, PERSON0.user_id)
-            assert entity_id
-            assert entity_registry.async_is_registered(entity_id)
+    # Assert entities should exist.
+    for attribute in get_platform_attributes(SENSOR_DOMAIN):
+        entity_id = await async_get_entity_id(hass, attribute, PERSON0.user_id)
+        assert entity_id
+        assert entity_registry.async_is_registered(entity_id)
 
-        resp = await component_factory.call_webhook(PERSON0.user_id, NotifyAppli.SLEEP)
-        assert resp.message_code == 0
+    resp = await component_factory.call_webhook(PERSON0.user_id, NotifyAppli.SLEEP)
+    assert resp.message_code == 0
 
-        resp = await component_factory.call_webhook(PERSON0.user_id, NotifyAppli.WEIGHT)
-        assert resp.message_code == 0
+    resp = await component_factory.call_webhook(PERSON0.user_id, NotifyAppli.WEIGHT)
+    assert resp.message_code == 0
 
-        for person, measurement, expected in EXPECTED_DATA:
-            attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
-            entity_id = await async_get_entity_id(hass, attribute, person.user_id)
-            state_obj = hass.states.get(entity_id)
+    for person, measurement, expected in EXPECTED_DATA:
+        attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
+        entity_id = await async_get_entity_id(hass, attribute, person.user_id)
+        state_obj = hass.states.get(entity_id)
 
-            async_assert_state_equals(entity_id, state_obj, expected, attribute)
+        async_assert_state_equals(entity_id, state_obj, expected, attribute)
 
     # Unload
-    await component_factory.unload(PERSON0)
+    await component_factory.remove(PERSON0)

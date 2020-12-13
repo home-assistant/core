@@ -5,15 +5,16 @@ import homeassistant.const as const
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
+CONF_CLOUDHOOK_URL = "cloudhook_url"
 
-DATA_MANAGER = "data_manager"
+URL_ARG_APPLI = "appli"
 
 CONFIG = "config"
+CONFIG_ENTRY_DATA = "config_entry_data"
 DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
 PROFILE = "profile"
 PUSH_HANDLER = "push_handler"
-CONF_WEBHOOK_URL = "webhook_url"
 
 
 class Measurement(Enum):
