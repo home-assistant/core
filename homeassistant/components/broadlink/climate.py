@@ -9,11 +9,12 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink climate entities."""
