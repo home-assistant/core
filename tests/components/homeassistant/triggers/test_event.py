@@ -59,6 +59,33 @@ async def test_if_fires_on_event(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_on_multiple_events(hass, calls):
+    """Test the firing of events."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": ["test_event", "test2_event"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    hass.bus.async_fire("test2_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].context.parent_id == context.id
+    assert calls[1].context.parent_id == context.id
+
+
 async def test_if_fires_on_event_extra_data(hass, calls, context_with_user):
     """Test the firing of events still matches with event data and context."""
     assert await async_setup_component(

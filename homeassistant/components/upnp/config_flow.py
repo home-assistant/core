@@ -154,6 +154,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         # Store discovery.
+        _LOGGER.debug("New discovery, continuing")
         name = discovery_info.get("friendlyName", "")
         discovery = {
             DISCOVERY_UDN: udn,

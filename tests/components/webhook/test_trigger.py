@@ -5,6 +5,7 @@ from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture(autouse=True)

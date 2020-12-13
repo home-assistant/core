@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (or IP address) of your twinkly device"
+                },
+                "description": "Set up your Twinkly led string",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

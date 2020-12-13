@@ -1,7 +1,8 @@
 """Config flow for Plugwise integration."""
 import logging
 
-from Plugwise_Smile.Smile import Smile
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -67,9 +68,9 @@ async def validate_gw_input(hass: core.HomeAssistant, data):
 
     try:
         await api.connect()
-    except Smile.InvalidAuthentication as err:
+    except InvalidAuthentication as err:
         raise InvalidAuth from err
-    except Smile.PlugwiseError as err:
+    except PlugwiseException as err:
         raise CannotConnect from err
 
     return api

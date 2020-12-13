@@ -49,7 +49,7 @@ DATA_LISTENER = "listener"
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback

@@ -5,7 +5,15 @@
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Autenticazione non riuscita per OVO Energy. Immettere le credenziali correnti.",
+                "title": "Riautenticazione"
+            },
             "user": {
                 "data": {
                     "password": "Password",

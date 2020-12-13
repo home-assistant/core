@@ -1,4 +1,6 @@
 """Smart energy channels module for Zigbee Home Automation."""
+from typing import Union
+
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.const import (
@@ -82,43 +84,47 @@ class Metering(ZigbeeChannel):
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._divisor = 1
-        self._multiplier = 1
-        self._unit_enum = None
         self._format_spec = None
 
-    async def async_configure(self):
+    @property
+    def divisor(self) -> int:
+        """Return divisor for the value."""
+        return self.cluster.get("divisor")
+
+    @property
+    def multiplier(self) -> int:
+        """Return multiplier for the value."""
+        return self.cluster.get("multiplier")
+
+    async def async_configure(self) -> None:
         """Configure channel."""
         await self.fetch_config(False)
         await super().async_configure()
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.fetch_config(True)
         await super().async_initialize(from_cache)
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: int) -> None:
         """Handle attribute update from Metering cluster."""
-        if None in (self._multiplier, self._divisor, self._format_spec):
+        if None in (self.multiplier, self.divisor, self._format_spec):
             return
-        super().attribute_updated(attrid, value * self._multiplier / self._divisor)
+        super().attribute_updated(attrid, value)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return unit of measurement."""
-        return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
+        uom = self.cluster.get("unit_of_measure", 0x7F)
+        return self.unit_of_measure_map.get(uom & 0x7F, "unknown")
 
-    async def fetch_config(self, from_cache):
+    async def fetch_config(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
         results = await self.get_attributes(
             ["divisor", "multiplier", "unit_of_measure", "demand_formatting"],
             from_cache=from_cache,
         )
-
-        self._divisor = results.get("divisor", self._divisor)
-        self._multiplier = results.get("multiplier", self._multiplier)
-        self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
 
         fmting = results.get(
             "demand_formatting", 0xF9
@@ -135,8 +141,9 @@ class Metering(ZigbeeChannel):
         else:
             self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
 
-    def formatter_function(self, value):
+    def formatter_function(self, value: int) -> Union[int, float]:
         """Return formatted value for display."""
+        value = value * self.multiplier / self.divisor
         if self.unit_of_measurement == POWER_WATT:
             # Zigbee spec power unit is kW, but we show the value in W
             value_watt = value * 1000

@@ -177,7 +177,7 @@ class NestFlowHandler(
             return self.async_abort(reason="authorize_url_timeout")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="authorize_url_fail")
+            return self.async_abort(reason="unknown_authorize_url_generation")
 
         return self.async_show_form(
             step_id="link",

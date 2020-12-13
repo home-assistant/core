@@ -5,6 +5,11 @@
             "validate_verification_code": "Nem siker\u00fclt ellen\u0151rizni az ellen\u0151rz\u0151 k\u00f3dot, ki kell v\u00e1lasztania egy megb\u00edzhat\u00f3s\u00e1gi eszk\u00f6zt, \u00e9s \u00fajra kell ind\u00edtania az ellen\u0151rz\u00e9st"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                }
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Megb\u00edzhat\u00f3 eszk\u00f6z"

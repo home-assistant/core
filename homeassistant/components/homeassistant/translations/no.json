@@ -6,6 +6,7 @@
             "dev": "Utvikling",
             "docker": "",
             "docker_version": "",
+            "hassio": "Supervisor",
             "host_os": "",
             "installation_type": "Installasjonstype",
             "os_name": "Familie for operativsystem",
