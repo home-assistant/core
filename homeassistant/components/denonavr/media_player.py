@@ -40,6 +40,8 @@ from .config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
+from .log_filters import SilenceFilter, TimeoutFilter
+from .receiver import _DENON_LOGGER, _DENON_SSDP_LOGGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +105,10 @@ class DenonDevice(MediaPlayerEntity):
         self._frequency = self._receiver.frequency
         self._station = self._receiver.station
 
+        self._available = True
+        self.timeout_filter = TimeoutFilter(ref=self)
+        self.silence_filter = SilenceFilter()
+
         self._sound_mode_support = self._receiver.support_sound_mode
         if self._sound_mode_support:
             self._sound_mode = self._receiver.sound_mode
@@ -142,6 +148,7 @@ class DenonDevice(MediaPlayerEntity):
     def update(self):
         """Get the latest status information from device."""
         self._receiver.update()
+
         self._name = self._receiver.name
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
@@ -159,6 +166,33 @@ class DenonDevice(MediaPlayerEntity):
         if self._sound_mode_support:
             self._sound_mode = self._receiver.sound_mode
             self._sound_mode_raw = self._receiver.sound_mode_raw
+
+        if self._power is None:
+            # update() was not successful, API is malfunctioning
+            self.handle_api_status(False)
+
+    def handle_api_status(self, it_is_working):
+        """Handle the status of the Denon API on failure/reconnect."""
+        if it_is_working:
+            self._available = True
+            _DENON_LOGGER.removeFilter(self.silence_filter)
+            _DENON_LOGGER.removeFilter(self.timeout_filter)
+            _DENON_SSDP_LOGGER.removeFilter(self.silence_filter)
+            _DENON_LOGGER.info("Denon API reconnected.")
+        elif self._available:
+            self._available = False
+            _DENON_LOGGER.error(
+                "Denon API failed, please power cycle the receiver at host %s",
+                self._receiver._host,  # pylint: disable=protected-access
+            )
+            _DENON_LOGGER.addFilter(self.timeout_filter)
+            _DENON_LOGGER.addFilter(self.silence_filter)
+            _DENON_SSDP_LOGGER.addFilter(self.silence_filter)
+
+    @property
+    def available(self):
+        """Return if media player is available."""
+        return self._available
 
     @property
     def unique_id(self):
