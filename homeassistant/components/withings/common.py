@@ -608,9 +608,6 @@ class DataManager:
             _LOGGER,
             name="poll_data_update_coordinator",
             update_interval=timedelta(minutes=30),
-            # update_interval=timedelta(minutes=120)
-            # if self._webhook_config.enabled
-            # else timedelta(minutes=10),
             update_method=self.async_get_all_data,
         )
         self.webhook_update_coordinator = WebhookUpdateCoordinator(
