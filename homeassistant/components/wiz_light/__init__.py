@@ -1,0 +1,1 @@
+"""WiZ Light integration."""

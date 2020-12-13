@@ -1,0 +1,175 @@
+# Bulb Library for importing possible bulb types
+# TEMPLATE:
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+# <Name>:
+#   name: <Name>
+#   features:
+#     brightness: true / false
+#     color: true / false
+#     effect: true / false
+#     color_tmp: true / false
+#   kelvin_range:
+#     min: 2200
+#     max: 6500
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Version: "0.1"
+# Only Brightness
+ESP01_SHDW_01:
+  name: ESP01_SHDW_01
+  features:
+    brightness: true
+    color: false
+    effect: false
+    color_tmp: false
+  kelvin_range:
+    min: 2200
+    max: 6500
+
+ESP01_SHDW1_31:
+  name: ESP01_SHDW1_31
+  features:
+    brightness: true
+    color: false
+    effect: false
+    color_tmp: false
+  kelvin_range:
+    min: 2200
+    max: 6500
+# ----------
+# Brightness and Effects
+ESP06_SHDW9_01:
+  name: ESP06_SHDW9_01
+  features:
+    brightness: true
+    color: false
+    effect: true
+    color_tmp: false
+  kelvin_range:
+    min: 2200
+    max: 6500
+
+ESP06_SHDW1_01:
+  name: ESP06_SHDW1_01
+  features:
+    brightness: true
+    color: false
+    effect: true
+    color_tmp: false
+  kelvin_range:
+    min: 2200
+    max: 6500
+# ---------
+# Brightness and Color Temp
+ESP01_SHTW1C_31:
+  name: ESP01_SHTW1C_31
+  features:
+    brightness: true
+    color: false
+    effect: false
+    color_tmp: true
+  kelvin_range:
+    min: 2200
+    max: 6500
+
+ESP17_SHTW9_01:
+  name: ESP17_SHTW9_01
+  features:
+    brightness: true
+    color: false
+    effect: false
+    color_tmp: true
+  kelvin_range:
+    min: 2000
+    max: 5000
+# ----------------
+# Brightness, Color Temp and Effect
+ESP56_SHTW3_01:
+  name: ESP56_SHTW3_01
+  features:
+    brightness: true
+    color: false
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2200
+    max: 6500
+
+ESP15_SHTW1_01I:
+  name: ESP15_SHTW1_01I
+  features:
+    brightness: true
+    color: false
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2200
+    max: 6500
+# -----------------
+# Brightness, Color Temp, Color and Effect / all features
+# Added #50
+ESP01_SHRGB1C_31:
+  name: ESP01_SHRGB1C_31
+  features:
+    brightness: true
+    color: true
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2200
+    max: 6500
+# Test device
+ESP01_SHRGB_03:
+  name: ESP01_SHRGB_03
+  features:
+    brightness: true
+    color: true
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2700
+    max: 6500
+
+ESP03_SHRGBP_31:
+  name: ESP03_SHRGBP_31
+  features:
+    brightness: true
+    color: true
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2000
+    max: 6500
+# Added #54
+ESP03_SHRGB1C_01:
+  name: ESP03_SHRGB1C_01
+  features:
+    brightness: true
+    color: true
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2200
+    max: 6500
+# Added #55
+ESP03_SHRGB1W_01:
+  name: ESP03_SHRGB1W_01
+  features:
+    brightness: true
+    color: true
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2200
+    max: 6500
+# Added #59
+ESP03_SHRGB3_01ABI:
+  name: ESP03_SHRGB3_01ABI
+  features:
+    brightness: true
+    color: true
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2500
+    max: 6500
+# -----------------
