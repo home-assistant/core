@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
-    _LOGGER.debug("async_setup_entry, config_entry: %s", config_entry.unique_id)
+    _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
     # Discover and construct.
     udn = config_entry.data[CONFIG_ENTRY_UDN]
@@ -139,7 +139,7 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
-    _LOGGER.debug("async_unload_entry, config_entry: %s", config_entry.unique_id)
+    _LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
     if udn in hass.data[DOMAIN][DOMAIN_DEVICES]:
