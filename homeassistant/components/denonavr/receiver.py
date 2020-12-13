@@ -4,6 +4,8 @@ import logging
 import denonavr
 
 _LOGGER = logging.getLogger(__name__)
+_DENON_LOGGER = denonavr.denonavr._LOGGER  # pylint: disable=protected-access
+_DENON_SSDP_LOGGER = denonavr.ssdp._LOGGER  # pylint: disable=protected-access
 
 
 class ConnectDenonAVR:
