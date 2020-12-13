@@ -149,16 +149,16 @@ SENSOR_TYPES = {
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "current_forecast:clouds",
     },
-    "condition": {
-        ENTITY_NAME: "Condition",
+    "original_condition": {
+        ENTITY_NAME: "Original condition",
         ENTITY_UNIT: None,
         ENTITY_ICON: None,
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: False,
         ENTITY_API_DATA_PATH: "current_forecast:weather:desc",
     },
-    "daily_condition": {
-        ENTITY_NAME: "Daily condition",
+    "daily_original_condition": {
+        ENTITY_NAME: "Daily original condition",
         ENTITY_UNIT: None,
         ENTITY_ICON: None,
         ENTITY_DEVICE_CLASS: None,
