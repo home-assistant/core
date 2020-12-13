@@ -627,7 +627,7 @@ async def test_timer():
         timer_ran_out.set_result(True)
 
     test_timer_instance = Timer(delay, timer_callback, loop=loop)
-    assert not test_timer_instance.timerhandle
+    assert not test_timer_instance._timer_done()
 
     test_timer_instance.start()
     assert test_timer_instance.timerhandle
@@ -663,7 +663,13 @@ async def test_timer():
     await asyncio.sleep(2 * delta_delay)
     assert timer_ran_out.done()
 
-    # Test if the timer has not off twice
+    # Test if the timer has not gone off twice
     timer_ran_out = loop.create_future()
-    await asyncio.sleep(2 * delay)
+    await asyncio.sleep(delay)
+    assert not timer_ran_out.done()
+
+    # Test if the timer doesn't go off when it is deleted
+    test_timer_instance.start()
+    test_timer_instance = None
+    await asyncio.sleep(delay + delta_delay)
     assert not timer_ran_out.done()

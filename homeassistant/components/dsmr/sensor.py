@@ -545,7 +545,6 @@ class Timer:
     def _timer_done(self):
         if self.timerhandle:
             return (self.loop.time() - self.timerhandle.when()) >= 0
-
         return False
 
     def _timer_active(self):
