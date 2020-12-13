@@ -3,7 +3,6 @@ import functools
 import logging
 
 from zigpy.exceptions import ZigbeeException
-from zigpy.zcl.foundation import Status
 
 from homeassistant.components.number import DOMAIN, NumberEntity
 from homeassistant.core import callback

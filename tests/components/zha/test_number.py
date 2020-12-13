@@ -107,6 +107,7 @@ async def test_number(m1, hass, zha_device_joined_restored, zigpy_analog_output_
         )
         assert len(cluster.write_attributes.mock_calls) == 1
         assert cluster.write_attributes.call_args == call({"present_value": 30.0})
+        cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
 
     # test rejoin
     await async_test_rejoin(hass, zigpy_analog_output_device, [cluster], (1,))

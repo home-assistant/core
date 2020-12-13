@@ -4,6 +4,7 @@ from typing import Any, Coroutine, List, Optional
 
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
+from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
