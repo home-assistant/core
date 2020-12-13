@@ -241,7 +241,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            discovery.async_add_entities, async_add_entities, entities_to_create
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            update_before_add=False,
         ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
