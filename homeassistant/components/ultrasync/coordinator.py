@@ -3,11 +3,12 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
+import ultrasync
+
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import ultrasync
 
 from .const import DOMAIN, SENSOR_UPDATE_LISTENER
 
@@ -20,7 +21,9 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
         """Initialize global UltraSync data updater."""
         self.hub = ultrasync.UltraSync(
-            user=config[CONF_USERNAME], pin=config[CONF_PIN], host=config[CONF_HOST],
+            user=config[CONF_USERNAME],
+            pin=config[CONF_PIN],
+            host=config[CONF_HOST],
         )
 
         self._init = False
@@ -32,7 +35,10 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=update_interval,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self) -> dict:

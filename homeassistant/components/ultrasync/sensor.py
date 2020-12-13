@@ -46,9 +46,9 @@ async def async_setup_entry(
         """Dynamically create/delete sensors based on what was detected by the hub."""
 
         _LOGGER.debug(
-            "Entering _auto_manage_sensors with {} area(s), and {} zone(s)".format(
-                len(areas), len(zones)
-            )
+            "Entering _auto_manage_sensors with %d area(s), and %d zone(s)",
+            len(areas),
+            len(zones),
         )
 
         # our list of sensors to add
@@ -74,7 +74,7 @@ async def async_setup_entry(
                 # Add our new area sensor
                 new_sensors.append(sensors[sensor_id])
                 _LOGGER.debug(
-                    "Detected {}.Area{}State".format(entry.data[CONF_NAME], bank_no + 1)
+                    "Detected %s.Area%dState", entry.data[CONF_NAME], bank_no + 1
                 )
 
             # Update our meta information
@@ -98,7 +98,7 @@ async def async_setup_entry(
                 # Add our new zone sensor
                 new_sensors.append(sensors[sensor_id])
                 _LOGGER.debug(
-                    "Detected {}.Zone{}State".format(entry.data[CONF_NAME], bank_no + 1)
+                    "Detected %s.Zone%dState", entry.data[CONF_NAME], bank_no + 1
                 )
 
             # Update our meta information
@@ -142,7 +142,7 @@ class UltraSyncSensor(UltraSyncEntity):
         )
 
     def __setitem__(self, key, value):
-        """Sets our attributes."""
+        """Set our sensor attributes."""
         self.__attributes[key] = value
 
     @property
