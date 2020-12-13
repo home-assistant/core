@@ -184,6 +184,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data."""
+
+        if self.hass.is_stopping:
+            return
+
         _LOGGER.debug("Polling Shelly Device - %s", self.name)
         try:
             async with async_timeout.timeout(
@@ -206,6 +210,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def async_setup(self):
         """Set up the wrapper."""
+
+        if self.hass.is_stopping:
+            return
+
         dev_reg = await device_registry.async_get_registry(self.hass)
         model_type = self.device.settings["device"]["type"]
         entry = dev_reg.async_get_or_create(
