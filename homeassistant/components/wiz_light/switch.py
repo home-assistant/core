@@ -52,10 +52,6 @@ class WizPlug(SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    @property
-    def should_poll(self):
-        return True
-
     async def async_turn_on(self, **kwargs):
         """Instruct the switch to turn on."""
         await self._switch.turn_on(PilotBuilder())

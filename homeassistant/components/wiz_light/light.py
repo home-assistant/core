@@ -1,8 +1,7 @@
 """WiZ Light integration."""
 import logging
 
-from pywizlight import SCENES, PilotBuilder, wizlight
-import voluptuous as vol
+from pywizlight import SCENES, PilotBuilder
 import yaml
 import os
 
@@ -13,24 +12,17 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+
 import homeassistant.util.color as color_utils
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-# Validation of the user's configuration
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
-)
 
 SUPPORT_FEATURES_RGB = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
@@ -43,11 +35,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the WiZ Light platform."""
     # Assign configuration variables.
     # The configuration check takes care they are present.
-    ip_address = config[CONF_HOST]
-    bulb = wizlight(ip_address)
+    bulb = hass.data[DOMAIN]
 
     # Add devices
-    async_add_entities([WizBulb(bulb, config[CONF_NAME])])
+    async_add_entities([WizBulb(bulb)])
 
 
 class WizBulb(LightEntity):
