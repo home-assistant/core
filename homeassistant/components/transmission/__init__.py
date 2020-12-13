@@ -332,37 +332,41 @@ class TransmissionData:
     def check_completed_torrent(self):
         """Get completed torrent functionality."""
         current_completed_torrents = [
-            var for var in self.torrents if var.status == "seeding"
+            torrent for torrent in self.torrents if torrent.status == "seeding"
         ]
         freshly_completed_torrents = set(current_completed_torrents).difference(
             self.completed_torrents
         )
         self.completed_torrents = current_completed_torrents
 
-        for var in freshly_completed_torrents:
+        for torrent in freshly_completed_torrents:
             self.hass.bus.fire(
-                EVENT_DOWNLOADED_TORRENT, {"name": var.name, "id": var.id}
+                EVENT_DOWNLOADED_TORRENT, {"name": torrent.name, "id": torrent.id}
             )
 
     def check_started_torrent(self):
         """Get started torrent functionality."""
         current_started_torrents = [
-            var for var in self.torrents if var.status == "downloading"
+            torrent for torrent in self.torrents if torrent.status == "downloading"
         ]
         freshly_started_torrents = set(current_started_torrents).difference(
             self.started_torrents
         )
         self.started_torrents = current_started_torrents
 
-        for var in freshly_started_torrents:
-            self.hass.bus.fire(EVENT_STARTED_TORRENT, {"name": var.name, "id": var.id})
+        for torrent in freshly_started_torrents:
+            self.hass.bus.fire(
+                EVENT_STARTED_TORRENT, {"name": torrent.name, "id": torrent.id}
+            )
 
     def check_removed_torrent(self):
         """Get removed torrent functionality."""
         freshly_removed_torrents = set(self.all_torrents).difference(self.torrents)
         self.all_torrents = self.torrents
-        for var in freshly_removed_torrents:
-            self.hass.bus.fire(EVENT_REMOVED_TORRENT, {"name": var.name, "id": var.id})
+        for torrent in freshly_removed_torrents:
+            self.hass.bus.fire(
+                EVENT_REMOVED_TORRENT, {"name": torrent.name, "id": torrent.id}
+            )
 
     def start_torrents(self):
         """Start all torrents."""
