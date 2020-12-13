@@ -5,7 +5,6 @@ from datetime import timedelta
 from functools import partial
 import logging
 from typing import Dict
-import warnings
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -478,11 +477,6 @@ class Timer:
         will not change the timeout of a running timer.
 
         """
-        if self._timer_active():
-            warnings.warn(
-                """A timer was still running with the old delay.
-                 delay won't be changed until next reset()"""
-            )
         self.delay = delay
 
     def set_callback(self, timer_callback):
@@ -492,11 +486,6 @@ class Timer:
 
         """
         if callable(timer_callback):
-            if self._timer_active():
-                warnings.warn(
-                    """A timer was still running with the old callback.
-                     callback won't be changed until next reset()"""
-                )
             self.timer_callback = timer_callback
         else:
             raise Exception("callback for Timer is not callable")
@@ -514,10 +503,6 @@ class Timer:
         """Stop the running timer by canceling the task."""
         if not self.timerhandle:
             raise Exception("Timer was stopped before being started")
-        if self.timerhandle.cancelled():
-            warnings.warn("Timer was stopped, before being stopped again")
-        elif self._timer_done():
-            warnings.warn("Timer was finished, before being stopped")
         self.timerhandle.cancel()
 
     def reset(self):
@@ -526,9 +511,7 @@ class Timer:
         This is done by canceling the previous task and creating a new one.
 
         """
-        if not self.timerhandle:
-            warnings.warn("Timer was not started while being reset")
-        elif not self._timer_done():
+        if not self._timer_done():
             self.stop()
         self.timerhandle = None
         self.start()
