@@ -318,6 +318,6 @@ class ThermostatEntity(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
-            raise ValueError(f"Unsupported fan__mode '{fan_mode}'")
+            raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
         trait = self._device.traits[FanTrait.NAME]
         await trait.set_timer(FAN_INV_MODE_MAP[fan_mode])
