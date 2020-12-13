@@ -240,18 +240,15 @@ class AmazonPollyProvider(Provider):
             return None, None
 
         _LOGGER.debug("Requesting TTS file for text: %s", message)
-        try:
-            resp = self.client.synthesize_speech(
-                Engine=self.config[CONF_ENGINE],
-                OutputFormat=self.config[CONF_OUTPUT_FORMAT],
-                SampleRate=self.config[CONF_SAMPLE_RATE],
-                Text=message,
-                TextType=self.config[CONF_TEXT_TYPE],
-                VoiceId=voice_id,
-            )
-        except botocore.exceptions.ClientError as exc:
-            _LOGGER.exception("boto3 AWS client failed with exception %s", exc)
-            return None, None
+        resp = self.client.synthesize_speech(
+            Engine=self.config[CONF_ENGINE],
+            OutputFormat=self.config[CONF_OUTPUT_FORMAT],
+            SampleRate=self.config[CONF_SAMPLE_RATE],
+            Text=message,
+            TextType=self.config[CONF_TEXT_TYPE],
+            VoiceId=voice_id,
+        )
+
         _LOGGER.debug("Reply received for TTS: %s", message)
         return (
             CONTENT_TYPE_EXTENSIONS[resp.get("ContentType")],
