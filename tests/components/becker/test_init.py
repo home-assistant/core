@@ -18,6 +18,31 @@ async def test_setup_with_no_config(hass):
     assert hass.data[becker.DOMAIN] == {}
 
 
+async def test_set_default_path(hass):
+    """Test to use default device path."""
+
+    MockConfigEntry(domain="becker", data={becker.CONF_DEVICE: None}).add_to_hass(hass)
+
+    with patch.object(becker, "async_setup_entry", return_value=mock_coro(True)):
+        assert (
+            await async_setup_component(
+                hass,
+                becker.DOMAIN,
+                {
+                    becker.DOMAIN: {
+                        becker.CONF_COVERS: [
+                            {becker.CONF_CHANNEL: "1", becker.CONF_UNIT: "1"},
+                        ],
+                        becker.CONF_DEVICE: "test",
+                    }
+                },
+            )
+            is True
+        )
+
+    assert hass.data[becker.DOMAIN][becker.CONF_DEVICE] == "test"
+
+
 async def test_setup_defined_cover(hass):
     """Test we don't initiate a config entry if config bridge is known."""
 
