@@ -214,6 +214,7 @@ class JellyfinSource(MediaSource):
 
     async def _build_artists(self, library_id: str):
         artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
+        artists = sorted(artists, key=lambda k: k["Name"])
         return [
             await self._build_artist(library_id, artist, False) for artist in artists
         ]
@@ -244,6 +245,7 @@ class JellyfinSource(MediaSource):
 
     async def _build_albums(self, library_id: str, artist_id: str):
         albums = await self._get_children(artist_id, ITEM_TYPE_ALBUM)
+        albums = sorted(albums, key=lambda k: k["Name"])
         return [await self._build_album(library_id, album, False) for album in albums]
 
     async def _build_album(self, library_id: str, album: dict, include_children: bool):
@@ -270,6 +272,7 @@ class JellyfinSource(MediaSource):
 
     async def _build_tracks(self, library_id: str, artist_id: str):
         tracks = await self._get_children(artist_id, ITEM_TYPE_AUDIO)
+        tracks = sorted(tracks, key=lambda k: k["IndexNumber"])
         return [self._build_track(library_id, track) for track in tracks]
 
     def _build_track(self, library_id: str, track: dict):
