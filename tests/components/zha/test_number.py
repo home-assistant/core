@@ -31,7 +31,10 @@ def zigpy_analog_output_device(zigpy_device_mock):
             "out_clusters": [],
         }
     }
-    return zigpy_device_mock(endpoints)
+    return zigpy_device_mock(
+        endpoints,
+        node_descriptor=b"\x01@\x8c7\x10\x7fd\x00\x00*d\x00\x00",
+    )
 
 
 @patch(
