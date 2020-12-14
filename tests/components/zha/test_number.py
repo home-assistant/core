@@ -114,27 +114,3 @@ async def test_number(m1, hass, zha_device_joined_restored, zigpy_analog_output_
     # test rejoin
     await async_test_rejoin(hass, zigpy_analog_output_device, [cluster], (1,))
     assert hass.states.get(entity_id).state == "30.0"
-
-
-async def test_restore_state(hass, zha_device_restored, zigpy_analog_output_device):
-    """Ensure states are restored on startup."""
-
-    mock_restore_cache(
-        hass,
-        (
-            State(
-                "number.fakemanufacturer_fakemodel_e769900a_analog_output",
-                "42.0",
-                {},
-            ),
-        ),
-    )
-
-    hass.state = CoreState.starting
-
-    zha_device = await zha_device_restored(zigpy_analog_output_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
-    assert entity_id is not None
-
-    # test that the number was created and that it is available
-    assert hass.states.get(entity_id).state == "42.0"
