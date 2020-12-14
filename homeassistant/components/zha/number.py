@@ -315,9 +315,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         engineering_units = self._analog_output_channel.engineering_units
-        if engineering_units is not None:
-            return UNITS.get(engineering_units, super().unit_of_measurement)
-        return super().unit_of_measurement
+        return UNITS.get(engineering_units)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
