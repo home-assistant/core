@@ -36,10 +36,7 @@ def zigpy_analog_output_device(zigpy_device_mock):
     )
 
 
-@patch(
-    "homeassistant.components.zha.core.channels.general.AnalogOutput.async_initialize"
-)
-async def test_number(m1, hass, zha_device_joined_restored, zigpy_analog_output_device):
+async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_device):
     """Test zha number platform."""
 
     cluster = zigpy_analog_output_device.endpoints.get(1).analog_output
