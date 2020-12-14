@@ -88,6 +88,7 @@ async def test_bad_api_key(hass, caplog):
         "simplehound.core.cloud.detect", side_effect=hound.SimplehoundException
     ):
         await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+        await hass.async_block_till_done()
         assert "Sighthound error" in caplog.text
         assert not hass.states.get(VALID_ENTITY_ID)
 
@@ -95,12 +96,14 @@ async def test_bad_api_key(hass, caplog):
 async def test_setup_platform(hass, mock_detections):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
 
 async def test_process_image(hass, mock_image, mock_detections):
     """Process an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     person_events = []
@@ -128,6 +131,7 @@ async def test_catch_bad_image(
     valid_config_save_file = deepcopy(VALID_CONFIG)
     valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
@@ -141,6 +145,7 @@ async def test_save_image(hass, mock_image, mock_detections):
     valid_config_save_file = deepcopy(VALID_CONFIG)
     valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     with mock.patch(
@@ -166,6 +171,7 @@ async def test_save_timestamped_image(hass, mock_image, mock_detections, mock_no
     valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
     valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_TIMESTAMPTED_FILE: True})
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_ts_file)
+    await hass.async_block_till_done()
     assert hass.states.get(VALID_ENTITY_ID)
 
     with mock.patch(

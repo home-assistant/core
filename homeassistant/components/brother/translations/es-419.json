@@ -5,7 +5,6 @@
             "unsupported_model": "Este modelo de impresora no es compatible."
         },
         "error": {
-            "connection_error": "Error de conexi\u00f3n.",
             "snmp_error": "El servidor SNMP est\u00e1 apagado o la impresora no es compatible.",
             "wrong_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos."
         },
@@ -16,8 +15,7 @@
                     "host": "Nombre de host de la impresora o direcci\u00f3n IP",
                     "type": "Tipo de impresora"
                 },
-                "description": "Configure la integraci\u00f3n de la impresora Brother. Si tiene problemas con la configuraci\u00f3n, vaya a: https://www.home-assistant.io/integrations/brother",
-                "title": "Impresora Brother"
+                "description": "Configure la integraci\u00f3n de la impresora Brother. Si tiene problemas con la configuraci\u00f3n, vaya a: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

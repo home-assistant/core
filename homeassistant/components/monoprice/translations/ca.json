@@ -4,13 +4,13 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },
         "step": {
             "user": {
                 "data": {
-                    "port": "Port s\u00e8rie",
+                    "port": "Port",
                     "source_1": "Nom de la font #1",
                     "source_2": "Nom de la font #2",
                     "source_3": "Nom de la font #3",

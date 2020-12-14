@@ -23,3 +23,4 @@ def load_mock_device(device):
     device.state.oscillation_angle_low = "000"
     device.state.oscillation_angle_high = "000"
     device.state.filter_life = "000"
+    device.state.heat_target = 200

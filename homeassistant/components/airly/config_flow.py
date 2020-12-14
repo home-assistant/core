@@ -39,7 +39,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             api_key_valid = await self._test_api_key(websession, user_input["api_key"])
             if not api_key_valid:
-                self._errors["base"] = "auth"
+                self._errors["base"] = "invalid_api_key"
             else:
                 location_valid = await self._test_location(
                     websession,

@@ -127,9 +127,7 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
-        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
+        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -144,7 +142,7 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
         ATTR_CHANGE: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
         ATTR_SPREAD: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
-        ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Range(min=0)),
+        ATTR_TRANSITION: cv.positive_float,
     }
 )
 
@@ -163,7 +161,7 @@ def aiolifx_effects():
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LIFX light platform. Obsolete."""
-    _LOGGER.warning("LIFX no longer works with light platform configuration.")
+    _LOGGER.warning("LIFX no longer works with light platform configuration")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -201,11 +199,11 @@ def lifx_features(bulb):
     ) or aiolifx().products.features_map.get(1)
 
 
-def find_hsbk(**kwargs):
+def find_hsbk(hass, **kwargs):
     """Find the desired color from a number of possible inputs."""
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(kwargs)
+    preprocess_turn_on_alternatives(hass, kwargs)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
@@ -332,11 +330,11 @@ class LIFXManager:
                 period=kwargs.get(ATTR_PERIOD),
                 cycles=kwargs.get(ATTR_CYCLES),
                 mode=kwargs.get(ATTR_MODE),
-                hsbk=find_hsbk(**kwargs),
+                hsbk=find_hsbk(self.hass, **kwargs),
             )
             await self.effects_conductor.start(effect, bulbs)
         elif service == SERVICE_EFFECT_COLORLOOP:
-            preprocess_turn_on_alternatives(kwargs)
+            preprocess_turn_on_alternatives(self.hass, kwargs)
 
             brightness = None
             if ATTR_BRIGHTNESS in kwargs:
@@ -371,6 +369,12 @@ class LIFXManager:
 
             # Read initial state
             ack = AwaitAioLIFX().wait
+
+            # Used to populate sw_version
+            # no need to wait as we do not
+            # need it until later
+            bulb.get_hostfirmware()
+
             color_resp = await ack(bulb.get_color)
             if color_resp:
                 version_resp = await ack(bulb.get_version)
@@ -459,7 +463,13 @@ class LIFXLight(LightEntity):
             "manufacturer": "LIFX",
         }
 
-        model = aiolifx().products.product_map.get(self.bulb.product)
+        version = self.bulb.host_firmware_version
+        if version is not None:
+            info["sw_version"] = version
+
+        product_map = aiolifx().products.product_map
+
+        model = product_map.get(self.bulb.product) or self.bulb.product
         if model is not None:
             info["model"] = model
 
@@ -590,7 +600,7 @@ class LIFXLight(LightEntity):
             power_on = kwargs.get(ATTR_POWER, False)
             power_off = not kwargs.get(ATTR_POWER, True)
 
-            hsbk = find_hsbk(**kwargs)
+            hsbk = find_hsbk(self.hass, **kwargs)
 
             # Send messages, waiting for ACK each time
             ack = AwaitAioLIFX().wait
@@ -629,7 +639,9 @@ class LIFXLight(LightEntity):
         """Start an effect with default parameters."""
         service = kwargs[ATTR_EFFECT]
         data = {ATTR_ENTITY_ID: self.entity_id}
-        await self.hass.services.async_call(LIFX_DOMAIN, service, data)
+        await self.hass.services.async_call(
+            LIFX_DOMAIN, service, data, context=self._context
+        )
 
     async def async_update(self):
         """Update bulb status."""

@@ -1,21 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "already_configured": "See WLED seade on juba h\u00e4\u00e4lestatud.",
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "error": {
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
+        "flow_title": "WLED: {name}",
         "step": {
             "user": {
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Seadista WLED-i sidumine Home Assistantiga."
             },
             "zeroconf_confirm": {
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "description": "Kas soovid lisada WLED {name} Home Assistanti?",
+                "title": "Leitud WLED seade"
             }
         }
     }

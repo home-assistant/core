@@ -4,10 +4,10 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
+from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +22,7 @@ async def async_setup(hass):
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
+    hass.http.register_view(ConfigManagerEntryResourceReloadView)
     hass.http.register_view(ConfigManagerFlowIndexView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
@@ -90,6 +91,29 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
             return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
 
         return self.json(result)
+
+
+class ConfigManagerEntryResourceReloadView(HomeAssistantView):
+    """View to reload a config entry."""
+
+    url = "/api/config/config_entries/entry/{entry_id}/reload"
+    name = "api:config:config_entries:entry:resource:reload"
+
+    async def post(self, request, entry_id):
+        """Reload a config entry."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(config_entry_id=entry_id, permission="remove")
+
+        hass = request.app["hass"]
+
+        try:
+            result = await hass.config_entries.async_reload(entry_id)
+        except config_entries.OperationNotAllowed:
+            return self.json_message("Entry cannot be reloaded", HTTP_FORBIDDEN)
+        except config_entries.UnknownEntry:
+            return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
+
+        return self.json({"require_restart": not result})
 
 
 class ConfigManagerFlowIndexView(FlowManagerIndexView):
@@ -180,7 +204,7 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
         handler in request is entry_id.
         """
         if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
@@ -195,7 +219,7 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     async def get(self, request, flow_id):
         """Get the current state of a data_entry_flow."""
         if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
 
         return await super().get(request, flow_id)
 
@@ -203,7 +227,7 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     async def post(self, request, flow_id):
         """Handle a POST request."""
         if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
@@ -274,7 +298,7 @@ async def system_options_update(hass, connection, msg):
     {"type": "config_entries/update", "entry_id": str, vol.Optional("title"): str}
 )
 async def config_entry_update(hass, connection, msg):
-    """Update config entry system options."""
+    """Update config entry."""
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
@@ -345,4 +369,5 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "state": entry.state,
         "connection_class": entry.connection_class,
         "supports_options": supports_options,
+        "supports_unload": entry.supports_unload,
     }

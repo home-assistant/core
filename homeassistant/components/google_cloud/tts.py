@@ -25,6 +25,7 @@ SUPPORTED_LANGUAGES = [
     "ar-XA",
     "bn-IN",
     "cmn-CN",
+    "cmn-TW",
     "cs-CZ",
     "da-DK",
     "de-DE",

@@ -4,8 +4,8 @@
             "already_configured": "Ce pont est d\u00e9j\u00e0 configur\u00e9",
             "already_in_progress": "Le flux de configuration pour le pont est d\u00e9j\u00e0 en cours.",
             "no_bridges": "Aucun pont deCONZ n'a \u00e9t\u00e9 d\u00e9couvert",
+            "no_hardware_available": "Aucun mat\u00e9riel radio connect\u00e9 \u00e0 deCONZ",
             "not_deconz_bridge": "Pas un pont deCONZ",
-            "one_instance_only": "Le composant prend uniquement en charge une instance deCONZ",
             "updated_instance": "Instance deCONZ mise \u00e0 jour avec la nouvelle adresse d'h\u00f4te"
         },
         "error": {
@@ -17,23 +17,19 @@
                 "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
                 "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
             },
-            "init": {
-                "title": "Initialiser la passerelle deCONZ"
-            },
             "link": {
                 "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
                 "title": "Lien vers deCONZ"
             },
-            "manual_confirm": {
+            "manual_input": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port"
                 }
             },
-            "manual_input": {
+            "user": {
                 "data": {
-                    "host": "H\u00f4te",
-                    "port": "Port"
+                    "host": "S\u00e9lectionnez la passerelle deCONZ d\u00e9couverte"
                 }
             }
         }
@@ -41,6 +37,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Les deux boutons",
+            "bottom_buttons": "Boutons du bas",
             "button_1": "Premier bouton",
             "button_2": "Deuxi\u00e8me bouton",
             "button_3": "Troisi\u00e8me bouton",
@@ -57,6 +54,7 @@
             "side_4": "Face 4",
             "side_5": "Face 5",
             "side_6": "Face 6",
+            "top_buttons": "Boutons du haut",
             "turn_off": "\u00c9teint",
             "turn_on": "Allumer"
         },
@@ -68,6 +66,7 @@
             "remote_button_quadruple_press": "Quadruple clic sur le bouton \" {subtype} \"",
             "remote_button_quintuple_press": "Quintuple clic sur le bouton \" {subtype} \"",
             "remote_button_rotated": "Bouton \"{subtype}\" tourn\u00e9",
+            "remote_button_rotated_fast": "Bouton pivot\u00e9 rapidement \" {subtype} \"",
             "remote_button_rotation_stopped": "La rotation du bouton \" {subtype} \" s'est arr\u00eat\u00e9e",
             "remote_button_short_press": "Bouton \"{subtype}\" appuy\u00e9",
             "remote_button_short_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9",
@@ -95,7 +94,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
-                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
+                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ",
+                    "allow_new_devices": "Autoriser l'ajout automatique de nouveaux appareils"
                 },
                 "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ",
                 "title": "Options deCONZ"

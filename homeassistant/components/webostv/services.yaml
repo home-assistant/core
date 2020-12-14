@@ -9,9 +9,9 @@ button:
     button:
       description: >-
         Name of the button to press.  Known possible values are
-        LEFT, RIGHT, DOWN, UP, HOME, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT,
+        LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT,
         MUTE, RED, GREEN, BLUE, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN,
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+        PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
       example: "LEFT"
 
 command:
@@ -24,7 +24,12 @@ command:
       description: >-
         Endpoint of the command. Known valid endpoints are listed in
         https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
-      example: "media.controls/rewind"
+      example: "system.launcher/open"
+    payload:
+      description: >-
+        An optional payload to provide to the endpoint in the format of key value pair(s).
+      example: >-
+        target: https://www.google.com
 
 select_sound_output:
   description: "Send the TV the command to change sound output."

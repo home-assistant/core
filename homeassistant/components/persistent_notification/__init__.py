@@ -119,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if title is not None:
             try:
                 title.hass = hass
-                title = title.async_render()
+                title = title.async_render(parse_result=False)
             except TemplateError as ex:
                 _LOGGER.error("Error rendering title %s: %s", title, ex)
                 title = title.template
@@ -128,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
         try:
             message.hass = hass
-            message = message.async_render()
+            message = message.async_render(parse_result=False)
         except TemplateError as ex:
             _LOGGER.error("Error rendering message %s: %s", message, ex)
             message = message.template
@@ -172,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if entity_id not in persistent_notifications:
             _LOGGER.error(
                 "Marking persistent_notification read failed: "
-                "Notification ID %s not found.",
+                "Notification ID %s not found",
                 notification_id,
             )
             return

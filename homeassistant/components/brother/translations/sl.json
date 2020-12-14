@@ -5,7 +5,6 @@
             "unsupported_model": "Ta model tiskalnika ni podprt."
         },
         "error": {
-            "connection_error": "Napaka v povezavi.",
             "snmp_error": "Stre\u017enik SNMP je izklopljen ali tiskalnik ni podprt.",
             "wrong_host": "Neveljavno ime gostitelja ali IP naslov."
         },
@@ -16,8 +15,7 @@
                     "host": "Gostiteljsko ime tiskalnika ali naslov IP",
                     "type": "Vrsta tiskalnika"
                 },
-                "description": "Nastavite integracijo tiskalnika Brother. \u010ce imate te\u017eave s konfiguracijo, pojdite na: https://www.home-assistant.io/integrations/brother",
-                "title": "Brother Tiskalnik"
+                "description": "Nastavite integracijo tiskalnika Brother. \u010ce imate te\u017eave s konfiguracijo, pojdite na: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

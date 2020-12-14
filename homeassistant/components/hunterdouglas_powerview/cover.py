@@ -28,6 +28,7 @@ from .const import (
     DEVICE_INFO,
     DEVICE_MODEL,
     DOMAIN,
+    LEGACY_DEVICE_MODEL,
     PV_API,
     PV_ROOM_DATA,
     PV_SHADE_DATA,
@@ -43,6 +44,8 @@ _LOGGER = logging.getLogger(__name__)
 # Estimated time it takes to complete a transition
 # from one state to another
 TRANSITION_COMPLETE_DURATION = 30
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -68,6 +71,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except asyncio.TimeoutError:
             # Forced refresh is not required for setup
             pass
+        if ATTR_POSITION_DATA not in shade.raw_data:
+            _LOGGER.info(
+                "The %s shade was skipped because it is missing position data",
+                name_before_refresh,
+            )
+            continue
         entities.append(
             PowerViewShade(
                 shade, name_before_refresh, room_data, coordinator, device_info
@@ -101,7 +110,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._scheduled_transition_update = None
         self._room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         self._current_cover_position = MIN_POSITION
-        self._coordinator = coordinator
 
     @property
     def device_state_attributes(self):
@@ -112,7 +120,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        if self._device_info[DEVICE_MODEL] != "1":
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             supported_features |= SUPPORT_STOP
         return supported_features
 
@@ -207,9 +215,9 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def _async_update_current_cover_position(self):
         """Update the current cover position from the data."""
         _LOGGER.debug("Raw data update: %s", self._shade.raw_data)
-        position_data = self._shade.raw_data[ATTR_POSITION_DATA]
+        position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
         if ATTR_POSITION1 in position_data:
-            self._current_cover_position = position_data[ATTR_POSITION1]
+            self._current_cover_position = int(position_data[ATTR_POSITION1])
         self._is_opening = False
         self._is_closing = False
 
@@ -263,7 +271,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         """When entity is added to hass."""
         self._async_update_current_cover_position()
         self.async_on_remove(
-            self._coordinator.async_add_listener(self._async_update_shade_from_group)
+            self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
     @callback
@@ -273,5 +281,5 @@ class PowerViewShade(ShadeEntity, CoverEntity):
             # If a transition in in progress
             # the data will be wrong
             return
-        self._async_process_new_shade_data(self._coordinator.data[self._shade.id])
+        self._async_process_new_shade_data(self.coordinator.data[self._shade.id])
         self.async_write_ha_state()

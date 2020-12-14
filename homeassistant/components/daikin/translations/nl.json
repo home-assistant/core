@@ -2,13 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "device_fail": "Onverwachte fout bij het aanmaken van een apparaat.",
-            "device_timeout": "Time-out voor verbinding met het apparaat."
+            "cannot_connect": "Kon niet verbinden"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "api_key": "API-sleutel",
+                    "host": "Host",
+                    "password": "Wachtwoord"
                 },
                 "description": "Voer het IP-adres van uw Daikin AC in.",
                 "title": "Daikin AC instellen"

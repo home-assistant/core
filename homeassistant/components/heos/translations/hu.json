@@ -1,10 +1,12 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Kiszolg\u00e1l\u00f3",
-                    "host": "Kiszolg\u00e1l\u00f3"
+                    "host": "Hoszt"
                 }
             }
         }

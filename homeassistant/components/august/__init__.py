@@ -3,13 +3,18 @@ import asyncio
 import itertools
 import logging
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from august.authenticator import ValidationResult
 from august.exceptions import AugustApiAIOHTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +34,7 @@ from .const import (
     MIN_TIME_BETWEEN_DETAIL_UPDATES,
     VERIFICATION_CODE_KEY,
 )
-from .exceptions import InvalidAuth, RequireValidation
+from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 
@@ -60,7 +65,7 @@ async def async_request_validation(hass, config_entry, august_gateway):
     # In the future this should start a new config flow
     # instead of using the legacy configurator
     #
-    _LOGGER.error("Access token is no longer valid.")
+    _LOGGER.error("Access token is no longer valid")
     configurator = hass.components.configurator
     entry_id = config_entry.entry_id
 
@@ -113,10 +118,7 @@ async def async_setup_august(hass, config_entry, august_gateway):
         await august_gateway.async_authenticate()
     except RequireValidation:
         await async_request_validation(hass, config_entry, august_gateway)
-        return False
-    except InvalidAuth:
-        _LOGGER.error("Password is no longer valid. Please set up August again")
-        return False
+        raise
 
     # We still use the configurator to get a new 2fa code
     # when needed since config_flow doesn't have a way
@@ -171,8 +173,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await august_gateway.async_setup(entry.data)
         return await async_setup_august(hass, entry, august_gateway)
-    except asyncio.TimeoutError:
-        raise ConfigEntryNotReady
+    except ClientResponseError as err:
+        if err.status == HTTP_UNAUTHORIZED:
+            _async_start_reauth(hass, entry)
+            return False
+
+        raise ConfigEntryNotReady from err
+    except InvalidAuth:
+        _async_start_reauth(hass, entry)
+        return False
+    except RequireValidation:
+        return False
+    except (CannotConnect, asyncio.TimeoutError) as err:
+        raise ConfigEntryNotReady from err
+
+
+def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth"},
+            data=entry.data,
+        )
+    )
+    _LOGGER.error("Password is no longer valid. Please reauthenticate")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -339,7 +363,7 @@ class AugustData(AugustSubscriberMixin):
             device_name = self._get_device_name(device_id)
             if device_name is None:
                 device_name = f"DeviceID: {device_id}"
-            raise HomeAssistantError(f"{device_name}: {err}")
+            raise HomeAssistantError(f"{device_name}: {err}") from err
 
         return ret
 
@@ -351,7 +375,7 @@ class AugustData(AugustSubscriberMixin):
             doorbell_detail = self._device_detail_by_id.get(device_id)
             if doorbell_detail is None:
                 _LOGGER.info(
-                    "The doorbell %s could not be setup because the system could not fetch details about the doorbell.",
+                    "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
                     doorbell.device_name,
                 )
             else:
@@ -373,17 +397,17 @@ class AugustData(AugustSubscriberMixin):
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because the system could not fetch details about the lock.",
+                    "The lock %s could not be setup because the system could not fetch details about the lock",
                     lock.device_name,
                 )
             elif lock_detail.bridge is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because it does not have a bridge (Connect).",
+                    "The lock %s could not be setup because it does not have a bridge (Connect)",
                     lock.device_name,
                 )
             elif not lock_detail.bridge.operative:
                 _LOGGER.info(
-                    "The lock %s could not be setup because the bridge (Connect) is not operative.",
+                    "The lock %s could not be setup because the bridge (Connect) is not operative",
                     lock.device_name,
                 )
             else:

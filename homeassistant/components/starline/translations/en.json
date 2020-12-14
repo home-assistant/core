@@ -11,7 +11,7 @@
                     "app_id": "App ID",
                     "app_secret": "Secret"
                 },
-                "description": "Application ID and secret code from <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine developer account</a>",
+                "description": "Application ID and secret code from [StarLine developer account](https://my.starline.ru/developer)",
                 "title": "Application credentials"
             },
             "auth_captcha": {

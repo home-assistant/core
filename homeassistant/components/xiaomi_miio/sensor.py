@@ -1,14 +1,39 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+from dataclasses import dataclass
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
+from miio.gateway import (
+    GATEWAY_MODEL_AC_V1,
+    GATEWAY_MODEL_AC_V2,
+    GATEWAY_MODEL_AC_V3,
+    GATEWAY_MODEL_EU,
+    DeviceType,
+    GatewayException,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
+from .const import DOMAIN
+from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +61,65 @@ ATTR_MODEL = "model"
 SUCCESS = ["ok"]
 
 
+@dataclass
+class SensorType:
+    """Class that holds device specific info for a xiaomi aqara sensor."""
+
+    unit: str = None
+    icon: str = None
+    device_class: str = None
+
+
+GATEWAY_SENSOR_TYPES = {
+    "temperature": SensorType(
+        unit=TEMP_CELSIUS, icon=None, device_class=DEVICE_CLASS_TEMPERATURE
+    ),
+    "humidity": SensorType(
+        unit=PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
+    ),
+    "pressure": SensorType(
+        unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
+    ),
+}
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi sensor from a config entry."""
+    entities = []
+
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        gateway = hass.data[DOMAIN][config_entry.entry_id]
+        # Gateway illuminance sensor
+        if gateway.model not in [
+            GATEWAY_MODEL_AC_V1,
+            GATEWAY_MODEL_AC_V2,
+            GATEWAY_MODEL_AC_V3,
+            GATEWAY_MODEL_EU,
+        ]:
+            entities.append(
+                XiaomiGatewayIlluminanceSensor(
+                    gateway, config_entry.title, config_entry.unique_id
+                )
+            )
+        # Gateway sub devices
+        sub_devices = gateway.devices
+        for sub_device in sub_devices.values():
+            sensor_variables = None
+            if sub_device.type == DeviceType.SensorHT:
+                sensor_variables = ["temperature", "humidity"]
+            if sub_device.type == DeviceType.AqaraHT:
+                sensor_variables = ["temperature", "humidity", "pressure"]
+            if sensor_variables is not None:
+                entities.extend(
+                    [
+                        XiaomiGatewaySensor(sub_device, config_entry, variable)
+                        for variable in sensor_variables
+                    ]
+                )
+
+    async_add_entities(entities, update_before_add=True)
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor from config."""
     if DATA_KEY not in hass.data:
@@ -59,8 +143,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_info.hardware_version,
         )
         device = XiaomiAirQualityMonitor(name, air_quality_monitor, model, unique_id)
-    except DeviceException:
-        raise PlatformNotReady
+    except DeviceException as ex:
+        raise PlatformNotReady from ex
 
     hass.data[DATA_KEY][host] = device
     async_add_entities([device], update_before_add=True)
@@ -91,11 +175,6 @@ class XiaomiAirQualityMonitor(Entity):
             ATTR_SENSOR_STATE: None,
             ATTR_MODEL: self._model,
         }
-
-    @property
-    def should_poll(self):
-        """Poll the miio device."""
-        return True
 
     @property
     def unique_id(self):
@@ -154,5 +233,101 @@ class XiaomiAirQualityMonitor(Entity):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiGatewaySensor(XiaomiGatewayDevice):
+    """Representation of a XiaomiGatewaySensor."""
+
+    def __init__(self, sub_device, entry, data_key):
+        """Initialize the XiaomiSensor."""
+        super().__init__(sub_device, entry)
+        self._data_key = data_key
+        self._unique_id = f"{sub_device.sid}-{data_key}"
+        self._name = f"{data_key} ({sub_device.sid})".capitalize()
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return GATEWAY_SENSOR_TYPES[self._data_key].icon
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return GATEWAY_SENSOR_TYPES[self._data_key].unit
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return GATEWAY_SENSOR_TYPES[self._data_key].device_class
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._sub_device.status[self._data_key]
+
+
+class XiaomiGatewayIlluminanceSensor(Entity):
+    """Representation of the gateway device's illuminance sensor."""
+
+    def __init__(self, gateway_device, gateway_name, gateway_device_id):
+        """Initialize the entity."""
+        self._gateway = gateway_device
+        self._name = f"{gateway_name} Illuminance"
+        self._gateway_device_id = gateway_device_id
+        self._unique_id = f"{gateway_device_id}-illuminance"
+        self._available = False
+        self._state = None
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info of the gateway."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway_device_id)},
+        }
+
+    @property
+    def name(self):
+        """Return the name of this entity, if any."""
+        return self._name
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return self._available
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return LIGHT_LUX
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_ILLUMINANCE
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        try:
+            self._state = await self.hass.async_add_executor_job(
+                self._gateway.get_illumination
+            )
+            self._available = True
+        except GatewayException as ex:
+            if self._available:
+                self._available = False
+                _LOGGER.error(
+                    "Got exception while fetching the gateway illuminance state: %s", ex
+                )

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Porta del server gi\u00e0 in uso.",
+            "start_server_failed": "Avvio del server non riuscito."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Porta"
+                },
+                "title": "Configurare il server TCP per i dispositivi WIFFI"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Timeout (minuti)"
+                }
+            }
+        }
+    }
+}

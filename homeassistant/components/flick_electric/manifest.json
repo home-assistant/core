@@ -1,0 +1,12 @@
+{
+  "domain": "flick_electric",
+  "name": "Flick Electric",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flick_electric/",
+  "requirements": [
+    "PyFlick==0.0.2"
+  ],
+  "codeowners": [
+    "@ZephireNZ"
+  ]
+}

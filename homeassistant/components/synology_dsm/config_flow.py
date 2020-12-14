@@ -21,11 +21,24 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_VOLUMES, DEFAULT_PORT, DEFAULT_PORT_SSL, DEFAULT_SSL
+from .const import (
+    CONF_VOLUMES,
+    DEFAULT_PORT,
+    DEFAULT_PORT_SSL,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL,
+)
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +64,13 @@ def _ordered_shared_schema(schema_input):
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
         vol.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
-        vol.Optional(CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_SSL)): bool,
+        vol.Optional(
+            CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_USE_SSL)
+        ): bool,
+        vol.Optional(
+            CONF_VERIFY_SSL,
+            default=schema_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        ): bool,
     }
 
 
@@ -60,6 +79,12 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return SynologyDSMOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the synology_dsm config flow."""
@@ -100,7 +125,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         port = user_input.get(CONF_PORT)
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        use_ssl = user_input.get(CONF_SSL, DEFAULT_SSL)
+        use_ssl = user_input.get(CONF_SSL, DEFAULT_USE_SSL)
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         otp_code = user_input.get(CONF_OTP_CODE)
 
         if not port:
@@ -109,7 +135,9 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(host, port, username, password, use_ssl)
+        api = SynologyDSM(
+            host, port, username, password, use_ssl, verify_ssl, timeout=30
+        )
 
         try:
             serial = await self.hass.async_add_executor_job(
@@ -123,10 +151,10 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_2sa(user_input, errors)
         except SynologyDSMLoginInvalidException as ex:
             _LOGGER.error(ex)
-            errors[CONF_USERNAME] = "login"
+            errors[CONF_USERNAME] = "invalid_auth"
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
-            errors[CONF_HOST] = "connection"
+            errors[CONF_HOST] = "cannot_connect"
         except SynologyDSMException as ex:
             _LOGGER.error(ex)
             errors["base"] = "unknown"
@@ -136,14 +164,17 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             return await self._show_setup_form(user_input, errors)
 
-        # Check if already configured
+        # unique_id should be serial for services purpose
         await self.async_set_unique_id(serial, raise_on_progress=False)
+
+        # Check if already configured
         self._abort_if_unique_id_configured()
 
         config_data = {
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_SSL: use_ssl,
+            CONF_VERIFY_SSL: verify_ssl,
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_MAC: api.network.macs,
@@ -164,10 +195,14 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
         )
 
+        mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
-        if self._mac_already_configured(discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()):
+        if self._mac_already_configured(mac):
             return self.async_abort(reason="already_configured")
+
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured()
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
@@ -212,18 +247,49 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return mac in existing_macs
 
 
+class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_TIMEOUT,
+                    default=self.config_entry.options.get(
+                        CONF_TIMEOUT, DEFAULT_TIMEOUT
+                    ),
+                ): cv.positive_int,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
+
+
 def _login_and_fetch_syno_info(api, otp_code):
     """Login to the NAS and fetch basic data."""
     # These do i/o
     api.login(otp_code)
-    utilisation = api.utilisation
-    storage = api.storage
+    api.utilisation.update()
+    api.storage.update()
+    api.network.update()
 
     if (
         not api.information.serial
-        or utilisation.cpu_user_load is None
-        or not storage.disks_ids
-        or not storage.volumes_ids
+        or api.utilisation.cpu_user_load is None
+        or not api.storage.volumes_ids
         or not api.network.macs
     ):
         raise InvalidData

@@ -6,6 +6,12 @@ from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOISTURE,
+)
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_ACCESS_TOKEN,
@@ -40,16 +46,15 @@ DEVICE_MAP_INDEX = [
     "UNIT_OF_MEASURE_INDEX",
 ]
 DEVICE_MAP = {
-    "auto_watering": ["Automatic Watering", "mdi:autorenew", "", ""],
-    "is_watering": ["Watering", "", "moisture", ""],
-    "manual_watering": ["Manual Watering", "mdi:water-pump", "", ""],
-    "next_cycle": ["Next Cycle", "mdi:calendar-clock", "", ""],
-    "status": ["Status", "", "connectivity", ""],
-    "watering_time": ["Watering Time", "mdi:water-pump", "", TIME_MINUTES],
-    "rain_sensor": ["Rain Sensor", "", "moisture", ""],
+    "auto_watering": ["Automatic Watering", None, DEVICE_CLASS_SWITCH, None],
+    "is_watering": ["Watering", None, DEVICE_CLASS_MOISTURE, None],
+    "manual_watering": ["Manual Watering", None, DEVICE_CLASS_SWITCH, None],
+    "next_cycle": ["Next Cycle", None, DEVICE_CLASS_TIMESTAMP, None],
+    "status": ["Status", None, DEVICE_CLASS_CONNECTIVITY, None],
+    "watering_time": ["Watering Time", "mdi:water-pump", None, TIME_MINUTES],
 }
 
-BINARY_SENSORS = ["is_watering", "status", "rain_sensor"]
+BINARY_SENSORS = ["is_watering", "status"]
 
 SENSORS = ["next_cycle", "watering_time"]
 
@@ -149,3 +154,15 @@ class HydrawiseEntity(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.get("relay")}
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor type."""
+        return DEVICE_MAP[self._sensor_type][
+            DEVICE_MAP_INDEX.index("DEVICE_CLASS_INDEX")
+        ]
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]

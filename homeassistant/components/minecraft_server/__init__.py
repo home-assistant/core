@@ -197,6 +197,7 @@ class MinecraftServer:
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
                     self.players_list.append(player.name)
+                self.players_list.sort()
 
             # Inform user once about successful update if necessary.
             if self._last_status_request_failed:

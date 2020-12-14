@@ -16,6 +16,16 @@ notify:
       description: Extended information for notification. Optional depending on the platform.
       example: platform specific
 
+persistent_notification:
+  description: Sends a notification to the visible in the front-end.
+  fields:
+    message:
+      description: Message body of the notification.
+      example: The garage door has been open for 10 minutes.
+    title:
+      description: Optional title for your notification.
+      example: "Your Garage Door Friend"
+
 apns_register:
   description: Registers a device to receive push notifications.
   fields:

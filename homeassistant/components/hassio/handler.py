@@ -10,7 +10,6 @@ from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
-    DEFAULT_SERVER_HOST,
 )
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
 
@@ -37,7 +36,7 @@ def _api_bool(funct):
     return _wrapper
 
 
-def _api_data(funct):
+def api_data(funct):
     """Return data of an api."""
 
     async def _wrapper(*argv, **kwargs):
@@ -67,15 +66,47 @@ class HassIO:
         """
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
-    @_api_data
-    def get_homeassistant_info(self):
-        """Return data for Home Assistant.
+    @api_data
+    def get_info(self):
+        """Return generic Supervisor information.
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/info", method="get")
+        return self.send_command("/info", method="get")
 
-    @_api_data
+    @api_data
+    def get_host_info(self):
+        """Return data for Host.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/host/info", method="get")
+
+    @api_data
+    def get_os_info(self):
+        """Return data for the OS.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/os/info", method="get")
+
+    @api_data
+    def get_core_info(self):
+        """Return data for Home Asssistant Core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/info", method="get")
+
+    @api_data
+    def get_supervisor_info(self):
+        """Return data for the Supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/info", method="get")
+
+    @api_data
     def get_addon_info(self, addon):
         """Return data for a Add-on.
 
@@ -83,7 +114,7 @@ class HassIO:
         """
         return self.send_command(f"/addons/{addon}/info", method="get")
 
-    @_api_data
+    @api_data
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 
@@ -107,7 +138,7 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
-    @_api_data
+    @api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
@@ -115,7 +146,7 @@ class HassIO:
         """
         return self.send_command("/discovery", method="get")
 
-    @_api_data
+    @api_data
     def get_discovery_message(self, uuid):
         """Return a single discovery data message.
 
@@ -134,10 +165,7 @@ class HassIO:
             "refresh_token": refresh_token.token,
         }
 
-        if (
-            http_config.get(CONF_SERVER_HOST, DEFAULT_SERVER_HOST)
-            != DEFAULT_SERVER_HOST
-        ):
+        if http_config.get(CONF_SERVER_HOST) is not None:
             options["watchdog"] = False
             _LOGGER.warning(
                 "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
@@ -168,7 +196,7 @@ class HassIO:
                 )
 
                 if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
-                    _LOGGER.error("%s return code %d.", command, request.status)
+                    _LOGGER.error("%s return code %d", command, request.status)
                     raise HassioAPIError()
 
                 answer = await request.json()

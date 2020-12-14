@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Jm\u00e9no senzoru"
+                },
+                "title": "V\u00fdb\u011br tarifu"
+            }
+        }
+    }
+}

@@ -52,7 +52,9 @@ async def test_create_entry(hass):
 async def test_flow_entry_already_exists(hass):
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
-        domain="tibber", data={CONF_ACCESS_TOKEN: "valid"}, unique_id="tibber",
+        domain="tibber",
+        data={CONF_ACCESS_TOKEN: "valid"},
+        unique_id="tibber",
     )
     first_entry.add_to_hass(hass)
 

@@ -23,11 +23,12 @@
             },
             "user": {
                 "data": {
-                    "host": "H\u00f4te",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "password": "Mot de passe",
                     "port": "Port",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Se connecter au serveur NUT"
             }
         }
     },
@@ -35,8 +36,10 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressources"
-                }
+                    "resources": "Ressources",
+                    "scan_interval": "Intervalle de balayage (secondes)"
+                },
+                "description": "Choisissez les ressources des capteurs."
             }
         }
     }

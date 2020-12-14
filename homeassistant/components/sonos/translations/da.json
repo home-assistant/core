@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vil du ops\u00e6tte Sonos?",
-                "title": "Sonos"
+                "description": "Vil du ops\u00e6tte Sonos?"
             }
         }
     }

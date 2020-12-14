@@ -1,26 +1,32 @@
 """Support for UPnP/IGD Sensors."""
 from datetime import timedelta
-from typing import Mapping
+from typing import Any, Mapping
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    CONFIG_ENTRY_SCAN_INTERVAL,
+    CONFIG_ENTRY_UDN,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    DOMAIN_COORDINATORS,
+    DOMAIN_DEVICES,
     KIBIBYTE,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     TIMESTAMP,
-    UPDATE_INTERVAL,
 )
 from .device import Device
 
@@ -78,23 +84,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up the UPnP/IGD sensors."""
     data = config_entry.data
-    if "udn" in data:
-        udn = data["udn"]
+    if CONFIG_ENTRY_UDN in data:
+        udn = data[CONFIG_ENTRY_UDN]
     else:
         # any device will do
-        udn = list(hass.data[DOMAIN]["devices"].keys())[0]
+        udn = list(hass.data[DOMAIN][DOMAIN_DEVICES])[0]
 
-    device: Device = hass.data[DOMAIN]["devices"][udn]
+    device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 
+    update_interval_sec = config_entry.options.get(
+        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
+    update_interval = timedelta(seconds=update_interval_sec)
+    _LOGGER.debug("update_interval: %s", update_interval)
     _LOGGER.debug("Adding sensors")
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[Mapping[str, Any]](
         hass,
         _LOGGER,
         name=device.name,
         update_method=device.async_get_traffic_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL.seconds),
+        update_interval=update_interval,
     )
     await coordinator.async_refresh()
+    hass.data[DOMAIN][DOMAIN_COORDINATORS][udn] = coordinator
 
     sensors = [
         RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
@@ -109,24 +121,22 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class UpnpSensor(Entity):
+class UpnpSensor(CoordinatorEntity):
     """Base class for UPnP/IGD sensors."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
         sensor_type: Mapping[str, str],
+        update_multiplier: int = 2,
     ) -> None:
         """Initialize the base sensor."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._device = device
         self._sensor_type = sensor_type
-
-    @property
-    def should_poll(self) -> bool:
-        """Inform we should not be polled."""
-        return False
+        self._update_counter_max = update_multiplier
+        self._update_counter = 0
 
     @property
     def icon(self) -> str:
@@ -138,8 +148,8 @@ class UpnpSensor(Entity):
         """Return if entity is available."""
         device_value_key = self._sensor_type["device_value_key"]
         return (
-            self._coordinator.last_update_success
-            and device_value_key in self._coordinator.data
+            self.coordinator.last_update_success
+            and device_value_key in self.coordinator.data
         )
 
     @property
@@ -158,7 +168,7 @@ class UpnpSensor(Entity):
         return self._sensor_type["unit"]
 
     @property
-    def device_info(self) -> Mapping[str, any]:
+    def device_info(self) -> Mapping[str, Any]:
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
@@ -166,17 +176,6 @@ class UpnpSensor(Entity):
             "manufacturer": self._device.manufacturer,
             "model": self._device.model_name,
         }
-
-    async def async_update(self):
-        """Request an update."""
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to sensors events."""
-        remove_from_coordinator = self._coordinator.async_add_listener(
-            self.async_write_ha_state
-        )
-        self.async_on_remove(remove_from_coordinator)
 
 
 class RawUpnpSensor(UpnpSensor):
@@ -186,7 +185,9 @@ class RawUpnpSensor(UpnpSensor):
     def state(self) -> str:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
-        value = self._coordinator.data[device_value_key]
+        value = self.coordinator.data[device_value_key]
+        if value is None:
+            return None
         return format(value, "d")
 
 
@@ -223,8 +224,10 @@ class DerivedUpnpSensor(UpnpSensor):
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]
-        current_value = self._coordinator.data[device_value_key]
-        current_timestamp = self._coordinator.data[TIMESTAMP]
+        current_value = self.coordinator.data[device_value_key]
+        if current_value is None:
+            return None
+        current_timestamp = self.coordinator.data[TIMESTAMP]
         if self._last_value is None or self._has_overflowed(current_value):
             self._last_value = current_value
             self._last_timestamp = current_timestamp

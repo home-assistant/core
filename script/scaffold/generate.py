@@ -125,9 +125,9 @@ def _custom_tasks(template, info) -> None:
                     }
                 },
                 "error": {
-                    "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
-                    "invalid_auth": "[%key:common::config_flow::abort::invalid_auth%]",
-                    "unknown": "[%key:common::config_flow::abort::unknown%]",
+                    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+                    "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+                    "unknown": "[%key:common::config_flow::error::unknown%]",
                 },
                 "abort": {
                     "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -153,7 +153,7 @@ def _custom_tasks(template, info) -> None:
         )
 
     elif template == "config_flow_oauth2":
-        info.update_manifest(config_flow=True)
+        info.update_manifest(config_flow=True, dependencies=["http"])
         info.update_strings(
             title=info.name,
             config={
@@ -165,18 +165,10 @@ def _custom_tasks(template, info) -> None:
                 "abort": {
                     "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
                     "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+                    "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
                 },
                 "create_entry": {
                     "default": "[%key:common::config_flow::create_entry::authenticated%]"
                 },
             },
-        )
-        _append(
-            info.integration_dir / "const.py",
-            """
-
-# TODO Update with your own urls
-OAUTH2_AUTHORIZE = "https://www.example.com/auth/authorize"
-OAUTH2_TOKEN = "https://www.example.com/auth/token"
-""",
         )

@@ -60,7 +60,7 @@ class AsteriskMailbox(Mailbox):
                 partial(client.mp3, msgid, sync=True)
             )
         except ServerError as err:
-            raise StreamError(err)
+            raise StreamError(err) from err
 
     async def async_get_messages(self):
         """Return a list of the current messages."""

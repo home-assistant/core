@@ -22,6 +22,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -464,6 +465,7 @@ async def test_if_fires_on_position(hass, calls):
     platform.init()
     ent = platform.ENTITIES[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -586,6 +588,7 @@ async def test_if_fires_on_tilt_position(hass, calls):
     platform.init()
     ent = platform.ENTITIES[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,

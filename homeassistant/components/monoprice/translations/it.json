@@ -4,13 +4,13 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {
                 "data": {
-                    "port": "Porta seriale",
+                    "port": "Porta",
                     "source_1": "Nome della fonte n. 1",
                     "source_2": "Nome della fonte n. 2",
                     "source_3": "Nome della fonte n. 3",

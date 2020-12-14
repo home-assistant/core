@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vill du konfigurera komponenten Mobile App?",
-                "title": "Mobilapp"
+                "description": "Vill du konfigurera komponenten Mobile App?"
             }
         }
     }

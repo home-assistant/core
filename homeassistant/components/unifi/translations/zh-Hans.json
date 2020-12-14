@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u63a7\u5236\u5668\u7ad9\u70b9\u5df2\u914d\u7f6e\u5b8c\u6210",
-            "user_privilege": "\u7528\u6237\u987b\u4e3a\u7ba1\u7406\u5458"
+            "already_configured": "\u63a7\u5236\u5668\u7ad9\u70b9\u5df2\u914d\u7f6e\u5b8c\u6210"
         },
         "error": {
             "faulty_credentials": "\u9519\u8bef\u7684\u7528\u6237\u51ed\u636e",

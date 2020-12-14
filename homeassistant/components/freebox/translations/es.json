@@ -4,7 +4,7 @@
             "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
-            "connection_failed": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
+            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
             "register_failed": "No se pudo registrar, int\u00e9ntalo de nuevo",
             "unknown": "Error desconocido: por favor, int\u00e9ntalo de nuevo m\u00e1s"
         },

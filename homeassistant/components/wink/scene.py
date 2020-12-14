@@ -1,5 +1,4 @@
 """Support for Wink scenes."""
-import logging
 from typing import Any
 
 import pywink
@@ -7,8 +6,6 @@ import pywink
 from homeassistant.components.scene import Scene
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

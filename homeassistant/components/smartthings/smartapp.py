@@ -30,6 +30,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -43,10 +44,12 @@ from .const import (
     DATA_BROKERS,
     DATA_MANAGER,
     DOMAIN,
+    IGNORED_CAPABILITIES,
     SETTINGS_INSTANCE_ID,
     SIGNAL_SMARTAPP_PREFIX,
     STORAGE_KEY,
     STORAGE_VERSION,
+    SUBSCRIPTION_WARNING_LIMIT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,7 +114,11 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
 
 
 def _get_app_template(hass: HomeAssistantType):
-    endpoint = f"at {hass.config.api.base_url}"
+    try:
+        endpoint = f"at {get_url(hass, allow_cloud=False, prefer_external=True)}"
+    except NoURLAvailableError:
+        endpoint = ""
+
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"
@@ -350,7 +357,26 @@ async def smartapp_sync_subscriptions(
     capabilities = set()
     for device in devices:
         capabilities.update(device.capabilities)
+    # Remove items not defined in the library
     capabilities.intersection_update(CAPABILITIES)
+    # Remove unused capabilities
+    capabilities.difference_update(IGNORED_CAPABILITIES)
+    capability_count = len(capabilities)
+    if capability_count > SUBSCRIPTION_WARNING_LIMIT:
+        _LOGGER.warning(
+            "Some device attributes may not receive push updates and there may be subscription "
+            "creation failures under app '%s' because %s subscriptions are required but "
+            "there is a limit of %s per app",
+            installed_app_id,
+            capability_count,
+            SUBSCRIPTION_WARNING_LIMIT,
+        )
+    _LOGGER.debug(
+        "Synchronizing subscriptions for %s capabilities under app '%s': %s",
+        capability_count,
+        installed_app_id,
+        capabilities,
+    )
 
     # Get current subscriptions and find differences
     subscriptions = await api.subscriptions(installed_app_id)

@@ -1,5 +1,6 @@
 """Support for Ubiquiti's UVC cameras."""
 import logging
+import re
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
@@ -57,10 +58,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
     except nvr.NvrError as ex:
         _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     add_entities(
         [
@@ -151,7 +152,7 @@ class UnifiVideoCamera(Camera):
                 camera.login()
                 _LOGGER.debug(
                     "Logged into UVC camera %(name)s via %(addr)s",
-                    dict(name=self._name, addr=addr),
+                    {"name": self._name, "addr": addr},
                 )
                 self._connect_addr = addr
                 break
@@ -213,7 +214,16 @@ class UnifiVideoCamera(Camera):
         """Return the source of the stream."""
         for channel in self._caminfo["channels"]:
             if channel["isRtspEnabled"]:
-                return channel["rtspUris"][0]
+                uri = next(
+                    (
+                        uri
+                        for i, uri in enumerate(channel["rtspUris"])
+                        # pylint: disable=protected-access
+                        if re.search(self._nvr._host, uri)
+                        # pylint: enable=protected-access
+                    )
+                )
+                return uri
 
         return None
 

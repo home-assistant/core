@@ -4,21 +4,23 @@
       "user": {
         "title": "Neato Account Info",
         "data": {
-          "username": "Username",
-          "password": "Password",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "vendor": "Vendor"
         },
         "description": "See [Neato documentation]({docs_url})."
       }
     },
     "error": {
-      "invalid_credentials": "Invalid credentials",
-      "unexpected_error": "Unexpected error"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "create_entry": { "default": "See [Neato documentation]({docs_url})." },
+    "create_entry": {
+      "default": "See [Neato documentation]({docs_url})."
+    },
     "abort": {
-      "already_configured": "Already configured",
-      "invalid_credentials": "Invalid credentials"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

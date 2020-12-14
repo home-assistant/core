@@ -91,12 +91,16 @@
     },
     "state": {
         "_": {
-            "off": "Desactivat",
-            "on": "Activat"
+            "off": "OFF",
+            "on": "ON"
         },
         "battery": {
             "off": "Normal",
             "on": "Baixa"
+        },
+        "battery_charging": {
+            "off": "No carregant",
+            "on": "Carregant"
         },
         "cold": {
             "off": "Normal",
@@ -107,12 +111,12 @@
             "on": "Connectat"
         },
         "door": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/ada",
+            "on": "Obert/a"
         },
         "garage_door": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/ada",
+            "on": "Obert/a"
         },
         "gas": {
             "off": "Lliure",
@@ -121,6 +125,10 @@
         "heat": {
             "off": "Normal",
             "on": "Calent"
+        },
+        "light": {
+            "off": "No s'ha detectat llum",
+            "on": "Llum detectada"
         },
         "lock": {
             "off": "Bloquejat",
@@ -134,20 +142,28 @@
             "off": "Lliure",
             "on": "Detectat"
         },
+        "moving": {
+            "off": "Parat",
+            "on": "En moviment"
+        },
         "occupancy": {
             "off": "Lliure",
             "on": "Detectat"
         },
         "opening": {
-            "off": "Tancat",
-            "on": "Obert"
+            "off": "Tancat/ada",
+            "on": "Obert/a"
+        },
+        "plug": {
+            "off": "Desendollat",
+            "on": "Endollat"
         },
         "presence": {
-            "off": "Lliure",
-            "on": "Detectat"
+            "off": "Fora",
+            "on": "A casa"
         },
         "problem": {
-            "off": "Correcte",
+            "off": "OK",
             "on": "Problema"
         },
         "safety": {
@@ -167,8 +183,8 @@
             "on": "Detectat"
         },
         "window": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/ada",
+            "on": "Obert/a"
         }
     },
     "title": "Sensor binari"

@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         requests.exceptions.HTTPError,
     ) as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from error
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
@@ -89,7 +89,7 @@ def valid_stations(stations, given_stations):
         if station is None:
             continue
         if not any(s.code == station.upper() for s in stations):
-            _LOGGER.warning("Station '%s' is not a valid station.", station)
+            _LOGGER.warning("Station '%s' is not a valid station", station)
             return False
     return True
 

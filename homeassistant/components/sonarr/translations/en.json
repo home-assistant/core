@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "base_path": "Path to API",
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Number of upcoming days to display",
+                    "wanted_max_items": "Max number of wanted items to display"
+                }
+            }
+        }
+    }
+}

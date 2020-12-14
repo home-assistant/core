@@ -4,22 +4,26 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
+    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRICAL_VOLT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
     VOLT,
+    VOLUME_CUBIC_METERS,
 )
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
-    "V_HUM": [UNIT_PERCENTAGE, "mdi:water-percent"],
-    "V_DIMMER": [UNIT_PERCENTAGE, "mdi:percent"],
-    "V_PERCENTAGE": [UNIT_PERCENTAGE, "mdi:percent"],
+    "V_HUM": [PERCENTAGE, "mdi:water-percent"],
+    "V_DIMMER": [PERCENTAGE, "mdi:percent"],
+    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent"],
     "V_PRESSURE": [None, "mdi:gauge"],
     "V_FORECAST": [None, "mdi:weather-partly-cloudy"],
     "V_RAIN": [None, "mdi:weather-rainy"],
@@ -32,21 +36,21 @@ SENSORS = {
     "V_IMPEDANCE": ["ohm", None],
     "V_WATT": [POWER_WATT, None],
     "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
-    "V_LIGHT_LEVEL": [UNIT_PERCENTAGE, "mdi:white-balance-sunny"],
+    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny"],
     "V_FLOW": [LENGTH_METERS, "mdi:gauge"],
-    "V_VOLUME": ["m³", None],
+    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None],
     "V_LEVEL": {
         "S_SOUND": ["dB", "mdi:volume-high"],
         "S_VIBRATION": [FREQUENCY_HERTZ, None],
-        "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
+        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny"],
     },
     "V_VOLTAGE": [VOLT, "mdi:flash"],
-    "V_CURRENT": ["A", "mdi:flash-auto"],
+    "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
     "V_EC": [CONDUCTIVITY, None],
     "V_VAR": ["var", None],
-    "V_VA": ["VA", None],
+    "V_VA": [ELECTRICAL_VOLT_AMPERE, None],
 }
 
 
@@ -81,7 +85,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        _, icon = self._get_sensor_type()
+        icon = self._get_sensor_type()[1]
         return icon
 
     @property
@@ -93,7 +97,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
             and set_req.V_UNIT_PREFIX in self._values
         ):
             return self._values[set_req.V_UNIT_PREFIX]
-        unit, _ = self._get_sensor_type()
+        unit = self._get_sensor_type()[0]
         return unit
 
     def _get_sensor_type(self):

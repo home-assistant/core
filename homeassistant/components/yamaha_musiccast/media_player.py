@@ -133,14 +133,9 @@ class YamahaDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self.power == STATE_ON and self.status is not STATE_UNKNOWN:
+        if self.power == STATE_ON and self.status != STATE_UNKNOWN:
             return self.status
         return self.power
-
-    @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return True
 
     @property
     def is_volume_muted(self):

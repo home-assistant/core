@@ -4,15 +4,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import (
-    CONF_UNIQUE_ID,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-)
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -27,11 +18,24 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumEntity,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
+from .. import (
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
+from ... import mqtt
 from ..debug_info import log_messages
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -395,33 +399,21 @@ class MqttVacuum(
     @property
     def status(self):
         """Return a status string for the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
-            return None
-
         return self._status
 
     @property
     def fan_speed(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return None
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
-        """Return the status of the vacuum.
-
-        No need to check SUPPORT_FAN_SPEED, this won't be called if fan_speed is None.
-        """
+        """Return the status of the vacuum."""
         return self._fan_speed_list
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return None
-
         return max(0, min(100, self._battery_level))
 
     @property

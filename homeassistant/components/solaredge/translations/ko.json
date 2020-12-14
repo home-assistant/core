@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "\uc774 \uc0ac\uc774\ud2b8\uc758 API \ud0a4",
+                    "api_key": "API \ud0a4",
                     "name": "\uc774 \uc124\uce58\uc758 \uc774\ub984",
                     "site_id": "SolarEdge site-id"
                 },

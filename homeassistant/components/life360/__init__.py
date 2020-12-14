@@ -1,6 +1,4 @@
 """Life360 integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -36,8 +34,6 @@ from .const import (
     SHOW_MOVING,
 )
 from .helpers import get_api
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PREFIX = DOMAIN
 

@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities(DecoraWifiLight(sw) for sw in all_switches)
     except ValueError:
-        _LOGGER.error("Failed to communicate with myLeviton Service.")
+        _LOGGER.error("Failed to communicate with myLeviton Service")
 
     # Listen for the stop event and log out.
     def logout(event):
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if session is not None:
                 Person.logout(session)
         except ValueError:
-            _LOGGER.error("Failed to log out of myLeviton Service.")
+            _LOGGER.error("Failed to log out of myLeviton Service")
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
 
@@ -127,7 +127,7 @@ class DecoraWifiLight(LightEntity):
         try:
             self._switch.update_attributes(attribs)
         except ValueError:
-            _LOGGER.error("Failed to turn on myLeviton switch.")
+            _LOGGER.error("Failed to turn on myLeviton switch")
 
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
@@ -135,11 +135,11 @@ class DecoraWifiLight(LightEntity):
         try:
             self._switch.update_attributes(attribs)
         except ValueError:
-            _LOGGER.error("Failed to turn off myLeviton switch.")
+            _LOGGER.error("Failed to turn off myLeviton switch")
 
     def update(self):
         """Fetch new state data for this switch."""
         try:
             self._switch.refresh()
         except ValueError:
-            _LOGGER.error("Failed to update myLeviton switch data.")
+            _LOGGER.error("Failed to update myLeviton switch data")

@@ -8,14 +8,17 @@ from requests import Session
 from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     BASE_TOKEN_FILENAME,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     DOMAIN,
     FLUME_AUTH,
     FLUME_DEVICES,
@@ -58,10 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
         )
         flume_devices = await hass.async_add_executor_job(
-            partial(FlumeDeviceList, flume_auth, http_session=http_session,)
+            partial(
+                FlumeDeviceList,
+                flume_auth,
+                http_session=http_session,
+            )
         )
-    except RequestException:
-        raise ConfigEntryNotReady
+    except RequestException as ex:
+        raise ConfigEntryNotReady from ex
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("Invalid credentials for flume: %s", ex)
         return False

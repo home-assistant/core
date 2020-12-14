@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This DoorBird is already configured",
+            "already_configured": "Device is already configured",
             "link_local_address": "Link local addresses are not supported",
             "not_doorbird_device": "This device is not a DoorBird"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host (IP Address)",
+                    "host": "Host",
                     "name": "Device Name",
                     "password": "Password",
                     "username": "Username"

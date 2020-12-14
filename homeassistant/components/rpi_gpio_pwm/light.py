@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_TYPE, STATE_ON
 import homeassistant.helpers.config_validation as cv
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(leds)
 
 
-class PwmSimpleLed(Light, RestoreEntity):
+class PwmSimpleLed(LightEntity, RestoreEntity):
     """Representation of a simple one-color PWM LED."""
 
     def __init__(self, led, name):
@@ -122,9 +122,6 @@ class PwmSimpleLed(Light, RestoreEntity):
             self._is_on = last_state.state == STATE_ON
             self._brightness = last_state.attributes.get(
                 "brightness", DEFAULT_BRIGHTNESS
-            )
-            self._led.set(
-                is_on=self._is_on, brightness=_from_hass_brightness(self._brightness)
             )
 
     @property
@@ -199,7 +196,6 @@ class PwmRgbLed(PwmSimpleLed):
         last_state = await self.async_get_last_state()
         if last_state:
             self._color = last_state.attributes.get("hs_color", DEFAULT_COLOR)
-            self._led.set(color=_from_hass_color(self._color))
 
     @property
     def hs_color(self):

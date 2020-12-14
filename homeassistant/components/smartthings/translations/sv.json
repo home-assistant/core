@@ -11,11 +11,6 @@
             "authorize": {
                 "title": "Auktorisera Home Assistant"
             },
-            "pat": {
-                "data": {
-                    "access_token": "\u00c5tkomstnyckel"
-                }
-            },
             "select_location": {
                 "data": {
                     "location_id": "Position"

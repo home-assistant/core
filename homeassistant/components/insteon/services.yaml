@@ -60,3 +60,9 @@ scene_off:
     group:
       description: INSTEON group or scene number
       example: 26
+add_default_links:
+  description: Add the default links between the device and the Insteon Modem (IM)
+  fields:
+    entity_id:
+      description: Name of the device to load. Use "all" to load the database of all devices.
+      example: "light.1a2b3c"

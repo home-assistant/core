@@ -4,9 +4,9 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "connection_failed": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "register_failed": "Feeler beim registr\u00e9ieren, prob\u00e9ier w.e.g. nach emol",
-            "unknown": "Onbekannte Feeler: prob\u00e9iertsp\u00e9ider nach emol"
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "link": {

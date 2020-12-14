@@ -28,6 +28,7 @@ from homeassistant.components.homekit.util import (
     density_to_air_quality,
     dismiss_setup_message,
     find_next_available_port,
+    format_sw_version,
     port_is_available,
     show_setup_message,
     temperature_to_homekit,
@@ -214,7 +215,7 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-async def test_show_setup_msg(hass):
+async def test_show_setup_msg(hass, hk_driver):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -315,3 +316,12 @@ async def test_port_is_available(hass):
     assert next_port
 
     assert await hass.async_add_executor_job(port_is_available, next_port)
+
+
+async def test_format_sw_version():
+    """Test format_sw_version method."""
+    assert format_sw_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
+    assert format_sw_version("undefined-undefined-1.6.8") == "1.6.8"
+    assert format_sw_version("56.0-76060") == "56.0.76060"
+    assert format_sw_version(3.6) == "3.6"
+    assert format_sw_version("unknown") is None

@@ -4,16 +4,13 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.mqtt import valid_publish_topic
-from homeassistant.const import (
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
-    MATCH_ALL,
-)
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.json import JSONEncoder
 
@@ -25,29 +22,13 @@ DOMAIN = "mqtt_statestream"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
-                vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
-                vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
                 vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
                 vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
                 vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
             }
-        )
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -55,18 +36,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the MQTT state feed."""
-    conf = config.get(DOMAIN, {})
+    conf = config.get(DOMAIN)
+    publish_filter = convert_include_exclude_filter(conf)
     base_topic = conf.get(CONF_BASE_TOPIC)
-    pub_include = conf.get(CONF_INCLUDE, {})
-    pub_exclude = conf.get(CONF_EXCLUDE, {})
     publish_attributes = conf.get(CONF_PUBLISH_ATTRIBUTES)
     publish_timestamps = conf.get(CONF_PUBLISH_TIMESTAMPS)
-    publish_filter = generate_filter(
-        pub_include.get(CONF_DOMAINS, []),
-        pub_include.get(CONF_ENTITIES, []),
-        pub_exclude.get(CONF_DOMAINS, []),
-        pub_exclude.get(CONF_ENTITIES, []),
-    )
     if not base_topic.endswith("/"):
         base_topic = f"{base_topic}/"
 

@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "access_token": "Onbekende fout bij het genereren van een toegangstoken.",
-            "already_setup": "Het Ambiclimate-account is geconfigureerd.",
-            "no_config": "U moet Ambiclimate configureren voordat u zich ermee kunt authenticeren. (Lees de instructies) (https://www.home-assistant.io/components/ambiclimate/)."
+            "already_configured": "Account is al geconfigureerd"
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Ambiclimate"
@@ -14,7 +13,7 @@
         },
         "step": {
             "auth": {
-                "description": "Volg deze [link] ( {authorization_url} ) en <b> Toestaan </b> toegang tot uw Ambiclimate-account, kom dan terug en druk hieronder op <b> Verzenden </b> . \n (Zorg ervoor dat de opgegeven callback-URL {cb_url} )",
+                "description": "Volg deze [link]({authorization_url}) en klik op **Toestaan** om toegang te geven tot uw Ambiclimate-account, kom dan terug en druk hieronder op **Verzenden**. \n (Zorg ervoor dat de opgegeven callback-URL {cb_url})",
                 "title": "Authenticatie Ambiclimate"
             }
         }

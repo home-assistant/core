@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "unknown_error": "Erro inesperado",
+            "wrong_password": "Senha incorreta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "name": "Nome amig\u00e1vel",
+                    "password": "Palavra-passe da API (deixar em branco se sem palavra-passe)",
+                    "port": "Porta da API"
+                },
+                "title": "Configurar dispositivo forked-daapd"
+            }
+        }
+    }
+}

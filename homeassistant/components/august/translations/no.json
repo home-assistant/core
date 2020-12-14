@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -23,8 +24,8 @@
                 "data": {
                     "code": "Bekreftelseskode"
                 },
-                "description": "Kontroller {login_method} ({username}) og skriv inn bekreftelseskoden nedenfor",
-                "title": "To-faktor autentisering"
+                "description": "Kontroller {login_method} ({username}) og fyll inn bekreftelseskoden nedenfor",
+                "title": "Totrinnsbekreftelse"
             }
         }
     }

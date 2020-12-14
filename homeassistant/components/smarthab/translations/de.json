@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                }
+            }
+        }
+    }
+}

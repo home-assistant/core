@@ -3,6 +3,7 @@
   "name": "GIOŚ",
   "documentation": "https://www.home-assistant.io/integrations/gios",
   "codeowners": ["@bieniu"],
-  "requirements": ["gios==0.1.1"],
-  "config_flow": true
+  "requirements": ["gios==0.1.4"],
+  "config_flow": true,
+  "quality_scale": "platinum"
 }

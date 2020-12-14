@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "port": "Port"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "options_digital": {

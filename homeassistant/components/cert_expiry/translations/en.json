@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This host and port combination is already configured",
+            "already_configured": "Service is already configured",
             "import_failed": "Import from config failed"
         },
         "error": {
@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "The hostname of the certificate",
+                    "host": "Host",
                     "name": "The name of the certificate",
-                    "port": "The port of the certificate"
+                    "port": "Port"
                 },
                 "title": "Define the certificate to test"
             }

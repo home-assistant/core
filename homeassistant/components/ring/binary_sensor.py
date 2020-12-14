@@ -1,19 +1,24 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 from datetime import datetime
-import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 
 from . import DOMAIN
 from .entity import RingEntityMixin
 
-_LOGGER = logging.getLogger(__name__)
-
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    "ding": ["Ding", ["doorbots", "authorized_doorbots"], "occupancy"],
-    "motion": ["Motion", ["doorbots", "authorized_doorbots", "stickup_cams"], "motion"],
+    "ding": ["Ding", ["doorbots", "authorized_doorbots"], DEVICE_CLASS_OCCUPANCY],
+    "motion": [
+        "Motion",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        DEVICE_CLASS_MOTION,
+    ],
 }
 
 

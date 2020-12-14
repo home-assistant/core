@@ -1,5 +1,6 @@
 """Alexa capabilities."""
 import logging
+from typing import List, Optional
 
 from homeassistant.components import (
     cover,
@@ -36,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
+from homeassistant.core import State
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
@@ -71,32 +73,32 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity, instance=None):
+    def __init__(self, entity: State, instance: Optional[str] = None):
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
 
-    def name(self):
+    def name(self) -> str:
         """Return the Alexa API name of this interface."""
         raise NotImplementedError
 
     @staticmethod
-    def properties_supported():
+    def properties_supported() -> List[dict]:
         """Return what properties this entity supports."""
         return []
 
     @staticmethod
-    def properties_proactively_reported():
+    def properties_proactively_reported() -> bool:
         """Return True if properties asynchronously reported."""
         return False
 
     @staticmethod
-    def properties_retrievable():
+    def properties_retrievable() -> bool:
         """Return True if properties can be retrieved."""
         return False
 
     @staticmethod
-    def properties_non_controllable():
+    def properties_non_controllable() -> bool:
         """Return True if non controllable."""
         return None
 
@@ -237,20 +239,34 @@ class AlexaCapability:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
-            prop_value = self.get_property(prop_name)
-            if prop_value is not None:
-                result = {
-                    "name": prop_name,
-                    "namespace": self.name(),
-                    "value": prop_value,
-                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
-                    "uncertaintyInMilliseconds": 0,
-                }
-                instance = self.instance
-                if instance is not None:
-                    result["instance"] = instance
+            try:
+                prop_value = self.get_property(prop_name)
+            except UnsupportedProperty:
+                raise
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Unexpected error getting %s.%s property from %s",
+                    self.name(),
+                    prop_name,
+                    self.entity,
+                )
+                prop_value = None
 
-                yield result
+            if prop_value is None:
+                continue
+
+            result = {
+                "name": prop_name,
+                "namespace": self.name(),
+                "value": prop_value,
+                "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
+                "uncertaintyInMilliseconds": 0,
+            }
+            instance = self.instance
+            if instance is not None:
+                result["instance"] = instance
+
+            yield result
 
 
 class Alexa(AlexaCapability):
@@ -396,10 +412,17 @@ class AlexaLockController(AlexaCapability):
         "en-AU",
         "en-CA",
         "en-GB",
+        "en-IN",
         "en-US",
         "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def name(self):
@@ -438,6 +461,7 @@ class AlexaSceneController(AlexaCapability):
 
     supported_locales = {
         "de-DE",
+        "en-AU",
         "en-CA",
         "en-GB",
         "en-IN",
@@ -445,6 +469,7 @@ class AlexaSceneController(AlexaCapability):
         "es-ES",
         "fr-FR",
         "it-IT",
+        "ja-JP",
     }
 
     def __init__(self, entity, supports_deactivation):
@@ -472,8 +497,10 @@ class AlexaBrightnessController(AlexaCapability):
         "en-US",
         "es-ES",
         "fr-FR",
+        "hi-IN",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def name(self):
@@ -516,8 +543,10 @@ class AlexaColorController(AlexaCapability):
         "en-US",
         "es-ES",
         "fr-FR",
+        "hi-IN",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def name(self):
@@ -565,8 +594,10 @@ class AlexaColorTemperatureController(AlexaCapability):
         "en-US",
         "es-ES",
         "fr-FR",
+        "hi-IN",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def name(self):
@@ -653,7 +684,18 @@ class AlexaSpeaker(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-speaker.html
     """
 
-    supported_locales = {"de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "it-IT",
+        "ja-JP",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -700,7 +742,16 @@ class AlexaStepSpeaker(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-stepspeaker.html
     """
 
-    supported_locales = {"de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "it-IT",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -768,7 +819,7 @@ class AlexaInputController(AlexaCapability):
             formatted_source = (
                 source.lower().replace("-", "").replace("_", "").replace(" ", "")
             )
-            if formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys():
+            if formatted_source in Inputs.VALID_SOURCE_NAME_MAP:
                 input_list.append(
                     {"name": Inputs.VALID_SOURCE_NAME_MAP[formatted_source]}
                 )
@@ -850,7 +901,16 @@ class AlexaContactSensor(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-contactsensor.html
     """
 
-    supported_locales = {"en-CA", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "it-IT",
+        "ja-JP",
+    }
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -889,7 +949,17 @@ class AlexaMotionSensor(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-motionsensor.html
     """
 
-    supported_locales = {"en-CA", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "it-IT",
+        "ja-JP",
+        "pt-BR",
+    }
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -939,6 +1009,7 @@ class AlexaThermostatController(AlexaCapability):
         "fr-FR",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def __init__(self, hass, entity):
@@ -1097,7 +1168,22 @@ class AlexaSecurityPanelController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
     """
 
-    supported_locales = {"en-AU", "en-CA", "en-IN", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+        "pt-BR",
+    }
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -1478,7 +1564,7 @@ class AlexaRangeController(AlexaCapability):
             min_value = float(self.entity.attributes[input_number.ATTR_MIN])
             max_value = float(self.entity.attributes[input_number.ATTR_MAX])
             precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
-            unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
+            unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
                 ["Value", AlexaGlobalCatalog.SETTING_PRESET],
@@ -1592,6 +1678,7 @@ class AlexaToggleController(AlexaCapability):
         "fr-FR",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def __init__(self, entity, instance, non_controllable=False):
@@ -1648,7 +1735,21 @@ class AlexaChannelController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
     """
 
-    supported_locales = {"de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "pt-BR",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1661,7 +1762,22 @@ class AlexaDoorbellEventSource(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-doorbelleventsource.html
     """
 
-    supported_locales = {"en-US"}
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1678,7 +1794,7 @@ class AlexaPlaybackStateReporter(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-playbackstatereporter.html
     """
 
-    supported_locales = {"de-DE", "en-GB", "en-US", "fr-FR"}
+    supported_locales = {"de-DE", "en-GB", "en-US", "es-MX", "fr-FR"}
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1716,7 +1832,7 @@ class AlexaSeekController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-seekcontroller.html
     """
 
-    supported_locales = {"de-DE", "en-GB", "en-US"}
+    supported_locales = {"de-DE", "en-GB", "en-US", "es-MX"}
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1788,7 +1904,14 @@ class AlexaEqualizerController(AlexaCapability):
     https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-equalizercontroller.html
     """
 
-    supported_locales = {"en-US"}
+    supported_locales = {"de-DE", "en-IN", "en-US", "es-ES", "it-IT", "ja-JP", "pt-BR"}
+    VALID_SOUND_MODES = {
+        "MOVIE",
+        "MUSIC",
+        "NIGHT",
+        "SPORT",
+        "TV",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1807,34 +1930,33 @@ class AlexaEqualizerController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         sound_mode = self.entity.attributes.get(media_player.ATTR_SOUND_MODE)
-        if sound_mode and sound_mode.upper() in (
-            "MOVIE",
-            "MUSIC",
-            "NIGHT",
-            "SPORT",
-            "TV",
-        ):
+        if sound_mode and sound_mode.upper() in self.VALID_SOUND_MODES:
             return sound_mode.upper()
 
         return None
 
     def configurations(self):
-        """Return the sound modes supported in the configurations object.
-
-        Valid Values for modes are: MOVIE, MUSIC, NIGHT, SPORT, TV.
-        """
+        """Return the sound modes supported in the configurations object."""
         configurations = None
-        sound_mode_list = self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
-        if sound_mode_list:
-            supported_sound_modes = [
-                {"name": sound_mode.upper()}
-                for sound_mode in sound_mode_list
-                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV")
-            ]
-
+        supported_sound_modes = self.get_valid_inputs(
+            self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST, [])
+        )
+        if supported_sound_modes:
             configurations = {"modes": {"supported": supported_sound_modes}}
 
         return configurations
+
+    @classmethod
+    def get_valid_inputs(cls, sound_mode_list):
+        """Return list of supported inputs."""
+        input_list = []
+        for sound_mode in sound_mode_list:
+            sound_mode = sound_mode.upper()
+
+            if sound_mode in cls.VALID_SOUND_MODES:
+                input_list.append({"name": sound_mode})
+
+        return input_list
 
 
 class AlexaTimeHoldController(AlexaCapability):
@@ -1878,8 +2000,10 @@ class AlexaCameraStreamController(AlexaCapability):
         "en-US",
         "es-ES",
         "fr-FR",
+        "hi-IN",
         "it-IT",
         "ja-JP",
+        "pt-BR",
     }
 
     def name(self):

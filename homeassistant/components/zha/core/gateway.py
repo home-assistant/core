@@ -2,6 +2,8 @@
 
 import asyncio
 import collections
+from datetime import timedelta
+from enum import Enum
 import itertools
 import logging
 import os
@@ -25,6 +27,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry as get_ent_reg,
 )
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -37,7 +40,6 @@ from .const import (
     CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
-    CONTROLLER,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
@@ -53,11 +55,11 @@ from .const import (
     DEBUG_LEVELS,
     DEBUG_RELAY_LOGGERS,
     DEFAULT_DATABASE_NAME,
+    DEVICE_PAIRING_STATUS,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    SIGNAL_REMOVE_GROUP,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -73,12 +75,16 @@ from .const import (
     ZHA_GW_MSG_LOG_ENTRY,
     ZHA_GW_MSG_LOG_OUTPUT,
     ZHA_GW_MSG_RAW_INIT,
-    ZHA_GW_RADIO_DESCRIPTION,
+    RadioType,
 )
-from .device import DeviceStatus, ZHADevice
+from .device import (
+    CONSIDER_UNAVAILABLE_BATTERY,
+    CONSIDER_UNAVAILABLE_MAINS,
+    DeviceStatus,
+    ZHADevice,
+)
 from .group import GroupMember, ZHAGroup
-from .patches import apply_application_controller_patch
-from .registries import GROUP_ENTITY_DOMAINS, RADIO_TYPES
+from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
 from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
@@ -88,6 +94,15 @@ EntityReference = collections.namedtuple(
     "EntityReference",
     "reference_id zha_device cluster_channels device_info remove_future",
 )
+
+
+class DevicePairingStatus(Enum):
+    """Status of a device."""
+
+    PAIRED = 1
+    INTERVIEW_COMPLETE = 2
+    CONFIGURED = 3
+    INITIALIZED = 4
 
 
 class ZHAGateway:
@@ -113,6 +128,7 @@ class ZHAGateway:
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
         self._config_entry = config_entry
+        self._unsubs = []
 
     async def async_initialize(self):
         """Initialize controller and connect radio."""
@@ -125,8 +141,8 @@ class ZHAGateway:
 
         radio_type = self._config_entry.data[CONF_RADIO_TYPE]
 
-        app_controller_cls = RADIO_TYPES[radio_type][CONTROLLER]
-        self.radio_description = RADIO_TYPES[radio_type][ZHA_GW_RADIO_DESCRIPTION]
+        app_controller_cls = RadioType[radio_type].controller
+        self.radio_description = RadioType[radio_type].description
 
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
@@ -149,7 +165,6 @@ class ZHAGateway:
             )
             raise ConfigEntryNotReady from exception
 
-        apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
@@ -162,11 +177,33 @@ class ZHAGateway:
     @callback
     def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
-        zigpy_devices = self.application_controller.devices.values()
-        for zigpy_device in zigpy_devices:
+        for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
             if zha_device.nwk == 0x0000:
                 self.coordinator_zha_device = zha_device
+            zha_dev_entry = self.zha_storage.devices.get(str(zigpy_device.ieee))
+            delta_msg = "not known"
+            if zha_dev_entry and zha_dev_entry.last_seen is not None:
+                delta = round(time.time() - zha_dev_entry.last_seen)
+                if zha_device.is_mains_powered:
+                    zha_device.available = delta < CONSIDER_UNAVAILABLE_MAINS
+                else:
+                    zha_device.available = delta < CONSIDER_UNAVAILABLE_BATTERY
+                delta_msg = f"{str(timedelta(seconds=delta))} ago"
+            _LOGGER.debug(
+                "[%s](%s) restored as '%s', last seen: %s",
+                zha_device.nwk,
+                zha_device.name,
+                "available" if zha_device.available else "unavailable",
+                delta_msg,
+            )
+        # update the last seen time for devices every 10 minutes to avoid thrashing
+        # writes and shutdown issues where storage isn't updated
+        self._unsubs.append(
+            async_track_time_interval(
+                self._hass, self.async_update_device_storage, timedelta(minutes=10)
+            )
+        )
 
     @callback
     def async_load_groups(self) -> None:
@@ -214,8 +251,11 @@ class ZHAGateway:
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_JOINED,
-                ATTR_NWK: device.nwk,
-                ATTR_IEEE: str(device.ieee),
+                ZHA_GW_MSG_DEVICE_INFO: {
+                    ATTR_NWK: device.nwk,
+                    ATTR_IEEE: str(device.ieee),
+                    DEVICE_PAIRING_STATUS: DevicePairingStatus.PAIRED.name,
+                },
             },
         )
 
@@ -227,11 +267,14 @@ class ZHAGateway:
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_RAW_INIT,
-                ATTR_NWK: device.nwk,
-                ATTR_IEEE: str(device.ieee),
-                ATTR_MODEL: device.model if device.model else UNKNOWN_MODEL,
-                ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
-                ATTR_SIGNATURE: device.get_signature(),
+                ZHA_GW_MSG_DEVICE_INFO: {
+                    ATTR_NWK: device.nwk,
+                    ATTR_IEEE: str(device.ieee),
+                    DEVICE_PAIRING_STATUS: DevicePairingStatus.INTERVIEW_COMPLETE.name,
+                    ATTR_MODEL: device.model if device.model else UNKNOWN_MODEL,
+                    ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
+                    ATTR_SIGNATURE: device.get_signature(),
+                },
             },
         )
 
@@ -278,13 +321,10 @@ class ZHAGateway:
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
 
     def group_removed(self, zigpy_group: ZigpyGroupType) -> None:
-        """Handle zigpy group added event."""
+        """Handle zigpy group removed event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
-        async_dispatcher_send(
-            self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
-        )
         self._cleanup_group_entity_registry_entries(zigpy_group)
 
     def _send_group_gateway_message(
@@ -377,7 +417,9 @@ class ZHAGateway:
 
         # then we get all group entity entries tied to the coordinator
         all_group_entity_entries = async_entries_for_device(
-            self.ha_entity_registry, self.coordinator_zha_device.device_id
+            self.ha_entity_registry,
+            self.coordinator_zha_device.device_id,
+            include_disabled_entities=True,
         )
 
         # then we get the entity entries for this specific group by getting the entries that match
@@ -482,14 +524,9 @@ class ZHAGateway:
         return zha_group
 
     @callback
-    def async_device_became_available(
-        self, sender, profile, cluster, src_ep, dst_ep, message
-    ):
-        """Handle tasks when a device becomes available."""
-        self.async_update_device(sender)
-
-    @callback
-    def async_update_device(self, sender: zigpy_dev.Device, available: bool = True):
+    def async_update_device(
+        self, sender: zigpy_dev.Device, available: bool = True
+    ) -> None:
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
@@ -497,7 +534,7 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
 
-    async def async_update_device_storage(self):
+    async def async_update_device_storage(self, *_):
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
@@ -533,7 +570,7 @@ class ZHAGateway:
             await self._async_device_joined(zha_device)
 
         device_info = zha_device.zha_device_info
-
+        device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.INITIALIZED.name
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
@@ -544,9 +581,19 @@ class ZHAGateway:
         )
 
     async def _async_device_joined(self, zha_device: zha_typing.ZhaDeviceType) -> None:
+        zha_device.available = True
+        device_info = zha_device.device_info
         await zha_device.async_configure()
-        # will cause async_init to fire so don't explicitly call it
-        zha_device.update_available(True)
+        device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: device_info,
+            },
+        )
+        await zha_device.async_initialize(from_cache=False)
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
     async def _async_device_rejoined(self, zha_device):
@@ -557,7 +604,18 @@ class ZHAGateway:
         )
         # we don't have to do this on a nwk swap but we don't have a way to tell currently
         await zha_device.async_configure()
-        # will cause async_init to fire so don't explicitly call it
+        device_info = zha_device.device_info
+        device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: device_info,
+            },
+        )
+        # force async_initialize() to fire so don't explicitly call it
+        zha_device.available = False
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
@@ -596,7 +654,7 @@ class ZHAGateway:
         if not group:
             _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
             return
-        if group and group.members:
+        if group.members:
             tasks = []
             for member in group.members:
                 tasks.append(member.async_remove_from_group())
@@ -607,7 +665,22 @@ class ZHAGateway:
     async def shutdown(self):
         """Stop ZHA Controller Application."""
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
-        await self.application_controller.shutdown()
+        for unsubscribe in self._unsubs:
+            unsubscribe()
+        await self.application_controller.pre_shutdown()
+
+    def handle_message(
+        self,
+        sender: zigpy_dev.Device,
+        profile: int,
+        cluster: int,
+        src_ep: int,
+        dst_ep: int,
+        message: bytes,
+    ) -> None:
+        """Handle message from a device Event handler."""
+        if sender.ieee in self.devices and not self.devices[sender.ieee].available:
+            self.async_update_device(sender, available=True)
 
 
 @callback

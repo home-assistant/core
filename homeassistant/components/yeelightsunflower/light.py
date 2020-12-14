@@ -25,7 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight Sunflower Light platform."""
-
     host = config.get(CONF_HOST)
     hub = yeelightsunflower.Hub(host)
 
@@ -45,12 +44,18 @@ class SunflowerBulb(LightEntity):
         self._available = light.available
         self._brightness = light.brightness
         self._is_on = light.is_on
-        self._hs_color = light.rgb_color
+        self._rgb_color = light.rgb_color
+        self._unique_id = light.zid
 
     @property
     def name(self):
         """Return the display name of this light."""
         return f"sunflower_{self._light.zid}"
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this light."""
+        return self._unique_id
 
     @property
     def available(self):
@@ -70,7 +75,7 @@ class SunflowerBulb(LightEntity):
     @property
     def hs_color(self):
         """Return the color property."""
-        return self._hs_color
+        return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
     def supported_features(self):
@@ -104,4 +109,4 @@ class SunflowerBulb(LightEntity):
         self._available = self._light.available
         self._brightness = self._light.brightness
         self._is_on = self._light.is_on
-        self._hs_color = color_util.color_RGB_to_hs(*self._light.rgb_color)
+        self._rgb_color = self._light.rgb_color

@@ -385,7 +385,9 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(
+                parse_result=False, from_state=self._state, to_state=state
+            )
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
@@ -394,13 +396,12 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state_attr = {}
-
         if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
-            state_attr[ATTR_PREVIOUS_STATE] = self._previous_state
-            state_attr[ATTR_NEXT_STATE] = self._state
-
-        return state_attr
+            return {
+                ATTR_PREVIOUS_STATE: self._previous_state,
+                ATTR_NEXT_STATE: self._state,
+            }
+        return {}
 
     @callback
     def async_scheduled_update(self, now):

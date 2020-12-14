@@ -98,6 +98,10 @@
             "off": "Normale",
             "on": "Basso"
         },
+        "battery_charging": {
+            "off": "Non in carica",
+            "on": "In carica"
+        },
         "cold": {
             "off": "Normale",
             "on": "Freddo"
@@ -122,25 +126,37 @@
             "off": "Normale",
             "on": "Caldo"
         },
+        "light": {
+            "off": "Nessuna luce",
+            "on": "Luce rilevata"
+        },
         "lock": {
             "off": "Bloccato",
             "on": "Sbloccato"
         },
         "moisture": {
             "off": "Asciutto",
-            "on": "Bagnato"
+            "on": "Umido"
         },
         "motion": {
             "off": "Assente",
             "on": "Rilevato"
         },
+        "moving": {
+            "off": "Non in movimento",
+            "on": "In movimento"
+        },
         "occupancy": {
-            "off": "Vuoto",
+            "off": "Assente",
             "on": "Rilevato"
         },
         "opening": {
             "off": "Chiuso",
             "on": "Aperto"
+        },
+        "plug": {
+            "off": "Scollegato",
+            "on": "Connesso"
         },
         "presence": {
             "off": "Fuori casa",

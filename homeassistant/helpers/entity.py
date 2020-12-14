@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 from timeit import default_timer as timer
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Awaitable, Dict, Iterable, List, Optional
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -26,19 +25,26 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
-from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED,
-    RegistryEntry,
-)
+from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
+from homeassistant.helpers.typing import StateType
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
-from homeassistant.util.async_ import run_callback_threadsafe
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
+DATA_ENTITY_SOURCE = "entity_info"
+SOURCE_CONFIG_ENTRY = "config_entry"
+SOURCE_PLATFORM_CONFIG = "platform_config"
+
+
+@callback
+@bind_hass
+def entity_sources(hass: HomeAssistant) -> Dict[str, Dict[str, str]]:
+    """Get the entity sources."""
+    return hass.data.get(DATA_ENTITY_SOURCE, {})
 
 
 def generate_entity_id(
@@ -48,21 +54,7 @@ def generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
-        return run_callback_threadsafe(
-            hass.loop,
-            async_generate_entity_id,
-            entity_id_format,
-            name,
-            current_ids,
-            hass,
-        ).result()
-
-    name = (slugify(name or "") or slugify(DEVICE_DEFAULT_NAME)).lower()
-
-    return ensure_unique_string(entity_id_format.format(name), current_ids)
+    return async_generate_entity_id(entity_id_format, name, current_ids, hass)
 
 
 @callback
@@ -73,14 +65,23 @@ def async_generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if current_ids is None:
-        if hass is None:
-            raise ValueError("Missing required parameter currentids or hass")
 
-        current_ids = hass.states.async_entity_ids()
     name = (name or DEVICE_DEFAULT_NAME).lower()
+    preferred_string = entity_id_format.format(slugify(name))
 
-    return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
+    if current_ids is not None:
+        return ensure_unique_string(preferred_string, current_ids)
+
+    if hass is None:
+        raise ValueError("Missing required parameter current_ids or hass")
+
+    test_string = preferred_string
+    tries = 1
+    while not hass.states.async_available(test_string):
+        tries += 1
+        test_string = f"{preferred_string}_{tries}"
+
+    return test_string
 
 
 class Entity(ABC):
@@ -119,6 +120,9 @@ class Entity(ABC):
     _context: Optional[Context] = None
     _context_set: Optional[datetime] = None
 
+    # If entity is added to an entity platform
+    _added = False
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -138,7 +142,7 @@ class Entity(ABC):
         return None
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> StateType:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
@@ -200,11 +204,6 @@ class Entity(ABC):
         return None
 
     @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return False
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return True
@@ -258,7 +257,7 @@ class Entity(ABC):
         self._context = context
         self._context_set = dt_util.utcnow()
 
-    async def async_update_ha_state(self, force_refresh=False):
+    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -294,16 +293,17 @@ class Entity(ABC):
                 f"No entity id specified for entity {self.name}"
             )
 
-        self._async_write_ha_state()  # type: ignore
+        self._async_write_ha_state()
 
     @callback
-    def _async_write_ha_state(self):
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self.registry_entry and self.registry_entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
+                assert self.platform is not None
                 _LOGGER.warning(
-                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration.",
+                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration",
                     self.entity_id,
                     self.platform.platform_name,
                 )
@@ -317,9 +317,8 @@ class Entity(ABC):
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
-            state = self.state
-
-            state = STATE_UNKNOWN if state is None else str(state)
+            sstate = self.state
+            state = STATE_UNKNOWN if sstate is None else str(sstate)
             attr.update(self.state_attributes or {})
             attr.update(self.device_state_attributes or {})
 
@@ -340,10 +339,6 @@ class Entity(ABC):
         entity_picture = self.entity_picture
         if entity_picture is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
-
-        hidden = self.hidden
-        if hidden:
-            attr[ATTR_HIDDEN] = hidden
 
         assumed_state = self.assumed_state
         if assumed_state:
@@ -367,7 +362,7 @@ class Entity(ABC):
             else:
                 extra = (
                     "Please create a bug report at "
-                    "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                 )
                 if self.platform:
                     extra += (
@@ -383,6 +378,7 @@ class Entity(ABC):
             )
 
         # Overwrite properties that have been set in the config file.
+        assert self.hass is not None
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
@@ -403,7 +399,7 @@ class Entity(ABC):
             pass
 
         if (
-            self._context is not None
+            self._context_set is not None
             and dt_util.utcnow() - self._context_set > self.context_recent_time
         ):
             self._context = None
@@ -413,7 +409,7 @@ class Entity(ABC):
             self.entity_id, state, attr, self.force_update, self._context
         )
 
-    def schedule_update_ha_state(self, force_refresh=False):
+    def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
 
         Scheduling the update avoids executor deadlocks.
@@ -423,10 +419,11 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))
+        assert self.hass is not None
+        self.hass.add_job(self.async_update_ha_state(force_refresh))  # type: ignore
 
     @callback
-    def async_schedule_update_ha_state(self, force_refresh=False):
+    def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
 
         This method must be run in the event loop.
@@ -438,11 +435,12 @@ class Entity(ABC):
         been executed, the intermediate state transitions will be missed.
         """
         if force_refresh:
+            assert self.hass is not None
             self.hass.async_create_task(self.async_update_ha_state(force_refresh))
         else:
             self.async_write_ha_state()
 
-    async def async_device_update(self, warning=True):
+    async def async_device_update(self, warning: bool = True) -> None:
         """Process 'update' or 'async_update' from entity.
 
         This method is a coroutine.
@@ -455,25 +453,35 @@ class Entity(ABC):
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
-        if warning:
-            update_warn = self.hass.loop.call_later(
-                SLOW_UPDATE_WARNING,
-                _LOGGER.warning,
+        try:
+            # pylint: disable=no-member
+            if hasattr(self, "async_update"):
+                task = self.hass.async_create_task(self.async_update())  # type: ignore
+            elif hasattr(self, "update"):
+                task = self.hass.async_add_executor_job(self.update)  # type: ignore
+            else:
+                return
+
+            if not warning:
+                await task
+                return
+
+            finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
+
+            for done in finished:
+                exc = done.exception()
+                if exc:
+                    raise exc
+                return
+
+            _LOGGER.warning(
                 "Update of %s is taking over %s seconds",
                 self.entity_id,
                 SLOW_UPDATE_WARNING,
             )
-
-        try:
-            # pylint: disable=no-member
-            if hasattr(self, "async_update"):
-                await self.async_update()
-            elif hasattr(self, "update"):
-                await self.hass.async_add_executor_job(self.update)
+            await task
         finally:
             self._update_staged = False
-            if warning:
-                update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
 
@@ -490,9 +498,48 @@ class Entity(ABC):
         To be extended by integrations.
         """
 
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: Optional[asyncio.Semaphore],
+    ) -> None:
+        """Start adding an entity to a platform."""
+        if self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+            )
+
+        self.hass = hass
+        self.platform = platform
+        self.parallel_updates = parallel_updates
+        self._added = True
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        self.hass = None
+        self.platform = None
+        self.parallel_updates = None
+        self._added = False
+
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding an entity to a platform."""
+        await self.async_internal_added_to_hass()
+        await self.async_added_to_hass()
+        self.async_write_ha_state()
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
+
+        if self.platform and not self._added:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} async_remove called twice"
+            )
+
+        self._added = False
 
         if self._on_remove is not None:
             while self._on_remove:
@@ -520,11 +567,28 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        assert self.hass is not None
+
+        if self.platform:
+            info = {"domain": self.platform.platform_name}
+
+            if self.platform.config_entry:
+                info["source"] = SOURCE_CONFIG_ENTRY
+                info["config_entry"] = self.platform.config_entry.entry_id
+            else:
+                info["source"] = SOURCE_PLATFORM_CONFIG
+
+            self.hass.data.setdefault(DATA_ENTITY_SOURCE, {})[self.entity_id] = info
+
         if self.registry_entry is not None:
-            assert self.hass is not None
+            # This is an assert as it should never happen, but helps in tests
+            assert (
+                not self.registry_entry.disabled_by
+            ), f"Entity {self.entity_id} is being added while it's disabled"
+
             self.async_on_remove(
-                self.hass.bus.async_listen(
-                    EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated
+                async_track_entity_registry_updated_event(
+                    self.hass, self.entity_id, self._async_registry_updated
                 )
             )
 
@@ -533,38 +597,42 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        if self.platform:
+            assert self.hass is not None
+            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
-    async def _async_registry_updated(self, event):
+    async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
         data = event.data
-        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+        if data["action"] == "remove":
             await self.async_removed_from_registry()
             await self.async_remove()
 
-        if (
-            data["action"] != "update"
-            or data.get("old_entity_id", data["entity_id"]) != self.entity_id
-        ):
+        if data["action"] != "update":
             return
 
+        assert self.hass is not None
         ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
+        assert self.registry_entry is not None
 
         if self.registry_entry.disabled_by is not None:
             await self.async_remove()
             return
 
+        assert old is not None
         if self.registry_entry.entity_id == old.entity_id:
             self.async_write_ha_state()
             return
 
         await self.async_remove()
 
+        assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
         if not isinstance(other, self.__class__):
             return False
@@ -587,8 +655,7 @@ class Entity(ABC):
         """Return the representation."""
         return f"<Entity {self.name}: {self.state}>"
 
-    # call an requests
-    async def async_request_call(self, coro):
+    async def async_request_call(self, coro: Awaitable) -> None:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
@@ -617,16 +684,18 @@ class ToggleEntity(Entity):
         """Turn the entity on."""
         raise NotImplementedError()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
+        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
@@ -636,7 +705,7 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
-    async def async_toggle(self, **kwargs):
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.is_on:
             await self.async_turn_off(**kwargs)

@@ -14,13 +14,15 @@
                 "description": "Modell: {modell}\nV\u00e4rd: {host}\nPort: {port}\n\nDu kan konfigurera IO- och panelbeteendet i inst\u00e4llningarna f\u00f6r Konnected Alarm Panel.",
                 "title": "Konnected-enheten redo"
             },
+            "import_confirm": {
+                "title": "Importera Konnected enhet"
+            },
             "user": {
                 "data": {
                     "host": "Konnected-enhetens IP-adress",
                     "port": "Konnected-enhetens port"
                 },
-                "description": "Ange v\u00e4rdinformationen f\u00f6r din Konnected Panel.",
-                "title": "Uppt\u00e4ck Konnected-enhet"
+                "description": "Ange v\u00e4rdinformationen f\u00f6r din Konnected Panel."
             }
         }
     },

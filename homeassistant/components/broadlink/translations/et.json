@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vigane hostinimi v\u00f5i IP aadress",
+            "not_supported": "Seadet ei toetata",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Sobimatu hostinimi v\u00f5i IP-aadress",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "{name} ( {model} asukohas {host} )",
+        "step": {
+            "auth": {
+                "title": "Seadme autentimine"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nimi"
+                },
+                "title": "Seadme nime valimine"
+            },
+            "reset": {
+                "description": "{name} ( {model} asukohas {host} ) on lukus. Sidumise autentimiseks ja l\u00f5puleviimiseks pead seadme avama. Juhised:\n 1. Avad rakendus Broadlink.\n 2. Kl\u00f5psa seadmel.\n 3. Kl\u00f5psa paremas \u00fclanurgas nuppu ....\n 4. Keri lehe alaossa.\n 5. Keela lukk.",
+                "title": "Seadme lukustuse eemaldamine"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Jah, tee seda."
+                },
+                "description": "{name} ( {model} asukohas {host} ) on lukus. See v\u00f5ib p\u00f5hjustada Home Assistanti autentimisprobleeme. Kas soovid selle avada?",
+                "title": "Seadme lukustuse eemaldamine (valikuline)"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "timeout": "Ajal\u00f5pp"
+                },
+                "title": "\u00dchendu seadmega"
+            }
+        }
+    }
+}

@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "These coordinates or Node/Pro ID are already registered."
+            "already_configured": "Location is already configured or Node/Pro ID is already registered.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "general_error": "There was an unknown error.",
-            "invalid_api_key": "Invalid API key provided.",
-            "unable_to_connect": "Unable to connect to Node/Pro unit."
+            "cannot_connect": "Failed to connect",
+            "general_error": "Unexpected error",
+            "invalid_api_key": "Invalid API key"
         },
         "step": {
             "geography": {
@@ -20,18 +21,21 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Unit IP Address/Hostname",
-                    "password": "Unit Password"
+                    "ip_address": "Host",
+                    "password": "Password"
                 },
                 "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
                 "title": "Configure an AirVisual Node/Pro"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "title": "Re-authenticate AirVisual"
+            },
             "user": {
                 "data": {
-                    "api_key": "API Key",
                     "cloud_api": "Geographical Location",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Integration Type"
                 },
@@ -46,7 +50,6 @@
                 "data": {
                     "show_on_map": "Show monitored geography on the map"
                 },
-                "description": "Set various options for the AirVisual integration.",
                 "title": "Configure AirVisual"
             }
         }

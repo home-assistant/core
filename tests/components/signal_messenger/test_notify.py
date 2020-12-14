@@ -53,7 +53,9 @@ class TestSignalMesssenger(unittest.TestCase):
         """Test send message."""
         message = "Testing Signal Messenger platform :)"
         mock.register_uri(
-            "POST", "http://127.0.0.1:8080/v2/send", status_code=201,
+            "POST",
+            "http://127.0.0.1:8080/v2/send",
+            status_code=201,
         )
         mock.register_uri(
             "GET",
@@ -74,7 +76,9 @@ class TestSignalMesssenger(unittest.TestCase):
         """Test send message."""
         message = "Testing Signal Messenger platform with attachment :)"
         mock.register_uri(
-            "POST", "http://127.0.0.1:8080/v2/send", status_code=201,
+            "POST",
+            "http://127.0.0.1:8080/v2/send",
+            status_code=201,
         )
         mock.register_uri(
             "GET",
@@ -91,7 +95,7 @@ class TestSignalMesssenger(unittest.TestCase):
                 data = {"data": {"attachment": tf.name}}
                 self._signalmessenger.send_message(message, **data)
         self.assertIn(
-            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108.",
+            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108",
             context.output[0],
         )
         self.assertTrue(mock.called)
@@ -102,7 +106,9 @@ class TestSignalMesssenger(unittest.TestCase):
         """Test send message."""
         message = "Testing Signal Messenger platform :)"
         mock.register_uri(
-            "POST", "http://127.0.0.1:8080/v2/send", status_code=201,
+            "POST",
+            "http://127.0.0.1:8080/v2/send",
+            status_code=201,
         )
         mock.register_uri(
             "GET",

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_only": "Deze integratie ondersteunt momenteel slechts \u00e9\u00e9n ecobee-instantie."
-        },
         "error": {
             "pin_request_failed": "Fout bij het aanvragen van pincode bij ecobee; Controleer of de API-sleutel correct is.",
             "token_request_failed": "Fout bij het aanvragen van tokens bij ecobee; probeer het opnieuw."

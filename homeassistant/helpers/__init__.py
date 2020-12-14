@@ -1,13 +1,14 @@
 """Helper methods for components within Home Assistant."""
 import re
-from typing import Any, Iterable, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Iterable, Sequence, Tuple
 
 from homeassistant.const import CONF_PLATFORM
 
-from .typing import ConfigType
+if TYPE_CHECKING:
+    from .typing import ConfigType
 
 
-def config_per_platform(config: ConfigType, domain: str) -> Iterable[Tuple[Any, Any]]:
+def config_per_platform(config: "ConfigType", domain: str) -> Iterable[Tuple[Any, Any]]:
     """Break a component config into different platforms.
 
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
@@ -31,7 +32,7 @@ def config_per_platform(config: ConfigType, domain: str) -> Iterable[Tuple[Any, 
             yield platform, item
 
 
-def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
+def extract_domain_configs(config: "ConfigType", domain: str) -> Sequence[str]:
     """Extract keys from config for given domain name.
 
     Async friendly.

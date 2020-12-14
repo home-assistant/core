@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "M\u00f6chtest du Sonos einrichten?",
-                "title": "Sonos"
+                "description": "M\u00f6chtest du Sonos einrichten?"
             }
         }
     }

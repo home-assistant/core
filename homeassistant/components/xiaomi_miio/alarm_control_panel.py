@@ -33,10 +33,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         f"{config_entry.title} Alarm",
         config_entry.data["model"],
         config_entry.data["mac"],
-        config_entry.data["gateway_id"],
+        config_entry.unique_id,
     )
     entities.append(entity)
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 
 class XiaomiGatewayAlarm(AlarmControlPanelEntity):
@@ -123,8 +123,10 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         try:
             state = await self.hass.async_add_executor_job(self._gateway.alarm.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)

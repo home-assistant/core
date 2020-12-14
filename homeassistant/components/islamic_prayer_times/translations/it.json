@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "\u00c8 necessaria solo una singola istanza."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "step": {
             "user": {
-                "description": "Vuoi impostare i tempi di preghiera islamici?",
-                "title": "Impostare i tempi di preghiera islamici"
+                "description": "Vuoi impostare gli Orari di Preghiera Islamici?",
+                "title": "Impostare gli Orari di Preghiera Islamici"
             }
         }
     },
@@ -19,5 +19,5 @@
             }
         }
     },
-    "title": "Tempi di preghiera islamica"
+    "title": "Orari di Preghiera Islamici"
 }

@@ -23,6 +23,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin,
+    color_temperature_to_hs,
+)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -63,8 +68,6 @@ class Light(HomeAccessory):
         if self._features & SUPPORT_COLOR:
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
-            self._hue = None
-            self._saturation = None
         elif self._features & SUPPORT_COLOR_TEMP:
             # ColorTemperature and Hue characteristic should not be
             # exposed both. Both states are tracked separately in HomeKit,
@@ -77,7 +80,7 @@ class Light(HomeAccessory):
 
         if CHAR_BRIGHTNESS in self.chars:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by update_state
+            # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
@@ -100,7 +103,7 @@ class Light(HomeAccessory):
         if CHAR_SATURATION in self.chars:
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
-        self.update_state(state)
+        self.async_update_state(state)
 
         serv_light.setter_callback = self._set_chars
 
@@ -138,7 +141,8 @@ class Light(HomeAccessory):
 
         self.call_service(DOMAIN, service, params, ", ".join(events))
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update light after state change."""
         # Handle State
         state = new_state.state
@@ -177,7 +181,16 @@ class Light(HomeAccessory):
 
         # Handle Color
         if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            hue, saturation = new_state.attributes.get(ATTR_HS_COLOR, (None, None))
+            if ATTR_HS_COLOR in new_state.attributes:
+                hue, saturation = new_state.attributes[ATTR_HS_COLOR]
+            elif ATTR_COLOR_TEMP in new_state.attributes:
+                hue, saturation = color_temperature_to_hs(
+                    color_temperature_mired_to_kelvin(
+                        new_state.attributes[ATTR_COLOR_TEMP]
+                    )
+                )
+            else:
+                hue, saturation = None, None
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)

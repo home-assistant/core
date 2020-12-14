@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione per il dispositivo \u00e8 gi\u00e0 in corso.",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto",
-            "unknown": "Si \u00e8 verificato un errore sconosciuto"
+            "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi ad un Pannello Konnected su {host}:{port}."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "confirm": {
@@ -20,11 +20,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Indirizzo IP del dispositivo Konnected",
-                    "port": "Porta del dispositivo Konnected"
+                    "host": "Indirizzo IP",
+                    "port": "Porta"
                 },
-                "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected.",
-                "title": "Rileva il dispositivo Konnected"
+                "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected."
             }
         }
     },
@@ -33,9 +32,7 @@
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto"
         },
         "error": {
-            "bad_host": "URL dell'host API di sostituzione non valido",
-            "one": "uno",
-            "other": "altri"
+            "bad_host": "URL dell'host API di sostituzione non valido"
         },
         "step": {
             "options_binary": {
@@ -44,7 +41,7 @@
                     "name": "Nome (opzionale)",
                     "type": "Tipo di sensore binario"
                 },
-                "description": "Si prega di selezionare le opzioni per il sensore binario collegato alla {zone}",
+                "description": "Opzioni {zone}",
                 "title": "Configurare il Sensore Binario"
             },
             "options_digital": {
@@ -53,7 +50,7 @@
                     "poll_interval": "Intervallo di sondaggio (minuti) (opzionale)",
                     "type": "Tipo di sensore"
                 },
-                "description": "Si prega di selezionare le opzioni per il sensore digitale collegato alla {zone}",
+                "description": "Opzioni {zone}",
                 "title": "Configurare il Sensore Digitale"
             },
             "options_io": {
@@ -88,6 +85,7 @@
                 "data": {
                     "api_host": "Sovrascrivi l'URL dell'host API (opzionale)",
                     "blink": "Attiva il lampeggio del LED del pannello durante l'invio del cambiamento di stato ",
+                    "discovery": "Rispondi alle richieste di rilevamento sulla tua rete",
                     "override_api_host": "Sovrascrivi l'URL predefinito del pannello host API di Home Assistant"
                 },
                 "description": "Seleziona il comportamento desiderato per il tuo pannello",
@@ -102,7 +100,7 @@
                     "pause": "Pausa tra gli impulsi (ms) (opzionale)",
                     "repeat": "Numero di volte da ripetere (-1 = infinito) (opzionale)"
                 },
-                "description": "Selezionare le opzioni di uscita per {zone}: stato {state}",
+                "description": "Opzioni {zone}: stato {state}",
                 "title": "Configurare l'uscita commutabile"
             }
         }

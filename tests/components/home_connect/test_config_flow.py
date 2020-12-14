@@ -5,19 +5,27 @@ from homeassistant.components.home_connect.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from tests.async_mock import patch
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
         "home_connect",
         {
-            "home_connect": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "home_connect": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+            },
             "http": {"base_url": "https://example.com"},
         },
     )
@@ -25,7 +33,13 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         "home_connect", context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -49,6 +63,11 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

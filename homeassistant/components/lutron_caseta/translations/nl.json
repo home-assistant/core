@@ -1,3 +1,16 @@
 {
-    "title": "Lutron Cas\u00e9ta"
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "step": {
+            "import_failed": {
+                "description": "Kan bridge (host: {host} ) niet instellen, ge\u00efmporteerd uit configuration.yaml."
+            }
+        }
+    }
 }

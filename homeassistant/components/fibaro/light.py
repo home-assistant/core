@@ -1,7 +1,6 @@
 """Support for Fibaro lights."""
 import asyncio
 from functools import partial
-import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,8 +16,6 @@ from homeassistant.const import CONF_WHITE_VALUE
 import homeassistant.util.color as color_util
 
 from . import CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def scaleto255(value):

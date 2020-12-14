@@ -11,7 +11,9 @@
             "user": {
                 "data": {
                     "loadzone": "Zone de charge (point d'\u00e9tablissement)"
-                }
+                },
+                "description": "Votre zone de charge se trouve dans votre compte Griddy sous \"Compte > Compteur > Zone de charge\".",
+                "title": "Configurez votre zone de charge Griddy"
             }
         }
     }

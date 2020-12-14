@@ -4,14 +4,14 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Email Address",
+                    "email": "Email",
                     "password": "Password"
                 },
                 "title": "Connect to your Sense Energy Monitor"

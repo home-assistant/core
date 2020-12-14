@@ -338,7 +338,7 @@ async def test_save_config(hass, client):
     assert resp.status == 200
     result = await resp.json()
     assert network.write_config.called
-    assert result == {"message": "Z-Wave configuration saved to file."}
+    assert result == {"message": "Z-Wave configuration saved to file"}
 
 
 async def test_get_protection_values(hass, client):

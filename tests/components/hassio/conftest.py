@@ -19,7 +19,7 @@ def hassio_env():
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
     ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}), patch(
-        "homeassistant.components.hassio.HassIO.get_homeassistant_info",
+        "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ):
         yield
@@ -35,7 +35,7 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
         "homeassistant.components.hassio.HassIO.update_hass_timezone",
         return_value={"result": "ok"},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_homeassistant_info",
+        "homeassistant.components.hassio.HassIO.get_info",
         side_effect=HassioAPIError(),
     ):
         hass.state = CoreState.starting
@@ -61,7 +61,8 @@ async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
     """Return an authenticated HTTP client."""
     access_token = hass.auth.async_create_access_token(hassio_stubs)
     return await aiohttp_client(
-        hass.http.app, headers={"Authorization": f"Bearer {access_token}"},
+        hass.http.app,
+        headers={"Authorization": f"Bearer {access_token}"},
     )
 
 

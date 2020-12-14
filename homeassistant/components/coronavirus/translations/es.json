@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este pa\u00eds ya est\u00e1 configurado."
+            "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "step": {
             "user": {

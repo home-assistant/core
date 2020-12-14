@@ -4,7 +4,8 @@ from pymfy.api.devices.category import Category
 
 from homeassistant.components.switch import SwitchEntity
 
-from . import API, DEVICES, DOMAIN, SomfyEntity
+from . import SomfyEntity
+from .const import API, COORDINATOR, DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -12,11 +13,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_shutters():
         """Retrieve switches."""
-        devices = hass.data[DOMAIN][DEVICES]
+        domain_data = hass.data[DOMAIN]
+        coordinator = domain_data[COORDINATOR]
+        api = domain_data[API]
 
         return [
-            SomfyCameraShutter(device, hass.data[DOMAIN][API])
-            for device in devices
+            SomfyCameraShutter(coordinator, device_id, api)
+            for device_id, device in coordinator.data.items()
             if Category.CAMERA.value in device.categories
         ]
 
@@ -26,14 +29,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomfyCameraShutter(SomfyEntity, SwitchEntity):
     """Representation of a Somfy Camera Shutter device."""
 
-    def __init__(self, device, api):
+    def __init__(self, coordinator, device_id, api):
         """Initialize the Somfy device."""
-        super().__init__(device, api)
-        self.shutter = CameraProtect(self.device, self.api)
+        super().__init__(coordinator, device_id, api)
+        self._create_device()
 
-    async def async_update(self):
+    def _create_device(self):
         """Update the device with the latest data."""
-        await super().async_update()
         self.shutter = CameraProtect(self.device, self.api)
 
     def turn_on(self, **kwargs) -> None:

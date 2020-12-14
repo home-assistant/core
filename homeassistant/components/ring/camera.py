@@ -103,13 +103,16 @@ class RingCam(RingEntityMixin, Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
+        ffmpeg = ImageFrame(self._ffmpeg.binary)
 
         if self._video_url is None:
             return
 
         image = await asyncio.shield(
-            ffmpeg.get_image(self._video_url, output_format=IMAGE_JPEG,)
+            ffmpeg.get_image(
+                self._video_url,
+                output_format=IMAGE_JPEG,
+            )
         )
         return image
 
@@ -118,7 +121,7 @@ class RingCam(RingEntityMixin, Camera):
         if self._video_url is None:
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(self._video_url)
 
         try:

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "addon_info_failed": "Impossibile ottenere le informazioni sul componente aggiuntivo OpenZWave.",
+            "addon_install_failed": "Impossibile installare il componente aggiuntivo OpenZWave.",
+            "addon_set_config_failed": "Impossibile impostare la configurazione di OpenZWave.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "mqtt_required": "L'integrazione MQTT non \u00e8 impostata",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "addon_start_failed": "Impossibile avviare il componente aggiuntivo OpenZWave. Controlla la configurazione."
+        },
+        "progress": {
+            "install_addon": "Attendi il termine dell'installazione del componente aggiuntivo OpenZWave. Questa operazione pu\u00f2 richiedere diversi minuti."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Configura l'integrazione di OpenZWave con il componente aggiuntivo OpenZWave"
+            },
+            "install_addon": {
+                "title": "L'installazione del componente aggiuntivo OpenZWave \u00e8 iniziata"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Usa il componente aggiuntivo OpenZWave Supervisor"
+                },
+                "description": "Vuoi usare il componente aggiuntivo OpenZWave Supervisor?",
+                "title": "Seleziona il metodo di connessione"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Chiave di rete",
+                    "usb_path": "Percorso del dispositivo USB"
+                },
+                "title": "Accedi alla configurazione dell'add-on OpenZWave"
+            }
+        }
+    }
+}

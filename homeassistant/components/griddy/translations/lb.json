@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebs Lued Zon ass scho konfigur\u00e9iert"
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "unknown": "Onerwaarte Feeler"
         },
         "step": {

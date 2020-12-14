@@ -55,8 +55,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
             effects = await api.get_all_patterns()
 
-        except pyeverlights.ConnectionError:
-            raise PlatformNotReady
+        except pyeverlights.ConnectionError as err:
+            raise PlatformNotReady from err
 
         else:
             lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
@@ -160,9 +160,9 @@ class EverLightsLight(LightEntity):
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:
             if self._available:
-                _LOGGER.warning("EverLights control box connection lost.")
+                _LOGGER.warning("EverLights control box connection lost")
             self._available = False
         else:
             if not self._available:
-                _LOGGER.warning("EverLights control box connection restored.")
+                _LOGGER.warning("EverLights control box connection restored")
             self._available = True

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Google Cast szolg\u00e1ltat\u00e1st?",
-                "title": "Google Cast"
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Google Cast szolg\u00e1ltat\u00e1st?"
             }
         }
     }

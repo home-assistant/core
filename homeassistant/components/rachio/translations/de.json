@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Der API-Schl\u00fcssel f\u00fcr das Rachio-Konto."
+                    "api_key": "API-Schl\u00fcssel"
                 },
                 "description": "Sie ben\u00f6tigen den API-Schl\u00fcssel von https://app.rach.io/. W\u00e4hlen Sie \"Kontoeinstellungen\" und klicken Sie dann auf \"API-SCHL\u00dcSSEL ERHALTEN\".",
                 "title": "Stellen Sie eine Verbindung zu Ihrem Rachio-Ger\u00e4t her"

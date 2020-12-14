@@ -4,9 +4,14 @@ import logging
 
 from homeassistant.const import TIME_SECONDS
 
+LOGGER = logging.getLogger(__package__)
+
 CONF_LOCAL_IP = "local_ip"
 DOMAIN = "upnp"
-LOGGER = logging.getLogger(__package__)
+DOMAIN_COORDINATORS = "coordinators"
+DOMAIN_DEVICES = "devices"
+DOMAIN_LOCAL_IP = "local_ip"
+DOMAIN_CONFIG = "config"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"
@@ -23,3 +28,5 @@ DISCOVERY_UDN = "udn"
 DISCOVERY_USN = "usn"
 CONFIG_ENTRY_UDN = "udn"
 CONFIG_ENTRY_ST = "st"
+CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).seconds

@@ -5,10 +5,10 @@
             "full_moon": "Volle maan",
             "last_quarter": "Laatste kwartier",
             "new_moon": "Nieuwe maan",
-            "waning_crescent": "Krimpende, sikkelvormige maan",
-            "waning_gibbous": "Krimpende, vooruitspringende maan",
+            "waning_crescent": "Afnemende, sikkelvormige maan",
+            "waning_gibbous": "Afnemende maan",
             "waxing_crescent": "Wassende, sikkelvormige maan",
-            "waxing_gibbous": "Wassende, sikkelvormige maan"
+            "waxing_gibbous": "Wassende maan"
         }
     }
 }

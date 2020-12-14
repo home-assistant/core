@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Disse koordinatene eller Node / Pro ID er allerede registrert."
+            "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert.",
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
-            "general_error": "Det oppstod en ukjent feil.",
-            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
-            "unable_to_connect": "Kan ikke koble til Node / Pro-enheten."
+            "cannot_connect": "Tilkobling mislyktes",
+            "general_error": "Uventet feil",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
         },
         "step": {
             "geography": {
@@ -20,18 +21,21 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Enhetens IP-adresse / vertsnavn",
-                    "password": "Passord for enhet"
+                    "ip_address": "Vert",
+                    "password": "Passord"
                 },
                 "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",
                 "title": "Konfigurer en AirVisual Node / Pro"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "title": "Autentiser AirVisual p\u00e5 nytt"
+            },
             "user": {
                 "data": {
-                    "api_key": "API-n\u00f8kkel",
                     "cloud_api": "Geografisk plassering",
-                    "latitude": "Breddegrad",
-                    "longitude": "Lengdegrad",
                     "node_pro": "",
                     "type": "Integrasjonstype"
                 },
@@ -46,7 +50,6 @@
                 "data": {
                     "show_on_map": "Vis overv\u00e5ket geografi p\u00e5 kartet"
                 },
-                "description": "Angi forskjellige alternativer for AirVisual-integrasjonen.",
                 "title": "Konfigurer AirVisual"
             }
         }

@@ -5,6 +5,11 @@
             "unknown": "Ok\u00e4nt fel: f\u00f6rs\u00f6k igen senare"
         },
         "step": {
+            "cities": {
+                "data": {
+                    "city": "Stad"
+                }
+            },
             "user": {
                 "data": {
                     "city": "Stad"

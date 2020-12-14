@@ -1,11 +1,7 @@
 """Support for Daikin AirBase zones."""
-import logging
-
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN as DAIKIN_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 ZONE_ICON = "mdi:home-circle"
 
@@ -43,7 +39,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.mac}-zone{self._zone_id}"
+        return f"{self._api.device.mac}-zone{self._zone_id}"
 
     @property
     def icon(self):

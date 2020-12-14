@@ -9,8 +9,8 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
@@ -41,7 +41,7 @@ STATE_ATTR_NEXT_SETTING = "next_setting"
 # The algorithm used here is somewhat complicated. It aims to cut down
 # the number of sensor updates over the day. It's documented best in
 # the PR for the change, see the Discussion section of:
-# https://github.com/home-assistant/home-assistant/pull/23832
+# https://github.com/home-assistant/core/pull/23832
 
 
 # As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight
@@ -99,9 +99,12 @@ class Sun(Entity):
         self.rising = self.phase = None
         self._next_change = None
 
-        def update_location(event):
-            self.location = get_astral_location(self.hass)
-            self.update_events(dt_util.utcnow())
+        def update_location(_event):
+            location = get_astral_location(self.hass)
+            if location == self.location:
+                return
+            self.location = location
+            self.update_events()
 
         update_location(None)
         self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_location)
@@ -135,9 +138,9 @@ class Sun(Entity):
             STATE_ATTR_RISING: self.rising,
         }
 
-    def _check_event(self, utc_point_in_time, event, before):
+    def _check_event(self, utc_point_in_time, sun_event, before):
         next_utc = get_location_astral_event_next(
-            self.location, event, utc_point_in_time
+            self.location, sun_event, utc_point_in_time
         )
         if next_utc < self._next_change:
             self._next_change = next_utc
@@ -145,8 +148,10 @@ class Sun(Entity):
         return next_utc
 
     @callback
-    def update_events(self, utc_point_in_time):
+    def update_events(self, now=None):
         """Update the attributes containing solar events."""
+        # Grab current time in case system clock changed since last time we ran.
+        utc_point_in_time = dt_util.utcnow()
         self._next_change = utc_point_in_time + timedelta(days=400)
 
         # Work our way around the solar cycle, figure out the next
@@ -204,15 +209,19 @@ class Sun(Entity):
         _LOGGER.debug(
             "sun phase_update@%s: phase=%s", utc_point_in_time.isoformat(), self.phase
         )
-        self.update_sun_position(utc_point_in_time)
+        self.update_sun_position()
 
         # Set timer for the next solar event
-        async_track_point_in_utc_time(self.hass, self.update_events, self._next_change)
+        event.async_track_point_in_utc_time(
+            self.hass, self.update_events, self._next_change
+        )
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
     @callback
-    def update_sun_position(self, utc_point_in_time):
+    def update_sun_position(self, now=None):
         """Calculate the position of the sun."""
+        # Grab current time in case system clock changed since last time we ran.
+        utc_point_in_time = dt_util.utcnow()
         self.solar_azimuth = round(self.location.solar_azimuth(utc_point_in_time), 2)
         self.solar_elevation = round(
             self.location.solar_elevation(utc_point_in_time), 2
@@ -232,6 +241,6 @@ class Sun(Entity):
         # position update just drop it
         if utc_point_in_time + delta * 1.25 > self._next_change:
             return
-        async_track_point_in_utc_time(
+        event.async_track_point_in_utc_time(
             self.hass, self.update_sun_position, utc_point_in_time + delta
         )

@@ -1,7 +1,6 @@
 """Constants for the Dynalite component."""
 import logging
 
-from homeassistant.components.cover import DEVICE_CLASS_SHUTTER
 from homeassistant.const import CONF_ROOM
 
 LOGGER = logging.getLogger(__package__)
@@ -24,6 +23,7 @@ CONF_DEFAULT = "default"
 CONF_DEVICE_CLASS = "class"
 CONF_DURATION = "duration"
 CONF_FADE = "fade"
+CONF_LEVEL = "level"
 CONF_NO_DEFAULT = "nodefault"
 CONF_OPEN_PRESET = "open"
 CONF_POLL_TIMER = "polltimer"
@@ -36,7 +36,6 @@ CONF_TILT_TIME = "tilt"
 CONF_TIME_COVER = "time_cover"
 
 DEFAULT_CHANNEL_TYPE = "light"
-DEFAULT_COVER_CLASS = DEVICE_CLASS_SHUTTER
 DEFAULT_NAME = "dynalite"
 DEFAULT_PORT = 12345
 DEFAULT_TEMPLATES = {
@@ -51,3 +50,12 @@ DEFAULT_TEMPLATES = {
         CONF_TILT_TIME,
     ],
 }
+
+ATTR_AREA = "area"
+ATTR_CHANNEL = "channel"
+ATTR_HOST = "host"
+ATTR_PACKET = "packet"
+ATTR_PRESET = "preset"
+
+SERVICE_REQUEST_AREA_PRESET = "request_area_preset"
+SERVICE_REQUEST_CHANNEL_LEVEL = "request_channel_level"

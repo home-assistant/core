@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "duplicate_entry": "Questo host \u00e8 gi\u00e0 stato aggiunto.",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "link": {
+                "description": "\u00c8 necessario autorizzare l'Assistente Home in Roon. Dopo aver fatto clic su Invia, passare all'applicazione Roon Core, aprire Impostazioni e abilitare HomeAssistant nella scheda Estensioni.",
+                "title": "Autorizzare HomeAssistant in Roon"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Inserisci il nome host o l'IP del tuo server Roon."
+            }
+        }
+    }
+}

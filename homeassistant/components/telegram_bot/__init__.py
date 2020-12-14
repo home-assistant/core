@@ -67,6 +67,7 @@ ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
+ATTR_MESSAGE_TAG = "message_tag"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -79,6 +80,7 @@ SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
 SERVICE_SEND_STICKER = "send_sticker"
 SERVICE_SEND_VIDEO = "send_video"
+SERVICE_SEND_VOICE = "send_voice"
 SERVICE_SEND_DOCUMENT = "send_document"
 SERVICE_SEND_LOCATION = "send_location"
 SERVICE_EDIT_MESSAGE = "edit_message"
@@ -91,6 +93,7 @@ SERVICE_LEAVE_CHAT = "leave_chat"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
+EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
@@ -136,6 +139,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_MESSAGE_TAG): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -221,6 +225,7 @@ SERVICE_MAP = {
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
@@ -329,7 +334,9 @@ async def async_setup(hass, config):
                 else:
                     attribute_templ.hass = hass
                     try:
-                        data[attribute] = attribute_templ.async_render()
+                        data[attribute] = attribute_templ.async_render(
+                            parse_result=False
+                        )
                     except TemplateError as exc:
                         _LOGGER.error(
                             "TemplateError in %s: %s -> %s",
@@ -354,26 +361,33 @@ async def async_setup(hass, config):
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
         if msgtype == SERVICE_SEND_MESSAGE:
-            await hass.async_add_job(partial(notify_service.send_message, **kwargs))
+            await hass.async_add_executor_job(
+                partial(notify_service.send_message, **kwargs)
+            )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_STICKER,
             SERVICE_SEND_VIDEO,
+            SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
         ]:
-            await hass.async_add_job(
+            await hass.async_add_executor_job(
                 partial(notify_service.send_file, msgtype, **kwargs)
             )
         elif msgtype == SERVICE_SEND_LOCATION:
-            await hass.async_add_job(partial(notify_service.send_location, **kwargs))
+            await hass.async_add_executor_job(
+                partial(notify_service.send_location, **kwargs)
+            )
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await hass.async_add_job(
+            await hass.async_add_executor_job(
                 partial(notify_service.answer_callback_query, **kwargs)
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
-            await hass.async_add_job(partial(notify_service.delete_message, **kwargs))
+            await hass.async_add_executor_job(
+                partial(notify_service.delete_message, **kwargs)
+            )
         else:
-            await hass.async_add_job(
+            await hass.async_add_executor_job(
                 partial(notify_service.edit_message, msgtype, **kwargs)
             )
 
@@ -500,6 +514,7 @@ class TelegramNotificationService:
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
+            ATTR_MESSAGE_TAG: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
@@ -514,6 +529,8 @@ class TelegramNotificationService:
                 params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
             if ATTR_REPLY_TO_MSGID in data:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
+            if ATTR_MESSAGE_TAG in data:
+                params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
@@ -540,12 +557,22 @@ class TelegramNotificationService:
             out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
-                self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
+                message_id = out[ATTR_MESSAGEID]
+                self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
                     self._last_message_id,
                     chat_id,
                 )
+
+                event_data = {
+                    ATTR_CHAT_ID: chat_id,
+                    ATTR_MESSAGEID: message_id,
+                }
+                message_tag = kwargs_msg.get(ATTR_MESSAGE_TAG)
+                if message_tag is not None:
+                    event_data[ATTR_MESSAGE_TAG] = message_tag
+                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
@@ -596,9 +623,7 @@ class TelegramNotificationService:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
             text = f"{title}\n{message}" if title else message
-            _LOGGER.debug(
-                "Editing message with ID %s.", message_id or inline_message_id
-            )
+            _LOGGER.debug("Editing message with ID %s", message_id or inline_message_id)
             return self._send_msg(
                 self.bot.editMessageText,
                 "Error editing text message",
@@ -628,7 +653,7 @@ class TelegramNotificationService:
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
-            "Answer callback query with callback ID %s: %s, alert: %s.",
+            "Answer callback query with callback ID %s: %s, alert: %s",
             callback_query_id,
             message,
             show_alert,
@@ -650,6 +675,7 @@ class TelegramNotificationService:
             SERVICE_SEND_PHOTO: self.bot.sendPhoto,
             SERVICE_SEND_STICKER: self.bot.sendSticker,
             SERVICE_SEND_VIDEO: self.bot.sendVideo,
+            SERVICE_SEND_VOICE: self.bot.sendVoice,
             SERVICE_SEND_DOCUMENT: self.bot.sendDocument,
         }.get(file_type)
         file_content = load_data(
@@ -663,7 +689,7 @@ class TelegramNotificationService:
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
-                _LOGGER.debug("Send file to chat ID %s. Caption: %s.", chat_id, caption)
+                _LOGGER.debug("Send file to chat ID %s. Caption: %s", chat_id, caption)
                 self._send_msg(
                     func_send,
                     "Error sending file",
@@ -683,7 +709,7 @@ class TelegramNotificationService:
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug(
-                "Send location %s/%s to chat ID %s.", latitude, longitude, chat_id
+                "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
             )
             self._send_msg(
                 self.bot.sendLocation,
@@ -722,11 +748,12 @@ class BaseTelegramBotEntity:
             _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
             return False, None
 
-        if msg_data["from"].get("id") not in self.allowed_chat_ids or (
-            "chat" in msg_data
+        if (
+            msg_data["from"].get("id") not in self.allowed_chat_ids
             and msg_data["chat"].get("id") not in self.allowed_chat_ids
         ):
-            # Origin is not allowed.
+            # Neither from id nor chat id was in allowed_chat_ids,
+            # origin is not allowed.
             _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
             return True, None
 

@@ -194,7 +194,7 @@ async def async_setup(hass, config):
     controller.callback_login_timeout = connection_fail_callback
     controller.callback_login_success = connection_success_callback
 
-    _LOGGER.info("Start envisalink.")
+    _LOGGER.info("Start envisalink")
     controller.start()
 
     result = await sync_connect

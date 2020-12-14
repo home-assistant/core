@@ -1,6 +1,5 @@
 """Philips Hue sensors platform tests."""
 import asyncio
-import logging
 
 import aiohue
 
@@ -9,8 +8,6 @@ from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
 from tests.async_mock import Mock
-
-_LOGGER = logging.getLogger(__name__)
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},

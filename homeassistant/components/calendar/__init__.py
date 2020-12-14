@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import re
+from typing import Dict, List, cast
 
 from aiohttp import web
 
@@ -35,12 +36,22 @@ async def async_setup(hass, config):
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    # Doesn't work in prod builds of the frontend: home-assistant-polymer#1289
-    # hass.components.frontend.async_register_built_in_panel(
-    #     'calendar', 'calendar', 'hass:calendar')
+    hass.components.frontend.async_register_built_in_panel(
+        "calendar", "calendar", "hass:calendar"
+    )
 
     await component.async_setup(config)
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 def get_date(date):
@@ -172,7 +183,7 @@ class CalendarEventView(http.HomeAssistantView):
     url = "/api/calendars/{entity_id}"
     name = "api:calendars:calendar"
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize calendar view."""
         self.component = component
 
@@ -200,17 +211,17 @@ class CalendarListView(http.HomeAssistantView):
     url = "/api/calendars"
     name = "api:calendars"
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize calendar view."""
         self.component = component
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
         hass = request.app["hass"]
-        calendar_list = []
+        calendar_list: List[Dict[str, str]] = []
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
 
-        return self.json(sorted(calendar_list, key=lambda x: x["name"]))
+        return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))

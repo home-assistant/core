@@ -1,6 +1,6 @@
 """Decorators for the Websocket API."""
+import asyncio
 from functools import wraps
-import logging
 from typing import Awaitable, Callable
 
 from homeassistant.core import HomeAssistant, callback
@@ -10,8 +10,6 @@ from . import const, messages
 from .connection import ActiveConnection
 
 # mypy: allow-untyped-calls, allow-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _handle_async_response(func, hass, connection, msg):
@@ -31,7 +29,9 @@ def async_response(
     @wraps(func)
     def schedule_handler(hass, connection, msg):
         """Schedule the handler."""
-        hass.async_create_task(_handle_async_response(func, hass, connection, msg))
+        # As the webserver is now started before the start
+        # event we do not want to block for websocket responders
+        asyncio.create_task(_handle_async_response(func, hass, connection, msg))
 
     return schedule_handler
 

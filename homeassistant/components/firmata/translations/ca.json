@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka"
+                },
+                "description": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka a d\u00e9lka budou pou\u017eity k vyhled\u00e1n\u00ed nejbli\u017e\u0161\u00ed meteorologick\u00e9 stanice.",
+                "title": "P\u0159ipojen\u00ed k UK Met Office"
+            }
+        }
+    }
+}

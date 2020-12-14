@@ -9,6 +9,7 @@ from homeassistant.components.zha.core.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import AsyncMock, patch
@@ -70,3 +71,27 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.version == 2
+
+
+@pytest.mark.skipif(
+    MAJOR_VERSION != 0 or (MAJOR_VERSION == 0 and MINOR_VERSION >= 112),
+    reason="Not applicaable for this version",
+)
+@pytest.mark.parametrize(
+    "zha_config",
+    (
+        {},
+        {CONF_USB_PATH: "str"},
+        {CONF_RADIO_TYPE: "ezsp"},
+        {CONF_RADIO_TYPE: "ezsp", CONF_USB_PATH: "str"},
+    ),
+)
+async def test_config_depreciation(hass, zha_config):
+    """Test config option depreciation."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.zha.async_setup", return_value=True
+    ) as setup_mock:
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: zha_config})
+        assert setup_mock.call_count == 1

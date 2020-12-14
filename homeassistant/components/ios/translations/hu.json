@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Home Assistant iOS komponenst?",
-                "title": "Home Assistant iOS"
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Home Assistant iOS komponenst?"
             }
         }
     }

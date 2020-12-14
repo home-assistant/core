@@ -1,7 +1,5 @@
 """Config flow to configure roomba component."""
-import logging
-
-from roomba import Roomba
+from roombapy import Roomba
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -29,8 +27,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: core.HomeAssistant, data):

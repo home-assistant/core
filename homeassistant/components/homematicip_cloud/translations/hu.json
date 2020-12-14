@@ -6,7 +6,7 @@
             "unknown": "Unknown error occurred."
         },
         "error": {
-            "invalid_pin": "\u00c9rv\u00e9nytelen PIN, pr\u00f3b\u00e1lkozz \u00fajra.",
+            "invalid_sgtin_or_pin": "\u00c9rv\u00e9nytelen PIN, pr\u00f3b\u00e1lkozz \u00fajra.",
             "press_the_button": "Nyomd meg a k\u00e9k gombot.",
             "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, pr\u00f3b\u00e1ld \u00fajra.",
             "timeout_button": "K\u00e9k gomb megnyom\u00e1s\u00e1nak id\u0151t\u00fall\u00e9p\u00e9se, pr\u00f3b\u00e1lkozz \u00fajra."

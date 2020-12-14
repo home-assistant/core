@@ -1,5 +1,4 @@
 """Module to help with parsing and generating configuration files."""
-# pylint: disable=no-name-in-module
 from collections import OrderedDict
 from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
@@ -21,15 +20,21 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
+    CONF_ALLOWLIST_EXTERNAL_DIRS,
+    CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
     CONF_ELEVATION,
+    CONF_EXTERNAL_URL,
     CONF_ID,
+    CONF_INTERNAL_URL,
     CONF_LATITUDE,
+    CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
+    CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
     CONF_TEMPERATURE_UNIT,
@@ -37,7 +42,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_WHITELIST_EXTERNAL_DIRS,
+    LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     TEMP_CELSIUS,
     __version__,
 )
@@ -73,10 +78,6 @@ SCENE_CONFIG_PATH = "scenes.yaml"
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
-
-# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-# http:
-#   base_url: example.duckdns.org:8123
 
 # Text to speech
 tts:
@@ -183,9 +184,15 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         CONF_UNIT_SYSTEM: cv.unit_system,
         CONF_TIME_ZONE: cv.time_zone,
-        vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
-        # pylint: disable=no-value-for-parameter
-        vol.All(cv.ensure_list, [vol.IsDir()]),
+        vol.Optional(CONF_INTERNAL_URL): cv.url,
+        vol.Optional(CONF_EXTERNAL_URL): cv.url,
+        vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
+            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+        ),
+        vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
+            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+        ),
+        vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(cv.ensure_list, [cv.url]),
         vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
         vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
             cv.ensure_list,
@@ -216,6 +223,9 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
             ],
             _no_duplicate_auth_mfa_module,
         ),
+        # pylint: disable=no-value-for-parameter
+        vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
+        vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
     }
 )
 
@@ -478,6 +488,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             CONF_ELEVATION,
             CONF_TIME_ZONE,
             CONF_UNIT_SYSTEM,
+            CONF_EXTERNAL_URL,
+            CONF_INTERNAL_URL,
         ]
     ):
         hac.config_source = SOURCE_YAML
@@ -487,6 +499,10 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_LONGITUDE, "longitude"),
         (CONF_NAME, "location_name"),
         (CONF_ELEVATION, "elevation"),
+        (CONF_INTERNAL_URL, "internal_url"),
+        (CONF_EXTERNAL_URL, "external_url"),
+        (CONF_MEDIA_DIRS, "media_dirs"),
+        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -494,10 +510,34 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
+    if CONF_MEDIA_DIRS not in config:
+        if is_docker_env():
+            hac.media_dirs = {"local": "/media"}
+        else:
+            hac.media_dirs = {"local": hass.config.path("media")}
+
     # Init whitelist external dir
-    hac.whitelist_external_dirs = {hass.config.path("www")}
-    if CONF_WHITELIST_EXTERNAL_DIRS in config:
-        hac.whitelist_external_dirs.update(set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
+    hac.allowlist_external_dirs = {hass.config.path("www"), *hac.media_dirs.values()}
+    if CONF_ALLOWLIST_EXTERNAL_DIRS in config:
+        hac.allowlist_external_dirs.update(set(config[CONF_ALLOWLIST_EXTERNAL_DIRS]))
+
+    elif LEGACY_CONF_WHITELIST_EXTERNAL_DIRS in config:
+        _LOGGER.warning(
+            "Key %s has been replaced with %s. Please update your config",
+            LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+            CONF_ALLOWLIST_EXTERNAL_DIRS,
+        )
+        hac.allowlist_external_dirs.update(
+            set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
+        )
+
+    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # already have it so that we can properly test "path ownership"
+    if CONF_ALLOWLIST_EXTERNAL_URLS in config:
+        hac.allowlist_external_urls.update(
+            url if url.endswith("/") else f"{url}/"
+            for url in config[CONF_ALLOWLIST_EXTERNAL_URLS]
+        )
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
@@ -529,10 +569,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             hac.units = METRIC_SYSTEM
     elif CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]
-        if unit == TEMP_CELSIUS:
-            hac.units = METRIC_SYSTEM
-        else:
-            hac.units = IMPERIAL_SYSTEM
+        hac.units = METRIC_SYSTEM if unit == TEMP_CELSIUS else IMPERIAL_SYSTEM
         _LOGGER.warning(
             "Found deprecated temperature unit in core "
             "configuration expected unit system. Replace '%s: %s' "
@@ -559,6 +596,9 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
 
 def _identify_config_schema(module: ModuleType) -> Optional[str]:
     """Extract the schema and identify list or dict based."""
+    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):  # type: ignore
+        return None
+
     schema = module.CONFIG_SCHEMA.schema  # type: ignore
 
     if isinstance(schema, vol.All):
@@ -710,8 +750,14 @@ async def async_process_component_config(
     config_validator = None
     try:
         config_validator = integration.get_platform("config")
-    except ImportError:
-        pass
+    except ImportError as err:
+        # Filter out import error of the config platform.
+        # If the config platform contains bad imports, make sure
+        # that still fails.
+        if err.name != f"{integration.pkg_path}.config":
+            _LOGGER.error("Error importing config platform %s: %s", domain, err)
+            return None
+
     if config_validator is not None and hasattr(
         config_validator, "async_validate_config"
     ):
@@ -782,9 +828,7 @@ async def async_process_component_config(
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                    p_config
-                )
+                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,
@@ -858,7 +902,7 @@ def async_notify_setup_error(
         part = f"[{name}]({link})" if link else name
         message += f" - {part}\n"
 
-    message += "\nPlease check your config."
+    message += "\nPlease check your config and [logs](/config/logs)."
 
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"

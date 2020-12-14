@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "invalid_access_token": "\u5b58\u53d6\u5bc6\u9470\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "\u5b58\u53d6\u5bc6\u9470",
+                    "email": "\u96fb\u5b50\u90f5\u4ef6"
+                },
+                "description": "\u8acb\u91cd\u65b0\u8f38\u5165 Awair \u958b\u767c\u8005\u5b58\u53d6\u5bc6\u9470\u3002"
+            },
+            "user": {
+                "data": {
+                    "access_token": "\u5b58\u53d6\u5bc6\u9470",
+                    "email": "\u96fb\u5b50\u90f5\u4ef6"
+                },
+                "description": "\u5fc5\u9808\u5148\u8a3b\u518a Awair \u958b\u767c\u8005\u5b58\u53d6\u5bc6\u9470\uff1ahttps://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

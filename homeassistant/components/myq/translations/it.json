@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "MyQ \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },

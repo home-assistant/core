@@ -106,11 +106,7 @@ class EntityComponent:
 
         This doesn't block the executor to protect from deadlocks.
         """
-        self.hass.add_job(
-            self.async_setup(  # type: ignore
-                config
-            )
-        )
+        self.hass.add_job(self.async_setup(config))  # type: ignore
 
     async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -123,15 +119,11 @@ class EntityComponent:
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
-        tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
-            tasks.append(self.async_setup_platform(p_type, p_config))
-
-        if tasks:
-            await asyncio.gather(*tasks)
+            self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
 
         # Generic discovery listener for loading platform dynamically
-        # Refer to: homeassistant.components.discovery.load_platform()
+        # Refer to: homeassistant.helpers.discovery.async_load_platform()
         async def component_platform_discovered(
             platform: str, info: Optional[Dict[str, Any]]
         ) -> None:
@@ -168,7 +160,7 @@ class EntityComponent:
             scan_interval=getattr(platform, "SCAN_INTERVAL", None),
         )
 
-        return await self._platforms[key].async_setup_entry(config_entry)  # type: ignore
+        return await self._platforms[key].async_setup_entry(config_entry)
 
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry."""
@@ -200,7 +192,7 @@ class EntityComponent:
         self,
         name: str,
         schema: Union[Dict[str, Any], vol.Schema],
-        func: str,
+        func: Union[str, Callable[..., Any]],
         required_features: Optional[List[int]] = None,
     ) -> None:
         """Register an entity service."""

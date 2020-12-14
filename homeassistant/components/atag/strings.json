@@ -1,20 +1,21 @@
 {
-  "title": "Atag",
   "config": {
     "step": {
       "user": {
         "title": "Connect to the device",
         "data": {
-          "host": "Host",
-          "port": "Port (10000)"
+          "host": "[%key:common::config_flow::data::host%]",
+          "email": "[%key:common::config_flow::data::email%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },
     "error": {
-      "connection_error": "Failed to connect, please try again"
+      "unauthorized": "Pairing denied, check device for auth request",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "Only one Atag device can be added to Home Assistant"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

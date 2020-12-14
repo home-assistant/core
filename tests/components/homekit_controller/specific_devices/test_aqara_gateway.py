@@ -1,7 +1,7 @@
 """
 Regression tests for Aqara Gateway V3.
 
-https://github.com/home-assistant/home-assistant/issues/20957
+https://github.com/home-assistant/core/issues/20957
 """
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR

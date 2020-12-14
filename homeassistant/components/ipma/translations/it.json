@@ -7,13 +7,18 @@
             "user": {
                 "data": {
                     "latitude": "Latitudine",
-                    "longitude": "Longitudine",
+                    "longitude": "Logitudine",
                     "mode": "Modalit\u00e0",
                     "name": "Nome"
                 },
                 "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
-                "title": "Localit\u00e0"
+                "title": "Posizione"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Endpoint API IPMA raggiungibile"
         }
     }
 }

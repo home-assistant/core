@@ -2,8 +2,7 @@
     "config": {
         "step": {
             "confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani az iZone-t?",
-                "title": "iZone"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani az iZone-t?"
             }
         }
     }

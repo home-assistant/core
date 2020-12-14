@@ -5,9 +5,13 @@
         },
         "step": {
             "confirm": {
-                "description": "Si desidera configurare il componente App per dispositivi mobili?",
-                "title": "App per dispositivi mobili"
+                "description": "Si desidera configurare il componente App per dispositivi mobili?"
             }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Invia una notifica"
         }
     }
 }

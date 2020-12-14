@@ -16,9 +16,11 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
@@ -27,17 +29,13 @@ from .const import (
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
+    DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
 )
 from .controller import get_controller
-from .errors import (
-    AlreadyConfigured,
-    AuthenticationRequired,
-    CannotConnect,
-    NoLocalUser,
-)
+from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
@@ -134,8 +132,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 for site in self.sites.values():
                     if desc == site["desc"]:
-                        if "role" not in site:
-                            raise NoLocalUser
                         self.config[CONF_SITE_ID] = site["name"]
                         break
 
@@ -153,9 +149,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
-
-            except NoLocalUser:
-                return self.async_abort(reason="no_local_user")
 
         if len(self.sites) == 1:
             self.desc = next(iter(self.sites.values()))["desc"]
@@ -229,12 +222,21 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_client_control()
 
-        ssids = list(self.controller.api.wlans) + [
-            f"{wlan.name}{wlan.name_combine_suffix}"
-            for wlan in self.controller.api.wlans.values()
-            if not wlan.name_combine_enabled
-        ]
-        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
+        ssids = (
+            set(self.controller.api.wlans)
+            | {
+                f"{wlan.name}{wlan.name_combine_suffix}"
+                for wlan in self.controller.api.wlans.values()
+                if not wlan.name_combine_enabled
+            }
+            | {
+                wlan["name"]
+                for ap in self.controller.api.devices.values()
+                for wlan in ap.wlan_overrides
+                if "name" in wlan
+            }
+        )
+        ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}
 
         return self.async_show_form(
             step_id="device_tracker",
@@ -295,6 +297,12 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_POE_CLIENTS,
                         default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
                     ): bool,
+                    vol.Optional(
+                        CONF_DPI_RESTRICTIONS,
+                        default=self.options.get(
+                            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
+                        ),
+                    ): bool,
                 }
             ),
             errors=errors,
@@ -313,7 +321,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
                         default=self.controller.option_allow_bandwidth_sensors,
-                    ): bool
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_UPTIME_SENSORS,
+                        default=self.controller.option_allow_uptime_sensors,
+                    ): bool,
                 }
             ),
         )

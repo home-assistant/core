@@ -1,23 +1,26 @@
 """Support for Ambient Weather Station Service."""
 import asyncio
-import logging
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     DEGREE,
     EVENT_HOMEASSISTANT_STOP,
-    POWER_WATT,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
+    LIGHT_LUX,
+    PERCENTAGE,
+    PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -35,11 +38,10 @@ from .const import (
     CONF_APP_KEY,
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
     TYPE_BINARY_SENSOR,
     TYPE_SENSOR,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = "config"
 
@@ -126,6 +128,8 @@ TYPE_TEMPF = "tempf"
 TYPE_TEMPINF = "tempinf"
 TYPE_TOTALRAININ = "totalrainin"
 TYPE_UV = "uv"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
 TYPE_WEEKLYRAININ = "weeklyrainin"
 TYPE_WINDDIR = "winddir"
 TYPE_WINDDIR_AVG10M = "winddir_avg10m"
@@ -138,8 +142,8 @@ TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
     TYPE_24HOURRAININ: ("24 Hr Rain", "in", TYPE_SENSOR, None),
-    TYPE_BAROMABSIN: ("Abs Pressure", "inHg", TYPE_SENSOR, "pressure"),
-    TYPE_BAROMRELIN: ("Rel Pressure", "inHg", TYPE_SENSOR, "pressure"),
+    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
+    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
     TYPE_BATT10: ("Battery 10", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT1: ("Battery 1", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT2: ("Battery 2", None, TYPE_BINARY_SENSOR, "battery"),
@@ -157,41 +161,41 @@ SENSOR_TYPES = {
     TYPE_EVENTRAININ: ("Event Rain", "in", TYPE_SENSOR, None),
     TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_HOURLYRAININ: ("Hourly Rain Rate", "in/hr", TYPE_SENSOR, None),
-    TYPE_HUMIDITY10: ("Humidity 10", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY1: ("Humidity 1", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY2: ("Humidity 2", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY3: ("Humidity 3", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY4: ("Humidity 4", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY5: ("Humidity 5", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY6: ("Humidity 6", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY7: ("Humidity 7", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY8: ("Humidity 8", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY9: ("Humidity 9", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY: ("Humidity", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITYIN: ("Humidity In", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY3: ("Humidity 3", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY4: ("Humidity 4", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY5: ("Humidity 5", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY6: ("Humidity 6", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY7: ("Humidity 7", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY8: ("Humidity 8", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY9: ("Humidity 9", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITY: ("Humidity", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, TYPE_SENSOR, "humidity"),
     TYPE_LASTRAIN: ("Last Rain", None, TYPE_SENSOR, "timestamp"),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", TYPE_SENSOR, None),
-    TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY2: ("Relay 2", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY3: ("Relay 3", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY4: ("Relay 4", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY5: ("Relay 5", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY6: ("Relay 6", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY7: ("Relay 7", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY8: ("Relay 8", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_RELAY9: ("Relay 9", None, TYPE_BINARY_SENSOR, "connectivity"),
-    TYPE_SOILHUM10: ("Soil Humidity 10", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM1: ("Soil Humidity 1", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM2: ("Soil Humidity 2", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM3: ("Soil Humidity 3", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM4: ("Soil Humidity 4", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM5: ("Soil Humidity 5", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM6: ("Soil Humidity 6", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM7: ("Soil Humidity 7", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM8: ("Soil Humidity 8", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM9: ("Soil Humidity 9", UNIT_PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY2: ("Relay 2", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY3: ("Relay 3", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY4: ("Relay 4", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY5: ("Relay 5", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY6: ("Relay 6", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY7: ("Relay 7", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY8: ("Relay 8", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY9: ("Relay 9", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_SOILHUM10: ("Soil Humidity 10", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM1: ("Soil Humidity 1", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM2: ("Soil Humidity 2", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM3: ("Soil Humidity 3", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM4: ("Soil Humidity 4", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM5: ("Soil Humidity 5", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM6: ("Soil Humidity 6", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM7: ("Soil Humidity 7", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM8: ("Soil Humidity 8", PERCENTAGE, TYPE_SENSOR, "humidity"),
+    TYPE_SOILHUM9: ("Soil Humidity 9", PERCENTAGE, TYPE_SENSOR, "humidity"),
     TYPE_SOILTEMP10F: ("Soil Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOILTEMP1F: ("Soil Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOILTEMP2F: ("Soil Temp 2", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
@@ -202,8 +206,13 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP7F: ("Soil Temp 7", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOILTEMP8F: ("Soil Temp 8", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOLARRADIATION: ("Solar Rad", f"{POWER_WATT}/m^2", TYPE_SENSOR, None),
-    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", "lx", TYPE_SENSOR, "illuminance"),
+    TYPE_SOLARRADIATION: (
+        "Solar Rad",
+        IRRADIATION_WATTS_PER_SQUARE_METER,
+        TYPE_SENSOR,
+        None,
+    ),
+    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", LIGHT_LUX, TYPE_SENSOR, "illuminance"),
     TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
@@ -218,6 +227,13 @@ SENSOR_TYPES = {
     TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
     TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
+    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TYPE_SENSOR, None),
+    TYPE_PM25_24H: (
+        "PM25 24h Avg",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        TYPE_SENSOR,
+        None,
+    ),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, TYPE_SENSOR, None),
@@ -283,18 +299,19 @@ async def async_setup_entry(hass, config_entry):
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY],
-                session,
+                session=session,
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketError as err:
-        _LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        LOGGER.error("Config entry failed: %s", err)
+        raise ConfigEntryNotReady from err
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, ambient.client.websocket.disconnect()
-    )
+    async def _async_disconnect_websocket(*_):
+        await ambient.client.websocket.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
 
     return True
 
@@ -318,7 +335,7 @@ async def async_migrate_entry(hass, config_entry):
     """Migrate old entry."""
     version = config_entry.version
 
-    _LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
@@ -331,7 +348,7 @@ async def async_migrate_entry(hass, config_entry):
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
 
-    _LOGGER.info("Migration to version %s successful", version)
+    LOGGER.info("Migration to version %s successful", version)
 
     return True
 
@@ -358,7 +375,7 @@ class AmbientStation:
         try:
             await connect()
         except WebsocketError as err:
-            _LOGGER.error("Error with the websocket connection: %s", err)
+            LOGGER.error("Error with the websocket connection: %s", err)
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
             async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
@@ -367,13 +384,13 @@ class AmbientStation:
 
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
-            _LOGGER.info("Connected to websocket")
+            LOGGER.info("Connected to websocket")
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
             mac_address = data["macAddress"]
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
-                _LOGGER.debug("New data received: %s", data)
+                LOGGER.debug("New data received: %s", data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
                 async_dispatcher_send(
                     self._hass, f"ambient_station_data_update_{mac_address}"
@@ -381,7 +398,7 @@ class AmbientStation:
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
-            _LOGGER.info("Disconnected from websocket")
+            LOGGER.info("Disconnected from websocket")
 
         def on_subscribed(data):
             """Define a handler to fire when the subscription is set."""
@@ -389,7 +406,7 @@ class AmbientStation:
                 if station["macAddress"] in self.stations:
                     continue
 
-                _LOGGER.debug("New station subscription: %s", data)
+                LOGGER.debug("New station subscription: %s", data)
 
                 # Only create entities based on the data coming through the socket.
                 # If the user is monitoring brightness (in W/m^2), make sure we also

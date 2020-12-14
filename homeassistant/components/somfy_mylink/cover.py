@@ -1,7 +1,11 @@
 """Cover Platform for the Somfy MyLink component."""
 import logging
 
-from homeassistant.components.cover import ENTITY_ID_FORMAT, CoverEntity
+from homeassistant.components.cover import (
+    DEVICE_CLASS_WINDOW,
+    ENTITY_ID_FORMAT,
+    CoverEntity,
+)
 from homeassistant.util import slugify
 
 from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
@@ -46,10 +50,10 @@ class SomfyShade(CoverEntity):
     def __init__(
         self,
         somfy_mylink,
-        target_id="AABBCC",
+        target_id,
         name="SomfyShade",
         reverse=False,
-        device_class="window",
+        device_class=DEVICE_CLASS_WINDOW,
     ):
         """Initialize the cover."""
         self.somfy_mylink = somfy_mylink
@@ -57,6 +61,11 @@ class SomfyShade(CoverEntity):
         self._name = name
         self._reverse = reverse
         self._device_class = device_class
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this cover."""
+        return self._target_id
 
     @property
     def name(self):

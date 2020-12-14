@@ -51,6 +51,7 @@ ENTITY_VACUUM_STATE = f"{DOMAIN}.{DEMO_VACUUM_STATE}".lower()
 async def setup_demo_vacuum(hass):
     """Initialize setup demo vacuum."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "demo"}})
+    await hass.async_block_till_done()
 
 
 async def test_supported_features(hass):

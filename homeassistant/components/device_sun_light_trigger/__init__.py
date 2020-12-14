@@ -11,6 +11,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_HOME,
@@ -59,17 +60,35 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the triggers to control lights based on device presence."""
+    conf = config[DOMAIN]
+    disable_turn_off = conf[CONF_DISABLE_TURN_OFF]
+    light_group = conf.get(CONF_LIGHT_GROUP)
+    light_profile = conf[CONF_LIGHT_PROFILE]
+    device_group = conf.get(CONF_DEVICE_GROUP)
+
+    async def activate_on_start(_):
+        """Activate automation."""
+        await activate_automation(
+            hass, device_group, light_group, light_profile, disable_turn_off
+        )
+
+    if hass.is_running:
+        await activate_on_start(None)
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, activate_on_start)
+
+    return True
+
+
+async def activate_automation(
+    hass, device_group, light_group, light_profile, disable_turn_off
+):
+    """Activate the automation."""
     logger = logging.getLogger(__name__)
     device_tracker = hass.components.device_tracker
     group = hass.components.group
     light = hass.components.light
     person = hass.components.person
-    conf = config[DOMAIN]
-    disable_turn_off = conf[CONF_DISABLE_TURN_OFF]
-    light_group = conf.get(CONF_LIGHT_GROUP)
-    light_profile = conf[CONF_LIGHT_PROFILE]
-
-    device_group = conf.get(CONF_DEVICE_GROUP)
 
     if device_group is None:
         device_entity_ids = hass.states.async_entity_ids(device_tracker.DOMAIN)
@@ -79,7 +98,7 @@ async def async_setup(hass, config):
 
     if not device_entity_ids:
         logger.error("No devices found to track")
-        return False
+        return
 
     # Get the light IDs from the specified group
     if light_group is None:
@@ -89,7 +108,7 @@ async def async_setup(hass, config):
 
     if not light_ids:
         logger.error("No lights found to turn on")
-        return False
+        return
 
     @callback
     def anyone_home():
@@ -219,7 +238,7 @@ async def async_setup(hass, config):
     )
 
     if disable_turn_off:
-        return True
+        return
 
     @callback
     def turn_off_lights_when_all_leave(entity, old_state, new_state):
@@ -247,4 +266,4 @@ async def async_setup(hass, config):
         STATE_NOT_HOME,
     )
 
-    return True
+    return

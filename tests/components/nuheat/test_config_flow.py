@@ -40,6 +40,7 @@ async def test_form_user(hass):
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Master bathroom"
@@ -48,7 +49,6 @@ async def test_form_user(hass):
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -79,6 +79,7 @@ async def test_form_import(hass):
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "Master bathroom"
@@ -87,7 +88,6 @@ async def test_form_import(hass):
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

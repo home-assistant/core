@@ -1,6 +1,4 @@
 """Support for Wink fans."""
-import logging
-
 import pywink
 
 from homeassistant.components.fan import (
@@ -13,8 +11,6 @@ from homeassistant.components.fan import (
 )
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SPEED_AUTO = "auto"
 SPEED_LOWEST = "lowest"

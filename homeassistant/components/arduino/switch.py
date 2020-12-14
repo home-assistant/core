@@ -1,6 +1,4 @@
 """Support for switching Arduino pins on and off."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -8,8 +6,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = "pins"
 CONF_TYPE = "digital"

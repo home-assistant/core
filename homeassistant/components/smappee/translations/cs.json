@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_configured_local_device": "M\u00edstn\u00ed za\u0159\u00edzen\u00ed ji\u017e jsou nastavena. P\u0159ed nastaven\u00ed cloudov\u00e9ho za\u0159\u00edzen\u00ed je nejprve odstra\u0148te.",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_mdns": "Nepodporovan\u00e9 za\u0159\u00edzen\u00ed pro integraci Smappee.",
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})"
+        },
+        "flow_title": "Smappee: {name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "Prost\u0159ed\u00ed"
+                },
+                "description": "Nastavte Smappee k integraci s Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Hostitel"
+                },
+                "description": "Zadejte hostitele a zahajte m\u00edstn\u00ed integraci Smappee"
+            },
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            },
+            "zeroconf_confirm": {
+                "description": "Chcete p\u0159idat za\u0159\u00edzen\u00ed Smappee se s\u00e9riov\u00fdm \u010d\u00edslem `{serialnumber}` do Home Assistant?",
+                "title": "Objeven\u00e9 za\u0159\u00edzen\u00ed Smappee"
+            }
+        }
+    }
+}

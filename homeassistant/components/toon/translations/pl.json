@@ -1,32 +1,24 @@
 {
     "config": {
         "abort": {
-            "client_id": "Identyfikator klienta z konfiguracji jest nieprawid\u0142owy.",
-            "client_secret": "Tajny klucz klienta z konfiguracji jest nieprawid\u0142owy.",
-            "no_agreements": "To konto nie posiada wy\u015bwietlaczy Toon.",
-            "no_app": "Musisz skonfigurowa\u0107 Toon, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Wyst\u0105pi\u0142 nieoczekiwany b\u0142\u0105d podczas uwierzytelniania."
-        },
-        "error": {
-            "credentials": "Wprowadzone dane logowania s\u0105 nieprawid\u0142owe.",
-            "display_exists": "Wybrany ekran jest ju\u017c skonfigurowany."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_agreements": "To konto nie posiada wy\u015bwietlaczy Toon",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "unknown_authorize_url_generation": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji"
         },
         "step": {
-            "authenticate": {
+            "agreement": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "tenant": "Najemca",
-                    "username": "Nazwa u\u017cytkownika"
+                    "agreement": "Umowa"
                 },
-                "description": "Uwierzytelnij konto Eneco Toon (nie konto programisty).",
-                "title": "Po\u0142\u0105cz konto Toon"
+                "description": "Wybierz adres umowy, kt\u00f3ry chcesz doda\u0107.",
+                "title": "Wybierz swoj\u0105 umow\u0119"
             },
-            "display": {
-                "data": {
-                    "display": "Wybierz wy\u015bwietlacz"
-                },
-                "description": "Wybierz wy\u015bwietlacz Toon, z kt\u00f3rym chcesz si\u0119 po\u0142\u0105czy\u0107.",
-                "title": "Wybierz wy\u015bwietlacz"
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
     }

@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u60a8\u60f3\u8981\u914d\u7f6e Google Cast \u5417\uff1f",
-                "title": "Google Cast"
+                "description": "\u60a8\u60f3\u8981\u914d\u7f6e Google Cast \u5417\uff1f"
             }
         }
     }

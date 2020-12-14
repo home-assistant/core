@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O site do controlador j\u00e1 se encontra configurado",
-            "user_privilege": "Utilizador tem que ser administrador"
+            "already_configured": "O site do controlador j\u00e1 se encontra configurado"
         },
         "error": {
             "faulty_credentials": "Credenciais do utilizador erradas",
@@ -40,6 +39,12 @@
                 "data": {
                     "one": "Vazio",
                     "other": "Vazios"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Acompanhar clientes da rede",
+                    "track_devices": "Acompanhar dispositivos de rede (dispositivos Ubiquiti)"
                 }
             },
             "statistics_sensors": {

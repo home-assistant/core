@@ -8,11 +8,11 @@
             "no_flows": "Du m\u00fcsst Point konfigurieren, bevor du dich damit authentifizieren kannst. [Bitte lese die Anweisungen] (https://www.home-assistant.io/components/point/)."
         },
         "create_entry": {
-            "default": "Mit Minut erfolgreich f\u00fcr Ihre Point-Ger\u00e4te authentifiziert"
+            "default": "Erfolgreich authentifiziert"
         },
         "error": {
             "follow_link": "Bitte folgen dem Link und authentifiziere dich, bevor du auf Senden klickst",
-            "no_token": "Nicht mit Minut authentifiziert"
+            "no_token": "Ung\u00fcltiger Access Token"
         },
         "step": {
             "auth": {

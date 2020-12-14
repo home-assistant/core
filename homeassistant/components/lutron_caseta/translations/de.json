@@ -1,3 +1,10 @@
 {
-    "title": "Lutron Cas\u00e9ta"
+    "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        }
+    }
 }

@@ -57,7 +57,8 @@ async def test_found(hass, mock_disco):
     mock_disco.pi_disco.controllers["blah"] = object()
 
     with patch(
-        "homeassistant.components.izone.climate.async_setup_entry", return_value=True,
+        "homeassistant.components.izone.climate.async_setup_entry",
+        return_value=True,
     ) as mock_setup, patch(
         "homeassistant.components.izone.config_flow.async_start_discovery_service"
     ) as start_disco, patch(

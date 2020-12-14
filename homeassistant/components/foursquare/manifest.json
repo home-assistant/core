@@ -3,5 +3,5 @@
   "name": "Foursquare",
   "documentation": "https://www.home-assistant.io/integrations/foursquare",
   "dependencies": ["http"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": []
 }

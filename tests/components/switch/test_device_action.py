@@ -16,6 +16,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -75,6 +76,7 @@ async def test_action(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     ent1, ent2, ent3 = platform.ENTITIES
 
