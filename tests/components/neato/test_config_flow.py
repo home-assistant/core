@@ -1,11 +1,13 @@
 """Test the Neato Botvac config flow."""
 from pybotvac.neato import Neato
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.neato.config_flow import OAuth2FlowHandler
 from homeassistant.components.neato.const import NEATO_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -69,3 +71,19 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_abort_if_already_setup(hass):
+    """Test we abort if Neato is already setup."""
+    flow = OAuth2FlowHandler()
+    flow.hass = hass
+
+    MockConfigEntry(
+        domain=NEATO_DOMAIN,
+        data={"some": "data"},
+    ).add_to_hass(hass)
+
+    # Should fail
+    result = await flow.async_step_user({"some": "data"})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
