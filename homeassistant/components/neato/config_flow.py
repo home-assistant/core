@@ -30,4 +30,10 @@ class OAuth2FlowHandler(
         """Create an entry for the flow."""
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
-        return super().async_step_user(user_input=user_input)
+
+        return await super().async_step_user(user_input=user_input)
+
+    async def async_step_reauth(self, entry_data) -> dict:
+        """Perform reauth upon migration of old entries."""
+        # TODO: delete current entries
+        return self.async_show_form(step_id="pick_implementation")

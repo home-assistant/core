@@ -7,8 +7,8 @@ from pybotvac import Account, Neato
 from pybotvac.exceptions import NeatoException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_SOURCE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -71,8 +71,13 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version < 2:
-        _LOGGER.warning(
-            "Your configuration is outdated. Please delete the integration and add neato botvac again."
+        _LOGGER.warning("Your configuration is outdated. Updating...")
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                NEATO_DOMAIN,
+                context={CONF_SOURCE: SOURCE_REAUTH},
+                data=config_entry.data,
+            )
         )
         return False
 
