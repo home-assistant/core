@@ -57,9 +57,13 @@ async def async_setup_entry(
         # A pointer to our sensors
         sensors = hass.data[DOMAIN][entry.entry_id][SENSORS]
 
+        # Track our detected sensors (for automatic updates if required)
+        detected_sensors = set()
+
         for meta in areas:
             bank_no = meta["bank"]
             sensor_id = "area{:0>2}_state".format(bank_no + 1)
+            detected_sensors.add(sensor_id)
             if sensor_id not in sensors:
                 # hash our entry
                 sensors[sensor_id] = UltraSyncSensor(
@@ -84,6 +88,7 @@ async def async_setup_entry(
         for meta in zones:
             bank_no = meta["bank"]
             sensor_id = "zone{:0>2}_state".format(bank_no + 1)
+            detected_sensors.add(sensor_id)
             if sensor_id not in sensors:
                 # hash our entry
                 sensors[sensor_id] = UltraSyncSensor(
@@ -108,6 +113,11 @@ async def async_setup_entry(
         if new_sensors:
             # Add our newly detected sensors
             async_add_entities(new_sensors)
+
+        for sensor_id in set(sensors.keys()).difference(detected_sensors):
+            # Tidy up sensors leaving our listing
+            hass.async_create_task(sensors[sensor_id].async_remove())
+            del sensors[sensor_id]
 
     # register our callback which will be called the second we make a
     # connection to our panel

@@ -62,7 +62,6 @@ async def test_sensors(hass, ultrasync_api) -> None:
     sensors = {
         "area01_state": ("area1state", "Ready"),
         "zone01_state": ("zone1state", "Ready"),
-        "zone02_state": ("zone2state", "unknown"),
     }
 
     for (sensor_id, data) in sensors.items():
@@ -73,3 +72,9 @@ async def test_sensors(hass, ultrasync_api) -> None:
         state = hass.states.get(f"sensor.ultrasync_{data[0]}")
         assert state
         assert state.state == data[1]
+
+    # Verify Zone02 is gone (safely unregistered)
+    entity_entry = registry.async_get("sensor.ultrasync_zone02_state")
+    assert entity_entry is None
+    state = hass.states.get("sensor.ultrasync_zone02_state")
+    assert state is None
