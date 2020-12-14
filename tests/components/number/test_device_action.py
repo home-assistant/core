@@ -3,8 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.number import DOMAIN, const, device_action
-from homeassistant.const import STATE_ON
+from homeassistant.components.number import DOMAIN, device_action
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 

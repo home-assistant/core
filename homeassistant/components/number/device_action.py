@@ -1,5 +1,5 @@
 """Provides device actions for Number."""
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
 
@@ -53,23 +53,23 @@ async def async_call_action_from_config(
     """Execute a device action."""
     config = ACTION_SCHEMA(config)
 
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
-
     if config[CONF_TYPE] != "set_value":
         return
 
     await hass.services.async_call(
         DOMAIN,
         const.SERVICE_SET_VALUE,
-        {const.ATTR_VALUE: config[const.ATTR_VALUE]},
+        {
+            ATTR_ENTITY_ID: config[CONF_ENTITY_ID],
+            const.ATTR_VALUE: config[const.ATTR_VALUE],
+        },
         blocking=True,
         context=context,
     )
 
 
-async def async_get_action_capabilities(hass, config):
+async def async_get_action_capabilities(hass: HomeAssistant, config: dict):
     """List action capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
     action_type = config[CONF_TYPE]
 
     if action_type != "set_value":
