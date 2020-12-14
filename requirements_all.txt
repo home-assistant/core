@@ -481,7 +481,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.7
+denonavr==0.9.8
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -759,7 +759,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.10.3
+holidays==0.10.4
 
 # homeassistant.components.frontend
 home-assistant-frontend==20201212.0
@@ -1928,7 +1928,7 @@ raspyrfm-client==1.2.8
 regenmaschine==3.0.0
 
 # homeassistant.components.python_script
-restrictedpython==5.0
+restrictedpython==5.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2330,7 +2330,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.11.12
+youtube_dl==2020.12.07
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

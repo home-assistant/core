@@ -257,7 +257,7 @@ debugpy==1.2.0
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.7
+denonavr==0.9.8
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -391,7 +391,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.10.3
+holidays==0.10.4
 
 # homeassistant.components.frontend
 home-assistant-frontend==20201212.0
@@ -948,7 +948,7 @@ rachiopy==1.0.3
 regenmaschine==3.0.0
 
 # homeassistant.components.python_script
-restrictedpython==5.0
+restrictedpython==5.1
 
 # homeassistant.components.rflink
 rflink==0.0.55
