@@ -64,7 +64,7 @@ TUYA_TRACKER = "tuya_tracker"
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN, invalidation_version="0.121"),
+        cv.deprecated(DOMAIN, invalidation_version="2021.02"),
         {
             DOMAIN: vol.Schema(
                 {
