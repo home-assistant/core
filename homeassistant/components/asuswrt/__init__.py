@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN, invalidation_version="2021.02"),
+        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
