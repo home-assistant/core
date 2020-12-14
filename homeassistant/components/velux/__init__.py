@@ -6,6 +6,7 @@ from pyvlx import PyVLX
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
 
@@ -32,8 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = gateway
-
-    await gateway.connect()
+    try: 
+        await gateway.connect()
+    except (OSError, ConnectionAbortedError) as ex:  # pylint: disable=broad-except
+        _LOGGER.error("Unable to connect to KLF200: %s", str(ex))
+        raise ConfigEntryNotReady from ex
     await gateway.load_nodes()
     await gateway.load_scenes()
 
