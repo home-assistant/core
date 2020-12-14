@@ -336,6 +336,6 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         _LOGGER.debug("polling current state")
         if self._analog_output_channel:
             value = await self._analog_output_channel.get_attribute_value(
-                "present_value"
+                "present_value", from_cache=False
             )
             _LOGGER.debug("read value=%s", value)

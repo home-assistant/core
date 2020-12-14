@@ -7,6 +7,7 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.setup import async_setup_component
 
 from .common import (
     async_enable_traffic,
@@ -69,8 +70,10 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
+    assert cluster.read_attributes.call_count == 2
     await async_enable_traffic(hass, [zha_device])
     await hass.async_block_till_done()
+    assert cluster.read_attributes.call_count == 4
 
     # test that the state has changed from unavailable to 15.0
     assert hass.states.get(entity_id).state == "15.0"
@@ -87,6 +90,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     )
 
     # change value from device
+    assert cluster.read_attributes.call_count == 4
     await send_attributes_report(hass, cluster, {0x0055: 15})
     assert hass.states.get(entity_id).state == "15.0"
 
@@ -108,5 +112,22 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
         cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
 
     # test rejoin
+    assert cluster.read_attributes.call_count == 4
     await async_test_rejoin(hass, zigpy_analog_output_device, [cluster], (1,))
     assert hass.states.get(entity_id).state == "30.0"
+    assert cluster.read_attributes.call_count == 6
+
+    # update device value with failed attribute report
+    cluster.PLUGGED_ATTR_READS["present_value"] = 40.0
+    # validate the entity still contains old value
+    assert hass.states.get(entity_id).state == "30.0"
+
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == "40.0"
+    assert cluster.read_attributes.call_count == 7
+    assert "present_value" in cluster.read_attributes.call_args[0][0]
