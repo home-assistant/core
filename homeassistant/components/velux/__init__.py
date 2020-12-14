@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = gateway
     try: 
         await gateway.connect()
-    except (OSError, ConnectionAbortedError) as ex:  # pylint: disable=broad-except
+    except (OSError, ConnectionAbortedError) as ex:  
         _LOGGER.error("Unable to connect to KLF200: %s", str(ex))
         raise ConfigEntryNotReady from ex
     await gateway.load_nodes()
