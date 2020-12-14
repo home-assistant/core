@@ -654,9 +654,6 @@ pyatmo==4.2.1
 # homeassistant.components.apple_tv
 pyatv==0.7.5
 
-# homeassistant.components.becker
-pybecker==1.0.4
-
 # homeassistant.components.blackbird
 pyblackbird==0.5
 
