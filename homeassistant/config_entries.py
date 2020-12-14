@@ -297,6 +297,7 @@ class ConfigEntry:
                 return True
 
         component = integration.get_component()
+
         if integration.domain == self.domain:
             if self.state in UNRECOVERABLE_STATES:
                 return False
@@ -310,6 +311,7 @@ class ConfigEntry:
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
+
         if not supports_unload:
             if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
@@ -839,6 +841,7 @@ class ConfigEntries:
             return True
 
         integration = await loader.async_get_integration(self.hass, domain)
+
         return await entry.async_unload(self.hass, integration=integration)
 
     @callback
