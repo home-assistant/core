@@ -22,6 +22,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import persistent_notification
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -30,6 +31,7 @@ from homeassistant.util.json import load_json
 from .const import DATA_SDM, DOMAIN, SDM_SCOPES
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
+NEST_REAUTH_NOTIFICATION = "nest_reauth"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -105,6 +107,28 @@ class NestFlowHandler(
         """Create an entry for the SDM flow."""
         data[DATA_SDM] = {}
         return await super().async_oauth_create_entry(data)
+
+    async def async_step_auth(self, user_input=None):
+        """Create an entry for auth."""
+        if not self.is_sdm_api():
+            raise UnexpectedStateError("Step only supported for SDM API")
+        persistent_notification.async_dismiss(self.hass, NEST_REAUTH_NOTIFICATION)
+        return await super().async_step_auth(user_input)
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        if not self.is_sdm_api():
+            raise UnexpectedStateError("Step only supported for SDM API")
+        # This causes the config flow to indicate that it should be reconfigured
+        # by showing a notification and an empty for that takes the user back
+        # to the start of the oauth setup flow.
+        persistent_notification.async_create(
+            self.hass,
+            "Nest needs to be re-authenticated.  Please go to the integrations page to re-configure it.",
+            "Nest re-authentication",
+            NEST_REAUTH_NOTIFICATION,
+        )
+        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
