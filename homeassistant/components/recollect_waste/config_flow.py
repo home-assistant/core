@@ -1,4 +1,6 @@
 """Config flow for ReCollect Waste integration."""
+from typing import Optional
+
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
 import voluptuous as vol
@@ -28,9 +30,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(entry: config_entries.ConfigEntry):
         """Define the config flow to handle options."""
-        return RecollectWasteOptionsFlowHandler(config_entry)
+        return RecollectWasteOptionsFlowHandler(entry)
 
     async def async_step_import(self, import_config: dict = None) -> dict:
         """Handle configuration via YAML import."""
@@ -75,11 +77,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a Recollect Waste options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, entry: config_entries.ConfigEntry):
         """Initialize."""
-        self.config_entry = config_entry
+        self._entry = entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: Optional[dict] = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -90,7 +92,7 @@ class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_FRIENDLY_NAME,
-                        default=self.config_entry.options.get(CONF_FRIENDLY_NAME),
+                        default=self._entry.options.get(CONF_FRIENDLY_NAME),
                     ): bool
                 }
             ),
