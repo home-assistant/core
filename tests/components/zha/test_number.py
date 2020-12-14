@@ -7,7 +7,6 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import CoreState, State
 
 from .common import (
     async_enable_traffic,
@@ -17,7 +16,7 @@ from .common import (
 )
 
 from tests.async_mock import call, patch
-from tests.common import mock_coro, mock_restore_cache
+from tests.common import mock_coro
 
 
 @pytest.fixture
