@@ -76,7 +76,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
             hass.config_entries.flow.async_init(
                 NEATO_DOMAIN,
                 context={CONF_SOURCE: SOURCE_REAUTH},
-                data=config_entry.data,
+                data=config_entry,
             )
         )
         return False
