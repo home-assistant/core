@@ -5,7 +5,12 @@ from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    CONN_CLASS_CLOUD_POLL,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -22,17 +27,17 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ReCollect Waste."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: config_entries.ConfigEntry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
         """Define the config flow to handle options."""
-        return RecollectWasteOptionsFlowHandler(entry)
+        return RecollectWasteOptionsFlowHandler(config_entry)
 
     async def async_step_import(self, import_config: dict = None) -> dict:
         """Handle configuration via YAML import."""
@@ -74,10 +79,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
+class RecollectWasteOptionsFlowHandler(OptionsFlow):
     """Handle a Recollect Waste options flow."""
 
-    def __init__(self, entry: config_entries.ConfigEntry):
+    def __init__(self, entry: ConfigEntry):
         """Initialize."""
         self._entry = entry
 
