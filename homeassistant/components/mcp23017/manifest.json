@@ -1,6 +1,7 @@
 {
   "domain": "mcp23017",
   "name": "MCP23017 Digital I/O Expander",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mcp23017",
   "dependencies": ["i2c"],
   "requirements": [],

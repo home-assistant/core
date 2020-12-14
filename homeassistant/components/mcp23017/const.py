@@ -1,3 +1,21 @@
 """Constant for MCP23017 integration."""
 DOMAIN = "mcp23017"
-DOMAIN_I2C = "i2c"
+
+MODE_UP = "UP"
+MODE_DOWN = "NONE"
+
+CONF_I2C_ADDRESS = "i2c_address"
+CONF_PINS = "pins"
+
+CONF_INVERT_LOGIC = "invert_logic"
+CONF_PULL_MODE = "pull_mode"
+
+CONF_FLOW_PLATFORM = "platform"
+CONF_FLOW_PIN_NUMBER = "pin_number"
+CONF_FLOW_PIN_NAME = "pin_name"
+
+DEFAULT_I2C_ADDRESS = 0x20
+
+DEFAULT_INVERT_LOGIC = False
+DEFAULT_PULL_MODE = MODE_UP
+DEFAULT_PUSH_SLOWDOWN = 10

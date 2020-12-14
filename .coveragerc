@@ -530,7 +530,9 @@ omit =
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
     homeassistant/components/maxcube/*
-    homeassistant/components/mcp23017/*
+    homeassistant/components/mcp23017/__init__.py
+    homeassistant/components/mcp23017/binary_sensor.py
+    homeassistant/components/mcp23017/switch.py
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/melcloud/__init__.py

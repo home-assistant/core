@@ -7,28 +7,27 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.components.mcp23017 import MCP23017
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, DOMAIN_I2C
+from .const import (
+    CONF_FLOW_PIN_NAME,
+    CONF_FLOW_PIN_NUMBER,
+    CONF_FLOW_PLATFORM,
+    CONF_I2C_ADDRESS,
+    CONF_INVERT_LOGIC,
+    CONF_PINS,
+    CONF_PULL_MODE,
+    DEFAULT_I2C_ADDRESS,
+    DEFAULT_INVERT_LOGIC,
+    DEFAULT_PULL_MODE,
+    DOMAIN,
+    MODE_DOWN,
+    MODE_UP,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_PINS = "pins"
-CONF_INVERT_LOGIC = "invert_logic"
-CONF_PULL_MODE = "pull_mode"
-CONF_I2C_ADDRESS = "i2c_address"
-CONF_SCAN_MULTIPLE = "scan_slowdown"
-
-MODE_UP = "UP"
-MODE_DOWN = "DOWN"
-
-DEFAULT_INVERT_LOGIC = False
-DEFAULT_PULL_MODE = MODE_UP
-DEFAULT_SCAN_MULTIPLE = 10
-DEFAULT_I2C_ADDRESS = 0x20
 
 _PIN_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
@@ -39,9 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): vol.All(
             vol.Upper, vol.In([MODE_UP, MODE_DOWN])
         ),
-        vol.Optional(CONF_SCAN_MULTIPLE, default=DEFAULT_SCAN_MULTIPLE): vol.Coerce(
-            int
-        ),
         vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
     }
 )
@@ -50,51 +46,81 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the MCP23017 platform for binary_sensor entities."""
 
-    # Bail out if i2c device manager is not available
-    if DOMAIN_I2C not in hass.data:
-        _LOGGER.warning(
-            "Umable to setup %s binary_sensors (missing %s platform)",
-            DOMAIN,
-            DOMAIN_I2C,
-        )
-        return
-
-    pins = config[CONF_PINS]
-    invert_logic = config[CONF_INVERT_LOGIC]
-    pull_mode = config[CONF_PULL_MODE]
-    scan_slowdown = config[CONF_SCAN_MULTIPLE]
-
-    i2c_address = config[CONF_I2C_ADDRESS]
-    i2c_bus = hass.data[DOMAIN_I2C]
-
-    binary_sensors = []
-    for pin_num, pin_name in pins.items():
-        binary_sensor_entity = MCP23017BinarySensor(
-            pin_num, pin_name, invert_logic, pull_mode
-        )
-        if await hass.async_add_executor_job(
-            functools.partial(
-                binary_sensor_entity.bind, MCP23017, i2c_bus, i2c_address, scan_slowdown
+    for pin_number, pin_name in config[CONF_PINS].items():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_FLOW_PLATFORM: "binary_sensor",
+                    CONF_FLOW_PIN_NUMBER: pin_number,
+                    CONF_FLOW_PIN_NAME: pin_name,
+                    CONF_I2C_ADDRESS: config[CONF_I2C_ADDRESS],
+                    CONF_INVERT_LOGIC: config[CONF_INVERT_LOGIC],
+                    CONF_PULL_MODE: config[CONF_PULL_MODE],
+                },
             )
-        ):
-            binary_sensors.append(binary_sensor_entity)
+        )
 
-    async_add_entities(binary_sensors, False)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a MCP23017 binary_sensor entry."""
+
+    binary_sensor_entity = MCP23017BinarySensor(hass, config_entry)
+
+    if await hass.async_add_executor_job(binary_sensor_entity.configure_device):
+        async_add_entities([binary_sensor_entity])
 
 
 class MCP23017BinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses MCP23017."""
 
-    def __init__(self, pin_num, pin_name, invert_logic, pull_mode):
+    def __init__(self, hass, config_entry):
         """Initialize the MCP23017 binary sensor."""
-        self._name = pin_name or DEVICE_DEFAULT_NAME
-        self._pin_num = pin_num
-        self._invert_logic = invert_logic
-        self._pull_mode = pull_mode
-        self._device = None
+        self._hass = hass
+        self._i2c_address = config_entry.data[CONF_I2C_ADDRESS]
+        self._pin_name = config_entry.data[CONF_FLOW_PIN_NAME]
+        self._pin_number = config_entry.data[CONF_FLOW_PIN_NUMBER]
+
+        self._invert_logic = config_entry.data.get(
+            CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
+        )
+        self._pull_mode = config_entry.data.get(CONF_PULL_MODE, DEFAULT_PULL_MODE)
+
+        # Create or update option values for binary_sensor platform
+        self._hass.config_entries.async_update_entry(
+            config_entry,
+            options={
+                CONF_INVERT_LOGIC: self._invert_logic,
+                CONF_PULL_MODE: self._pull_mode,
+            },
+        )
+
+        # Subscribe to updates of config entry options.
+        self._unsubscribe_update_listener = config_entry.add_update_listener(
+            self.async_config_update
+        )
+
+        # Retrieve associated device
+        self._device = self._hass.data[DOMAIN][config_entry.data[CONF_I2C_ADDRESS]]
         self._state = None
 
-        _LOGGER.info("%s(pin %d:'%s') created", type(self).__name__, pin_num, pin_name)
+        _LOGGER.info(
+            "%s(pin %d:'%s') created",
+            type(self).__name__,
+            self._pin_number,
+            self._pin_name,
+        )
+
+    @property
+    def icon(self):
+        """Return device icon for this entity."""
+        return "mdi:chip"
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return f"{self._device.unique_id}-{self._pin_number}"
 
     @property
     def should_poll(self):
@@ -104,55 +130,75 @@ class MCP23017BinarySensor(BinarySensorEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._name
+        return self._pin_name
 
     @property
     def is_on(self):
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
+    @property
+    def pin(self):
+        """Return the pin number of the entity."""
+        return self._pin_number
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN, self._i2c_address)},
+            "manufacturer": "Microchip",
+            "model": "MCP23017",
+            "entry_type": "service",
+        }
+
     @callback
-    async def async_input_callback(self, state):
+    async def async_push_update(self, state):
         """Update the GPIO state."""
         self._state = state
-        await self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
+
+    @callback
+    async def async_config_update(self, hass, config_entry):
+        """Handle update from config entry options."""
+        self._invert_logic = config_entry.options[CONF_INVERT_LOGIC]
+        if self._pull_mode != config_entry.options[CONF_PULL_MODE]:
+            self._pull_mode = config_entry.options[CONF_PULL_MODE]
+            await hass.async_add_executor_job(
+                functools.partial(
+                    self._device.set_pullup,
+                    self._pin_number,
+                    bool(self._pull_mode == MODE_UP),
+                )
+            )
+        self.async_schedule_update_ha_state()
+
+    def unsubscribe_update_listener(self):
+        """Remove listener from config entry options."""
+        self._unsubscribe_update_listener()
 
     # Sync functions executed outside of the hass async loop
 
-    def input_callback(self, state):
+    def push_update(self, state):
         """Signal a state change and call the async counterpart."""
-        asyncio.run_coroutine_threadsafe(
-            self.async_input_callback(state), self.hass.loop
-        )
+        asyncio.run_coroutine_threadsafe(self.async_push_update(state), self.hass.loop)
 
-    def bind(self, device_class, bus, address, scan_slowdown):
-        """Register a device to the given {bus, address}.
+    def configure_device(self):
+        """Attach instance to a device on the given address and configure it.
 
-        This function should be called from the thread pool (call blocking functions).
+        This function should be called from the thread pool as it contains blocking functions.
+
+        Return True when successful.
         """
-        # Bind a MCP23017 device to this binary_sensor entity
-        self._device = bus.register_device(device_class, address, scan_slowdown)
-
         if self._device:
-            # Default device configuration for a binary_sensor
-            self._device.set_input(self._pin_num, True)
-            self._device.set_pullup(self._pin_num, bool(self._pull_mode == MODE_UP))
-            self._device.register_input_callback(self._pin_num, self.input_callback)
+            # Register entity
+            if self._device.register_entity(self):
+                # Configure entity as input for a binary sensor
+                self._device.set_input(self._pin_number, True)
+                self._device.set_pullup(
+                    self._pin_number, bool(self._pull_mode == MODE_UP)
+                )
 
-            _LOGGER.info(
-                "%s(pin %d:'%s') bound to I2C device@0x%02x",
-                type(self).__name__,
-                self._pin_num,
-                self._name,
-                address,
-            )
-        else:
-            _LOGGER.warning(
-                "Failed to bind %s(pin %d:'%s') to I2C device@0x%02x",
-                type(self).__name__,
-                self._pin_num,
-                self._name,
-                address,
-            )
+                return True
 
-        return self._device
+        return False

@@ -1,6 +1,19 @@
 """Support for I2C MCP23017 chip."""
+
+import functools
 import logging
 import threading
+
+from homeassistant.components.i2c.const import DOMAIN as DOMAIN_I2C
+from homeassistant.helpers import device_registry
+
+from .const import (
+    CONF_FLOW_PIN_NUMBER,
+    CONF_FLOW_PLATFORM,
+    CONF_I2C_ADDRESS,
+    DEFAULT_PUSH_SLOWDOWN,
+    DOMAIN,
+)
 
 # MCP23017 Register Map
 IODIRA = 0x00
@@ -28,6 +41,86 @@ OLATB = 0x15
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["binary_sensor", "switch"]
+
+
+async def async_setup(hass, config):
+    """Set up the component."""
+
+    # hass.data[DOMAIN] store one entry for each MCP23017 instance using i2c address as a key
+    hass.data.setdefault(DOMAIN, {})
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up the MCP23017 from a config entry."""
+
+    i2c_address = config_entry.data[CONF_I2C_ADDRESS]
+    if i2c_address not in hass.data[DOMAIN]:
+        try:
+            bus = hass.data[DOMAIN_I2C]
+            hass.data[DOMAIN][i2c_address] = MCP23017(bus, i2c_address)
+
+        except (OSError, ValueError, KeyError) as error:
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            hass.components.persistent_notification.create(
+                f"Error: {error}<br /> Unable to create MCP23017 device at address 0x{i2c_address:02x}",
+                title=f"{DOMAIN} Configuration",
+                notification_id=f"{DOMAIN} notification",
+            )
+
+            _LOGGER.error(
+                "Unable to create MCP23017 device at address 0x%02x",
+                i2c_address,
+            )
+
+            return False
+
+        # Register a device combining all related platforms
+        devices = await device_registry.async_get_registry(hass)
+        devices.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, i2c_address)},
+            manufacturer="MicroChip",
+            model=DOMAIN,
+            name=f"{DOMAIN} @0x{i2c_address:02x}",
+        )
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(
+            config_entry, config_entry.data[CONF_FLOW_PLATFORM]
+        )
+    )
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload MCP23017 platform corresponding to a config_entry."""
+
+    await hass.config_entries.async_forward_entry_unload(
+        config_entry, config_entry.data[CONF_FLOW_PLATFORM]
+    )
+
+    # Remove related platform from component
+    i2c_address = config_entry.data[CONF_I2C_ADDRESS]
+    device = hass.data[DOMAIN][i2c_address]
+
+    await hass.async_add_executor_job(
+        functools.partial(
+            device.unregister_entity, config_entry.data[CONF_FLOW_PIN_NUMBER]
+        )
+    )
+
+    if device.has_no_entities:
+        await hass.async_add_executor_job(device.destroy)
+        del hass.data[DOMAIN][i2c_address]
+
+        _LOGGER.info("%s@0x%02x device destroyed", type(device).__name__, i2c_address)
+
+    return True
+
 
 class MCP23017:
     """MCP23017 device driver."""
@@ -44,10 +137,14 @@ class MCP23017:
             "GPIO": (self[GPIOB] << 8) + self[GPIOA],
             "OLAT": (self[OLATB] << 8) + self[OLATA],
         }
-        self._input_callbacks = [None for i in range(16)]
+        self._entities = [None for i in range(16)]
+        self._push_slowdown = DEFAULT_PUSH_SLOWDOWN
+        self._push_slowdown_counter = 0
         self._update_bitmap = 0
 
-        _LOGGER.info("%s @ 0x%02x device created", type(self).__name__, address)
+        self._bus.register_device(self)
+
+        _LOGGER.info("%s@0x%02x device created", type(self).__name__, address)
 
     def __enter__(self):
         """Lock access to device (with statement)."""
@@ -99,6 +196,16 @@ class MCP23017:
         """Return device address."""
         return self._address
 
+    @property
+    def unique_id(self):
+        """Return component unique id."""
+        return f"{DOMAIN}-{self.address}"
+
+    @property
+    def has_no_entities(self):
+        """Check if there are no more entities attached."""
+        return not any(self._entities)
+
     # -- Called from HA thread pool
 
     def get_pin_value(self, pin):
@@ -121,35 +228,76 @@ class MCP23017:
         with self:
             self._set_register_value("GPPU", pin, is_pullup)
 
-    def register_input_callback(self, pin, callback):
-        """Register callback for state change."""
+    def register_entity(self, entity):
+        """Register entity to this device instance."""
         with self:
-            self._input_callbacks[pin] = callback
+            self._entities[entity.pin] = entity
+
             # Trigger a callback to update initial state
-            self._update_bitmap |= (1 << pin) & 0xFFFF
+            self._update_bitmap |= (1 << entity.pin) & 0xFFFF
+
+            _LOGGER.info(
+                "%s(pin %d:'%s') attached to %s@0x%02x",
+                type(entity).__name__,
+                entity._pin_number,
+                entity._pin_name,
+                type(self).__name__,
+                self.address,
+            )
+
+        return True
+
+    def unregister_entity(self, pin_number):
+        """Unregister entity from the device."""
+        with self:
+            entity = self._entities[pin_number]
+            entity.unsubscribe_update_listener()
+            self._entities[pin_number] = None
+
+            _LOGGER.info(
+                "%s(pin %d:'%s') removed from MCP23017@0x%02x",
+                type(entity).__name__,
+                entity.pin,
+                entity.name,
+                self._address,
+            )
+
+    def destroy(self):
+        """Handle steps required before object destruction."""
+        # Free up i2c bus at component's address
+        self._bus.unregister_device(self)
 
     # -- Called from bus manager thread
 
     def run(self):
         """Poll all ports once and call corresponding callback if a change is detected."""
         with self:
-            # Read pin values for bank A and B from device if there are associated callbacks (minimize # of I2C  transactions)
-            input_state = self._cache["GPIO"]
-            if any(self._input_callbacks[0:8]):
-                input_state = input_state & 0xFF00 | self[GPIOA]
-            if any(self._input_callbacks[8:16]):
-                input_state = input_state & 0x00FF | (self[GPIOB] << 8)
+            self._push_slowdown_counter -= 1
+            if self._push_slowdown_counter <= 0:
+                self._push_slowdown_counter = self._push_slowdown
 
-            # Check pin values that changed and update input cache
-            self._update_bitmap = self._update_bitmap | (
-                input_state ^ self._cache["GPIO"]
-            )
-            self._cache["GPIO"] = input_state
+                # Read pin values for bank A and B from device if there are associated callbacks (minimize # of I2C  transactions)
+                input_state = self._cache["GPIO"]
+                if any(
+                    [hasattr(entity, "push_update") for entity in self._entities[0:8]]
+                ):
+                    input_state = input_state & 0xFF00 | self[GPIOA]
+                if any(
+                    [hasattr(entity, "push_update") for entity in self._entities[8:16]]
+                ):
+                    input_state = input_state & 0x00FF | (self[GPIOB] << 8)
 
-            # Call callback functions only for pin that changed
-            for pin in range(16):
-                if (self._update_bitmap & 0x1) and self._input_callbacks[pin]:
-                    self._input_callbacks[pin](bool(input_state & 0x1))
-                    self._update_bitmap &= ~(1 << pin) & 0xFFFF
-                input_state >>= 1
-                self._update_bitmap >>= 1
+                # Check pin values that changed and update input cache
+                self._update_bitmap = self._update_bitmap | (
+                    input_state ^ self._cache["GPIO"]
+                )
+                self._cache["GPIO"] = input_state
+                # Call callback functions only for pin that changed
+                for pin in range(16):
+                    if (self._update_bitmap & 0x1) and hasattr(
+                        self._entities[pin], "push_update"
+                    ):
+                        self._entities[pin].push_update(bool(input_state & 0x1))
+                        self._update_bitmap &= ~(1 << pin) & 0xFFFF
+                    input_state >>= 1
+                    self._update_bitmap >>= 1

@@ -124,6 +124,7 @@ FLOWS = [
     "lyric",
     "mailgun",
     "mazda",
+    "mcp23017",
     "melcloud",
     "met",
     "meteo_france",

@@ -1,0 +1,31 @@
+{
+  "title": "MCP23017 Digital I/O Expander",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define New Entity",
+        "data": {
+          "i2c_address": "I2C address",
+          "platform": "Platform",
+          "pin_number": "Pin number",
+          "pin_name": "Pin name"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_create": "Unable to create MCP23017 device with specified parameters"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Define Entity Properties",
+        "data": {
+          "invert_logic": "Invert logic",
+          "pull_mode": "Pull mode"
+        }
+      }
+    }
+  }
+}
