@@ -16,6 +16,28 @@ async def test_config_no_static(hass):
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: False}})
 
 
+async def test_static_duplicate_static_entry(hass, pywemo_device):
+    """Duplicate static entries are merged into a single entity."""
+    static_config_entry = f"{MOCK_HOST}:{MOCK_PORT}"
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_STATIC: [
+                    static_config_entry,
+                    static_config_entry,
+                ],
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_entries = list(entity_reg.entities.values())
+    assert len(entity_entries) == 1
+
+
 async def test_static_config_with_port(hass, pywemo_device):
     """Static device with host and port is added and removed."""
     assert await async_setup_component(
