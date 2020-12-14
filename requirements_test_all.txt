@@ -394,7 +394,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-ais-dom-frontend==20201210.0
+ais-dom-frontend==20201212.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1144,10 +1144,10 @@ yeelight==0.5.4
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.6
+zeroconf==0.28.7
 
 # homeassistant.components.zha
-zha-quirks==0.0.48
+zha-quirks==0.0.49
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
