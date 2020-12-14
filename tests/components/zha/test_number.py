@@ -54,8 +54,8 @@ async def test_number(m1, hass, zha_device_joined_restored, zigpy_analog_output_
         "application_type": 4 * 0x10000,
     }
     zha_device = await zha_device_joined_restored(zigpy_analog_output_device)
-    assert cluster.read_attributes.call_count == 1
-    assert "present_value" in cluster.read_attributes.call_args[0][0]
+    # one for present_value and one for the rest configuration attributes
+    assert cluster.read_attributes.call_count == 2
     assert "max_present_value" in cluster.read_attributes.call_args[0][0]
     assert "min_present_value" in cluster.read_attributes.call_args[0][0]
     assert "relinquish_default" in cluster.read_attributes.call_args[0][0]

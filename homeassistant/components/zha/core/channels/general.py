@@ -96,17 +96,13 @@ class AnalogOutput(ZigbeeChannel):
             return True
         return False
 
-    def async_configure_channel_specific(self) -> Coroutine:
-        """Configure channel."""
-        return self.fetch_config(False)
-
     @retryable_req(delays=(1, 1, 3))
     def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
         return self.fetch_config(from_cache)
 
     async def fetch_config(self, from_cache: bool) -> None:
-        """Get the color configuration."""
+        """Get the channel configuration."""
         attributes = [
             "min_present_value",
             "max_present_value",
