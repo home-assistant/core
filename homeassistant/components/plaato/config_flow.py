@@ -92,12 +92,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         use_webhook = self._init_info[CONF_USE_WEBHOOK]
 
         if use_webhook and user_input is None:
-            device_type = self._init_info[CONF_DEVICE_TYPE]
-
-            if device_type != PlaatoDeviceType.Airlock:
-                self._errors["base"] = "invalid_webhook_device"
-                return await self._show_api_method_form(device_type)
-
             webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
             self._init_info[CONF_WEBHOOK_ID] = webhook_id
             self._init_info[CONF_CLOUDHOOK] = cloudhook
