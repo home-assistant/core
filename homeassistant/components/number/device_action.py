@@ -68,7 +68,7 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(hass: HomeAssistant, config: dict):
+async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List action capabilities."""
     action_type = config[CONF_TYPE]
 
