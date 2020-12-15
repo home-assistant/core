@@ -899,6 +899,9 @@ python-nest==4.1.0
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
+# homeassistant.components.qbittorrent
+python-qbittorrent==0.4.2
+
 # homeassistant.components.songpal
 python-songpal==0.12
 
