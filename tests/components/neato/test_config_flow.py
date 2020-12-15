@@ -8,6 +8,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
+from tests.helpers.test_config_entry_oauth2_flow import MockOAuth2Implementation
+from tests.helpers.test_config_entry_oauth2_flow import local_impl  # noqa: F401
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -73,17 +75,47 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass, local_impl):  # noqa: F811
     """Test we abort if Neato is already setup."""
     flow = OAuth2FlowHandler()
     flow.hass = hass
 
-    MockConfigEntry(
+    flow.async_register_implementation(hass, MockOAuth2Implementation)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, NEATO_DOMAIN, MockOAuth2Implementation()
+    )
+
+    entry = MockConfigEntry(
         domain=NEATO_DOMAIN,
-        data={"some": "data"},
-    ).add_to_hass(hass)
+        data={"client_id": "abcdef", "client_secret": "123456"},
+        version=2,
+    )
+    entry.add_to_hass(hass)
 
     # Should fail
-    result = await flow.async_step_user({"some": "data"})
+    result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_migration_and_reauth(hass, local_impl):  # noqa: F811
+    """Test migration from version 1 to version 2."""
+    flow = OAuth2FlowHandler()
+    flow.hass = hass
+
+    flow.async_register_implementation(hass, MockOAuth2Implementation)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, NEATO_DOMAIN, MockOAuth2Implementation()
+    )
+
+    entry = MockConfigEntry(
+        domain=NEATO_DOMAIN,
+        data={"username": "abcdef", "password": "123456", "vendor": "neato"},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    # Should show form
+    result = await flow.async_step_reauth(entry)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
