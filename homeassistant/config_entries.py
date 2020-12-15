@@ -181,7 +181,9 @@ class ConfigEntry:
         self.supports_unload = False
 
         # Listeners to call on update
-        self.update_listeners: List[weakref.WeakMethod] = []
+        self.update_listeners: List[
+            Union[weakref.ReferenceType[UpdateListenerType], weakref.WeakMethod]
+        ] = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
@@ -299,6 +301,7 @@ class ConfigEntry:
                 return True
 
         component = integration.get_component()
+
         if integration.domain == self.domain:
             if self.state in UNRECOVERABLE_STATES:
                 return False
@@ -312,6 +315,7 @@ class ConfigEntry:
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
+
         if not supports_unload:
             if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
@@ -412,7 +416,11 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener = weakref.WeakMethod(cast(MethodType, listener))
+        weak_listener: Any
+        if hasattr(listener, "__self__"):
+            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
+        else:
+            weak_listener = weakref.ref(listener)
         self.update_listeners.append(weak_listener)
 
         return lambda: self.update_listeners.remove(weak_listener)
@@ -840,6 +848,7 @@ class ConfigEntries:
             return True
 
         integration = await loader.async_get_integration(self.hass, domain)
+
         return await entry.async_unload(self.hass, integration=integration)
 
     @callback
