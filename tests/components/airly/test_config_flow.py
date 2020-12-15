@@ -17,6 +17,11 @@ from . import API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
+API_POINT_URL = (
+    "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000"
+)
+API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000"
+
 CONFIG = {
     CONF_NAME: "Home",
     CONF_API_KEY: "foo",
@@ -65,13 +70,10 @@ async def test_invalid_location(hass, aioclient_mock):
 async def test_invalid_nearest_location(hass, aioclient_mock):
     """Test that errors are shown when nearest location is invalid."""
 
-    aioclient_mock.get(
-        "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000",
-        text=load_fixture("airly_no_station.json"),
-    )
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
 
     aioclient_mock.get(
-        "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000",
+        API_NEAREST_URL,
         exc=AirlyError(HTTP_NOT_FOUND, {"errorCode": "INSTALLATION_NOT_FOUND"}),
     )
 
@@ -119,15 +121,9 @@ async def test_create_entry(hass, aioclient_mock):
 async def test_create_entry_with_nearest_method(hass, aioclient_mock):
     """Test that the user step works with nearest method."""
 
-    aioclient_mock.get(
-        "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000",
-        text=load_fixture("airly_no_station.json"),
-    )
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
 
-    aioclient_mock.get(
-        "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000",
-        text=load_fixture("airly_valid_station.json"),
-    )
+    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("airly_valid_station.json"))
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
