@@ -210,19 +210,19 @@ class FluxLight(LightEntity):
 
     @property
     def available(self):
-        """Return the device information."""
-        device_name = "FluxLED/Magic Home"
-        device_model = self._model
+<<<<<<< HEAD
+=======
+        """Return if the light is available."""
+        available = True
+        if self._config_type == "auto":
+            available = self.coordinator.scan_coordinator.data[self._unique_id][
+                "active"
+            ]
 
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: self._name,
-            ATTR_MANUFACTURER: device_name,
-            ATTR_MODEL: device_model,
-        }
+        return available
 
-    async def async_turn_on(self, **kwargs):
-        """Turn on the light."""
+    @property
+    def is_on(self):
 
         rgb = None
         hs_color = kwargs.get(ATTR_HS_COLOR)
