@@ -140,6 +140,11 @@ class QBittorrentSensor(Entity):
         return self._state
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return self._attribute
+
+    @property
     def available(self):
         """Return true if device is available."""
         return self._available
