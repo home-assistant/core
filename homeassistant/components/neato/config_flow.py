@@ -41,7 +41,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(self, user_input: Optional[dict] = None) -> dict:
         """Confirm reauth upon migration of old entries."""
-        if need_confirmation:
+        if not user_input:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
