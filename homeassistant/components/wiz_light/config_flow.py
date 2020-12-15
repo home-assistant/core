@@ -1,10 +1,12 @@
 """Config flow for wiz_light."""
+from homeassistant.data_entry_flow import AbortFlow
 import logging
 
 import voluptuous as vol
+from pywizlight import wizlight
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 
 from .const import DOMAIN, DEFAULT_NAME
 
@@ -16,7 +18,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     config = {
-        vol.Required(CONF_HOST, default="IP Address"): str,
+        vol.Required(CONF_IP_ADDRESS): str,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
     }
 
@@ -26,10 +28,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                bulb = wizlight(user_input[CONF_IP_ADDRESS])
+                mac = await bulb.getMac()
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "Cant connect to bulb!"
+            except AbortFlow:
+                return self.async_abort(reason="single_instance_allowed")
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(self.config), errors=errors

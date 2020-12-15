@@ -4,28 +4,29 @@ import logging
 from pywizlight import wizlight
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
 PLATFORMS = ["light"]
 
 
 async def async_setup(hass, config):
     """Old way of setting up the wiz_light component."""
+    hass.data[DOMAIN] = {}
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the wiz_light integration from a config entry."""
-    ip = entry.data.get(CONF_HOST)
+    ip = entry.data.get(CONF_IP_ADDRESS)
     _LOGGER.debug("Get bulb with IP: %s", ip)
     bulb = wizlight(ip)
-    hass.data[DOMAIN] = bulb
+    hass.data[DOMAIN][entry.unique_id] = bulb
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "light")
@@ -34,11 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     # unload srp client
-    hass.data[DOMAIN] = None
+    hass.data[DOMAIN][entry.unique_id] = None
     # Remove config entry
-    await hass.config_entries.async_forward_entry_unload(config_entry, "light")
+    await hass.config_entries.async_forward_entry_unload(entry, "light")
 
     return True

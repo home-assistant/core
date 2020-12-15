@@ -1,9 +1,10 @@
 """WiZ Light integration."""
 import logging
 
-from pywizlight import SCENES, PilotBuilder
+from pywizlight import SCENES, PilotBuilder, wizlight
 import yaml
 import os
+import voluptuous as vol
 
 # Import the device class from the component
 from homeassistant.components.light import (
@@ -16,12 +17,15 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
+    PLATFORM_SCHEMA,
     LightEntity,
 )
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 import homeassistant.util.color as color_utils
+import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,11 +36,24 @@ SUPPORT_FEATURES_RGB = (
 SUPPORT_FEATURES_DIM = SUPPORT_BRIGHTNESS
 SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
+)
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the WiZ Light platform from legacy."""
+    # Assign configuration variables.
+    # The configuration check takes care they are present.
+    ip_address = config[CONF_HOST]
+    bulb = wizlight(ip_address)
+
+    # Add devices
+    async_add_entities([WizBulb(bulb, config[CONF_NAME])])
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the WiZ Light platform."""
+    """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
-    bulb = hass.data[DOMAIN]
+    bulb = hass.data[DOMAIN][entry.unique_id]
     # Add devices
     async_add_entities([WizBulb(bulb, entry.data.get(CONF_NAME))])
 
