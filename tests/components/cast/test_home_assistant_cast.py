@@ -91,8 +91,6 @@ async def test_use_cloud_url(hass, mock_zeroconf):
 
 async def test_remove_entry(hass, mock_zeroconf):
     """Test removing config entry removes user."""
-    hass.config.components.add("tasmota")
-
     entry = MockConfigEntry(
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={},
@@ -110,7 +108,7 @@ async def test_remove_entry(hass, mock_zeroconf):
         "pychromecast.discovery.stop_discovery"
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert "cast" in hass.config.components
 
     user_id = entry.data.get("user_id")
