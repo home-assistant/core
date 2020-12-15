@@ -120,9 +120,11 @@ class RecollectWasteSensor(CoordinatorEntity):
         self._state = pickup_event.date
         self._attributes.update(
             {
-                ATTR_PICKUP_TYPES: pickup_event.pickup_types,
+                ATTR_PICKUP_TYPES: [t.name for t in pickup_event.pickup_types],
                 ATTR_AREA_NAME: pickup_event.area_name,
-                ATTR_NEXT_PICKUP_TYPES: next_pickup_event.pickup_types,
+                ATTR_NEXT_PICKUP_TYPES: [
+                    t.name for t in next_pickup_event.pickup_types
+                ],
                 ATTR_NEXT_PICKUP_DATE: next_date,
             }
         )

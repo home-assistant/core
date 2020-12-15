@@ -148,21 +148,21 @@ async def test_multiple_devices(hass):
 
     triggers = await async_get_device_automations(hass, "trigger", entry1.device_id)
     assert len(triggers) == 1
-    assert {
+    assert triggers[0] == {
         "platform": "device",
         "domain": DOMAIN,
         "type": "camera_sound",
         "device_id": entry1.device_id,
-    } == triggers[0]
+    }
 
     triggers = await async_get_device_automations(hass, "trigger", entry2.device_id)
     assert len(triggers) == 1
-    assert {
+    assert triggers[0] == {
         "platform": "device",
         "domain": DOMAIN,
         "type": "doorbell_chime",
         "device_id": entry2.device_id,
-    } == triggers[0]
+    }
 
 
 async def test_triggers_for_invalid_device_id(hass):
@@ -205,7 +205,7 @@ async def test_no_triggers(hass):
     assert entry.unique_id == "some-device-id-camera"
 
     triggers = await async_get_device_automations(hass, "trigger", entry.device_id)
-    assert [] == triggers
+    assert triggers == []
 
 
 async def test_fires_on_camera_motion(hass, calls):

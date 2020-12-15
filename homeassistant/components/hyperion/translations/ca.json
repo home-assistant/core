@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "auth_new_token_not_granted_error": "El nou token creat no est\u00e0 aprovat a Hyperion UI",
+            "auth_new_token_not_work_error": "No s'ha pogut autenticar amb el nou token creat",
+            "auth_required_error": "No s'ha pogut determinar si cal autoritzaci\u00f3",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_id": "La inst\u00e0ncia d'Hyperion Ambilight no ha retornat el seu ID"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_access_token": "Token d'acc\u00e9s no v\u00e0lid"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Crea un nou token autom\u00e0ticament",
+                    "token": "O proporciona un token ja existent"
+                },
+                "description": "Configura l'autoritzaci\u00f3 amb el teu servidor Hyperion Ambilight"
+            },
+            "confirm": {
+                "description": "Vols afegir el seg\u00fcent Hyperion Ambilight a Home Assistant?\n\n**Host:** {host}\n**Port:** {port}\n**ID**: {id}",
+                "title": "Confirma l'addici\u00f3 del servei Hyperion Ambilight"
+            },
+            "create_token": {
+                "description": "Selecciona **Envia** a continuaci\u00f3 per sol\u00b7licitar un token d'autenticaci\u00f3 nou. Ser\u00e0s redirigit a la interf\u00edcie d'usuari d'Hyperion perqu\u00e8 puguis aprovar la sol\u00b7licitud. Verifica que l'identificador que es mostra \u00e9s \"{auth_id}\"",
+                "title": "Crea un nou token d'autenticaci\u00f3 autom\u00e0ticament"
+            },
+            "create_token_external": {
+                "title": "Accepta el nou token a la IU d'Hyperion"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "priority": "Prioritat Hyperion a utilitzar per als colors i efectes"
+                }
+            }
+        }
+    }
+}

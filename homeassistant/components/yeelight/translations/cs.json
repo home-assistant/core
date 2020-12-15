@@ -26,8 +26,10 @@
             "init": {
                 "data": {
                     "model": "Model (voliteln\u00fd)",
+                    "nightlight_switch": "Pou\u017e\u00edt p\u0159ep\u00edna\u010d no\u010dn\u00edho osv\u011btlen\u00ed",
                     "save_on_change": "Ulo\u017eit stav p\u0159i zm\u011bn\u011b",
-                    "transition": "\u010cas p\u0159echodu (v ms)"
+                    "transition": "\u010cas p\u0159echodu (v ms)",
+                    "use_music_mode": "Povolit hudebn\u00ed re\u017eim"
                 },
                 "description": "Pokud ponech\u00e1te model pr\u00e1zdn\u00fd, bude automaticky rozpozn\u00e1n."
             }

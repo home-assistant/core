@@ -1,5 +1,5 @@
 """Home automation channels module for Zigbee Home Automation."""
-from typing import Optional
+from typing import Coroutine, Optional
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
 
@@ -62,23 +62,17 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
                 result,
             )
 
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
+        """Initialize channel specific attributes."""
 
-    async def fetch_config(self, from_cache):
-        """Fetch config from device and updates format specifier."""
-
-        # prime the cache
-        await self.get_attributes(
+        return self.get_attributes(
             [
                 "ac_power_divisor",
                 "power_divisor",
                 "ac_power_multiplier",
                 "power_multiplier",
             ],
-            from_cache=from_cache,
+            from_cache=True,
         )
 
     @property

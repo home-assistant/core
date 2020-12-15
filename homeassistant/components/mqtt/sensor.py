@@ -5,7 +5,7 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt, sensor
+from homeassistant.components import sensor
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE,
@@ -38,6 +38,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 

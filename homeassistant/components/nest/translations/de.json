@@ -26,5 +26,10 @@
                 "title": "Nest-Konto verkn\u00fcpfen"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Bewegung erkannt"
+        }
     }
 }
