@@ -37,7 +37,7 @@ class OAuth2FlowHandler(
 
         return await super().async_step_user(user_input=user_input)
 
-    async def async_step_reauth(self, config_entry: ConfigEntry) -> dict:
+    async def async_step_reauth(self, data: ConfigEntry) -> dict:
         """Perform reauth upon migration of old entries."""
         self._reauth = True
         return await self.async_step_reauth_confirm()
