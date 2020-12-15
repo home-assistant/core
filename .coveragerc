@@ -604,6 +604,8 @@ omit =
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
+    homeassistant/components/niu/__init__.py
+    homeassistant/components/niu/sensor.py
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
     homeassistant/components/notion/__init__.py
