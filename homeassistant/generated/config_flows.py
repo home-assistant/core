@@ -165,6 +165,7 @@ FLOWS = [
     "progettihwsw",
     "ps4",
     "pvpc_hourly_pricing",
+    "qbittorrent",
     "rachio",
     "rainmachine",
     "recollect_waste",

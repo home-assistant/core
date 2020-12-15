@@ -1,7 +1,7 @@
 """Support for monitoring the qBittorrent API."""
 import logging
 
-from qbittorrent.client import Client, LoginRequired
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -18,13 +18,17 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from .client import create_client, get_main_data_client
+from .const import (
+    DATA_KEY_CLIENT,
+    DATA_KEY_NAME,
+    DOMAIN,
+    SENSOR_TYPE_CURRENT_STATUS,
+    SENSOR_TYPE_DOWNLOAD_SPEED,
+    SENSOR_TYPE_UPLOAD_SPEED,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPE_CURRENT_STATUS = "current_status"
-SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
-SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
-
-DEFAULT_NAME = "qBittorrent"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
@@ -37,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_URL): cv.url,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
     }
 )
 
@@ -46,8 +50,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the qBittorrent sensors."""
 
     try:
-        client = Client(config[CONF_URL])
-        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
+        client = create_client(
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+        )
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
         return
@@ -57,12 +62,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config.get(CONF_NAME)
 
-    dev = []
-    for sensor_type in SENSOR_TYPES:
-        sensor = QBittorrentSensor(sensor_type, client, name, LoginRequired)
-        dev.append(sensor)
+    variables = SENSOR_TYPES
+    sensors = [
+        QBittorrentSensor(
+            sensor_name,
+            client,
+            name,
+            LoginRequired,
+            None,
+        )
+        for sensor_name in variables
+    ]
 
-    add_entities(dev, True)
+    add_entities(sensors, True)
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the qBittorrent sensor."""
+
+    qbit_data = hass.data[DOMAIN][entry.data[CONF_URL]]
+    name = qbit_data[DATA_KEY_NAME]
+    variables = SENSOR_TYPES
+    sensors = [
+        QBittorrentSensor(
+            sensor_name,
+            qbit_data[DATA_KEY_CLIENT],
+            name,
+            LoginRequired,
+            entry.entry_id,
+        )
+        for sensor_name in variables
+    ]
+    async_add_entities(sensors, True)
 
 
 def format_speed(speed):
@@ -74,7 +105,14 @@ def format_speed(speed):
 class QBittorrentSensor(Entity):
     """Representation of an qBittorrent sensor."""
 
-    def __init__(self, sensor_type, qbittorrent_client, client_name, exception):
+    def __init__(
+        self,
+        sensor_type,
+        qbittorrent_client,
+        client_name,
+        exception,
+        server_unique_id,
+    ):
         """Initialize the qBittorrent sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
@@ -84,6 +122,8 @@ class QBittorrentSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._available = False
         self._exception = exception
+        self._server_unique_id = server_unique_id
+        self._attribute = {}
 
     @property
     def name(self):
@@ -91,9 +131,19 @@ class QBittorrentSensor(Entity):
         return f"{self.client_name} {self._name}"
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"{self._server_unique_id}/{self._name}"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return self._attribute
 
     @property
     def available(self):
@@ -105,10 +155,26 @@ class QBittorrentSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    def update(self):
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:cloud-download"
+
+    @property
+    def device_info(self):
+        """Return the device information of the entity."""
+        return {
+            "identifiers": {(DOMAIN, self._server_unique_id)},
+            "name": self.client_name,
+            "manufacturer": "QBittorrent",
+        }
+
+    async def async_update(self):
         """Get the latest data from qBittorrent and updates the state."""
         try:
-            data = self.client.sync_main_data()
+            data = await self.hass.async_add_executor_job(
+                get_main_data_client, self.client
+            )
             self._available = True
         except RequestException:
             _LOGGER.error("Connection lost")
