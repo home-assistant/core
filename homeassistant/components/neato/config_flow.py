@@ -9,8 +9,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 # pylint: disable=unused-import
 from .const import NEATO_DOMAIN
 
-DOCS_URL = "https://www.home-assistant.io/integrations/neato"
-
 _LOGGER = logging.getLogger(__name__)
 
 
