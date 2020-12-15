@@ -16,9 +16,11 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, const
 
+ATYP_SET_VALUE = "set_value"
+
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): "set_value",
+        vol.Required(CONF_TYPE): ATYP_SET_VALUE,
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
         vol.Required(const.ATTR_VALUE): vol.Coerce(float),
     }
@@ -40,7 +42,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_value",
+                CONF_TYPE: ATYP_SET_VALUE,
             }
         )
 
@@ -53,7 +55,7 @@ async def async_call_action_from_config(
     """Execute a device action."""
     config = ACTION_SCHEMA(config)
 
-    if config[CONF_TYPE] != "set_value":
+    if config[CONF_TYPE] != ATYP_SET_VALUE:
         return
 
     await hass.services.async_call(
@@ -72,7 +74,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     """List action capabilities."""
     action_type = config[CONF_TYPE]
 
-    if action_type != "set_value":
+    if action_type != ATYP_SET_VALUE:
         return {}
 
     fields = {vol.Required(const.ATTR_VALUE): vol.Coerce(float)}
