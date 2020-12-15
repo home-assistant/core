@@ -1201,6 +1201,18 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
         return None
 
+    @property
+    def water_level(self):
+        """Return the water tank levels as percentage."""
+        if self._state:
+            reported_level = self._state_attrs[ATTR_WATER_LEVEL]
+            #  127 without water tank. 120 = 100% water
+            if reported_level == 127:
+                return -1
+            return reported_level / 1.2
+
+        return None
+
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
 
