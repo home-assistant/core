@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import List
 
 from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
@@ -15,11 +14,8 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.singleton import singleton
 
 from .const import (
     DOMAIN as WEMO_DOMAIN,
@@ -84,58 +80,11 @@ HASS_FAN_SPEED_TO_WEMO = {
     if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]
 }
 
-SET_HUMIDITY_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=100)
-        ),
-    }
-)
-
-RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
-
-
-@singleton(f"{__name__}.service")
-async def _async_get_humidifiers(hass: HomeAssistant) -> List["WemoHumidifier"]:
-    """Singleton containing humidifier services.
-
-    Returns:
-      List of humidifiers used by the services.
-    """
-    entities = []
-
-    def service_handle(service):
-        """Handle the WeMo humidifier services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-
-        humidifiers = [entity for entity in entities if entity.entity_id in entity_ids]
-
-        if service.service == SERVICE_SET_HUMIDITY:
-            target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
-
-            for humidifier in humidifiers:
-                humidifier.set_humidity(target_humidity)
-        elif service.service == SERVICE_RESET_FILTER_LIFE:
-            for humidifier in humidifiers:
-                humidifier.reset_filter_life()
-
-    # Register service(s)
-    hass.services.async_register(
-        WEMO_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        service_handle,
-        schema=SET_HUMIDITY_SCHEMA,
-    )
-
-    hass.services.async_register(
-        WEMO_DOMAIN,
-        SERVICE_RESET_FILTER_LIFE,
-        service_handle,
-        schema=RESET_FILTER_LIFE_SCHEMA,
-    )
-
-    return entities
+SET_HUMIDITY_SCHEMA = {
+    vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
+        vol.Coerce(float), vol.Range(min=0, max=100)
+    ),
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -152,6 +101,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _discovered_wemo(device)
             for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
         ]
+    )
+
+    platform = entity_platform.current_platform.get()
+
+    # This will call WemoHumidifier.set_humidity(target_humidity=VALUE)
+    platform.async_register_entity_service(
+        SERVICE_SET_HUMIDITY, SET_HUMIDITY_SCHEMA, "set_humidity"
+    )
+
+    # This will call WemoHumidifier.reset_filter_life()
+    platform.async_register_entity_service(
+        SERVICE_RESET_FILTER_LIFE, {}, "reset_filter_life"
     )
 
 
@@ -200,16 +161,6 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORTED_FEATURES
-
-    async def async_added_to_hass(self) -> None:
-        """Wemo humidifier added to Home Assistant."""
-        await super().async_added_to_hass()
-        (await _async_get_humidifiers(self.hass)).append(self)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Wemo humidifier removed from hass."""
-        await super().async_will_remove_from_hass()
-        (await _async_get_humidifiers(self.hass)).remove(self)
 
     def _update(self, force_update=True):
         """Update the device state."""
@@ -269,21 +220,21 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
 
         self.schedule_update_ha_state()
 
-    def set_humidity(self, humidity: float) -> None:
+    def set_humidity(self, target_humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
-        if humidity < 50:
-            target_humidity = WEMO_HUMIDITY_45
-        elif 50 <= humidity < 55:
-            target_humidity = WEMO_HUMIDITY_50
-        elif 55 <= humidity < 60:
-            target_humidity = WEMO_HUMIDITY_55
-        elif 60 <= humidity < 100:
-            target_humidity = WEMO_HUMIDITY_60
-        elif humidity >= 100:
-            target_humidity = WEMO_HUMIDITY_100
+        if target_humidity < 50:
+            pywemo_humidity = WEMO_HUMIDITY_45
+        elif 50 <= target_humidity < 55:
+            pywemo_humidity = WEMO_HUMIDITY_50
+        elif 55 <= target_humidity < 60:
+            pywemo_humidity = WEMO_HUMIDITY_55
+        elif 60 <= target_humidity < 100:
+            pywemo_humidity = WEMO_HUMIDITY_60
+        elif target_humidity >= 100:
+            pywemo_humidity = WEMO_HUMIDITY_100
 
         try:
-            self.wemo.set_humidity(target_humidity)
+            self.wemo.set_humidity(pywemo_humidity)
         except ActionException as err:
             _LOGGER.warning(
                 "Error while setting humidity of device: %s (%s)", self.name, err
