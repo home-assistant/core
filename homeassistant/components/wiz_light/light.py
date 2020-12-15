@@ -19,6 +19,8 @@ from homeassistant.components.light import (
     LightEntity,
 )
 
+from homeassistant.const import CONF_NAME
+
 import homeassistant.util.color as color_utils
 from .const import DOMAIN
 
@@ -31,14 +33,12 @@ SUPPORT_FEATURES_DIM = SUPPORT_BRIGHTNESS
 SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform."""
     # Assign configuration variables.
-    # The configuration check takes care they are present.
     bulb = hass.data[DOMAIN]
-
     # Add devices
-    async_add_entities([WizBulb(bulb)])
+    async_add_entities([WizBulb(bulb, entry.data.get(CONF_NAME))])
 
 
 class WizBulb(LightEntity):

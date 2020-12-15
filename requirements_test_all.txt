@@ -29,6 +29,9 @@ PyTurboJPEG==1.4.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
 
+# homeassistant.components.wiz_light
+PyYAML==5.3.1
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -937,6 +940,9 @@ pywemo==0.5.3
 
 # homeassistant.components.wilight
 pywilight==0.0.65
+
+# homeassistant.components.wiz_light
+pywizlight==0.3.4
 
 # homeassistant.components.zerproc
 pyzerproc==0.3.0

@@ -1,9 +1,14 @@
 {
-    "domain": "wiz_light",
-    "name": "WiZ Light integration",
-    "documentation": "https://github.com/sbidy/wiz_light",
-    "dependencies": [],
-    "codeowners": ["@sbidy"],
-    "requirements": ["pywizlight==0.3.4", "PyYAML==5.3.1"],
-    "config_flow": true
-  }
+  "domain": "wiz_light",
+  "name": "WiZ Light integration",
+  "documentation": "https://github.com/sbidy/wiz_light",
+  "dependencies": [],
+  "codeowners": [
+    "@sbidy"
+  ],
+  "requirements": [
+    "pywizlight==0.3.4",
+    "PyYAML==5.3.1"
+  ],
+  "config_flow": true
+}
