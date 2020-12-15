@@ -43,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         scanner_api = BulbScanner()
         if len(scanner_api.scan()) == 0:
             raise PlatformNotReady("No FluxLED/MagicHome Bulbs found in network.")
-            return False
 
         coordinator = FluxLEDListUpdateCoordinator(
             hass=hass,

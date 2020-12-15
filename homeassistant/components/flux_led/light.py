@@ -179,6 +179,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             hass=hass,
             name=bulb["id"],
             update_interval=DEFAULT_SCAN_INTERVAL,
+            config_type="auto",
             ip_address=bulb["ipaddr"],
             scan_coordinator=bulb_coordinator,
         )
@@ -294,18 +295,22 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def available(self):
         """Return if the light is available."""
+        available = True
         if self._config_type == "auto":
-            return self.coordinator.scan_coordinator.data[self._unique_id]["active"]
-        else:
-            return True
+            available = self.coordinator.scan_coordinator.data[self._unique_id][
+                "active"
+            ]
+
+        return available
 
     @property
     def is_on(self):
         """Return true if the light is on."""
+        state = self._bulb.isOn() and self.brightness > 0
         if time.time() - self._last_update < 1:
-            return self._state
-        else:
-            return self._bulb.isOn() and self.brightness > 0
+            state = self._state
+
+        return state
 
     @property
     def brightness(self):

@@ -55,7 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             unique_id = "flux_led_auto"
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured
             return self.async_create_entry(
                 title="Auto Search",
                 data=user_data,
@@ -81,7 +80,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                     unique_id = f"flux_led_{ip_address.replace('.','_')}"
                     await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured
                     return self.async_create_entry(title=name, data=user_data)
                 else:
                     return self.async_abort(reason="cannot_connect")
