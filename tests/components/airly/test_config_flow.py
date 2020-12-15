@@ -2,13 +2,14 @@
 from airly.exceptions import AirlyError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airly.const import DOMAIN
+from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
 )
 
@@ -61,6 +62,30 @@ async def test_invalid_location(hass, aioclient_mock):
     assert result["errors"] == {"base": "wrong_location"}
 
 
+async def test_invalid_nearest_location(hass, aioclient_mock):
+    """Test that errors are shown when nearest location is invalid."""
+
+    aioclient_mock.get(
+        "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000",
+        text=load_fixture("airly_no_station.json"),
+    )
+
+    aioclient_mock.get(
+        "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000",
+        exc=AirlyError(HTTP_NOT_FOUND, {"errorCode": "INSTALLATION_NOT_FOUND"}),
+    )
+
+    with patch(
+        "homeassistant.components.airly.config_flow.AirlyFlowHandler._test_api_key",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        assert result["errors"] == {"base": "wrong_location"}
+
+
 async def test_duplicate_error(hass, aioclient_mock):
     """Test that errors are shown when duplicates are added."""
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
@@ -88,3 +113,33 @@ async def test_create_entry(hass, aioclient_mock):
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is False
+
+
+async def test_create_entry_with_nearest_method(hass, aioclient_mock):
+    """Test that the user step works with nearest method."""
+
+    aioclient_mock.get(
+        "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000",
+        text=load_fixture("airly_no_station.json"),
+    )
+
+    aioclient_mock.get(
+        "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000",
+        text=load_fixture("airly_valid_station.json"),
+    )
+
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is True
