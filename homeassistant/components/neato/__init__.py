@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -76,7 +76,6 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
             hass.config_entries.flow.async_init(
                 NEATO_DOMAIN,
                 context={CONF_SOURCE: SOURCE_REAUTH},
-                data=config_entry,
             )
         )
         return False

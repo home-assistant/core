@@ -21,6 +21,8 @@ class OAuth2FlowHandler(
     DOMAIN = NEATO_DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    _reauth = False
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -37,11 +39,15 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth(self, config_entry: ConfigEntry) -> dict:
         """Perform reauth upon migration of old entries."""
+        self._reauth = True
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_reauth_confirm(
+        self, user_input: Optional[dict] = None
+    ) -> dict:
         """Confirm reauth upon migration of old entries."""
-        if not user_input:
+        if self._reauth:
+            self._reauth = False
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
