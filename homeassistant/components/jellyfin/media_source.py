@@ -48,7 +48,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_media_source(hass: HomeAssistant):
     """Set up Jellyfin media source."""
+
+    """Currently only a single Jellyfin server is supported"""
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+
     data = hass.data[DOMAIN][entry.entry_id]
     client = data[DATA_CLIENT]
 
