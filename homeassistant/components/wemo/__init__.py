@@ -7,24 +7,28 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
 
-# Mapping from Wemo model_name to component.
+# Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
-    "Bridge": "light",
-    "CoffeeMaker": "switch",
-    "Dimmer": "light",
-    "Humidifier": "fan",
-    "Insight": "switch",
-    "LightSwitch": "switch",
-    "Maker": "switch",
-    "Motion": "binary_sensor",
-    "Sensor": "binary_sensor",
-    "Socket": "switch",
+    "Bridge": LIGHT_DOMAIN,
+    "CoffeeMaker": SWITCH_DOMAIN,
+    "Dimmer": LIGHT_DOMAIN,
+    "Humidifier": FAN_DOMAIN,
+    "Insight": SWITCH_DOMAIN,
+    "LightSwitch": SWITCH_DOMAIN,
+    "Maker": SWITCH_DOMAIN,
+    "Motion": BINARY_SENSOR_DOMAIN,
+    "Sensor": BINARY_SENSOR_DOMAIN,
+    "Socket": SWITCH_DOMAIN,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,7 +139,7 @@ async def async_setup_entry(hass, entry):
             device.serialnumber,
         )
 
-        component = WEMO_MODEL_DISPATCH.get(device.model_name, "switch")
+        component = WEMO_MODEL_DISPATCH.get(device.model_name, SWITCH_DOMAIN)
 
         # Three cases:
         # - First time we see component, we need to load it and initialize the backlog
