@@ -1,14 +1,25 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network"
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
+            "manual": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "Enter the details for your FluxLED/MagicHome bulb."
+            },
+            "user": {
+                "data": {
+                    "type": "Configuration type."
+                },
+                "description": "Would you like to auto configure the integration or configure manually?"
             }
         }
     },
-    "title": "Flux LED/MagicLight"
+    "title": "Flux LED/MagicHome"
 }

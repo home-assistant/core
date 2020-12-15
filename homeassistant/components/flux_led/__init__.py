@@ -7,6 +7,7 @@ from flux_led import BulbScanner
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -35,27 +36,38 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Flux LED/MagicLight from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-    scanner_api = BulbScanner()
-    if len(scanner_api.scan()) == 0:
-        raise PlatformNotReady("No FluxLED/MagicHome Bulbs found in network.")
-        return False
 
-    coordinator = FluxLEDListUpdateCoordinator(
-        hass=hass,
-        name="flux_led_scanner",
-        update_interval=DEFAULT_NETWORK_SCAN_INTERVAL,
-    )
+    conf = entry.data
 
-    await coordinator.async_refresh()
+    if conf[CONF_TYPE] == "auto":
+        scanner_api = BulbScanner()
+        if len(scanner_api.scan()) == 0:
+            raise PlatformNotReady("No FluxLED/MagicHome Bulbs found in network.")
+            return False
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+        coordinator = FluxLEDListUpdateCoordinator(
+            hass=hass,
+            name="flux_led_scanner",
+            update_interval=DEFAULT_NETWORK_SCAN_INTERVAL,
+        )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        BULB_COORDINATOR: coordinator,
-    }
+        await coordinator.async_refresh()
+
+        if not coordinator.last_update_success:
+            raise ConfigEntryNotReady
+
+        hass.data[DOMAIN][entry.entry_id] = {
+            CONF_TYPE: "auto",
+            BULB_COORDINATOR: coordinator,
+        }
+
+    else:
+        hass.data[DOMAIN][entry.entry_id] = {
+            CONF_TYPE: "manual",
+            CONF_NAME: conf[CONF_NAME],
+            CONF_HOST: conf[CONF_HOST],
+            BULB_COORDINATOR: None,
+        }
 
     for component in PLATFORMS:
         hass.async_create_task(
