@@ -14,13 +14,13 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 
 from .const import (
-    BSH_AMBIENTLIGHTBRIGHTNESS,
-    BSH_AMBIENTLIGHTCOLOR,
-    BSH_AMBIENTLIGHTCOLOR_CUSTOMCOLOR,
-    BSH_AMBIENTLIGHTCUSTOMCOLOR,
-    BSH_AMBIENTLIGHTENABLED,
+    BSH_AMBIENT_LIGHT_BRIGHTNESS,
+    BSH_AMBIENT_LIGHT_COLOR,
+    BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
+    BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
+    BSH_AMBIENT_LIGHT_ENABLED,
     COOKING_LIGHTING,
-    COOKING_LIGHTINGBRIGHTNESS,
+    COOKING_LIGHTING_BRIGHTNESS,
     DOMAIN,
 )
 from .entity import HomeConnectEntity
@@ -55,12 +55,12 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         self._hs_color = None
         self._ambient = ambient
         if self._ambient:
-            self._brightnesskey = BSH_AMBIENTLIGHTBRIGHTNESS
-            self._key = BSH_AMBIENTLIGHTENABLED
-            self._customcolorkey = BSH_AMBIENTLIGHTCUSTOMCOLOR
-            self._colorkey = BSH_AMBIENTLIGHTCOLOR
+            self._brightnesskey = BSH_AMBIENT_LIGHT_BRIGHTNESS
+            self._key = BSH_AMBIENT_LIGHT_ENABLED
+            self._customcolorkey = BSH_AMBIENT_LIGHT_CUSTOM_COLOR
+            self._colorkey = BSH_AMBIENT_LIGHT_COLOR
         else:
-            self._brightnesskey = COOKING_LIGHTINGBRIGHTNESS
+            self._brightnesskey = COOKING_LIGHTING_BRIGHTNESS
             self._key = COOKING_LIGHTING
             self._customcolorkey = None
             self._colorkey = None
@@ -95,7 +95,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     await self.hass.async_add_executor_job(
                         self.device.appliance.set_setting,
                         self._colorkey,
-                        BSH_AMBIENTLIGHTCOLOR_CUSTOMCOLOR,
+                        BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
                     )
                 except HomeConnectError as err:
                     _LOGGER.error("Error while trying selecting customcolor: %s", err)
@@ -113,15 +113,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             await self.hass.async_add_executor_job(
                                 self.device.appliance.set_setting,
                                 self._customcolorkey,
-                                "#" + hex_val,
+                                f"#{hex_val}",
                             )
                         except HomeConnectError as err:
                             _LOGGER.error(
                                 "Error while trying setting the color: %s", err
                             )
-                            self._state = False
             else:
-                _LOGGER.debug("Tried to switch light on for: %s", self.name)
+                _LOGGER.debug("Tried to switch ambient light on for: %s", self.name)
                 try:
                     await self.hass.async_add_executor_job(
                         self.device.appliance.set_setting,
@@ -145,7 +144,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying set the brightness: %s", err)
-                self._state = False
                 self._brightness = None
         else:
             _LOGGER.debug("Tried to switch light on for: %s", self.name)
@@ -163,7 +161,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Switch the light off."""
-        _LOGGER.debug("tried to switch light off for: %s", self.name)
+        _LOGGER.debug("Tried to switch light off for: %s", self.name)
         try:
             await self.hass.async_add_executor_job(
                 self.device.appliance.set_setting,
