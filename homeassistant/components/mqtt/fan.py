@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import fan, mqtt
+from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_SPEED,
     SPEED_HIGH,
@@ -43,6 +43,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 

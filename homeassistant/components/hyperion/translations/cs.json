@@ -10,6 +10,14 @@
             "invalid_access_token": "Neplatn\u00fd p\u0159\u00edstupov\u00fd token"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Automaticky vytvo\u0159it nov\u00fd token"
+                }
+            },
+            "create_token_external": {
+                "title": "P\u0159ijmout nov\u00fd token v u\u017eivatelsk\u00e9m rozhran\u00ed Hyperion"
+            },
             "user": {
                 "data": {
                     "host": "Hostitel",

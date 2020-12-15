@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "A kapcsol\u00f3d\u00e1s nem siker\u00fclt"
+        },
         "error": {
             "dev_multi_type": "A konfigur\u00e1land\u00f3 eszk\u00f6z\u00f6knek azonos t\u00edpus\u00faaknak kell lennie",
             "dev_not_config": "Ez az eszk\u00f6zt\u00edpus nem konfigur\u00e1lhat\u00f3",

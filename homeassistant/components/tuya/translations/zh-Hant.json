@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
         "error": {
             "dev_multi_type": "\u591a\u91cd\u9078\u64c7\u8a2d\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u4f7f\u7528\u76f8\u540c\u985e\u578b",
             "dev_not_config": "\u88dd\u7f6e\u985e\u578b\u7121\u6cd5\u8a2d\u5b9a",

@@ -5,9 +5,9 @@
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
     "bellows==0.21.0",
-    "pyserial==3.4",
-    "pyserial-asyncio==0.4",
-    "zha-quirks==0.0.48",
+    "pyserial==3.5",
+    "pyserial-asyncio==0.5",
+    "zha-quirks==0.0.49",
     "zigpy-cc==0.5.2",
     "zigpy-deconz==0.11.0",
     "zigpy==0.28.2",

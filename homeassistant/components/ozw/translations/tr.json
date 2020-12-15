@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "addon_info_failed": "OpenZWave eklenti bilgileri al\u0131namad\u0131.",
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "progress": {
+            "install_addon": "OpenZWave eklenti kurulumu bitene kadar l\u00fctfen bekleyin. Bu birka\u00e7 dakika s\u00fcrebilir."
+        },
+        "step": {
+            "install_addon": {
+                "title": "OpenZWave eklenti kurulumu ba\u015flad\u0131"
+            }
+        }
+    }
+}
