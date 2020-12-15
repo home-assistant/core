@@ -5,7 +5,7 @@
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
-            "entry_updated": "Successfully updated"
+            "reauth_successful": "Re-authentication was successful"
         },
         "create_entry": {
             "default": "Successfully authenticated"

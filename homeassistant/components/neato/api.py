@@ -52,4 +52,4 @@ class NeatoImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
         We must make sure that the plus signs are not encoded.
         """
         url = await super().async_generate_authorize_url(flow_id)
-        return url + "&scope=public_profile+control_robots+maps"
+        return f"{url}&scope=public_profile+control_robots+maps"
