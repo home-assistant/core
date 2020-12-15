@@ -8,10 +8,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.singleton import singleton
 
 from .const import DOMAIN
 
@@ -70,16 +68,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@singleton("f{__name__}.registry")
-async def async_get_registry(hass: HomeAssistant) -> pywemo.SubscriptionRegistry:
-    """Return the pywemo subscription registry."""
-    return await hass.async_add_executor_job(pywemo.SubscriptionRegistry)
-
-
 async def async_setup(hass, config):
     """Set up for WeMo devices."""
     hass.data[DOMAIN] = {
         "config": config.get(DOMAIN, {}),
+        "registry": None,
         "pending": {},
     }
 
@@ -98,7 +91,7 @@ async def async_setup_entry(hass, entry):
     config = hass.data[DOMAIN].pop("config")
 
     # Keep track of WeMo device subscriptions for push updates
-    registry = await async_get_registry(hass)
+    registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
     await hass.async_add_executor_job(registry.start)
 
     def stop_wemo(event):
