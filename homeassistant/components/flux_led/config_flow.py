@@ -27,7 +27,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry):
         """Get the options flow for the Flux LED component."""
@@ -54,13 +53,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
-        errors = {}
-
-        config_entry = self.hass.config_entries.async_entries(DOMAIN)
-        if config_entry:
-            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             devices = user_input.get(CONF_DEVICES, {})
@@ -85,6 +77,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_DEVICES: devices,
                 },
             )
+=======
+        self.config_type = None
+
+        if user_input is not None:
+            self.config_type = user_input[CONF_TYPE]
+            if self.config_type == "auto":
+                return await self.async_step_auto()
+            else:
+                return await self.async_step_manual()
+>>>>>>> Updated to allow auto and manual configuration.
 
         return self.async_show_form(
             step_id="user",

@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "title": "Flux LED/MagicHome",
   "config": {
     "step": {
@@ -34,18 +33,6 @@
         },
         "title":"FluxLED/MagicHome Device Options"
       }
-=======
-  "title": "Flux LED/MagicLight",
-  "config": {
-    "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
->>>>>>> Initial commit of updated flux_led component.
     }
   }
 }

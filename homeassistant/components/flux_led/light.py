@@ -199,7 +199,6 @@ class FluxLight(LightEntity):
         """Disconnect from Flux light."""
         self._bulb = None
 
-    @property
     def unique_id(self):
         """Return the unique ID of the light."""
         return self._unique_id
@@ -211,78 +210,6 @@ class FluxLight(LightEntity):
 
     @property
     def available(self):
-        """Return if the light is available."""
-        return self.coordinator.scan_coordinator.data[self._unique_id]["active"]
-
-    @property
-    def is_on(self):
-        """Return true if the light is on."""
-        if time.time() - self._last_update < 1:
-            return self._state
-        else:
-            return self._bulb.isOn() and self.brightness > 0
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        brightness = self._brightness if self._brightness else 0
-        if time.time() - self._last_update < 1:
-            if self._mode == MODE_WHITE:
-                brightness = self.white_value
-
-            brightness = self._bulb.brightness
-            self._last_brightness = brightness
-
-        return brightness
-
-    @property
-    def hs_color(self):
-        """Return the color property."""
-        hs_color = self._hs_color
-        if time.time() - self._last_update < 1:
-            hs_color = color_util.color_RGB_to_hs(*self._bulb.getRgb())
-            self._last_hs_color = hs_color
-        return hs_color
-
-    @property
-    def white_value(self):
-        """Return the white value of this light."""
-        return self._bulb.getRgbw()[3]
-
-    @property
-    def supported_features(self):
-        """Return the supported features for this light."""
-        if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
-
-        return SUPPORT_FLUX_LED
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return FLUX_EFFECT_LIST
-
-    @property
-    def effect(self):
-        """Return the current effect."""
-        current_mode = self._bulb.raw_state[3]
-
-        for effect, code in EFFECT_MAP.items():
-            if current_mode == code:
-                return effect
-
-        return None
-
-    @property
-    def device_state_attributes(self):
-        """Return the attributes."""
-        self._attrs["ip_address"] = self.coordinator.scan_coordinator.data[
-            self._unique_id
-        ]["ipaddr"]
-        return self._attrs
-
-    @property
-    def device_info(self):
         """Return the device information."""
         device_name = "FluxLED/Magic Home"
         device_model = self._model
