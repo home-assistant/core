@@ -107,12 +107,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # This will call WemoHumidifier.set_humidity(target_humidity=VALUE)
     platform.async_register_entity_service(
-        SERVICE_SET_HUMIDITY, SET_HUMIDITY_SCHEMA, "set_humidity"
+        SERVICE_SET_HUMIDITY, SET_HUMIDITY_SCHEMA, WemoHumidifier.set_humidity.__name__
     )
 
     # This will call WemoHumidifier.reset_filter_life()
     platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, {}, "reset_filter_life"
+        SERVICE_RESET_FILTER_LIFE, {}, WemoHumidifier.reset_filter_life.__name__
     )
 
 
