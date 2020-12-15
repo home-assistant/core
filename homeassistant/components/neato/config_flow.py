@@ -60,9 +60,8 @@ class OAuth2FlowHandler(
             self.hass.config_entries.async_update_entry(
                 current_entries[0], title=self.flow_impl.name, data=data
             )
-            # TODO: This doesn't work because the entry state is still migration_error
-            # self.hass.async_create_task(
-            #    self.hass.config_entries.async_reload(current_entries[0].entry_id)
-            # )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(current_entries[0].entry_id)
+            )
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.flow_impl.name, data=data)

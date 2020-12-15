@@ -72,6 +72,12 @@ async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry
 
     if config_entry.version < 2:
         _LOGGER.warning("Your configuration is outdated. Updating...")
+        return True
+
+
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Set up config entry."""
+    if entry.version == 1:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 NEATO_DOMAIN,
@@ -80,12 +86,6 @@ async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry
         )
         return False
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
-    """Set up config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
