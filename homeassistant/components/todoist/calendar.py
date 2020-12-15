@@ -189,7 +189,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M"
+            date_format = "%Y-%m-%dT%H:%M%S"
             due_date = datetime.strftime(due_date, date_format)
             _due["date"] = due_date
 

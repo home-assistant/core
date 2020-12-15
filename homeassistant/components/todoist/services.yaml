@@ -20,7 +20,7 @@ new_task:
       description: The language of due_date_string.
       example: en
     due_date:
-      description: The day this task is due, in format YYYY-MM-DD.
+      description: The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone.
       example: "2019-10-22"
     reminder_date_string:
       description: When should user be reminded of this task, in natural language.
