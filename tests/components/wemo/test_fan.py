@@ -87,7 +87,7 @@ async def test_fan_reset_filter_service(hass, pywemo_device, wemo_entity):
     assert await hass.services.async_call(
         DOMAIN,
         fan.SERVICE_RESET_FILTER_LIFE,
-        {fan.ATTR_ENTITY_ID: wemo_entity.entity_id},
+        {ATTR_ENTITY_ID: wemo_entity.entity_id},
         blocking=True,
     )
     pywemo_device.reset_filter_life.assert_called_with()
@@ -99,7 +99,7 @@ async def test_fan_set_humidity_service(hass, pywemo_device, wemo_entity):
         DOMAIN,
         fan.SERVICE_SET_HUMIDITY,
         {
-            fan.ATTR_ENTITY_ID: wemo_entity.entity_id,
+            ATTR_ENTITY_ID: wemo_entity.entity_id,
             fan.ATTR_TARGET_HUMIDITY: "50",
         },
         blocking=True,
