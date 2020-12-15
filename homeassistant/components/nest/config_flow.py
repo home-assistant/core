@@ -110,15 +110,13 @@ class NestFlowHandler(
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if not self.is_sdm_api():
-            raise UnexpectedStateError("Step only supported for SDM API")
+        assert self.is_sdm_api(), "Step only supported for SDM API"
         persistent_notification.async_dismiss(self.hass, NEST_REAUTH_NOTIFICATION)
         return await super().async_step_auth(user_input)
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
-        if not self.is_sdm_api():
-            raise UnexpectedStateError("Step only supported for SDM API")
+        assert self.is_sdm_api(), "Step only supported for SDM API"
         # This causes the config flow to indicate that it should be reconfigured
         # by showing a notification and an empty for that takes the user back
         # to the start of the oauth setup flow.
@@ -138,8 +136,7 @@ class NestFlowHandler(
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        if self.is_sdm_api():
-            raise UnexpectedStateError("Step only supported for legacy API")
+        assert not self.is_sdm_api(), "Step only supported for legacy API"
 
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -169,8 +166,7 @@ class NestFlowHandler(
         implementation type we expect a pin or an external component to
         deliver the authentication code.
         """
-        if self.is_sdm_api():
-            raise UnexpectedStateError("Step only supported for legacy API")
+        assert not self.is_sdm_api(), "Step only supported for legacy API"
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
 
@@ -212,8 +208,7 @@ class NestFlowHandler(
 
     async def async_step_import(self, info):
         """Import existing auth from Nest."""
-        if self.is_sdm_api():
-            raise UnexpectedStateError("Step only supported for legacy API")
+        assert not self.is_sdm_api(), "Step only supported for legacy API"
 
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
