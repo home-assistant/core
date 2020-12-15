@@ -13,6 +13,9 @@
         "step": {
             "pick_implementation": {
                 "title": "Authentifizierungsmethode auswählen"
+            },
+            "reauth_confirm": {
+                "title": "Einrichtung bestätigen?"
             }
         }
     },

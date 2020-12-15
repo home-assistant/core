@@ -13,6 +13,9 @@
         "step": {
             "pick_implementation": {
                 "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "title": "Confirm setup?"
             }
         }
     },

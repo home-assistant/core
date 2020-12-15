@@ -75,12 +75,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass, local_impl):  # noqa: F811
+async def test_abort_if_already_setup(hass):
     """Test we abort if Neato is already setup."""
     flow = OAuth2FlowHandler()
     flow.hass = hass
 
-    flow.async_register_implementation(hass, MockOAuth2Implementation)
     config_entry_oauth2_flow.async_register_implementation(
         hass, NEATO_DOMAIN, MockOAuth2Implementation()
     )
@@ -98,24 +97,70 @@ async def test_abort_if_already_setup(hass, local_impl):  # noqa: F811
     assert result["reason"] == "already_configured"
 
 
-async def test_migration_and_reauth(hass, local_impl):  # noqa: F811
-    """Test migration from version 1 to version 2."""
+async def test_reauth(hass):
+    """Test initialization of the reauth flow."""
     flow = OAuth2FlowHandler()
     flow.hass = hass
 
-    flow.async_register_implementation(hass, MockOAuth2Implementation)
     config_entry_oauth2_flow.async_register_implementation(
         hass, NEATO_DOMAIN, MockOAuth2Implementation()
     )
 
-    entry = MockConfigEntry(
+    MockConfigEntry(
         domain=NEATO_DOMAIN,
         data={"username": "abcdef", "password": "123456", "vendor": "neato"},
         version=1,
-    )
-    entry.add_to_hass(hass)
+    ).add_to_hass(hass)
 
     # Should show form
-    result = await flow.async_step_reauth(entry)
+    result = await flow.async_step_reauth(None)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
+    assert flow._reauth is False
+
+
+async def test_reauth_confirm(hass):
+    """Test confirmation of the reauth flow."""
+    flow = OAuth2FlowHandler()
+    flow.hass = hass
+
+    # Form confirmed, init new flow
+    with patch(
+        "homeassistant.components.neato.config_flow.OAuth2FlowHandler.async_step_user",
+        return_value={"key": "val"},
+    ) as mock_user:
+        await flow.async_step_reauth_confirm()
+
+    mock_user.assert_called_once_with()
+
+
+async def test_oauth_create_entry(hass, local_impl):  # noqa: 811
+    """Test migration from version 1 to version 2."""
+    flow = OAuth2FlowHandler()
+    flow.hass = hass
+    flow.flow_impl = local_impl
+
+    MockConfigEntry(
+        entry_id="my_entry",
+        domain=NEATO_DOMAIN,
+        data={"username": "abcdef", "password": "123456", "vendor": "neato"},
+        version=1,
+    ).add_to_hass(hass)
+
+    # Update entry
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=True,
+    ) as mock_reload:
+        result = await flow.async_oauth_create_entry({"my": "data"})
+
+    await hass.async_block_till_done()
+
+    new_entry = hass.config_entries.async_get_entry("my_entry")
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+    assert new_entry.version == 2
+    assert new_entry.data == {"my": "data"}
+
+    mock_reload.assert_called_once_with("my_entry")
