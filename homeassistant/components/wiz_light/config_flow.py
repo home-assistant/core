@@ -28,13 +28,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                # TODO: check if IP is valide
                 bulb = wizlight(user_input[CONF_IP_ADDRESS])
                 mac = await bulb.getMac()
                 await self.async_set_unique_id(mac)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            except ConnectionRefusedError:
+                return self.async_abort(reason="can_not_connect")
             except AbortFlow:
                 return self.async_abort(reason="single_instance_allowed")
+
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(self.config), errors=errors
