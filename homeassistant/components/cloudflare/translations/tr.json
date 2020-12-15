@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "invalid_zone": "Ge\u00e7ersiz b\u00f6lge"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Kay\u0131tlar"
+                },
+                "title": "G\u00fcncellenecek Kay\u0131tlar\u0131 Se\u00e7in"
+            },
+            "user": {
+                "title": "Cloudflare'ye ba\u011flan\u0131n"
+            },
+            "zone": {
+                "data": {
+                    "zone": "B\u00f6lge"
+                },
+                "title": "G\u00fcncellenecek B\u00f6lgeyi Se\u00e7in"
+            }
+        }
+    }
+}
