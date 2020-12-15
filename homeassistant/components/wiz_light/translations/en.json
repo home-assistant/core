@@ -5,8 +5,13 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
+            "user": {
+                "data": {
+                    "ip_address": "IP Address",
+                    "name": "Name"
+                },
+                "description": "Add the bulb via IP address.",
+                "title": "WiZ Light"
             }
         }
     },
