@@ -86,4 +86,4 @@ async def test_static_config_with_invalid_host(hass):
             },
         },
     )
-    assert setup_success is False
+    assert not setup_success
