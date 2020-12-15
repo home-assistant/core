@@ -13,13 +13,15 @@ BSH_ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"
 BSH_OPERATION_STATE = "BSH.Common.Status.OperationState"
 
 COOKING_LIGHTING = "Cooking.Common.Setting.Lighting"
-COOKING_LIGHTINGBRIGHTNESS = "Cooking.Common.Setting.LightingBrightness"
+COOKING_LIGHTING_BRIGHTNESS = "Cooking.Common.Setting.LightingBrightness"
 
-BSH_AMBIENTLIGHTENABLED = "BSH.Common.Setting.AmbientLightEnabled"
-BSH_AMBIENTLIGHTBRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"
-BSH_AMBIENTLIGHTCOLOR = "BSH.Common.Setting.AmbientLightColor"
-BSH_AMBIENTLIGHTCOLOR_CUSTOMCOLOR = "BSH.Common.EnumType.AmbientLightColor.CustomColor"
-BSH_AMBIENTLIGHTCUSTOMCOLOR = "BSH.Common.Setting.AmbientLightCustomColor"
+BSH_AMBIENT_LIGHT_ENABLED = "BSH.Common.Setting.AmbientLightEnabled"
+BSH_AMBIENT_LIGHT_BRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"
+BSH_AMBIENT_LIGHT_COLOR = "BSH.Common.Setting.AmbientLightColor"
+BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR = (
+    "BSH.Common.EnumType.AmbientLightColor.CustomColor"
+)
+BSH_AMBIENT_LIGHT_CUSTOM_COLOR = "BSH.Common.Setting.AmbientLightCustomColor"
 
 BSH_DOOR_STATE = "BSH.Common.Status.DoorState"
 BSH_PAUSE = "BSH.Common.Command.PauseProgram"
