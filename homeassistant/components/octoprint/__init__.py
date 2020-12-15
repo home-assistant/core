@@ -87,6 +87,7 @@ SENSOR_TYPES = {
         "mdi:clock-end",
     ],
     "Time Elapsed": ["job", "progress", "printTime", TIME_SECONDS, "mdi:clock-start"],
+    "Job Filename": ["job", "job.file", "display", None, "mdi:tag-text"],
 }
 
 SENSOR_SCHEMA = vol.Schema(
@@ -297,10 +298,16 @@ class OctoPrintAPI:
         return response
 
 
-def get_value_from_json(json_dict, sensor_type, group, tool):
+def get_value_from_json(json_dict, sensor_type, path, tool):
     """Return the value for sensor_type from the JSON."""
+    paths = path.split(".", 1)
+    group = paths[0]
+
     if group not in json_dict:
         return None
+
+    if len(paths) == 2:
+        return get_value_from_json(json_dict[group], sensor_type, paths[1], tool)
 
     if sensor_type in json_dict[group]:
         if sensor_type == "target" and json_dict[sensor_type] is None:
