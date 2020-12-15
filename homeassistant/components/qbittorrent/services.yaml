@@ -1,0 +1,25 @@
+add_download:
+  description: Download a magnet link on the Qbittorrent server.
+  fields:
+    magnet_link:
+      description: The Magnet link you want to download (required).
+      example: "magnet:?xt=urn:ed2k:xxxxxxxx"
+    server_url:
+      description: The URL of a Qbittorrent server (optional).
+      example: "http://Qbittorrent_Server:8080"
+    download_path:
+      description: The path whereto you want to download (optional).
+      example: "c:&#92;testing&#92;testtest"
+
+remove_download:
+  description: remove a torrent from the Qbittorrent server.
+  fields:
+    torrent_hash:
+      description: The torrent hash you want to remove (required).
+      example: "xxxxxxxxxxxxxxx"
+    server_url:
+      description: The URL of a Qbittorrent server (optional).
+      example: "http://Qbittorrent_Server:8080"
+    delete_permanent:
+      description: Remove file from disk (bool) (optional).
+      example: "True or False"

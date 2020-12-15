@@ -11,6 +11,7 @@ from homeassistant.exceptions import PlatformNotReady
 
 from .client import create_client
 from .const import DATA_KEY_CLIENT, DATA_KEY_NAME, DOMAIN
+from .services import async_setup_services
 
 PLATFORMS = ["sensor"]
 
@@ -21,6 +22,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Qbittorrent component."""
     # Make sure coordinator is initialized.
     hass.data.setdefault(DOMAIN, {})
+    await async_setup_services(hass)
 
     return True
 

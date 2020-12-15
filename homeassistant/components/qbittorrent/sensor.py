@@ -1,4 +1,5 @@
 """Support for monitoring the qBittorrent API."""
+from datetime import timedelta
 import logging
 
 from qbittorrent.client import LoginRequired
@@ -18,22 +19,40 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .client import create_client, get_main_data_client
+from .client import create_client, get_main_data_client, retrieve_torrentdata
 from .const import (
     DATA_KEY_CLIENT,
     DATA_KEY_NAME,
     DOMAIN,
+    SENSOR_TYPE_ACTIVE_TORRENTS,
+    SENSOR_TYPE_COMPLETED_TORRENTS,
     SENSOR_TYPE_CURRENT_STATUS,
     SENSOR_TYPE_DOWNLOAD_SPEED,
+    SENSOR_TYPE_DOWNLOADING_TORRENTS,
+    SENSOR_TYPE_INACTIVE_TORRENTS,
+    SENSOR_TYPE_PAUSED_TORRENTS,
+    SENSOR_TYPE_RESUMED_TORRENTS,
+    SENSOR_TYPE_SEEDING_TORRENTS,
+    SENSOR_TYPE_TOTAL_TORRENTS,
     SENSOR_TYPE_UPLOAD_SPEED,
+    TRIM_SIZE,
 )
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
     SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
     SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    SENSOR_TYPE_TOTAL_TORRENTS: ["Total Torrents", None],
+    SENSOR_TYPE_ACTIVE_TORRENTS: ["Active Torrents", None],
+    SENSOR_TYPE_INACTIVE_TORRENTS: ["Inactive Torrents", None],
+    SENSOR_TYPE_DOWNLOADING_TORRENTS: ["Downloading", None],
+    SENSOR_TYPE_SEEDING_TORRENTS: ["Seeding", None],
+    SENSOR_TYPE_RESUMED_TORRENTS: ["Resumed Torrents", None],
+    SENSOR_TYPE_PAUSED_TORRENTS: ["Paused Torrents", None],
+    SENSOR_TYPE_COMPLETED_TORRENTS: ["Completed Torrents", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -171,6 +190,7 @@ class QBittorrentSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from qBittorrent and updates the state."""
+
         try:
             data = await self.hass.async_add_executor_job(
                 get_main_data_client, self.client
@@ -187,9 +207,9 @@ class QBittorrentSensor(Entity):
         if data is None:
             return
 
+        attributes = {}
         download = data["server_state"]["dl_info_speed"]
         upload = data["server_state"]["up_info_speed"]
-
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if upload > 0 and download > 0:
                 self._state = "up_down"
@@ -204,3 +224,98 @@ class QBittorrentSensor(Entity):
             self._state = format_speed(download)
         elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
             self._state = format_speed(upload)
+
+        elif self.type == SENSOR_TYPE_TOTAL_TORRENTS:
+            torrents = data["torrents"]
+
+            for torrent in torrents:
+                torrentattr = torrents[torrent]
+                attributes[trim_name(torrentattr, TRIM_SIZE - 5)] = torrentattr["state"]
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "active"
+            )
+
+            for torrent in torrents:
+                attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_INACTIVE_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "inactive"
+            )
+
+            for torrent in torrents:
+                attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "downloading"
+            )
+
+            for torrent in torrents:
+                attributes[trim_name(torrent)] = format_progress(torrent)
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_SEEDING_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "seeding"
+            )
+            for torrent in torrents:
+                ratio = torrent["ratio"]
+                ratio = float(ratio)
+                ratio = f"{ratio:.2f}"
+
+                attributes[trim_name(torrent)] = ratio
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_RESUMED_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "resumed"
+            )
+
+            for torrent in torrents:
+                attributes[trim_name(torrent)] = format_progress(torrent)
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_PAUSED_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "paused"
+            )
+
+            for torrent in torrents:
+                attributes[trim_name(torrent)] = format_progress(torrent)
+
+            self._state = len(torrents)
+        elif self.type == SENSOR_TYPE_COMPLETED_TORRENTS:
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "completed"
+            )
+
+            for torrent in torrents:
+                attributes[trim_name(torrent)] = "100.0%"
+
+            self._state = len(torrents)
+        self._attribute = attributes
+
+
+def trim_name(torrent, trim_size=TRIM_SIZE):
+    """Do not show the complete name of the torrent, trim it a bit."""
+    name = torrent["name"]
+
+    if len(name) > trim_size:
+        name = name[0:trim_size] + "..."
+
+    return name
+
+
+def format_progress(torrent):
+    """Format the progress as a percentage, not as a pointer."""
+    progress = torrent["progress"]
+    progress = float(progress) * 100
+    progress = f"{progress:.1f}%"
+
+    return progress
