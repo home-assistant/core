@@ -118,4 +118,4 @@ async def test_migration_and_reauth(hass, local_impl):  # noqa: F811
     # Should show form
     result = await flow.async_step_reauth(entry)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
