@@ -7,7 +7,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def init_integration(hass, forecast=False) -> MockConfigEntry:
+async def init_integration(hass) -> MockConfigEntry:
     """Set up the Airly integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
