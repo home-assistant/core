@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components import history
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -178,16 +179,20 @@ class SensorFilter(Entity):
         self._state = None
         self._filters = filters
         self._icon = None
+        self._device_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
         """Handle device state changes."""
+        _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data.get("new_state"))
 
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
         """Process device state changes."""
         if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            self._state = new_state.state
+            self.async_write_ha_state()
             return
 
         temp_state = new_state
@@ -213,6 +218,9 @@ class SensorFilter(Entity):
 
         if self._icon is None:
             self._icon = new_state.attributes.get(ATTR_ICON, ICON)
+
+        if self._device_class is None:
+            self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -283,7 +291,8 @@ class SensorFilter(Entity):
 
             # Replay history through the filter chain
             for state in history_list:
-                self._update_filter_sensor_state(state, False)
+                if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
+                    self._update_filter_sensor_state(state, False)
 
         self.async_on_remove(
             async_track_state_change_event(
@@ -320,6 +329,11 @@ class SensorFilter(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity}
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._device_class
 
 
 class FilterState:
