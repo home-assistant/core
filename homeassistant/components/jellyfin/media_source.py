@@ -1,28 +1,29 @@
 import logging
-from typing import List
 import mimetypes
+from typing import List
 
-from jellyfin_apiclient_python.client import JellyfinClient
 from jellyfin_apiclient_python.api import jellyfin_url
+from jellyfin_apiclient_python.client import JellyfinClient
 
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_TRACK,
 )
-
-from homeassistant.core import HomeAssistant
-
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
 )
+from homeassistant.core import HomeAssistant
 
-from .const import (
+from .const import (  # pylint:disable=unused-import
+    COLLECTION_TYPE_MUSIC,
+    DATA_CLIENT,
+    DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
     ITEM_KEY_IMAGE_TAGS,
@@ -30,18 +31,15 @@ from .const import (
     ITEM_KEY_MEDIA_SOURCES,
     ITEM_KEY_MEDIA_TYPE,
     ITEM_KEY_NAME,
-    MAX_STREAMING_BITRATE,
-    MEDIA_SOURCE_KEY_PATH,
-    SUPPORTED_COLLECTION_TYPES,
-    COLLECTION_TYPE_MUSIC,
     ITEM_TYPE_ALBUM,
     ITEM_TYPE_ARTIST,
     ITEM_TYPE_AUDIO,
     ITEM_TYPE_LIBRARY,
+    MAX_STREAMING_BITRATE,
+    MEDIA_SOURCE_KEY_PATH,
     MEDIA_TYPE_AUDIO,
-    DATA_CLIENT,
-    DOMAIN,
-)  # pylint:disable=unused-import
+    SUPPORTED_COLLECTION_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

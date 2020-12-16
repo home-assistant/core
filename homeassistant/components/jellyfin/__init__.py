@@ -1,27 +1,20 @@
 """The Jellyfin integration."""
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-
 import logging
 
-import voluptuous as vol
-
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-
 from jellyfin_apiclient_python import Jellyfin
+import voluptuous as vol
 
 from homeassistant.components.jellyfin.config_flow import authenticate, setup_client
 from homeassistant.components.jellyfin.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-from .const import (  # pylint:disable=unused-import
-    DOMAIN,
-    DATA_CLIENT,
-)
+from .const import DATA_CLIENT, DOMAIN  # pylint:disable=unused-import
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

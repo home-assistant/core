@@ -1,24 +1,21 @@
 """Config flow for jellyfin integration."""
 
 import logging
-
-import voluptuous as vol
-import uuid
 import socket
+import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
 from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-
 from homeassistant.components.jellyfin.const import (
-    DOMAIN,
-    USER_APP_NAME,
-    USER_AGENT,
     CLIENT_VERSION,
+    DOMAIN,
+    USER_AGENT,
+    USER_APP_NAME,
 )
-
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
