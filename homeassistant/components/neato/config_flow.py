@@ -2,6 +2,8 @@
 import logging
 from typing import Optional
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -20,8 +22,6 @@ class OAuth2FlowHandler(
     DOMAIN = NEATO_DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    _reauth = False
-
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -38,16 +38,16 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth(self, data) -> dict:
         """Perform reauth upon migration of old entries."""
-        self._reauth = True
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: Optional[dict] = None
     ) -> dict:
         """Confirm reauth upon migration of old entries."""
-        if self._reauth:
-            self._reauth = False
-            return self.async_show_form(step_id="reauth_confirm")
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=vol.Schema({})
+            )
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> dict:

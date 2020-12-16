@@ -117,8 +117,8 @@ async def test_reauth(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
 
-    # Init reauth flow
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    # Confirm reauth flow
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
