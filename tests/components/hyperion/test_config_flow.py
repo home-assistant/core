@@ -734,7 +734,7 @@ async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
         CONF_PORT: TEST_PORT,
     }
 
-    config_entry = add_test_config_entry(hass, data=config_data)
+    add_test_config_entry(hass, data=config_data)
     client = create_mock_client()
     client.async_client_connect = AsyncMock(return_value=False)
 
