@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Fehler beim Verbinden"
+        },
         "error": {
             "dev_not_config": "Ger\u00e4tetyp nicht konfigurierbar",
             "dev_not_found": "Ger\u00e4t nicht gefunden"
