@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
-
     entities = []
 
     # Get Niu Api Object

@@ -26,7 +26,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Niu from a config entry."""
-
     # Get data from config
     config = entry.data
     username = entry.title

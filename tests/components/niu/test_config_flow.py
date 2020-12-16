@@ -1,5 +1,6 @@
 """Test the Niu config flow."""
 from homeassistant import config_entries, setup
+
 from homeassistant.components.niu.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.niu.const import DOMAIN
 
@@ -14,10 +15,7 @@ async def test_form(hass):
     )
     assert result["type"] == "form"
 
-    with patch(
-        "homeassistant.components.niu.config_flow.validate_input",
-        return_value={"title": "test-username"},
-    ), patch(
+    with patch("homeassistant.components.niu.config_flow.validate_input"), patch(
         "homeassistant.components.niu.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.niu.async_setup_entry",
