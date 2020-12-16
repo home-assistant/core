@@ -12,11 +12,14 @@ from homeassistant.components.hyperion.const import (
     CONF_ENTRY_ID,
     CONF_PRIORITY,
     DOMAIN,
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_REAUTH,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -168,7 +171,7 @@ async def test_user_if_no_configuration(hass: HomeAssistantType) -> None:
 
 
 async def test_user_existing_id_abort(hass: HomeAssistantType) -> None:
-    """Verify a duplicate ID results in a reauth."""
+    """Verify a duplicate ID results in an abort."""
     result = await _init_flow(hass)
 
     await _create_mock_entry(hass)

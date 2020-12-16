@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     OptionsFlow,
@@ -37,7 +38,6 @@ from .const import (
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
-    SOURCE_REAUTH,
 )
 
 _LOGGER = logging.getLogger(__name__)

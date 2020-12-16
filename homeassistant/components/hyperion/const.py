@@ -17,9 +17,6 @@ CONF_ON_UNLOAD = "ON_UNLOAD"
 SIGNAL_INSTANCES_UPDATED = f"{DOMAIN}_instances_updated_signal." "{}"
 SIGNAL_INSTANCE_REMOVED = f"{DOMAIN}_instance_removed_signal." "{}"
 
-SOURCE_IMPORT = "import"
-SOURCE_REAUTH = "reauth"
-
 HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.9"
 HYPERION_RELEASES_URL = "https://github.com/hyperion-project/hyperion.ng/releases"
 

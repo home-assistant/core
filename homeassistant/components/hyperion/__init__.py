@@ -8,7 +8,7 @@ from hyperion import client, const as hyperion_const
 from pkg_resources import parse_version
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -22,7 +22,6 @@ from .const import (
     HYPERION_RELEASES_URL,
     HYPERION_VERSION_WARN_CUTOFF,
     SIGNAL_INSTANCES_UPDATED,
-    SOURCE_REAUTH,
 )
 
 PLATFORMS = [LIGHT_DOMAIN]

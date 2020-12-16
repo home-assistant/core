@@ -10,18 +10,18 @@ from homeassistant.components.hyperion import (
     get_hyperion_unique_id,
     light as hyperion_light,
 )
-from homeassistant.components.hyperion.const import (
-    DOMAIN,
-    SOURCE_REAUTH,
-    TYPE_HYPERION_LIGHT,
-)
+from homeassistant.components.hyperion.const import DOMAIN, TYPE_HYPERION_LIGHT
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR, ConfigEntry
+from homeassistant.config_entries import (
+    ENTRY_STATE_SETUP_ERROR,
+    SOURCE_REAUTH,
+    ConfigEntry,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
