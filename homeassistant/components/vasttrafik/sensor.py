@@ -27,6 +27,7 @@ CONF_HEADING = "heading"
 CONF_LINES = "lines"
 CONF_KEY = "key"
 CONF_SECRET = "secret"
+CONF_SKIP = "skip"
 
 DEFAULT_DELAY = 0
 
@@ -42,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {
                 vol.Required(CONF_FROM): cv.string,
                 vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
+                vol.Optional(CONF_SKIP, default=0): cv.positive_int,
                 vol.Optional(CONF_HEADING): cv.string,
                 vol.Optional(CONF_LINES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
@@ -68,15 +70,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 departure.get(CONF_HEADING),
                 departure.get(CONF_LINES),
                 departure.get(CONF_DELAY),
+                departure.get(CONF_SKIP),
             )
         )
+
     add_entities(sensors, True)
 
 
 class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
-    def __init__(self, planner, name, departure, heading, lines, delay):
+    def __init__(self, planner, name, departure, heading, lines, delay, skip):
         """Initialize the sensor."""
         self._planner = planner
         self._name = name or departure
@@ -84,6 +88,7 @@ class VasttrafikDepartureSensor(Entity):
         self._heading = self.get_station_id(heading) if heading else None
         self._lines = lines if lines else None
         self._delay = timedelta(minutes=delay)
+        self._skip = skip
         self._departureboard = None
         self._state = None
         self._attributes = None
@@ -139,11 +144,16 @@ class VasttrafikDepartureSensor(Entity):
             self._state = None
             self._attributes = {}
         else:
+            skipIndex = 0
             for departure in self._departureboard:
                 line = departure.get("sname")
                 if "cancelled" in departure:
                     continue
                 if not self._lines or line in self._lines:
+                    if skipIndex < self._skip:
+                        skipIndex += 1
+                        continue
+
                     if "rtTime" in departure:
                         self._state = departure["rtTime"]
                     else:
