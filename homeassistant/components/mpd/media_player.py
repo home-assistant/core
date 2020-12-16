@@ -365,6 +365,7 @@ class MpdDevice(MediaPlayerEntity):
             self._client.play()
         else:
             self._client.clear()
+            self._currentplaylist = None
             self._client.add(media_id)
             self._client.play()
 

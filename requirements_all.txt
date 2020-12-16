@@ -17,7 +17,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.0.0
+HAP-python==3.1.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -215,7 +215,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.recollect_waste
-aiorecollect==0.2.2
+aiorecollect==1.0.1
 
 # homeassistant.components.shelly
 aioshelly==0.5.1
@@ -481,7 +481,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.7
+denonavr==0.9.8
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -508,7 +508,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.23
+dsmr_parser==0.25
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -559,7 +559,7 @@ env_canada==0.2.4
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.17.0
+envoy_reader==0.17.3
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -684,7 +684,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.0
+google-nest-sdm==0.2.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -738,7 +738,7 @@ hass-nabucasa==0.39.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.1.4
+hatasmota==0.1.6
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -762,10 +762,10 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.10.3
+holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201210.0
+home-assistant-frontend==20201212.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1149,9 +1149,6 @@ plumlightpad==0.0.11
 # homeassistant.components.serial_pm
 pmsensor==0.4
 
-# homeassistant.components.pocketcasts
-pocketcasts==0.1
-
 # homeassistant.components.poolsense
 poolsense==0.0.8
 
@@ -1307,7 +1304,10 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.5.1
+pychromecast==7.6.0
+
+# homeassistant.components.pocketcasts
+pycketcasts==1.0.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1521,7 +1521,7 @@ pymediaroom==0.6.4.1
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.9.1
+pymfy==0.9.3
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -1801,7 +1801,7 @@ python-nmap==0.6.1
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.qbittorrent
-python-qbittorrent==0.4.1
+python-qbittorrent==0.4.2
 
 # homeassistant.components.ripple
 python-ripple-api==0.0.3
@@ -1931,7 +1931,7 @@ raspyrfm-client==1.2.8
 regenmaschine==3.0.0
 
 # homeassistant.components.python_script
-restrictedpython==5.0
+restrictedpython==5.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2333,7 +2333,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.11.12
+youtube_dl==2020.12.07
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -2342,10 +2342,10 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.6
+zeroconf==0.28.7
 
 # homeassistant.components.zha
-zha-quirks==0.0.48
+zha-quirks==0.0.49
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

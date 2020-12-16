@@ -79,6 +79,7 @@ DOMAIN = "telegram_bot"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
 SERVICE_SEND_STICKER = "send_sticker"
+SERVICE_SEND_ANIMATION = "send_animation"
 SERVICE_SEND_VIDEO = "send_video"
 SERVICE_SEND_VOICE = "send_voice"
 SERVICE_SEND_DOCUMENT = "send_document"
@@ -224,6 +225,7 @@ SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
@@ -367,6 +369,7 @@ async def async_setup(hass, config):
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_STICKER,
+            SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
@@ -772,6 +775,19 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
+                    )
+                elif file_type == SERVICE_SEND_ANIMATION:
+                    self._send_msg(
+                        self.bot.send_animation,
+                        "Error sending animation",
+                        params[ATTR_MESSAGE_TAG],
+                        chat_id=chat_id,
+                        animation=file_content,
+                        caption=kwargs.get(ATTR_CAPTION),
+                        disable_notification=params[ATTR_DISABLE_NOTIF],
+                        reply_markup=params[ATTR_REPLYMARKUP],
+                        timeout=params[ATTR_TIMEOUT],
+                        parse_mode=params[ATTR_PARSER],
                     )
 
                 file_content.seek(0)
