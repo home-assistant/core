@@ -567,6 +567,8 @@ omit =
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
+    homeassistant/components/neato/__init__.py
+    homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
