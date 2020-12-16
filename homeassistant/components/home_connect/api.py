@@ -400,4 +400,3 @@ class Hob(DeviceWithPrograms):
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {"switch": program_switches, "sensor": program_sensors}
-        
