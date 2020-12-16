@@ -1,4 +1,4 @@
-"""Config flow for Recollect Waste integration."""
+"""Config flow for ReCollect Waste integration."""
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
 import voluptuous as vol
@@ -19,7 +19,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Recollect Waste."""
+    """Handle a config flow for ReCollect Waste."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
