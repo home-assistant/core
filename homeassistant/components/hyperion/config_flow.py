@@ -16,7 +16,14 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlow,
 )
-from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_BASE,
+    CONF_HOST,
+    CONF_ID,
+    CONF_PORT,
+    CONF_SOURCE,
+    CONF_TOKEN,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,6 +37,7 @@ from .const import (
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
+    SOURCE_REAUTH,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -414,7 +422,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
 
-        if entry is not None:
+        # pylint: disable=no-member
+        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
             assert self.hass
             self.hass.config_entries.async_update_entry(entry, data=self._data)
             # Need to manually reload, as the listener won't have been installed because
