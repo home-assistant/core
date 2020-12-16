@@ -77,8 +77,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
     """Test we abort if Neato is already setup."""
     entry = MockConfigEntry(
         domain=NEATO_DOMAIN,
-        data={"client_id": "abcdef", "client_secret": "123456"},
-        version=2,
+        data={"auth_implementation": "neato", "token": {"some": "data"}},
     )
     entry.add_to_hass(hass)
 
@@ -107,7 +106,6 @@ async def test_reauth(
         entry_id="my_entry",
         domain=NEATO_DOMAIN,
         data={"username": "abcdef", "password": "123456", "vendor": "neato"},
-        version=1,
     ).add_to_hass(hass)
 
     # Should show form
@@ -153,7 +151,6 @@ async def test_reauth(
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result3["reason"] == "reauth_successful"
-    assert new_entry.version == 2
     assert new_entry.state == "loaded"
     assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1

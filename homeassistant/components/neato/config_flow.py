@@ -5,6 +5,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 # pylint: disable=unused-import
@@ -18,7 +19,6 @@ class OAuth2FlowHandler(
 ):
     """Config flow to handle Neato Botvac OAuth2 authentication."""
 
-    VERSION = 2
     DOMAIN = NEATO_DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
@@ -30,7 +30,7 @@ class OAuth2FlowHandler(
     async def async_step_user(self, user_input: Optional[dict] = None) -> dict:
         """Create an entry for the flow."""
         current_entries = self._async_current_entries()
-        if current_entries and current_entries[0].version == self.VERSION:
+        if current_entries and CONF_TOKEN in current_entries[0].data:
             # Already configured
             return self.async_abort(reason="already_configured")
 
@@ -53,9 +53,8 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for the flow. Update an entry if one already exist."""
         current_entries = self._async_current_entries()
-        if current_entries and current_entries[0].version == 1:
-            # Update version 1 to 2
-            current_entries[0].version = self.VERSION
+        if current_entries and CONF_TOKEN not in current_entries[0].data:
+            # Update entry
             self.hass.config_entries.async_update_entry(
                 current_entries[0], title=self.flow_impl.name, data=data
             )

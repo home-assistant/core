@@ -8,7 +8,12 @@ from pybotvac.exceptions import NeatoException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_SOURCE
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_SOURCE,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -66,18 +71,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version < 2:
-        _LOGGER.warning("Your configuration is outdated. Updating...")
-        return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up config entry."""
-    if entry.version == 1:
+    if CONF_TOKEN not in entry.data:
+        # Init reauth flow
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 NEATO_DOMAIN,
