@@ -74,7 +74,10 @@ async def async_setup_platform(
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
-    envoy_reader = EnvoyReader(ip_address, username, password)
+    if "inverters" in monitored_conditions:
+        envoy_reader = EnvoyReader(ip_address, username, password, inverters=True)
+    else:
+        envoy_reader = EnvoyReader(ip_address, username, password)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -82,6 +85,8 @@ async def async_setup_platform(
         async with async_timeout.timeout(30):
             try:
                 await envoy_reader.getData()
+            except httpx.HTTPStatusError as err:
+                _LOGGER.error("Error retrieving data: %s", err)
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -121,37 +126,34 @@ async def async_setup_platform(
 
     entities = []
     for condition in monitored_conditions:
+        entity_name = ""
         if (
             condition == "inverters"
             and coordinator.data.get("inverters_production") is not None
         ):
             for inverter in coordinator.data["inverters_production"]:
+                entity_name = f"{name}{SENSORS[condition][0]} {inverter}"
+                split_name = entity_name.split(" ")
+                serial_number = split_name[-1]
                 entities.append(
                     Envoy(
                         condition,
-                        f"{name}{SENSORS[condition][0]} {inverter}",
+                        entity_name,
+                        serial_number,
                         SENSORS[condition][1],
                         coordinator,
                     )
                 )
-                _LOGGER.debug(
-                    "Adding inverter SN: %s - Type: %s",
-                    f"{name}{SENSORS[condition][0]} {inverter}",
-                    condition,
-                )
         elif condition != "inverters":
+            entity_name = f"{name}{SENSORS[condition][0]}"
             entities.append(
                 Envoy(
                     condition,
-                    f"{name}{SENSORS[condition][0]}",
+                    entity_name,
+                    None,
                     SENSORS[condition][1],
                     coordinator,
                 )
-            )
-            _LOGGER.debug(
-                "Adding sensor: %s - Type: %s",
-                f"{name}{SENSORS[condition][0]})",
-                condition,
             )
 
     async_add_entities(entities)
@@ -160,10 +162,11 @@ async def async_setup_platform(
 class Envoy(CoordinatorEntity):
     """Envoy entity."""
 
-    def __init__(self, sensor_type, name, unit, coordinator):
+    def __init__(self, sensor_type, name, serial_number, unit, coordinator):
         """Initialize Envoy entity."""
         self._type = sensor_type
         self._name = name
+        self._serial_number = serial_number
         self._unit_of_measurement = unit
 
         super().__init__(coordinator)
@@ -183,11 +186,8 @@ class Envoy(CoordinatorEntity):
             self._type == "inverters"
             and self.coordinator.data.get("inverters_production") is not None
         ):
-            split_name = self._name.split(" ")
-            serial_number = split_name[-1]
-
             value = self.coordinator.data.get("inverters_production").get(
-                serial_number
+                self._serial_number
             )[0]
         else:
             return None
@@ -211,11 +211,8 @@ class Envoy(CoordinatorEntity):
             self._type == "inverters"
             and self.coordinator.data.get("inverters_production") is not None
         ):
-            split_name = self._name.split(" ")
-            serial_number = split_name[-1]
-
             value = self.coordinator.data.get("inverters_production").get(
-                serial_number
+                self._serial_number
             )[1]
             return {"last_reported": value}
 
