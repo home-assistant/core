@@ -1,10 +1,13 @@
 """Support for Apple TV media player."""
 import logging
 
-from pyatv.const import DeviceState, MediaType
+from pyatv.const import DeviceState, FeatureName, FeatureState, MediaType
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_GENRE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
@@ -108,6 +111,22 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    def app_id(self):
+        """ID of the current running app."""
+        if self.atv:
+            if self.atv.features.in_state(FeatureState.Available, FeatureName.App):
+                return self.atv.metadata.app.identifier
+        return None
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        if self.atv:
+            if self.atv.features.in_state(FeatureState.Available, FeatureName.App):
+                return self.atv.metadata.app.name
+        return None
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self._playing:
@@ -172,6 +191,23 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_APPLE_TV
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {}
+
+        if self.atv and self._playing:
+            all_features = self.atv.features.all_features(include_unsupported=True)
+
+            if all_features[FeatureName.Album].state == FeatureState.Available:
+                attrs[ATTR_MEDIA_ALBUM_NAME] = self._playing.album
+            if all_features[FeatureName.Artist].state == FeatureState.Available:
+                attrs[ATTR_MEDIA_ARTIST] = self._playing.artist
+            if all_features[FeatureName.Genre].state == FeatureState.Available:
+                attrs[ATTR_MEDIA_GENRE] = self._playing.genre
+
+        return attrs
 
     async def async_turn_on(self):
         """Turn the media player on."""
