@@ -9,7 +9,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
-    CONF_ENTRY_ID,
     CONF_PRIORITY,
     DOMAIN,
 )
@@ -713,7 +712,7 @@ async def test_reauth_success(hass: HomeAssistantType) -> None:
         result = await _init_flow(
             hass,
             source=SOURCE_REAUTH,
-            data={**config_data, CONF_ENTRY_ID: config_entry.entry_id},
+            data=config_data,
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -745,7 +744,7 @@ async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
         result = await _init_flow(
             hass,
             source=SOURCE_REAUTH,
-            data={**config_data, CONF_ENTRY_ID: config_entry.entry_id},
+            data=config_data,
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

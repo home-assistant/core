@@ -9,7 +9,6 @@ CONF_AUTH_ID = "auth_id"
 CONF_CREATE_TOKEN = "create_token"
 CONF_INSTANCE = "instance"
 CONF_PRIORITY = "priority"
-CONF_ENTRY_ID = "entry_id"
 
 CONF_ROOT_CLIENT = "ROOT_CLIENT"
 CONF_ON_UNLOAD = "ON_UNLOAD"
