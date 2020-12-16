@@ -13,7 +13,7 @@ from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -237,11 +237,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": "reauth"},
+                context={"source": SOURCE_REAUTH},
                 data=entry.data,
             )
         )
-        return True
+        return False
     except GoogleNestException as err:
         _LOGGER.error("Subscriber error: %s", err)
         subscriber.stop_async()
