@@ -167,8 +167,8 @@ async def test_user_if_no_configuration(hass: HomeAssistantType) -> None:
     assert result["handler"] == DOMAIN
 
 
-async def test_user_existing_id_abort(hass: HomeAssistantType) -> None:
-    """Verify a duplicate ID results in an abort."""
+async def test_user_existing_id_reauth(hass: HomeAssistantType) -> None:
+    """Verify a duplicate ID results in a reauth."""
     result = await _init_flow(hass)
 
     await _create_mock_entry(hass)
@@ -178,7 +178,7 @@ async def test_user_existing_id_abort(hass: HomeAssistantType) -> None:
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+        assert result["reason"] == "reauth_successful"
 
 
 async def test_user_client_errors(hass: HomeAssistantType) -> None:

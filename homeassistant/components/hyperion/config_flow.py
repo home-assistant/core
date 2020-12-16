@@ -26,7 +26,6 @@ from . import create_hyperion_client
 from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
-    CONF_ENTRY_ID,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -109,7 +108,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._auth_id: Optional[str] = None
         self._require_confirm: bool = False
         self._port_ui: int = const.DEFAULT_PORT_UI
-        self._entry_id: Optional[str] = None
 
     def _create_client(self, raw_connection: bool = False) -> client.HyperionClient:
         """Create and connect a client instance."""
@@ -147,10 +145,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         config_data: ConfigType,
     ) -> Dict[str, Any]:
         """Handle a reauthentication flow."""
-        entry_data = dict(config_data)
-        assert CONF_ENTRY_ID in entry_data
-        self._entry_id = entry_data.pop(CONF_ENTRY_ID)
-        self._data = entry_data
+        self._data = dict(config_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
@@ -417,12 +412,10 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         if not hyperion_id:
             return self.async_abort(reason="no_id")
 
-        await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
+        entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
 
-        if self._entry_id:
+        if entry is not None:
             assert self.hass
-            entry = self.hass.config_entries.async_get_entry(self._entry_id)
-            assert entry is not None
             self.hass.config_entries.async_update_entry(entry, data=self._data)
             # Need to manually reload, as the listener won't have been installed because
             # the initial load did not succeed (the reauth flow will not be initiated if
