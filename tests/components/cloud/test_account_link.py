@@ -44,7 +44,7 @@ async def test_setup_provide_implementation(hass):
         "homeassistant.components.cloud.account_link._get_services",
         return_value=[
             {"service": "test", "min_version": "0.1.0"},
-            {"service": "too_new", "min_version": "100.0.0"},
+            {"service": "too_new", "min_version": "1000000.0.0"},
         ],
     ):
         assert (
