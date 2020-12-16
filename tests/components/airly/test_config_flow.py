@@ -58,34 +58,19 @@ async def test_invalid_api_key(hass, aioclient_mock):
 
 async def test_invalid_location(hass, aioclient_mock):
     """Test that errors are shown when location is invalid."""
+
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+
+    aioclient_mock.get(
+        API_NEAREST_URL,
+        exc=AirlyError(HTTP_NOT_FOUND, {"message": "UNAUTHORIZED"}),
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
 
     assert result["errors"] == {"base": "wrong_location"}
-
-
-async def test_invalid_nearest_location(hass, aioclient_mock):
-    """Test that errors are shown when nearest location is invalid."""
-
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
-
-    aioclient_mock.get(
-        API_NEAREST_URL,
-        exc=AirlyError(HTTP_NOT_FOUND, {"errorCode": "INSTALLATION_NOT_FOUND"}),
-    )
-
-    with patch(
-        "homeassistant.components.airly.config_flow.AirlyFlowHandler._test_api_key",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "wrong_location"}
 
 
 async def test_duplicate_error(hass, aioclient_mock):
