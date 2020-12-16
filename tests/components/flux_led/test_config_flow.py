@@ -123,3 +123,105 @@ async def test_auto_form(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_auto(hass):
+    """Test the config_flow when the source is an import from YAML."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.flux_led.BulbScanner.scan",
+        return_value=[
+            {
+                "ipaddr": "1.1.1.1",
+                "id": "test_id",
+                "model": "test_model",
+            }
+        ],
+    ), patch(
+        "homeassistant.components.flux_led.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.flux_led.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_TYPE: "auto"},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Auto Search"
+    assert result["data"] == {CONF_TYPE: "auto"}
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_manual_import(hass):
+    """Test the config flow for manual import from YAML."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={
+            CONF_TYPE: "manual",
+            CONF_NAME: "TestLight",
+            CONF_HOST: "1.1.1.1",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+
+    with patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb.connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb._send_msg",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb._read_msg",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb._determine_query_len",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb.query_state",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb.update_state",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb.mode",
+        return_value="valid",
+    ), patch(
+        "homeassistant.components.flux_led.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.flux_led.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "TestLight",
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "TestLight"
+    assert result2["data"] == {
+        CONF_NAME: "TestLight",
+        CONF_HOST: "1.1.1.1",
+        CONF_TYPE: "manual",
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

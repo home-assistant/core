@@ -1,4 +1,6 @@
 """Config flow for Flux LED/MagicLight."""
+import logging
+
 from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
 
@@ -7,12 +9,50 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for FluxLED/MagicHome Integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    async def async_step_import(self, import_config: dict = None):
+        """Handle configuration via YAML import."""
+        _LOGGER.info("Importing configuration from YAML for flux_led.")
+        config_entry = self.hass.config_entries.async_entries(DOMAIN)
+
+        if import_config[CONF_TYPE] == "auto":
+            for entry in config_entry:
+                if entry.unique_id == "flux_led_auto":
+                    _LOGGER.error(
+                        "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml."
+                    )
+                    return self.async_abort(reason="Already imported flux_led.")
+
+            _LOGGER.error(
+                "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml."
+            )
+            return await self.async_step_auto()
+
+        if import_config[CONF_TYPE] == "manual":
+            for entry in config_entry:
+                if (
+                    entry.unique_id
+                    == f"{DOMAIN}_{import_config[CONF_HOST].replace('.','_')}"
+                ):
+                    _LOGGER.error(
+                        f"Your flux_led configuration for {import_config[CONF_HOST]} has already been imported. Please remove configuration from your configuration.yaml."
+                    )
+                    return self.async_abort(reason="Already imported flux_led.")
+
+            _LOGGER.error(
+                f"Imported flux_led configuration for {import_config[CONF_HOST]}. Please remove from your configuration.yaml."
+            )
+            return await self.async_step_manual(import_config)
+
+        return self.async_abort(reason="Could not import YAML configuration.")
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -44,7 +84,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auto(self, user_input=None):
         """Complete the auto configuration step for setup."""
-
         bulb_scanner = BulbScanner()
         devices = bulb_scanner.scan()
         if len(devices) == 0:

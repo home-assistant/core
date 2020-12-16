@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -103,6 +104,36 @@ TRANSITION_JUMP = "jump"
 TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
+
+
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the platform and manage importing from YAML."""
+
+    if config.get("automatic_add", False):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_TYPE: "auto"}
+        )
+
+    else:
+        for import_host, import_item in config.items():
+            if import_host == "platform":
+                continue
+
+            import_name = import_host
+            if import_item:
+                import_name = import_item.get("name", import_host)
+
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_TYPE: "manual",
+                    CONF_NAME: import_name,
+                    CONF_HOST: import_host,
+                },
+            )
+
+    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
