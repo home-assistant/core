@@ -93,15 +93,15 @@ class HomeConnectDevice:
         try:
             self.appliance.get_status()
         except (HomeConnectError, ValueError):
-            _LOGGER.debug("Unable to fetch appliance status. Probably offline.")
+            _LOGGER.debug("Unable to fetch appliance status. Probably offline")
         try:
             self.appliance.get_settings()
         except (HomeConnectError, ValueError):
-            _LOGGER.debug("Unable to fetch settings. Probably offline.")
+            _LOGGER.debug("Unable to fetch settings. Probably offline")
         try:
             program_active = self.appliance.get_programs_active()
         except (HomeConnectError, ValueError):
-            _LOGGER.debug("Unable to fetch active programs. Probably offline.")
+            _LOGGER.debug("Unable to fetch active programs. Probably offline")
             program_active = None
         if program_active and "key" in program_active:
             self.appliance.status[BSH_ACTIVE_PROGRAM] = {"value": program_active["key"]}
@@ -399,7 +399,4 @@ class Hob(DeviceWithPrograms):
         """Get a dictionary with infos about the associated entities."""
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
-        return {
-            "switch": program_switches,
-            "sensor": program_sensors,
-        }
+        return {"switch": program_switches,"sensor": program_sensors}
