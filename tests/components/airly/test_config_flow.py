@@ -63,7 +63,7 @@ async def test_invalid_location(hass, aioclient_mock):
 
     aioclient_mock.get(
         API_NEAREST_URL,
-        exc=AirlyError(HTTP_NOT_FOUND, {"message": "UNAUTHORIZED"}),
+        exc=AirlyError(HTTP_NOT_FOUND, {"message": "Installation was not found"}),
     )
 
     result = await hass.config_entries.flow.async_init(
