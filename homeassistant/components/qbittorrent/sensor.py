@@ -123,7 +123,6 @@ class QBittorrentSensor(Entity):
         self._available = False
         self._exception = exception
         self._server_unique_id = server_unique_id
-        self._attribute = {}
 
     @property
     def name(self):
@@ -139,11 +138,6 @@ class QBittorrentSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return self._attribute
 
     @property
     def available(self):
