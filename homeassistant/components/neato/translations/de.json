@@ -1,21 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bereits konfiguriert"
+            "already_configured": "Konto ist bereits konfiguriert.",
+            "authorize_url_timeout": "Timeout beim Erzeugen der Autorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte beachten Sie die Dokumentation.",
+            "no_url_available": "Keine URL verfügbar. Informationen zu diesem Fehler finden Sie [im Hilfebereich]({docs_url})",
+            "reauth_successful": "Re-Authentifizierung war erfolgreich"
         },
         "create_entry": {
-            "default": "Siehe [Neato-Dokumentation]({docs_url})."
+            "default": "Erfolgreich authentifiziert"
         },
         "step": {
-            "user": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername",
-                    "vendor": "Hersteller"
-                },
-                "description": "Siehe [Neato-Dokumentation]({docs_url}).",
-                "title": "Neato-Kontoinformationen"
+            "pick_implementation": {
+                "title": "Authentifizierungsmethode auswählen"
+            },
+            "reauth_confirm": {
+                "title": "Einrichtung bestätigen?"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }
