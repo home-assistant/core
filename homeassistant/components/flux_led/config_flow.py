@@ -1,7 +1,11 @@
 """Config flow for Flux LED/MagicLight."""
 import logging
 
+<<<<<<< HEAD
 from flux_led import BulbScanner
+=======
+from flux_led import BulbScanner, WifiLedBulb
+>>>>>>> Added import from existing configuration.yaml with config_flow tests.
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,6 +21,8 @@ from .const import (
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 _LOGGER = logging.getLogger(__name__)
 
