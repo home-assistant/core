@@ -39,7 +39,7 @@ class Mcp23017ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a new entity from configuration.yaml import."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input=None, user_options=None):
+    async def async_step_user(self, user_input=None):
         """Create a new entity from UI."""
 
         if user_input is not None:

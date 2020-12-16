@@ -60,7 +60,9 @@ async def async_setup_entry(hass, config_entry):
     if i2c_address not in hass.data[DOMAIN]:
         try:
             bus = hass.data[DOMAIN_I2C]
-            hass.data[DOMAIN][i2c_address] = MCP23017(bus, i2c_address)
+            hass.data[DOMAIN][i2c_address] = await hass.async_add_executor_job(
+                functools.partial(MCP23017, bus, i2c_address)
+            )
 
         except (OSError, ValueError, KeyError) as error:
             await hass.config_entries.async_remove(config_entry.entry_id)
@@ -71,8 +73,10 @@ async def async_setup_entry(hass, config_entry):
             )
 
             _LOGGER.error(
-                "Unable to create MCP23017 device at address 0x%02x",
+                "Unable to create %s device at address 0x%02x (%s)",
+                DOMAIN,
                 i2c_address,
+                error,
             )
 
             return False
@@ -239,8 +243,8 @@ class MCP23017:
             _LOGGER.info(
                 "%s(pin %d:'%s') attached to %s@0x%02x",
                 type(entity).__name__,
-                entity._pin_number,
-                entity._pin_name,
+                entity.pin,
+                entity.name,
                 type(self).__name__,
                 self.address,
             )

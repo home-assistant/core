@@ -164,6 +164,13 @@ class MCP23017Switch(ToggleEntity):
     async def async_config_update(self, hass, config_entry):
         """Handle update from config entry options."""
         self._invert_logic = config_entry.options[CONF_INVERT_LOGIC]
+        await self.hass.async_add_executor_job(
+            functools.partial(
+                self._device.set_pin_value,
+                self._pin_number,
+                self._state ^ self._invert_logic,
+            )
+        )
         self.async_schedule_update_ha_state()
 
     def unsubscribe_update_listener(self):
