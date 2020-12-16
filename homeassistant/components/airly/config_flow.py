@@ -84,7 +84,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def test_location(client, api_key, latitude, longitude, , use_nearest=False):
+async def test_location(client, api_key, latitude, longitude, use_nearest=False):
     """Return true if location is valid."""
     airly = Airly(api_key, client)
     if use_nearest:
