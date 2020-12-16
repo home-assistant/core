@@ -20,7 +20,6 @@ class HomeConnectEntity(Entity):
         self.device = device
         self.desc = desc
         self._name = f"{self.device.appliance.name} {desc}"
-        self.device.entities.append(self)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
