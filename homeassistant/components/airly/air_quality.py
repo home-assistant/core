@@ -125,12 +125,12 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
             LABEL_ADVICE: self.coordinator.data[ATTR_API_ADVICE],
             LABEL_AQI_LEVEL: self.coordinator.data[ATTR_API_CAQI_LEVEL],
         }
-        if self.coordinator.data.get(ATTR_API_PM25):
+        if ATTR_API_PM25 in self.coordinator.data:
             attrs[LABEL_PM_2_5_LIMIT] = self.coordinator.data[ATTR_API_PM25_LIMIT]
             attrs[LABEL_PM_2_5_PERCENT] = round(
                 self.coordinator.data[ATTR_API_PM25_PERCENT]
             )
-        if self.coordinator.data.get(ATTR_API_PM10):
+        if ATTR_API_PM10 in self.coordinator.data:
             attrs[LABEL_PM_10_LIMIT] = self.coordinator.data[ATTR_API_PM10_LIMIT]
             attrs[LABEL_PM_10_PERCENT] = round(
                 self.coordinator.data[ATTR_API_PM10_PERCENT]
