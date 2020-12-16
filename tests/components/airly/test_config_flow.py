@@ -13,7 +13,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from . import API_POINT_URL
+from . import API_NEAREST_URL, API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
