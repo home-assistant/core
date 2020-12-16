@@ -16,7 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
-    CONF_ENTRY_ID,
     CONF_ON_UNLOAD,
     CONF_ROOT_CLIENT,
     DOMAIN,
@@ -93,12 +92,7 @@ async def _create_reauth_flow(
 ) -> None:
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_REAUTH},
-            data={
-                **config_entry.data,
-                CONF_ENTRY_ID: config_entry.entry_id,
-            },
+            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
         )
     )
 
