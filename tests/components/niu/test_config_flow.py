@@ -1,6 +1,5 @@
 """Test the Niu config flow."""
 from homeassistant import config_entries, setup
-
 from homeassistant.components.niu.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.niu.const import DOMAIN
 
