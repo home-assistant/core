@@ -97,6 +97,6 @@ class TelegramPoll(BaseTelegramBotEntity):
         """Stop the polling task."""
         self.updater.stop()
 
-    def process_update(self, bot, update):
+    def process_update(self, update: HandlerArg, context: CallbackContext):
         """Process incoming message."""
         self.process_message(update.to_dict())
