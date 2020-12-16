@@ -1,35 +1,35 @@
-"""Constants for the jellyfin integration."""
+"""Constants for the Jellyfin integration."""
 
 DOMAIN = "jellyfin"
 
 CLIENT_VERSION = "1.0"
-USER_APP_NAME = "Home Assistant"
-USER_AGENT = "Home-Assistant/%s" % CLIENT_VERSION
-
-DATA_CLIENT = "client"
 
 COLLECTION_TYPE_MOVIES = "movies"
 COLLECTION_TYPE_TVSHOWS = "tvshows"
 COLLECTION_TYPE_MUSIC = "music"
 
-ITEM_TYPE_LIBRARY = "CollectionFolder"
-ITEM_TYPE_ARTIST = "MusicArtist"
-ITEM_TYPE_ALBUM = "MusicAlbum"
-ITEM_TYPE_AUDIO = "Audio"
+DATA_CLIENT = "client"
 
 ITEM_KEY_COLLECTION_TYPE = "CollectionType"
 ITEM_KEY_ID = "Id"
-ITEM_KEY_NAME = "Name"
-ITEM_KEY_INDEX_NUMBER = "IndexNumber"
 ITEM_KEY_IMAGE_TAGS = "ImageTags"
-ITEM_KEY_MEDIA_TYPE = "MediaType"
+ITEM_KEY_INDEX_NUMBER = "IndexNumber"
 ITEM_KEY_MEDIA_SOURCES = "MediaSources"
+ITEM_KEY_MEDIA_TYPE = "MediaType"
+ITEM_KEY_NAME = "Name"
+
+ITEM_TYPE_ALBUM = "MusicAlbum"
+ITEM_TYPE_ARTIST = "MusicArtist"
+ITEM_TYPE_AUDIO = "Audio"
+ITEM_TYPE_LIBRARY = "CollectionFolder"
+
+MAX_STREAMING_BITRATE = "140000000"
 
 MEDIA_SOURCE_KEY_PATH = "Path"
-
 
 MEDIA_TYPE_AUDIO = "Audio"
 
 SUPPORTED_COLLECTION_TYPES = [COLLECTION_TYPE_MUSIC]
 
-MAX_STREAMING_BITRATE = "140000000"
+USER_APP_NAME = "Home Assistant"
+USER_AGENT = "Home-Assistant/%s" % CLIENT_VERSION

@@ -1,5 +1,4 @@
-"""Config flow for jellyfin integration."""
-
+"""Config flow for the Jellyfin integration."""
 import logging
 import socket
 import uuid
@@ -30,13 +29,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for jellyfin."""
+    """Handle a config flow for Jellyfin."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
-        """Handle the config flow start."""
+        """Handle a user defined configuration."""
         await self.async_set_unique_id(DOMAIN)
 
         if self._async_current_entries():
@@ -46,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                title = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -55,6 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                title = user_input.get(CONF_URL)
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -62,24 +62,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def validate_input(hass: core.HomeAssistant, user_input: dict) -> str:
+async def validate_input(hass: core.HomeAssistant, user_input: dict) -> JellyfinClient:
+    """Validate that the provided url and credentials can be used to connect."""
     jellyfin = Jellyfin()
-    setup_client(jellyfin)
+    client = jellyfin.get_client()
+    _setup_client(client)
 
     url = user_input.get(CONF_URL)
     username = user_input.get(CONF_USERNAME)
     password = user_input.get(CONF_PASSWORD)
 
-    await hass.async_add_executor_job(
-        authenticate, jellyfin.get_client(), url, username, password
-    )
+    await hass.async_add_executor_job(_connect, client, url, username, password)
 
-    return url
+    return client
 
 
-def setup_client(jellyfin: Jellyfin):
-    client = jellyfin.get_client()
-
+def _setup_client(client: JellyfinClient):
+    """Configure the Jellyfin client with a number of required properties."""
     player_name = socket.gethostname()
     client_uuid = str(uuid.uuid4())
 
@@ -87,7 +86,8 @@ def setup_client(jellyfin: Jellyfin):
     client.config.http(USER_AGENT)
 
 
-def authenticate(client: JellyfinClient, url, username, password) -> bool:
+def _connect(client: JellyfinClient, url, username, password) -> bool:
+    """Connect to the Jellyfin server and assert that the user can login."""
     client.config.data["auth.ssl"] = True if url.startswith("https") else False
 
     state = client.auth.connect_to_address(url)
@@ -105,8 +105,8 @@ def authenticate(client: JellyfinClient, url, username, password) -> bool:
 
 
 class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate the server is unreachable."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+    """Error to indicate the credentials are invalid."""

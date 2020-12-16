@@ -1,20 +1,20 @@
 """The Jellyfin integration."""
 import logging
 
-from jellyfin_apiclient_python import Jellyfin
 import voluptuous as vol
 
-from homeassistant.components.jellyfin.config_flow import authenticate, setup_client
-from homeassistant.components.jellyfin.const import DOMAIN
+from homeassistant.components.jellyfin.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+    validate_input,
+)
+from homeassistant.components.jellyfin.const import DATA_CLIENT, DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-from .const import DATA_CLIENT, DOMAIN  # pylint:disable=unused-import
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -25,23 +25,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up jellyfin from a config entry."""
+    """Set up Jellyfin from a config entry."""
 
-    jellyfin = Jellyfin()
-    setup_client(jellyfin)
-
-    url = entry.data.get(CONF_URL)
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
-
-    connected = await hass.async_add_executor_job(
-        authenticate, jellyfin.get_client(), url, username, password
-    )
-
-    if connected:
+    try:
+        client = await validate_input(hass, entry.data)
+    except CannotConnect:
+        _LOGGER.error("Cannot connect to Jellyfin server")
+        return False
+    except InvalidAuth:
+        _LOGGER.error("Failed to login to Jellyfin server")
+        return False
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception(
+            "Unexpected exception occured while setting up Jellyfin server"
+        )
+        return False
+    else:
         _LOGGER.debug("Adding API to domain data storage for entry %s", entry.entry_id)
-
-        client = jellyfin.get_client()
 
         hass.data[DOMAIN][entry.entry_id] = {DATA_CLIENT: client}
 

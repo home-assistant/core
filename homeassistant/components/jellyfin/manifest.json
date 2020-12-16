@@ -1,6 +1,6 @@
 {
   "domain": "jellyfin",
-  "name": "jellyfin",
+  "name": "Jellyfin",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jellyfin",
   "requirements": [

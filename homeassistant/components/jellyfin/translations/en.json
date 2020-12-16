@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "single_instance_allowed": "Only a single Jellyfin server is currently supported"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -18,5 +18,5 @@
             }
         }
     },
-    "title": "jellyfin"
+    "title": "Jellyfin"
 }
