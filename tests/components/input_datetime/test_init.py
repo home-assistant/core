@@ -697,12 +697,40 @@ async def test_timestamp(hass):
             ).strftime(FMT_DATETIME)
             == "2020-12-13 10:00:00"
         )
+        # Use datetime.datetime.fromtimestamp
+        assert (
+            dt_util.as_local(
+                datetime.datetime.fromtimestamp(
+                    state_without_tz.attributes[ATTR_TIMESTAMP]
+                )
+            ).strftime(FMT_DATETIME)
+            == "2020-12-13 10:00:00"
+        )
 
         # Test initial time sets timestamp correctly.
         state_time = hass.states.get("input_datetime.test_time_initial")
         assert state_time is not None
         assert state_time.state == "10:00:00"
         assert state_time.attributes[ATTR_TIMESTAMP] == 10 * 60 * 60
+
+        # Test that setting the timestamp of an entity works.
+        await hass.services.async_call(
+            DOMAIN,
+            "set_datetime",
+            {
+                ATTR_ENTITY_ID: "input_datetime.test_datetime_initial_with_tz",
+                ATTR_TIMESTAMP: state_without_tz.attributes[ATTR_TIMESTAMP],
+            },
+            blocking=True,
+        )
+        state_with_tz_updated = hass.states.get(
+            "input_datetime.test_datetime_initial_with_tz"
+        )
+        assert state_with_tz_updated.state == "2020-12-13 10:00:00"
+        assert (
+            state_with_tz_updated.attributes[ATTR_TIMESTAMP]
+            == state_without_tz.attributes[ATTR_TIMESTAMP]
+        )
 
     finally:
         dt_util.set_default_time_zone(ORIG_TIMEZONE)
