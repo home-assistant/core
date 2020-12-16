@@ -2,14 +2,12 @@
 from pybotvac.neato import Neato
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.neato.config_flow import OAuth2FlowHandler
 from homeassistant.components.neato.const import NEATO_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
-from tests.helpers.test_config_entry_oauth2_flow import local_impl  # noqa: F401
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -92,9 +90,21 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth(hass: HomeAssistantType):
+async def test_reauth(
+    hass: HomeAssistantType, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Test initialization of the reauth flow."""
+    assert await setup.async_setup_component(
+        hass,
+        "neato",
+        {
+            "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "http": {"base_url": "https://example.com"},
+        },
+    )
+
     MockConfigEntry(
+        entry_id="my_entry",
         domain=NEATO_DOMAIN,
         data={"username": "abcdef", "password": "123456", "vendor": "neato"},
         version=1,
@@ -107,50 +117,43 @@ async def test_reauth(hass: HomeAssistantType):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
 
-    # Form confirmed, init new flow
-    with patch(
-        "homeassistant.components.neato.config_flow.OAuth2FlowHandler.async_step_user",
-        return_value={
-            "description_placeholders": None,
+    # Init reauth flow
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
             "flow_id": result["flow_id"],
-            "handler": "neato",
-            "step_id": "auth",
-            "type": "external",
-            "url": "https://example.com/",
+            "redirect_uri": "https://example.com/auth/external/callback",
         },
-    ) as mock_user:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+    )
 
-    mock_user.assert_called_once_with()
+    client = await aiohttp_client(hass.http.app)
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
 
-
-async def test_oauth_create_entry(hass: HomeAssistantType, local_impl):  # noqa: 811
-    """Test migration from version 1 to version 2."""
-    flow = OAuth2FlowHandler()
-    flow.hass = hass
-    flow.flow_impl = local_impl
-
-    MockConfigEntry(
-        entry_id="my_entry",
-        domain=NEATO_DOMAIN,
-        data={"username": "abcdef", "password": "123456", "vendor": "neato"},
-        version=1,
-    ).add_to_hass(hass)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
 
     # Update entry
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=True,
-    ) as mock_reload:
-        result = await flow.async_oauth_create_entry({"my": "data"})
-
-    await hass.async_block_till_done()
+        "homeassistant.components.neato.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        await hass.async_block_till_done()
 
     new_entry = hass.config_entries.async_get_entry("my_entry")
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["reason"] == "reauth_successful"
     assert new_entry.version == 2
-    assert new_entry.data == {"my": "data"}
-
-    mock_reload.assert_called_once_with("my_entry")
+    assert new_entry.state == "loaded"
+    assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
+    assert len(mock_setup.mock_calls) == 1
