@@ -1,9 +1,11 @@
 {
     "config": {
-        "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
-        },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwort"
