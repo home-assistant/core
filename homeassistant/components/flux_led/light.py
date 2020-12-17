@@ -174,12 +174,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
                 },
             )
 
-    return True
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
-    config_data = hass.data[DOMAIN][entry.entry_id]
+    config_data = entry.data
     config_type = config_data[CONF_TYPE]
     lights = []
 

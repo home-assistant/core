@@ -20,19 +20,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict = None):
         """Handle configuration via YAML import."""
-        _LOGGER.info("Importing configuration from YAML for flux_led.")
+        _LOGGER.info("Importing configuration from YAML for flux_led")
         config_entry = self.hass.config_entries.async_entries(DOMAIN)
 
         if import_config[CONF_TYPE] == "auto":
             for entry in config_entry:
                 if entry.unique_id == "flux_led_auto":
                     _LOGGER.error(
-                        "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml."
+                        "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml"
                     )
                     return self.async_abort(reason="already_configured_device")
 
             _LOGGER.error(
-                "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml."
+                "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml"
             )
             return await self.async_step_auto()
 
@@ -43,13 +43,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     == f"{DOMAIN}_{import_config[CONF_HOST].replace('.','_')}"
                 ):
                     _LOGGER.error(
-                        "Your flux_led configuration for %s has already been imported. Please remove configuration from your configuration.yaml.",
+                        "Your flux_led configuration for %s has already been imported. Please remove configuration from your configuration.yaml",
                         import_config[CONF_HOST],
                     )
                     return self.async_abort(reason="already_configured_device")
 
             _LOGGER.error(
-                "Imported flux_led configuration for %s. Please remove from your configuration.yaml.",
+                "Imported flux_led configuration for %s. Please remove from your configuration.yaml",
                 import_config[CONF_HOST],
             )
             return await self.async_step_manual(import_config, source_import=True)
