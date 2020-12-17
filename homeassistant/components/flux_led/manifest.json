@@ -1,6 +1,7 @@
 {
   "domain": "flux_led",
-  "name": "Flux LED/MagicLight",
+  "name": "Flux LED/MagicHome",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
   "requirements": [
     "flux_led==0.22"
@@ -8,4 +9,8 @@
   "codeowners": [
     "@djtimca"
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> Add dataupdate coordinator and code refactor for flux_led.
