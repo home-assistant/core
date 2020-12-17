@@ -1,22 +1,22 @@
-"""Support for FluxLED/MagicHome lights."""
-
-from datetime import timedelta
+"""Support for Flux lights."""
 import logging
 import random
-import time
 
-from flux_led import WifiLedBulb
+from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     LightEntity,
@@ -41,10 +41,16 @@ CONF_COLORS = "colors"
 CONF_SPEED_PCT = "speed_pct"
 CONF_TRANSITION = "transition"
 
+DOMAIN = "flux_led"
+
 SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
 MODE_RGB = "rgb"
 MODE_WHITE = "w"
+
+# Constant color temp values for 2 flux_led special modes
+# Warm-white and Cool-white modes
+COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
 
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = "red_fade"
@@ -98,11 +104,8 @@ TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
-SERVICE_CUSTOM_EFFECT = "set_custom_effect"
-
 CUSTOM_EFFECT_SCHEMA = vol.Schema(
     {
-        vol.Required("entity_id"): str,
         vol.Required(CONF_COLORS): vol.All(
             cv.ensure_list,
             vol.Length(min=1, max=16),
@@ -121,6 +124,16 @@ CUSTOM_EFFECT_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(ATTR_MODE, default=MODE_RGBW): vol.All(
+            cv.string, vol.In([MODE_RGBW, MODE_RGB, MODE_WHITE])
+        ),
+        vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(["ledenet"])),
+        vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
+    }
+)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
@@ -131,7 +144,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         import_name = import_host
         import_name = import_item.get("name", import_host)
 
-        devices[import_host.replace(".", "_")] = {
             CONF_NAME: import_name,
             CONF_HOST: import_host,
         }
@@ -144,15 +156,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_DEVICES: devices,
         },
     )
+=======
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Flux lights."""
-    config_auto = entry.options["global"].get(
-        CONF_AUTOMATIC_ADD, entry.data[CONF_AUTOMATIC_ADD]
-    )
-    config_devices = entry.data[CONF_DEVICES]
-    config_options = entry.options
 
     lights = []
 
@@ -184,6 +189,41 @@ async def async_setup_entry(hass, entry, async_add_entities):
         lights.append(light)
 
     async_add_entities(lights)
+=======
+    lights = []
+    light_ips = []
+
+    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
+        device = {}
+        device["name"] = device_config[CONF_NAME]
+        device["ipaddr"] = ipaddr
+        device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
+        device[ATTR_MODE] = device_config[ATTR_MODE]
+        device[CONF_CUSTOM_EFFECT] = device_config.get(CONF_CUSTOM_EFFECT)
+        light = FluxLight(device)
+        lights.append(light)
+        light_ips.append(ipaddr)
+
+    if not config.get(CONF_AUTOMATIC_ADD, False):
+        add_entities(lights, True)
+        return
+
+    # Find the bulbs on the LAN
+    scanner = BulbScanner()
+    scanner.scan(timeout=10)
+    for device in scanner.getBulbInfo():
+        ipaddr = device["ipaddr"]
+        if ipaddr in light_ips:
+            continue
+        device["name"] = f"{device['id']} {ipaddr}"
+        device[ATTR_MODE] = None
+        device[CONF_PROTOCOL] = None
+        device[CONF_CUSTOM_EFFECT] = None
+        light = FluxLight(device)
+        lights.append(light)
+
+    add_entities(lights, True)
+>>>>>>> Remove all but the config_flow from the current PR. Additional PR required to complete.
 
 
 class FluxLight(LightEntity):
@@ -225,72 +265,49 @@ class FluxLight(LightEntity):
 
     @property
     def name(self):
-        """Return the name of the light."""
+        """Return the name of the device if any."""
         return self._name
 
     @property
-    def available(self):
-<<<<<<< HEAD
-=======
-        """Return if the light is available."""
-        available = True
-        if self._config_type == "auto":
-            available = self.coordinator.scan_coordinator.data[self._unique_id][
-                "active"
-            ]
-
-        return available
-
-    @property
     def is_on(self):
-<<<<<<< HEAD
-=======
-        """Return true if the light is on."""
-        state = self._bulb.isOn() and self.brightness > 0
-        if time.time() - self._last_update < 1:
-            state = self._state
-
-        return state
+        return self._state
 
     @property
     def brightness(self):
-        """Return the brightness of the light."""
-        brightness = self._brightness if self._brightness else 0
-        if time.time() - self._last_update < 1:
-            if self._mode == MODE_WHITE:
-                brightness = self.white_value
+        """Return the brightness of this light between 0..255."""
+        if self._mode == MODE_WHITE:
+            return self.white_value
 
-            brightness = self._bulb.brightness
-            self._last_brightness = brightness
-
-        return brightness
+        return self._bulb.brightness
 
     @property
     def hs_color(self):
         """Return the color property."""
-        hs_color = self._hs_color
-        if time.time() - self._last_update < 1:
-            hs_color = color_util.color_RGB_to_hs(*self._bulb.getRgb())
-            self._last_hs_color = hs_color
-        return hs_color
-
-    @property
-    def white_value(self):
-        """Return the white value of this light."""
-        return self._bulb.getRgbw()[3]
+        return color_util.color_RGB_to_hs(*self._bulb.getRgb())
 
     @property
     def supported_features(self):
-        """Return the supported features for this light."""
+        """Flag supported features."""
         if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
+
+        if self._mode == MODE_WHITE:
+            return SUPPORT_BRIGHTNESS
 
         return SUPPORT_FLUX_LED
 
     @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
+        return self._bulb.getRgbw()[3]
+
+    @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
+        if self._custom_effect:
+            return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
+
+        return FLUX_EFFECT_LIST
 
     @property
     def effect(self):
@@ -306,23 +323,16 @@ class FluxLight(LightEntity):
 
         return None
 
-    @property
-    def device_state_attributes(self):
-        """Return the attributes."""
-        if self._config_type == "auto":
-            self._attrs["ip_address"] = self.coordinator.scan_coordinator.data[
-                self._unique_id
-            ]["ipaddr"]
-        else:
-            self._attrs["ip_address"] = self._ip_address
-
-        return self._attrs
+    def turn_on(self, **kwargs):
+        """Turn the specified or all lights on."""
+        if not self.is_on:
+            self._bulb.turnOn()
 
     @property
     def device_info(self):
         """Return the device information."""
         device_name = "FluxLED/Magic Home"
-        device_model = self._model
+        device_model = "LED Lights"
 
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
@@ -333,43 +343,57 @@ class FluxLight(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light."""
->>>>>>> Added set_custom_effect service for lights.
-
         rgb = None
+
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color:
             rgb = color_util.color_hs_to_RGB(*hs_color)
+        else:
+            rgb = None
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-        if effect == EFFECT_RANDOM:
-            color_red = random.randint(0, 255)
-            color_green = random.randint(0, 255)
-            color_blue = random.randint(0, 255)
-
-            self._bulb.setRgbw(
-                r=color_red,
-                g=color_green,
-                b=color_blue,
-            )
-
-            self._hs_color = color_util.color_RGB_to_hs(
-                color_red,
-                color_green,
-                color_blue,
-            )
-            self._last_update = time.time()
-
+        # handle special modes
+        if color_temp is not None:
+            if brightness is None:
+                brightness = self.brightness
+            if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
+                self._bulb.setRgbw(w=brightness)
+            else:
+                self._bulb.setRgbw(w2=brightness)
             return
 
+        # Show warning if effect set with rgb, brightness, or white level
+        if effect and (brightness or white or rgb):
+            _LOGGER.warning(
+                "RGB, brightness and white level are ignored when"
+                " an effect is specified for a flux bulb"
+            )
+
+        # Random color effect
+        if effect == EFFECT_RANDOM:
+            self._bulb.setRgb(
+                random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+            )
+            return
+
+        if effect == EFFECT_CUSTOM:
+            if self._custom_effect:
+                self._bulb.setCustomPattern(
+                    self._custom_effect[CONF_COLORS],
+                    self._custom_effect[CONF_SPEED_PCT],
+                    self._custom_effect[CONF_TRANSITION],
+                )
+            return
+
+        # Effect selection
         if effect in EFFECT_MAP:
-<<<<<<< HEAD
             self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
             return
-=======
             self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_SPEED)
 
         if not brightness:
@@ -377,56 +401,49 @@ class FluxLight(LightEntity):
 
         self._last_brightness = brightness
         self._brightness = brightness
->>>>>>> Initial commit of updated flux_led component.
+            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            return
 
-        if not rgb:
-            rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
+        # Preserve current brightness on color/white level change
+        if brightness is None:
+            brightness = self.brightness
 
-        self._hs_color = color_util.color_RGB_to_hs(*tuple(rgb))
+        # Preserve color on brightness/white level change
+        if rgb is None:
+            rgb = self._bulb.getRgb()
 
-        if not white and self._mode == MODE_RGBW:
+        if white is None and self._mode == MODE_RGBW:
             white = self.white_value
 
+        # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
 
+        # handle RGBW mode
         elif self._mode == MODE_RGBW:
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
 
+        # handle RGB mode
         else:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
-        self._state = True
-        self._last_update = time.time()
+    def turn_off(self, **kwargs):
+        """Turn the specified or all lights off."""
+        self._bulb.turnOff()
 
-    async def async_turn_off(self, **kwargs):
-        """Turn off the light."""
+    def update(self):
+        """Synchronize state with bulb."""
+        if not self.available:
+            try:
+                self._connect()
+                self._error_reported = False
+            except OSError:
+                self._disconnect()
+                if not self._error_reported:
+                    _LOGGER.warning(
+                        "Failed to connect to bulb %s, %s", self._ipaddr, self._name
+                    )
+                    self._error_reported = True
+                return
 
-        rgb = self._bulb.getRgb()
-        self._last_brightness = self.brightness
-        self._last_hs_color = self.hs_color
-
-        if self._mode == MODE_WHITE:
-            self._bulb.setRgbw(0, 0, 0, w=0)
-
-        elif self._mode == MODE_RGBW:
-            self._bulb.setRgbw(*tuple(rgb), w=0, brightness=0)
-
-        else:
-            self._bulb.setRgb(*tuple(rgb), brightness=0)
-
-        self._state = False
-        self._last_update = time.time()
-
-    async def async_set_custom_effect(
-        self, colors: list, speed_pct: int, transition: str
-    ):
-        """Define custom service to set a custom effect on the lights."""
-
-        if not self.is_on:
-            await self.async_turn_on()
-
-        self.coordinator.light.setCustomPattern(colors, speed_pct, transition)
-
-        self._state = True
-        self._last_update = time.time()
+        self._bulb.update_state(retry=2)
