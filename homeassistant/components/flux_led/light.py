@@ -181,7 +181,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if config_type == "auto":
         # Find the bulbs on the LAN
         scanner = BulbScanner()
-        await hass.async_add_executor_job(scanner.scan(timeout=10))
+        await hass.async_add_executor_job(scanner.scan())
         for device in scanner.getBulbInfo():
             ipaddr = device["ipaddr"]
             device["name"] = f"{device['id']} {ipaddr}"
