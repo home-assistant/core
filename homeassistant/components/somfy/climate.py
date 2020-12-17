@@ -1,7 +1,6 @@
 """Support for Somfy Thermostat."""
 
-import logging
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pymfy.api.devices.category import Category
 from pymfy.api.devices.thermostat import (
@@ -14,9 +13,6 @@ from pymfy.api.devices.thermostat import (
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -26,12 +22,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import SomfyEntity
 from .const import API, COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_CATEGORIES = {Category.HVAC.value}
 
@@ -89,11 +83,6 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes of the device."""
-        return {ATTR_BATTERY_LEVEL: self._climate.get_battery()}
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
         return TEMP_CELSIUS
@@ -145,39 +134,17 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         HEAT and COOL mode are exclusive. End user has to enable a mode manually within the Somfy application.
         So only one mode can be displayed. Auto mode is a scheduler.
         """
-        hvac_state = HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
+        hvac_state = HVAC_MODES_MAPPING[self._climate.get_hvac_state()]
         return [HVAC_MODE_AUTO, hvac_state]
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == self.hvac_mode:
-            return
         if hvac_mode == HVAC_MODE_AUTO:
             self._climate.cancel_target()
         else:
             self._climate.set_target(
                 TargetMode.MANUAL, self.target_temperature, DurationType.FURTHER_NOTICE
             )
-
-    @property
-    def hvac_action(self) -> str:
-        """Return the current running hvac operation if supported."""
-        if not self.current_temperature or not self.target_temperature:
-            return CURRENT_HVAC_IDLE
-
-        if (
-            self.hvac_mode == HVAC_MODE_HEAT
-            and self.current_temperature < self.target_temperature
-        ):
-            return CURRENT_HVAC_HEAT
-
-        if (
-            self.hvac_mode == HVAC_MODE_COOL
-            and self.current_temperature > self.target_temperature
-        ):
-            return CURRENT_HVAC_COOL
-
-        return CURRENT_HVAC_IDLE
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -206,8 +173,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         elif preset_mode in [PRESET_MANUAL, PRESET_GEOFENCING]:
             temperature = self.target_temperature
         else:
-            _LOGGER.error("Preset mode not supported: %s", preset_mode)
-            return
+            raise ValueError(f"Preset mode not supported: {preset_mode}")
 
         self._climate.set_target(
             REVERSE_PRESET_MAPPING[preset_mode], temperature, DurationType.NEXT_MODE
