@@ -6,6 +6,7 @@ import random
 import time
 
 from flux_led import WifiLedBulb
+import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,6 +24,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -43,6 +45,10 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_COLORS = "colors"
+CONF_SPEED_PCT = "speed_pct"
+CONF_TRANSITION = "transition"
 
 SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
@@ -104,6 +110,29 @@ TRANSITION_JUMP = "jump"
 TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
+
+SERVICE_CUSTOM_EFFECT = "set_custom_effect"
+
+CUSTOM_EFFECT_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): str,
+        vol.Required(CONF_COLORS): vol.All(
+            cv.ensure_list,
+            vol.Length(min=1, max=16),
+            [
+                vol.All(
+                    vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+                )
+            ],
+        ),
+        vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
+            vol.Range(min=0, max=100), vol.Coerce(int)
+        ),
+        vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
+            cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+        ),
+    }
+)
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -230,6 +259,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
     async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_lights)
+
+    # register custom_effect service
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_CUSTOM_EFFECT,
+        CUSTOM_EFFECT_SCHEMA,
+        "async_set_custom_effect",
+    )
 
 
 class FluxLEDCoordinator(DataUpdateCoordinator):
@@ -381,12 +419,15 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return FLUX_EFFECT_LIST
+        return FLUX_EFFECT_LIST + [EFFECT_CUSTOM]
 
     @property
     def effect(self):
         """Return the current effect."""
         current_mode = self._bulb.raw_state[3]
+
+        if current_mode == EFFECT_CUSTOM_CODE:
+            return EFFECT_CUSTOM
 
         for effect, code in EFFECT_MAP.items():
             if current_mode == code:
@@ -498,4 +539,17 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._bulb.setRgb(*tuple(rgb), brightness=0)
 
         self._state = False
+        self._last_update = time.time()
+
+    async def async_set_custom_effect(
+        self, colors: list, speed_pct: int, transition: str
+    ):
+        """Define custom service to set a custom effect on the lights."""
+
+        if not self.is_on:
+            await self.async_turn_on()
+
+        self.coordinator.light.setCustomPattern(colors, speed_pct, transition)
+
+        self._state = True
         self._last_update = time.time()
