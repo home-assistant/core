@@ -17,8 +17,6 @@ from . import API_NEAREST_URL, API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
-from tests.common import MockConfigEntry, load_fixture
-
 CONFIG = {
     CONF_NAME: "Home",
     CONF_API_KEY: "foo",
@@ -108,9 +106,6 @@ async def test_create_entry_with_nearest_method(hass, aioclient_mock):
     aioclient_mock.get(API_NEAREST_URL, text=load_fixture("airly_valid_station.json"))
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
