@@ -24,7 +24,5 @@ BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR = (
 BSH_AMBIENT_LIGHT_CUSTOM_COLOR = "BSH.Common.Setting.AmbientLightCustomColor"
 
 BSH_DOOR_STATE = "BSH.Common.Status.DoorState"
-BSH_PAUSE = "BSH.Common.Command.PauseProgram"
-BSH_RESUME = "BSH.Common.Command.ResumeProgram"
 
 SIGNAL_UPDATE_ENTITIES = "home_connect.update_entities"
