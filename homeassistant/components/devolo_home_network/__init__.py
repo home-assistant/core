@@ -1,18 +1,23 @@
 """The devolo Home Network integration."""
 import asyncio
+import logging
 
 from devolo_plc_api.device import Device
+from devolo_plc_api.exceptions.device import DeviceNotFound
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, PLATFORMS
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -28,9 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     async_client = get_async_client(hass)
 
-    device = Device(ip=conf[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
-    device.password = conf.get(CONF_PASSWORD) or ""
-    await device.async_connect(session_instance=async_client)
+    try:
+        device = Device(ip=conf[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
+        await device.async_connect(session_instance=async_client)
+    except DeviceNotFound as error:
+        _LOGGER.warning("Unable to connect to %s.", conf[CONF_IP_ADDRESS])
+        raise ConfigEntryNotReady from error
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device, "listener": None}
 
