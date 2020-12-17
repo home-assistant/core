@@ -116,4 +116,3 @@ class FluxLedList:
             )
 
             async_dispatcher_send(self.hass, SIGNAL_ADD_DEVICE, new_bulbs)
-            
