@@ -1,11 +1,7 @@
 """Config flow for Flux LED/MagicLight."""
 import logging
 
-<<<<<<< HEAD
 from flux_led import BulbScanner
-=======
-from flux_led import BulbScanner, WifiLedBulb
->>>>>>> Added import from existing configuration.yaml with config_flow tests.
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -84,15 +80,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 =======
-        self.config_type = None
+        config_type = None
 
         if user_input is not None:
-            self.config_type = user_input[CONF_TYPE]
-            if self.config_type == "auto":
-                return await self.async_step_auto()
-            else:
-                return await self.async_step_manual()
->>>>>>> Updated to allow auto and manual configuration.
+            config_type = user_input[CONF_TYPE]
+
+            return (
+                await self.async_step_auto()
+                if config_type == "auto"
+                else await self.async_step_manual()
+            )
+>>>>>>> Fix lint issues.
 
         return self.async_show_form(
             step_id="user",
