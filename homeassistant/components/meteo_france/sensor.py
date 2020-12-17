@@ -115,7 +115,7 @@ class MeteoFranceSensor(CoordinatorEntity):
             else:
                 value = data[path[1]]
 
-        if self._type == "wind_speed":
+        if self._type in ["wind_speed", "wind_gust"]:
             # convert API wind speed from m/s to km/h
             value = round(value * 3.6)
         return value
