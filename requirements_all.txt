@@ -215,7 +215,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.recollect_waste
-aiorecollect==0.2.2
+aiorecollect==1.0.1
 
 # homeassistant.components.shelly
 aioshelly==0.5.1
@@ -508,7 +508,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.23
+dsmr_parser==0.25
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -559,7 +559,7 @@ env_canada==0.2.4
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.17.0
+envoy_reader==0.17.3
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -738,7 +738,7 @@ hass-nabucasa==0.39.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.1.4
+hatasmota==0.1.6
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12

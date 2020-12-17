@@ -131,7 +131,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.recollect_waste
-aiorecollect==0.2.2
+aiorecollect==1.0.1
 
 # homeassistant.components.shelly
 aioshelly==0.5.1
@@ -269,7 +269,7 @@ distro==1.5.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.23
+dsmr_parser==0.25
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -376,7 +376,7 @@ hangups==0.4.11
 hass-nabucasa==0.39.0
 
 # homeassistant.components.tasmota
-hatasmota==0.1.4
+hatasmota==0.1.6
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
