@@ -14,7 +14,6 @@ from homeassistant.components.airly.air_quality import (
     LABEL_PM_10_LIMIT,
     LABEL_PM_10_PERCENT,
 )
-from homeassistant.components.airly.const import DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,

@@ -17,10 +17,7 @@ from . import API_NEAREST_URL, API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
-API_POINT_URL = (
-    "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000"
-)
-API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000"
+from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {
     CONF_NAME: "Home",

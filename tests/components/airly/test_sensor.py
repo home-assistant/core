@@ -1,7 +1,6 @@
 """Test sensor of Airly integration."""
 from datetime import timedelta
 
-from homeassistant.components.airly.const import DOMAIN
 from homeassistant.components.airly.sensor import ATTRIBUTION
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
