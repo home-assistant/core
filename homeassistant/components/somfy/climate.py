@@ -181,8 +181,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         elif preset_mode in [PRESET_MANUAL, PRESET_GEOFENCING]:
             temperature = self.target_temperature
         else:
-            _LOGGER.error("Preset mode not supported: %s", preset_mode)
-            return
+            raise ValueError(f"Preset mode not supported: {preset_mode}")
 
         self._climate.set_target(
             REVERSE_PRESET_MAPPING[preset_mode], temperature, DurationType.NEXT_MODE
