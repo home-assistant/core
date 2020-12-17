@@ -145,7 +145,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         HEAT and COOL mode are exclusive. End user has to enable a mode manually within the Somfy application.
         So only one mode can be displayed. Auto mode is a scheduler.
         """
-        hvac_state = HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
+        hvac_state = HVAC_MODES_MAPPING[self._climate.get_hvac_state()]
         return [HVAC_MODE_AUTO, hvac_state]
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
