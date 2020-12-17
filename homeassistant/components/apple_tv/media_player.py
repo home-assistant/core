@@ -5,9 +5,6 @@ from pyatv.const import DeviceState, FeatureName, FeatureState, MediaType
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_GENRE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
@@ -188,26 +185,29 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         return None
 
     @property
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        if self._is_feature_available(FeatureName.Artist):
+            return self._playing.artist
+        return None
+
+    @property
+    def media_album_name(self):
+        """Album name of current playing media, music track only."""
+        if self._is_feature_available(FeatureName.Album):
+            return self._playing.album
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_APPLE_TV
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-
+    def _is_feature_available(self, feature):
+        """Return if a feature is available."""
         if self.atv and self._playing:
-            all_features = self.atv.features.all_features(include_unsupported=True)
-
-            if all_features[FeatureName.Album].state == FeatureState.Available:
-                attrs[ATTR_MEDIA_ALBUM_NAME] = self._playing.album
-            if all_features[FeatureName.Artist].state == FeatureState.Available:
-                attrs[ATTR_MEDIA_ARTIST] = self._playing.artist
-            if all_features[FeatureName.Genre].state == FeatureState.Available:
-                attrs[ATTR_MEDIA_GENRE] = self._playing.genre
-
-        return attrs
+            return self.atv.features.in_state(FeatureState.Available, feature)
+        return False
 
     async def async_turn_on(self):
         """Turn the media player on."""
