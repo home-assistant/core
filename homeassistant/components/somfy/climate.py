@@ -14,9 +14,6 @@ from pymfy.api.devices.thermostat import (
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -156,26 +153,6 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
             self._climate.set_target(
                 TargetMode.MANUAL, self.target_temperature, DurationType.FURTHER_NOTICE
             )
-
-    @property
-    def hvac_action(self) -> str:
-        """Return the current running hvac operation if supported."""
-        if not self.current_temperature or not self.target_temperature:
-            return CURRENT_HVAC_IDLE
-
-        if (
-            self.hvac_mode == HVAC_MODE_HEAT
-            and self.current_temperature < self.target_temperature
-        ):
-            return CURRENT_HVAC_HEAT
-
-        if (
-            self.hvac_mode == HVAC_MODE_COOL
-            and self.current_temperature > self.target_temperature
-        ):
-            return CURRENT_HVAC_COOL
-
-        return CURRENT_HVAC_IDLE
 
     @property
     def preset_mode(self) -> Optional[str]:
