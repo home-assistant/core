@@ -22,7 +22,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (

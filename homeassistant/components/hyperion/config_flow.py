@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
     CONF_ID,
-    CONF_MODE,
     CONF_PORT,
     CONF_SOURCE,
     CONF_TOKEN,

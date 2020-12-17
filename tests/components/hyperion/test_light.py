@@ -34,7 +34,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
-    CONF_MODE,
     CONF_PORT,
     CONF_SOURCE,
     CONF_TOKEN,
