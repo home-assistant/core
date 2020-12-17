@@ -85,14 +85,13 @@ class RachioPerson:
                         controller[KEY_NAME],
                         self.username,
                     )
-                    continue
                 else:
                     _LOGGER.error(
                         "Failed to add rachio controller '%s' because of an error: %s",
                         controller[KEY_NAME],
                         webhooks.get("error", "Unknown Error"),
                     )
-                    continue
+                continue
 
             rachio_iro = RachioIro(hass, self.rachio, controller, webhooks)
             rachio_iro.setup()
