@@ -55,6 +55,7 @@ async def test_setup_fail(hass):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
+
 async def test_invalid_state(hass):
     """Test if filter attributes are inherited."""
     config = {
@@ -69,14 +70,15 @@ async def test_invalid_state(hass):
     }
 
     with assert_setup_component(1, "sensor"):
-        assert setup_component(hass, "sensor", config)
-        hass.block_till_done()
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-        hass.states.set("sensor.test_monitored", STATE_UNAVAILABLE)
-        hass.block_till_done()
+        hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
+        await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
         assert STATE_UNAVAILABLE == state.state
+
 
 async def test_chain(hass, values):
     """Test if filter chaining works."""
@@ -119,18 +121,19 @@ async def test_setup(hass):
     }
 
     with assert_setup_component(1, "sensor"):
-        assert setup_component(hass, "sensor", config)
-        hass.block_till_done()
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-        hass.states.set(
+        hass.states.async_set(
             "sensor.test_monitored", 1, {"icon": "mdi:test", "device_class": "test"}
         )
-        hass.block_till_done()
+        await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
         assert state.attributes["device_class"] == "test"
         assert "1.0" == state.state
+
 
 async def test_chain_history(hass, values, missing=False):
     """Test if filter chaining works."""
