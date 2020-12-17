@@ -273,6 +273,7 @@ async def test_import_manual_already_setup(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
+<<<<<<< HEAD
         context={"source": config_entries.SOURCE_IMPORT},
         data={
             CONF_AUTOMATIC_ADD: False,
@@ -282,14 +283,15 @@ async def test_import_manual_already_setup(hass):
                     CONF_HOST: "1.1.1.1",
                 }
             },
+        context={
+            "source": config_entries.SOURCE_IMPORT,
+>>>>>>> Added test coverage in test_config_flow.py.
         },
+        data={CONF_TYPE: "auto"},
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
 
-
-async def test_options_set_global_options(hass):
-    """Test set global options through options flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
@@ -306,6 +308,16 @@ async def test_options_set_global_options(hass):
         },
     )
     entry.add_to_hass(hass)
+=======
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured_device"
+
+
+async def test_manual_import(hass):
+    """Test the config flow for manual import from YAML."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+>>>>>>> Added test coverage in test_config_flow.py.
 
     with patch(
         "homeassistant.components.flux_led.BulbScanner.scan",
@@ -421,6 +433,7 @@ async def test_options_add_and_remove_new_light(hass):
         user_input={CONF_REMOVE_DEVICE: "1_1_1_2"},
     )
 
+<<<<<<< HEAD
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         "global": {
@@ -429,7 +442,6 @@ async def test_options_add_and_remove_new_light(hass):
         }
     }
 
-    assert entry.data == {
         CONF_AUTOMATIC_ADD: False,
         CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
         CONF_DEVICES: {
@@ -505,3 +517,12 @@ async def test_options_configure_light(hass):
         },
     }
     
+=======
+    assert result["type"] == "create_entry"
+    assert result["title"] == "TestLight"
+    assert result["data"] == {
+        CONF_NAME: "TestLight",
+        CONF_HOST: "1.1.1.1",
+        CONF_TYPE: "manual",
+    }
+
