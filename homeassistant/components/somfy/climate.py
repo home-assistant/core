@@ -150,8 +150,6 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == self.hvac_mode:
-            return
         if hvac_mode == HVAC_MODE_AUTO:
             self._climate.cancel_target()
         else:
