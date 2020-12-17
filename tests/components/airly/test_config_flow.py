@@ -89,8 +89,8 @@ async def test_create_entry(hass, aioclient_mock):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONFIG[CONF_NAME]
-        assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-        assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-        assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
