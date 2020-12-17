@@ -374,6 +374,9 @@ answer_callback_query:
     show_alert:
       description: Show a permanent notification.
       example: true
+    timeout:
+      description: Timeout for sending the answer. Will help with timeout errors (poor internet connection, etc)
+      example: "1000"
 
 delete_message:
   description: Delete a previously sent message.

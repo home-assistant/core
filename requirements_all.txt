@@ -1816,7 +1816,7 @@ python-songpal==0.12
 python-tado==0.8.1
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==11.1.0
+python-telegram-bot==13.1
 
 # homeassistant.components.vlc_telnet
 python-telnet-vlc==1.0.4
