@@ -235,6 +235,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def async_new_lights(bulb: dict):
         """Add a new bulb when it is connected to the network for auto configured."""
+        bulb_coordinator = hass.data[DOMAIN][entry.entry_id][BULB_COORDINATOR]
+
         coordinator = FluxLEDCoordinator(
             hass=hass,
             name=bulb["id"],
