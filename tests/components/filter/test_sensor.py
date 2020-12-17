@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, init_recorder_component
+from tests.common import assert_setup_component, async_init_recorder_component
 
 
 @fixture
@@ -63,9 +63,7 @@ async def test_chain(hass, values):
             ],
         }
     }
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
 
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, "sensor", config)
@@ -94,9 +92,7 @@ async def test_chain_history(hass, values, missing=False):
             ],
         },
     }
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
     assert_setup_component(1, "history")
 
     t_0 = dt_util.utcnow() - timedelta(minutes=1)
@@ -155,9 +151,7 @@ async def test_history_time(hass):
             "filters": [{"filter": "time_throttle", "window_size": "00:01"}],
         },
     }
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
     assert_setup_component(1, "history")
 
     t_0 = dt_util.utcnow() - timedelta(minutes=1)
@@ -201,9 +195,7 @@ async def test_setup(hass):
         }
     }
 
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
 
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, "sensor", config)
@@ -232,9 +224,7 @@ async def test_invalid_state(hass):
         }
     }
 
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
 
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, "sensor", config)
@@ -379,9 +369,7 @@ def test_time_sma(values):
 
 async def test_reload(hass):
     """Verify we can reload filter sensors."""
-    await hass.async_add_executor_job(
-        init_recorder_component, hass
-    )  # force in memory db
+    await async_init_recorder_component(hass)
 
     hass.states.async_set("sensor.test_monitored", 12345)
     await async_setup_component(
