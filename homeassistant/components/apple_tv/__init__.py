@@ -342,7 +342,7 @@ class AppleTVManager:
         attrs = {
             "identifiers": {(DOMAIN, self.config_entry.unique_id)},
             "manufacturer": "Apple",
-            "name": self.config_entry.data.get(CONF_NAME),
+            "name": self.config_entry.data[CONF_NAME],
         }
 
         if self.atv:
