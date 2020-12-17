@@ -7,17 +7,16 @@ from devolo_plc_api.exceptions.device import DeviceNotFound
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO PASSWORD needs to be optional
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD): str}
-)
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
 
 async def validate_input(
@@ -27,19 +26,23 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    valid = await Device.async_validate_password(
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+    async_client = get_async_client(hass)
+
+    device = Device(
         data[CONF_IP_ADDRESS],
-        data.get(CONF_PASSWORD),
-        "wifi" if "wifi" in discovery_data["name"].lower() else "lan",
+        zeroconf_instance=zeroconf_instance,
+        deviceapi=discovery_data,
     )
 
-    # TODO Use function to validate password
-    return valid
-    # return {
-    #     # TODO Use constants
-    #     "serial_number": device.serial_number,
-    #     "title": device.hostname.split(".")[0],
-    # },
+    await device.async_connect(session_instance=async_client)
+    await device.async_disconnect()
+
+    return {
+        # TODO Use constants
+        "serial_number": device.serial_number,
+        "title": device.hostname.split(".")[0],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -102,24 +105,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
+        title = self._discovery_info["hostname"].split(".")[0]
         if user_input is not None:
             data = {
                 CONF_IP_ADDRESS: self._discovery_info["host"],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
-            # TODO Handle exceptions
-            info = await validate_input(
-                self.hass,
-                data=data,
-                discovery_data=self._discovery_info,
-            )
-            return self.async_create_entry(title=info["title"], data=data)
+            return self.async_create_entry(title=title, data=data)
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema({vol.Optional(CONF_PASSWORD, default=""): str}),
-            description_placeholders={
-                "host_name": self._discovery_info["hostname"].split(".")[0]
-            },
+            description_placeholders={"host_name": title},
         )
 
     # TODO Add options flow for ability to change password
