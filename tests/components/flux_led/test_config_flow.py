@@ -4,6 +4,7 @@ from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -125,6 +126,31 @@ async def test_auto_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_auto_form_no_devices_found(hass):
+    """Test the auto configuration with no devices found."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.flux_led.BulbScanner.scan",
+        return_value=[],
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_TYPE: "auto",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "no_devices_found"
+
+
 async def test_import_auto(hass):
     """Test the config_flow when the source is an import from YAML."""
 
@@ -160,23 +186,34 @@ async def test_import_auto(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_import(hass):
-    """Test the config flow for manual import from YAML."""
+async def test_auto_import_already_setup(hass):
+    """Test where the auto configuration from YAML has already been set up."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="flux_led_auto",
+        data={
+            CONF_TYPE: "auto",
+        },
+    ).add_to_hass(hass)
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_TYPE: "manual",
-            CONF_NAME: "TestLight",
-            CONF_HOST: "1.1.1.1",
+        context={
+            "source": config_entries.SOURCE_IMPORT,
         },
+        data={CONF_TYPE: "auto"},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "manual"
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured_device"
+
+
+async def test_manual_import(hass):
+    """Test the config flow for manual import from YAML."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.flux_led.config_flow.WifiLedBulb.connect",
@@ -206,18 +243,20 @@ async def test_manual_import(hass):
         "homeassistant.components.flux_led.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_TYPE: "manual",
                 CONF_NAME: "TestLight",
                 CONF_HOST: "1.1.1.1",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "TestLight"
-    assert result2["data"] == {
+    assert result["type"] == "create_entry"
+    assert result["title"] == "TestLight"
+    assert result["data"] == {
         CONF_NAME: "TestLight",
         CONF_HOST: "1.1.1.1",
         CONF_TYPE: "manual",
@@ -225,3 +264,31 @@ async def test_manual_import(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_manual_import_already_setup(hass):
+    """Test the manual import flow where the light is already set up."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="flux_led_1_1_1_1",
+        data={
+            CONF_TYPE: "manual",
+            CONF_NAME: "TestLight",
+            CONF_HOST: "1.1.1.1",
+        },
+    ).add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_TYPE: "manual",
+            CONF_NAME: "TestLight",
+            CONF_HOST: "1.1.1.1",
+        },
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured_device"

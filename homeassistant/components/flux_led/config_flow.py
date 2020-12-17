@@ -29,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.error(
                         "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml."
                     )
-                    return self.async_abort(reason="Already imported flux_led.")
+                    return self.async_abort(reason="already_configured_device")
 
             _LOGGER.error(
                 "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml."
@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "Your flux_led configuration for %s has already been imported. Please remove configuration from your configuration.yaml.",
                         import_config[CONF_HOST],
                     )
-                    return self.async_abort(reason="Already imported flux_led.")
+                    return self.async_abort(reason="already_configured_device")
 
             _LOGGER.error(
                 "Imported flux_led configuration for %s. Please remove from your configuration.yaml.",
@@ -90,23 +90,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Complete the auto configuration step for setup."""
         bulb_scanner = BulbScanner()
         devices = bulb_scanner.scan()
-        abort = False
-        if len(devices) == 0:
-            abort = True
-        else:
-            user_data = {
-                CONF_TYPE: "auto",
-            }
-            unique_id = "flux_led_auto"
-            await self.async_set_unique_id(unique_id)
 
-        return (
-            self.async_abort(reason="no_devices_found")
-            if abort
-            else self.async_create_entry(
-                title="Auto Search",
-                data=user_data,
-            )
+        if not devices:
+            return self.async_abort(reason="no_devices_found")
+
+        user_data = {
+            CONF_TYPE: "auto",
+        }
+        unique_id = "flux_led_auto"
+        await self.async_set_unique_id(unique_id)
+
+        return self.async_create_entry(
+            title="Auto Search",
+            data=user_data,
         )
 
     async def async_step_manual(self, user_input=None):
@@ -129,12 +125,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                     unique_id = f"flux_led_{ip_address.replace('.','_')}"
                     await self.async_set_unique_id(unique_id)
+                    return self.async_create_entry(title=name, data=user_data)
 
-                return (
-                    self.async_create_entry(title=name, data=user_data)
-                    if bulb.mode
-                    else self.async_abort(reason="cannot_connect")
-                )
+                return self.async_abort(reason="cannot_connect")
 
             except BrokenPipeError:
                 errors["base"] = "cannot_connect"
