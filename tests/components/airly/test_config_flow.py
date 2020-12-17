@@ -14,7 +14,7 @@ from homeassistant.const import (
 
 from . import API_KEY_VALIDATION_URL, API_POINT_URL
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, patch
 
 CONFIG = {
     CONF_NAME: "Home",
@@ -84,12 +84,13 @@ async def test_create_entry(hass, aioclient_mock):
     )
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-    )
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == CONFIG[CONF_NAME]
-    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == CONFIG[CONF_NAME]
+        assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+        assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+        assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
