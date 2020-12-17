@@ -1254,3 +1254,6 @@ async def test_blueprint_automation(hass, calls):
     hass.bus.async_fire("blueprint_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert automation.entities_in_automation(hass, "automation.automation_0") == [
+        "light.kitchen"
+    ]

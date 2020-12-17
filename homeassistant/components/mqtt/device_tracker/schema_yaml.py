@@ -2,12 +2,12 @@
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPES
 from homeassistant.const import CONF_DEVICES, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from ... import mqtt
 from ..const import CONF_QOS
 
 CONF_PAYLOAD_HOME = "payload_home"

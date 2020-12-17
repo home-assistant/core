@@ -1,0 +1,13 @@
+{
+    "config": {
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN-Code"
+                }
+            }
+        }
+    },
+    "title": "Apple TV"
+}

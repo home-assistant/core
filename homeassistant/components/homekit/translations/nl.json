@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "Er is al een bridge met dezelfde naam of poort geconfigureerd."
+            "port_name_in_use": "Er is al een bridge of apparaat met dezelfde naam of poort geconfigureerd."
         },
         "step": {
             "pairing": {

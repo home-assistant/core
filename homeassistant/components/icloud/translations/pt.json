@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Conta j\u00e1 configurada",
             "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida"
         },
         "error": {
@@ -22,7 +23,8 @@
             "user": {
                 "data": {
                     "password": "Palavra-passe",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "Com a fam\u00edlia"
                 }
             }
         }

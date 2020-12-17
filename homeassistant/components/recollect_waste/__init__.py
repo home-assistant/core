@@ -1,4 +1,4 @@
-"""The Recollect Waste integration."""
+"""The ReCollect Waste integration."""
 import asyncio
 from datetime import date, timedelta
 from typing import List
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         except RecollectError as err:
             raise UpdateFailed(
-                f"Error while requesting data from Recollect: {err}"
+                f"Error while requesting data from ReCollect: {err}"
             ) from err
 
     coordinator = DataUpdateCoordinator(
