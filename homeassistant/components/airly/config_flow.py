@@ -5,7 +5,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -37,23 +43,24 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
-            api_key_valid = await self._test_api_key(websession, user_input["api_key"])
-            if not api_key_valid:
-                self._errors["base"] = "invalid_api_key"
-            else:
-                location_valid = await self._test_location(
+            try:
+                location_valid = await test_location(
                     websession,
                     user_input["api_key"],
                     user_input["latitude"],
                     user_input["longitude"],
                 )
+            except AirlyError as err:
+                if err.status_code == HTTP_UNAUTHORIZED:
+                    self._errors["base"] = "invalid_api_key"
+            else:
                 if not location_valid:
                     self._errors["base"] = "wrong_location"
 
-            if not self._errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                if not self._errors:
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
 
         return self._show_config_form(
             name=DEFAULT_NAME,
@@ -81,31 +88,19 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def _test_api_key(self, client, api_key):
-        """Return true if api_key is valid."""
 
-        with async_timeout.timeout(10):
-            airly = Airly(api_key, client)
-            measurements = airly.create_measurements_session_point(
-                latitude=52.24131, longitude=20.99101
-            )
-            try:
-                await measurements.update()
-            except AirlyError:
-                return False
-            return True
+async def test_location(client, api_key, latitude, longitude):
+    """Return true if location is valid."""
+    airly = Airly(api_key, client)
+    measurements = airly.create_measurements_session_point(
+        latitude=latitude, longitude=longitude
+    )
 
-    async def _test_location(self, client, api_key, latitude, longitude):
-        """Return true if location is valid."""
+    with async_timeout.timeout(10):
+        await measurements.update()
 
-        with async_timeout.timeout(10):
-            airly = Airly(api_key, client)
-            measurements = airly.create_measurements_session_point(
-                latitude=latitude, longitude=longitude
-            )
+    current = measurements.current
 
-            await measurements.update()
-        current = measurements.current
-        if current["indexes"][0]["description"] == NO_AIRLY_SENSORS:
-            return False
-        return True
+    if current["indexes"][0]["description"] == NO_AIRLY_SENSORS:
+        return False
+    return True
