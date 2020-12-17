@@ -21,7 +21,15 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PROTOCOL,
+    CONF_TYPE,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -139,41 +147,66 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the platform and manage importing from YAML."""
+
+    if config.get("automatic_add", False):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_TYPE: "auto"}
+        )
+
+    else:
+        for import_host, import_item in config.items():
+            if import_host == "platform":
+                continue
+
+            import_name = import_host
+            if import_item:
+                import_name = import_item.get("name", import_host)
+
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_TYPE: "manual",
+                    CONF_NAME: import_name,
+                    CONF_HOST: import_host,
+                },
+            )
+
+    return True
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
+    config_data = hass.data[DOMAIN][entry.entry_id]
+    config_type = config_data[CONF_TYPE]
     lights = []
-    light_ips = []
 
-    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
+    if config_type == "auto":
+        # Find the bulbs on the LAN
+        scanner = BulbScanner()
+        scanner.scan(timeout=10)
+        for device in scanner.getBulbInfo():
+            ipaddr = device["ipaddr"]
+            device["name"] = f"{device['id']} {ipaddr}"
+            device[ATTR_MODE] = None
+            device[CONF_PROTOCOL] = None
+            device[CONF_CUSTOM_EFFECT] = None
+            light = FluxLight(device)
+            lights.append(light)
+
+    else:
         device = {}
-        device["name"] = device_config[CONF_NAME]
-        device["ipaddr"] = ipaddr
-        device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
-        device[ATTR_MODE] = device_config[ATTR_MODE]
-        device[CONF_CUSTOM_EFFECT] = device_config.get(CONF_CUSTOM_EFFECT)
-        light = FluxLight(device)
-        lights.append(light)
-        light_ips.append(ipaddr)
-
-    if not config.get(CONF_AUTOMATIC_ADD, False):
-        add_entities(lights, True)
-        return
-
-    # Find the bulbs on the LAN
-    scanner = BulbScanner()
-    scanner.scan(timeout=10)
-    for device in scanner.getBulbInfo():
-        ipaddr = device["ipaddr"]
-        if ipaddr in light_ips:
-            continue
-        device["name"] = f"{device['id']} {ipaddr}"
-        device[ATTR_MODE] = None
+        device["name"] = config_data[CONF_NAME]
+        device["ipaddr"] = config_data[CONF_HOST]
         device[CONF_PROTOCOL] = None
+        device[ATTR_MODE] = None
         device[CONF_CUSTOM_EFFECT] = None
         light = FluxLight(device)
         lights.append(light)
 
-    add_entities(lights, True)
+    async_add_entities(lights)
 
 
 class FluxLight(LightEntity):
