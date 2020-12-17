@@ -156,10 +156,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
     else:
-        for import_host, import_item in config.items():
-            if import_host == "platform":
-                continue
-
+        for import_host, import_item in config["devices"].items():
             import_name = import_host
             if import_item:
                 import_name = import_item.get("name", import_host)
