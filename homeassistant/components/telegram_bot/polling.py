@@ -7,7 +7,6 @@ from telegram.ext import CallbackContext, Dispatcher, Handler, Updater
 from telegram.utils.types import HandlerArg
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
 
 from . import CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot
 
@@ -19,12 +18,10 @@ async def async_setup_platform(hass, config):
     bot = initialize_bot(config)
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
 
-    @callback
     def _start_bot(_event):
         """Start the bot."""
         pol.start_polling()
 
-    @callback
     def _stop_bot(_event):
         """Stop the bot."""
         pol.stop_polling()
