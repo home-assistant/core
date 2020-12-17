@@ -1,4 +1,4 @@
-"""Define tests for the Recollect Waste config flow."""
+"""Define tests for the ReCollect Waste config flow."""
 from aiorecollect.errors import RecollectError
 
 from homeassistant import data_entry_flow
