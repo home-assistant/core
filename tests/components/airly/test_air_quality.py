@@ -14,6 +14,7 @@ from homeassistant.components.airly.air_quality import (
     LABEL_PM_10_LIMIT,
     LABEL_PM_10_PERCENT,
 )
+from homeassistant.components.airly.const import DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
@@ -109,5 +110,4 @@ async def test_manual_update_entity(hass, aioclient_mock):
         {ATTR_ENTITY_ID: ["air_quality.home"]},
         blocking=True,
     )
-
     assert aioclient_mock.call_count == call_count + 1

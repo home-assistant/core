@@ -1,6 +1,7 @@
 """Test sensor of Airly integration."""
 from datetime import timedelta
 
+from homeassistant.components.airly.const import DOMAIN
 from homeassistant.components.airly.sensor import ATTRIBUTION
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -122,5 +123,4 @@ async def test_manual_update_entity(hass, aioclient_mock):
         {ATTR_ENTITY_ID: ["sensor.home_humidity"]},
         blocking=True,
     )
-
     assert aioclient_mock.call_count == call_count + 1
