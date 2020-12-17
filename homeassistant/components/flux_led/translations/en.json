@@ -5,6 +5,9 @@
             "cannot_connect": "Failed to connect",
             "no_devices_found": "No devices found on the network"
         },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
         "step": {
             "manual": {
                 "data": {

@@ -52,9 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Imported flux_led configuration for %s. Please remove from your configuration.yaml.",
                 import_config[CONF_HOST],
             )
-            return await self.async_step_manual(import_config)
-
-        return self.async_abort(reason="Could not import YAML configuration.")
+            return await self.async_step_manual(import_config, source_import=True)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -105,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=user_data,
         )
 
-    async def async_step_manual(self, user_input=None):
+    async def async_step_manual(self, user_input=None, source_import: bool = False):
         """Complete the manual setup of an individual FluxLED Light."""
         errors = {}
 
@@ -130,6 +128,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
 
             except BrokenPipeError:
+                if source_import:
+                    return self.async_abort(reason="cannot_connect")
+
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(

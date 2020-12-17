@@ -85,6 +85,41 @@ async def test_manual_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_manual_form_broken_pipe(hass):
+    """Test the manual configuration form with cannot_connect to light."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TYPE: "manual",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "manual"
+
+    with patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb.connect",
+        side_effect=BrokenPipeError(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_NAME: "TestLight",
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+
+    assert result3["type"] == "form"
+    assert result3["step_id"] == "manual"
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+
 async def test_auto_form(hass):
     """Test the auto configured setup form."""
 
@@ -264,6 +299,29 @@ async def test_manual_import(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_manual_import_broken_pipe(hass):
+    """Test the config flow for manual import with cannot_connect from YAML."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.flux_led.config_flow.WifiLedBulb.connect",
+        side_effect=BrokenPipeError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_TYPE: "manual",
+                CONF_NAME: "TestLight",
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_manual_import_already_setup(hass):
