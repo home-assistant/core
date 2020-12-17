@@ -756,7 +756,6 @@ async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-
 async def test_options_mode_off(hass: HomeAssistantType) -> None:
     """Check mode off option."""
 
