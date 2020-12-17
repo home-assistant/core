@@ -83,6 +83,33 @@ async def test_chain(hass, values):
         assert "18.05" == state.state
 
 
+async def test_setup(hass):
+    """Test if filter attributes are inherited."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "outlier", "window_size": 10, "radius": 4.0},
+            ],
+        }
+    }
+
+    with assert_setup_component(1, "sensor"):
+        assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
+
+        self.hass.states.set(
+            "sensor.test_monitored", 1, {"icon": "mdi:test", "device_class": "test"}
+        )
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.attributes["icon"] == "mdi:test"
+        assert state.attributes["device_class"] == "test"
+        assert "1.0" == state.state
+
 async def test_chain_history(hass, values, missing=False):
     """Test if filter chaining works."""
     await init_recorder(hass)
