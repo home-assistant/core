@@ -3,9 +3,6 @@ from homeassistant.components.airly.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 
-API_KEY_VALIDATION_URL = (
-    "https://airapi.airly.eu/v2/measurements/point?lat=52.241310&lng=20.991010"
-)
 API_POINT_URL = (
     "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000"
 )
