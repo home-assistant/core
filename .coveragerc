@@ -616,7 +616,7 @@ omit =
     homeassistant/components/notify_events/notify.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuimo_controller/*
-    homeassistant/components/nuki/lock.py
+    homeassistant/components/nuki/*
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py

@@ -8,36 +8,40 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN
+from .const import (
+    ATTR_BATTERY_CRITICAL,
+    ATTR_DATA,
+    ATTR_NUKI_ID,
+    ATTR_UNLATCH,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    ERROR_STATES,
+)
+from .webhook import register_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 20
-
-ATTR_BATTERY_CRITICAL = "battery_critical"
-ATTR_NUKI_ID = "nuki_id"
-ATTR_UNLATCH = "unlatch"
-
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
-
-NUKI_DATA = "nuki"
-
-ERROR_STATES = (0, 254, 255)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_WEBHOOK_ID): cv.string,
     }
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
+    use_webhook = CONF_WEBHOOK_ID in config
 
     def get_entities():
         bridge = NukiBridge(
@@ -48,8 +52,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             DEFAULT_TIMEOUT,
         )
 
-        entities = [NukiLockEntity(lock) for lock in bridge.locks]
-        entities.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
+        entities = [NukiLockEntity(lock, use_webhook) for lock in bridge.locks]
+        entities.extend(
+            [NukiOpenerEntity(opener, use_webhook) for opener in bridge.openers]
+        )
         return entities
 
     entities = await hass.async_add_executor_job(get_entities)
@@ -67,14 +73,46 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "lock_n_go",
     )
 
+    if use_webhook:
+        await register_webhook(hass, config)
+
 
 class NukiDeviceEntity(LockEntity, ABC):
     """Representation of a Nuki device."""
 
-    def __init__(self, nuki_device):
+    def __init__(self, nuki_device, use_webhook):
         """Initialize the lock."""
         self._nuki_device = nuki_device
+        self._use_webhook = use_webhook
         self._available = nuki_device.state not in ERROR_STATES
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        if self._use_webhook:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{self._nuki_device.nuki_id}",
+                    self.handle_callback,
+                )
+            )
+
+    async def handle_callback(self, event):
+        """Handle callback events."""
+        _LOGGER.debug("Got callback event: %s", event)
+
+        self._nuki_device.update_from_callback(event[ATTR_DATA])
+
+        self._available = self._nuki_device.state not in ERROR_STATES
+
+        self.async_write_ha_state()
+
+    @property
+    def should_poll(self):
+        """Return if Entity should be polled."""
+        return not self._use_webhook
 
     @property
     def name(self):
