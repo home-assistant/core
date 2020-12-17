@@ -134,7 +134,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.recollect_waste
-aiorecollect==0.2.2
+aiorecollect==1.0.1
 
 # homeassistant.components.shelly
 aioshelly==0.5.1
@@ -272,7 +272,7 @@ distro==1.5.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.23
+dsmr_parser==0.25
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -355,7 +355,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.0
+google-nest-sdm==0.2.1
 
 # homeassistant.components.gree
 greeclimate==0.10.3
@@ -376,7 +376,7 @@ hangups==0.4.11
 hass-nabucasa==0.39.0
 
 # homeassistant.components.tasmota
-hatasmota==0.1.4
+hatasmota==0.1.6
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -655,13 +655,13 @@ pyatv==0.7.5
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.17
+pybotvac==0.0.19
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.5.1
+pychromecast==7.6.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
@@ -770,7 +770,7 @@ pymata-express==1.19
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.9.1
+pymfy==0.9.3
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -963,7 +963,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.25
+roonapi==0.0.28
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0

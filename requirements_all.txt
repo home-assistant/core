@@ -215,7 +215,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.recollect_waste
-aiorecollect==0.2.2
+aiorecollect==1.0.1
 
 # homeassistant.components.shelly
 aioshelly==0.5.1
@@ -508,7 +508,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.23
+dsmr_parser==0.25
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -559,7 +559,7 @@ env_canada==0.2.4
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.17.0
+envoy_reader==0.17.3
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -681,7 +681,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.0
+google-nest-sdm==0.2.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -735,7 +735,7 @@ hass-nabucasa==0.39.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.1.4
+hatasmota==0.1.6
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -1146,9 +1146,6 @@ plumlightpad==0.0.11
 # homeassistant.components.serial_pm
 pmsensor==0.4
 
-# homeassistant.components.pocketcasts
-pocketcasts==0.1
-
 # homeassistant.components.poolsense
 poolsense==0.0.8
 
@@ -1292,7 +1289,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.17
+pybotvac==0.0.19
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.9
@@ -1304,7 +1301,10 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.5.1
+pychromecast==7.6.0
+
+# homeassistant.components.pocketcasts
+pycketcasts==1.0.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1518,7 +1518,7 @@ pymediaroom==0.6.4.1
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.9.1
+pymfy==0.9.3
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -1798,7 +1798,7 @@ python-nmap==0.6.1
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.qbittorrent
-python-qbittorrent==0.4.1
+python-qbittorrent==0.4.2
 
 # homeassistant.components.ripple
 python-ripple-api==0.0.3
@@ -1955,7 +1955,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.25
+roonapi==0.0.28
 
 # homeassistant.components.rova
 rova==0.1.0

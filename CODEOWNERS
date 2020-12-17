@@ -356,6 +356,7 @@ homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/pvpc_hourly_pricing/* @azogue
+homeassistant/components/qbittorrent/* @geoffreylagaisse
 homeassistant/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
