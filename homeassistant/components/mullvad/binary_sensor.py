@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represents a Mullvad binary sensor."""
 
-    def __init__(self, coordinator, sensor):  # pylint: disable=W0231
+    def __init__(self, coordinator, sensor):  # pylint: disable=super-init-not-called
         """Initialize the Mullvad binary sensor."""
         self.coordinator = coordinator
         self.id = sensor["id"]
