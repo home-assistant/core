@@ -83,7 +83,7 @@ async def test_stretch_sensor_entities(hass, mock_stretch):
     assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("sensor.koelkast_92c4a_electricity_consumed")
-    assert float(state.state) == 53.2
+    assert float(state.state) == 50.5
 
     state = hass.states.get("sensor.droger_52559_electricity_consumed_interval")
-    assert float(state.state) == 1.06
+    assert float(state.state) == 0.0
