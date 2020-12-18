@@ -77,6 +77,7 @@ class NestFlowHandler(
 
     def __init__(self):
         """Initialize NestFlowHandler."""
+        super().__init__()
         # When invoked for reauth, allows updating an existing config entry
         self._reauth = False
 
