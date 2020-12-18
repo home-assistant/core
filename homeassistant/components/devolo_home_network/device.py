@@ -1,9 +1,11 @@
 """Generic platform."""
 from devolo_plc_api.device import Device
 
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, TOPIC_UPDATE
 
 
 class DevoloDevice(Entity):
@@ -55,3 +57,20 @@ class DevoloDevice(Entity):
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
         return self._unique_id
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
