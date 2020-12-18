@@ -18,7 +18,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
@@ -88,7 +87,7 @@ def _setup_client(client: JellyfinClient):
 
 def _connect(client: JellyfinClient, url, username, password) -> bool:
     """Connect to the Jellyfin server and assert that the user can login."""
-    client.config.data["auth.ssl"] = True if url.startswith("https") else False
+    client.config.data["auth.ssl"] = url.startswith("https")
 
     state = client.auth.connect_to_address(url)
     if state["State"] != CONNECTION_STATE["ServerSignIn"]:

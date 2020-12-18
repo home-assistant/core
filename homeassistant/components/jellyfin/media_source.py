@@ -1,7 +1,7 @@
 """The Media Source implementation for the Jellyfin integration."""
 import logging
 import mimetypes
-from typing import List
+from typing import List, Tuple
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -39,6 +39,7 @@ from .const import (  # pylint:disable=unused-import
     MAX_STREAMING_BITRATE,
     MEDIA_SOURCE_KEY_PATH,
     MEDIA_TYPE_AUDIO,
+    MEDIA_TYPE_NONE,
     SUPPORTED_COLLECTION_TYPES,
 )
 
@@ -48,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_media_source(hass: HomeAssistant):
     """Set up Jellyfin media source."""
 
-    """Currently only a single Jellyfin server is supported"""
+    # Currently only a single Jellyfin server is supported
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     data = hass.data[DOMAIN][entry.entry_id]
@@ -83,7 +84,9 @@ class JellyfinSource(MediaSource):
 
         return PlayMedia(stream_url, mime_type)
 
-    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
+    async def async_browse_media(
+        self, item: MediaSourceItem, media_types: Tuple[str] = None
+    ) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
         if not item.identifier:
             return await self._build_libraries()
@@ -95,12 +98,12 @@ class JellyfinSource(MediaSource):
         item_type = media_item["Type"]
         if item_type == ITEM_TYPE_LIBRARY:
             return await self._build_library(media_item, True)
-        elif item_type == ITEM_TYPE_ARTIST:
+        if item_type == ITEM_TYPE_ARTIST:
             return await self._build_artist(media_item, True)
-        elif item_type == ITEM_TYPE_ALBUM:
+        if item_type == ITEM_TYPE_ALBUM:
             return await self._build_album(media_item, True)
-        else:
-            raise BrowseError("Unsupported item type %s" % item_type)
+
+        raise BrowseError("Unsupported item type %s" % item_type)
 
     async def _build_libraries(self) -> BrowseMediaSource:
         """Return all supported libraries the user has access to as media sources."""
@@ -108,7 +111,7 @@ class JellyfinSource(MediaSource):
             domain=DOMAIN,
             identifier=None,
             media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=None,
+            media_content_type=MEDIA_TYPE_NONE,
             title=self.name,
             can_play=False,
             can_expand=True,
@@ -142,29 +145,29 @@ class JellyfinSource(MediaSource):
 
         if collection_type == COLLECTION_TYPE_MUSIC:
             return await self._build_music_library(library, include_children)
-        else:
-            raise BrowseError("Unsupported collection type %s" % collection_type)
+
+        raise BrowseError("Unsupported collection type %s" % collection_type)
 
     async def _build_music_library(
         self, library: dict, include_children: bool
     ) -> BrowseMediaSource:
         """Return a single music library as a browsable media source."""
-        id = library[ITEM_KEY_ID]
-        name = library[ITEM_KEY_NAME]
+        library_id = library[ITEM_KEY_ID]
+        library_name = library[ITEM_KEY_NAME]
 
         result = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=id,
+            identifier=library_id,
             media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=None,
-            title=name,
+            media_content_type=MEDIA_TYPE_NONE,
+            title=library_name,
             can_play=False,
             can_expand=True,
         )
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ARTIST
-            result.children = await self._build_artists(id)
+            result.children = await self._build_artists(library_id)
 
         return result
 
@@ -178,16 +181,16 @@ class JellyfinSource(MediaSource):
         self, artist: dict, include_children: bool
     ) -> BrowseMediaSource:
         """Return a single artist as a browsable media source."""
-        id = artist[ITEM_KEY_ID]
-        title = artist[ITEM_KEY_NAME]
+        artist_id = artist[ITEM_KEY_ID]
+        artist_name = artist[ITEM_KEY_NAME]
         thumbnail_url = self._get_thumbnail_url(artist)
 
         result = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=id,
+            identifier=artist_id,
             media_class=MEDIA_CLASS_ARTIST,
-            media_content_type=None,
-            title=title,
+            media_content_type=MEDIA_TYPE_NONE,
+            title=artist_name,
             can_play=False,
             can_expand=True,
             thumbnail=thumbnail_url,
@@ -195,7 +198,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ALBUM
-            result.children = await self._build_albums(id)
+            result.children = await self._build_albums(artist_id)
 
         return result
 
@@ -209,16 +212,16 @@ class JellyfinSource(MediaSource):
         self, album: dict, include_children: bool
     ) -> BrowseMediaSource:
         """Return a single album as a browsable media source."""
-        id = album[ITEM_KEY_ID]
-        title = album[ITEM_KEY_NAME]
+        album_id = album[ITEM_KEY_ID]
+        album_title = album[ITEM_KEY_NAME]
         thumbnail_url = self._get_thumbnail_url(album)
 
         result = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=id,
+            identifier=album_id,
             media_class=MEDIA_CLASS_ALBUM,
-            media_content_type=None,
-            title=title,
+            media_content_type=MEDIA_TYPE_NONE,
+            title=album_title,
             can_play=False,
             can_expand=True,
             thumbnail=thumbnail_url,
@@ -226,7 +229,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_TRACK
-            result.children = await self._build_tracks(id)
+            result.children = await self._build_tracks(album_id)
 
         return result
 
@@ -238,17 +241,17 @@ class JellyfinSource(MediaSource):
 
     def _build_track(self, track: dict) -> BrowseMediaSource:
         """Return a single track as a browsable media source."""
-        id = track[ITEM_KEY_ID]
-        title = track[ITEM_KEY_NAME]
+        track_id = track[ITEM_KEY_ID]
+        track_title = track[ITEM_KEY_NAME]
         mime_type = _media_mime_type(track)
         thumbnail_url = self._get_thumbnail_url(track)
 
         result = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=id,
+            identifier=track_id,
             media_class=MEDIA_CLASS_TRACK,
             media_content_type=mime_type,
-            title=title,
+            title=track_title,
             can_play=True,
             can_expand=False,
             thumbnail=thumbnail_url,
@@ -257,7 +260,7 @@ class JellyfinSource(MediaSource):
         return result
 
     async def _get_children(self, parent_id: str, item_type=None) -> List[dict]:
-        """Return all children for the parent_id whos item type is item_type."""
+        """Return all children for the parent_id whose item type is item_type."""
         params = {"Recursive": "true", "ParentId": parent_id}
         if item_type:
             params["IncludeItemTypes"] = item_type
@@ -269,13 +272,15 @@ class JellyfinSource(MediaSource):
 
     def _get_thumbnail_url(self, media_item: dict) -> str:
         """Return the URL for the primary image of a media item if available."""
-        id = media_item[ITEM_KEY_ID]
+        item_id = media_item[ITEM_KEY_ID]
         image_tags = media_item[ITEM_KEY_IMAGE_TAGS]
         api_key = self.client.config.data["auth.token"]
 
         if "Primary" in image_tags:
             tag = image_tags["Primary"]
-            return f"{self.url}Items/{id}/Images/Primary?Tag={tag}&api_key={api_key}"
+            return (
+                f"{self.url}Items/{item_id}/Images/Primary?Tag={tag}&api_key={api_key}"
+            )
 
     def _get_stream_url(self, media_item: dict) -> str:
         """Return the stream URL for a media item."""
@@ -283,17 +288,17 @@ class JellyfinSource(MediaSource):
 
         if media_type == MEDIA_TYPE_AUDIO:
             return self._get_audio_stream_url(media_item)
-        else:
-            raise BrowseError("Unsupported media type %s" % media_type)
+
+        raise BrowseError("Unsupported media type %s" % media_type)
 
     def _get_audio_stream_url(self, media_item: dict) -> str:
         """Return the stream URL for a music media item."""
-        id = media_item[ITEM_KEY_ID]
+        item_id = media_item[ITEM_KEY_ID]
         user_id = self.client.config.data["auth.user_id"]
         device_id = self.client.config.data["app.device_id"]
         api_key = self.client.config.data["auth.token"]
 
-        return f"{self.url}Audio/{id}/universal?UserId={user_id}&DeviceId={device_id}&api_key={api_key}&MaxStreamingBitrate={MAX_STREAMING_BITRATE}"
+        return f"{self.url}Audio/{item_id}/universal?UserId={user_id}&DeviceId={device_id}&api_key={api_key}&MaxStreamingBitrate={MAX_STREAMING_BITRATE}"
 
 
 def _media_mime_type(media_item: dict) -> str:
