@@ -30,7 +30,6 @@ from homeassistant.util.json import load_json
 from .const import DATA_SDM, DOMAIN, SDM_SCOPES
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
-NEST_REAUTH_NOTIFICATION = "nest_reauth"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -110,7 +109,7 @@ class NestFlowHandler(
         # Update existing config entry when in the reauth flow
         existing_entries = self.hass.config_entries.async_entries(DOMAIN)
         assert len(existing_entries) <= 1, "Unexpected config entries must be deleted"
-        if len(existing_entries) > 0:
+        if existing_entries:
             self.hass.config_entries.async_update_entry(existing_entries[0], data=data)
             return self.async_abort(reason="reauth_successful")
 

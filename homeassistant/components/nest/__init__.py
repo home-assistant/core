@@ -219,7 +219,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     config = hass.data[DOMAIN][DATA_NEST_CONFIG]
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         session,
