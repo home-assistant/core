@@ -53,6 +53,9 @@ async def test_options_flow(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="12345, 12345", data=conf)
     config_entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     with patch(
         "homeassistant.components.recollect_waste.async_setup_entry", return_value=True
     ):
