@@ -146,7 +146,6 @@ class NestFlowHandler(
             # entry is allowed to be updated during reauth, otherwise there
             # should be no existing configurations.
             existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-
             assert len(existing_entries) <= 1, "Expected at most 1 config entry"
             if self.hass.config_entries.async_entries(DOMAIN) and not self._reauth:
                 return self.async_abort(reason="single_instance_allowed")
