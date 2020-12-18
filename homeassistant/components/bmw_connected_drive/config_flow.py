@@ -9,7 +9,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import DOMAIN
+from . import DOMAIN  # pylint: disable=unused-import
 from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REGION, CONF_USE_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
