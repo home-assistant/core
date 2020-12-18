@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     address = entry.data[CONF_HOST]
     name = entry.data[CONF_NAME]
-    data = HarmonyData(address, name, entry.unique_id)
+    data = HarmonyData(hass, address, name, entry.unique_id)
     try:
         connected_ok = await data.connect()
     except (asyncio.TimeoutError, ValueError, AttributeError) as err:
