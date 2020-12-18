@@ -1,7 +1,5 @@
 """Mixin class for handling harmony callback subscriptions."""
 
-import asyncio
-from functools import partial
 import logging
 from typing import Any, Callable, NamedTuple, Optional
 
@@ -26,18 +24,19 @@ class HarmonyCallback(NamedTuple):
 class HarmonySubscriberMixin:
     """Base implementation for a subscriber."""
 
-    def __init__(self):
+    def __init__(self, hass):
         """Initialize an subscriber."""
         super().__init__()
+        self._hass = hass
         self._subscriptions = []
 
     @callback
-    def async_subscribe(self, update_callback: HarmonyCallback) -> Callable:
+    def async_subscribe(self, update_callbacks: HarmonyCallback) -> Callable:
         """Add a callback subscriber."""
-        self._subscriptions.append(update_callback)
+        self._subscriptions.append(update_callbacks)
 
         def _unsubscribe():
-            self.async_unsubscribe(update_callback)
+            self.async_unsubscribe(update_callbacks)
 
         return _unsubscribe
 
@@ -72,12 +71,7 @@ class HarmonySubscriberMixin:
         for subscription in self._subscriptions:
             current_callback = getattr(subscription, callback_func_name)
             if current_callback:
-                is_async = asyncio.iscoroutinefunction(current_callback)
-
                 if argument:
-                    current_callback = partial(current_callback, argument)
-
-                if is_async:
-                    asyncio.create_task(current_callback())
+                    self._hass.async_run_job(current_callback, argument)
                 else:
-                    current_callback()
+                    self._hass.async_run_job(current_callback)

@@ -16,9 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 class HarmonyData(HarmonySubscriberMixin):
     """HarmonyData registers for Harmony hub updates."""
 
-    def __init__(self, address: str, name: str, unique_id: str):
+    def __init__(self, hass, address: str, name: str, unique_id: str):
         """Initialize a data object."""
-        super().__init__()
+        super().__init__(hass)
         self._name = name
         self._unique_id = unique_id
         self._available = False
