@@ -12,18 +12,14 @@ from homeassistant.const import (
 from .conftest import FakeHarmonyClient
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
 @patch(
     "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
 )
-@patch(
-    "homeassistant.components.harmony.remote.HarmonyRemote.sleep",
-    new_callable=AsyncMock,
-)
-async def test_connection_state_changes(sleep, hc_init, hass):
+async def test_connection_state_changes(hc_init, hass, patched_remote):
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}

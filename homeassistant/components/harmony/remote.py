@@ -1,5 +1,6 @@
 """Support for Harmony Hub devices."""
 import asyncio
+import json
 import logging
 
 import voluptuous as vol
@@ -116,7 +117,8 @@ async def async_setup_entry(
     default_activity = entry.options.get(ATTR_ACTIVITY)
     delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
-    device = HarmonyRemote(data, default_activity, delay_secs)
+    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
+    device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
     async_add_entities([device])
 
     platform = entity_platform.current_platform.get()
@@ -134,7 +136,7 @@ async def async_setup_entry(
 class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, data, activity, delay_secs):
+    def __init__(self, data, activity, delay_secs, out_path):
         """Initialize HarmonyRemote class."""
         self._data = data
         self._name = data.name
@@ -147,6 +149,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._available = False
         self._unique_id = data.unique_id
         self._last_activity = None
+        self._config_path = out_path
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -268,6 +271,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         """Call for updating the current activity."""
         _LOGGER.debug("%s: configuration has been updated", self._name)
         self.new_activity(self._data.current_activity)
+        await self.hass.async_add_executor_job(self.write_config_file)
 
     async def got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
@@ -332,7 +336,32 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
 
     async def sync(self):
         """Sync the Harmony device with the web service."""
-        await self._data.sync()
+        if await self._data.sync():
+            await self.hass.async_add_executor_job(self.write_config_file)
+
+    def write_config_file(self):
+        """Write Harmony configuration file.
+
+        This is a handy way for users to figure out the available commands for automations.
+        """
+        _LOGGER.debug(
+            "%s: Writing hub configuration to file: %s", self.name, self._config_path
+        )
+        json_config = self._data.json_config
+        if json_config is None:
+            _LOGGER.warning("%s: No configuration received from hub", self.name)
+            return
+
+        try:
+            with open(self._config_path, "w+", encoding="utf-8") as file_out:
+                json.dump(json_config, file_out, sort_keys=True, indent=4)
+        except OSError as exc:
+            _LOGGER.error(
+                "%s: Unable to write HUB configuration to %s: %s",
+                self.name,
+                self._config_path,
+                exc,
+            )
 
     async def sleep(self, time):
         """Sleep for the given time."""

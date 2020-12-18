@@ -67,6 +67,13 @@ class HarmonyData(HarmonySubscriberMixin):
         return self._unique_id
 
     @property
+    def json_config(self):
+        """Return the hub config as json."""
+        if self._client.config is None:
+            return None
+        return self._client.json_config
+
+    @property
     def available(self) -> bool:
         """Return if connected to the hub."""
         return self._available

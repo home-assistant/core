@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 @patch(
     "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
 )
-async def test_switch_toggles(_, hass):
+async def test_switch_toggles(_, hass, patched_remote):
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -66,7 +66,7 @@ async def test_switch_toggles(_, hass):
 @patch(
     "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
 )
-async def test_remote_toggles(_, hass):
+async def test_remote_toggles(_, hass, patched_remote):
     """Ensure calls to the remote also updates the switches."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
