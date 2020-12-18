@@ -19,19 +19,15 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 
-from .conftest import TV_DEVICE_ID, TV_DEVICE_NAME, FakeHarmonyClient
+from .conftest import TV_DEVICE_ID, TV_DEVICE_NAME
 from .const import ENTITY_REMOTE, HUB_NAME
 
-from unittest.mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 PLAY_COMMAND = "Play"
 STOP_COMMAND = "Stop"
 
 
-@patch(
-    "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
-)
 async def test_async_send_command(mock_hc, hass, patched_remote):
     """Ensure calls to send remote commands properly propagate to devices."""
     entry = MockConfigEntry(
@@ -165,9 +161,6 @@ async def test_async_send_command(mock_hc, hass, patched_remote):
     send_commands_mock.reset_mock()
 
 
-@patch(
-    "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
-)
 async def test_async_send_command_custom_delay(mock_hc, hass, patched_remote):
     """Ensure calls to send remote commands properly propagate to devices with custom delays."""
     entry = MockConfigEntry(
@@ -209,9 +202,6 @@ async def test_async_send_command_custom_delay(mock_hc, hass, patched_remote):
     send_commands_mock.reset_mock()
 
 
-@patch(
-    "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
-)
 async def test_change_channel(mock_hc, hass, patched_remote):
     """Test change channel commands."""
     entry = MockConfigEntry(
@@ -237,14 +227,7 @@ async def test_change_channel(mock_hc, hass, patched_remote):
     change_channel_mock.assert_awaited_once_with(100)
 
 
-@patch(
-    "homeassistant.components.harmony.data.HarmonyClient", side_effect=FakeHarmonyClient
-)
-@patch(
-    "homeassistant.components.harmony.remote.HarmonyRemote.write_config_file",
-    new_callable=MagicMock,
-)
-async def test_sync(mock_hc, harmony_remote, hass):
+async def test_sync(mock_hc, patched_remote, hass):
     """Test the sync command."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -267,6 +250,7 @@ async def test_sync(mock_hc, harmony_remote, hass):
     await hass.async_block_till_done()
 
     sync_mock.assert_awaited_once()
+    assert patched_remote["write_config_file"].called
 
 
 async def _send_commands_and_wait(hass, service_data):
