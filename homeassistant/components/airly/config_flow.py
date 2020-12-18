@@ -15,11 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
-    DEFAULT_NAME,
-    DOMAIN,
-    NO_AIRLY_SENSORS,
-)
+from .const import DOMAIN, NO_AIRLY_SENSORS  # pylint:disable=unused-import
 
 
 class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,13 +24,9 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize."""
-        self._errors = {}
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        self._errors = {}
+        errors = {}
 
         websession = async_get_clientsession(self.hass)
 
@@ -52,40 +44,33 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AirlyError as err:
                 if err.status_code == HTTP_UNAUTHORIZED:
-                    self._errors["base"] = "invalid_api_key"
+                    errors["base"] = "invalid_api_key"
             else:
                 if not location_valid:
-                    self._errors["base"] = "wrong_location"
+                    errors["base"] = "wrong_location"
 
-                if not self._errors:
+                if not errors:
                     return self.async_create_entry(
                         title=user_input[CONF_NAME], data=user_input
                     )
 
-        return self._show_config_form(
-            name=DEFAULT_NAME,
-            api_key="",
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-        )
-
-    def _show_config_form(self, name=None, api_key=None, latitude=None, longitude=None):
-        """Show the configuration form to edit data."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY, default=api_key): str,
+                    vol.Required(CONF_API_KEY): str,
                     vol.Optional(
                         CONF_LATITUDE, default=self.hass.config.latitude
                     ): cv.latitude,
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(CONF_NAME, default=name): str,
+                    vol.Optional(
+                        CONF_NAME, default=self.hass.config.location_name
+                    ): str,
                 }
             ),
-            errors=self._errors,
+            errors=errors,
         )
 
 
