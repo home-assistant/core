@@ -1,6 +1,7 @@
 """Mixin class for handling harmony callback subscriptions."""
 
 import asyncio
+from functools import partial
 import logging
 from typing import Any, Callable, NamedTuple, Optional
 
@@ -47,52 +48,36 @@ class HarmonySubscriberMixin:
 
     def _config_updated(self, _=None) -> None:
         _LOGGER.debug("config_updated")
-        for subscription in self._subscriptions:
-            current_callback = subscription.config_updated
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback())
-                else:
-                    current_callback()
+        self._call_callbacks("config_updated")
 
     def _connected(self, _=None) -> None:
         _LOGGER.debug("connected")
         self._available = True
-        for subscription in self._subscriptions:
-            current_callback = subscription.connected
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback())
-                else:
-                    current_callback()
+        self._call_callbacks("connected")
 
     def _disconnected(self, _=None) -> None:
         _LOGGER.debug("disconnected")
         self._available = False
-        for subscription in self._subscriptions:
-            current_callback = subscription.disconnected
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback())
-                else:
-                    current_callback()
+        self._call_callbacks("disconnected")
 
     def _activity_starting(self, activity_info: tuple) -> None:
         _LOGGER.debug("activity %s starting", activity_info)
-        for subscription in self._subscriptions:
-            current_callback = subscription.activity_starting
-            if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback(activity_info))
-                else:
-                    current_callback(activity_info)
+        self._call_callbacks("activity_starting", activity_info)
 
     def _activity_started(self, activity_info: tuple) -> None:
         _LOGGER.debug("activity %s started", activity_info)
+        self._call_callbacks("activity_started", activity_info)
+
+    def _call_callbacks(self, callback_func_name: str, argument: tuple = None):
         for subscription in self._subscriptions:
-            current_callback = subscription.activity_started
+            current_callback = getattr(subscription, callback_func_name)
             if current_callback:
-                if asyncio.iscoroutinefunction(current_callback):
-                    asyncio.create_task(current_callback(activity_info))
+                is_async = asyncio.iscoroutinefunction(current_callback)
+
+                if argument:
+                    current_callback = partial(current_callback, argument)
+
+                if is_async:
+                    asyncio.create_task(current_callback())
                 else:
-                    current_callback(activity_info)
+                    current_callback()
