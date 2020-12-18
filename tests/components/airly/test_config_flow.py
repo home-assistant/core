@@ -53,7 +53,6 @@ async def test_invalid_api_key(hass, aioclient_mock):
 
 async def test_invalid_location(hass, aioclient_mock):
     """Test that errors are shown when location is invalid."""
-
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
 
     aioclient_mock.get(

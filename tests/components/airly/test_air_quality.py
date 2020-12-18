@@ -109,4 +109,5 @@ async def test_manual_update_entity(hass, aioclient_mock):
         {ATTR_ENTITY_ID: ["air_quality.home"]},
         blocking=True,
     )
+
     assert aioclient_mock.call_count == call_count + 1
