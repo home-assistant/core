@@ -2,7 +2,5 @@
   "domain": "anomaly",
   "name": "Data Anomaly Sensor",
   "documentation": "https://www.home-assistant.io/integrations/anomaly",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@adamlogan73"]
 }

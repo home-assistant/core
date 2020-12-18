@@ -25,7 +25,7 @@ from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util import utcnow
 
 from . import DOMAIN, PLATFORMS
@@ -86,14 +86,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the anomaly sensors."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
-
     for device_id, device_config in config[CONF_SENSORS].items():
-        entity_id = device_config[ATTR_ENTITY_ID]
+        monitored_entity_id = device_config[ATTR_ENTITY_ID]
         attribute = device_config.get(CONF_ATTRIBUTE)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device_id)
@@ -107,13 +106,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         trailing_sample_duration = device_config[CONF_TRAILING_SAMPLE_DURATION]
         min_change_amount = device_config[CONF_MIN_CHANGE_AMOUNT]
         min_change_percent = device_config[CONF_MIN_CHANGE_PERCENT]
-
         sensors.append(
             SensorAnomaly(
                 hass=hass,
-                device_id=device_id,
+                entity_id=generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass),
                 friendly_name=friendly_name,
-                entity_id=entity_id,
+                monitored_entity_id=monitored_entity_id,
                 attribute=attribute,
                 device_class=device_class,
                 invert=invert,
@@ -129,7 +127,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
         )
     if sensors:
-        add_entities(sensors)
+        async_add_entities(sensors)
 
 
 class SensorAnomaly(BinarySensorEntity):
@@ -138,9 +136,9 @@ class SensorAnomaly(BinarySensorEntity):
     def __init__(
         self,
         hass,
-        device_id: str,
-        friendly_name: str,
         entity_id: str,
+        friendly_name: str,
+        monitored_entity_id: str,
         attribute: str,
         device_class: str,
         invert: bool,
@@ -156,9 +154,9 @@ class SensorAnomaly(BinarySensorEntity):
     ):
         """Initialize the sensor."""
         self._hass = hass
-        self.entity_id: str = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+        self.entity_id: str = entity_id
         self._name: str = friendly_name
-        self._entity_id: str = entity_id
+        self._entity_id: str = monitored_entity_id
         self._attribute: str = attribute
         self._device_class: str = device_class
         self._invert: bool = invert
@@ -245,18 +243,18 @@ class SensorAnomaly(BinarySensorEntity):
         """Get the latest data and update the states."""
         # Remove outdated samples
         if self._trailing_sample_duration > 0:
-            await self.hass.async_add_executor_job(self._trim_trailing_samples)
+            self._trim_trailing_samples()
         if self._sample_duration > 0:
-            await self.hass.async_add_executor_job(self._trim_samples)
+            self._trim_samples()
 
         # Calculate diffs between trailing and sample averages
         if len(self.samples) == 0:
-            await self.hass.async_add_executor_job(self._empty_sample_diff)
+            self._empty_sample_diff()
         else:
-            await self.hass.async_add_executor_job(self._calculate_diff)
+            self._calculate_diff()
 
         # Update state
-        await self.hass.async_add_executor_job(self._set_state)
+        self._set_state()
         return
 
     def _set_state(self) -> None:

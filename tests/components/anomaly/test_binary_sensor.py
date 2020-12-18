@@ -5,595 +5,584 @@ from os import path
 from homeassistant import config as hass_config, setup
 from homeassistant.components.anomaly import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant
 
 
-class TestAnomalyBinarySensor:
-    """Test the anomaly sensor."""
+async def test_up_and_off(hass: HomeAssistant):
+    """Test up anomaly."""
 
-    hass = None
-
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_up_and_off(self):
-        """Test up anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        self.hass.states.set("sensor.test_state", "11")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_down_and_off(self):
-        """Test down anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        self.hass.states.set("sensor.test_state", "0")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_positive_only(self):
-        """Test up anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                            "positive_only": True,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "0")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-        self.hass.states.set("sensor.test_state", "11")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        self.hass.states.set("sensor.test_state", "11")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_negative_only(self):
-        """Test up anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                            "negative_only": True,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-        self.hass.states.set("sensor.test_state", "11")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "0")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "0")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_up_using_amount(self):
-        """Test up anomaly using many samples."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "max_samples": 3,
-                            "max_trailing_samples": 7,
-                            "min_change_amount": 5,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        now = dt_util.utcnow()
-
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-        for val in [1, 2, 3, 30, 31, 32]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-        # have to change state value, otherwise sample will lost
-        for val in [30, 31, 32, 33]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_down_using_amount(self):
-        """Test down anomaly using many samples."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "max_samples": 3,
-                            "max_trailing_samples": 7,
-                            "min_change_amount": 5,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        now = dt_util.utcnow()
-        for val in [30, 31, 32, 33, 1, 2, 3]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-        for val in [0, 1, 2, 3]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_invert_up_and_on(self):
-        """Test up anomly with invert."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "invert": "Yes",
-                            "min_change_amount": 3,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-        self.hass.states.set("sensor.test_state", "11")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-    def test_invert_down_and_on(self):
-        """Test down anomaly with invert."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "invert": "Yes",
-                            "min_change_amount": 3,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "10")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-        self.hass.states.set("sensor.test_state", "0")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-    def test_attribute_up(self):
-        """Test attribute up anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                            "attribute": "attr",
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "State", {"attr": "1"})
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "State", {"attr": "10"})
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-    def test_attribute_down(self):
-        """Test attribute down anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                            "attribute": "attr",
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "State", {"attr": "10"})
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "State", {"attr": "1"})
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-    def test_require_both(self):
-        """Test attribute down anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 10,
-                            "min_change_percent": 99,
-                            "require_both": True,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "0")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "6")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.attributes.get("change_amount") == 3
-        assert state.attributes.get("change_percent") == 100
-        assert state.state == "off"
-        self.hass.states.set("sensor.test_state", "1000")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1050")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.attributes.get("change_amount") == 25
-        assert state.attributes.get("change_percent") < 2.5
-        assert state.state == "off"
-        self.hass.states.set("sensor.test_state", "1000")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "1")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-
-    def test_max_samples(self):
-        """Test that sample count is limited correctly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                            "max_samples": 3,
-                            "max_trailing_samples": 6,
-                            "sample_duration": 7,
-                            "trailing_sample_duration": 15,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        for val in [0, 1, 2, 3, 50, 51, 52]:
-            self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        assert state.attributes["sample_count"] == 3
-        assert state.attributes["trailing_sample_count"] == 6
-
-    def test_max_samples_time(self):
-        """Test that sample count is limited correctly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                            "max_samples": 100,
-                            "max_trailing_samples": 100,
-                            "sample_duration": 7,
-                            "trailing_sample_duration": 15,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-        now = dt_util.utcnow() - timedelta(seconds=20)
-        for val in [0, 1, 2, 3, 4, 5, 6, 50, 51, 52]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        assert state.attributes["sample_count"] == 3
-        assert state.attributes["trailing_sample_count"] == 7
-
-    def test_no_data(self):
-        """Test that sample count is limited correctly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "min_change_amount": 3,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-        assert state.attributes["sample_count"] == 0
-        assert state.attributes["trailing_sample_count"] == 0
-
-    def test_non_numeric(self):
-        """Test up anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {"entity_id": "sensor.test_state"}
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "Non")
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "Numeric")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_missing_attribute(self):
-        """Test attribute down anomaly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "attribute": "missing",
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-
-        self.hass.states.set("sensor.test_state", "State", {"attr": "2"})
-        self.hass.block_till_done()
-        self.hass.states.set("sensor.test_state", "State", {"attr": "1"})
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-
-    def test_invalid_name_does_not_create(self):
-        """Test invalid name."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test INVALID sensor": {"entity_id": "sensor.test_state"}
-                        },
+    print("starting test_up_and_off1")
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
                     }
                 },
-            )
-        assert self.hass.states.all() == []
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "11")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    await hass.async_block_till_done()
+    print("done")
 
-    def test_invalid_sensor_does_not_create(self):
-        """Test invalid sensor."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_anomaly_sensor": {
-                                "not_entity_id": "sensor.test_state"
-                            }
-                        },
+
+async def test_down_and_off(hass: HomeAssistant):
+    """Test down anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
                     }
                 },
-            )
-        assert self.hass.states.all() == []
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-    def test_no_sensors_does_not_create(self):
-        """Test no sensors."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass, "binary_sensor", {"binary_sensor": {"platform": "anomaly"}}
-            )
-        assert self.hass.states.all() == []
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
 
 
-async def test_reload(hass):
+async def test_positive_only(hass: HomeAssistant):
+    """Test up anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                        "positive_only": True,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    hass.states.async_set("sensor.test_state", "11")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+    hass.states.async_set("sensor.test_state", "11")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+
+async def test_negative_only(hass: HomeAssistant):
+    """Test up anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                        "negative_only": True,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    hass.states.async_set("sensor.test_state", "11")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+
+async def test_up_using_amount(hass: HomeAssistant):
+    """Test up anomaly using many samples."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "max_samples": 3,
+                        "max_trailing_samples": 7,
+                        "min_change_amount": 5,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow()
+
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+    for val in [1, 2, 3, 30, 31, 32]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+    # have to change state value, otherwise sample will lost
+    for val in [30, 31, 32, 33]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+
+async def test_down_using_amount(hass: HomeAssistant):
+    """Test down anomaly using many samples."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "max_samples": 3,
+                        "max_trailing_samples": 7,
+                        "min_change_amount": 5,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow()
+    for val in [30, 31, 32, 33, 1, 2, 3]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+    for val in [0, 1, 2, 3]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+
+async def test_invert_up_and_on(hass: HomeAssistant):
+    """Test up anomly with invert."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "invert": "Yes",
+                        "min_change_amount": 3,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    hass.states.async_set("sensor.test_state", "11")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+
+async def test_invert_down_and_on(hass: HomeAssistant):
+    """Test down anomaly with invert."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "invert": "Yes",
+                        "min_change_amount": 3,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "10")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+
+async def test_attribute_up(hass: HomeAssistant):
+    """Test attribute up anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                        "attribute": "attr",
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "State", {"attr": "1"})
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "State", {"attr": "10"})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+
+async def test_attribute_down(hass: HomeAssistant):
+    """Test attribute down anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                        "attribute": "attr",
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "State", {"attr": "10"})
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "State", {"attr": "1"})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+
+async def test_require_both(hass: HomeAssistant):
+    """Test attribute down anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 10,
+                        "min_change_percent": 99,
+                        "require_both": True,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "0")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "6")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.attributes.get("change_amount") == 3
+    assert state.attributes.get("change_percent") == 100
+    assert state.state == "off"
+    hass.states.async_set("sensor.test_state", "1000")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1050")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.attributes.get("change_amount") == 25
+    assert state.attributes.get("change_percent") < 2.5
+    assert state.state == "off"
+    hass.states.async_set("sensor.test_state", "1000")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+
+
+async def test_max_samples(hass: HomeAssistant):
+    """Test that sample count is limited correctly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                        "max_samples": 3,
+                        "max_trailing_samples": 6,
+                        "sample_duration": 7,
+                        "trailing_sample_duration": 15,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for val in [0, 1, 2, 3, 50, 51, 52]:
+        hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+    assert state.attributes["sample_count"] == 3
+    assert state.attributes["trailing_sample_count"] == 6
+
+
+async def test_max_samples_time(hass: HomeAssistant):
+    """Test that sample count is limited correctly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                        "max_samples": 100,
+                        "max_trailing_samples": 100,
+                        "sample_duration": 7,
+                        "trailing_sample_duration": 15,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    now = dt_util.utcnow() - timedelta(seconds=20)
+    for val in [0, 1, 2, 3, 4, 5, 6, 50, 51, 52]:
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
+        now += timedelta(seconds=2)
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "on"
+    assert state.attributes["sample_count"] == 3
+    assert state.attributes["trailing_sample_count"] == 7
+
+
+async def test_no_data(hass: HomeAssistant):
+    """Test that sample count is limited correctly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    assert state.attributes["sample_count"] == 0
+    assert state.attributes["trailing_sample_count"] == 0
+
+
+async def test_null_new_state(hass: HomeAssistant):
+    """Test that sample count is limited correctly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "min_change_amount": 3,
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", 1)
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", None)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+    assert state.attributes["sample_count"] == 1
+    assert state.attributes["trailing_sample_count"] == 1
+
+
+async def test_non_numeric(hass: HomeAssistant):
+    """Test up anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {"test_anomaly_sensor": {"entity_id": "sensor.test_state"}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "Non")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "Numeric")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+
+async def test_missing_attribute(hass: HomeAssistant):
+    """Test attribute down anomaly."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "anomaly",
+                "sensors": {
+                    "test_anomaly_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "attribute": "missing",
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "State", {"attr": "2"})
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "State", {"attr": "1"})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_anomaly_sensor")
+    assert state.state == "off"
+
+
+async def test_reload(hass: HomeAssistant):
     """Verify we can reload anomaly sensors."""
     hass.states.async_set("sensor.test_state", 1234)
 
