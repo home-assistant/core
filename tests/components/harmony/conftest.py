@@ -4,7 +4,7 @@ import logging
 from aioharmony.const import ClientCallbackType
 import pytest
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,3 +134,14 @@ def mock_harmonyclient():
     fake = FakeHarmonyClient()
 
     yield fake
+
+
+@pytest.fixture()
+def patched_remote():
+    """Create a patched remote that removes side effects."""
+    with patch.multiple(
+        "homeassistant.components.harmony.remote.HarmonyRemote",
+        sleep=AsyncMock(),
+        write_config_file=MagicMock(),
+    ) as mocks:
+        yield mocks

@@ -7,7 +7,7 @@ from homeassistant.components.harmony.subscriber import (
     HarmonySubscriberMixin,
 )
 
-from tests.async_mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 _NO_PARAM_CALLBACKS = {
     "connected": "_connected",
