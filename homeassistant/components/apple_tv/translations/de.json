@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "backoff": "Ger\u00e4t akzeptiert derzeit keine Kopplungsanfragen (Sie haben m\u00f6glicherweise zu oft einen ung\u00fcltigen PIN-Code eingegeben), versuchen Sie es sp\u00e4ter erneut.",
+            "device_did_not_pair": "Es wurde kein Versuch unternommen, den Kopplungsvorgang vom Ger\u00e4t aus abzuschlie\u00dfen.",
+            "invalid_config": "Die Konfiguration f\u00fcr dieses Ger\u00e4t ist unvollst\u00e4ndig. Bitte versuchen Sie, es erneut hinzuzuf\u00fcgen.",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "pair_no_pin": {
+                "title": "Kopplung"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN-Code"
+                },
+                "title": "Kopplung"
+            },
+            "reconfigure": {
+                "description": "Dieses Apple TV hat Verbindungsprobleme und muss neu konfiguriert werden.",
+                "title": "Ger\u00e4teneukonfiguration"
+            },
+            "service_problem": {
+                "description": "Beim Koppeln des Protokolls `{protocol}` ist ein Problem aufgetreten. Es wird ignoriert.",
+                "title": "Fehler beim Hinzuf\u00fcgen des Dienstes"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Ger\u00e4t"
+                },
+                "title": "Einrichten eines neuen Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Schalten Sie das Ger\u00e4t nicht ein, wenn Sie Home Assistant starten"
+                },
+                "description": "Konfigurieren Sie allgemeine Ger\u00e4teeinstellungen"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

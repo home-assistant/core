@@ -1,5 +1,6 @@
 """Import logic for blueprint."""
 from dataclasses import dataclass
+import html
 import re
 from typing import Optional
 
@@ -107,7 +108,7 @@ def _extract_blueprint_from_community_topic(
         if block_syntax not in ("auto", "yaml"):
             continue
 
-        block_content = block_content.strip()
+        block_content = html.unescape(block_content.strip())
 
         try:
             data = yaml.parse_yaml(block_content)

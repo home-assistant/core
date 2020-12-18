@@ -1,4 +1,4 @@
-"""Support for Recollect Waste sensors."""
+"""Support for ReCollect Waste sensors."""
 from typing import Callable
 
 import voluptuous as vol
@@ -20,7 +20,7 @@ ATTR_AREA_NAME = "area_name"
 ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
-DEFAULT_ATTRIBUTION = "Pickup data provided by Recollect Waste"
+DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_ICON = "mdi:trash-can-outline"
 
@@ -43,7 +43,7 @@ async def async_setup_platform(
 ):
     """Import Awair configuration from YAML."""
     LOGGER.warning(
-        "Loading Recollect Waste via platform setup is deprecated. "
+        "Loading ReCollect Waste via platform setup is deprecated. "
         "Please remove it from your configuration."
     )
     hass.async_create_task(
@@ -58,13 +58,13 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
-    """Set up Recollect Waste sensors based on a config entry."""
+    """Set up ReCollect Waste sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
-    async_add_entities([RecollectWasteSensor(coordinator, entry)])
+    async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
-class RecollectWasteSensor(CoordinatorEntity):
-    """Recollect Waste Sensor."""
+class ReCollectWasteSensor(CoordinatorEntity):
+    """ReCollect Waste Sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
@@ -120,9 +120,11 @@ class RecollectWasteSensor(CoordinatorEntity):
         self._state = pickup_event.date
         self._attributes.update(
             {
-                ATTR_PICKUP_TYPES: pickup_event.pickup_types,
+                ATTR_PICKUP_TYPES: [t.name for t in pickup_event.pickup_types],
                 ATTR_AREA_NAME: pickup_event.area_name,
-                ATTR_NEXT_PICKUP_TYPES: next_pickup_event.pickup_types,
+                ATTR_NEXT_PICKUP_TYPES: [
+                    t.name for t in next_pickup_event.pickup_types
+                ],
                 ATTR_NEXT_PICKUP_DATE: next_date,
             }
         )

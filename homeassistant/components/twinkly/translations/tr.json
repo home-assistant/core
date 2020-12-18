@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Twinkly cihaz\u0131n\u0131z\u0131n ana bilgisayar\u0131 (veya IP adresi)"
+                },
+                "description": "Twinkly led dizinizi ayarlay\u0131n",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

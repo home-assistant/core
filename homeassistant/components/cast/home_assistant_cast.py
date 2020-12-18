@@ -72,3 +72,14 @@ async def async_setup_ha_cast(
             }
         ),
     )
+
+
+async def async_remove_user(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Remove Home Assistant Cast user."""
+    user_id: Optional[str] = entry.data.get("user_id")
+
+    if user_id is not None:
+        user = await hass.auth.async_get_user(user_id)
+        await hass.auth.async_remove_user(user)

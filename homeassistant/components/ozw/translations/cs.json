@@ -13,6 +13,12 @@
             "addon_start_failed": "Spu\u0161t\u011bn\u00ed dopl\u0148ku OpenZWave se nezda\u0159ilo. Zkontrolujte konfiguraci."
         },
         "step": {
+            "hassio_confirm": {
+                "title": "Nastaven\u00ed integrace OpenZWave s dopl\u0148kem OpenZWave"
+            },
+            "install_addon": {
+                "title": "Instalace dopl\u0148ku OpenZWave byla zah\u00e1jena."
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Pou\u017e\u00edt dopln\u011bk OpenZWave pro Supervisor"

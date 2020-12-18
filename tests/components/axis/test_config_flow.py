@@ -8,7 +8,7 @@ from homeassistant.components.axis.const import (
     DEFAULT_STREAM_PROFILE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -31,6 +31,8 @@ from tests.common import MockConfigEntry
 
 async def test_flow_manual_configuration(hass):
     """Test that config flow works."""
+    MockConfigEntry(domain=AXIS_DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )

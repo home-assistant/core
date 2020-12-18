@@ -2,6 +2,6 @@
   "domain": "cisco_mobility_express",
   "name": "Cisco Mobility Express",
   "documentation": "https://www.home-assistant.io/integrations/cisco_mobility_express",
-  "requirements": ["ciscomobilityexpress==0.3.3"],
+  "requirements": ["ciscomobilityexpress==0.3.9"],
   "codeowners": ["@fbradyirl"]
 }

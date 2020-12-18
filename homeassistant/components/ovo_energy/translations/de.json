@@ -1,6 +1,11 @@
 {
     "config": {
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwort",
