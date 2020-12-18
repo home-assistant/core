@@ -402,15 +402,16 @@ class Thermostat(ClimateEntity):
 
     @property
     def target_humidity(self) -> Optional[int]:
+        """Returns the desired humidity set point"""
         if self.has_humidifier:
             return self.thermostat["runtime"]["desiredHumidity"]
         return None
-    
+
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return DEFAULT_MIN_HUMIDITY
-    
+
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
@@ -677,7 +678,7 @@ class Thermostat(ClimateEntity):
             _LOGGER.error("Missing valid arguments for set_temperature in %s", kwargs)
 
     def set_humidity(self, humidity):
-        """Set the humidity level."""  
+        """Set the humidity level."""
         if humidity not in range(0, 101):
             _LOGGER.error("Invalid set_humidity value: %s. Must be between 0 and 100.", humidity)
             return
