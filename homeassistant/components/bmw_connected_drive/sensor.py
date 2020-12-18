@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,14 +50,13 @@ ATTR_TO_HA_IMPERIAL = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive sensors from config entry."""
-
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         attribute_info = ATTR_TO_HA_IMPERIAL
     else:
         attribute_info = ATTR_TO_HA_METRIC
 
-    account = hass.data[BMW_DOMAIN][config_entry.entry_id]
-    devices = []
+    account = hass.data[BMW_DOMAIN][config_entry.entry_id][CONF_ACCOUNT]
+    entities = []
 
     for vehicle in account.account.vehicles:
         for attribute_name in vehicle.drive_train_attributes:
@@ -65,8 +64,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 device = BMWConnectedDriveSensor(
                     account, vehicle, attribute_name, attribute_info
                 )
-                devices.append(device)
-    async_add_entities(devices, True)
+                entities.append(device)
+    async_add_entities(entities, True)
 
 
 class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, Entity):
@@ -81,14 +80,6 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, Entity):
         self._name = f"{self._vehicle.name} {self._attribute}"
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._attribute_info = attribute_info
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False.
-
-        Data update is triggered from BMWConnectedDriveEntity.
-        """
-        return False
 
     @property
     def unique_id(self):

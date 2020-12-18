@@ -7,7 +7,7 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, CONF_ACCOUNT
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
@@ -15,14 +15,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][config_entry.entry_id]
-    devices = []
+    account = hass.data[BMW_DOMAIN][config_entry.entry_id][CONF_ACCOUNT]
+    entities = []
 
     if not account.read_only:
         for vehicle in account.account.vehicles:
             device = BMWLock(account, vehicle, "lock", "BMW lock")
-            devices.append(device)
-    async_add_entities(devices, True)
+            entities.append(device)
+    async_add_entities(entities, True)
 
 
 class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
@@ -40,14 +40,6 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         self.door_lock_state_available = (
             DOOR_LOCK_STATE in self._vehicle.available_attributes
         )
-
-    @property
-    def should_poll(self):
-        """Do not poll this class.
-
-        Updates are triggered from BMWConnectedDriveAccount.
-        """
-        return False
 
     @property
     def unique_id(self):
@@ -75,7 +67,10 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._state == STATE_LOCKED
+        if self.door_lock_state_available:
+            return self._state == STATE_LOCKED
+        else:
+            return None
 
     def lock(self, **kwargs):
         """Lock the car."""

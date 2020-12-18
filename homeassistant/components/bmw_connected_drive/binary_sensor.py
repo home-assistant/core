@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +43,8 @@ SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][config_entry.entry_id]
-    devices = []
+    account = hass.data[BMW_DOMAIN][config_entry.entry_id][CONF_ACCOUNT]
+    entities = []
 
     for vehicle in account.account.vehicles:
         if vehicle.has_hv_battery:
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device = BMWConnectedDriveSensor(
                         account, vehicle, key, value[0], value[1], value[2]
                     )
-                    devices.append(device)
+                    entities.append(device)
         elif vehicle.has_internal_combustion_engine:
             _LOGGER.debug("BMW with an internal combustion engine")
             for key, value in sorted(SENSOR_TYPES.items()):
@@ -62,8 +62,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device = BMWConnectedDriveSensor(
                         account, vehicle, key, value[0], value[1], value[2]
                     )
-                    devices.append(device)
-    async_add_entities(devices, True)
+                    entities.append(device)
+    async_add_entities(entities, True)
 
 
 class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
@@ -82,14 +82,6 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         self._device_class = device_class
         self._icon = icon
         self._state = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False.
-
-        Data update is triggered from BMWConnectedDriveEntity.
-        """
-        return False
 
     @property
     def unique_id(self):
