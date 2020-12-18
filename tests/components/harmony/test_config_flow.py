@@ -195,7 +195,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass, mock_harmonyclient):
+async def test_options_flow(hass, mock_hc):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -204,17 +204,13 @@ async def test_options_flow(hass, mock_harmonyclient):
         options={"activity": "Watch TV", "delay_secs": 0.5},
     )
 
-    with patch(
-        "aioharmony.harmonyapi.HarmonyClient",
-        return_value=mock_harmonyclient,
-    ):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
