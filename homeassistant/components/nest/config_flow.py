@@ -129,11 +129,8 @@ class NestFlowHandler(
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
-                errors={},
             )
-        return await self.async_step_pick_implementation(
-            user_input={"implementation": DOMAIN}
-        )
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
