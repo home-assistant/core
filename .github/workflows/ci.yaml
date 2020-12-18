@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -73,7 +73,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -118,7 +118,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -163,7 +163,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -230,7 +230,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -278,7 +278,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -326,7 +326,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -371,7 +371,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -419,7 +419,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -475,7 +475,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -555,7 +555,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
