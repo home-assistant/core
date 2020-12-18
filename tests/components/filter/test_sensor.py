@@ -208,7 +208,7 @@ async def test_setup(hass):
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
         assert state.attributes["device_class"] == "test"
-        assert "1.0" == state.state
+        assert state.state == "1.0"
 
 
 async def test_invalid_state(hass):
