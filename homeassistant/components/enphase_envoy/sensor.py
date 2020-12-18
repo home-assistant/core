@@ -94,18 +94,9 @@ async def async_setup_platform(
                 if condition != "inverters":
                     data[condition] = await getattr(envoy_reader, condition)()
                 else:
-                    try:
-                        data["inverters_production"] = await getattr(
-                            envoy_reader, "inverters_production"
-                        )()
-                    except httpx.HTTPStatusError as err:
-                        _LOGGER.error("Authentication error: %s", err)
-                        data["inverters_production"] = None
-                        continue
-                    except httpx.HTTPError as err:
-                        _LOGGER.error("Protocol Error: %s", err)
-                        data["inverters_production"] = None
-                        continue
+                    data["inverters_production"] = await getattr(
+                        envoy_reader, "inverters_production"
+                    )()
 
             _LOGGER.debug("Retrieved data from API: %s", data)
 
