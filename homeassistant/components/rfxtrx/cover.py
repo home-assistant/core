@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.cover import (
-    CoverEntity,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -10,8 +9,8 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverEntity,
 )
-
 from homeassistant.const import CONF_DEVICES, STATE_OPEN
 from homeassistant.core import callback
 
