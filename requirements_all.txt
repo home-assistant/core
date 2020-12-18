@@ -1622,7 +1622,7 @@ pypoint==2.0.0
 pyprof2calltree==1.4.5
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.1.1
+pyps4-2ndscreen==1.2.0
 
 # homeassistant.components.qvr_pro
 pyqvrpro==0.52
