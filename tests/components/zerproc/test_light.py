@@ -44,7 +44,7 @@ async def mock_light(hass, mock_entry):
     light = MagicMock(spec=pyzerproc.Light)
     light.address = "AA:BB:CC:DD:EE:FF"
     light.name = "LEDBlue-CCDDEEFF"
-    light.connected = False
+    light.is_connected.return_value = False
 
     mock_state = pyzerproc.LightState(False, (0, 0, 0))
 
@@ -57,7 +57,7 @@ async def mock_light(hass, mock_entry):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    light.connected = True
+    light.is_connected.return_value = True
 
     return light
 
@@ -71,12 +71,12 @@ async def test_init(hass, mock_entry):
     mock_light_1 = MagicMock(spec=pyzerproc.Light)
     mock_light_1.address = "AA:BB:CC:DD:EE:FF"
     mock_light_1.name = "LEDBlue-CCDDEEFF"
-    mock_light_1.connected = True
+    mock_light_1.is_connected.return_value = True
 
     mock_light_2 = MagicMock(spec=pyzerproc.Light)
     mock_light_2.address = "11:22:33:44:55:66"
     mock_light_2.name = "LEDBlue-33445566"
-    mock_light_2.connected = True
+    mock_light_2.is_connected.return_value = True
 
     mock_state_1 = pyzerproc.LightState(False, (0, 0, 0))
     mock_state_2 = pyzerproc.LightState(True, (0, 80, 255))
@@ -144,7 +144,7 @@ async def test_connect_exception(hass, mock_entry):
     mock_light = MagicMock(spec=pyzerproc.Light)
     mock_light.address = "AA:BB:CC:DD:EE:FF"
     mock_light.name = "LEDBlue-CCDDEEFF"
-    mock_light.connected = False
+    mock_light.is_connected.return_value = False
 
     with patch(
         "homeassistant.components.zerproc.light.pyzerproc.discover",
