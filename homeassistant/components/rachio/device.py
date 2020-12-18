@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICES = "devices"
 ATTR_DURATION = "duration"
+PERMISSION_ERROR = "7"
 
 PAUSE_SERVICE_SCHEMA = vol.Schema(
     {
@@ -78,11 +79,18 @@ class RachioPerson:
             # webhooks are normally a list, however if there is an error
             # rachio hands us back a dict
             if isinstance(webhooks, dict):
-                _LOGGER.error(
-                    "Failed to add rachio controller '%s' because of an error: %s",
-                    controller[KEY_NAME],
-                    webhooks.get("error", "Unknown Error"),
-                )
+                if webhooks.get("code") == PERMISSION_ERROR:
+                    _LOGGER.info(
+                        "Not adding controller '%s', only controllers owned by '%s' may be added",
+                        controller[KEY_NAME],
+                        self.username,
+                    )
+                else:
+                    _LOGGER.error(
+                        "Failed to add rachio controller '%s' because of an error: %s",
+                        controller[KEY_NAME],
+                        webhooks.get("error", "Unknown Error"),
+                    )
                 continue
 
             rachio_iro = RachioIro(hass, self.rachio, controller, webhooks)
