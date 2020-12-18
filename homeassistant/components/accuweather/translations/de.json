@@ -10,5 +10,10 @@
                 "title": "AccuWeather"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "remaining_requests": "Verbleibende erlaubte Anfragen"
+        }
     }
 }

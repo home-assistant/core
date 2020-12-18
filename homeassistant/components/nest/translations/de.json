@@ -29,7 +29,10 @@
     },
     "device_automation": {
         "trigger_type": {
-            "camera_motion": "Bewegung erkannt"
+            "camera_motion": "Bewegung erkannt",
+            "camera_person": "Person erkannt",
+            "camera_sound": "Ger\u00e4usch erkannt",
+            "doorbell_chime": "T\u00fcrklingel gedr\u00fcckt"
         }
     }
 }
