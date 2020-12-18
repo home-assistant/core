@@ -75,6 +75,11 @@ class NestFlowHandler(
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
+    def __init__(self):
+        """Initialize NestFlowHandler."""
+        # When invoked for reauth, allows updating an existing config entry
+        self._reauth = False
+
     @classmethod
     def register_sdm_api(cls, hass):
         """Configure the flow handler to use the SDM API."""
@@ -108,7 +113,7 @@ class NestFlowHandler(
 
         # Update existing config entry when in the reauth flow
         existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-        assert len(existing_entries) <= 1, "Unexpected config entries must be deleted"
+        assert len(existing_entries) <= 1, "Expected at most 1 config entry"
         if existing_entries:
             entry = existing_entries[0]
             self.hass.config_entries.async_update_entry(entry, data=data)
@@ -120,6 +125,7 @@ class NestFlowHandler(
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
+        self._reauth = True  # Forces update of existing config entry
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
@@ -135,7 +141,14 @@ class NestFlowHandler(
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
-            if self.hass.config_entries.async_entries(DOMAIN):
+            # Only one config entry is allowed since only a single static
+            # config is currently allowed in configuration.yaml.  The config
+            # entry is allowed to be updated during reauth, otherwise there
+            # should be no existing configurations.
+            existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+
+            assert len(existing_entries) <= 1, "Expected at most 1 config entry"
+            if self.hass.config_entries.async_entries(DOMAIN) and not self._reauth:
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)

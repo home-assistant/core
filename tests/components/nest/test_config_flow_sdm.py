@@ -54,6 +54,7 @@ class OAuthFixture:
         )
 
         oauth_authorize = OAUTH2_AUTHORIZE.format(project_id=PROJECT_ID)
+        assert result["type"] == "external"
         assert result["url"] == (
             f"{oauth_authorize}?response_type=code&client_id={CLIENT_ID}"
             "&redirect_uri=https://example.com/auth/external/callback"
@@ -134,7 +135,7 @@ async def test_reauth(hass, oauth):
         "access_token": "some-revoked-token",
     }
 
-    result = await hass.config_entries.flow.async_init(
+    await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
     )
 
@@ -193,9 +194,10 @@ async def test_unexpected_existing_config_entries(hass, oauth):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
     )
-    flows = hass.config_entries.flow.async_progress()
-    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
 
-    # Existing flow aborts
-    with pytest.raises(AssertionError, match=r"Unexpected config entries.*"):
-        await oauth.async_oauth_flow(result)
+    flows = hass.config_entries.flow.async_progress()
+
+    with pytest.raises(AssertionError, match=r"Expected at most 1 config entry.*"):
+        await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
