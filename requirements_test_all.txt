@@ -734,7 +734,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==0.2.1
+pyiqvia==0.3.1
 
 # homeassistant.components.isy994
 pyisy==2.1.0
