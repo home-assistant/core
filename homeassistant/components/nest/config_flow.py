@@ -22,7 +22,6 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import persistent_notification
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -105,32 +104,41 @@ class NestFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for the SDM flow."""
-        data[DATA_SDM] = {}
-        return await super().async_oauth_create_entry(data)
-
-    async def async_step_auth(self, user_input=None):
-        """Create an entry for auth."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
-        persistent_notification.async_dismiss(self.hass, NEST_REAUTH_NOTIFICATION)
-        return await super().async_step_auth(user_input)
+        data[DATA_SDM] = {}
+
+        # Update existing config entry when in the reauth flow
+        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        assert len(existing_entries) <= 1, "Unexpected config entries must be deleted"
+        if len(existing_entries) > 0:
+            self.hass.config_entries.async_update_entry(existing_entries[0], data=data)
+            return self.async_abort(reason="reauth_successful")
+
+        return await super().async_oauth_create_entry(data)
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
-        # This causes the config flow to indicate that it should be reconfigured
-        # by showing a notification and an empty for that takes the user back
-        # to the start of the oauth setup flow.
-        persistent_notification.async_create(
-            self.hass,
-            "Nest needs to be re-authenticated.  Please go to the integrations page to re-configure it.",
-            "Nest re-authentication",
-            NEST_REAUTH_NOTIFICATION,
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Confirm reauth dialog."""
+        assert self.is_sdm_api(), "Step only supported for SDM API"
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+                errors={},
+            )
+        return await self.async_step_pick_implementation(
+            user_input={"implementation": DOMAIN}
         )
-        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
+            if self.hass.config_entries.async_entries(DOMAIN):
+                return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)
 
