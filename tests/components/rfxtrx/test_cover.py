@@ -246,12 +246,20 @@ async def test_rfy_cover(hass, rfxtrx):
         blocking=True,
     )
 
+    await hass.services.async_call(
+        "cover",
+        "stop_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
     assert rfxtrx.transport.send.mock_calls == [
         call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
         call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x02\x0F")),
         call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x02\x10")),
         call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x02\x11")),
         call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x02\x12")),
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
     ]
 
     # Test a blind with venetian mode set to EU
@@ -294,10 +302,18 @@ async def test_rfy_cover(hass, rfxtrx):
         blocking=True,
     )
 
+    await hass.services.async_call(
+        "cover",
+        "stop_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
     assert rfxtrx.transport.send.mock_calls == [
         call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
         call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x03\x11")),
         call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x03\x12")),
         call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x03\x0F")),
         call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x03\x10")),
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
     ]

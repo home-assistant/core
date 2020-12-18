@@ -1,7 +1,17 @@
 """Support for RFXtrx covers."""
 import logging
 
-from homeassistant.components.cover import CoverEntity
+from homeassistant.components.cover import (
+    CoverEntity,
+    SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
+)
+
 from homeassistant.const import CONF_DEVICES, STATE_OPEN
 from homeassistant.core import callback
 
@@ -117,16 +127,22 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
                 self._state = old_state.state == STATE_OPEN
 
     @property
-    def current_cover_tilt_position(self):
-        """Return current position of cover tilt.
+    def supported_features(self):
+        """Flag supported features."""
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
-        None is unknown, 0 is closed, 100 is fully open.
-        """
         if self._venetian_blind_mode in (
             CONST_VENETIAN_BLIND_MODE_US,
             CONST_VENETIAN_BLIND_MODE_EU,
         ):
-            return 50  # Rfy does not support tilt position. The non-empty value is used to enable tilt support.
+            supported_features |= (
+                SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
+                | SUPPORT_SET_TILT_POSITION
+            )
+
+        return supported_features
 
     @property
     def is_closed(self):
@@ -174,6 +190,12 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             await self._async_send(self._device.send_down2sec)
         elif self._venetian_blind_mode == CONST_VENETIAN_BLIND_MODE_EU:
             await self._async_send(self._device.send_down05sec)
+
+    async def async_stop_cover_tilt(self, **kwargs):
+        """Stop the cover tilt."""
+        await self._async_send(self._device.send_stop)
+        self._state = True
+        self.async_write_ha_state()
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""

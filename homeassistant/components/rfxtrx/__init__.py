@@ -48,8 +48,6 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
-    CONF_VENETIAN_BLIND_MODE,
-    CONST_VENETIAN_BLIND_MODE_DEFAULT,
     DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
     DATA_RFXOBJECT,
@@ -128,9 +126,6 @@ DEVICE_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_ON): cv.byte,
         vol.Optional(CONF_COMMAND_OFF): cv.byte,
         vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
-        vol.Optional(
-            CONF_VENETIAN_BLIND_MODE, default=CONST_VENETIAN_BLIND_MODE_DEFAULT
-        ): cv.string,
     }
 )
 
