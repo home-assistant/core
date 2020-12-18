@@ -5,6 +5,7 @@ import logging
 from plexapi.exceptions import NotFound
 import voluptuous as vol
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -118,3 +119,19 @@ def lookup_plex_media(hass, content_type, content_id):
 
     playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
     return (playqueue, plex_server)
+
+
+def play_on_sonos(hass, content_type, content_id, speaker_name):
+    """Play music on a connected Sonos speaker using Plex APIs.
+
+    Called by Sonos 'media_player.play_media' service.
+    """
+    media, plex_server = lookup_plex_media(hass, content_type, content_id)
+    if media is None:
+        raise HomeAssistantError(f"Plex media not found using payload: '{content_id}'")
+    sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
+    if sonos_speaker is None:
+        message = f"Sonos speaker '{speaker_name}' is not associated with '{plex_server.friendly_name}'"
+        _LOGGER.error(message)
+        raise HomeAssistantError(message)
+    sonos_speaker.playMedia(media)
