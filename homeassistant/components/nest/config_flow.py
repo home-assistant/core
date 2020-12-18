@@ -110,7 +110,9 @@ class NestFlowHandler(
         existing_entries = self.hass.config_entries.async_entries(DOMAIN)
         assert len(existing_entries) <= 1, "Unexpected config entries must be deleted"
         if existing_entries:
-            self.hass.config_entries.async_update_entry(existing_entries[0], data=data)
+            entry = existing_entries[0]
+            self.hass.config_entries.async_update_entry(entry, data=data)
+            await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return await super().async_oauth_create_entry(data)

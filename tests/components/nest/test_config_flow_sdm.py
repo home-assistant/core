@@ -79,8 +79,9 @@ class OAuthFixture:
 
         with patch(
             "homeassistant.components.nest.async_setup_entry", return_value=True
-        ):
+        ) as mock_setup:
             await self.hass.config_entries.flow.async_configure(result["flow_id"])
+            assert len(mock_setup.mock_calls) == 1
 
 
 @pytest.fixture
