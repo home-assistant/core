@@ -134,11 +134,8 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): vol.All(
-            cv.entity_id,
-            vol.Any(
-                cv.entity_domain(SENSOR_DOMAIN), cv.entity_domain(BINARY_SENSOR_DOMAIN)
-            ),
+        vol.Required(CONF_ENTITY_ID): vol.Any(
+            cv.entity_domain(SENSOR_DOMAIN), cv.entity_domain(BINARY_SENSOR_DOMAIN)
         ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
