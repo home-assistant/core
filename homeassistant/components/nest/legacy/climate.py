@@ -25,6 +25,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.components.nest.const import DATA_NEST, DOMAIN as NEST_DOMAIN
+from homeassistant.components.nest.legacy.const import SIGNAL_NEST_UPDATE
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_SCAN_INTERVAL,
@@ -32,9 +34,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from . import DATA_NEST, DOMAIN as NEST_DOMAIN
-from .const import SIGNAL_NEST_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
