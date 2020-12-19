@@ -4,10 +4,10 @@ import logging
 from bimmer_connected.state import LockState
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import ATTRIBUTION, CONF_ACCOUNT
+from .const import CONF_ACCOUNT
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
@@ -55,10 +55,8 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     def device_state_attributes(self):
         """Return the state attributes of the lock."""
         vehicle_state = self._vehicle.state
-        result = {
-            "car": self._vehicle.name,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        result = self._attrs.copy()
+
         if self.door_lock_state_available:
             result["door_lock_state"] = vehicle_state.door_lock_state.value
             result["last_update_reason"] = vehicle_state.last_update_reason

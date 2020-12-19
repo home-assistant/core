@@ -8,7 +8,12 @@ import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
@@ -19,6 +24,7 @@ from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ATTRIBUTION,
     CONF_ACCOUNT,
     CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
@@ -28,6 +34,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_HASS_CONFIG = "bmw_connected_drive_hass_config"
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
@@ -66,6 +73,8 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the BMW Connected Drive component from configuration.yaml."""
+    hass.data[DATA_HASS_CONFIG] = config
+
     if DOMAIN in config:
         for entry_config in config[DOMAIN].values():
             hass.async_create_task(
@@ -80,21 +89,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
 @callback
 def _async_migrate_options_from_data_if_missing(hass, entry):
     data = dict(entry.data)
-    options = DEFAULT_OPTIONS.copy()
+    options = dict(entry.options)
 
     if CONF_READ_ONLY in data or list(options) != list(DEFAULT_OPTIONS):
+        options = dict(DEFAULT_OPTIONS, **options)
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
 
-        options.update(dict(entry.options))
-
         hass.config_entries.async_update_entry(entry, data=data, options=options)
+        return True
+    return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BMW Connected Drive from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    _async_migrate_options_from_data_if_missing(hass, entry)
+    _async_migrate_options_from_data_if_missing(hass, entry)  #:
+    # entry = hass.config_entries.async_get_entry(entry.entry_id)
 
     try:
         account = await hass.async_add_executor_job(
@@ -133,8 +144,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
 
-    hass.async_create_task(
-        discovery.async_load_platform(hass, NOTIFY_DOMAIN, DOMAIN, {}, entry.data)
+    # set up notify platform, no entry support for notify component yet,
+    # have to use discovery to load platform.
+    await discovery.async_load_platform(
+        hass,
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        {CONF_NAME: DOMAIN},
+        hass.data[DATA_HASS_CONFIG],
     )
 
     return True
@@ -198,11 +215,10 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> "BMWConnectedDriveAcco
         vin = call.data[ATTR_VIN]
         vehicle = None
         # Double check for read_only accounts as another account could create the services
-        for entity in filter(
-            lambda entity: not entity[CONF_ACCOUNT].read_only,
-            hass.data[DOMAIN].values(),
-        ):
-            vehicle = entity[CONF_ACCOUNT].account.get_vehicle(vin)
+        for entry_data in [
+            e for e in hass.data[DOMAIN].values() if not e[CONF_ACCOUNT].read_only
+        ]:
+            vehicle = entry_data[CONF_ACCOUNT].account.get_vehicle(vin)
         if not vehicle:
             _LOGGER.error("Could not find a vehicle for VIN %s", vin)
             return
@@ -293,6 +309,11 @@ class BMWConnectedDriveBaseEntity(Entity):
         """Initialize sensor."""
         self._account = account
         self._vehicle = vehicle
+        self._attrs = {
+            "car": self._vehicle.name,
+            "vin": self._vehicle.vin,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     @property
     def device_info(self) -> dict:
@@ -304,6 +325,11 @@ class BMWConnectedDriveBaseEntity(Entity):
             "model": self._vehicle.name,
             "manufacturer": self._vehicle.attributes.get("brand"),
         }
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return self._attrs
 
     @property
     def should_poll(self):

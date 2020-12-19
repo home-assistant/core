@@ -124,10 +124,7 @@ async def test_full_config_flow_implementation(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert (
-            result["title"]
-            == FIXTURE_IMPORT_ENTRY[CONF_USERNAME] + " (configuration.yaml)"
-        )
+        assert result["title"] == FIXTURE_IMPORT_ENTRY[CONF_USERNAME]
         assert result["data"] == FIXTURE_IMPORT_ENTRY
 
         assert len(mock_setup.mock_calls) == 1

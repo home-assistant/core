@@ -9,10 +9,10 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
+from homeassistant.const import LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import ATTRIBUTION, CONF_ACCOUNT
+from .const import CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,10 +112,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
-        result = {
-            "car": self._vehicle.name,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        result = self._attrs.copy()
 
         if self._attribute == "lids":
             for lid in vehicle_state.lids:

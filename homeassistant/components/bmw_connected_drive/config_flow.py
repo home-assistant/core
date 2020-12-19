@@ -69,10 +69,6 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             if info:
-                # pylint: disable=no-member
-                if self.context[CONF_SOURCE] == config_entries.SOURCE_IMPORT:
-                    info["title"] = f"{info['title']} (configuration.yaml)"
-
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
