@@ -320,7 +320,6 @@ class BMWConnectedDriveBaseEntity(Entity):
         """Return info for device registry."""
         return {
             "identifiers": {(DOMAIN, self._vehicle.vin)},
-            "sw_version": self._vehicle.vin,
             "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
             "model": self._vehicle.name,
             "manufacturer": self._vehicle.attributes.get("brand"),
