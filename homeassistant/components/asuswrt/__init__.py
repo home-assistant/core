@@ -156,8 +156,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        update_listener = hass.data[DOMAIN].pop("update_listener")
-        update_listener()
+        options_listener = hass.data[DOMAIN].pop("update_listener")
+        options_listener()
         stop_listener = hass.data[DOMAIN].pop("stop_listener")
         stop_listener()
 

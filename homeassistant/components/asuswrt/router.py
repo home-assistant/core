@@ -1,5 +1,5 @@
 """Represent the AsusWrt router."""
-from typing import Dict
+from typing import Dict, Optional
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -83,8 +83,9 @@ class AsusWrtRouter:
         return self._api
 
 
-def get_api(conf: Dict, options: Dict = {}) -> AsusWrt:
+def get_api(conf: Dict, options: Optional[Dict] = None) -> AsusWrt:
     """Get the AsusWrt API."""
+    opt = options or {}
 
     return AsusWrt(
         conf[CONF_HOST],
@@ -94,7 +95,7 @@ def get_api(conf: Dict, options: Dict = {}) -> AsusWrt:
         conf.get(CONF_PASSWORD, ""),
         conf.get(CONF_SSH_KEY, ""),
         conf[CONF_MODE],
-        options.get(CONF_REQUIRE_IP, True),
-        interface=options.get(CONF_INTERFACE, DEFAULT_INTERFACE),
-        dnsmasq=options.get(CONF_DNSMASQ, DEFAULT_DNSMASQ),
+        opt.get(CONF_REQUIRE_IP, True),
+        interface=opt.get(CONF_INTERFACE, DEFAULT_INTERFACE),
+        dnsmasq=opt.get(CONF_DNSMASQ, DEFAULT_DNSMASQ),
     )
