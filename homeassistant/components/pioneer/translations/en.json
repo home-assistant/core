@@ -1,0 +1,92 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "connection_details": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port",
+                    "timeout": "Connection timeout (in seconds)"
+                },
+                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/pioneer/.\n\nGive your receiver a name and enter its IP and port below. Leave port and timeout empty if unsure (some Pioneer receivers use `8102`). ",
+                "title": "Pioneer network receiver: Connection parameters"
+            },
+            "rename_sources": {
+                "data": {
+                    "Adapter": "Adapter",
+                    "BD": "BD",
+                    "CD": "CD",
+                    "CD-R/TAPE": "CD-R/TAPE",
+                    "DVD": "DVD",
+                    "DVR/BDR": "DVR/BDR",
+                    "Favorites": "Favorites",
+                    "Game": "Game",
+                    "HDMI/MHL": "HDMI/MHL",
+                    "HDMI1": "HDMI1",
+                    "HDMI2": "HDMI2",
+                    "HDMI3": "HDMI3",
+                    "HDMI4": "HDMI4",
+                    "HDMI5": "HDMI5",
+                    "HDMI6": "HDMI6",
+                    "HOME MEDIA GALLERY(Internet Radio)": "HOME MEDIA GALLERY(Internet Radio)",
+                    "Media Server": "Media Server",
+                    "Netradio": "Netradio",
+                    "PHONO": "PHONO",
+                    "Pandora": "Pandora",
+                    "Sat/Cbl": "Sat/Cbl",
+                    "TV": "TV",
+                    "Tuner": "Tuner",
+                    "Video 1": "Video 1",
+                    "Video 2": "Video 2",
+                    "iPod/USB": "iPod/USB"
+                },
+                "description": "In this screen you can provide alternative names to the sources selected in the previous screen (e.g., you may want to rename `HDMI1` to `Kodi`).\n\nFields left blank will keep their original names.",
+                "title": "Pioneer network receiver: Rename sources"
+            },
+            "select_sources": {
+                "data": {
+                    "Adapter": "Adapter",
+                    "BD": "BD",
+                    "CD": "CD",
+                    "CD-R/TAPE": "CD-R/TAPE",
+                    "DVD": "DVD",
+                    "DVR/BDR": "DVR/BDR",
+                    "Favorites": "Favorites",
+                    "Game": "Game",
+                    "HDMI/MHL": "HDMI/MHL",
+                    "HDMI1": "HDMI1",
+                    "HDMI2": "HDMI2",
+                    "HDMI3": "HDMI3",
+                    "HDMI4": "HDMI4",
+                    "HDMI5": "HDMI5",
+                    "HDMI6": "HDMI6",
+                    "HOME MEDIA GALLERY(Internet Radio)": "HOME MEDIA GALLERY(Internet Radio)",
+                    "Media Server": "Media Server",
+                    "Netradio": "Netradio",
+                    "PHONO": "PHONO",
+                    "Pandora": "Pandora",
+                    "Sat/Cbl": "Sat/Cbl",
+                    "TV": "TV",
+                    "Tuner": "Tuner",
+                    "Video 1": "Video 1",
+                    "Video 2": "Video 2",
+                    "iPod/USB": "iPod/USB"
+                },
+                "description": "In this screen you can select the sources that will be available for your receiver.\n\nDepending on your receiver model some options below may not be available. The most common combination of sources has been preselected for you.\n\nYou can find further combinations per receiver type here: https://www.home-assistant.io/integrations/pioneer/.",
+                "title": "Pioneer network receiver: Select sources"
+            },
+            "user": {
+                "description": "The pioneer platform allows you to control Pioneer Network Receivers. Please note, however, that the more recent Pioneer models work with [Onkyo](https://www.home-assistant.io/integrations/onkyo) platform instead.",
+                "title": "Pioneer network receiver"
+            }
+        }
+    },
+    "title": "Pioneer"
+}

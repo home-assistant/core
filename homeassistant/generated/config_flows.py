@@ -149,6 +149,7 @@ FLOWS = [
     "ozw",
     "panasonic_viera",
     "pi_hole",
+    "pioneer",
     "plaato",
     "plex",
     "plugwise",

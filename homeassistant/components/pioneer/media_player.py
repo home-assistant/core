@@ -2,9 +2,7 @@
 import logging
 import telnetlib
 
-import voluptuous as vol
-
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -15,24 +13,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TIMEOUT,
-    STATE_OFF,
-    STATE_ON,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DEFAULT_MAX_VOLUME, DOMAIN, MAX_SOURCE_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SOURCES = "sources"
-
-DEFAULT_NAME = "Pioneer AVR"
-DEFAULT_PORT = 23  # telnet default. Some Pioneer AVRs use 8102
-DEFAULT_TIMEOUT = None
-DEFAULT_SOURCES = {}
 
 SUPPORT_PIONEER = (
     SUPPORT_PAUSE
@@ -45,38 +32,19 @@ SUPPORT_PIONEER = (
     | SUPPORT_PLAY
 )
 
-MAX_VOLUME = 185
-MAX_SOURCE_NUMBERS = 60
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
-        vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Pioneer platform."""
-    pioneer = PioneerDevice(
-        config[CONF_NAME],
-        config[CONF_HOST],
-        config[CONF_PORT],
-        config[CONF_TIMEOUT],
-        config[CONF_SOURCES],
-    )
 
-    if pioneer.update():
-        add_entities([pioneer])
+    async_add_entities([hass.data[DOMAIN][config_entry.entry_id]], True)
 
 
 class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout, sources):
+    def __init__(self, name, host, port, timeout, sources, unique_id):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
@@ -88,6 +56,12 @@ class PioneerDevice(MediaPlayerEntity):
         self._selected_source = ""
         self._source_name_to_number = sources
         self._source_number_to_name = {v: k for k, v in sources.items()}
+        self._unique_id = unique_id
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        return self._unique_id
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -134,7 +108,7 @@ class PioneerDevice(MediaPlayerEntity):
             self._pwstate = pwstate
 
         volume_str = self.telnet_request(telnet, "?V", "VOL")
-        self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
+        self._volume = int(volume_str[3:]) / DEFAULT_MAX_VOLUME if volume_str else None
 
         muted_value = self.telnet_request(telnet, "?M", "MUT")
         self._muted = (muted_value == "MUT0") if muted_value else None
@@ -225,7 +199,7 @@ class PioneerDevice(MediaPlayerEntity):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # 60dB max
-        self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
+        self.telnet_command(f"{round(volume * DEFAULT_MAX_VOLUME):03}VL")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
