@@ -616,6 +616,13 @@ def test_positive_time_period_dict_in_serializer():
     }
 
 
+def test_socket_timeout_in_serializer():
+    """Test positive_time_period_dict with custom_serializer."""
+    assert cv.custom_serializer(cv.socket_timeout) == {
+        "type": "int",
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""

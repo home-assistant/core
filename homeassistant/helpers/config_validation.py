@@ -829,6 +829,9 @@ def custom_serializer(schema: Any) -> Any:
     if schema is boolean:
         return {"type": "boolean"}
 
+    if schema is socket_timeout:
+        return {"type": "int"}
+
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
 
