@@ -1,4 +1,5 @@
 """Zerproc light platform."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Callable, List, Optional
@@ -29,6 +30,16 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
+async def connect_light(light: pyzerproc.Light) -> Optional[pyzerproc.Light]:
+    """Return the given light if it connects successfully."""
+    try:
+        await light.connect()
+    except pyzerproc.ZerprocException:
+        _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
+        return None
+    return light
+
+
 async def discover_entities(hass: HomeAssistant) -> List[Entity]:
     """Attempt to discover new lights."""
     lights = await pyzerproc.discover()
@@ -39,12 +50,10 @@ async def discover_entities(hass: HomeAssistant) -> List[Entity]:
     ]
 
     entities = []
-    for light in new_lights:
-        try:
-            await light.connect()
-        except pyzerproc.ZerprocException:
-            _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
-            continue
+    connected_lights = filter(
+        None, await asyncio.gather(*(connect_light(light) for light in new_lights))
+    )
+    for light in connected_lights:
         # Double-check the light hasn't been added in the meantime
         if light.address not in hass.data[DOMAIN]["addresses"]:
             hass.data[DOMAIN]["addresses"].add(light.address)
