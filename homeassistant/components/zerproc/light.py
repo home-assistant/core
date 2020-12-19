@@ -30,7 +30,7 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
-async def connect_light(light: pyzerproc.Light):
+async def connect_light(light: pyzerproc.Light) -> Optional[pyzerproc.Light]:
     """Return the given light if it connects successfully."""
     try:
         await light.connect()
