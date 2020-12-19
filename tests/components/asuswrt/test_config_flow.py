@@ -4,11 +4,7 @@ from socket import gaierror
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.asuswrt.const import (
-    CONF_REQUIRE_IP,
-    CONF_SSH_KEY,
-    DOMAIN,
-)
+from homeassistant.components.asuswrt.const import CONF_REQUIRE_IP, CONF_SSH_KEY, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -264,6 +260,8 @@ async def test_options_flow(hass):
     config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.asuswrt.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

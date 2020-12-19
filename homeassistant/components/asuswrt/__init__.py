@@ -1,6 +1,7 @@
 """Support for ASUSWRT devices."""
 import asyncio
 import logging
+from types import MappingProxyType
 
 import voluptuous as vol
 
@@ -27,8 +28,8 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_SSH_PORT,
     DOMAIN,
-    MODE_ROUTER,
     MODE_AP,
+    MODE_ROUTER,
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
     SENSOR_TYPES,
@@ -81,18 +82,25 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
+    # save the options from config yaml
+    options = {}
+    for name, value in conf.items():
+        if name in ([CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]):
+            options[name] = value
+    hass.data[DOMAIN] = {"yaml_options": options}
+
+    # check if already configured
     domains_list = hass.config_entries.async_domains()
     if DOMAIN in domains_list:
         return True
 
     # remove not required config keys
-    pub_key = conf.get(CONF_PUB_KEY)
+    pub_key = conf.pop(CONF_PUB_KEY, "")
     if pub_key:
         conf[CONF_SSH_KEY] = pub_key
-    conf.pop(CONF_PUB_KEY, "")
-    conf.pop(CONF_SENSORS, {})
 
-    conf.pop(CONF_REQUIRE_IP, "")
+    conf.pop(CONF_REQUIRE_IP, True)
+    conf.pop(CONF_SENSORS, {})
     conf.pop(CONF_INTERFACE, "")
     conf.pop(CONF_DNSMASQ, "")
 
@@ -107,6 +115,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up AsusWrt platform."""
+
+    # import options from yaml if empty
+    yaml_options = hass.data.get(DOMAIN, {}).pop("yaml_options", {})
+    if not entry.options:
+        entry.options = MappingProxyType(yaml_options or {})
 
     router = AsusWrtRouter(hass, entry)
     await router.setup()
