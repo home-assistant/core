@@ -190,6 +190,9 @@ async def test_unexpected_existing_config_entries(hass, oauth):
     )
     old_entry.add_to_hass(hass)
 
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+
     # Invoke the reauth flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
@@ -199,5 +202,17 @@ async def test_unexpected_existing_config_entries(hass, oauth):
 
     flows = hass.config_entries.flow.async_progress()
 
-    with pytest.raises(AssertionError, match=r"Expected at most 1 config entry.*"):
-        await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    await oauth.async_oauth_flow(result)
+
+    # Only a single entry now exists, and the other was cleaned up
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    entry.data["token"].pop("expires_at")
+    assert entry.data["token"] == {
+        "refresh_token": "mock-refresh-token",
+        "access_token": "mock-access-token",
+        "type": "Bearer",
+        "expires_in": 60,
+    }

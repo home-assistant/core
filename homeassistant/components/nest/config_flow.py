@@ -111,14 +111,21 @@ class NestFlowHandler(
         """Create an entry for the SDM flow."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
         data[DATA_SDM] = {}
-
-        # Update existing config entry when in the reauth flow
+        await self.async_set_unique_id(DOMAIN)
+        # Update existing config entry when in the reauth flow.  This
+        # integration only supports one config entry so remove any prior entries
+        # added before the "single_instance_allowed" check was added
         existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-        assert len(existing_entries) <= 1, "Expected at most 1 config entry"
         if existing_entries:
-            entry = existing_entries[0]
-            self.hass.config_entries.async_update_entry(entry, data=data)
-            await self.hass.config_entries.async_reload(entry.entry_id)
+            updated = False
+            for entry in existing_entries:
+                if updated:
+                    await self.hass.config_entries.async_unload(entry.entry_id)
+                    await self.hass.config_entries.async_remove(entry.entry_id)
+                    continue
+                updated = True
+                self.hass.config_entries.async_update_entry(entry, data=data)
+                await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return await super().async_oauth_create_entry(data)
@@ -142,12 +149,7 @@ class NestFlowHandler(
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
-            # Only one config entry is allowed since only a single static
-            # config is currently allowed in configuration.yaml.  The config
-            # entry is allowed to be updated during reauth, otherwise there
-            # should be no existing configurations.
-            existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-            assert len(existing_entries) <= 1, "Expected at most 1 config entry"
+            # Reauth will update an existing entry
             if self.hass.config_entries.async_entries(DOMAIN) and not self._reauth:
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
