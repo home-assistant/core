@@ -120,7 +120,6 @@ class NestFlowHandler(
             updated = False
             for entry in existing_entries:
                 if updated:
-                    await self.hass.config_entries.async_unload(entry.entry_id)
                     await self.hass.config_entries.async_remove(entry.entry_id)
                     continue
                 updated = True
