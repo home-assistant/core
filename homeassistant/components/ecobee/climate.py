@@ -65,6 +65,9 @@ AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
 
+DEFAULT_MIN_HUMIDITY = 15
+DEFAULT_MAX_HUMIDITY = 50
+
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
@@ -162,7 +165,6 @@ SUPPORT_FLAGS = (
     | SUPPORT_AUX_HEAT
     | SUPPORT_TARGET_TEMPERATURE_RANGE
     | SUPPORT_FAN_MODE
-    | SUPPORT_TARGET_HUMIDITY
 )
 
 
@@ -332,6 +334,8 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
+        if self.has_humidifier:
+            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
         return SUPPORT_FLAGS
 
     @property
@@ -390,6 +394,28 @@ class Thermostat(ClimateEntity):
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
+
+    @property
+    def has_humidifier(self):
+        """Return true if humidifier connected."""
+        return self.thermostat["settings"]["hasHumidifier"]
+
+    @property
+    def target_humidity(self) -> Optional[int]:
+        """Return the desired humidity set point."""
+        if self.has_humidifier:
+            return self.thermostat["runtime"]["desiredHumidity"]
+        return None
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return DEFAULT_MIN_HUMIDITY
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return DEFAULT_MAX_HUMIDITY
 
     @property
     def target_temperature(self):
@@ -653,6 +679,9 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity):
         """Set the humidity level."""
+        if humidity not in range(0, 101):
+            _LOGGER.error("Invalid set_humidity value: %s", humidity)
+            return
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
 
     def set_hvac_mode(self, hvac_mode):
