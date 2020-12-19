@@ -4,7 +4,10 @@ import socket
 import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
-from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
+from jellyfin_apiclient_python.connection_manager import (
+    CONNECTION_STATE,
+    ConnectionManager,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -89,18 +92,29 @@ def _connect(client: JellyfinClient, url, username, password) -> bool:
     """Connect to the Jellyfin server and assert that the user can login."""
     client.config.data["auth.ssl"] = url.startswith("https")
 
-    state = client.auth.connect_to_address(url)
+    _connect_to_address(client.auth, url)
+    _login(client.auth, url, username, password)
+
+    return True
+
+
+def _connect_to_address(connection_manager: ConnectionManager, url: str):
+    """Connect to the Jellyfin server."""
+    state = connection_manager.connect_to_address(url)
     if state["State"] != CONNECTION_STATE["ServerSignIn"]:
         _LOGGER.error(
             "Unable to connect to: %s. Connection State: %s", url, state["State"]
         )
         raise CannotConnect
 
-    response = client.auth.login(url, username, password)
+
+def _login(
+    connection_manager: ConnectionManager, url: str, username: str, password: str
+):
+    """Assert that the user can log in to the Jellyfin server."""
+    response = connection_manager.login(url, username, password)
     if "AccessToken" not in response:
         raise InvalidAuth
-
-    return True
 
 
 class CannotConnect(exceptions.HomeAssistantError):

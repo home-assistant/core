@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(
-            "Unexpected exception occured while setting up Jellyfin server"
+            "Unexpected exception occurred while setting up Jellyfin server"
         )
         return False
     else:

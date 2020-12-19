@@ -1,14 +1,23 @@
 """Test the jellyfin config flow."""
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
+
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.jellyfin.config_flow import CannotConnect
 from homeassistant.components.jellyfin.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
+URL = "https://example.com"
+USERNAME = "test-username"
+PASSWORD = "test-password"
 
-async def test_abort_if_existing_entry(hass):
+MOCK_SUCCESFUL_CONNECTION_STATE = {"State": CONNECTION_STATE["ServerSignIn"]}
+MOCK_SUCCESFUL_LOGIN_RESPONSE = {"AccessToken": "Test"}
+
+
+async def test_abort_if_existing_entry(hass: HomeAssistant):
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -19,7 +28,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant):
     """Test the complete configuration form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -28,14 +37,13 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    url = "https://example.com"
-    username = "test-username"
-    password = "test-password"
-
     with patch(
-        "homeassistant.components.jellyfin.config_flow.validate_input",
-        return_value=url,
-    ) as mock_authenticate, patch(
+        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        return_value=MOCK_SUCCESFUL_CONNECTION_STATE,
+    ) as mock_connect, patch(
+        "homeassistant.components.jellyfin.config_flow.ConnectionManager.login",
+        return_value=MOCK_SUCCESFUL_LOGIN_RESPONSE,
+    ) as mock_login, patch(
         "homeassistant.components.jellyfin.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.jellyfin.async_setup_entry",
@@ -44,44 +52,103 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_URL: url,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
+                CONF_URL: URL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == url
+    assert result2["title"] == URL
     assert result2["data"] == {
-        CONF_URL: url,
-        CONF_USERNAME: username,
-        CONF_PASSWORD: password,
+        CONF_URL: URL,
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
     }
 
-    assert len(mock_authenticate.mock_calls) == 1
+    assert len(mock_connect.mock_calls) == 1
+    assert len(mock_login.mock_calls) == 1
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+async def test_form_cannot_connect(hass: HomeAssistant):
+    """Test we handle an unreachable server."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.jellyfin.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_URL: "https://example.com",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: URL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_invalid_auth(hass: HomeAssistant):
+    """Test that we can handle invalid credentials."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        return_value=MOCK_SUCCESFUL_CONNECTION_STATE,
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: URL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    assert len(mock_connect.mock_calls) == 1
+
+
+async def test_form_exception(hass: HomeAssistant):
+    """Test we handle an unexpected exception during server setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        side_effect=Exception("UnknownException"),
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: URL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+    assert len(mock_connect.mock_calls) == 1
