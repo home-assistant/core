@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
+    CONF_MODE,
     CONF_URL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
@@ -74,10 +75,12 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
+    NET_MODES,
     NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
     SERVICE_RESUME_INTEGRATION,
+    SERVICE_SET_NETWORK_MODE,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
@@ -118,7 +121,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_URL): cv.url,
+        vol.Optional(CONF_MODE): vol.In(list(NET_MODES.keys())),
+    }
+)
 
 CONFIG_ENTRY_PLATFORMS = (
     BINARY_SENSOR_DOMAIN,
@@ -518,6 +527,31 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         elif service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
+            _LOGGER.debug("%s: %s", service.service, "done")
+        elif service.service == SERVICE_SET_NETWORK_MODE:
+            mode = service.data.get(CONF_MODE, None)
+            if mode is None:
+                _LOGGER.error("%s: mode is required for this service", service.service)
+                return
+
+            net_mode_list = router.client.net.net_mode_list()
+
+            # Due the the deep nesting of data, the try/expect was simplier than a vol schema
+            try:
+                network_band = net_mode_list["BandList"]["Band"]["Value"]
+                lte_band_list = net_mode_list["LTEBandList"]["LTEBand"]
+                lte_band = [
+                    x["Value"] for x in lte_band_list if x["Name"] == "All bands"
+                ][0]
+            except:
+                _LOGGER.error(
+                    "%s: cannot locate Network and/or LTE band values", service.service
+                )
+                return
+
+            router.client.net.set_net_mode(
+                lteband=lte_band, networkband=network_band, networkmode=NET_MODES[mode]
+            )
             _LOGGER.debug("%s: %s", service.service, "done")
         elif service.service == SERVICE_SUSPEND_INTEGRATION:
             router.logout()

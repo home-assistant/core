@@ -28,3 +28,14 @@ suspend_integration:
     url:
       description: URL of router to resume integration for; optional when only one is configured.
       example: http://192.168.100.1/
+
+set_network_mode:
+  description: Changes the network mode
+  fields:
+    url:
+      description: URL of router to resume integration for; optional when only one is configured.
+      example: http://192.168.100.1/
+    mode:
+      description: >
+        The type of mode you want to change the network band to. Options are: AUTO, 2G, 3G, 4G
+      example: AUTO
