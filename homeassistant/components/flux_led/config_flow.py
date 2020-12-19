@@ -1,4 +1,5 @@
 """Config flow for Flux LED/MagicLight."""
+import copy
 import logging
 
 from flux_led import BulbScanner
@@ -7,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -16,9 +18,9 @@ from .const import (
     CONF_REMOVE_DEVICE,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    SIGNAL_ADD_DEVICE,
+    SIGNAL_REMOVE_DEVICE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry):
         """Get the options flow for the Flux LED component."""
@@ -55,6 +58,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
+
+        config_entry = self.hass.config_entries.async_entries(DOMAIN)
+        if config_entry:
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             devices = user_input.get(CONF_DEVICES, {})
@@ -79,31 +89,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_DEVICES: devices,
                 },
             )
-
-        if user_input is not None:
-            devices = user_input.get(CONF_DEVICES, {})
-
-            if user_input[CONF_AUTOMATIC_ADD]:
-                scanner = BulbScanner()
-                await self.hass.async_add_executor_job(scanner.scan)
-
-                for bulb in scanner.getBulbInfo():
-                    device_id = bulb["ipaddr"].replace(".", "_")
-                    if not devices.get(device_id, False):
-                        devices[device_id] = {
-                            CONF_NAME: bulb["ipaddr"],
-                            CONF_HOST: bulb["ipaddr"],
-                        }
-
-            return self.async_create_entry(
-                title="FluxLED/MagicHome",
-                data={
-                    CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
-                    CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-                    CONF_DEVICES: devices,
-                },
-            )
->>>>>>> Fix lint issues.
 
         return self.async_show_form(
             step_id="user",
@@ -122,9 +107,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         self._config_entry = config_entry
         self._global_options = None
-        self._device_registry = None
         self._configure_device = None
-        self._title = "FluxLED/MagicHome"
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -147,11 +130,15 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             if CONF_REMOVE_DEVICE in user_input:
                 device_id = user_input[CONF_REMOVE_DEVICE]
-                config_data = self._config_entry.data.copy()
+                config_data = copy.deepcopy(dict(self._config_entry.data))
                 del config_data[CONF_DEVICES][device_id]
 
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=config_data
+                )
+
+                async_dispatcher_send(
+                    self.hass, SIGNAL_REMOVE_DEVICE, {"device_id": device_id}
                 )
 
                 options_data = self._config_entry.options.copy()
@@ -172,18 +159,16 @@ class OptionsFlow(config_entries.OptionsFlow):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_NAME: device_name,
                 }
-
-                config_data = self._config_entry.data.copy()
+                config_data = copy.deepcopy(dict(self._config_entry.data))
                 config_data[CONF_DEVICES][device_id] = device_data
 
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=config_data
                 )
 
-                options_data = self._config_entry.options.copy()
-                options_data["global"] = self._global_options
-                options_data[device_id] = {CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED}
-                return self.async_create_entry(title="", data=options_data)
+                async_dispatcher_send(
+                    self.hass, SIGNAL_ADD_DEVICE, {device_id: device_data}
+                )
 
             options_data = self._config_entry.options.copy()
             options_data["global"] = self._global_options
@@ -248,3 +233,4 @@ class OptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="configure_device", data_schema=vol.Schema(options), errors=errors
         )
+        

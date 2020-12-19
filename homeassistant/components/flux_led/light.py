@@ -395,6 +395,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     @property
     def is_on(self):
+=======
+
+>>>>>>> Reworked config_flow for one flow for auto/manual. Device additions only so far.
         return self._state
 
     @property

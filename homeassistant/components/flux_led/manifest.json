@@ -9,8 +9,4 @@
   "codeowners": [
     "@djtimca"
   ]
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> Add dataupdate coordinator and code refactor for flux_led.
