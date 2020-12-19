@@ -40,6 +40,8 @@ ATTR_VACATION_END = "next_vacation_end_date"
 ATTR_ON_VACATION = "on_vacation"
 ATTR_TODAYS_ENERGY_USAGE = "todays_energy_usage"
 ATTR_IN_USE = "in_use"
+ATTR_WIFI_SIGNAL = "wifi_signal_strength"
+ATTR_ALERT_COUNT = "alert_count"
 
 ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
@@ -137,12 +139,16 @@ class EcoNetWaterHeater(WaterHeaterEntity):
     @property
     def device_state_attributes(self):
         """Return the optional device state attributes."""
-        data = {}
-        data[ATTR_ON_VACATION] = self.water_heater.vacation
+        data = {
+            ATTR_WIFI_SIGNAL: self.water_heater.wifi_signal,
+            ATTR_ALERT_COUNT: self.water_heater.alert_count,
+            ATTR_ON_VACATION: self.water_heater.vacation,
+            ATTR_IN_USE: self.water_heater.running,
+        }
+
         todays_usage = self.water_heater.todays_energy_usage
         if todays_usage:
             data[ATTR_TODAYS_ENERGY_USAGE] = todays_usage
-        data[ATTR_IN_USE] = self.water_heater.running
 
         if self.min_temp is not None:
             data[ATTR_LOWER_TEMP] = round(self.min_temp, 2)

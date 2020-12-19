@@ -3,6 +3,6 @@
   "name": "Rheem EcoNET Water Products",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/econet",
-  "requirements": ["pyeconet==0.1.6"],
+  "requirements": ["pyeconet==0.1.7"],
   "codeowners": ["@vangorra"]
 }

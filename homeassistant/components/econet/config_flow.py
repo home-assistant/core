@@ -1,4 +1,4 @@
-"""Config flow for Gogogate2."""
+"""Config flow for Econet."""
 import logging
 
 from pyeconet.errors import InvalidCredentialsError
