@@ -1175,7 +1175,7 @@ class TurnOnOffListener:
 
         service = event.data[ATTR_SERVICE]
         service_data = event.data[ATTR_SERVICE_DATA]
-        entity_ids = cv.ensure_list(service_data[ATTR_ENTITY_ID])
+        entity_ids = cv.ensure_list_csv(service_data[ATTR_ENTITY_ID])
 
         if not any(eid in self.lights for eid in entity_ids):
             return
