@@ -4,10 +4,15 @@ import asyncio
 import logging
 
 from google_nest_sdm.event import EventMessage
-from google_nest_sdm.exceptions import AuthException, GoogleNestException
+from google_nest_sdm.exceptions import (
+    AuthException,
+    ConfigurationException,
+    GoogleNestException,
+)
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -43,6 +48,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
 DATA_NEST_CONFIG = "nest_config"
+
+NEST_SETUP_NOTIFICATION = "nest_setup"
 
 SENSOR_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
@@ -172,18 +179,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 data=entry.data,
             )
         )
+    except ConfigurationException as err:
+        persistent_notification.async_create(
+            hass,
+            f"Please update configuration.yaml: {err}",
+            title="Nest configuration error",
+            notification_id=NEST_SETUP_NOTIFICATION,
+        )
+        subscriber.stop_async()
         return False
     except GoogleNestException as err:
-        _LOGGER.error("Subscriber error: %s", err)
+        persistent_notification.async_create(
+            hass,
+            f"Subscriber error: {err}",
+            title="Nest unavailable",
+            notification_id=NEST_SETUP_NOTIFICATION,
+        )
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
     try:
         await subscriber.async_get_device_manager()
     except GoogleNestException as err:
-        _LOGGER.error("Device Manager error: %s", err)
+        persistent_notification.async_create(
+            hass,
+            f"Device manager error: {err}",
+            title="Nest unavailable",
+            notification_id=NEST_SETUP_NOTIFICATION,
+        )
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
+
+    # Clear any previous error notifications
+    persistent_notification.async_dismiss(hass, NEST_SETUP_NOTIFICATION)
 
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
