@@ -53,33 +53,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return await self.async_step_user(user_input={CONF_AUTOMATIC_ADD: True})
 
-        else:
-            if config_entry:
-                for device_id, device in config_entry.entry.data[CONF_DEVICES].items():
-                    if device_id == import_config[CONF_HOST].replace(".", "_"):
-                        _LOGGER.error(
-                            "Your flux_led configuration for %s has already been imported. Please remove configuration from your configuration.yaml.",
-                            import_config[CONF_HOST],
-                        )
-                        return self.async_abort(reason="already_configured_device")
+        if config_entry:
+            for device_id, device in config_entry.entry.data[CONF_DEVICES].items():
+                if device_id == import_config[CONF_HOST].replace(".", "_"):
+                    _LOGGER.error(
+                        "Your flux_led configuration for %s has already been imported. Please remove configuration from your configuration.yaml.",
+                        device["ipaddr"],
+                    )
+                    return self.async_abort(reason="already_configured_device")
 
-            _LOGGER.error(
-                "Imported flux_led configuration for %s. Please remove from your configuration.yaml.",
-                import_config[CONF_HOST],
-            )
-            await self.async_step_user(
-                user_input={
-                    CONF_AUTOMATIC_ADD: False,
-                    CONF_DEVICES: {
-                        import_config[CONF_HOST].replace(".", "_"): {
-                            CONF_NAME: import_config.get(
-                                CONF_NAME, import_config[CONF_HOST]
-                            ),
-                            CONF_HOST: import_config[CONF_HOST],
-                        }
-                    },
-                }
-            )
+        _LOGGER.error(
+            "Imported flux_led configuration for %s. Please remove from your configuration.yaml.",
+            import_config[CONF_HOST],
+        )
+        await self.async_step_user(
+            user_input={
+                CONF_AUTOMATIC_ADD: False,
+                CONF_DEVICES: {
+                    import_config[CONF_HOST].replace(".", "_"): {
+                        CONF_NAME: import_config.get(
+                            CONF_NAME, import_config[CONF_HOST]
+                        ),
+                        CONF_HOST: import_config[CONF_HOST],
+                    }
+                },
+            }
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
