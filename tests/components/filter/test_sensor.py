@@ -14,7 +14,8 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
+from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -35,12 +36,6 @@ def values():
     return values
 
 
-async def init_recorder(hass):
-    """Init the recorder for testing."""
-    await async_init_recorder_component(hass)
-    await hass.async_start()
-
-
 async def test_setup_fail(hass):
     """Test if filter doesn't exist."""
     config = {
@@ -50,7 +45,6 @@ async def test_setup_fail(hass):
             "filters": [{"filter": "nonexisting"}],
         }
     }
-    hass.config.components.add("history")
     with assert_setup_component(0):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
@@ -70,7 +64,8 @@ async def test_chain(hass, values):
             ],
         }
     }
-    hass.config.components.add("history")
+    await async_init_recorder_component(hass)
+
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
@@ -85,7 +80,6 @@ async def test_chain(hass, values):
 
 async def test_chain_history(hass, values, missing=False):
     """Test if filter chaining works."""
-    await init_recorder(hass)
     config = {
         "history": {},
         "sensor": {
@@ -99,6 +93,9 @@ async def test_chain_history(hass, values, missing=False):
             ],
         },
     }
+    await async_init_recorder_component(hass)
+    assert_setup_component(1, "history")
+
     t_0 = dt_util.utcnow() - timedelta(minutes=1)
     t_1 = dt_util.utcnow() - timedelta(minutes=2)
     t_2 = dt_util.utcnow() - timedelta(minutes=3)
@@ -146,7 +143,6 @@ async def test_chain_history_missing(hass, values):
 
 async def test_history_time(hass):
     """Test loading from history based on a time window."""
-    await init_recorder(hass)
     config = {
         "history": {},
         "sensor": {
@@ -156,6 +152,9 @@ async def test_history_time(hass):
             "filters": [{"filter": "time_throttle", "window_size": "00:01"}],
         },
     }
+    await async_init_recorder_component(hass)
+    assert_setup_component(1, "history")
+
     t_0 = dt_util.utcnow() - timedelta(minutes=1)
     t_1 = dt_util.utcnow() - timedelta(minutes=2)
     t_2 = dt_util.utcnow() - timedelta(minutes=3)
@@ -182,6 +181,63 @@ async def test_history_time(hass):
             await hass.async_block_till_done()
             state = hass.states.get("sensor.test")
             assert "18.0" == state.state
+
+
+async def test_setup(hass):
+    """Test if filter attributes are inherited."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "outlier", "window_size": 10, "radius": 4.0},
+            ],
+        }
+    }
+
+    await async_init_recorder_component(hass)
+
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        hass.states.async_set(
+            "sensor.test_monitored",
+            1,
+            {"icon": "mdi:test", "device_class": DEVICE_CLASS_TEMPERATURE},
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test")
+        assert state.attributes["icon"] == "mdi:test"
+        assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+        assert state.state == "1.0"
+
+
+async def test_invalid_state(hass):
+    """Test if filter attributes are inherited."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "outlier", "window_size": 10, "radius": 4.0},
+            ],
+        }
+    }
+
+    await async_init_recorder_component(hass)
+
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_outlier(values):
@@ -316,7 +372,7 @@ def test_time_sma(values):
 
 async def test_reload(hass):
     """Verify we can reload filter sensors."""
-    await init_recorder(hass)
+    await async_init_recorder_component(hass)
 
     hass.states.async_set("sensor.test_monitored", 12345)
     await async_setup_component(
