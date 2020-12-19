@@ -166,10 +166,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
-    config_data = entry.data
-
-    config_auto = config_data[CONF_AUTOMATIC_ADD]
-    config_devices = config_data[CONF_DEVICES]
+    config_auto = entry.options["global"].get(
+        CONF_AUTOMATIC_ADD, entry.data[CONF_AUTOMATIC_ADD]
+    )
+    config_devices = entry.data[CONF_DEVICES]
 
     lights = []
 
@@ -179,8 +179,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         await hass.async_add_executor_job(scanner.scan)
 
         for device in scanner.getBulbInfo():
-            if device["id"] not in config_devices:
-                config_devices[device["id"]] = device
+            device_id = device["ipaddr"].replace(".", "_")
+            if device_id not in config_devices:
+                config_devices[device_id] = device
 
     for device_id, device in config_devices.items():
         add_device = {}

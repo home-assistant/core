@@ -139,9 +139,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
-            self._config_entry.data[CONF_AUTOMATIC_ADD] = user_input[CONF_AUTOMATIC_ADD]
-
             self._global_options = {
+                CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
                 CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED],
             }
 
@@ -196,7 +195,9 @@ class OptionsFlow(config_entries.OptionsFlow):
         options = {
             vol.Optional(
                 CONF_AUTOMATIC_ADD,
-                default=self._config_entry.data[CONF_AUTOMATIC_ADD],
+                default=self._config_entry.options["global"].get(
+                    CONF_AUTOMATIC_ADD, self._config_entry.data[CONF_AUTOMATIC_ADD]
+                ),
             ): bool,
             vol.Optional(
                 CONF_EFFECT_SPEED,
