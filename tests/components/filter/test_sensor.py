@@ -14,6 +14,7 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -202,12 +203,14 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         hass.states.async_set(
-            "sensor.test_monitored", 1, {"icon": "mdi:test", "device_class": "test"}
+            "sensor.test_monitored",
+            1,
+            {"icon": "mdi:test", "device_class": DEVICE_CLASS_TEMPERATURE},
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
-        assert state.attributes["device_class"] == "test"
+        assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
         assert state.state == "1.0"
 
 

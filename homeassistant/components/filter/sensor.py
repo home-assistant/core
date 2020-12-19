@@ -12,7 +12,11 @@ import voluptuous as vol
 
 from homeassistant.components import history
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
+    DOMAIN as SENSOR_DOMAIN,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -222,7 +226,10 @@ class SensorFilter(Entity):
         if self._icon is None:
             self._icon = new_state.attributes.get(ATTR_ICON, ICON)
 
-        if self._device_class is None:
+        if (
+            self._device_class is None
+            and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
+        ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         if self._unit_of_measurement is None:
