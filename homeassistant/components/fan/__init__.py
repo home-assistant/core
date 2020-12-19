@@ -38,6 +38,7 @@ SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
 
 SPEED_OFF = "off"
+SPEED_AUTO = "auto"
 SPEED_LOW = "low"
 SPEED_MEDIUM = "medium"
 SPEED_HIGH = "high"

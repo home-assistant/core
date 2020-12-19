@@ -38,6 +38,7 @@ import voluptuous as vol
 
 from homeassistant.components.fan import (
     PLATFORM_SCHEMA,
+    SPEED_AUTO,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -174,6 +175,7 @@ ATTR_SLEEP_MODE = "sleep_mode"
 ATTR_VOLUME = "volume"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
+ATTR_WATER_LEVEL = "water_level"
 
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
@@ -345,6 +347,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
     ATTR_DRY: "dry",
     ATTR_FAHRENHEIT: "fahrenheit",
     ATTR_MOTOR_SPEED: "motor_speed",
+    ATTR_WATER_LEVEL: "water_level",
 }
 
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
@@ -1058,7 +1061,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4
-            self._speed_list = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            self._speed_list = [SPEED_AUTO, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
@@ -1172,6 +1175,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
     MODE_MAPPING = {
+        AirhumidifierMiotOperationMode.Auto: SPEED_AUTO,
         AirhumidifierMiotOperationMode.Low: SPEED_LOW,
         AirhumidifierMiotOperationMode.Mid: SPEED_MEDIUM,
         AirhumidifierMiotOperationMode.High: SPEED_HIGH,
