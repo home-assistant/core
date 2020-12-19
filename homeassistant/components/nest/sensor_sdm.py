@@ -5,6 +5,7 @@ from typing import Optional
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
+from google_nest_sdm.event import AsyncEventCallback, EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,11 +16,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DATA_SUBSCRIBER, DOMAIN, SIGNAL_NEST_UPDATE
+from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class SensorBase(Entity):
+class SensorBase(Entity, AsyncEventCallback):
     """Representation of a dynamically updated Sensor."""
 
     def __init__(self, device: Device):
@@ -80,16 +80,11 @@ class SensorBase(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-        # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
-        # here to re-fresh the signals from _device.  Unregister this callback
-        # when the entity is removed.
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_NEST_UPDATE,
-                self.async_write_ha_state,
-            )
-        )
+        self.async_on_remove(self._device.add_event_callback(self))
+
+    async def async_handle_event(self, event_message: EventMessage):
+        """Let Home Assistant know device state has been updated."""
+        self.async_write_ha_state()
 
 
 class TemperatureSensor(SensorBase):

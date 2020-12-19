@@ -23,11 +23,16 @@ class DeviceInfo:
         self._device = device
 
     @property
+    def device_id(self):
+        """Return the Home Assistant device identifier."""
+        return {(DOMAIN, self._device.name)}
+
+    @property
     def device_info(self):
         """Return device specific attributes."""
         return {
             # The API "name" field is a unique device identifier.
-            "identifiers": {(DOMAIN, self._device.name)},
+            "identifiers": self.device_id,
             "name": self.device_name,
             "manufacturer": self.device_brand,
             "model": self.device_model,

@@ -24,7 +24,6 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import api, config_flow
 from .const import (
@@ -106,47 +105,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-class SignalUpdateCallback(AsyncEventCallback):
-    """An EventCallback invoked when new events arrive from subscriber."""
-
-    def __init__(self, hass: HomeAssistant):
-        """Initialize EventCallback."""
-        self._hass = hass
-
-    async def async_handle_event(self, event_message: EventMessage):
-        """Process an incoming EventMessage."""
-        if not event_message.resource_update_name:
-            _LOGGER.debug("Ignoring event with no device_id")
-            return
-        device_id = event_message.resource_update_name
-        _LOGGER.debug("Update for %s @ %s", device_id, event_message.timestamp)
-        traits = event_message.resource_update_traits
-        if traits:
-            _LOGGER.debug("Trait update %s", traits.keys())
-            # This event triggered an update to a device that changed some
-            # properties which the DeviceManager should already have received.
-            # Send a signal to refresh state of all listening devices.
-            async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
-        events = event_message.resource_update_events
-        if not events:
-            return
-        _LOGGER.debug("Event Update %s", events.keys())
-        device_registry = await self._hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
-        if not device_entry:
-            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
-            return
-        for event in events:
-            event_type = EVENT_NAME_MAP.get(event)
-            if not event_type:
-                continue
-            message = {
-                "device_id": device_entry.id,
-                "type": event_type,
-            }
-            self._hass.bus.async_fire(NEST_EVENT, message)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nest from a config entry with dispatch between old/new flows."""
 
@@ -170,7 +128,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     subscriber = GoogleNestSubscriber(
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
-    subscriber.set_update_callback(SignalUpdateCallback(hass))
 
     try:
         await subscriber.start_async()

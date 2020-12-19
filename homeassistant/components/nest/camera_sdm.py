@@ -6,6 +6,7 @@ from typing import Optional
 
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
+from google_nest_sdm.event import AsyncEventCallback, EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
 
@@ -13,13 +14,13 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_SUBSCRIBER, DOMAIN, SIGNAL_NEST_UPDATE
+from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
+from .events import EVENT_NAME_MAP, NEST_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class NestCamera(Camera):
+class NestCamera(Camera, AsyncEventCallback):
     """Devices that support cameras."""
 
     def __init__(self, device: Device):
@@ -151,14 +152,31 @@ class NestCamera(Camera):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-        # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
-        # here to re-fresh the signals from _device.  Unregister this callback
-        # when the entity is removed.
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_NEST_UPDATE, self.async_write_ha_state
-            )
-        )
+        self.async_on_remove(self._device.add_event_callback(self))
+
+    async def async_handle_event(self, event_message: EventMessage):
+        """Let Home Assistant know device state has been updated."""
+        if event_message.resource_update_traits:
+            self.async_write_ha_state()
+        events = event_message.resource_update_events
+        if not events:
+            return
+        _LOGGER.debug("Event Update %s", events.keys())
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_id = self._device_info.device_id
+        device_entry = device_registry.async_get_device(device_id, ())
+        if not device_entry:
+            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
+            return
+        for event in events:
+            event_type = EVENT_NAME_MAP.get(event)
+            if not event_type:
+                continue
+            message = {
+                "device_id": device_entry.id,
+                "type": event_type,
+            }
+            self.hass.bus.async_fire(NEST_EVENT, message)
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
