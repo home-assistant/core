@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
 
+DATA_LISTENER = "listener"
+
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
@@ -22,7 +24,7 @@ PLATFORMS = ["sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_LISTENER: {}}
     return True
 
 
@@ -64,7 +66,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
+    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = entry.add_update_listener(
+        async_reload_entry
+    )
+
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle an options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -79,5 +90,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
+        cancel_listener()
 
     return unload_ok
