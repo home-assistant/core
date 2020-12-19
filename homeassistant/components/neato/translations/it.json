@@ -9,7 +9,7 @@
             "reauth_successful": "Ri-autenticazione completata con successo"
         },
         "create_entry": {
-            "default": "Vedere la [Documentazione di Neato]({docs_url})."
+            "default": "Autenticato con successo"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
