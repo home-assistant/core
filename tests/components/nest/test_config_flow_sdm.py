@@ -177,6 +177,9 @@ async def test_single_config_entry(hass):
 
 async def test_unexpected_existing_config_entries(hass, oauth):
     """Test Nest reauthentication with multiple existing config entries."""
+    # Note that this case will not happen in the future since only a single
+    # instance is now allowed, but this may have been allowed in the past.
+    # On reauth, only one entry is kept and the others are deleted.
 
     assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
 
