@@ -156,8 +156,8 @@ class NestCamera(Camera, AsyncEventCallback):
 
     async def async_handle_event(self, event_message: EventMessage):
         """Let Home Assistant know device state has been updated."""
-        if event_message.resource_update_traits:
-            self.async_write_ha_state()
+        # Note: This ignores resource_update_traits as there are really not
+        # any camera specific traits used besides the live stream
         events = event_message.resource_update_events
         if not events:
             return
