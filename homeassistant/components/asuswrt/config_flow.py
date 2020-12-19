@@ -116,14 +116,14 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return RESULT_UNKNOWN
 
-        if api.is_connected:
-            conf_protocol = user_input[CONF_PROTOCOL]
-            if conf_protocol == PROTOCOL_TELNET:
-                await api.connection.disconnect()
-            return RESULT_SUCCESS
+        if not api.is_connected:
+            _LOGGER.error("Error connecting to the AsusWrt router at %s", self._host)
+            return RESULT_CONN_ERROR
 
-        _LOGGER.error("Error connecting to the AsusWrt router at %s", self._host)
-        return RESULT_CONN_ERROR
+        conf_protocol = user_input[CONF_PROTOCOL]
+        if conf_protocol == PROTOCOL_TELNET:
+            await api.connection.disconnect()
+        return RESULT_SUCCESS
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
