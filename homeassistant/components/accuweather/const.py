@@ -183,6 +183,20 @@ FORECAST_SENSOR_TYPES = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
     },
+    "WindDay": {
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:weather-windy",
+        ATTR_LABEL: "Wind Day",
+        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
+        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
+    },
+    "WindNight": {
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:weather-windy",
+        ATTR_LABEL: "Wind Night",
+        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
+        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
+    },
 }
 
 OPTIONAL_SENSORS = (
@@ -283,6 +297,13 @@ SENSOR_TYPES = {
         ATTR_LABEL: "Wind Chill Temperature",
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
+    },
+    "Wind": {
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:weather-windy",
+        ATTR_LABEL: "Wind",
+        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
+        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
     },
     "WindGust": {
         ATTR_DEVICE_CLASS: None,
