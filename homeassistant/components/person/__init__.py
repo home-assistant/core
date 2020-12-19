@@ -87,8 +87,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_UNDEF = object()
-
 
 @bind_hass
 async def async_create_person(hass, name, *, user_id=None, device_trackers=None):
