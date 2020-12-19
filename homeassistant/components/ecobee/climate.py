@@ -683,6 +683,7 @@ class Thermostat(ClimateEntity):
             _LOGGER.error("Invalid set_humidity value: %s", humidity)
             return
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
+        self.update_without_throttle = True
 
     def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
