@@ -215,7 +215,7 @@ async def test_unexpected_existing_config_entries(hass, oauth):
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
-    assert entry.unique_id is None
+    assert entry.unique_id == DOMAIN
     entry.data["token"].pop("expires_at")
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",

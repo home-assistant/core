@@ -124,7 +124,9 @@ class NestFlowHandler(
                     await self.hass.config_entries.async_remove(entry.entry_id)
                     continue
                 updated = True
-                self.hass.config_entries.async_update_entry(entry, data=data)
+                self.hass.config_entries.async_update_entry(
+                    entry, data=data, unique_id=DOMAIN
+                )
                 await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
