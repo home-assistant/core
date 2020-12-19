@@ -12,15 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
-    DATA_HOST,
-    DATA_HUB,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import DATA_HOST, DATA_HUB, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,15 +56,6 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self.coordinator.last_update_success
-
-    @property
-    def device_info(self) -> dict:
-        """Return device registry information for this entity."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._host, self._relay.id)},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_NAME: self.name,
-        }
 
     @property
     def name(self) -> str:
