@@ -12,15 +12,23 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    DATA_HOST,
+    DATA_HUB,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
-    hub = hass.data[DOMAIN][entry.entry_id]["hub"]
-    host = hass.data[DOMAIN][entry.entry_id]["host"]
+    hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
+    host = hass.data[DOMAIN][entry.entry_id][DATA_HOST]
     await hub.async_get_relays()
 
     async def async_update_data():
@@ -33,12 +41,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="KMtronic",
+        name=MANUFACTURER,
         update_method=async_update_data,
         update_interval=timedelta(seconds=30),
     )
 
-    async_add_entities(KMtronicSwitch(coordinator, host, relay) for relay in hub.relays)
+    async_add_entities(
+        [KMtronicSwitch(coordinator, host, relay) for relay in hub.relays]
+    )
 
 
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
@@ -59,9 +69,9 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     def device_info(self) -> dict:
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self._host, self._relay.id)},
-            "manufacturer": "KM Tronic",
-            "name": self.name,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._host, self._relay.id)},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_NAME: self.name,
         }
 
     @property
@@ -73,6 +83,11 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
         return f"{self._host}_relay{self._relay.id}"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
 
     @property
     def is_on(self):

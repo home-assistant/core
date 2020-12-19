@@ -7,9 +7,17 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 
-from .const import DOMAIN
+from .const import (
+    CONF_HOSTNAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DATA_HOST,
+    DATA_HUB,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -27,16 +35,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(
         session,
-        f"http://{entry.data['host']}",
-        entry.data["username"],
-        entry.data["password"],
+        f"http://{entry.data[CONF_HOSTNAME]}",
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
     )
     hub = KMTronicHubAPI(auth)
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id]["hub"] = hub
-    hass.data[DOMAIN][entry.entry_id]["host"] = entry.data["host"]
+    hass.data[DOMAIN][entry.entry_id][DATA_HUB] = hub
+    hass.data[DOMAIN][entry.entry_id][DATA_HOST] = entry.data[DATA_HOST]
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        manufacturer=MANUFACTURER,
+        name=hub.host,
+    )
 
     for component in PLATFORMS:
         hass.async_create_task(

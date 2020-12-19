@@ -9,18 +9,24 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.helpers import aiohttp_client
 
+from .const import CONF_HOSTNAME, CONF_PASSWORD, CONF_USERNAME
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema({CONF_HOSTNAME: str, CONF_USERNAME: str, CONF_PASSWORD: str})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     session = aiohttp_client.async_get_clientsession(hass)
-    auth = Auth(session, f"http://{data['host']}", data["username"], data["password"])
+    auth = Auth(
+        session,
+        f"http://{data[CONF_HOSTNAME]}",
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+    )
     hub = KMTronicHubAPI(auth)
 
     try:
