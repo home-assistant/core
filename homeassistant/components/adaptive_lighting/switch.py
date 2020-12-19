@@ -252,6 +252,11 @@ def _fire_manual_control_event(
     """Fire an event that 'light' is marked as manual_control."""
     hass = switch.hass
     fire = hass.bus.async_fire if is_async else hass.bus.fire
+    _LOGGER.debug(
+        "'adaptive_lighting.manual_control' event fired for %s for light %s",
+        switch.entity_id,
+        light,
+    )
     fire(
         f"{DOMAIN}.manual_control",
         {ATTR_ENTITY_ID: light, SWITCH_DOMAIN: switch.entity_id},
