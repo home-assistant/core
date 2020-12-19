@@ -31,10 +31,10 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_MODE,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
-    CONF_MODE,
     CONF_URL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
@@ -536,14 +536,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
             net_mode_list = router.client.net.net_mode_list()
 
-            # Due the the deep nesting of data, the try/expect was simplier than a vol schema
+            # Due the the deep nesting of data, the try/expect was simpler than a vol schema
             try:
                 network_band = net_mode_list["BandList"]["Band"]["Value"]
                 lte_band_list = net_mode_list["LTEBandList"]["LTEBand"]
                 lte_band = [
                     x["Value"] for x in lte_band_list if x["Name"] == "All bands"
                 ][0]
-            except:
+            except (KeyError, IndexError):
                 _LOGGER.error(
                     "%s: cannot locate Network and/or LTE band values", service.service
                 )
