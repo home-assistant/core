@@ -104,6 +104,7 @@ async def test_full_flow(hass, oauth):
     assert entry.title == "Configuration.yaml"
     assert "token" in entry.data
     entry.data["token"].pop("expires_at")
+    assert entry.unique_id == DOMAIN
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -127,6 +128,7 @@ async def test_reauth(hass, oauth):
             },
             "sdm": {},
         },
+        unique_id=DOMAIN,
     )
     old_entry.add_to_hass(hass)
 
@@ -151,6 +153,7 @@ async def test_reauth(hass, oauth):
     # Verify existing tokens are replaced
     entry = get_config_entry(hass)
     entry.data["token"].pop("expires_at")
+    assert entry.unique_id == DOMAIN
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -212,6 +215,7 @@ async def test_unexpected_existing_config_entries(hass, oauth):
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
+    assert entry.unique_id is None
     entry.data["token"].pop("expires_at")
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
