@@ -680,7 +680,7 @@ class Thermostat(ClimateEntity):
     def set_humidity(self, humidity):
         """Set the humidity level."""
         if humidity not in range(0, 101):
-            _LOGGER.error("Invalid set_humidity value: %s", humidity)
+            raise ValueError("Invalid set_humidity value (must be in range 0-100): %s" % humidity)
             return
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
         self.update_without_throttle = True
