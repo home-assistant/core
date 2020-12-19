@@ -9,6 +9,8 @@ from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
     SwitchEntity,
 )
+
+# from homeassistant.helpers import entity_platform
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -37,13 +39,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
+        switch_data = {}
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                return await api.fetch_data()
+                switch_data = await api.fetch_data()
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
+
+        # Remove obsolete entities
+        # platform = entity_platform.current_platform.get()
+        for ent_id in api.switches_to_remove:
+            await coordinator.data[ent_id].async_remove()
+
+        return switch_data
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -60,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(
         HomeControlSwitchEntity(coordinator, idx)
-        for idx, ent in enumerate(coordinator.data)
+        for idx, ent in coordinator.data.items()
     )
     _LOGGER.debug("hass.data[%s]: %s", DOMAIN, hass.data[DOMAIN])
 
@@ -93,7 +103,7 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
     @property
     def unique_id(self):
         """ID (unique) of the device."""
-        return self.coordinator.data[self.idx].id
+        return self.idx
 
     @property
     def device_info(self):

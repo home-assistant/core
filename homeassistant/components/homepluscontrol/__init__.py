@@ -78,10 +78,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Continue setting up the platform
+    _LOGGER.debug("Hass config components %s", hass.config.components)
     for component in PLATFORMS:
+        _LOGGER.debug("Configuring %s", component)
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+    _LOGGER.debug("Hass config components %s", hass.config.components)
 
     return True
 

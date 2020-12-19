@@ -1,5 +1,6 @@
 """API for Legrand Home+ Control bound to Home Assistant OAuth."""
 import logging
+import time
 
 from homepluscontrol.authentication import HomePlusOAuth2Async
 from homepluscontrol.homeplusinteractivemodule import HomePlusInteractiveModule
@@ -9,7 +10,21 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import CONF_REDIRECT_URI, CONF_SUBSCRIPTION_KEY, PLANT_URL
+from .const import CONF_REDIRECT_URI, CONF_SUBSCRIPTION_KEY, DOMAIN, PLANT_URL
+
+# The Legrand Home+ Control API has very limited request quotas - at the time of writing, it is limited
+# to 500 calls per day (resets at 00:00) - so we want to keep updates to a minimum.
+
+# Seconds between API checks for plant information updates. This is expected to change very little over time
+# because a user's plants (homes) should rarely change.
+PLANT_UPDATE_INTERVAL = 7200  # 120 minutes
+
+# Seconds between API checks for plant topology updates. This is expected to change  little over time
+# because the modules in the user's plant should be relatively stable.
+PLANT_TOPOLOGY_UPDATE_INTERVAL = 3600  # 60 minutes
+
+# Seconds between API checks for module status updates. This can change frequently so we check often
+MODULE_STATUS_UPDATE_INTERVAL = 300  # 5 minutes
 
 
 class HomePlusControlAsyncApi(HomePlusOAuth2Async):
@@ -22,6 +37,8 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         config_entry (ConfigEntry): ConfigEntry object that configures this API.
         implementation (AbstractOAuth2Implementation): OAuth2 implementation that handles AA and token refresh.
         logger (Logger): Logger of the object.
+        switches (dict): Dictionary of HomePlusControl switches indexed by their unique ID.
+        switches_to_remove (dict): Dictionaty of the HomePlusControl switches that are to be removed from HomeAssistant, indexed by their unique ID.
     """
 
     def __init__(
@@ -42,6 +59,12 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         self.hass = hass
         self.config_entry = config_entry
         self.implementation = implementation
+        self._domain = DOMAIN
+        self._plants = {}
+        self.switches = {}
+        self.switches_to_remove = {}
+
+        self._last_check = {"PLANT": time.monotonic(), "TOPOLOGY": -1, "STATUS": -1}
 
         # Create the API authenticated client - external library
         super().__init__(
@@ -56,6 +79,26 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
     def logger(self) -> logging.Logger:
         """Logger of authentication API."""
         return logging.getLogger(__name__)
+
+    @property
+    def switches(self):
+        """Return dictionary of switch entities of this platform."""
+        return self._switches
+
+    @switches.setter
+    def switches(self, switches):
+        """Set the internal switch attribute."""
+        self._switches = switches
+
+    @property
+    def switches_to_remove(self):
+        """Return dictionary of switch entities of this platform that should be removed from HA."""
+        return self._switches_to_remove
+
+    @switches_to_remove.setter
+    def switches_to_remove(self, switches):
+        """Set the internal switches_to_remove attribute."""
+        self._switches_to_remove = switches
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid.
@@ -80,27 +123,153 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
     async def fetch_data(self):
         """Get the latest data from the API.
 
-        Return:
-            Array of switch entities in their updated state.
+        Returns:
+            dict: Dictionary of switch entities in their updated state.
         """
-        result = await self.get_request(PLANT_URL)
-        plant_info = await result.json()
-        self.logger.debug(f"Obtained plant information: {plant_info}")
-        plant_array = []
-        for p in plant_info["plants"]:
-            plant_array.append(HomePlusPlant(p["id"], p["name"], p["country"], self))
-
-        plant = plant_array[0]
-        await plant.update_topology_and_modules()
-        switches = []
-        for module in list(plant.modules.values()):
-            if isinstance(module, HomePlusInteractiveModule):
-                self.logger.debug(f"Including Home+ Control module: {str(module)}")
-                switches.append(module)
-            else:
-                self.logger.debug(f"Ignoring Home+ Control module: {str(module)}")
-        return switches
+        await self.async_handle_plant_data()
+        return await self.async_handle_module_status()
 
     async def close_connection(self):
         """Clean up the connection."""
         await self.oauth_client.close()
+
+    async def async_handle_plant_data(self):
+        """Recover the plant data for this particular user.
+
+        This will populate the "private" array of plants of this object and will return it.
+        It is expected that in most cases, there will only be one plant.
+
+        Returns:
+            dict: Dictionary of plants for this user - Keyed by the plant ID. Can be empty if no plants are retrieved.
+        """
+        # Attempt to recover the plant information from the Hass data object.
+        # If it is not there, then we request it from the API and add it.
+        # We also refresh from the API if the time has expired.
+        plant_info = self.hass.data[self._domain].get("plant_info")
+        if plant_info is None or self._should_check("PLANT", PLANT_UPDATE_INTERVAL):
+            result = await self.get_request(PLANT_URL)  # Call the API
+            plant_info = await result.json()
+
+            # If all goes well, we update the last check time
+            self._last_check["PLANT"] = time.monotonic()
+
+            self.hass.data[self._domain]["plant_info"] = plant_info
+            self.logger.debug("Obtained plant information from API: %s", plant_info)
+        else:
+            self.logger.debug(
+                "Obtained plant information from Hass object: %s", plant_info
+            )
+
+        # Populate the dictionary of plants
+        current_plant_ids = []
+        for p in plant_info["plants"]:
+            current_plant_ids.append(p["id"])
+            if p["id"] in self._plants:
+                self.logger.debug(
+                    "Plant with id %s is already cached. Only updating the existing data.",
+                    p["id"],
+                )
+                cur_plant = self._plants.get(p["id"])
+                # We will update the plant info just in case and ensure it has an Api object
+                cur_plant.name = p["name"]
+                cur_plant.country = p["country"]
+                if cur_plant.oauth_client is None:
+                    cur_plant.oauth_client = self
+            else:
+                self.logger.debug("New plant with id %s detected.", p["id"])
+                self._plants[p["id"]] = HomePlusPlant(
+                    p["id"], p["name"], p["country"], self
+                )
+
+        # Discard plants that may have disappeared
+        # TODO: Remove associated entities to the plant
+        for existing_id in self._plants:
+            if existing_id in current_plant_ids:
+                continue
+            self.logger.debug(
+                "Plant with id %s is no longer present, so remove from cache.",
+                existing_id,
+            )
+            self._plants.pop(existing_id, None)
+
+        return self._plants
+
+    async def async_handle_module_status(self):
+        """Recover the topology information for the plants defined in this object.
+
+        By requesting the topology of the plant, the system learns about the modules that exist.
+        The topology indicates identifiers, type and other device information, but it contains no information
+        about the state of the module.
+
+        This method returns the list of switch entities that will be registered in HomeAssistant. At this time
+        the switches that are discovered through this API call are flattened into a single data structure.
+
+        Returns:
+            dict: Dictionary of switch entities across all of the plants.
+        """
+        for plant in self._plants.values():
+
+            if self._should_check("TOPOLOGY", PLANT_TOPOLOGY_UPDATE_INTERVAL):
+                await plant.update_topology()  # Call the API
+                # If all goes well, we update the last check time
+                self._last_check["TOPOLOGY"] = time.monotonic()
+
+            if self._should_check("STATUS", MODULE_STATUS_UPDATE_INTERVAL):
+                await plant.update_module_status()  # Call the API
+                # If all goes well, we update the last check time
+                self._last_check["STATUS"] = time.monotonic()
+
+        return self._update_entities()
+
+    def _should_check(self, check_type, period):
+        """Return True if the current monotonic time is greater than the last check time plus a fixed period.
+
+        Args:
+            check_type (str): Type that identifies the timer that has to be used
+            period (float): Number of fractional seconds to add to the last check time
+        """
+        current_time = time.monotonic()
+        if current_time > self._last_check[check_type] + period:
+            self.logger.debug(
+                "Last check time (%.2f) has been exceeded by more than %.2f seconds [current monotonic time is %.2f]",
+                self._last_check[check_type],
+                period,
+                current_time,
+            )
+            return True
+        return False
+
+    def _update_entities(self):
+        """Update the switch entities based on the collected information in the plant object.
+
+        Returns:
+            dict: Dictionary of switch entities across all of the plants.
+        """
+        for plant in self._plants.values():
+            # Loop through the modules in the plant and we only keep the ones that are "interactive"
+            # and can be represented by a switch, i.e. power outlets, micromodules and light switches.
+            # All other modules are discarded/ignored.
+            current_module_ids = []
+            for module in list(plant.modules.values()):
+                if isinstance(module, HomePlusInteractiveModule):
+                    current_module_ids.append(module.id)
+                    if module.id not in self.switches.keys():
+                        self.logger.debug(
+                            "Registering Home+ Control module in internal map: %s.",
+                            str(module),
+                        )
+                        self.switches[module.id] = module
+
+            # Discard modules that may have disappeared from the topology
+            for existing_id in self.switches:
+                if existing_id in current_module_ids:
+                    continue
+                self.logger.debug(
+                    "Module with id %s is no longer present, so remove from the internal map.",
+                    existing_id,
+                )
+                self.switches_to_remove[existing_id] = self.switches.pop(
+                    existing_id, None
+                )
+
+        return self.switches
