@@ -1,5 +1,7 @@
 """Test the HarmonySubscriberMixin class."""
 
+import asyncio
+
 from homeassistant.components.harmony.subscriber import (
     HarmonyCallback,
     HarmonySubscriberMixin,
@@ -58,6 +60,32 @@ async def test_async_callbacks(hass):
     for callback_name in _ACTIVITY_CALLBACKS.keys():
         callback_mock = callbacks[callback_name]
         callback_mock.assert_awaited_once_with(_ACTIVITY_TUPLE)
+
+
+async def test_long_async_callbacks(hass):
+    """Ensure we handle async callbacks that may have sleeps."""
+    subscriber = HarmonySubscriberMixin(hass)
+
+    blocker_event = asyncio.Event()
+    notifier_event_one = asyncio.Event()
+    notifier_event_two = asyncio.Event()
+
+    async def blocks_until_notified():
+        await blocker_event.wait()
+        notifier_event_one.set()
+
+    async def notifies_when_called():
+        notifier_event_two.set()
+
+    callbacks_one = {k: blocks_until_notified for k in _ALL_CALLBACK_NAMES}
+    callbacks_two = {k: notifies_when_called for k in _ALL_CALLBACK_NAMES}
+    subscriber.async_subscribe(HarmonyCallback(**callbacks_one))
+    subscriber.async_subscribe(HarmonyCallback(**callbacks_two))
+
+    subscriber._connected()
+    await notifier_event_two.wait()
+    blocker_event.set()
+    await notifier_event_one.wait()
 
 
 async def test_callbacks(hass):
