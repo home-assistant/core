@@ -186,6 +186,10 @@ def is_our_context(context: Optional[Context]) -> bool:
 
 def _split_service_data(service_data, adapt_brightness, adapt_color):
     """Split service_data into two dictionaries (for color and brightness)."""
+    transition = service_data.get(ATTR_TRANSITION)
+    if transition is not None:
+        # Split the transition over both commands
+        service_data[ATTR_TRANSITION] /= 2
     service_datas = []
     if adapt_color:
         service_data_color = service_data.copy()
@@ -769,12 +773,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ):
             return
         self.turn_on_off_listener.last_service_data[light] = service_data
-        service_datas = (
-            _split_service_data(service_data, adapt_brightness, adapt_color)
-            if self._separate_turn_on_commands
-            else [service_data]
-        )
-        for service_data in service_datas:
+
+        async def turn_on(service_data):
             _LOGGER.debug(
                 "%s: Scheduling 'light.turn_on' with the following 'service_data': %s"
                 " with context.id='%s'",
@@ -788,6 +788,18 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 service_data,
                 context=context,
             )
+
+        if not self._separate_turn_on_commands:
+            await turn_on(service_data)
+        else:
+            service_data_color, service_data_brightness = _split_service_data(
+                service_data, adapt_brightness, adapt_color
+            )
+            await turn_on(service_data_color)
+            transition = service_data_color.get(ATTR_TRANSITION)
+            if transition is not None:
+                await asyncio.sleep(transition)
+            await turn_on(service_data_brightness)
 
     async def _update_attrs_and_maybe_adapt_lights(
         self,
