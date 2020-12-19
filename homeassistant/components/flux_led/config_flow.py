@@ -97,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(scanner.scan)
 
                 for bulb in scanner.getBulbInfo():
-                    devices[bulb["id"]] = bulb
+                    devices[bulb["ipaddr"].replace(".", "_")] = bulb
 
             return self.async_create_entry(
                 title="FluxLED/MagicHome",
