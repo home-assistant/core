@@ -2,12 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "cannot_connect": "Failed to connect",
-            "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
-        },
-        "error": {
-            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
@@ -20,6 +15,12 @@
     },
     "options": {
         "step": {
+            "configure_device": {
+                "data": {
+                    "effect_speed": "Default effect speed for this light."
+                },
+                "title": "FluxLED/MagicHome Device Options"
+            },
             "prompt_options": {
                 "data": {
                     "automatic_add": "Enable automatic add of devices",

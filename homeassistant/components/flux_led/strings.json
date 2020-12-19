@@ -26,6 +26,12 @@
           "remove_device": "Select the device to delete"
         },
         "title": "FluxLED/MagicHome Options"
+      },
+      "configure_device": {
+        "data": {
+          "effect_speed": "Default effect speed for this light."
+        },
+        "title":"FluxLED/MagicHome Device Options"
       }
     }
   }

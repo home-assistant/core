@@ -126,6 +126,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
         self._global_options = None
         self._device_registry = None
+        self._configure_device = None
         self._title = "FluxLED/MagicHome"
 
     async def async_step_init(self, user_input=None):
@@ -138,13 +139,15 @@ class OptionsFlow(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
+            self._config_entry.data[CONF_AUTOMATIC_ADD] = user_input[CONF_AUTOMATIC_ADD]
+
             self._global_options = {
-                CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
                 CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED],
             }
 
             if CONF_CONFIGURE_DEVICE in user_input:
-                _LOGGER.info("Will launch configuration when done.")
+                self._configure_device = user_input[CONF_CONFIGURE_DEVICE]
+                return await self.async_step_configure_device()
 
             if CONF_REMOVE_DEVICE in user_input:
                 device_id = user_input[CONF_REMOVE_DEVICE]
@@ -177,9 +180,13 @@ class OptionsFlow(config_entries.OptionsFlow):
                     self.hass, SIGNAL_ADD_DEVICE, {device_id: device_data}
                 )
 
-                options_data = self._config_entry.options
+                options_data = self._config_entry.options.copy()
                 options_data[device_id] = {CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED}
                 return self.async_create_entry(title="", data=options_data)
+
+            options_data = self._config_entry.options.copy()
+            options_data["global"] = self._global_options
+            return self.async_create_entry(title="", data=options_data)
 
         existing_devices = {}
 
@@ -191,7 +198,12 @@ class OptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTOMATIC_ADD,
                 default=self._config_entry.data[CONF_AUTOMATIC_ADD],
             ): bool,
-            vol.Optional(CONF_EFFECT_SPEED, default=50): vol.All(
+            vol.Optional(
+                CONF_EFFECT_SPEED,
+                default=self._config_entry.options.get("global", {}).get(
+                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+                ),
+            ): vol.All(
                 vol.Coerce(int),
                 vol.Range(min=1, max=100),
             ),
@@ -203,4 +215,33 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="prompt_options", data_schema=vol.Schema(options), errors=errors
+        )
+
+    async def async_step_configure_device(self, user_input=None):
+        """Manage the options."""
+
+        errors = {}
+
+        if user_input is not None:
+            options_data = self._config_entry.options.copy()
+            options_data[self._configure_device] = {
+                CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED]
+            }
+
+            return self.async_create_entry(title="", data=options_data)
+
+        options = {
+            vol.Required(
+                CONF_EFFECT_SPEED,
+                default=self._config_entry.options.get(self._configure_device, {}).get(
+                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+                ),
+            ): vol.All(
+                vol.Coerce(int),
+                vol.Range(min=1, max=100),
+            )
+        }
+
+        return self.async_show_form(
+            step_id="configure_device", data_schema=vol.Schema(options), errors=errors
         )
