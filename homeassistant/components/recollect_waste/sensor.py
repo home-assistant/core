@@ -1,11 +1,12 @@
 """Support for ReCollect Waste sensors."""
-from typing import Callable
+from typing import Callable, List
 
+from aiorecollect.client import PickupType
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import (
@@ -35,13 +36,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+@callback
+def async_get_pickup_type_names(
+    entry: ConfigEntry, pickup_types: List[PickupType]
+) -> List[str]:
+    """Return proper pickup type names from their associated objects."""
+    return [
+        t.friendly_name
+        if entry.options.get(CONF_FRIENDLY_NAME) and t.friendly_name
+        else t.name
+        for t in pickup_types
+    ]
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: dict,
     async_add_entities: Callable,
     discovery_info: dict = None,
 ):
-    """Import Awair configuration from YAML."""
+    """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
         "Loading ReCollect Waste via platform setup is deprecated. "
         "Please remove it from your configuration."
@@ -70,8 +84,7 @@ class ReCollectWasteSensor(CoordinatorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._place_id = entry.data[CONF_PLACE_ID]
-        self._service_id = entry.data[CONF_SERVICE_ID]
+        self._entry = entry
         self._state = None
 
     @property
@@ -97,7 +110,7 @@ class ReCollectWasteSensor(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._place_id}{self._service_id}"
+        return f"{self._entry.data[CONF_PLACE_ID]}{self._entry.data[CONF_SERVICE_ID]}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -120,11 +133,13 @@ class ReCollectWasteSensor(CoordinatorEntity):
         self._state = pickup_event.date
         self._attributes.update(
             {
-                ATTR_PICKUP_TYPES: [t.name for t in pickup_event.pickup_types],
+                ATTR_PICKUP_TYPES: async_get_pickup_type_names(
+                    self._entry, pickup_event.pickup_types
+                ),
                 ATTR_AREA_NAME: pickup_event.area_name,
-                ATTR_NEXT_PICKUP_TYPES: [
-                    t.name for t in next_pickup_event.pickup_types
-                ],
+                ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
+                    self._entry, next_pickup_event.pickup_types
+                ),
                 ATTR_NEXT_PICKUP_DATE: next_date,
             }
         )
