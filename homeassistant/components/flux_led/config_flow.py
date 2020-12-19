@@ -154,6 +154,12 @@ class OptionsFlow(config_entries.OptionsFlow):
                     self.hass, SIGNAL_REMOVE_DEVICE, {"device_id": device_id}
                 )
 
+                options_data = self._config_entry.options.copy()
+                if device_id in options_data:
+                    del options_data[device_id]
+
+                return self.async_create_entry(title="", data=options_data)
+
             if CONF_HOST in user_input:
                 device_name = (
                     user_input[CONF_NAME]
@@ -171,7 +177,8 @@ class OptionsFlow(config_entries.OptionsFlow):
                     self.hass, SIGNAL_ADD_DEVICE, {device_id: device_data}
                 )
 
-                options_data = {device_id: {CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED}}
+                options_data = self._config_entry.options
+                options_data[device_id] = {CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED}
                 return self.async_create_entry(title="", data=options_data)
 
         existing_devices = {}
