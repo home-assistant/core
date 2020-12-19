@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -28,9 +27,13 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_SSH_PORT,
     DOMAIN,
+    MODE_ROUTER,
+    MODE_AP,
+    PROTOCOL_SSH,
+    PROTOCOL_TELNET,
     SENSOR_TYPES,
 )
-from .router import get_api
+from .router import AsusWrtRouter
 
 PLATFORMS = ["device_tracker", "sensor"]
 
@@ -48,10 +51,12 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_HOST): cv.string,
                     vol.Required(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_PROTOCOL, default="ssh"): vol.In(
-                        ["ssh", "telnet"]
+                    vol.Optional(CONF_PROTOCOL, default=PROTOCOL_SSH): vol.In(
+                        [PROTOCOL_SSH, PROTOCOL_TELNET]
                     ),
-                    vol.Optional(CONF_MODE, default="router"): vol.In(["router", "ap"]),
+                    vol.Optional(CONF_MODE, default=MODE_ROUTER): vol.In(
+                        [MODE_ROUTER, MODE_AP]
+                    ),
                     vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
                     vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
                     vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
@@ -80,11 +85,17 @@ async def async_setup(hass, config):
     if DOMAIN in domains_list:
         return True
 
+    # remove not required config keys
     pub_key = conf.get(CONF_PUB_KEY)
     if pub_key:
         conf[CONF_SSH_KEY] = pub_key
     conf.pop(CONF_PUB_KEY, "")
     conf.pop(CONF_SENSORS, {})
+
+    conf.pop(CONF_REQUIRE_IP, "")
+    conf.pop(CONF_INTERFACE, "")
+    conf.pop(CONF_DNSMASQ, "")
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
@@ -97,28 +108,26 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up AsusWrt platform."""
 
-    api = get_api(entry.data)
+    router = AsusWrtRouter(hass, entry)
+    await router.setup()
 
-    try:
-        await api.connection.async_connect()
-        if not api.is_connected:
-            raise ConfigEntryNotReady
-    except OSError as exp:
-        raise ConfigEntryNotReady from exp
-
-    hass.data[DATA_ASUSWRT] = api
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][DATA_ASUSWRT] = router
 
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    hass.data[DOMAIN]["update_listener"] = entry.add_update_listener(update_listener)
+
     async def async_close_connection(event):
         """Close AsusWrt connection on HA Stop."""
-        if hasattr(api.connection, "disconnect"):
-            await api.connection.disconnect()
+        await router.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    hass.data[DOMAIN]["stop_listener"] = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_close_connection
+    )
 
     return True
 
@@ -134,8 +143,20 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        api = hass.data.pop(DATA_ASUSWRT)
-        if hasattr(api.connection, "disconnect"):
-            await api.connection.disconnect()
+        update_listener = hass.data[DOMAIN].pop("update_listener")
+        update_listener()
+        stop_listener = hass.data[DOMAIN].pop("stop_listener")
+        stop_listener()
+
+        router = hass.data[DOMAIN].pop(DATA_ASUSWRT)
+        await router.close()
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Update when config_entry options update."""
+    router = hass.data[DOMAIN][DATA_ASUSWRT]
+
+    if router.update_options(entry.options):
+        await hass.config_entries.async_reload(entry.entry_id)

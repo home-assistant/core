@@ -5,8 +5,6 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.asuswrt.const import (
-    CONF_DNSMASQ,
-    CONF_INTERFACE,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
     DOMAIN,
@@ -31,13 +29,10 @@ SSH_KEY = "1234"
 CONFIG_DATA = {
     CONF_HOST: HOST,
     CONF_PORT: 22,
-    CONF_PROTOCOL: "ssh",
+    CONF_PROTOCOL: "telnet",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
-    CONF_MODE: "router",
-    CONF_REQUIRE_IP: True,
-    CONF_INTERFACE: "eth0",
-    CONF_DNSMASQ: "/var/lib/misc",
+    CONF_MODE: "ap",
 }
 
 
@@ -75,7 +70,6 @@ async def test_user(hass, connect):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == IP_ADDRESS
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
 
@@ -99,7 +93,6 @@ async def test_import(hass, connect):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == IP_ADDRESS
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
 
@@ -133,7 +126,6 @@ async def test_import_ssh(hass, connect):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == IP_ADDRESS
         assert result["title"] == HOST
         assert result["data"] == config_data
 
@@ -204,7 +196,6 @@ async def test_abort_if_already_setup(hass):
     MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        unique_id=IP_ADDRESS,
     ).add_to_hass(hass)
 
     with patch(
@@ -261,3 +252,26 @@ async def test_on_connect_failed(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "unknown"}
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        options={CONF_REQUIRE_IP: True},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.asuswrt.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_REQUIRE_IP: False}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options[CONF_REQUIRE_IP] is False

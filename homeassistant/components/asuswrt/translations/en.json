@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
@@ -15,20 +14,29 @@
         "step": {
             "user": {
                 "data": {
-                    "dnsmasq": "The location in the router of the dnsmasq.leases files",
                     "host": "Host",
-                    "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
                     "mode": "Mode",
                     "name": "Name",
                     "password": "Password",
                     "port": "Port",
                     "protocol": "Communication protocol to use",
-                    "require_ip": "Devices must have IP (for access point mode)",
                     "ssh_key": "Path to your SSH key file (instead of password)",
                     "username": "Username"
                 },
                 "description": "Set required parameter to connect to your router",
                 "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "dnsmasq": "The location in the router of the dnsmasq.leases files",
+                    "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
+                    "require_ip": "Devices must have IP (for access point mode)"
+                },
+                "title": "AsusWRT Options"
             }
         }
     }

@@ -90,7 +90,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the asuswrt sensors."""
 
-    api: AsusWrt = hass.data[DATA_ASUSWRT]
+    router = hass.data[DOMAIN][DATA_ASUSWRT]
+    api: AsusWrt = router.api
     device_name = entry.data.get(CONF_NAME, "AsusWRT")
 
     # Let's discover the valid sensor types.

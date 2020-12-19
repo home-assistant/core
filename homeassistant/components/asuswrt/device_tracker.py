@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.device_tracker import DeviceScanner
 
-from .const import DATA_ASUSWRT
+from .const import DATA_ASUSWRT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +15,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 async def async_get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
-    scanner = AsusWrtDeviceScanner(hass.data[DATA_ASUSWRT])
+    router = hass.data[DOMAIN][DATA_ASUSWRT]
+    scanner = AsusWrtDeviceScanner(router.api)
     await scanner.async_connect()
     return scanner if scanner.success_init else None
 

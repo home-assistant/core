@@ -9,12 +9,12 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 # pylint:disable=unused-import
@@ -27,8 +27,16 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_SSH_PORT,
     DOMAIN,
+    MODE_AP,
+    MODE_ROUTER,
+    PROTOCOL_SSH,
+    PROTOCOL_TELNET,
 )
 from .router import get_api
+
+RESULT_CONN_ERROR = "cannot_connect"
+RESULT_UNKNOWN = "unknown"
+RESULT_SUCCESS = "success"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +54,6 @@ def _is_file(value) -> bool:
 
 def _get_ip(host):
     """Get the ip address from the host name."""
-    if host is None:
-        return None
     try:
         return socket.gethostbyname(host)
     except socket.gaierror:
@@ -63,8 +69,8 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize AsusWrt config flow."""
         self._host = None
-        self._name = None
 
+    @callback
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -76,22 +82,18 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
                     vol.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
                     vol.Optional(CONF_PASSWORD): str,
                     vol.Optional(CONF_SSH_KEY): str,
-                    vol.Required(CONF_PROTOCOL, default="ssh"): vol.In(
-                        {"ssh": "SSH", "telnet": "Telnet"}
+                    vol.Required(CONF_PROTOCOL, default=PROTOCOL_SSH): vol.In(
+                        {PROTOCOL_SSH: "SSH", PROTOCOL_TELNET: "Telnet"}
                     ),
                     vol.Required(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-                    vol.Required(CONF_MODE, default="router"): vol.In(
-                        {"router": "Router", "ap": "Access Point"}
+                    vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
+                        {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
                     ),
-                    vol.Required(CONF_REQUIRE_IP, default=True): bool,
-                    vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
-                    vol.Required(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): str,
                 }
             ),
             errors=errors or {},
@@ -100,46 +102,39 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_check_connection(self, user_input):
         """Attempt to connect the AsusWrt router."""
 
-        errors = {}
-
         api = get_api(user_input)
         try:
             await api.connection.async_connect()
-            if api.is_connected:
-                if hasattr(api.connection, "disconnect"):
-                    await api.connection.disconnect()
-
-                return self.async_create_entry(
-                    title=self._name,
-                    data=user_input,
-                )
-
-            _LOGGER.error("Error connecting to the AsusWrt router at %s", self._host)
-            errors["base"] = "cannot_connect"
 
         except OSError:
             _LOGGER.error("Error connecting to the AsusWrt router at %s", self._host)
-            errors["base"] = "cannot_connect"
+            return RESULT_CONN_ERROR
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with AsusWrt router at %s", self._host
             )
-            errors["base"] = "unknown"
+            return RESULT_UNKNOWN
 
-        return self._show_setup_form(user_input, errors)
+        if api.is_connected:
+            conf_protocol = user_input[CONF_PROTOCOL]
+            if conf_protocol == PROTOCOL_TELNET:
+                await api.connection.disconnect()
+            return RESULT_SUCCESS
+
+        _LOGGER.error("Error connecting to the AsusWrt router at %s", self._host)
+        return RESULT_CONN_ERROR
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        errors = {}
-
         if user_input is None:
-            return self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input)
 
-        host = user_input[CONF_HOST]
+        errors = {}
+        self._host = user_input[CONF_HOST]
         pwd = user_input.get(CONF_PASSWORD)
         ssh = user_input.get(CONF_SSH_KEY)
 
@@ -154,22 +149,72 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "ssh_not_file"
 
         if not errors:
-            ip_address = await self.hass.async_add_executor_job(_get_ip, host)
+            ip_address = await self.hass.async_add_executor_job(_get_ip, self._host)
             if not ip_address:
                 errors["base"] = "invalid_host"
+
+        if not errors:
+            result = await self._async_check_connection(user_input)
+            if result != RESULT_SUCCESS:
+                errors["base"] = result
 
         if errors:
             return self._show_setup_form(user_input, errors)
 
-        self._host = host
-        self._name = user_input.get(CONF_NAME, host)
-
-        # Check if already configured
-        await self.async_set_unique_id(ip_address)
-        self._abort_if_unique_id_configured()
-
-        return await self._async_check_connection(user_input)
+        return self.async_create_entry(
+            title=self._host,
+            data=user_input,
+        )
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
         return await self.async_step_user(user_input)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for AsusWrt."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_INTERFACE,
+                    default=self.config_entry.options.get(
+                        CONF_INTERFACE, DEFAULT_INTERFACE
+                    ),
+                ): str,
+                vol.Required(
+                    CONF_DNSMASQ,
+                    default=self.config_entry.options.get(
+                        CONF_DNSMASQ, DEFAULT_DNSMASQ
+                    ),
+                ): str,
+            }
+        )
+
+        conf_mode = self.config_entry.data[CONF_MODE]
+        if conf_mode == MODE_AP:
+            data_schema = data_schema.extend(
+                {
+                    vol.Optional(
+                        CONF_REQUIRE_IP,
+                        default=self.config_entry.options.get(CONF_REQUIRE_IP, True),
+                    ): bool,
+                }
+            )
+
+        return self.async_show_form(step_id="init", data_schema=data_schema)

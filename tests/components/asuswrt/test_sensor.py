@@ -5,12 +5,7 @@ from aioasuswrt.asuswrt import Device
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.asuswrt.const import (
-    CONF_DNSMASQ,
-    CONF_INTERFACE,
-    CONF_REQUIRE_IP,
-    DOMAIN,
-)
+from homeassistant.components.asuswrt.const import DOMAIN
 from homeassistant.components.asuswrt.sensor import _SensorTypes
 from homeassistant.const import (
     CONF_HOST,
@@ -35,9 +30,6 @@ CONFIG_DATA = {
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "router",
-    CONF_REQUIRE_IP: True,
-    CONF_INTERFACE: "eth0",
-    CONF_DNSMASQ: "/var/lib/misc",
 }
 
 MOCK_DEVICES = {
@@ -113,7 +105,6 @@ async def test_sensors(hass, connect):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        unique_id=IP_ADDRESS,
     )
     config_entry.add_to_hass(hass)
 
