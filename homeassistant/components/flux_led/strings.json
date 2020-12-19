@@ -3,26 +3,30 @@
   "config": {
     "step": {
       "user": {
-        "description": "Would you like to auto configure the integration or configure manually?",
+        "description": "Choose whether you want to automatically search for devices on your network.",
         "data": {
-          "type": "Configuration type."
-        }
-      },
-      "manual": {
-        "description": "Enter the details for your FluxLED/MagicHome bulb.",
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "host": "[%key:common::config_flow::data::host%]"
+          "automatic_add": "Enable automatic add of devices"
         }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "prompt_options": {
+        "data": {
+          "automatic_add": "Enable automatic add of devices",
+          "effect_speed": "Default effect speed for all lights.",
+          "host": "Enter IP address to add a new light",
+          "name": "Enter the name for the new light (optional)",
+          "configure_device": "Select the device to configure",
+          "remove_device": "Select the device to delete"
+        },
+        "title": "FluxLED/MagicHome Options"
+      }
     }
   }
 }
