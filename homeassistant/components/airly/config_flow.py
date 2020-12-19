@@ -16,7 +16,11 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_USE_NEAREST,
+    DOMAIN,
+    NO_AIRLY_SENSORS,
+)
 
 
 class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,6 +32,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
+        use_nearest = False
 
         websession = async_get_clientsession(self.hass)
 
