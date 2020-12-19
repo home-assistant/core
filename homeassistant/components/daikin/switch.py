@@ -1,4 +1,5 @@
 """Support for Daikin AirBase zones."""
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN as DAIKIN_DOMAIN
@@ -85,7 +86,7 @@ class DaikinZoneSwitch(ToggleEntity):
         await self._api.device.set_zone(self._zone_id, "0")
 
 
-class DaikinStreamerSwitch(ToggleEntity):
+class DaikinStreamerSwitch(SwitchEntity):
     """Streamer state."""
 
     def __init__(self, daikin_api):
