@@ -11,6 +11,15 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "Wettervorhersage"
+                }
+            }
+        }
+    },
     "system_health": {
         "info": {
             "remaining_requests": "Verbleibende erlaubte Anfragen"
