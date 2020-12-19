@@ -1,12 +1,7 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "conn_error": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
-        },
-        "error": {
-            "auth_failed": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "flow_title": "Tuya \uad6c\uc131\ud558\uae30",
         "step": {

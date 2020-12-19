@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "no_devices_found": "Geen apparaten op het netwerk gevonden"
+        },
+        "error": {
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "reauth": {
+                "description": "Voer uw Awair-ontwikkelaarstoegangstoken opnieuw in."
+            }
+        }
+    }
+}

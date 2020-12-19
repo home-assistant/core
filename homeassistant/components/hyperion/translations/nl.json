@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Maak automatisch een nieuw token aan"
+                }
+            }
+        }
+    }
+}

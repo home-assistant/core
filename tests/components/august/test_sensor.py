@@ -1,6 +1,6 @@
 """The sensor tests for the august platform."""
 
-from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAVAILABLE
 
 from tests.components.august.mocks import (
     _create_august_with_devices,
@@ -75,7 +75,7 @@ async def test_create_lock_with_linked_keypad(hass):
 
     state = hass.states.get("sensor.front_door_lock_keypad_battery")
     assert state.state == "60"
-    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
     assert entry
     assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
@@ -105,7 +105,7 @@ async def test_create_lock_with_low_battery_linked_keypad(hass):
 
     state = hass.states.get("sensor.front_door_lock_keypad_battery")
     assert state.state == "10"
-    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
     assert entry
     assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"

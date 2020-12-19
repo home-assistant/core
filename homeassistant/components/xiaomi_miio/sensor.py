@@ -7,6 +7,7 @@ from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
+    GATEWAY_MODEL_EU,
     DeviceType,
     GatewayException,
 )
@@ -21,6 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -92,6 +94,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             GATEWAY_MODEL_AC_V1,
             GATEWAY_MODEL_AC_V2,
             GATEWAY_MODEL_AC_V3,
+            GATEWAY_MODEL_EU,
         ]:
             entities.append(
                 XiaomiGatewayIlluminanceSensor(
@@ -174,11 +177,6 @@ class XiaomiAirQualityMonitor(Entity):
         }
 
     @property
-    def should_poll(self):
-        """Poll the miio device."""
-        return True
-
-    @property
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id
@@ -235,8 +233,9 @@ class XiaomiAirQualityMonitor(Entity):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiGatewaySensor(XiaomiGatewayDevice):
@@ -307,7 +306,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "lux"
+        return LIGHT_LUX
 
     @property
     def device_class(self):

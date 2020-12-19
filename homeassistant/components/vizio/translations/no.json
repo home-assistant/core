@@ -2,19 +2,18 @@
     "config": {
         "abort": {
             "already_configured_device": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
             "updated_entry": "Dette innlegget har allerede v\u00e6rt oppsett, men navnet, apps, og/eller alternativer som er definert i konfigurasjon som ikke stemmer med det som tidligere er importert konfigurasjon, s\u00e5 konfigurasjonen innlegget har blitt oppdatert i henhold til dette."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "complete_pairing_failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
-            "existing_config_entry_found": "En eksisterende VIZIO SmartCast-enhet konfigurasjonsinngang med samme serienummer er allerede konfigurert. Du m\u00e5 slette den eksisterende oppf\u00f8ringen for \u00e5 konfigurere denne.",
-            "host_exists": "VIZIO SmartCast-enhet with specified host already configured.",
-            "name_exists": "VIZIO SmartCast-enhet with specified name already configured."
+            "existing_config_entry_found": "En eksisterende VIZIO SmartCast-enhet konfigurasjonsinngang med samme serienummer er allerede konfigurert. Du m\u00e5 slette den eksisterende oppf\u00f8ringen for \u00e5 konfigurere denne."
         },
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN kode"
                 },
                 "description": "TVen skal vise en kode. Fyll inn denne koden i skjemaet, og fortsett deretter til neste trinn for \u00e5 fullf\u00f8re paringen.",
                 "title": "Fullf\u00f8r sammenkoblingsprosess"
@@ -24,7 +23,7 @@
                 "title": "Sammenkoblingen fullf\u00f8rt"
             },
             "pairing_complete_import": {
-                "description": "Din VIZIO SmartCast-enhet er n\u00e5 koblet til VIZIO SmartCast-enhet . \n\n Tilgangstoken er '** {access_token} **'.",
+                "description": "Din VIZIO SmartCast-enhet er n\u00e5 koblet til Home Assistant . \n\n Tilgangstoken er '** {access_token} **'.",
                 "title": "Sammenkoblingen fullf\u00f8rt"
             },
             "user": {

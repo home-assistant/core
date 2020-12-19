@@ -25,7 +25,6 @@ from .typing import ChannelType
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
-
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -80,15 +79,8 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR
 }
 
-SWITCH_CLUSTERS = SetRegistry()
-
-BINARY_SENSOR_CLUSTERS = SetRegistry()
-BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
-CLIMATE_CLUSTERS = SetRegistry()
-CUSTOM_CLUSTER_MAPPINGS = {}
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
@@ -119,19 +111,7 @@ DEVICE_CLASS = {
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
-DEVICE_TRACKER_CLUSTERS = SetRegistry()
-LIGHT_CLUSTERS = SetRegistry()
-OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
-COMPONENT_CLUSTERS = {
-    BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
-    CLIMATE: CLIMATE_CLUSTERS,
-    DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
-    LIGHT: LIGHT_CLUSTERS,
-    SWITCH: SWITCH_CLUSTERS,
-}
-
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
 
@@ -180,10 +160,12 @@ class MatchRule:
         """
         weight = 0
         if self.models:
-            weight += 401 - len(self.models)
+            weight += 401 - (1 if callable(self.models) else len(self.models))
 
         if self.manufacturers:
-            weight += 301 - len(self.manufacturers)
+            weight += 301 - (
+                1 if callable(self.manufacturers) else len(self.manufacturers)
+            )
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)

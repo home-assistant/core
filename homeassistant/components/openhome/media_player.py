@@ -188,11 +188,6 @@ class OpenhomeDevice(MediaPlayerEntity):
         return self._supported_features
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
         return self._device.Uuid()

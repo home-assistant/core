@@ -1,9 +1,9 @@
 {
   "config": {
     "error": {
-      "unknown": "Unexpected error",
-      "invalid_auth": "Invalid authentication",
-      "cannot_connect": "Failed to connect, please try again"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "user": {
@@ -18,7 +18,7 @@
       }
     },
     "abort": {
-      "already_configured": "This account is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }

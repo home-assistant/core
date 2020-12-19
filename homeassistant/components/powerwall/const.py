@@ -29,8 +29,6 @@ POWERWALL_API_SERIAL_NUMBERS = "serial_numbers"
 
 POWERWALL_HTTP_SESSION = "http_session"
 
-POWERWALL_BATTERY_METER = "battery"
-
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"
 

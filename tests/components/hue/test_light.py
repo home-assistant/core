@@ -1,6 +1,5 @@
 """Philips Hue lights platform tests."""
 import asyncio
-import logging
 
 import aiohue
 
@@ -10,8 +9,6 @@ from homeassistant.components.hue import light as hue_light
 from homeassistant.util import color
 
 from tests.async_mock import Mock
-
-_LOGGER = logging.getLogger(__name__)
 
 HUE_LIGHT_NS = "homeassistant.components.light.hue."
 GROUP_RESPONSE = {

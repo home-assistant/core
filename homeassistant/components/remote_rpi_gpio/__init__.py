@@ -1,10 +1,6 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
-import logging
-
 from gpiozero import LED, Button
 from gpiozero.pins.pigpio import PiGPIOFactory
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"

@@ -18,7 +18,7 @@ from tests.common import (
     init_recorder_component,
     mock_state_change_event,
 )
-from tests.components.recorder.common import wait_recording_done
+from tests.components.recorder.common import trigger_db_commit, wait_recording_done
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -763,7 +763,7 @@ async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
@@ -775,7 +775,7 @@ async def test_fetch_period_api_with_use_include_order(hass, hass_client):
     await async_setup_component(
         hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
     )
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
@@ -785,7 +785,7 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     """Test the fetch period view for history with minimal_response."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
@@ -797,7 +797,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
     """Test the fetch period view for history with no timestamp."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get("/api/history/period")
     assert response.status == 200
@@ -816,10 +816,195 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
             }
         },
     )
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
         params={"filter_entity_id": "non.existing,something.else"},
     )
     assert response.status == 200
+
+
+async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "include": {"entity_globs": ["light.k*"]},
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+
+
+async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "exclude": {
+                    "entity_globs": ["light.k*"],
+                    "domains": "switch",
+                    "entities": "media_player.test",
+                },
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.match", "on")
+    hass.states.async_set("switch.match", "on")
+    hass.states.async_set("media_player.test", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.cow"
+    assert response_json[1][0]["entity_id"] == "light.match"
+
+
+async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "exclude": {
+                    "entity_globs": ["light.many*"],
+                },
+                "include": {
+                    "entity_globs": ["light.m*"],
+                    "domains": "switch",
+                    "entities": "media_player.test",
+                },
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.match", "on")
+    hass.states.async_set("light.many_state_changes", "on")
+    hass.states.async_set("switch.match", "on")
+    hass.states.async_set("media_player.test", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 3
+    assert response_json[0][0]["entity_id"] == "light.match"
+    assert response_json[1][0]["entity_id"] == "media_player.test"
+    assert response_json[2][0]["entity_id"] == "switch.match"
+
+
+async def test_entity_ids_limit_via_api(hass, hass_client):
+    """Test limiting history to entity_ids."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+    assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_client):
+    """Test limiting history to entity_ids with skip_initial_state."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 0
+
+    when = dt_util.utcnow() - timedelta(minutes=1)
+    response = await client.get(
+        f"/api/history/period/{when.isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+    assert response_json[1][0]["entity_id"] == "light.cow"

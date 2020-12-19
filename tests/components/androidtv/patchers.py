@@ -155,16 +155,16 @@ PATCH_ISFILE = patch("os.path.isfile", isfile)
 PATCH_ACCESS = patch("os.access", return_value=True)
 
 
-def patch_firetv_update(state, current_app, running_apps):
+def patch_firetv_update(state, current_app, running_apps, hdmi_input):
     """Patch the `FireTV.update()` method."""
     return patch(
         "androidtv.firetv.firetv_async.FireTVAsync.update",
-        return_value=(state, current_app, running_apps),
+        return_value=(state, current_app, running_apps, hdmi_input),
     )
 
 
 def patch_androidtv_update(
-    state, current_app, running_apps, device, is_volume_muted, volume_level
+    state, current_app, running_apps, device, is_volume_muted, volume_level, hdmi_input
 ):
     """Patch the `AndroidTV.update()` method."""
     return patch(
@@ -176,6 +176,7 @@ def patch_androidtv_update(
             device,
             is_volume_muted,
             volume_level,
+            hdmi_input,
         ),
     )
 

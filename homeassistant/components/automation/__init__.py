@@ -1,9 +1,11 @@
 """Allow to set up simple automation rules via the config file."""
 import logging
-from typing import Any, Awaitable, Callable, List, Optional, Set, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
+from homeassistant.components import blueprint
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -41,9 +43,7 @@ from homeassistant.helpers.script import (
     ATTR_MODE,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
-    SCRIPT_MODE_SINGLE,
     Script,
-    make_script_schema,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
@@ -52,32 +52,28 @@ from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
+# Not used except by packages to check config structure
+from .config import PLATFORM_SCHEMA  # noqa
+from .config import async_validate_config_item
+from .const import (
+    CONF_ACTION,
+    CONF_CONDITION,
+    CONF_INITIAL_STATE,
+    CONF_TRIGGER,
+    DEFAULT_INITIAL_STATE,
+    DOMAIN,
+    LOGGER,
+)
+from .helpers import async_get_blueprints
+
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
-DOMAIN = "automation"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
-CONF_DESCRIPTION = "description"
-CONF_HIDE_ENTITY = "hide_entity"
-
-CONF_CONDITION = "condition"
-CONF_ACTION = "action"
-CONF_TRIGGER = "trigger"
-CONF_CONDITION_TYPE = "condition_type"
-CONF_INITIAL_STATE = "initial_state"
 CONF_SKIP_CONDITION = "skip_condition"
 CONF_STOP_ACTIONS = "stop_actions"
-
-CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
-CONDITION_TYPE_AND = "and"
-CONDITION_TYPE_NOT = "not"
-CONDITION_TYPE_OR = "or"
-
-DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
-DEFAULT_INITIAL_STATE = True
 DEFAULT_STOP_ACTIONS = True
 
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
@@ -88,30 +84,7 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
-_LOGGER = logging.getLogger(__name__)
-
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
-
-_CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
-    make_script_schema(
-        {
-            # str on purpose
-            CONF_ID: str,
-            CONF_ALIAS: cv.string,
-            vol.Optional(CONF_DESCRIPTION): cv.string,
-            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-            vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
-            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
-            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-        },
-        SCRIPT_MODE_SINGLE,
-    ),
-)
 
 
 @bind_hass
@@ -188,9 +161,13 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 async def async_setup(hass, config):
     """Set up the automation."""
-    hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
-    await _async_process_config(hass, config, component)
+    # To register the automation blueprints
+    async_get_blueprints(hass)
+
+    if not await _async_process_config(hass, config, component):
+        await async_get_blueprints(hass).async_populate()
 
     async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""
@@ -221,6 +198,7 @@ async def async_setup(hass, config):
         conf = await component.async_prepare_reload()
         if conf is None:
             return
+        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
@@ -256,7 +234,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
-        self._logger = _LOGGER
+        self._logger = LOGGER
         self._variables: ScriptVariables = variables
 
     @property
@@ -506,17 +484,44 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         return {CONF_ID: self._id}
 
 
-async def _async_process_config(hass, config, component):
+async def _async_process_config(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    component: EntityComponent,
+) -> bool:
     """Process config and add automations.
 
-    This method is a coroutine.
+    Returns if blueprints were used.
     """
     entities = []
+    blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf = config[config_key]
+        conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[  # type: ignore
+            config_key
+        ]
 
         for list_no, config_block in enumerate(conf):
+            if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+                blueprints_used = True
+                blueprint_inputs = config_block
+
+                try:
+                    config_block = cast(
+                        Dict[str, Any],
+                        await async_validate_config_item(
+                            hass, blueprint_inputs.async_substitute()
+                        ),
+                    )
+                except vol.Invalid as err:
+                    LOGGER.error(
+                        "Blueprint %s generated invalid automation with inputs %s: %s",
+                        blueprint_inputs.blueprint.name,
+                        blueprint_inputs.inputs,
+                        humanize_error(config_block, err),
+                    )
+                    continue
+
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
@@ -531,7 +536,7 @@ async def _async_process_config(hass, config, component):
                 script_mode=config_block[CONF_MODE],
                 max_runs=config_block[CONF_MAX],
                 max_exceeded=config_block[CONF_MAX_EXCEEDED],
-                logger=_LOGGER,
+                logger=LOGGER,
                 # We don't pass variables here
                 # Automation will already render them to use them in the condition
                 # and so will pass them on to the script.
@@ -560,6 +565,8 @@ async def _async_process_config(hass, config, component):
     if entities:
         await component.async_add_entities(entities)
 
+    return blueprints_used
+
 
 async def _async_process_if(hass, config, p_config):
     """Process if checks."""
@@ -570,7 +577,7 @@ async def _async_process_if(hass, config, p_config):
         try:
             checks.append(await condition.async_from_config(hass, if_config, False))
         except HomeAssistantError as ex:
-            _LOGGER.warning("Invalid condition: %s", ex)
+            LOGGER.warning("Invalid condition: %s", ex)
             return None
 
     def if_action(variables=None):

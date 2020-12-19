@@ -122,6 +122,7 @@ class SQLSensor(Entity):
     def update(self):
         """Retrieve sensor data from the query."""
 
+        data = None
         try:
             sess = self.sessionmaker()
             result = sess.execute(self._query)
@@ -147,7 +148,7 @@ class SQLSensor(Entity):
         finally:
             sess.close()
 
-        if self._template is not None:
+        if data is not None and self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
                 data, None
             )

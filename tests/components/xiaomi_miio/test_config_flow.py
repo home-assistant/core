@@ -90,7 +90,7 @@ async def test_config_flow_step_gateway_connect_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "gateway"
-    assert result["errors"] == {"base": "connect_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_config_flow_gateway_success(hass):

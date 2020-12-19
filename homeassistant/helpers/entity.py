@@ -77,7 +77,7 @@ def async_generate_entity_id(
 
     test_string = preferred_string
     tries = 1
-    while hass.states.get(test_string):
+    while not hass.states.async_available(test_string):
         tries += 1
         test_string = f"{preferred_string}_{tries}"
 
@@ -362,7 +362,7 @@ class Entity(ABC):
             else:
                 extra = (
                     "Please create a bug report at "
-                    "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                 )
                 if self.platform:
                     extra += (
@@ -453,26 +453,35 @@ class Entity(ABC):
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
-        assert self.hass is not None
-        if warning:
-            update_warn = self.hass.loop.call_later(
-                SLOW_UPDATE_WARNING,
-                _LOGGER.warning,
+        try:
+            # pylint: disable=no-member
+            if hasattr(self, "async_update"):
+                task = self.hass.async_create_task(self.async_update())  # type: ignore
+            elif hasattr(self, "update"):
+                task = self.hass.async_add_executor_job(self.update)  # type: ignore
+            else:
+                return
+
+            if not warning:
+                await task
+                return
+
+            finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
+
+            for done in finished:
+                exc = done.exception()
+                if exc:
+                    raise exc
+                return
+
+            _LOGGER.warning(
                 "Update of %s is taking over %s seconds",
                 self.entity_id,
                 SLOW_UPDATE_WARNING,
             )
-
-        try:
-            # pylint: disable=no-member
-            if hasattr(self, "async_update"):
-                await self.async_update()  # type: ignore
-            elif hasattr(self, "update"):
-                await self.hass.async_add_executor_job(self.update)  # type: ignore
+            await task
         finally:
             self._update_staged = False
-            if warning:
-                update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
 

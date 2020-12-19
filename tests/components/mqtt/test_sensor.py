@@ -5,8 +5,6 @@ import json
 
 import pytest
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
@@ -75,9 +73,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires_availability_topic(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -107,9 +103,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     await expires_helper(hass, mqtt_mock, caplog)
 
 
-async def test_setting_sensor_value_expires(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -564,9 +558,6 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
     registry = await hass.helpers.device_registry.async_get_registry()
     hub = registry.async_get_or_create(
         config_entry_id="123",

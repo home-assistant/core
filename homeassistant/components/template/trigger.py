@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -36,6 +36,7 @@ async def async_attach_trigger(
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
     delay_cancel = None
+    job = HassJob(action)
 
     @callback
     def template_listener(event, updates):
@@ -58,8 +59,8 @@ async def async_attach_trigger(
         @callback
         def call_action(*_):
             """Call action with right context."""
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": "template",

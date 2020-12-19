@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No se han encontrado dispositivos Sonos en la red.",
+            "no_devices_found": "No se encontraron dispositivos en la red",
             "single_instance_allowed": "S\u00f3lo se necesita una \u00fanica configuraci\u00f3n de Sonos."
         },
         "step": {

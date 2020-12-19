@@ -1,5 +1,4 @@
 """Standard conversastion implementation for Home Assistant."""
-import logging
 import re
 from typing import Optional
 
@@ -17,8 +16,6 @@ from homeassistant.setup import ATTR_COMPONENT
 from .agent import AbstractConversationAgent
 from .const import DOMAIN
 from .util import create_matcher
-
-_LOGGER = logging.getLogger(__name__)
 
 REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
 REGEX_TYPE = type(re.compile(""))

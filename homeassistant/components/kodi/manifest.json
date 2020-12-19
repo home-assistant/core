@@ -2,10 +2,15 @@
   "domain": "kodi",
   "name": "Kodi",
   "documentation": "https://www.home-assistant.io/integrations/kodi",
-  "requirements": ["pykodi==0.2.0"],
-  "codeowners": [
-    "@OnFreund"
+  "requirements": [
+    "pykodi==0.2.1"
   ],
-  "zeroconf": ["_xbmc-jsonrpc-h._tcp.local."],
+  "codeowners": [
+    "@OnFreund",
+    "@cgtobi"
+  ],
+  "zeroconf": [
+    "_xbmc-jsonrpc-h._tcp.local."
+  ],
   "config_flow": true
 }

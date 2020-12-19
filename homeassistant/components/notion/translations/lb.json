@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse Benotzernumm g\u00ebtt scho benotzt."
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
-            "invalid_credentials": "Ong\u00ebltege Benotzernumm oder Passwuert",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "no_devices": "Keng Apparater am Kont fonnt"
         },
         "step": {

@@ -1,6 +1,5 @@
 """The songpal component."""
 from collections import OrderedDict
-import logging
 
 import voluptuous as vol
 
@@ -10,8 +9,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_ENDPOINT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SONGPAL_CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}

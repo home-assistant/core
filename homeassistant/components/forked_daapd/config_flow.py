@@ -31,6 +31,7 @@ DATA_SCHEMA_DICT = {
 }
 
 TEST_CONNECTION_ERROR_DICT = {
+    "forbidden": "forbidden",
     "ok": "ok",
     "websocket_not_enabled": "websocket_not_enabled",
     "wrong_host_or_port": "wrong_host_or_port",

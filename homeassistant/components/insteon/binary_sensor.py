@@ -1,6 +1,4 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
-import logging
-
 from pyinsteon.groups import (
     CO_SENSOR,
     DOOR_SENSOR,
@@ -34,8 +32,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     OPEN_CLOSE_SENSOR: DEVICE_CLASS_OPENING,

@@ -32,6 +32,7 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "1.1.1.1"
@@ -40,7 +41,6 @@ async def test_form(hass):
         "port": 10102,
         "supported_modes": AVAILABLE_MODES,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -60,7 +60,7 @@ async def test_form_timeout(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_connection_refused(hass):
@@ -78,7 +78,7 @@ async def test_form_connection_refused(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_no_units(hass):

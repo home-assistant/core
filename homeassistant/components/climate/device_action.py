@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -61,7 +62,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_TYPE: "set_hvac_mode",
             }
         )
-        if state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
+        if state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_PRESET_MODE:
             actions.append(
                 {
                     CONF_DEVICE_ID: device_id,

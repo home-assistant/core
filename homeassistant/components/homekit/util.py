@@ -37,6 +37,7 @@ from .const import (
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
+    CONF_LINKED_OBSTRUCTION_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -136,6 +137,15 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
+)
+
+
+COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
+            binary_sensor.DOMAIN
+        )
+    }
 )
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -247,6 +257,9 @@ def validate_entity_config(values):
         elif domain == "humidifier":
             config = HUMIDIFIER_SCHEMA(config)
 
+        elif domain == "cover":
+            config = COVER_SCHEMA(config)
+
         else:
             config = BASIC_INFO_SCHEMA(config)
 
@@ -344,7 +357,7 @@ class HomeKitSpeedMapping:
         for state, speed_range in reversed(self.speed_ranges.items()):
             if speed_range.start <= speed:
                 return state
-        return list(self.speed_ranges.keys())[0]
+        return list(self.speed_ranges)[0]
 
 
 def show_setup_message(hass, entry_id, bridge_name, pincode, uri):

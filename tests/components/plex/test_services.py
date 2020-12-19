@@ -15,31 +15,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
-from .mock_classes import MockPlexAccount, MockPlexLibrarySection, MockPlexServer
+from .const import MOCK_SERVERS, MOCK_TOKEN
+from .mock_classes import MockPlexLibrarySection
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_refresh_library(hass):
+async def test_refresh_library(hass, mock_plex_server, setup_plex_server):
     """Test refresh_library service call."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     # Test with non-existent server
     with patch.object(MockPlexLibrarySection, "update") as mock_update:
         assert await hass.services.async_call(
@@ -84,13 +68,7 @@ async def test_refresh_library(hass):
         },
     )
 
-    mock_plex_server_2 = MockPlexServer(config_entry=entry_2)
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server_2), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
-        entry_2.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry_2.entry_id)
-        await hass.async_block_till_done()
+    await setup_plex_server(config_entry=entry_2)
 
     # Test multiple servers available but none specified
     with patch.object(MockPlexLibrarySection, "update") as mock_update:
@@ -103,24 +81,8 @@ async def test_refresh_library(hass):
         assert not mock_update.called
 
 
-async def test_scan_clients(hass):
+async def test_scan_clients(hass, mock_plex_server):
     """Test scan_for_clients service call."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SCAN_CLIENTS,

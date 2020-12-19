@@ -6,7 +6,12 @@ from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.const import (
+    CONF_API_KEY,
+    HTTP_METHOD_NOT_ALLOWED,
+    HTTP_OK,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -67,9 +72,9 @@ class BloomSky:
             headers={AUTHORIZATION: self._api_key},
             timeout=10,
         )
-        if response.status_code == 401:
+        if response.status_code == HTTP_UNAUTHORIZED:
             raise RuntimeError("Invalid API_KEY")
-        if response.status_code == 405:
+        if response.status_code == HTTP_METHOD_NOT_ALLOWED:
             _LOGGER.error("You have no bloomsky devices configured")
             return
         if response.status_code != HTTP_OK:

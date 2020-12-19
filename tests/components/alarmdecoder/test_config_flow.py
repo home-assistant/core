@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "protocol,connection,baud,title",
+    "protocol,connection,title",
     [
         (
             PROTOCOL_SOCKET,
@@ -42,7 +42,6 @@ from tests.common import MockConfigEntry
                 CONF_HOST: "alarmdecoder123",
                 CONF_PORT: 10001,
             },
-            None,
             "alarmdecoder123:10001",
         ),
         (
@@ -51,12 +50,11 @@ from tests.common import MockConfigEntry
                 CONF_DEVICE_PATH: "/dev/ttyUSB123",
                 CONF_DEVICE_BAUD: 115000,
             },
-            115000,
             "/dev/ttyUSB123",
         ),
     ],
 )
-async def test_setups(hass: HomeAssistant, protocol, connection, baud, title):
+async def test_setups(hass: HomeAssistant, protocol, connection, title):
     """Test flow for setting up the available AlarmDecoder protocols."""
 
     result = await hass.config_entries.flow.async_init(
@@ -90,10 +88,9 @@ async def test_setups(hass: HomeAssistant, protocol, connection, baud, title):
         assert result["data"] == {
             **connection,
             CONF_PROTOCOL: protocol,
-            CONF_DEVICE_BAUD: baud,
         }
+        await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -129,7 +126,7 @@ async def test_setup_connection_error(hass: HomeAssistant):
             result["flow_id"], connection_settings
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "service_unavailable"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_options_arm_flow(hass: HomeAssistant):
@@ -141,6 +138,9 @@ async def test_options_arm_flow(hass: HomeAssistant):
     }
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -176,6 +176,9 @@ async def test_options_zone_flow(hass: HomeAssistant):
     zone_settings = {CONF_ZONE_NAME: "Front Entry", CONF_ZONE_TYPE: DEVICE_CLASS_WINDOW}
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -249,6 +252,9 @@ async def test_options_zone_flow_validation(hass: HomeAssistant):
     zone_settings = {CONF_ZONE_NAME: "Front Entry", CONF_ZONE_TYPE: DEVICE_CLASS_WINDOW}
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

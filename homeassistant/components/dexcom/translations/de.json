@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Account ist bereits konfiguriert"
+            "already_configured": "Konto ist bereits konfiguriert"
         },
         "error": {
-            "session_error": "Verbindung nicht m\u00f6glich",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Passwort"
+                    "password": "Passwort",
+                    "username": "Benutzername"
                 }
             }
         }

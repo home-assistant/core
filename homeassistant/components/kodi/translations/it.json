@@ -4,6 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
+            "no_uuid": "L'istanza di Kodi non ha un ID univoco. Ci\u00f2 \u00e8 molto probabilmente dovuto a una vecchia versione di Kodi (17.xo inferiore). Puoi configurare l'integrazione manualmente o eseguire l'aggiornamento a una versione di Kodi pi\u00f9 recente.",
             "unknown": "Errore imprevisto"
         },
         "error": {
@@ -24,19 +25,11 @@
                 "description": "Vuoi aggiungere Kodi (`{name}`) a Home Assistant?",
                 "title": "Rilevato Kodi"
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Porta",
-                    "ssl": "Connettiti tramite SSL"
-                },
-                "description": "Informazioni sulla connessione Kodi. Assicurati di abilitare \"Consenti il controllo di Kodi tramite HTTP\" in Sistema/Impostazioni/Rete/Servizi."
-            },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Porta",
-                    "ssl": "Connettiti tramite SSL"
+                    "ssl": "Utilizza un certificato SSL"
                 },
                 "description": "Informazioni sulla connessione Kodi. Assicurati di abilitare \"Consenti il controllo di Kodi tramite HTTP\" in Sistema/Impostazioni/Rete/Servizi."
             },

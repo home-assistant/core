@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta zona de c\u00e0rrega ja est\u00e0 configurada"
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },
         "step": {

@@ -104,7 +104,10 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = discovery_info["host"]
         self._port = int(discovery_info["port"])
         self._name = discovery_info["hostname"][: -len(".local.")]
-        uuid = discovery_info["properties"]["uuid"]
+        uuid = discovery_info["properties"].get("uuid")
+        if not uuid:
+            return self.async_abort(reason="no_uuid")
+
         self._discovery_name = discovery_info["name"]
 
         await self.async_set_unique_id(uuid)
@@ -115,6 +118,9 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NAME: self._name,
             }
         )
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
 
         try:
             await validate_http(self.hass, self._get_data())
@@ -129,8 +135,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(self, user_input=None):
@@ -200,6 +204,10 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._ws_port = user_input.get(CONF_WS_PORT)
+
+            # optional ints return 0 rather than None when empty
+            if self._ws_port == 0:
+                self._ws_port = None
 
             try:
                 await validate_ws(self.hass, self._get_data())

@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
+    PRESSURE_BAR,
     TEMP_CELSIUS,
     TIME_HOURS,
     TIME_MINUTES,
@@ -39,7 +40,6 @@ SERVICE_SET_MAX_MOD = "set_max_modulation"
 SERVICE_SET_OAT = "set_outside_temperature"
 SERVICE_SET_SB_TEMP = "set_setback_temperature"
 
-UNIT_BAR = "bar"
 UNIT_KW = "kW"
 UNIT_L_MIN = f"L/{TIME_MINUTES}"
 
@@ -152,7 +152,11 @@ SENSOR_INFO = {
         "Room Setpoint {}",
     ],
     gw_vars.DATA_REL_MOD_LEVEL: [None, PERCENTAGE, "Relative Modulation Level {}"],
-    gw_vars.DATA_CH_WATER_PRESS: [None, UNIT_BAR, "Central Heating Water Pressure {}"],
+    gw_vars.DATA_CH_WATER_PRESS: [
+        None,
+        PRESSURE_BAR,
+        "Central Heating Water Pressure {}",
+    ],
     gw_vars.DATA_DHW_FLOW_RATE: [None, UNIT_L_MIN, "Hot Water Flow Rate {}"],
     gw_vars.DATA_ROOM_SETPOINT_2: [
         DEVICE_CLASS_TEMPERATURE,

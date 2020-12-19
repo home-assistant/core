@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "project_error": "Nie mo\u017cna uzyska\u0107 informacji o projekcie"
+        },
+        "flow_title": "Azure DevOps: {project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Osobisty token dost\u0119pu (PAT)"
+                },
+                "description": "Uwierzytelnianie dla {project_url} nie powiod\u0142o si\u0119. Wprowad\u017a aktualne dane uwierzytelniaj\u0105ce.",
+                "title": "Ponowne uwierzytelnianie"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organizacja",
+                    "personal_access_token": "Osobisty token dost\u0119pu (PAT)",
+                    "project": "Projekt"
+                },
+                "description": "Skonfiguruj instancj\u0119 Azure DevOps, aby uzyska\u0107 dost\u0119p do swojego projektu. Osobisty token dost\u0119pu (PAT) jest wymagany tylko dla prywatnego projektu.",
+                "title": "Dodaj projekt Azure DevOps"
+            }
+        }
+    }
+}

@@ -529,6 +529,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["title"] == "Apps"
     assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
     assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 11
@@ -538,18 +539,14 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
     assert (
-        msg["result"]["children"][0]["thumbnail"]
-        == "http://192.168.1.161:8060/query/icon/tvinput.hdmi2"
+        "/browse_media/app/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
     )
     assert msg["result"]["children"][0]["can_play"]
 
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
     assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][3]["media_content_id"] == "11"
-    assert (
-        msg["result"]["children"][3]["thumbnail"]
-        == "http://192.168.1.161:8060/query/icon/11"
-    )
+    assert "/browse_media/app/11" in msg["result"]["children"][3]["thumbnail"]
     assert msg["result"]["children"][3]["can_play"]
 
     # test channels
@@ -573,6 +570,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["title"] == "Channels"
     assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
     assert msg["result"]["media_content_type"] == MEDIA_TYPE_CHANNELS
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_CHANNEL
     assert msg["result"]["can_expand"]
     assert not msg["result"]["can_play"]
     assert len(msg["result"]["children"]) == 2

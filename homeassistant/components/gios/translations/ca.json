@@ -1,22 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La integraci\u00f3 GIO\u015a per a aquesta estaci\u00f3 ja est\u00e0 configurada."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar al servidor de GIO\u015a.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_sensors_data": "Les dades dels sensors d'aquesta estaci\u00f3 de mesura s\u00f3n inv\u00e0lides.",
             "wrong_station_id": "L'ID de l'estaci\u00f3 de mesura \u00e9s incorrecte."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "Nom de la integraci\u00f3",
+                    "name": "Nom",
                     "station_id": "ID de l'estaci\u00f3 de mesura"
                 },
                 "description": "Integraci\u00f3 de mesura de qualitat de l'aire GIO\u015a (Polish Chief Inspectorate Of Environmental Protection). Si necessites ajuda amb la configuraci\u00f3, fes un cop d'ull a: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Servidor de GIO\u015a accessible"
         }
     }
 }

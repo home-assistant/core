@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne"
+        },
+        "step": {
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne",
+            "setup_network": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "title": "Wybierz adres dla po\u0142\u0105czenia"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Wybierz urz\u0105dzenie"
+                },
+                "title": "Urz\u0105dzenie"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "title": "\u015acie\u017cka"
+            },
+            "user": {
+                "data": {
+                    "type": "Typ po\u0142\u0105czenia"
+                },
+                "title": "Wybierz typ po\u0142\u0105czenia"
+            }
+        }
+    },
+    "few": "kilka",
+    "many": "wiele",
+    "one": "jeden",
+    "options": {
+        "error": {
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "invalid_event_code": "Nieprawid\u0142owy kod zdarzenia",
+            "invalid_input_2262_off": "Nieprawid\u0142owy wpis dla komendy \"wy\u0142\u0105cz\" (off)",
+            "invalid_input_2262_on": "Nieprawid\u0142owy wpis dla komendy \"w\u0142\u0105cz\" (on)",
+            "invalid_input_off_delay": "Nieprawid\u0142owy wpis dla op\u00f3\u017anienia wy\u0142\u0105czania",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "W\u0142\u0105cz automatyczne dodawanie",
+                    "debug": "W\u0142\u0105cz debugowanie",
+                    "device": "Wybierz urz\u0105dzenie do skonfigurowania",
+                    "event_code": "Podaj kod zdarzenia do dodania",
+                    "remove_device": "Wybierz urz\u0105dzenie do usuni\u0119cia"
+                },
+                "title": "Opcje Rfxtrx"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Warto\u015b\u0107 bit\u00f3w danych dla komendy \"wy\u0142\u0105cz\" (off)",
+                    "command_on": "Warto\u015b\u0107 bit\u00f3w danych dla komendy \"w\u0142\u0105cz\" (on)",
+                    "data_bit": "Liczba bit\u00f3w danych",
+                    "fire_event": "W\u0142\u0105cz zdarzenia na urz\u0105dzeniu",
+                    "off_delay": "Op\u00f3\u017anienie stanu \"off\"",
+                    "off_delay_enabled": "W\u0142\u0105cz op\u00f3\u017anienie stanu \"off\"",
+                    "replace_device": "Wybierz urz\u0105dzenie do zast\u0105pienia",
+                    "signal_repetitions": "Liczba powt\u00f3rze\u0144 sygna\u0142u"
+                },
+                "title": "Konfiguracja opcji urz\u0105dzenia"
+            }
+        }
+    },
+    "other": "inne"
+}

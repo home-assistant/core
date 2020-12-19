@@ -5,7 +5,8 @@
             "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
             "authorize_url_timeout": "Timout de g\u00e9n\u00e9ration de l'URL d'autorisation.",
             "missing_configuration": "The composant n'est pas configur\u00e9. Veuillez vous r\u00e9f\u00e9rer \u00e0 la documentation.",
-            "no_agreements": "Ce compte n'a pas d'affichages Toon."
+            "no_agreements": "Ce compte n'a pas d'affichages Toon.",
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )"
         },
         "step": {
             "agreement": {

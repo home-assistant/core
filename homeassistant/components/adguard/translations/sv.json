@@ -4,9 +4,6 @@
             "existing_instance_updated": "Uppdaterade existerande konfiguration.",
             "single_instance_allowed": "Endast en enda konfiguration av AdGuard Home \u00e4r till\u00e5ten."
         },
-        "error": {
-            "connection_error": "Det gick inte att ansluta."
-        },
         "step": {
             "hassio_confirm": {
                 "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till AdGuard Home som tillhandah\u00e5lls av Hass.io Add-on: {addon}?",

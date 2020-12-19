@@ -1,6 +1,4 @@
 """Config flow to configure flood monitoring gauges."""
-import logging
-
 from aioeafm import get_stations
 import voluptuous as vol
 
@@ -9,8 +7,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

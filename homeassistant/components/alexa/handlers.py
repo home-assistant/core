@@ -17,6 +17,7 @@ from homeassistant.components import (
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
@@ -487,7 +488,7 @@ async def async_api_select_input(hass, config, directive, context):
         )
         media_input = media_input.lower().replace(" ", "")
         if (
-            formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys()
+            formatted_source in Inputs.VALID_SOURCE_NAME_MAP
             and formatted_source == media_input
         ) or (
             media_input.endswith("1") and formatted_source == media_input.rstrip("1")
@@ -994,14 +995,14 @@ async def async_api_set_mode(hass, config, directive, context):
 
     # Fan Direction
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        _, direction = mode.split(".")
+        direction = mode.split(".")[1]
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        _, position = mode.split(".")
+        position = mode.split(".")[1]
 
         if position == cover.STATE_CLOSED:
             service = cover.SERVICE_CLOSE_COVER
@@ -1532,7 +1533,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
-    camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
+    camera_image = hass.states.get(entity.entity_id).attributes[ATTR_ENTITY_PICTURE]
 
     try:
         external_url = network.get_url(

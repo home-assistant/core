@@ -26,6 +26,7 @@ async def test_form(hass):
             result["flow_id"],
             {"timeout": "6", "email": "test-email", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-email"
@@ -34,7 +35,6 @@ async def test_form(hass):
         "email": "test-email",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

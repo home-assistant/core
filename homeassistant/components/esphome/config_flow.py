@@ -202,6 +202,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             await cli.connect(login=True)
         except APIConnectionError:
             await cli.disconnect(force=True)
-            return "invalid_password"
+            return "invalid_auth"
 
         return None

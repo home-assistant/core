@@ -1,5 +1,6 @@
 """Support for Homekit sensors."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -7,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -18,8 +20,6 @@ HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:molecule-co2"
-
-UNIT_LUX = "lux"
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -113,7 +113,7 @@ class HomeKitLightSensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_LUX
+        return LIGHT_LUX
 
     @property
     def state(self):
@@ -217,11 +217,11 @@ class HomeKitBatterySensor(HomeKitEntity):
 
 
 ENTITY_TYPES = {
-    "humidity": HomeKitHumiditySensor,
-    "temperature": HomeKitTemperatureSensor,
-    "light": HomeKitLightSensor,
-    "carbon-dioxide": HomeKitCarbonDioxideSensor,
-    "battery": HomeKitBatterySensor,
+    ServicesTypes.HUMIDITY_SENSOR: HomeKitHumiditySensor,
+    ServicesTypes.TEMPERATURE_SENSOR: HomeKitTemperatureSensor,
+    ServicesTypes.LIGHT_SENSOR: HomeKitLightSensor,
+    ServicesTypes.CARBON_DIOXIDE_SENSOR: HomeKitCarbonDioxideSensor,
+    ServicesTypes.BATTERY_SERVICE: HomeKitBatterySensor,
 }
 
 
@@ -231,11 +231,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 

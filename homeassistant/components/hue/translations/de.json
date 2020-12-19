@@ -26,6 +26,9 @@
                 "title": "Hub verbinden"
             },
             "manual": {
+                "data": {
+                    "host": "Host"
+                },
                 "title": "Manuelles Konfigurieren einer Hue Bridge"
             }
         }

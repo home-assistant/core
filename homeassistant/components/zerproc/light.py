@@ -1,7 +1,7 @@
 """Zerproc light platform."""
 from datetime import timedelta
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import pyzerproc
 
@@ -36,7 +36,7 @@ def connect_lights(lights: List[pyzerproc.Light]) -> List[pyzerproc.Light]:
     connected = []
     for light in lights:
         try:
-            light.connect(auto_reconnect=True)
+            light.connect()
             connected.append(light)
         except pyzerproc.ZerprocException:
             _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
@@ -143,6 +143,11 @@ class ZerprocLight(LightEntity):
         }
 
     @property
+    def icon(self) -> Optional[str]:
+        """Return the icon to use in the frontend."""
+        return "mdi:string-lights"
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_ZERPROC
@@ -188,6 +193,8 @@ class ZerprocLight(LightEntity):
     def update(self):
         """Fetch new state data for this light."""
         try:
+            if not self._light.connected:
+                self._light.connect()
             state = self._light.get_state()
         except pyzerproc.ZerprocException:
             if self._available:

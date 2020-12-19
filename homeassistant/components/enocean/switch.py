@@ -1,6 +1,4 @@
 """Support for EnOcean switches."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
@@ -9,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
 from .device import EnOceanEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"

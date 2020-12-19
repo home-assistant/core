@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "unsupported_firmware": "The device is using an unsupported firmware version."
         },
         "error": {
-            "auth_not_supported": "Shelly devices requiring authentication are not currently supported.",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Do you want to set up the {model} at {host}?"
+                "description": "Do you want to set up the {model} at {host}?\n\nBefore set up, battery-powered devices must be woken up by pressing the button on the device."
             },
             "credentials": {
                 "data": {
@@ -23,9 +23,9 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Before set up, battery-powered devices must be woken up by pressing the button on the device."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

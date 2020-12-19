@@ -140,6 +140,8 @@ async def _goto_future(hass, future=None):
     with patch("homeassistant.util.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
 
 async def test_full_valid_config(hass):
@@ -247,6 +249,8 @@ async def test_delivered_not_shown(hass):
 
     hass.components.persistent_notification = MagicMock()
     await _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
+    await _goto_future(hass)
+
     assert not hass.states.async_entity_ids()
     hass.components.persistent_notification.create.assert_called()
 

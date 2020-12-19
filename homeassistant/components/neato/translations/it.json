@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Gi\u00e0 configurato",
-            "invalid_credentials": "Credenziali non valide"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "invalid_auth": "Autenticazione non valida"
         },
         "create_entry": {
             "default": "Vedere la [Documentazione di Neato]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Credenziali non valide",
-            "unexpected_error": "Errore inaspettato"
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {

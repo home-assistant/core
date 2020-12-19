@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "AlarmDecoder-enheten er allerede konfigurert."
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "create_entry": {
             "default": "Vellykket koblet til AlarmDecoder."
         },
         "error": {
-            "service_unavailable": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "protocol": {

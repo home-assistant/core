@@ -4,9 +4,7 @@
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/image",
   "requirements": ["pillow==7.2.0"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": ["http"],
-  "codeowners": ["@home-assistant/core"]
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

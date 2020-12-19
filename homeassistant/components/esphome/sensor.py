@@ -1,5 +1,4 @@
 """Support for esphome sensors."""
-import logging
 import math
 from typing import Optional
 
@@ -9,8 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

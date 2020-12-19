@@ -2,7 +2,7 @@
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Type
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -168,7 +168,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-def map_vera_device(vera_device, remap):
+def map_vera_device(vera_device: veraApi.VeraDevice, remap: List[int]) -> str:
     """Map vera classes to Home Assistant types."""
 
     type_map = {
@@ -198,10 +198,13 @@ def map_vera_device(vera_device, remap):
     )
 
 
-class VeraDevice(Entity):
+DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
+
+
+class VeraDevice(Generic[DeviceType], Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device, controller_data: ControllerData):
+    def __init__(self, vera_device: DeviceType, controller_data: ControllerData):
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller_data.controller
@@ -217,26 +220,26 @@ class VeraDevice(Entity):
         else:
             self._unique_id = f"vera_{controller_data.config_entry.unique_id}_{self.vera_device.vera_device_id}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.controller.register(self.vera_device, self._update_callback)
 
-    def _update_callback(self, _device):
+    def _update_callback(self, _device: DeviceType) -> None:
         """Update the state."""
         self.schedule_update_ha_state(True)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Get polling requirement from vera device."""
         return self.vera_device.should_poll
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
         attr = {}
 

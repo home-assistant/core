@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "description": "Seadista oma Elegato Key Light sidumine Home Assistant-iga."
+            },
+            "zeroconf_confirm": {
+                "description": "Kas soovite lisada Home Assistanti Elegato Key Light'i seerianumbriga \" {serial_number} \"?",
+                "title": "Leitud Elegato Key Light seade"
+            }
+        }
+    }
+}

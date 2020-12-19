@@ -1,6 +1,5 @@
 """Support for Toon van Eneco devices."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -34,8 +33,6 @@ ENTITY_COMPONENTS = {
     SENSOR_DOMAIN,
     SWITCH_DOMAIN,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema(

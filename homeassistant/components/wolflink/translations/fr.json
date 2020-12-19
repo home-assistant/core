@@ -9,11 +9,18 @@
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "device": {
+                "data": {
+                    "device_name": "Appareil"
+                },
+                "title": "S\u00e9lectionnez l'appareil WOLF"
+            },
             "user": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Connexion WOLF SmartSet"
             }
         }
     }

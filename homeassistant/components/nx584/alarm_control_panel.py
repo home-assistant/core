@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error(
             "Unable to connect to %(host)s: %(reason)s",
-            dict(host=url, reason=ex),
+            {"host": url, "reason": ex},
         )
         raise PlatformNotReady from ex
 
@@ -118,7 +118,7 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to %(host)s: %(reason)s",
-                dict(host=self._url, reason=ex),
+                {"host": self._url, "reason": ex},
             )
             self._state = None
             zones = []
@@ -132,7 +132,7 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
             if zone["bypassed"]:
                 _LOGGER.debug(
                     "Zone %(zone)s is bypassed, assuming HOME",
-                    dict(zone=zone["number"]),
+                    {"zone": zone["number"]},
                 )
                 bypassed = True
                 break

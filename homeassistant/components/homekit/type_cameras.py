@@ -109,6 +109,7 @@ RESOLUTIONS = [
     (1280, 720),
     (1280, 960),
     (1920, 1080),
+    (1600, 1200),
 ]
 
 VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
@@ -369,7 +370,7 @@ class Camera(HomeAccessory, PyhapCamera):
         if self.config[CONF_SUPPORT_AUDIO]:
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
         _LOGGER.debug("FFmpeg output settings: %s", output)
-        stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
+        stream = HAFFmpeg(self._ffmpeg.binary)
         opened = await stream.open(
             cmd=[], input_source=input_source, output=output, stdout_pipe=False
         )

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "invalid_host": "Neveljavno ime gostitelja ali neveljaven IP naslov"
+        }
+    }
+}

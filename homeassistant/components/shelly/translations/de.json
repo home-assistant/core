@@ -1,3 +1,18 @@
 {
-    "title": "Shelly"
+    "config": {
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
 }

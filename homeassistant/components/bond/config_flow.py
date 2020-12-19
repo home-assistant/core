@@ -7,7 +7,12 @@ from bond_api import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_NAME,
+    HTTP_UNAUTHORIZED,
+)
 
 from .const import CONF_BOND_ID
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -31,7 +36,7 @@ async def _validate_input(data: Dict[str, Any]) -> str:
     except ClientConnectionError as error:
         raise InputValidationError("cannot_connect") from error
     except ClientResponseError as error:
-        if error.status == 401:
+        if error.status == HTTP_UNAUTHORIZED:
             raise InputValidationError("invalid_auth") from error
         raise InputValidationError("unknown") from error
     except Exception as error:

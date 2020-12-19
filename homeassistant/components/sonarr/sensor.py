@@ -4,112 +4,17 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    DATA_BYTES,
-    DATA_EXABYTES,
-    DATA_GIGABYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_PETABYTES,
-    DATA_TERABYTES,
-    DATA_YOTTABYTES,
-    DATA_ZETTABYTES,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_GIGABYTES
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import SonarrEntity
-from .const import (
-    CONF_BASE_PATH,
-    CONF_DAYS,
-    CONF_INCLUDED,
-    CONF_UNIT,
-    CONF_UPCOMING_DAYS,
-    CONF_URLBASE,
-    CONF_WANTED_MAX_ITEMS,
-    DATA_SONARR,
-    DEFAULT_BASE_PATH,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DOMAIN,
-)
+from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-BYTE_SIZES = [
-    DATA_BYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_GIGABYTES,
-    DATA_TERABYTES,
-    DATA_PETABYTES,
-    DATA_EXABYTES,
-    DATA_ZETTABYTES,
-    DATA_YOTTABYTES,
-]
-
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = DATA_GIGABYTES
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_INCLUDED, invalidation_version="0.112"),
-    cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.112"),
-    cv.deprecated(CONF_UNIT, invalidation_version="0.112"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-            vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
-            vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.ensure_list,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-            vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
-        }
-    ),
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities: Callable[[List[Entity], bool], None],
-    discovery_info: Any = None,
-) -> None:
-    """Import the platform into a config entry."""
-    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
-        return True
-
-    config[CONF_BASE_PATH] = f"{config[CONF_URLBASE]}{DEFAULT_BASE_PATH}"
-    config[CONF_UPCOMING_DAYS] = int(config[CONF_DAYS])
-    config[CONF_VERIFY_SSL] = False
-
-    del config[CONF_DAYS]
-    del config[CONF_INCLUDED]
-    del config[CONF_MONITORED_CONDITIONS]
-    del config[CONF_URLBASE]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
@@ -259,10 +164,6 @@ class SonarrDiskspaceSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    def _to_unit(self, value):
-        """Return a value converted to unit of measurement."""
-        return value / 1024 ** BYTE_SIZES.index(self._unit_of_measurement)
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
@@ -276,8 +177,8 @@ class SonarrDiskspaceSensor(SonarrSensor):
         attrs = {}
 
         for disk in self._disks:
-            free = self._to_unit(disk.free)
-            total = self._to_unit(disk.total)
+            free = disk.free / 1024 ** 3
+            total = disk.total / 1024 ** 3
             usage = free / total * 100
 
             attrs[
@@ -289,7 +190,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        free = self._to_unit(self._total_free)
+        free = self._total_free / 1024 ** 3
         return f"{free:.2f}"
 
 
@@ -389,18 +290,6 @@ class SonarrUpcomingSensor(SonarrSensor):
             unit_of_measurement="Episodes",
         )
 
-    async def async_added_to_hass(self):
-        """Listen for signals."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"sonarr.{self._entry_id}.entry_options_update",
-                self.async_update_entry_options,
-            )
-        )
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
@@ -410,10 +299,6 @@ class SonarrUpcomingSensor(SonarrSensor):
         self._upcoming = await self.sonarr.calendar(
             start=start.isoformat(), end=end.isoformat()
         )
-
-    async def async_update_entry_options(self, options: dict) -> None:
-        """Update sensor settings when config entry options are update."""
-        self._days = options[CONF_UPCOMING_DAYS]
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -450,27 +335,11 @@ class SonarrWantedSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    async def async_added_to_hass(self):
-        """Listen for signals."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"sonarr.{self._entry_id}.entry_options_update",
-                self.async_update_entry_options,
-            )
-        )
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
         self._results = await self.sonarr.wanted(page_size=self._max_items)
         self._total = self._results.total
-
-    async def async_update_entry_options(self, options: dict) -> None:
-        """Update sensor settings when config entry options are update."""
-        self._max_items = options[CONF_WANTED_MAX_ITEMS]
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:

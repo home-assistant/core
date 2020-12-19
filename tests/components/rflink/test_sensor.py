@@ -12,7 +12,12 @@ from homeassistant.components.rflink import (
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 
 from tests.components.rflink.test_init import mock_rflink
 
@@ -42,7 +47,7 @@ async def test_default_setup(hass, monkeypatch):
     config_sensor = hass.states.get("sensor.test")
     assert config_sensor
     assert config_sensor.state == "unknown"
-    assert config_sensor.attributes["unit_of_measurement"] == TEMP_CELSIUS
+    assert config_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
     # test event for config sensor
     event_callback(
@@ -62,7 +67,7 @@ async def test_default_setup(hass, monkeypatch):
     new_sensor = hass.states.get("sensor.test2")
     assert new_sensor
     assert new_sensor.state == "0"
-    assert new_sensor.attributes["unit_of_measurement"] == TEMP_CELSIUS
+    assert new_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert new_sensor.attributes["icon"] == "mdi:thermometer"
 
 
@@ -160,7 +165,7 @@ async def test_aliases(hass, monkeypatch):
     updated_sensor = hass.states.get("sensor.test_02")
     assert updated_sensor
     assert updated_sensor.state == "65"
-    assert updated_sensor.attributes["unit_of_measurement"] == PERCENTAGE
+    assert updated_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
 
 async def test_race_condition(hass, monkeypatch):

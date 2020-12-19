@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, mqtt
+from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
@@ -40,6 +40,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
@@ -60,7 +61,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OFF_DELAY): vol.All(vol.Coerce(int), vol.Range(min=0)),
+            vol.Optional(CONF_OFF_DELAY): cv.positive_int,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,

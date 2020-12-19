@@ -1,4 +1,5 @@
 """Support for TPLink lights."""
+import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -15,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
@@ -25,7 +26,7 @@ from homeassistant.util.color import (
 import homeassistant.util.dt as dt_util
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-from .common import async_add_entities_retry
+from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -54,23 +55,21 @@ LIGHT_SYSINFO_IS_DIMMABLE = "is_dimmable"
 LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP = "is_variable_color_temp"
 LIGHT_SYSINFO_IS_COLOR = "is_color"
 
+MAX_ATTEMPTS = 300
+SLEEP_TIME = 2
+
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
-    """Set up switches."""
-    await async_add_entities_retry(
-        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
+    """Set up lights."""
+    entities = await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
     )
-    return True
 
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
-def add_entity(device: SmartBulb, async_add_entities):
-    """Check if device is online and add the entity."""
-    # Attempt to get the sysinfo. If it fails, it will raise an
-    # exception that is caught by async_add_entities_retry which
-    # will try again later.
-    device.get_sysinfo()
-
-    async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
+    if hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]:
+        raise PlatformNotReady
 
 
 def brightness_to_percentage(byt):
@@ -133,6 +132,9 @@ class TPLinkSmartBulb(LightEntity):
         self._last_current_power_update = None
         self._last_historical_power_update = None
         self._emeter_params = {}
+
+        self._host = None
+        self._alias = None
 
     @property
     def unique_id(self):
@@ -235,39 +237,35 @@ class TPLinkSmartBulb(LightEntity):
         """Return True if device is on."""
         return self._light_state.state
 
-    def update(self):
-        """Update the TP-Link Bulb's state."""
+    def attempt_update(self, update_attempt):
+        """Attempt to get details the TP-Link bulb."""
         # State is currently being set, ignore.
         if self._is_setting_light_state:
-            return
+            return False
 
         try:
-            # Update light features only once.
             if not self._light_features:
-                self._light_features = self._get_light_features_retry()
-            self._light_state = self._get_light_state_retry()
-            self._is_available = True
+                self._light_features = self._get_light_features()
+                self._alias = self._light_features.alias
+                self._host = self.smartbulb.host
+            self._light_state = self._get_light_state()
+            return True
+
         except (SmartDeviceException, OSError) as ex:
-            if self._is_available:
-                _LOGGER.warning(
-                    "Could not read data for %s: %s", self.smartbulb.host, ex
+            if update_attempt == 0:
+                _LOGGER.debug(
+                    "Retrying in %s seconds for %s|%s due to: %s",
+                    SLEEP_TIME,
+                    self._host,
+                    self._alias,
+                    ex,
                 )
-            self._is_available = False
+            return False
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._light_features.supported_features
-
-    def _get_light_features_retry(self) -> LightFeatures:
-        """Retry the retrieval of the supported features."""
-        try:
-            return self._get_light_features()
-        except (SmartDeviceException, OSError):
-            pass
-
-        _LOGGER.debug("Retrying getting light features")
-        return self._get_light_features()
 
     def _get_light_features(self):
         """Determine all supported features in one go."""
@@ -303,16 +301,6 @@ class TPLinkSmartBulb(LightEntity):
             max_mireds=max_mireds,
             has_emeter=has_emeter,
         )
-
-    def _get_light_state_retry(self) -> LightState:
-        """Retry the retrieval of getting light states."""
-        try:
-            return self._get_light_state()
-        except (SmartDeviceException, OSError):
-            pass
-
-        _LOGGER.debug("Retrying getting light state")
-        return self._get_light_state()
 
     def _light_state_from_params(self, light_state_params) -> LightState:
         brightness = None
@@ -473,6 +461,33 @@ class TPLinkSmartBulb(LightEntity):
                 self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
 
         return self._get_device_state()
+
+    async def async_update(self):
+        """Update the TP-Link bulb's state."""
+        for update_attempt in range(MAX_ATTEMPTS):
+            is_ready = await self.hass.async_add_executor_job(
+                self.attempt_update, update_attempt
+            )
+
+            if is_ready:
+                self._is_available = True
+                if update_attempt > 0:
+                    _LOGGER.debug(
+                        "Device %s|%s responded after %s attempts",
+                        self._host,
+                        self._alias,
+                        update_attempt,
+                    )
+                break
+            await asyncio.sleep(SLEEP_TIME)
+        else:
+            if self._is_available:
+                _LOGGER.warning(
+                    "Could not read state for %s|%s",
+                    self._host,
+                    self._alias,
+                )
+            self._is_available = False
 
 
 def _light_state_diff(old_light_state: LightState, new_light_state: LightState):

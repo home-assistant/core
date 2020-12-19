@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
@@ -63,11 +63,13 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
 def _attach_trigger(
     hass: HomeAssistant, config: ConfigType, action: AutomationActionType, event_type
 ):
+    job = HassJob(action)
+
     @callback
     def _handle_event(event: Event):
         if event.data[ATTR_ENTITY_ID] == config[CONF_ENTITY_ID]:
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {"trigger": {**config, "description": event_type}},
                 event.context,
             )

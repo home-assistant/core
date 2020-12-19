@@ -1,6 +1,5 @@
 """Track devices using UniFi controllers."""
 from datetime import timedelta
-import logging
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.events import (
@@ -28,8 +27,6 @@ import homeassistant.util.dt as dt_util
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
-
-LOGGER = logging.getLogger(__name__)
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"
@@ -233,9 +230,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @property
     def device_state_attributes(self):
         """Return the client state attributes."""
-        attributes = {}
-
-        attributes["is_wired"] = self.is_wired
+        attributes = {"is_wired": self.is_wired}
 
         if self.is_connected:
             for variable in CLIENT_CONNECTED_ATTRIBUTES:

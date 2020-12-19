@@ -1,10 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "port": "Poort"
-                }
+                },
+                "title": "Stel Agent DVR in"
             }
         }
     }

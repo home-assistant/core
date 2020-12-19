@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja ZHA."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem ZHA."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "pick_radio": {
@@ -58,13 +58,14 @@
             "left": "w lewo",
             "open": "otw\u00f3rz",
             "right": "w prawo",
-            "turn_off": "wy\u0142\u0105cz",
-            "turn_on": "w\u0142\u0105cz"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "device_dropped": "nast\u0105pi upadek urz\u0105dzenia",
             "device_flipped": "nast\u0105pi odwr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
             "device_knocked": "nast\u0105pi pukni\u0119cie w urz\u0105dzenie \"{subtype}\"",
+            "device_offline": "urz\u0105dzenie przejdzie w tryb offline",
             "device_rotated": "nast\u0105pi obr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
             "device_shaken": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
             "device_slid": "nast\u0105pi przesuni\u0119cie urz\u0105dzenia \"{subtype}\"",

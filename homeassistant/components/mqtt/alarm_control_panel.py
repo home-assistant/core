@@ -4,7 +4,6 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -48,6 +47,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
@@ -338,7 +338,7 @@ class MqttAlarm(
         """Publish via mqtt."""
         command_template = self._config[CONF_COMMAND_TEMPLATE]
         values = {"action": action, "code": code}
-        payload = command_template.async_render(**values)
+        payload = command_template.async_render(**values, parse_result=False)
         mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],

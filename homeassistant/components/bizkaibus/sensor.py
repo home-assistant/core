@@ -1,7 +1,4 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
-
-import logging
-
 from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
@@ -9,8 +6,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_DUE_IN = "Due in"
 

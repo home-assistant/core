@@ -23,7 +23,7 @@ async def test_duplicate_error(hass, config_entry):
     flow.hass = hass
 
     result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {"base": "identifier_exists"}
+    assert result["errors"] == {"base": "already_configured"}
 
 
 async def test_show_form(hass):

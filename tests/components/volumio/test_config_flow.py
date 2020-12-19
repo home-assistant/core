@@ -50,12 +50,12 @@ async def test_form(hass):
             result["flow_id"],
             TEST_CONNECTION,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "TestVolumio"
     assert result2["data"] == {**TEST_SYSTEM_INFO, **TEST_CONNECTION}
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -118,6 +118,7 @@ async def test_empty_system_info(hass):
             result["flow_id"],
             TEST_CONNECTION,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_CONNECTION["host"]
@@ -128,7 +129,6 @@ async def test_empty_system_info(hass):
         "id": None,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -191,6 +191,7 @@ async def test_discovery(hass):
             result["flow_id"],
             user_input={},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_DISCOVERY_RESULT["name"]
@@ -199,7 +200,6 @@ async def test_discovery(hass):
     assert result2["result"]
     assert result2["result"].unique_id == TEST_DISCOVERY_RESULT["id"]
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -35,6 +35,7 @@ ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE_IEEE = "device_ieee"
 ATTR_DEVICE_TYPE = "device_type"
 ATTR_ENDPOINTS = "endpoints"
+ATTR_ENDPOINT_NAMES = "endpoint_names"
 ATTR_ENDPOINT_ID = "endpoint_id"
 ATTR_IEEE = "ieee"
 ATTR_IN_CLUSTERS = "in_clusters"
@@ -46,6 +47,7 @@ ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_MEMBERS = "members"
 ATTR_MODEL = "model"
 ATTR_NAME = "name"
+ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
 ATTR_OUT_CLUSTERS = "out_clusters"
@@ -153,6 +155,9 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
 DEFAULT_RADIO_TYPE = "ezsp"
 DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = "zigbee.db"
+
+DEVICE_PAIRING_STATUS = "pairing_status"
+
 DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"

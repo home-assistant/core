@@ -6,6 +6,8 @@
         "data": { "country": "Country" }
       }
     },
-    "abort": { "already_configured": "This country is already configured." }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
   }
 }

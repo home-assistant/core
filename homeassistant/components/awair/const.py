@@ -14,6 +14,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -63,7 +64,7 @@ SENSOR_TYPES = {
     API_LUX: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
         ATTR_ICON: None,
-        ATTR_UNIT: "lx",
+        ATTR_UNIT: LIGHT_LUX,
         ATTR_LABEL: "Illuminance",
         ATTR_UNIQUE_ID: "illuminance",
     },

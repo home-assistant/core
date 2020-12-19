@@ -3,7 +3,15 @@
 import pytest
 
 from homeassistant import setup
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
@@ -13,7 +21,6 @@ from tests.common import (
     mock_component,
     mock_restore_cache,
 )
-from tests.components.switch import common
 
 
 @pytest.fixture
@@ -418,8 +425,12 @@ async def test_on_action(hass, calls):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
 
-    await common.async_turn_on(hass, "switch.test_template_switch")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
 
     assert len(calls) == 1
 
@@ -454,8 +465,12 @@ async def test_on_action_optimistic(hass, calls):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
 
-    await common.async_turn_on(hass, "switch.test_template_switch")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
 
     state = hass.states.get("switch.test_template_switch")
     assert len(calls) == 1
@@ -494,8 +509,12 @@ async def test_off_action(hass, calls):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_ON
 
-    await common.async_turn_off(hass, "switch.test_template_switch")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
 
     assert len(calls) == 1
 
@@ -530,8 +549,12 @@ async def test_off_action_optimistic(hass, calls):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_ON
 
-    await common.async_turn_off(hass, "switch.test_template_switch")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        blocking=True,
+    )
 
     state = hass.states.get("switch.test_template_switch")
     assert len(calls) == 1

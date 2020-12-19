@@ -14,6 +14,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
@@ -24,7 +25,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +36,16 @@ TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
-ALL_TABLES = [TABLE_EVENTS, TABLE_STATES, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
 
 
 class Events(Base):  # type: ignore
     """Event history data."""
 
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, primary_key=True)
     event_type = Column(String(32))
@@ -59,12 +64,12 @@ class Events(Base):  # type: ignore
     )
 
     @staticmethod
-    def from_event(event):
+    def from_event(event, event_data=None):
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=json.dumps(event.data, cls=JSONEncoder),
-            origin=str(event.origin),
+            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -95,17 +100,27 @@ class Events(Base):  # type: ignore
 class States(Base):  # type: ignore
     """State change history."""
 
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
     __tablename__ = TABLE_STATES
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
     entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
-    event_id = Column(Integer, ForeignKey("events.event_id"), index=True)
+    event_id = Column(
+        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
+    )
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(Integer)
+    old_state_id = Column(
+        Integer, ForeignKey("states.state_id", ondelete="SET NULL"), index=True
+    )
+    event = relationship("Events", uselist=False)
+    old_state = relationship("States", remote_side=[state_id])
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
@@ -218,7 +233,8 @@ def process_timestamp_to_utc_isoformat(ts):
     """Process a timestamp into UTC isotime."""
     if ts is None:
         return None
+    if ts.tzinfo == dt_util.UTC:
+        return ts.isoformat()
     if ts.tzinfo is None:
         return f"{ts.isoformat()}{DB_TIMEZONE}"
-
-    return dt_util.as_utc(ts).isoformat()
+    return ts.astimezone(dt_util.UTC).isoformat()

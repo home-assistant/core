@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import cover, mqtt
+from homeassistant.components import cover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -51,6 +51,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
@@ -557,7 +558,7 @@ class MqttCover(
         position = kwargs[ATTR_POSITION]
         percentage_position = position
         if set_position_template is not None:
-            position = set_position_template.async_render(**kwargs)
+            position = set_position_template.async_render(parse_result=False, **kwargs)
         else:
             position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 

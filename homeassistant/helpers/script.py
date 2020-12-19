@@ -22,10 +22,10 @@ from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
-import homeassistant.components.device_automation as device_automation
+from homeassistant.components import device_automation, scene
 from homeassistant.components.logger import LOGSEVERITY
-import homeassistant.components.scene as scene
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
@@ -44,6 +44,7 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
+    CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNTIL,
     CONF_VARIABLES,
@@ -53,14 +54,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import SERVICE_CALL_LIMIT, Context, HomeAssistant, callback
-from homeassistant.helpers import condition, config_validation as cv, template
+from homeassistant.core import (
+    SERVICE_CALL_LIMIT,
+    Context,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.helpers import condition, config_validation as cv, service, template
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.service import (
-    CONF_SERVICE_DATA,
-    async_prepare_call_from_config,
-)
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -123,29 +126,70 @@ def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
     )
 
 
+STATIC_VALIDATION_ACTION_TYPES = (
+    cv.SCRIPT_ACTION_CALL_SERVICE,
+    cv.SCRIPT_ACTION_DELAY,
+    cv.SCRIPT_ACTION_WAIT_TEMPLATE,
+    cv.SCRIPT_ACTION_FIRE_EVENT,
+    cv.SCRIPT_ACTION_ACTIVATE_SCENE,
+    cv.SCRIPT_ACTION_VARIABLES,
+)
+
+
+async def async_validate_actions_config(
+    hass: HomeAssistant, actions: List[ConfigType]
+) -> List[ConfigType]:
+    """Validate a list of actions."""
+    return await asyncio.gather(
+        *[async_validate_action_config(hass, action) for action in actions]
+    )
+
+
 async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
     action_type = cv.determine_script_action(config)
 
-    if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
+    if action_type in STATIC_VALIDATION_ACTION_TYPES:
+        pass
+
+    elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "action"
         )
         config = platform.ACTION_SCHEMA(config)  # type: ignore
-    elif (
-        action_type == cv.SCRIPT_ACTION_CHECK_CONDITION
-        and config[CONF_CONDITION] == "device"
-    ):
-        platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "condition"
-        )
-        config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
+    elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
+        if config[CONF_CONDITION] == "device":
+            platform = await device_automation.async_get_device_automation_platform(
+                hass, config[CONF_DOMAIN], "condition"
+            )
+            config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
             hass, config[CONF_WAIT_FOR_TRIGGER]
         )
+
+    elif action_type == cv.SCRIPT_ACTION_REPEAT:
+        config[CONF_SEQUENCE] = await async_validate_actions_config(
+            hass, config[CONF_REPEAT][CONF_SEQUENCE]
+        )
+
+    elif action_type == cv.SCRIPT_ACTION_CHOOSE:
+        if CONF_DEFAULT in config:
+            config[CONF_DEFAULT] = await async_validate_actions_config(
+                hass, config[CONF_DEFAULT]
+            )
+
+        for choose_conf in config[CONF_CHOOSE]:
+            choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, choose_conf[CONF_SEQUENCE]
+            )
+
+    else:
+        raise ValueError(f"No validation for {action_type}")
 
     return config
 
@@ -382,13 +426,13 @@ class _ScriptRun:
         self._script.last_action = self._action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s", self._script.last_action)
 
-        domain, service, service_data = async_prepare_call_from_config(
+        domain, service_name, service_data = service.async_prepare_call_from_config(
             self._hass, self._action, self._variables
         )
 
         running_script = (
             domain == "automation"
-            and service == "trigger"
+            and service_name == "trigger"
             or domain in ("python_script", "script")
         )
         # If this might start a script then disable the call timeout.
@@ -401,7 +445,7 @@ class _ScriptRun:
         service_task = self._hass.async_create_task(
             self._hass.services.async_call(
                 domain,
-                service,
+                service_name,
                 service_data,
                 blocking=True,
                 context=self._context,
@@ -708,6 +752,23 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[Dict[str, Any], MappingProxyType]
 
 
+def _referenced_extract_ids(data: Dict, key: str, found: Set[str]) -> None:
+    """Extract referenced IDs."""
+    if not data:
+        return
+
+    item_ids = data.get(key)
+
+    if item_ids is None or isinstance(item_ids, template.Template):
+        return
+
+    if isinstance(item_ids, str):
+        item_ids = [item_ids]
+
+    for item_id in item_ids:
+        found.add(item_id)
+
+
 class Script:
     """Representation of a script."""
 
@@ -748,7 +809,11 @@ class Script:
         self.name = name
         self.domain = domain
         self.running_description = running_description or f"{domain} script"
-        self.change_listener = change_listener
+        self._change_listener = change_listener
+        self._change_listener_job = (
+            None if change_listener is None else HassJob(change_listener)
+        )
+
         self.script_mode = script_mode
         self._set_logger(logger)
         self._log_exceptions = log_exceptions
@@ -771,6 +836,21 @@ class Script:
         if self._variables_dynamic:
             template.attach(hass, variables)
 
+    @property
+    def change_listener(self) -> Optional[Callable[..., Any]]:
+        """Return the change_listener."""
+        return self._change_listener
+
+    @change_listener.setter
+    def change_listener(self, change_listener: Callable[..., Any]) -> None:
+        """Update the change_listener."""
+        self._change_listener = change_listener
+        if (
+            self._change_listener_job is None
+            or change_listener != self._change_listener_job.target
+        ):
+            self._change_listener_job = HassJob(change_listener)
+
     def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
         if logger:
             self._logger = logger
@@ -789,8 +869,8 @@ class Script:
                 choose_data["default"].update_logger(self._logger)
 
     def _changed(self):
-        if self.change_listener:
-            self._hass.async_run_job(self.change_listener)
+        if self._change_listener_job:
+            self._hass.async_run_hass_job(self._change_listener_job)
 
     def _chain_change_listener(self, sub_script):
         if sub_script.is_running:
@@ -823,7 +903,16 @@ class Script:
         for step in self.sequence:
             action = cv.determine_script_action(step)
 
-            if action == cv.SCRIPT_ACTION_CHECK_CONDITION:
+            if action == cv.SCRIPT_ACTION_CALL_SERVICE:
+                for data in (
+                    step,
+                    step.get(CONF_TARGET),
+                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                ):
+                    _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
+
+            elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_devices(step)
 
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
@@ -844,20 +933,13 @@ class Script:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
-                data = step.get(CONF_SERVICE_DATA)
-                if not data:
-                    continue
-
-                entity_ids = data.get(ATTR_ENTITY_ID)
-
-                if entity_ids is None:
-                    continue
-
-                if isinstance(entity_ids, str):
-                    entity_ids = [entity_ids]
-
-                for entity_id in entity_ids:
-                    referenced.add(entity_id)
+                for data in (
+                    step,
+                    step.get(CONF_TARGET),
+                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                ):
+                    _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_entities(step)

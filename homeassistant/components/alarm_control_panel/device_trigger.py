@@ -12,6 +12,7 @@ from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -64,7 +65,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entity_state is None:
             continue
 
-        supported_features = entity_state.attributes["supported_features"]
+        supported_features = entity_state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add triggers for each entity that belongs to this integration
         triggers += [

@@ -24,6 +24,14 @@ from tests.components.homekit_controller.common import setup_test_component
 
 HEATING_COOLING_TARGET = ("thermostat", "heating-cooling.target")
 HEATING_COOLING_CURRENT = ("thermostat", "heating-cooling.current")
+THERMOSTAT_TEMPERATURE_COOLING_THRESHOLD = (
+    "thermostat",
+    "temperature.cooling-threshold",
+)
+THERMOSTAT_TEMPERATURE_HEATING_THRESHOLD = (
+    "thermostat",
+    "temperature.heating-threshold",
+)
 TEMPERATURE_TARGET = ("thermostat", "temperature.target")
 TEMPERATURE_CURRENT = ("thermostat", "temperature.current")
 HUMIDITY_TARGET = ("thermostat", "relative-humidity.target")
@@ -40,6 +48,16 @@ def create_thermostat_service(accessory):
     char.value = 0
 
     char = service.add_char(CharacteristicsTypes.HEATING_COOLING_CURRENT)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
+    char.minValue = 15
+    char.maxValue = 40
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
+    char.minValue = 4
+    char.maxValue = 30
     char.value = 0
 
     char = service.add_char(CharacteristicsTypes.TEMPERATURE_TARGET)
@@ -126,6 +144,41 @@ async def test_climate_change_thermostat_state(hass, utcnow):
     assert helper.characteristics[HEATING_COOLING_TARGET].value == 0
 
 
+async def test_climate_check_min_max_values_per_mode(hass, utcnow):
+    """Test that we we get the appropriate min/max values for each mode."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_COOL},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 4
+    assert climate_state.attributes["max_temp"] == 40
+
+
 async def test_climate_change_thermostat_temperature(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
     helper = await setup_test_component(hass, create_thermostat_service)
@@ -145,6 +198,89 @@ async def test_climate_change_thermostat_temperature(hass, utcnow):
         blocking=True,
     )
     assert helper.characteristics[TEMPERATURE_TARGET].value == 25
+
+
+async def test_climate_change_thermostat_temperature_range(hass, utcnow):
+    """Test that we can set separate heat and cool setpoints in heat_cool mode."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
+            "hvac_mode": HVAC_MODE_HEAT_COOL,
+            "target_temp_high": 25,
+            "target_temp_low": 20,
+        },
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 22.5
+    assert helper.characteristics[THERMOSTAT_TEMPERATURE_HEATING_THRESHOLD].value == 20
+    assert helper.characteristics[THERMOSTAT_TEMPERATURE_COOLING_THRESHOLD].value == 25
+
+
+async def test_climate_change_thermostat_temperature_range_iphone(hass, utcnow):
+    """Test that we can set all three set points at once (iPhone heat_cool mode support)."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
+            "hvac_mode": HVAC_MODE_HEAT_COOL,
+            "temperature": 22,
+            "target_temp_low": 20,
+            "target_temp_high": 24,
+        },
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 22
+    assert helper.characteristics[THERMOSTAT_TEMPERATURE_HEATING_THRESHOLD].value == 20
+    assert helper.characteristics[THERMOSTAT_TEMPERATURE_COOLING_THRESHOLD].value == 24
+
+
+async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(hass, utcnow):
+    """Test that we cannot set range values when not in heat_cool mode."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
+            "hvac_mode": HVAC_MODE_HEAT_COOL,
+            "temperature": 22,
+            "target_temp_low": 20,
+            "target_temp_high": 24,
+        },
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 22
+    assert helper.characteristics[THERMOSTAT_TEMPERATURE_HEATING_THRESHOLD].value == 0
+    assert helper.characteristics[THERMOSTAT_TEMPERATURE_COOLING_THRESHOLD].value == 0
 
 
 async def test_climate_change_thermostat_humidity(hass, utcnow):

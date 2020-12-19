@@ -255,8 +255,7 @@ class HikvisionBinarySensor(BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr[ATTR_LAST_TRIP_TIME] = self._sensor_last_update()
+        attr = {ATTR_LAST_TRIP_TIME: self._sensor_last_update()}
 
         if self._delay != 0:
             attr[ATTR_DELAY] = self._delay

@@ -271,7 +271,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return sorted(self._source_list.keys())
+        return sorted(list(self._source_list))
 
     @property
     def media_content_type(self):
@@ -305,7 +305,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Flag media player features that are supported."""
         supported = SUPPORT_WEBOSTV
 
-        if self._client.sound_output == "external_arc":
+        if (self._client.sound_output == "external_arc") or (
+            self._client.sound_output == "external_speaker"
+        ):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
@@ -318,10 +320,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
-        if self._client.sound_output is not None and self.state != STATE_OFF:
-            attributes[ATTR_SOUND_OUTPUT] = self._client.sound_output
-        return attributes
+        if self._client.sound_output is None and self.state == STATE_OFF:
+            return {}
+        return {ATTR_SOUND_OUTPUT: self._client.sound_output}
 
     @cmd
     async def async_turn_off(self):

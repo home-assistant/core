@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cas\u00e9ta bridge allerede konfigurert.",
-            "cannot_connect": "Avbrutt oppsett av Cas\u00e9ta bridge p\u00e5 grunn av tilkoblingssvikt."
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "cannot_connect": "Kunne ikke koble til Cas\u00e9ta bridge; sjekk verts- og sertifikatkonfigurasjonen."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "import_failed": {

@@ -80,13 +80,13 @@ async def test_trigger_sensor_value_changed(hass, mock_openzwave):
     assert not device.is_on
 
     value.data = True
-    await hass.async_add_job(value_changed, value)
+    await hass.async_add_executor_job(value_changed, value)
     assert device.invalidate_after is None
 
     device.hass = hass
 
     value.data = True
-    await hass.async_add_job(value_changed, value)
+    await hass.async_add_executor_job(value_changed, value)
     assert device.is_on
 
     test_time = device.invalidate_after - datetime.timedelta(seconds=1)

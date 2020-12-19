@@ -14,6 +14,16 @@
                     "host": "Adresse IP",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
+                },
+                "description": "Veuillez saisir les d\u00e9tails de votre compte Control4 et l'adresse IP de votre contr\u00f4leur local."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Secondes entre les mises \u00e0 jour"
                 }
             }
         }

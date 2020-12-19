@@ -9,7 +9,11 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.components import cover, vacuum
-from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
+from homeassistant.components.cover import (
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
+    DEVICE_CLASS_WINDOW,
+)
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -24,6 +28,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -154,6 +159,11 @@ def get_accessory(hass, driver, state, aid, config):
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
         ):
             a_type = "GarageDoorOpener"
+        elif (
+            device_class == DEVICE_CLASS_WINDOW
+            and features & cover.SUPPORT_SET_POSITION
+        ):
+            a_type = "Window"
         elif features & cover.SUPPORT_SET_POSITION:
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
@@ -197,7 +207,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "CarbonMonoxideSensor"
         elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", "lx"):
+        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
 
     elif state.domain == "switch":

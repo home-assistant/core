@@ -7,33 +7,33 @@
       },
       "mode": {
         "title": "PlayStation 4",
-        "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
+        "description": "Select mode for configuration. The [%key:common::config_flow::data::ip%] field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
         "data": {
           "mode": "Config Mode",
-          "ip_address": "IP Address (Leave empty if using Auto Discovery)."
+          "ip_address": "[%key:common::config_flow::data::ip%] (Leave empty if using Auto Discovery)."
         }
       },
       "link": {
         "title": "PlayStation 4",
-        "description": "Enter your PlayStation 4 information. For 'PIN', navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
+        "description": "Enter your PlayStation 4 information. For [%key:common::config_flow::data::pin%], navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the [%key:common::config_flow::data::pin%] that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
         "data": {
           "region": "Region",
-          "name": "Name",
-          "code": "PIN",
-          "ip_address": "IP Address"
+          "name": "[%key:common::config_flow::data::name%]",
+          "code": "[%key:common::config_flow::data::pin%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       }
     },
     "error": {
       "credential_timeout": "Credential service timed out. Press submit to restart.",
-      "not_ready": "PlayStation 4 is not on or connected to network.",
-      "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
-      "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "login_failed": "Failed to pair to PlayStation 4. Verify [%key:common::config_flow::data::pin%] is correct.",
+      "no_ipaddress": "Enter the [%key:common::config_flow::data::ip%] of the PlayStation 4 you would like to configure."
     },
     "abort": {
       "credential_error": "Error fetching credentials.",
-      "no_devices_found": "No PlayStation 4 devices found on the network.",
-      "devices_configured": "All devices found are already configured.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
       "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
     }

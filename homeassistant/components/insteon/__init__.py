@@ -159,7 +159,7 @@ async def async_setup_entry(hass, entry):
         identifiers={(DOMAIN, str(devices.modem.address))},
         manufacturer="Smart Home",
         name=f"{devices.modem.description} {devices.modem.address}",
-        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
+        model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
         sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
     )
 

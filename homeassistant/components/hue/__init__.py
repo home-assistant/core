@@ -1,4 +1,5 @@
 """Support for the Philips Hue system."""
+import asyncio
 import logging
 
 from aiohue.util import normalize_bridge_id
@@ -7,7 +8,13 @@ from homeassistant import config_entries, core
 from homeassistant.components import persistent_notification
 from homeassistant.helpers import device_registry as dr
 
-from .bridge import HueBridge
+from .bridge import (
+    ATTR_GROUP_NAME,
+    ATTR_SCENE_NAME,
+    SCENE_SCHEMA,
+    SERVICE_HUE_SCENE,
+    HueBridge,
+)
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
@@ -21,6 +28,40 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Hue platform."""
+
+    async def hue_activate_scene(call, skip_reload=True):
+        """Handle activation of Hue scene."""
+        # Get parameters
+        group_name = call.data[ATTR_GROUP_NAME]
+        scene_name = call.data[ATTR_SCENE_NAME]
+
+        # Call the set scene function on each bridge
+        tasks = [
+            bridge.hue_activate_scene(
+                call, updated=skip_reload, hide_warnings=skip_reload
+            )
+            for bridge in hass.data[DOMAIN].values()
+            if isinstance(bridge, HueBridge)
+        ]
+        results = await asyncio.gather(*tasks)
+
+        # Did *any* bridge succeed? If not, refresh / retry
+        # Note that we'll get a "None" value for a successful call
+        if None not in results:
+            if skip_reload:
+                await hue_activate_scene(call, skip_reload=False)
+                return
+            _LOGGER.warning(
+                "No bridge was able to activate " "scene %s in group %s",
+                scene_name,
+                group_name,
+            )
+
+    # Register a local handler for scene activation
+    hass.services.async_register(
+        DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene, schema=SCENE_SCHEMA
+    )
+
     hass.data[DOMAIN] = {}
     return True
 
@@ -131,4 +172,5 @@ async def async_setup_entry(
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     bridge = hass.data[DOMAIN].pop(entry.entry_id)
+    hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
     return await bridge.async_reset()
