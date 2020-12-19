@@ -165,18 +165,14 @@ class NestCamera(Camera, AsyncEventCallback):
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_id = self._device_info.device_id
         device_entry = device_registry.async_get_device(device_id, ())
-        if not device_entry:
-            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
-            return
         for event in events:
             event_type = EVENT_NAME_MAP.get(event)
-            if not event_type:
-                continue
-            message = {
-                "device_id": device_entry.id,
-                "type": event_type,
-            }
-            self.hass.bus.async_fire(NEST_EVENT, message)
+            if event_type and device_id:
+                message = {
+                    "device_id": device_entry.id,
+                    "type": event_type,
+                }
+                self.hass.bus.async_fire(NEST_EVENT, message)
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
