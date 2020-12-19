@@ -131,7 +131,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     _LOGGER.error(
                         "Error while trying to turn on ambient light: %s", err
                     )
-                    self._state = False
 
         elif ATTR_BRIGHTNESS in kwargs:
             _LOGGER.debug("Changing brightness for: %s", self.name)
@@ -144,7 +143,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying set the brightness: %s", err)
-                self._brightness = None
         else:
             _LOGGER.debug("Switching light on for: %s", self.name)
             try:
@@ -155,7 +153,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying to turn on light: %s", err)
-                self._state = False
 
         self.async_entity_update()
 
@@ -170,7 +167,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off light: %s", err)
-            self._state = True
         self.async_entity_update()
 
     async def async_update(self):
