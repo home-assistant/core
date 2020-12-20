@@ -3,7 +3,6 @@
 import asyncio
 import logging
 
-from google_nest_sdm.event import AsyncEventCallback, EventMessage
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
