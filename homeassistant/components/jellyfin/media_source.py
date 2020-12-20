@@ -46,7 +46,7 @@ from .const import (  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_media_source(hass: HomeAssistant):
+async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
 
     # Currently only a single Jellyfin server is supported
