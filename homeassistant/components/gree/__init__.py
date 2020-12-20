@@ -21,8 +21,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Gree Climate component."""
@@ -80,7 +78,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
     )
 
-    unload_ok = False not in await results
+    unload_ok = all(await results)
     if unload_ok:
         hass.data[DOMAIN].pop(COORDINATORS, None)
 

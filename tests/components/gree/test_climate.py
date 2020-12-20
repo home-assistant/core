@@ -242,30 +242,6 @@ async def test_send_command_device_timeout(hass, discovery, device, mock_now):
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_send_command_device_unknown_error(hass, discovery, device, mock_now):
-    """Test for sending power on command to the device with a device timeout."""
-    await async_setup_gree(hass)
-
-    # First update to make the device available
-    state = hass.states.get(ENTITY_ID)
-    assert state.name == "fake-device-1"
-    assert state.state != STATE_UNAVAILABLE
-
-    device().push_state_update.side_effect = Exception
-
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVAC_MODE_AUTO},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-
 async def test_send_power_on(hass, discovery, device, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)

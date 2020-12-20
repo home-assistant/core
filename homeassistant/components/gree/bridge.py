@@ -40,15 +40,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Update the state of the device."""
         try:
             await self.device.update_state()
-
-            if not self.last_update_success and self._error_count:
-                _LOGGER.warning(
-                    "Device is available: %s (%s)",
-                    self.name,
-                    str(self.device.device_info),
-                )
-
-            self._error_count = 0
         except DeviceTimeoutError as error:
             self._error_count += 1
 
@@ -68,12 +59,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         except DeviceTimeoutError:
             _LOGGER.warning(
                 "Timeout send state update to: %s (%s)",
-                self.name,
-                self.device.device_info,
-            )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown exception caught while sending state update to: %s (%s)",
                 self.name,
                 self.device.device_info,
             )
