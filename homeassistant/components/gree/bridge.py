@@ -66,12 +66,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 self.name,
                 self.device.device_info,
             )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown exception caught while sending state update to: %s (%s)",
-                self.name,
-                self.device.device_info,
-            )
 
 
 class DeviceHelper:
