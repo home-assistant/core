@@ -6,14 +6,14 @@ import logging
 import threading
 
 from google_nest_sdm.event import AsyncEventCallback, EventMessage
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
 from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -231,6 +231,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await subscriber.start_async()
+    except AuthException as err:
+        _LOGGER.debug("Subscriber authentication error: %s", err)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data=entry.data,
+            )
+        )
+        return False
     except GoogleNestException as err:
         _LOGGER.error("Subscriber error: %s", err)
         subscriber.stop_async()
