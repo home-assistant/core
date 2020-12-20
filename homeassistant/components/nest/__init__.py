@@ -8,12 +8,11 @@ from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.components.nest.legacy import (
     async_setup_legacy,
     async_setup_legacy_entry,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
