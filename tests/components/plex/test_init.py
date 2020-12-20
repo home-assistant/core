@@ -1,7 +1,6 @@
 """Tests for Plex setup."""
 import copy
 from datetime import timedelta
-import logging
 import ssl
 from unittest.mock import patch
 
@@ -30,8 +29,6 @@ from .payloads import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_set_config_entry_unique_id(hass, entry, mock_plex_server):
