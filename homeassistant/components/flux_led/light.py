@@ -141,27 +141,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
+    automatic_add = False
+    devices = {}
 
     if config.get("automatic_add", False):
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_AUTOMATIC_ADD: True}
-        )
+        automatic_add = True
 
-    else:
-        for import_host, import_item in config["devices"].items():
-            import_name = import_host
-            if import_item:
-                import_name = import_item.get("name", import_host)
+    for import_host, import_item in config["devices"].items():
+        import_name = import_host
+        if import_item:
+            import_name = import_item.get("name", import_host)
 
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_AUTOMATIC_ADD: False,
-                    CONF_NAME: import_name,
-                    CONF_HOST: import_host,
-                },
-            )
+        devices[import_host.replace(".", "_")] = {
+            CONF_NAME: import_name,
+            CONF_HOST: import_host,
+        }
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_AUTOMATIC_ADD: automatic_add,
+            CONF_DEVICES: devices,
+        },
+    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

@@ -36,47 +36,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for the Flux LED component."""
         return OptionsFlow(config_entry)
 
-    async def async_step_import(self, import_config: dict = None):
+    async def async_step_import(self, data: dict = None):
         """Handle configuration via YAML import."""
         _LOGGER.info("Importing configuration from YAML for flux_led.")
         config_entry = self.hass.config_entries.async_entries(DOMAIN)
 
-        if import_config[CONF_AUTOMATIC_ADD]:
-            if config_entry:
-                _LOGGER.error(
-                    "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml."
-                )
-                return self.async_abort(reason="already_configured_device")
-
-            _LOGGER.error(
-                "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml."
-            )
-            return await self.async_step_user(user_input={CONF_AUTOMATIC_ADD: True})
-
         if config_entry:
-            for device_id, device in config_entry.entry.data[CONF_DEVICES].items():
-                if device_id == import_config[CONF_HOST].replace(".", "_"):
-                    _LOGGER.error(
-                        "Your flux_led configuration for %s has already been imported. Please remove configuration from your configuration.yaml.",
-                        device["ipaddr"],
-                    )
-                    return self.async_abort(reason="already_configured_device")
+            _LOGGER.error(
+                "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml."
+            )
+            return self.async_abort(reason="single_instance_allowed")
 
         _LOGGER.error(
-            "Imported flux_led configuration for %s. Please remove from your configuration.yaml.",
-            import_config[CONF_HOST],
+            "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml."
         )
-        await self.async_step_user(
+        return await self.async_step_user(
             user_input={
-                CONF_AUTOMATIC_ADD: False,
-                CONF_DEVICES: {
-                    import_config[CONF_HOST].replace(".", "_"): {
-                        CONF_NAME: import_config.get(
-                            CONF_NAME, import_config[CONF_HOST]
-                        ),
-                        CONF_HOST: import_config[CONF_HOST],
-                    }
-                },
+                CONF_AUTOMATIC_ADD: data[CONF_AUTOMATIC_ADD],
+                CONF_DEVICES: data.get(CONF_DEVICES, {}),
             }
         )
 
@@ -96,7 +73,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(scanner.scan)
 
                 for bulb in scanner.getBulbInfo():
-                    devices[bulb["ipaddr"].replace(".", "_")] = bulb
+                    device_id = bulb["ipaddr"].replace(".", "_")
+                    if not devices.get(device_id, False):
+                        devices[device_id] = {
+                            CONF_NAME: bulb["ipaddr"],
+                            CONF_HOST: bulb["ipaddr"],
+                        }
 
             return self.async_create_entry(
                 title="FluxLED/MagicHome",
