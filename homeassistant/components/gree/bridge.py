@@ -35,15 +35,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Update the state of the device."""
         try:
             await self.device.update_state()
-
-            if not self.last_update_success and self._error_count:
-                _LOGGER.warning(
-                    "Device is available: %s (%s)",
-                    self.name,
-                    str(self.device.device_info),
-                )
-
-            self._error_count = 0
         except DeviceTimeoutError as error:
             self._error_count += 1
 
@@ -55,6 +46,15 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
                     self.device.device_info,
                 )
                 raise UpdateFailed(error) from error
+        else:
+            if not self.last_update_success and self._error_count:
+                _LOGGER.warning(
+                    "Device is available: %s (%s)",
+                    self.name,
+                    str(self.device.device_info),
+                )
+
+            self._error_count = 0
 
     async def push_state_update(self):
         """Send state updates to the physical device."""
