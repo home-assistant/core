@@ -14,7 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        [GreeSwitchEntity(device) for device in hass.data[DOMAIN][COORDINATOR]]
+        [
+            GreeSwitchEntity(coordinator)
+            for coordinator in hass.data[DOMAIN][COORDINATOR]
+        ]
     )
 
 
