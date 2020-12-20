@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Diese Koordinaten sind bereits registriert."
         },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "user": {
                 "data": {

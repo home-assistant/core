@@ -169,9 +169,9 @@ class BME280Sensor(Entity):
         await self.hass.async_add_executor_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 1)
+                temperature = round(self.bme280_client.sensor.temperature, 2)
                 if self.temp_unit == TEMP_FAHRENHEIT:
-                    temperature = round(celsius_to_fahrenheit(temperature), 1)
+                    temperature = round(celsius_to_fahrenheit(temperature), 2)
                 self._state = temperature
             elif self.type == SENSOR_HUMID:
                 self._state = round(self.bme280_client.sensor.humidity, 1)

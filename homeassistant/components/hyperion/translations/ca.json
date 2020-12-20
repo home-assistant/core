@@ -7,7 +7,8 @@
             "auth_new_token_not_work_error": "No s'ha pogut autenticar amb el nou token creat",
             "auth_required_error": "No s'ha pogut determinar si cal autoritzaci\u00f3",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "no_id": "La inst\u00e0ncia d'Hyperion Ambilight no ha retornat el seu ID"
+            "no_id": "La inst\u00e0ncia d'Hyperion Ambilight no ha retornat el seu ID",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",

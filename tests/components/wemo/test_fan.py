@@ -87,21 +87,34 @@ async def test_fan_reset_filter_service(hass, pywemo_device, wemo_entity):
     assert await hass.services.async_call(
         DOMAIN,
         fan.SERVICE_RESET_FILTER_LIFE,
-        {fan.ATTR_ENTITY_ID: wemo_entity.entity_id},
+        {ATTR_ENTITY_ID: wemo_entity.entity_id},
         blocking=True,
     )
     pywemo_device.reset_filter_life.assert_called_with()
 
 
-async def test_fan_set_humidity_service(hass, pywemo_device, wemo_entity):
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (0, fan.WEMO_HUMIDITY_45),
+        (45, fan.WEMO_HUMIDITY_45),
+        (50, fan.WEMO_HUMIDITY_50),
+        (55, fan.WEMO_HUMIDITY_55),
+        (60, fan.WEMO_HUMIDITY_60),
+        (100, fan.WEMO_HUMIDITY_100),
+    ],
+)
+async def test_fan_set_humidity_service(
+    hass, pywemo_device, wemo_entity, test_input, expected
+):
     """Verify that SERVICE_SET_HUMIDITY is registered and works."""
     assert await hass.services.async_call(
         DOMAIN,
         fan.SERVICE_SET_HUMIDITY,
         {
-            fan.ATTR_ENTITY_ID: wemo_entity.entity_id,
-            fan.ATTR_TARGET_HUMIDITY: "50",
+            ATTR_ENTITY_ID: wemo_entity.entity_id,
+            fan.ATTR_TARGET_HUMIDITY: test_input,
         },
         blocking=True,
     )
-    pywemo_device.set_humidity.assert_called_with(fan.WEMO_HUMIDITY_50)
+    pywemo_device.set_humidity.assert_called_with(expected)
