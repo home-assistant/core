@@ -1,5 +1,7 @@
 """Support for LED lights."""
 from functools import partial
+import logging
+import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import voluptuous as vol
@@ -43,9 +45,14 @@ from .const import (
     DOMAIN,
     SERVICE_EFFECT,
     SERVICE_PRESET,
+    SERVICE_RANDOM_EFFECT,
+    SERVICE_RANDOM_PALETTE,
 )
 
 PARALLEL_UPDATES = 1
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -72,6 +79,22 @@ async def async_setup_entry(
             ),
         },
         "async_effect",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_RANDOM_EFFECT,
+        {
+            # no options
+        },
+        "async_random_effect",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_RANDOM_PALETTE,
+        {
+            # no options
+        },
+        "async_random_palette",
     )
 
     platform.async_register_entity_service(
@@ -381,6 +404,25 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         if speed is not None:
             data[ATTR_SPEED] = speed
 
+        await self.coordinator.wled.segment(**data)
+
+    @wled_exception_handler
+    async def async_random_effect(self) -> None:
+        """Activate random effect for a WLED light."""
+        data = {ATTR_SEGMENT_ID: self._segment}
+        effect = data[ATTR_EFFECT] = random.choice(self.effect_list)
+
+        _LOGGER.debug("Selected random effect: %s", effect)
+        await self.coordinator.wled.segment(**data)
+
+    @wled_exception_handler
+    async def async_random_palette(self) -> None:
+        """Activate random color palette for a WLED light."""
+        data = {ATTR_SEGMENT_ID: self._segment}
+        palettes = [palette.name for palette in self.coordinator.data.palettes]
+        palette = data[ATTR_PALETTE] = random.choice(palettes)
+
+        _LOGGER.debug("Selected randomly palette: %s", palette)
         await self.coordinator.wled.segment(**data)
 
     @wled_exception_handler

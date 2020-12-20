@@ -29,4 +29,6 @@ CURRENT_MA = "mA"
 
 # Services
 SERVICE_EFFECT = "effect"
+SERVICE_RANDOM_EFFECT = "random_effect"
+SERVICE_RANDOM_PALETTE = "random_palette"
 SERVICE_PRESET = "preset"

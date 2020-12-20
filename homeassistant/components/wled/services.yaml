@@ -28,3 +28,15 @@ preset:
     preset:
       description: ID of the WLED preset
       example: 6
+random_effect:
+  description: Selects random effect from the available effects
+  fields:
+    entity_id:
+      description: Name of the WLED light entity.
+      example: "light.wled"
+random_palette:
+  description: Selects random palette from the available palettes
+  fields:
+    entity_id:
+      description: Name of the WLED light entity.
+      example: "light.wled"
