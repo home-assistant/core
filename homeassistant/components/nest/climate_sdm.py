@@ -295,8 +295,9 @@ class ThermostatEntity(ClimateEntity):
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Unsupported hvac_mode '{hvac_mode}'")
         if hvac_mode == HVAC_MODE_FAN_ONLY:
+            # Turn the fan on but also turn off the hvac if it is on
             await self.async_set_fan_mode(FAN_ON)
-            return
+            hvac_mode = HVAC_MODE_OFF
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
         await trait.set_mode(api_mode)

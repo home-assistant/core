@@ -931,11 +931,21 @@ async def test_thermostat_set_hvac_fan_only(hass, auth):
     await common.async_set_hvac_mode(hass, HVAC_MODE_FAN_ONLY)
     await hass.async_block_till_done()
 
-    assert auth.method == "post"
-    assert auth.url == "some-device-id:executeCommand"
-    assert auth.json == {
+    assert len(auth.captured_requests) == 2
+
+    (method, url, json) = auth.captured_requests.pop(0)
+    assert method == "post"
+    assert url == "some-device-id:executeCommand"
+    assert json == {
         "command": "sdm.devices.commands.Fan.SetTimer",
         "params": {"timerMode": "ON"},
+    }
+    (method, url, json) = auth.captured_requests.pop(0)
+    assert method == "post"
+    assert url == "some-device-id:executeCommand"
+    assert json == {
+        "command": "sdm.devices.commands.ThermostatMode.SetMode",
+        "params": {"mode": "OFF"},
     }
 
 
