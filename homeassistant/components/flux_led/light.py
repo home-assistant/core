@@ -97,12 +97,6 @@ TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the platform and manage importing from YAML."""
-    automatic_add = config["automatic_add"]
-    devices = {}
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
     automatic_add = config["automatic_add"]
@@ -110,30 +104,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for import_host, import_item in config["devices"].items():
         import_name = import_host
-        import_name = import_item.get("name", import_host)
-
-            CONF_NAME: import_name,
-            CONF_HOST: import_host,
-        }
-
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_AUTOMATIC_ADD: automatic_add,
-            CONF_DEVICES: devices,
-        },
-    )
-
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_TYPE: "manual",
-                    CONF_NAME: import_name,
-                    CONF_HOST: import_host,
-                },
-            )
+        if import_item:
+            import_name = import_item.get("name", import_host)
 
         devices[import_host.replace(".", "_")] = {
             CONF_NAME: import_name,
@@ -149,37 +121,42 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         },
     )
 
-    lights = []
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Flux lights."""
 
-    if config_auto:
-        # Find the bulbs on the LAN
-        scanner = BulbScanner()
-        await hass.async_add_executor_job(scanner.scan)
+    async def async_new_lights(bulbs: dict):
+        """Add new bulbs when they are found or configured."""
 
-        for device in scanner.getBulbInfo():
-            device_id = device["ipaddr"].replace(".", "_")
-            if device_id not in config_devices:
-                config_devices[device_id] = device
+        lights = []
 
-    for device_id, device in config_devices.items():
-        add_device = {}
-        add_device["name"] = device.get("name", device_id)
-        add_device[CONF_HOST] = device[CONF_HOST]
-        add_device[CONF_PROTOCOL] = None
-        add_device[ATTR_MODE] = None
-        add_device[CONF_CUSTOM_EFFECT] = None
-        add_device[CONF_EFFECT_SPEED] = config_options.get(device_id, {}).get(
-            CONF_EFFECT_SPEED,
-            config_options.get("global", {}).get(
-                CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
-            ),
-        )
+        for bulb_id, bulb_details in bulbs.items():
+            effect_speed = entry.options.get(bulb_id, {}).get(
+                CONF_EFFECT_SPEED,
+                entry.options.get("global", {}).get(
+                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+                ),
+            )
 
-        light = FluxLight(add_device)
-        lights.append(light)
+            host = bulb_details[CONF_HOST]
+            try:
+                bulb = await hass.async_add_executor_job(WifiLedBulb, host)
+            except BrokenPipeError as error:
+                raise PlatformNotReady(error) from error
 
-    async_add_entities(lights)
+            lights.append(
+                FluxLight(
+                    unique_id=bulb_id,
+                    device=bulb_details,
+                    effect_speed=effect_speed,
+                    bulb=bulb,
+                )
+            )
 
+        async_add_entities(lights, True)
+
+    await async_new_lights(entry.data[CONF_DEVICES])
+
+    async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_lights)
 
 class FluxLight(LightEntity):
     """Representation of a Flux light."""
@@ -214,7 +191,6 @@ class FluxLight(LightEntity):
         """Disconnect from Flux light."""
         self._bulb = None
 
-=======
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
@@ -383,7 +359,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         async_dispatcher_connect(hass, SIGNAL_REMOVE_DEVICE, async_remove_light)
 
     @property
->>>>>>> Add dataupdate coordinator and code refactor for flux_led.
     def unique_id(self):
         """Return the unique ID of the light."""
         return self._unique_id
@@ -395,9 +370,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     @property
     def is_on(self):
-=======
-
->>>>>>> Reworked config_flow for one flow for auto/manual. Device additions only so far.
         return self._state
 
     @property
