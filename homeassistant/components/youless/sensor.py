@@ -126,7 +126,7 @@ class CurrentPowerSensor(YoulessBaseSensor):
     @property
     def name(self) -> Optional[str]:
         """Return the name of the meter."""
-        return f"{self._device} ssage"
+        return f"{self._device} Usage"
 
     @property
     def get_sensor(self) -> Optional[YoulessSensor]:
