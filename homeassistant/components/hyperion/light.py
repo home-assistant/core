@@ -489,7 +489,7 @@ class HyperionLight(LightEntity):
         if not await self._client.async_send_set_component(
             **{
                 const.KEY_COMPONENTSTATE: {
-                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                    const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
                     const.KEY_STATE: False,
                 }
             }
