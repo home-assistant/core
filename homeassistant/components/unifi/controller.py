@@ -345,9 +345,9 @@ class UniFiController:
 
             mac = ""
             if entity.domain == TRACKER_DOMAIN:
-                mac, _ = entity.unique_id.split("-", 1)
+                mac = entity.unique_id.split("-", 1)[0]
             elif entity.domain == SWITCH_DOMAIN:
-                _, mac = entity.unique_id.split("-", 1)
+                mac = entity.unique_id.split("-", 1)[1]
 
             if mac in self.api.clients or mac not in self.api.clients_all:
                 continue
@@ -397,7 +397,12 @@ class UniFiController:
                 await self.api.login()
                 self.api.start_websocket()
 
-        except (asyncio.TimeoutError, aiounifi.AiounifiException):
+        except (
+            asyncio.TimeoutError,
+            aiounifi.BadGateway,
+            aiounifi.ServiceUnavailable,
+            aiounifi.AiounifiException,
+        ):
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
     @callback
@@ -464,7 +469,12 @@ async def get_controller(
         LOGGER.warning("Connected to UniFi at %s but not registered.", host)
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, aiounifi.RequestError) as err:
+    except (
+        asyncio.TimeoutError,
+        aiounifi.BadGateway,
+        aiounifi.ServiceUnavailable,
+        aiounifi.RequestError,
+    ) as err:
         LOGGER.error("Error connecting to the UniFi controller at %s", host)
         raise CannotConnect from err
 

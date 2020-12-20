@@ -365,9 +365,7 @@ class InputDatetime(RestoreEntity):
     def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
         if timestamp:
-            datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp)).replace(
-                tzinfo=None
-            )
+            datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
         if datetime:
             date = datetime.date()
@@ -388,8 +386,8 @@ class InputDatetime(RestoreEntity):
         if not time:
             time = self._current_datetime.time()
 
-        self._current_datetime = py_datetime.datetime.combine(date, time).replace(
-            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        self._current_datetime = dt_util.DEFAULT_TIME_ZONE.localize(
+            py_datetime.datetime.combine(date, time)
         )
         self.async_write_ha_state()
 

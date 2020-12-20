@@ -5,22 +5,15 @@ from datetime import datetime, timedelta
 import logging
 import threading
 
-from google_nest_sdm.event import (
-    AsyncEventCallback,
-    CameraMotionEvent,
-    CameraPersonEvent,
-    CameraSoundEvent,
-    DoorbellChimeEvent,
-    EventMessage,
-)
-from google_nest_sdm.exceptions import GoogleNestException
+from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
 from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -50,24 +43,19 @@ from . import api, config_flow, local_auth
 from .const import (
     API_URL,
     DATA_SDM,
+    DATA_SUBSCRIBER,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     SIGNAL_NEST_UPDATE,
 )
+from .events import EVENT_NAME_MAP, NEST_EVENT
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
-NEST_EVENT = "nest_event"
-EVENT_TRAIT_MAP = {
-    DoorbellChimeEvent.NAME: "DoorbellChime",
-    CameraMotionEvent.NAME: "CameraMotion",
-    CameraPersonEvent.NAME: "CameraPerson",
-    CameraSoundEvent.NAME: "CameraSound",
-}
 
 
 # Configuration for the legacy nest API
@@ -206,11 +194,12 @@ class SignalUpdateCallback(AsyncEventCallback):
             _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
             return
         for event in events:
-            if event not in EVENT_TRAIT_MAP:
+            event_type = EVENT_NAME_MAP.get(event)
+            if not event_type:
                 continue
             message = {
                 "device_id": device_entry.id,
-                "type": EVENT_TRAIT_MAP[event],
+                "type": event_type,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -242,6 +231,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await subscriber.start_async()
+    except AuthException as err:
+        _LOGGER.debug("Subscriber authentication error: %s", err)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data=entry.data,
+            )
+        )
+        return False
     except GoogleNestException as err:
         _LOGGER.error("Subscriber error: %s", err)
         subscriber.stop_async()
@@ -254,7 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = subscriber
+    hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -270,7 +269,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         # Legacy API
         return True
 
-    subscriber = hass.data[DOMAIN][entry.entry_id]
+    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = all(
         await asyncio.gather(
@@ -281,7 +280,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
 
     return unload_ok
 

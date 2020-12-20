@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import placeholder
 from homeassistant.util import yaml
 
 from .const import (
@@ -38,7 +37,7 @@ from .errors import (
     FileAlreadyExists,
     InvalidBlueprint,
     InvalidBlueprintInputs,
-    MissingPlaceholder,
+    MissingInput,
 )
 from .schemas import BLUEPRINT_INSTANCE_FIELDS, BLUEPRINT_SCHEMA
 
@@ -59,8 +58,6 @@ class Blueprint:
         except vol.Invalid as err:
             raise InvalidBlueprint(expected_domain, path, data, err) from err
 
-        self.placeholders = placeholder.extract_placeholders(data)
-
         # In future, we will treat this as "incorrect" and allow to recover from this
         data_domain = data[CONF_BLUEPRINT][CONF_DOMAIN]
         if expected_domain is not None and data_domain != expected_domain:
@@ -73,7 +70,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = self.placeholders - set(data[CONF_BLUEPRINT][CONF_INPUT])
+        missing = yaml.extract_inputs(data) - set(data[CONF_BLUEPRINT][CONF_INPUT])
 
         if missing:
             raise InvalidBlueprint(
@@ -143,7 +140,7 @@ class BlueprintInputs:
     @property
     def inputs_with_default(self):
         """Return the inputs and fallback to defaults."""
-        no_input = self.blueprint.placeholders - set(self.inputs)
+        no_input = set(self.blueprint.inputs) - set(self.inputs)
 
         inputs_with_default = dict(self.inputs)
 
@@ -156,12 +153,10 @@ class BlueprintInputs:
 
     def validate(self) -> None:
         """Validate the inputs."""
-        missing = self.blueprint.placeholders - set(self.inputs_with_default)
+        missing = set(self.blueprint.inputs) - set(self.inputs_with_default)
 
         if missing:
-            raise MissingPlaceholder(
-                self.blueprint.domain, self.blueprint.name, missing
-            )
+            raise MissingInput(self.blueprint.domain, self.blueprint.name, missing)
 
         # In future we can see if entities are correct domain, areas exist etc
         # using the new selector helper.
@@ -169,9 +164,7 @@ class BlueprintInputs:
     @callback
     def async_substitute(self) -> dict:
         """Get the blueprint value with the inputs substituted."""
-        processed = placeholder.substitute(
-            self.blueprint.data, self.inputs_with_default
-        )
+        processed = yaml.substitute(self.blueprint.data, self.inputs_with_default)
         combined = {**processed, **self.config_with_inputs}
         # From config_with_inputs
         combined.pop(CONF_USE_BLUEPRINT)

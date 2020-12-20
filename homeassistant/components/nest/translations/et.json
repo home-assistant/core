@@ -36,5 +36,13 @@
                 "title": "Vali tuvastusmeetod"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Tuvastati liikumine",
+            "camera_person": "Isik tuvastatud",
+            "camera_sound": "Tuvastati heli",
+            "doorbell_chime": "Uksekell helises"
+        }
     }
 }

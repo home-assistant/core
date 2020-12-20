@@ -36,5 +36,13 @@
                 "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Movimiento detectado",
+            "camera_person": "Persona detectada",
+            "camera_sound": "Sonido detectado",
+            "doorbell_chime": "Timbre pulsado"
+        }
     }
 }

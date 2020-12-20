@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Azonos\u00edt\u00e1s nem siker\u00fclt",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        },
+        "step": {
+            "confirm": {
+                "title": "Apple TV sikeresen hozz\u00e1adva"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN K\u00f3d"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Schwellenwert (%)"
+                }
+            }
+        }
+    }
+}

@@ -74,7 +74,7 @@ SERVICE_STOP_PROGRAM_SCHEMA = vol.Schema(
 
 SERVICE_STOP_ZONE_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_ID): cv.positive_int})
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
@@ -275,7 +275,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]:
         hass.services.async_register(DOMAIN, service, method, schema=schema)
 
-    hass.data[DOMAIN][DATA_LISTENER] = entry.add_update_listener(async_reload_entry)
+    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = entry.add_update_listener(
+        async_reload_entry
+    )
 
     return True
 

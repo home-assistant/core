@@ -14,6 +14,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -25,7 +26,6 @@ from .typing import ChannelType
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
-
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -62,6 +62,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.closures.DoorLock.cluster_id: LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: COVER,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
+    zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff.cluster_id: SWITCH,
     zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,
@@ -80,15 +81,8 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR
 }
 
-SWITCH_CLUSTERS = SetRegistry()
-
-BINARY_SENSOR_CLUSTERS = SetRegistry()
-BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
-CLIMATE_CLUSTERS = SetRegistry()
-CUSTOM_CLUSTER_MAPPINGS = {}
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
@@ -119,19 +113,7 @@ DEVICE_CLASS = {
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
-DEVICE_TRACKER_CLUSTERS = SetRegistry()
-LIGHT_CLUSTERS = SetRegistry()
-OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
-COMPONENT_CLUSTERS = {
-    BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
-    CLIMATE: CLIMATE_CLUSTERS,
-    DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
-    LIGHT: LIGHT_CLUSTERS,
-    SWITCH: SWITCH_CLUSTERS,
-}
-
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
 

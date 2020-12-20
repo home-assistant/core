@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/aurora",
   "config_flow": true,
   "codeowners": ["@djtimca"],
-  "requirements": ["auroranoaa==0.0.1"]
+  "requirements": ["auroranoaa==0.0.2"]
 }

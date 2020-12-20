@@ -21,7 +21,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER, OPTIONS
+from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER
 from .lock import ATTR_USERCODE
 
 TYPE = "type"
@@ -461,7 +461,7 @@ def websocket_refresh_node_info(hass, connection, msg):
     """Tell OpenZWave to re-interview a node."""
 
     manager = hass.data[DOMAIN][MANAGER]
-    options = hass.data[DOMAIN][OPTIONS]
+    options = manager.options
 
     @callback
     def forward_node(node):

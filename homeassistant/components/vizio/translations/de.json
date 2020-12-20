@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "cannot_connect": "Verbindungsfehler",
             "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {

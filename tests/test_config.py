@@ -1116,7 +1116,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
         ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
-        ("openuv", cv.deprecated("openuv", invalidation_version="0.115"), None),
+        ("openuv", cv.deprecated("openuv"), None),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

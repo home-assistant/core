@@ -5,6 +5,9 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "reauth": {
+                "title": "Opnieuw verifi\u00ebren"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

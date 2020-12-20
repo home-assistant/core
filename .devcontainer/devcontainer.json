@@ -26,7 +26,7 @@
     "files.trimTrailingWhitespace": true,
     "terminal.integrated.shell.linux": "/bin/bash",
     "yaml.customTags": [
-      "!placeholder scalar",
+      "!input scalar",
       "!secret scalar",
       "!include_dir_named scalar",
       "!include_dir_list scalar",

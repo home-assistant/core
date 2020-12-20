@@ -13,7 +13,7 @@
         },
         "error": {
             "internal_error": "Intern feil ved validering av kode",
-            "invalid_pin": "Ugyldig PIN-kode",
+            "invalid_pin": "Ugyldig PIN kode",
             "timeout": "Tidsavbrudd ved validering av kode",
             "unknown": "Uventet feil"
         },
@@ -27,7 +27,7 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN-kode"
+                    "code": "PIN kode"
                 },
                 "description": "For \u00e5 koble din Nest-konto, [bekreft kontoen din]({url}). \n\nEtter bekreftelse, kopier og lim inn den oppgitte PIN koden nedenfor.",
                 "title": "Koble til Nest konto"
@@ -35,6 +35,14 @@
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Bevegelse oppdaget",
+            "camera_person": "Person oppdaget",
+            "camera_sound": "Lyd oppdaget",
+            "doorbell_chime": "Ringeklokke trykket"
         }
     }
 }
