@@ -2,9 +2,11 @@
 import asyncio
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import voluptuous as vol
+import zhaquirks.const as zhaquirks_const
 import zigpy.zcl.clusters.closures
 
-from homeassistant.const import ATTR_DEVICE_ID
+import homeassistant.const as ha_const
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -31,6 +33,66 @@ from .. import (
 )
 
 ChannelsDict = Dict[str, zha_typing.ChannelType]
+
+INTERACTION_TARGETS = {
+    zhaquirks_const.BUTTON_1: ha_const.TARGET_BUTTON_1,
+    zhaquirks_const.BUTTON_2: ha_const.TARGET_BUTTON_2,
+    zhaquirks_const.BUTTON_3: ha_const.TARGET_BUTTON_3,
+    zhaquirks_const.BUTTON_4: ha_const.TARGET_BUTTON_4,
+    zhaquirks_const.BUTTON_5: ha_const.TARGET_BUTTON_5,
+    zhaquirks_const.BUTTON_6: ha_const.TARGET_BUTTON_6,
+    zhaquirks_const.DIM_UP: ha_const.TARGET_BUTTON_UP,
+    zhaquirks_const.DIM_DOWN: ha_const.TARGET_BUTTON_DOWN,
+    zhaquirks_const.ON: ha_const.TARGET_BUTTON_ON,
+    zhaquirks_const.OFF: ha_const.TARGET_BUTTON_OFF,
+    zhaquirks_const.LEFT: ha_const.TARGET_BUTTON_LEFT,
+    zhaquirks_const.RIGHT: ha_const.TARGET_BUTTON_RIGHT,
+    "both_buttons": ha_const.TARGET_BUTTON_ALL,
+    "face_1": ha_const.TARGET_BUTTON_1,
+    "face_2": ha_const.TARGET_BUTTON_2,
+    "face_3": ha_const.TARGET_BUTTON_3,
+    "face_4": ha_const.TARGET_BUTTON_4,
+    "face_5": ha_const.TARGET_BUTTON_5,
+    "face_6": ha_const.TARGET_BUTTON_6,
+    "left": ha_const.TARGET_BUTTON_LEFT,
+    "right": ha_const.TARGET_BUTTON_RIGHT,
+    zhaquirks_const.SHAKEN: ha_const.TARGET_DEVICE,
+    zhaquirks_const.SHORT_PRESS: ha_const.TARGET_DEVICE,
+    zhaquirks_const.SHORT_RELEASE: ha_const.TARGET_DEVICE,
+    zhaquirks_const.DOUBLE_PRESS: ha_const.TARGET_DEVICE,
+    zhaquirks_const.TRIPLE_PRESS: ha_const.TARGET_DEVICE,
+    zhaquirks_const.QUADRUPLE_PRESS: ha_const.TARGET_DEVICE,
+    zhaquirks_const.QUINTUPLE_PRESS: ha_const.TARGET_DEVICE,
+    zhaquirks_const.LONG_PRESS: ha_const.TARGET_DEVICE,
+    zhaquirks_const.LONG_RELEASE: ha_const.TARGET_DEVICE,
+    zhaquirks_const.COMMAND_TOGGLE: ha_const.TARGET_DEVICE,
+    "device_tilted": ha_const.TARGET_DEVICE,
+    "device_shaken": ha_const.TARGET_DEVICE,
+}
+
+INTERACTION_TYPES = {
+    zhaquirks_const.ALT_DOUBLE_PRESS: ha_const.INTERACTION_TYPE_DOUBLE,
+    zhaquirks_const.ALT_LONG_PRESS: ha_const.INTERACTION_TYPE_LONG_PRESS,
+    zhaquirks_const.ALT_LONG_RELEASE: ha_const.INTERACTION_TYPE_LONG_RELEASE,
+    zhaquirks_const.ALT_SHORT_PRESS: ha_const.INTERACTION_TYPE_SINGLE,
+    zhaquirks_const.SHAKEN: ha_const.INTERACTION_TYPE_SHAKE,
+    zhaquirks_const.SHORT_PRESS: ha_const.INTERACTION_TYPE_SINGLE,
+    zhaquirks_const.SHORT_RELEASE: ha_const.INTERACTION_TYPE_RELEASE,
+    zhaquirks_const.DOUBLE_PRESS: ha_const.INTERACTION_TYPE_DOUBLE,
+    zhaquirks_const.TRIPLE_PRESS: ha_const.INTERACTION_TYPE_TRIPLE,
+    zhaquirks_const.QUADRUPLE_PRESS: ha_const.INTERACTION_TYPE_QUADRUPLE,
+    zhaquirks_const.QUINTUPLE_PRESS: ha_const.INTERACTION_TYPE_QUINTUPLE,
+    zhaquirks_const.LONG_PRESS: ha_const.INTERACTION_TYPE_LONG_PRESS,
+    zhaquirks_const.LONG_RELEASE: ha_const.INTERACTION_TYPE_LONG_RELEASE,
+    zhaquirks_const.COMMAND_TOGGLE: ha_const.INTERACTION_TYPE_TOGGLE,
+    "device_tilted": ha_const.INTERACTION_TYPE_TILT,
+    "device_shaken": ha_const.INTERACTION_TYPE_SHAKE,
+    "device_slid": ha_const.INTERACTION_TYPE_SLIDE,
+    "device_dropped": ha_const.INTERACTION_TYPE_DROP,
+    "device_rotated": ha_const.INTERACTION_TYPE_ROTATE,
+    "device_knocked": ha_const.INTERACTION_TYPE_KNOCK,
+    "device_flipped": ha_const.INTERACTION_TYPE_FLIP,
+}
 
 
 class Channels:
@@ -153,14 +215,39 @@ class Channels:
     @callback
     def zha_send_event(self, event_data: Dict[str, Union[str, int]]) -> None:
         """Relay events to hass."""
+        triggers = self.zha_device.device_automation_triggers
+        matched_trigger = None
+        if triggers:
+            for trigger_key, trigger in triggers.items():
+                try:
+                    trigger_schema = vol.Schema(
+                        {vol.Required(key): value for key, value in trigger.items()},
+                        extra=vol.ALLOW_EXTRA,
+                    )
+                    trigger_schema(event_data)
+                    matched_trigger = trigger_key
+                    break
+                except vol.Invalid:
+                    pass
+
+        event_data_to_fire = {
+            const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
+            const.ATTR_UNIQUE_ID: self.unique_id,
+            ha_const.ATTR_DEVICE_ID: self.zha_device.device_id,
+            **event_data,
+        }
+
+        if matched_trigger:
+            event_data_to_fire[ha_const.INTERACTION_TYPE] = INTERACTION_TYPES.get(
+                matched_trigger[0], matched_trigger[0]
+            )
+            event_data_to_fire[ha_const.INTERACTION_TARGET] = INTERACTION_TARGETS.get(
+                matched_trigger[1], matched_trigger[1]
+            )
+
         self.zha_device.hass.bus.async_fire(
             "zha_event",
-            {
-                const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
-                const.ATTR_UNIQUE_ID: self.unique_id,
-                ATTR_DEVICE_ID: self.zha_device.device_id,
-                **event_data,
-            },
+            event_data_to_fire,
         )
 
 
