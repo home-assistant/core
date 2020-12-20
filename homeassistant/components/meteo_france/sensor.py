@@ -1,7 +1,7 @@
 """Support for Meteo-France raining forecast sensor."""
 import logging
 
-from meteofrance.helpers import (
+from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
     readeable_phenomenoms_dict,
 )
