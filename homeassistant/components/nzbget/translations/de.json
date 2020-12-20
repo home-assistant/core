@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "flow_title": "NZBGet: {name}",
         "step": {
             "user": {
