@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "cannot_connect": "Verbindungsfehler",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "flow_title": "Tuya Konfiguration",

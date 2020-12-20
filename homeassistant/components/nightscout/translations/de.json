@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "flow_title": "Nightscout",
         "step": {
             "user": {
