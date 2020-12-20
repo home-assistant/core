@@ -28,7 +28,6 @@ from typing import (
 from urllib.parse import urlparse
 from uuid import UUID
 
-from pkg_resources import parse_version
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -80,7 +79,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     WEEKDAYS,
-    __version__,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -712,7 +710,6 @@ class multi_select:
 def deprecated(
     key: str,
     replacement_key: Optional[str] = None,
-    invalidation_version: Optional[str] = None,
     default: Optional[Any] = None,
 ) -> Callable[[Dict], Dict]:
     """
@@ -725,8 +722,6 @@ def deprecated(
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-        is detected
     """
     module = inspect.getmodule(inspect.stack()[1][0])
     if module is not None:
@@ -737,24 +732,10 @@ def deprecated(
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
 
-    if replacement_key and invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
-        )
-    elif replacement_key:
+    if replacement_key:
         warning = (
             "The '{key}' option is deprecated,"
             " please replace it with '{replacement_key}'"
-        )
-    elif invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
         )
     else:
         warning = (
@@ -762,31 +743,13 @@ def deprecated(
             " please remove it from your configuration"
         )
 
-    def check_for_invalid_version() -> None:
-        """Raise error if current version has reached invalidation."""
-        if not invalidation_version:
-            return
-
-        if parse_version(__version__) >= parse_version(invalidation_version):
-            raise vol.Invalid(
-                warning.format(
-                    key=key,
-                    replacement_key=replacement_key,
-                    invalidation_status="became",
-                    invalidation_version=invalidation_version,
-                )
-            )
-
     def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
-            check_for_invalid_version()
             KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
                 replacement_key=replacement_key,
-                invalidation_status="will become",
-                invalidation_version=invalidation_version,
             )
 
             value = config[key]

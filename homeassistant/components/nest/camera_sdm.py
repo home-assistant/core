@@ -95,9 +95,10 @@ class NestCamera(Camera):
     @property
     def supported_features(self):
         """Flag supported features."""
+        supported_features = 0
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            return SUPPORT_STREAM
-        return 0
+            supported_features |= SUPPORT_STREAM
+        return supported_features
 
     async def stream_source(self):
         """Return the source of the stream."""
@@ -131,7 +132,6 @@ class NestCamera(Camera):
         if not self._stream:
             return
         _LOGGER.debug("Extending stream url")
-        self._stream_refresh_unsub = None
         try:
             self._stream = await self._stream.extend_rtsp_stream()
         except GoogleNestException as err:

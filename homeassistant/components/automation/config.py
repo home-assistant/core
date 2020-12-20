@@ -32,7 +32,7 @@ from .helpers import async_get_blueprints
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
+    cv.deprecated(CONF_HIDE_ENTITY),
     script.make_script_schema(
         {
             # str on purpose

@@ -567,6 +567,8 @@ omit =
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
+    homeassistant/components/neato/__init__.py
+    homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
@@ -578,10 +580,8 @@ omit =
     homeassistant/components/nest/binary_sensor.py
     homeassistant/components/nest/camera.py
     homeassistant/components/nest/camera_legacy.py
-    homeassistant/components/nest/camera_sdm.py
     homeassistant/components/nest/climate.py
     homeassistant/components/nest/climate_legacy.py
-    homeassistant/components/nest/climate_sdm.py
     homeassistant/components/nest/local_auth.py
     homeassistant/components/nest/sensor.py
     homeassistant/components/nest/sensor_legacy.py

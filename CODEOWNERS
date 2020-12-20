@@ -323,6 +323,7 @@ homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
 homeassistant/components/openerz/* @misialq
 homeassistant/components/opengarage/* @danielhiversen
+homeassistant/components/openhome/* @bazwilliams
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff @freekode @nzapponi
@@ -355,6 +356,7 @@ homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/pvpc_hourly_pricing/* @azogue
+homeassistant/components/qbittorrent/* @geoffreylagaisse
 homeassistant/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
@@ -453,6 +455,7 @@ homeassistant/components/tado/* @michaelarnauts @bdraco
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
+homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
