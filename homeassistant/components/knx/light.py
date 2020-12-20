@@ -86,7 +86,9 @@ class KNXLight(KnxEntity, LightEntity):
         """Return the color temperature in mireds."""
         if self._device.supports_color_temperature:
             kelvin = self._device.current_color_temperature
-            if kelvin is not None:
+            # Some KNX-Dali gateways report 0 kelvin if the value has not been set
+            # After setting the value for the first time everything looks as expected
+            if kelvin is not None and kelvin > 0:
                 return color_util.color_temperature_kelvin_to_mired(kelvin)
         if self._device.supports_tunable_white:
             relative_ct = self._device.current_tunable_white
