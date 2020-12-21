@@ -174,6 +174,7 @@ FLOWS = [
     "omnilogic",
     "ondilo_ico",
     "onewire",
+    "onkyo",
     "onvif",
     "opentherm_gw",
     "openuv",

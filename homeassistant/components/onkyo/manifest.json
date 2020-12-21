@@ -1,8 +1,14 @@
 {
   "domain": "onkyo",
   "name": "Onkyo",
+  "config_flow": true,
+  "dependencies": ["persistent_notification"],
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
   "requirements": ["onkyo-eiscp==1.2.7"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "ssdp": [{
+    "manufacturer": "Onkyo & Pioneer Corporation",
+    "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2"
+  }]
 }

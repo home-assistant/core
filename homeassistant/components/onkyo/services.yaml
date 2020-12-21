@@ -1,0 +1,11 @@
+select_hdmi_output:
+  description: "Select Output."
+  fields:
+    entity_id:
+      description: Name(s) of the onkyo entities where to run the API method.
+      example: "media_player.onkyo_receiver"
+    hdmi_output:
+      description: >-
+        Known possible values are
+        NO, ANALOG, TES, OUT, OUT-SUB, SUB, HDBASET, BOTH, UP
+      example: "NO"

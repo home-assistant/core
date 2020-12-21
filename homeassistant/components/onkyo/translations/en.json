@@ -1,0 +1,34 @@
+{
+  "title": "Onkyo Receiver",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the Onkyo receiver",
+        "description": "Onkyo receiver",
+        "data": {
+          "host": "Hostname or IP Address",
+          "name": "Name",
+          "max_volume": "Maximum volume",
+          "receiver_max_volume": "Maximum volume receiver",
+          "sources": "Sources"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Can not connect",
+      "receiver_unknown": "Onkyo receiver unknown"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Sources of receiver",
+        "description": "select sources of you receiver."
+      },
+      "customize":{
+        "title": "Sources naming",
+        "description": "Rename sources to friendly name."
+      }
+    }
+  }
+}
