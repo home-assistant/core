@@ -1,7 +1,8 @@
 """WiZ Light integration."""
 import logging
 
-from pywizlight import SCENES, PilotBuilder, wizlight, WizLightConnectionError
+from pywizlight import SCENES, PilotBuilder, wizlight
+from pywizlight.exceptions import WizLightConnectionError
 import yaml
 import os
 import voluptuous as vol
