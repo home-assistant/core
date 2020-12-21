@@ -4,6 +4,7 @@ import logging
 
 import voluptuous as vol
 from pywizlight import wizlight
+from pywizlight.exceptions import WizLightConnectionError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
@@ -36,6 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
             except ConnectionRefusedError:
                 return self.async_abort(reason="can_not_connect")
+            except WizLightConnectionError:
+                return self.async_abort(reason="no_wiz_light")
             except AbortFlow:
                 return self.async_abort(reason="single_instance_allowed")
 
