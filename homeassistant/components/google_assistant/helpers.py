@@ -474,10 +474,10 @@ class GoogleEntity:
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
             device["roomHint"] = room
-
-        area = await _get_area(self.hass, state.entity_id)
-        if area and area.name:
-            device["roomHint"] = area.name
+        else:
+            area = await _get_area(self.hass, state.entity_id)
+            if area and area.name:
+                device["roomHint"] = area.name
 
         return device
 
