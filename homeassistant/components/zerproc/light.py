@@ -119,7 +119,9 @@ class ZerprocLight(LightEntity):
         try:
             await self._light.disconnect()
         except pyzerproc.ZerprocException:
-            pass
+            _LOGGER.debug(
+                "Exception disconnected from %s", self.entity_id, exc_info=True
+            )
 
     @property
     def name(self):
