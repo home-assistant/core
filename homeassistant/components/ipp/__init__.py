@@ -41,28 +41,32 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the IPP component."""
-    hass.data.setdefault(DOMAIN, {})
+    if DOMAIN not in hass.data:
+        hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPP from a config entry."""
 
-    # Create IPP instance for this entry
-    coordinator = IPPDataUpdateCoordinator(
-        hass,
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
-        base_path=entry.data[CONF_BASE_PATH],
-        tls=entry.data[CONF_SSL],
-        verify_ssl=entry.data[CONF_VERIFY_SSL],
-    )
+    if entry.entry_id not in hass.data[DOMAIN]:
+        # Create IPP instance for this entry
+        coordinator = IPPDataUpdateCoordinator(
+            hass,
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+            base_path=entry.data[CONF_BASE_PATH],
+            tls=entry.data[CONF_SSL],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+        )
+        hass.data[DOMAIN][entry.entry_id] = coordinator
+    else:
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
