@@ -1,4 +1,6 @@
 """Test the AirNow config flow."""
+from pyairnow.errors import AirNowError, InvalidKeyError
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.airnow.const import DOMAIN
 from homeassistant.const import (
@@ -8,8 +10,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
 )
-
-from pyairnow.errors import AirNowError, InvalidKeyError
 
 from tests.async_mock import patch
 
