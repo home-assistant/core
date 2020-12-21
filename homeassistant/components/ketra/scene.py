@@ -5,6 +5,7 @@ from aioketraapi import ButtonChange, WebsocketV2Notification
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import KetraPlatformBase, KetraPlatformCommon
@@ -90,6 +91,7 @@ class KetraScenePlatform(KetraPlatformBase):
                     "activated" if activated else "deactivated",
                 )
                 event_data = {
+                    ATTR_ENTITY_ID: self.button_map[button_id].entity_id,
                     "button_id": button_id,
                     "name": self.button_map[button_id].name,
                     "keypad_name": self.button_map[button_id].keypad_name,

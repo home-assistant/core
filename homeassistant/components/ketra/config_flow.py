@@ -94,7 +94,7 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle installation selection."""
 
         if user_input is None:
-            _LOGGER.warning("showing select installation form")
+            _LOGGER.info("Showing select installation form")
             data_schema = {
                 vol.Required("installation_id"): vol.In(
                     {**self.installation_id_to_title_dict}
@@ -113,6 +113,9 @@ class KetraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "installation_id": user_input["installation_id"],
             "installation_name": installation_name,
         }
+        await self.async_set_unique_id(
+            user_input["installation_id"], raise_on_progress=False
+        )
         return self.async_create_entry(title=installation_name, data=config_data)
 
     async def _get_installations(self):
