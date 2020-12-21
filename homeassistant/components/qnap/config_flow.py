@@ -105,7 +105,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.is_imported:
                     notify_create(
                         self.hass,
-                        "The import of the Qnap configuration was successful. \
+                        "The import of the QNAP configuration was successful. \
                         Please remove the platform from the YAML configuration file",
                         "QNAP Import",
                     )
