@@ -122,15 +122,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+
+            # Check if already configured
+            await self.async_set_unique_id(f"webex_{user_input[CONF_EMAIL]}")
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return self.async_create_entry(title="Demo", data={})
 
 
 class CannotConnect(exceptions.HomeAssistantError):

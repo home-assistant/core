@@ -50,6 +50,7 @@ class WebexPresenceSensor(Entity):
         self._attributes = {}
         self._api = api
         self._name = name
+        self.uid = f"webex_status_{email}"
 
     @property
     def name(self):
@@ -71,6 +72,11 @@ class WebexPresenceSensor(Entity):
     def device_class(self):
         """Return the device class of this binary sensor."""
         return DEVICE_CLASS_PRESENCE
+
+    @property
+    def unique_id(self):
+        """Return a unique id identifying the entity."""
+        self.uid
 
     def update(self):
         """Update device state."""
