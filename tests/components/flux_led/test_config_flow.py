@@ -2,7 +2,9 @@
 from homeassistant import config_entries, setup
 from homeassistant.components.flux_led.const import (
     CONF_AUTOMATIC_ADD,
+    CONF_CONFIGURE_DEVICE,
     CONF_EFFECT_SPEED,
+    CONF_REMOVE_DEVICE,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
 )
@@ -275,3 +277,174 @@ async def test_import_manual_already_setup(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_set_global_options(hass):
+    """Test set global options through options flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain="flux_led",
+        data={
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+            CONF_DEVICES: {
+                "1_1_1_1": {
+                    CONF_NAME: "TestLight",
+                    CONF_HOST: "1.1.1.1",
+                }
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_AUTOMATIC_ADD: True, CONF_EFFECT_SPEED: 80},
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        "global": {
+            CONF_AUTOMATIC_ADD: True,
+            CONF_EFFECT_SPEED: 80,
+        }
+    }
+
+
+async def test_options_add_and_remove_new_light(hass):
+    """Test manual adding and removing of new light through options flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain="flux_led",
+        data={
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+            CONF_DEVICES: {
+                "1_1_1_1": {
+                    CONF_NAME: "TestLight",
+                    CONF_HOST: "1.1.1.1",
+                }
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "1.1.1.2", CONF_NAME: "TestLight2"},
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        "1_1_1_2": {CONF_EFFECT_SPEED: 50},
+        "global": {
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        },
+    }
+
+    assert entry.data == {
+        CONF_AUTOMATIC_ADD: False,
+        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        CONF_DEVICES: {
+            "1_1_1_1": {
+                CONF_NAME: "TestLight",
+                CONF_HOST: "1.1.1.1",
+            },
+            "1_1_1_2": {
+                CONF_NAME: "TestLight2",
+                CONF_HOST: "1.1.1.2",
+            },
+        },
+    }
+
+    # Remove the new light.
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_REMOVE_DEVICE: "1_1_1_2"},
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        "global": {
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        }
+    }
+
+    assert entry.data == {
+        CONF_AUTOMATIC_ADD: False,
+        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        CONF_DEVICES: {
+            "1_1_1_1": {
+                CONF_NAME: "TestLight",
+                CONF_HOST: "1.1.1.1",
+            },
+        },
+    }
+
+
+async def test_options_configure_light(hass):
+    """Test configuration of a light through options flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain="flux_led",
+        data={
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+            CONF_DEVICES: {
+                "1_1_1_1": {
+                    CONF_NAME: "TestLight",
+                    CONF_HOST: "1.1.1.1",
+                }
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CONFIGURE_DEVICE: "1_1_1_1"},
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "configure_device"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={CONF_EFFECT_SPEED: 80},
+    )
+
+    assert result3["type"] == "create_entry"
+    assert result3["data"] == {
+        "global": {
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        },
+        "1_1_1_1": {
+            CONF_EFFECT_SPEED: 80,
+        },
+    }

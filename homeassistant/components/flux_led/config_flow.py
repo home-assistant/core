@@ -140,6 +140,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 options_data = self._config_entry.options.copy()
                 if device_id in options_data:
                     del options_data[device_id]
+                options_data["global"] = self._global_options
 
                 return self.async_create_entry(title="", data=options_data)
 
@@ -151,7 +152,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 )
                 device_id = user_input[CONF_HOST].replace(".", "_")
                 device_data = {
-                    "ipaddr": user_input[CONF_HOST],
+                    CONF_HOST: user_input[CONF_HOST],
                     CONF_NAME: device_name,
                 }
                 self._config_entry.data[CONF_DEVICES][device_id] = device_data
@@ -161,6 +162,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                 )
 
                 options_data = self._config_entry.options.copy()
+                options_data["global"] = self._global_options
                 options_data[device_id] = {CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED}
                 return self.async_create_entry(title="", data=options_data)
 
@@ -171,12 +173,12 @@ class OptionsFlow(config_entries.OptionsFlow):
         existing_devices = {}
 
         for device_id, device in self._config_entry.data[CONF_DEVICES].items():
-            existing_devices[device_id] = device.get(CONF_NAME, device["ipaddr"])
+            existing_devices[device_id] = device.get(CONF_NAME, device[CONF_HOST])
 
         options = {
             vol.Optional(
                 CONF_AUTOMATIC_ADD,
-                default=self._config_entry.options["global"].get(
+                default=self._config_entry.options.get("global", {}).get(
                     CONF_AUTOMATIC_ADD, self._config_entry.data[CONF_AUTOMATIC_ADD]
                 ),
             ): bool,
@@ -209,7 +211,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             options_data[self._configure_device] = {
                 CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED]
             }
-
+            options_data["global"] = self._global_options
             return self.async_create_entry(title="", data=options_data)
 
         options = {
