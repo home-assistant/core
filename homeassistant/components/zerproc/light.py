@@ -116,11 +116,14 @@ class ZerprocLight(LightEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        await self._light.disconnect()
+        try:
+            await self._light.disconnect()
+        except pyzerproc.ZerprocException:
+            pass
 
     async def on_hass_shutdown(self, event):
         """Execute when Home Assistant is shutting down."""
-        await self._light.disconnect()
+        await self.async_will_remove_from_hass()
 
     @property
     def name(self):
@@ -192,7 +195,7 @@ class ZerprocLight(LightEntity):
     async def async_update(self):
         """Fetch new state data for this light."""
         try:
-            if not await self._light.is_connected():
+            if not self._available:
                 await self._light.connect()
             state = await self._light.get_state()
         except pyzerproc.ZerprocException:

@@ -173,6 +173,16 @@ async def test_remove_entry(hass, mock_light, mock_entry):
     assert mock_disconnect.called
 
 
+async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
+    """Assert that disconnect exceptions are caught."""
+    with patch.object(
+        mock_light, "disconnect", side_effect=pyzerproc.ZerprocException("Mock error")
+    ) as mock_disconnect:
+        await hass.config_entries.async_remove(mock_entry.entry_id)
+
+    assert mock_disconnect.called
+
+
 async def test_light_turn_on(hass, mock_light):
     """Test ZerprocLight turn_on."""
     utcnow = dt_util.utcnow()
