@@ -6,10 +6,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 
-from .const import CONF_CITY, FORECAST_MODE, FORECAST_MODE_DAILY
+from .const import CONF_CITY
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,12 +24,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Init MeteoFranceFlowHandler."""
         self.places = []
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return MeteoFranceOptionsFlowHandler(config_entry)
 
     @callback
     def _show_setup_form(self, user_input=None, errors=None):
@@ -110,31 +104,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LONGITUDE: city_infos[2],
             }
         )
-
-
-class MeteoFranceOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_MODE, FORECAST_MODE_DAILY
-                    ),
-                ): vol.In(FORECAST_MODE)
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 def _build_place_key(place) -> str:
