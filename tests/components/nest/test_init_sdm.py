@@ -60,6 +60,8 @@ async def test_setup_configuration_failure(hass):
 
     state = hass.states.get("persistent_notification.nest_setup")
     assert state is not None
+    # This error comes from the python google-nest-sdm library, as a check added
+    # to prevent common misconfigurations (e.g. confusing topic and subscriber)
     assert state.attributes["title"] == "Nest configuration error"
     assert (
         "Subscription misconfigured. Expected subscriber_id"
