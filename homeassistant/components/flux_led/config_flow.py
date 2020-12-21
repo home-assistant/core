@@ -233,32 +233,4 @@ class OptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="configure_device", data_schema=vol.Schema(options), errors=errors
         )
-
-    async def async_step_configure_device(self, user_input=None):
-        """Manage the options."""
-
-        errors = {}
-
-        if user_input is not None:
-            options_data = self._config_entry.options.copy()
-            options_data[self._configure_device] = {
-                CONF_EFFECT_SPEED: user_input[CONF_EFFECT_SPEED]
-            }
-
-            return self.async_create_entry(title="", data=options_data)
-
-        options = {
-            vol.Required(
-                CONF_EFFECT_SPEED,
-                default=self._config_entry.options.get(self._configure_device, {}).get(
-                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
-                ),
-            ): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=1, max=100),
-            )
-        }
-
-        return self.async_show_form(
-            step_id="configure_device", data_schema=vol.Schema(options), errors=errors
-        )
+        

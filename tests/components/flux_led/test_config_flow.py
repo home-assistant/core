@@ -504,3 +504,4 @@ async def test_options_configure_light(hass):
             CONF_EFFECT_SPEED: 80,
         },
     }
+    
