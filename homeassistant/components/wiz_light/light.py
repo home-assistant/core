@@ -41,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the WiZ Light platform from legacy config."""
     # Assign configuration variables.
@@ -54,11 +55,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Add devices
     async_add_entities([WizBulb(bulb, config[CONF_NAME])])
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
     bulb = hass.data[DOMAIN][entry.unique_id]
-    # Add devices
+    # Add devices with defined name
     async_add_entities([WizBulb(bulb, entry.data.get(CONF_NAME))])
 
 
