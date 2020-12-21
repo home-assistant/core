@@ -837,6 +837,7 @@ omit =
     homeassistant/components/pvoutput/sensor.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/sensor.py
+    homeassistant/components/qnap/__init__.py
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
