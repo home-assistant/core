@@ -17,9 +17,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for vehicle in account.account.vehicles:
         entities.append(BMWDeviceTracker(account, vehicle))
-        _LOGGER.info(
-            "Tracking is disabled for vehicle %s (%s)", vehicle.name, vehicle.vin
-        )
+        if not vehicle.state.is_vehicle_tracking_enabled:
+            _LOGGER.info(
+                "Tracking is (currently) disabled for vehicle %s (%s), defaulting to unknown.",
+                vehicle.name,
+                vehicle.vin,
+            )
     async_add_entities(entities, True)
 
 
