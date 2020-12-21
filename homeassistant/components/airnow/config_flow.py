@@ -30,21 +30,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     session = async_get_clientsession(hass)
     client = WebServiceAPI(data[CONF_API_KEY], session=session)
 
-    # Check that we can connect to AirNow with the given API Key
-    try:
-        await client.observations.latLong(34.053718, -118.244842)
-    except InvalidKeyError as exc:
-        raise InvalidAuth from exc
-    except AirNowError as exc:
-        raise CannotConnect from exc
-
     # Check that the provided latitude/longitude provide a response
     try:
         lat = data[CONF_LATITUDE]
         lng = data[CONF_LONGITUDE]
         distance = data[CONF_RADIUS]
-        data = await client.observations.latLong(lat, lng, distance=distance)
-        if len(data) == 0:
+        test_data = await client.observations.latLong(lat, lng, distance=distance)
+        if not test_data:
             raise InvalidLocation
     except InvalidKeyError as exc:
         raise InvalidAuth from exc
@@ -65,20 +57,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            try:
-                # Set a unique id based on latitude/longitude
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
-                )
-                self._abort_if_unique_id_configured()
+            # Set a unique id based on latitude/longitude
+            await self.async_set_unique_id(
+                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
+            )
+            self._abort_if_unique_id_configured()
 
+            try:
                 # Validate inputs
                 await validate_input(self.hass, user_input)
 
-                # Create Entry
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -88,6 +76,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                # Create Entry
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",

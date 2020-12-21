@@ -75,9 +75,6 @@ class AirNowSensor(CoordinatorEntity):
         self._icon = None
         self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        if self.kind == ATTR_API_AQI:
-            self._attrs[SENSOR_AQI_ATTR_DESCR] = None
-            self._attrs[SENSOR_AQI_ATTR_LEVEL] = None
 
     @property
     def name(self):

@@ -6,10 +6,10 @@
         "title": "AirNow",
         "description": "Set up AirNow air quality integration. To generate API key go to https://docs.airnowapi.org/account/request/",
         "data": {
-          "name": "Name of the integration",
-          "api_key": "API Key",
-          "latitude": "Latitude",
-          "longitude": "Longitude",
+          "name": "Sensor Name",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
           "radius": "Station Radius (miles; optional)"
         }
       }

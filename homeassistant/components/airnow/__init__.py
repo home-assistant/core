@@ -7,14 +7,12 @@ from aiohttp.client_exceptions import ClientConnectorError
 from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
 from pyairnow.errors import AirNowError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -36,22 +34,8 @@ from .const import (
     DOMAIN,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
-                vol.Optional(CONF_RADIUS, default=150): int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["air_quality", "sensor"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -126,7 +110,6 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        obs = []
         try:
             obs = await self.airnow.observations.latLong(
                 self.latitude,
@@ -137,7 +120,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
         except (AirNowError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error
 
-        if len(obs) == 0:
+        if not obs:
             raise UpdateFailed("No data was returned from AirNow")
 
         max_aqi = 0
