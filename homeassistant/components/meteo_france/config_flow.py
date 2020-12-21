@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Meteo-France config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
