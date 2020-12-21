@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from devolo_plc_api.device import Device
+from devolo_plc_api.exceptions.device import DeviceUnavailable
 
 from homeassistant.util import Throttle
 
@@ -24,15 +25,17 @@ class DevoloNetworkOverviewEntity(DevoloDevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update the value async."""
-        network_overview = await self._device.plcnet.async_get_network_overview()
-        self._state = len(
-            {
-                device["mac_address_from"]
-                for device in network_overview["network"]["data_rates"]
-            }
-        )
-
-    # TODO add device_state_attributes
+        try:
+            network_overview = await self._device.plcnet.async_get_network_overview()
+            self._state = len(
+                {
+                    device["mac_address_from"]
+                    for device in network_overview["network"]["data_rates"]
+                }
+            )
+            self._set_availablility(True)
+        except DeviceUnavailable:
+            self._set_availablility(False)
 
 
 class DevoloWifiClientsEntity(DevoloDevice):
@@ -48,10 +51,14 @@ class DevoloWifiClientsEntity(DevoloDevice):
 
     async def async_update(self):
         """Update the value async."""
-        network_overview = await self._device.device.async_get_wifi_connected_station()
-        self._state = len(network_overview["connected_stations"])
-
-    # TODO add device_state_attributes
+        try:
+            network_overview = (
+                await self._device.device.async_get_wifi_connected_station()
+            )
+            self._state = len(network_overview["connected_stations"])
+            self._set_availablility(True)
+        except DeviceUnavailable:
+            self._set_availablility(False)
 
 
 class DevoloWifiNetworksEntity(DevoloDevice):
@@ -68,7 +75,11 @@ class DevoloWifiNetworksEntity(DevoloDevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update the value async."""
-        neighbors = await self._device.device.async_get_wifi_neighbor_access_points()
-        self._state = len(neighbors["neighbor_aps"])
-
-    # TODO add device_state_attributes
+        try:
+            neighbors = (
+                await self._device.device.async_get_wifi_neighbor_access_points()
+            )
+            self._state = len(neighbors["neighbor_aps"])
+            self._set_availablility(True)
+        except DeviceUnavailable:
+            self._set_availablility(False)
