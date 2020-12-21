@@ -13,7 +13,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODE, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -26,7 +26,7 @@ from .const import (
     CONDITION_CLASSES,
     COORDINATOR_FORECAST,
     DOMAIN,
-    FORECAST_MODE_DAILY,
+    FORECAST_MODE,
     FORECAST_MODE_HOURLY,
 )
 
@@ -47,20 +47,21 @@ async def async_setup_entry(
     """Set up the Meteo-France weather platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
 
-    async_add_entities(
-        [
-            MeteoFranceWeather(
-                coordinator,
-                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
-            )
-        ],
-        True,
-    )
-    _LOGGER.debug(
-        "Weather entity (%s) added for %s.",
-        entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
-        coordinator.data.position["name"],
-    )
+    for mode in FORECAST_MODE:
+        async_add_entities(
+            [
+                MeteoFranceWeather(
+                    coordinator,
+                    mode,
+                )
+            ],
+            True,
+        )
+        _LOGGER.debug(
+            "Weather entity (%s) added for %s.",
+            mode,
+            coordinator.data.position["name"],
+        )
 
 
 class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
@@ -71,7 +72,10 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
         self._mode = mode
-        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        if self._mode == FORECAST_MODE_HOURLY:
+            self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{FORECAST_MODE_HOURLY}"
+        else:
+            self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
 
     @property
     def unique_id(self):
@@ -81,7 +85,7 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._city_name
+        return f"{self._city_name} ({self._mode})"
 
     @property
     def condition(self):
