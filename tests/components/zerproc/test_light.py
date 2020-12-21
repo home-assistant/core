@@ -44,7 +44,7 @@ async def mock_light(hass, mock_entry):
     light = MagicMock(spec=pyzerproc.Light)
     light.address = "AA:BB:CC:DD:EE:FF"
     light.name = "LEDBlue-CCDDEEFF"
-    light.connected = False
+    light.is_connected.return_value = False
 
     mock_state = pyzerproc.LightState(False, (0, 0, 0))
 
@@ -57,7 +57,7 @@ async def mock_light(hass, mock_entry):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    light.connected = True
+    light.is_connected.return_value = True
 
     return light
 
@@ -71,12 +71,12 @@ async def test_init(hass, mock_entry):
     mock_light_1 = MagicMock(spec=pyzerproc.Light)
     mock_light_1.address = "AA:BB:CC:DD:EE:FF"
     mock_light_1.name = "LEDBlue-CCDDEEFF"
-    mock_light_1.connected = True
+    mock_light_1.is_connected.return_value = True
 
     mock_light_2 = MagicMock(spec=pyzerproc.Light)
     mock_light_2.address = "11:22:33:44:55:66"
     mock_light_2.name = "LEDBlue-33445566"
-    mock_light_2.connected = True
+    mock_light_2.is_connected.return_value = True
 
     mock_state_1 = pyzerproc.LightState(False, (0, 0, 0))
     mock_state_2 = pyzerproc.LightState(True, (0, 80, 255))
@@ -141,27 +141,43 @@ async def test_connect_exception(hass, mock_entry):
 
     mock_entry.add_to_hass(hass)
 
-    mock_light = MagicMock(spec=pyzerproc.Light)
-    mock_light.address = "AA:BB:CC:DD:EE:FF"
-    mock_light.name = "LEDBlue-CCDDEEFF"
-    mock_light.connected = False
+    mock_light_1 = MagicMock(spec=pyzerproc.Light)
+    mock_light_1.address = "AA:BB:CC:DD:EE:FF"
+    mock_light_1.name = "LEDBlue-CCDDEEFF"
+    mock_light_1.is_connected.return_value = False
+
+    mock_light_2 = MagicMock(spec=pyzerproc.Light)
+    mock_light_2.address = "11:22:33:44:55:66"
+    mock_light_2.name = "LEDBlue-33445566"
+    mock_light_2.is_connected.return_value = False
 
     with patch(
         "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[mock_light],
+        return_value=[mock_light_1, mock_light_2],
     ), patch.object(
-        mock_light, "connect", side_effect=pyzerproc.ZerprocException("TEST")
+        mock_light_1, "connect", side_effect=pyzerproc.ZerprocException("TEST")
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    # The exception should be captured and no entities should be added
-    assert len(hass.data[DOMAIN]["addresses"]) == 0
+    # The exception connecting to light 1 should be captured, but light 2
+    # should still be added
+    assert len(hass.data[DOMAIN]["addresses"]) == 1
 
 
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
     with patch.object(mock_light, "disconnect") as mock_disconnect:
+        await hass.config_entries.async_remove(mock_entry.entry_id)
+
+    assert mock_disconnect.called
+
+
+async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
+    """Assert that disconnect exceptions are caught."""
+    with patch.object(
+        mock_light, "disconnect", side_effect=pyzerproc.ZerprocException("Mock error")
+    ) as mock_disconnect:
         await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_disconnect.called

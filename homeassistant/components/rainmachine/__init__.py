@@ -275,7 +275,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]:
         hass.services.async_register(DOMAIN, service, method, schema=schema)
 
-    hass.data[DOMAIN][DATA_LISTENER] = entry.add_update_listener(async_reload_entry)
+    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = entry.add_update_listener(
+        async_reload_entry
+    )
 
     return True
 

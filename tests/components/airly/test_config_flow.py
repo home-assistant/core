@@ -12,7 +12,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from . import API_KEY_VALIDATION_URL, API_POINT_URL
+from . import API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
@@ -37,7 +37,7 @@ async def test_show_form(hass):
 async def test_invalid_api_key(hass, aioclient_mock):
     """Test that errors are shown when API key is invalid."""
     aioclient_mock.get(
-        API_KEY_VALIDATION_URL,
+        API_POINT_URL,
         exc=AirlyError(
             HTTP_UNAUTHORIZED, {"message": "Invalid authentication credentials"}
         ),
@@ -52,9 +52,6 @@ async def test_invalid_api_key(hass, aioclient_mock):
 
 async def test_invalid_location(hass, aioclient_mock):
     """Test that errors are shown when location is invalid."""
-    aioclient_mock.get(
-        API_KEY_VALIDATION_URL, text=load_fixture("airly_valid_station.json")
-    )
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
 
     result = await hass.config_entries.flow.async_init(
@@ -79,9 +76,6 @@ async def test_duplicate_error(hass, aioclient_mock):
 
 async def test_create_entry(hass, aioclient_mock):
     """Test that the user step works."""
-    aioclient_mock.get(
-        API_KEY_VALIDATION_URL, text=load_fixture("airly_valid_station.json")
-    )
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):

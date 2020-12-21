@@ -155,7 +155,7 @@ airly==1.0.0
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.56
+androidtv[async]==0.0.57
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -257,7 +257,7 @@ debugpy==1.2.0
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.8
+denonavr==0.9.9
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -462,7 +462,7 @@ mbddns==0.1.2
 mcstatus==2.3.0
 
 # homeassistant.components.meteo_france
-meteofrance-api==0.1.1
+meteofrance-api==1.0.1
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -670,7 +670,7 @@ pycoolmasternet-async==0.1.2
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.3.1
+pydaikin==2.4.0
 
 # homeassistant.components.deconz
 pydeconz==76
@@ -734,7 +734,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==0.2.1
+pyiqvia==0.3.1
 
 # homeassistant.components.isy994
 pyisy==2.1.0
@@ -823,7 +823,7 @@ pypoint==2.0.0
 pyprof2calltree==1.4.5
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.1.1
+pyps4-2ndscreen==1.2.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -915,7 +915,7 @@ pytile==4.0.0
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.4
+pytradfri[async]==7.0.5
 
 # homeassistant.components.vera
 pyvera==0.3.11
@@ -939,7 +939,7 @@ pywemo==0.5.3
 pywilight==0.0.65
 
 # homeassistant.components.zerproc
-pyzerproc==0.3.0
+pyzerproc==0.4.7
 
 # homeassistant.components.rachio
 rachiopy==1.0.3

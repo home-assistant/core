@@ -7,7 +7,8 @@
             "auth_new_token_not_work_error": "Nie uda\u0142o si\u0119 uwierzytelni\u0107 przy u\u017cyciu nowo utworzonego tokena",
             "auth_required_error": "Nie uda\u0142o si\u0119 okre\u015bli\u0107, czy wymagana jest autoryzacja",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "no_id": "Instancja Hyperion Ambilight nie zg\u0142osi\u0142a swojego identyfikatora"
+            "no_id": "Instancja Hyperion Ambilight nie zg\u0142osi\u0142a swojego identyfikatora",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
