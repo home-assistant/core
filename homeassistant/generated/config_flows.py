@@ -38,6 +38,7 @@ FLOWS = [
     "canary",
     "cast",
     "cert_expiry",
+    "cisco_webex",
     "cloudflare",
     "control4",
     "coolmaster",

@@ -1124,6 +1124,10 @@ wakeonlan==1.1.6
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
 
+# homeassistant.components.cisco_webex
+# homeassistant.components.cisco_webex_teams
+webexteamssdk==1.6
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 

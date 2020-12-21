@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect. Check your internet connection.",
+            "invalid_auth": "Invalid authentication. Ensure your auth token is from a bot at developer.webex.com/docs/bots",
+            "invalid_email": "Invalid email.",
+            "email_not_found": "Email provided is not a Webex user.",
+            "unknown": "An unexpected error occurred."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "Bot Token",
+                    "email": "Email Address"
+                },
+                "description": "Learn how to create a bot token here: \n\n[developer.webex.com/docs/bots]({bot_docs_url})"
+            }
+        }
+    },
+    "title": "cisco_webex"
+}

@@ -1,0 +1,16 @@
+{
+  "domain": "cisco_webex",
+  "name": "Cisco Webex",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cisco_webex",
+  "requirements": [
+    "webexteamssdk==1.6"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@fbradyirl"
+  ]
+}

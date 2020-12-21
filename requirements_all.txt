@@ -2277,6 +2277,7 @@ watchdog==0.8.3
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
 
+# homeassistant.components.cisco_webex
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.6
 
