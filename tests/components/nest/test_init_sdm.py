@@ -72,7 +72,8 @@ async def test_setup_configuration_failure(hass):
 async def test_setup_susbcriber_failure(hass):
     """Test configuration error."""
     await async_setup_component(hass, "persistent_notification", {})
-
+state = hass.states.get("persistent_notification.nest_setup")
+assert state is None
     with patch(
         "homeassistant.components.nest.GoogleNestSubscriber.start_async",
         side_effect=GoogleNestException(),
