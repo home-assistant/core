@@ -13,7 +13,7 @@ set_runtime_value_bool:
       example: 123456
     value:
       description: The boolean value to set.
-      example: True
+      example: true
 
 set_runtime_value_int:
   description: Set an integer runtime value on the IHC controller.
