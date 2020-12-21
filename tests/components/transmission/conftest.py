@@ -74,8 +74,8 @@ async def mock_client_setup(hass, entry=None, **kwargs):
         side_effect=get_correct_fixture,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        for k, v in kwargs.items():
-            setattr(hass.data[DOMAIN][entry.entry_id]._tm_data.data, k, v)
+        for name, value in kwargs.items():
+            setattr(hass.data[DOMAIN][entry.entry_id]._tm_data.data, name, value)
         await hass.async_block_till_done()
 
 
