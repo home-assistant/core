@@ -1,8 +1,17 @@
 """Transmission sensor platform tests."""
 
+from homeassistant.components.transmission.const import (
+    ORDER_BEST_RATIO_FIRST,
+    ORDER_NEWEST_FIRST,
+    ORDER_WORST_RATIO_FIRST,
+)
+
 from tests.components.transmission.conftest import (
+    MOCK_LIMIT_TRUNCATED,
     MOCK_TORRENTS_BEST_TO_WORST,
     MOCK_TORRENTS_OLDEST_TO_NEWEST,
+    mock_client_setup,
+    setup_transmission,
 )
 
 
@@ -33,81 +42,133 @@ async def test_sensors(hass, torrent_info):
     assert started_torrents.state == "5"
 
 
-async def test_status_seeding(hass, status_seeding):
-    """Test the Transmission Status sensor."""
+async def test_status_seeding(hass):
+    """Test the Transmission Status Seeding."""
+    tm_client = await mock_client_setup(hass)
+    # pylint: disable=protected-access
+    tm_client._tm_data.data.downloadSpeed = 0
+    await hass.async_block_till_done()
+
     status = hass.states.get("sensor.transmission_status")
     assert status.state == "Seeding"
 
 
-async def test_status_downloading(hass, status_downloading):
-    """Test the Transmission Status sensor."""
+async def test_status_downloading(hass):
+    """Test the Transmission Status Downloading."""
+    tm_client = await mock_client_setup(hass)
+    # pylint: disable=protected-access
+    tm_client._tm_data.data.uploadSpeed = 0
+    await hass.async_block_till_done()
+
     status = hass.states.get("sensor.transmission_status")
     assert status.state == "Downloading"
 
 
-async def test_status_idle(hass, status_idle):
-    """Test the Transmission Status sensor."""
+async def test_status_idle(hass):
+    """Test the Transmission Status Idle."""
+    tm_client = await mock_client_setup(hass)
+    # pylint: disable=protected-access
+    tm_client._tm_data.data.downloadSpeed = 0
+    tm_client._tm_data.data.uploadSpeed = 0
+    await hass.async_block_till_done()
+
     status = hass.states.get("sensor.transmission_status")
     assert status.state == "idle"
 
 
 async def test_torrent_info(hass, torrent_info):
-    """Test the Transmission Torrent Info attributes."""
+    """Test Torrent Info attributes old->new (default)."""
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
     assert [x["id"] for x in info.values()] == MOCK_TORRENTS_OLDEST_TO_NEWEST
 
 
-async def test_torrent_info_limit(hass, torrent_limit):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_limit(hass):
+    """Test Torrent Info attributes old->new truncated."""
+    entry = setup_transmission(hass, limit=MOCK_LIMIT_TRUNCATED)
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
-    assert [x["id"] for x in info.values()] == MOCK_TORRENTS_OLDEST_TO_NEWEST[:2]
+    assert [x["id"] for x in info.values()] == MOCK_TORRENTS_OLDEST_TO_NEWEST[
+        :MOCK_LIMIT_TRUNCATED
+    ]
 
 
-async def test_torrent_info_order_recent(hass, torrent_order_recent):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_order_recent(hass):
+    """Test Torrent Info attributes new->old."""
+    entry = setup_transmission(hass, order=ORDER_NEWEST_FIRST)
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
     mocked = list(reversed(MOCK_TORRENTS_OLDEST_TO_NEWEST))
     assert [x["id"] for x in info.values()] == mocked
 
 
-async def test_torrent_info_order_recent_limit(hass, torrent_order_recent_limit):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_order_recent_limit(hass):
+    """Test Torrent Info attributes new->old truncated."""
+    entry = setup_transmission(
+        hass, limit=MOCK_LIMIT_TRUNCATED, order=ORDER_NEWEST_FIRST
+    )
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
     mocked = list(reversed(MOCK_TORRENTS_OLDEST_TO_NEWEST))
-    assert [x["id"] for x in info.values()] == mocked[:2]
+    assert [x["id"] for x in info.values()] == mocked[:MOCK_LIMIT_TRUNCATED]
 
 
-async def test_torrent_info_order_ratio(hass, torrent_order_ratio):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_order_ratio(hass):
+    """Test Torrent Info attributes best->worst ratio."""
+    entry = setup_transmission(hass, order=ORDER_BEST_RATIO_FIRST)
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
     assert [x["id"] for x in info.values()] == MOCK_TORRENTS_BEST_TO_WORST
 
 
-async def test_torrent_info_order_ratio_limit(hass, torrent_order_ratio_limit):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_order_ratio_limit(hass):
+    """Test Torrent Info attributes best->worst ratio truncated."""
+    entry = setup_transmission(
+        hass, limit=MOCK_LIMIT_TRUNCATED, order=ORDER_BEST_RATIO_FIRST
+    )
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
-    assert [x["id"] for x in info.values()] == MOCK_TORRENTS_BEST_TO_WORST[:2]
+    assert [x["id"] for x in info.values()] == MOCK_TORRENTS_BEST_TO_WORST[
+        :MOCK_LIMIT_TRUNCATED
+    ]
 
 
-async def test_torrent_info_order_ratio_worst(hass, torrent_order_ratio_worst):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_order_ratio_worst(hass):
+    """Test Torrent Info attributes worst->best ratio."""
+    entry = setup_transmission(hass, order=ORDER_WORST_RATIO_FIRST)
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
     mocked = list(reversed(MOCK_TORRENTS_BEST_TO_WORST))
     assert [x["id"] for x in info.values()] == mocked
 
 
-async def test_torrent_info_order_ratio_worst_limit(
-    hass, torrent_order_ratio_worst_limit
-):
-    """Test the Transmission Torrent Info attributes."""
+async def test_torrent_info_order_ratio_worst_limit(hass):
+    """Test Torrent Info attributes worst->best ratio truncated."""
+    entry = setup_transmission(
+        hass, limit=MOCK_LIMIT_TRUNCATED, order=ORDER_WORST_RATIO_FIRST
+    )
+    await mock_client_setup(hass, entry)
+    await hass.async_block_till_done()
+
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
     mocked = list(reversed(MOCK_TORRENTS_BEST_TO_WORST))
-    assert [x["id"] for x in info.values()] == mocked[:2]
+    assert [x["id"] for x in info.values()] == mocked[:MOCK_LIMIT_TRUNCATED]
