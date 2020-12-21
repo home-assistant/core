@@ -3,7 +3,7 @@
     "name": "kmtronic",
     "config_flow": true,
     "documentation": "https://www.home-assistant.io/integrations/kmtronic",
-    "requirements": ["pykmtronic==0.0.2"],
+    "requirements": ["pykmtronic==0.0.3"],
     "ssdp": [],
     "zeroconf": [],
     "homekit": {},

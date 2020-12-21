@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=MANUFACTURER,
+        name=f"{MANUFACTURER} {hub.name}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=30),
     )

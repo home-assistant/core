@@ -48,9 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
+        identifiers={(DOMAIN, hub.name)},
         config_entry_id=entry.entry_id,
         manufacturer=MANUFACTURER,
-        name=hub.host,
+        name=hub.name,
     )
 
     for component in PLATFORMS:
