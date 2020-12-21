@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, ATTR_BATTERY_LEVEL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -74,6 +74,7 @@ class SomaEntity(Entity):
         self.device = device
         self.api = api
         self.current_position = 50
+        self.state_attrs = None
         self.is_available = True
 
     @property
@@ -120,4 +121,25 @@ class SomaEntity(Entity):
             self.is_available = False
             return
         self.current_position = 100 - response["position"]
+        try:
+            response = await self.hass.async_add_executor_job(
+                self.api.get_battery_level, self.device["mac"]
+            )
+        except RequestException:
+            _LOGGER.error("Connection to SOMA Connect failed")
+            self.is_available = False
+            return
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
+            self.is_available = False
+            return
+        battery = response["battery_level"] - 320
+        if battery < 0:
+            battery = 0
+        elif battery > 100:
+            battery = 100
+        self.state_attrs = {}
+        self.state_attrs[ATTR_BATTERY_LEVEL] = battery
         self.is_available = True

@@ -67,3 +67,8 @@ class SomaCover(SomaEntity, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed."""
         return self.current_position == 0
+
+    @property
+    def device_state_attributes(self):
+        """Get additional state attributes."""
+        return self.state_attrs
