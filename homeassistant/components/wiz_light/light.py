@@ -1,7 +1,7 @@
 """WiZ Light integration."""
 import logging
 
-from pywizlight import SCENES, PilotBuilder, wizlight
+from pywizlight import SCENES, PilotBuilder, wizlight, WizLightConnectionError
 import yaml
 import os
 import voluptuous as vol
@@ -41,11 +41,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the WiZ Light platform from legacy."""
+    """Set up the WiZ Light platform from legacy config."""
     # Assign configuration variables.
     # The configuration check takes care they are present.
     ip_address = config[CONF_HOST]
-    bulb = wizlight(ip_address)
+    try:
+        bulb = wizlight(ip_address)
+    except WizLightConnectionError:
+        _LOGGER.error("Cant add bulb with ip %s.", ip_address)
 
     # Add devices
     async_add_entities([WizBulb(bulb, config[CONF_NAME])])

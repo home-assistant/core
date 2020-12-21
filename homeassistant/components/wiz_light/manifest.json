@@ -7,7 +7,7 @@
     "@sbidy"
   ],
   "requirements": [
-    "pywizlight==0.3.4",
+    "pywizlight==0.3.6",
     "PyYAML==5.3.1"
   ],
   "config_flow": true
