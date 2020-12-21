@@ -18,7 +18,7 @@
     {
       // Debug by attaching to local Home Asistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
-      "name": "Debug Home Assistant: Attach Local",
+      "name": "Home Assistant: Attach Local",
       "type": "python",
       "request": "attach",
       "port": 5678,
@@ -33,7 +33,7 @@
     {
       // Debug by attaching to remote Home Asistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
-      "name": "Debug Home Assistant: Attach Remote",
+      "name": "Home Assistant: Attach Remote",
       "type": "python",
       "request": "attach",
       "port": 5678,
