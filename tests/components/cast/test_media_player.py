@@ -22,6 +22,18 @@ from tests.components.media_player import common
 
 
 @pytest.fixture()
+def dial_mock():
+    """Mock pychromecast dial."""
+    dial_mock = MagicMock()
+    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
+    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
+    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
+    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
+    dial_mock.get_multizone_status.return_value.dynamic_groups = []
+    return dial_mock
+
+
+@pytest.fixture()
 def mz_mock():
     """Mock pychromecast MultizoneManager."""
     return MagicMock()
@@ -34,20 +46,17 @@ def quick_play_mock():
 
 
 @pytest.fixture(autouse=True)
-def cast_mock(mz_mock, quick_play_mock):
+def cast_mock(dial_mock, mz_mock, quick_play_mock):
     """Mock pychromecast."""
     pycast_mock = MagicMock()
     pycast_mock.start_discovery.return_value = (None, Mock())
-    dial_mock = MagicMock(name="XXX")
-    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
-    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
-    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
-    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
 
     with patch(
         "homeassistant.components.cast.media_player.pychromecast", pycast_mock
     ), patch(
         "homeassistant.components.cast.discovery.pychromecast", pycast_mock
+    ), patch(
+        "homeassistant.components.cast.helpers.dial", dial_mock
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager",
         return_value=mz_mock,
@@ -183,7 +192,18 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert get_chromecast.call_count == 1
-        return chromecast
+
+        def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
+            """Discover a chromecast device."""
+            listener.services[info.uuid] = (
+                {service_name},
+                info.uuid,
+                info.model_name,
+                info.friendly_name,
+            )
+            discovery_callback(info.uuid, service_name)
+
+        return chromecast, discover_chromecast
 
 
 def get_status_callbacks(chromecast_mock, mz_mock=None):
@@ -392,7 +412,7 @@ async def test_entity_availability(hass: HomeAssistantType):
     entity_id = "media_player.speaker"
     info = get_fake_chromecast_info()
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     state = hass.states.get(entity_id)
@@ -423,7 +443,7 @@ async def test_entity_cast_status(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -466,7 +486,7 @@ async def test_entity_play_media(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -495,7 +515,7 @@ async def test_entity_play_media_cast(hass: HomeAssistantType, quick_play_mock):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -528,7 +548,7 @@ async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -575,7 +595,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistantType):
 
     info = get_fake_chromecast_info()
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -601,7 +621,7 @@ async def test_entity_media_content_type(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -655,7 +675,7 @@ async def test_entity_control(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -738,7 +758,7 @@ async def test_entity_media_states(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -797,7 +817,7 @@ async def test_group_media_states(hass, mz_mock):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, conn_status_cb, media_status_cb, group_media_status_cb = get_status_callbacks(
         chromecast, mz_mock
     )
@@ -840,8 +860,78 @@ async def test_group_media_states(hass, mz_mock):
     assert state.state == "playing"
 
 
-async def test_group_media_control(hass, mz_mock):
+async def test_dynamic_group_media_states(hass, dial_mock):
     """Test media states are read from group if entity has no state."""
+    entity_id = "media_player.speaker"
+    reg = await hass.helpers.entity_registry.async_get_registry()
+
+    # Fake dynamic group for later
+    tmp = MagicMock()
+    tmp.uuid = FakeUUID2
+    dial_mock.get_multizone_status.return_value.dynamic_groups = [tmp]
+
+    # Non-standard port -> audio group
+    info = get_fake_chromecast_info(port=23456)
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+    dynamic_group_info = get_fake_chromecast_info(host="host_1", uuid=FakeUUID2)
+
+    chromecast, discover_cast = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
+
+    # Discover a dynamic group
+    dynamic_group_chromecast = get_fake_chromecast(dynamic_group_info)
+    with patch(
+        "homeassistant.components.cast.discovery.pychromecast._get_chromecast_from_host",
+        return_value=dynamic_group_chromecast,
+    ) as get_chromecast_from_host:
+        discover_cast("service2", dynamic_group_info)
+        await hass.async_block_till_done()
+        assert get_chromecast_from_host.call_count == 1
+
+    _, _, dynamic_group_media_status_cb = get_status_callbacks(dynamic_group_chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "unknown"
+    assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
+
+    group_media_status = MagicMock(images=None)
+    player_media_status = MagicMock(images=None)
+
+    # Player has no state, dynamic group is playing -> Should report 'playing'
+    group_media_status.player_is_playing = True
+    dynamic_group_media_status_cb(group_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "playing"
+
+    # Player is paused, dynamic group is playing -> Should report 'paused'
+    player_media_status.player_is_playing = False
+    player_media_status.player_is_paused = True
+    media_status_cb(player_media_status)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "paused"
+
+    # Player is in unknown state, dynamic group is playing -> Should report 'playing'
+    player_media_status.player_state = "UNKNOWN"
+    media_status_cb(player_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "playing"
+
+
+async def test_group_media_control(hass, mz_mock):
+    """Test media controls are handled by group if entity has no state."""
     entity_id = "media_player.speaker"
     reg = await hass.helpers.entity_registry.async_get_registry()
 
@@ -850,7 +940,7 @@ async def test_group_media_control(hass, mz_mock):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
 
     _, conn_status_cb, media_status_cb, group_media_status_cb = get_status_callbacks(
         chromecast, mz_mock
@@ -901,10 +991,158 @@ async def test_group_media_control(hass, mz_mock):
     assert chromecast.media_controller.play_media.called
 
 
+async def test_dynamic_group_media_control(hass, dial_mock):
+    """Test media controls are handled by dynamic group if entity has no state."""
+    entity_id = "media_player.speaker"
+    reg = await hass.helpers.entity_registry.async_get_registry()
+
+    # Fake dynamic group for later
+    tmp = MagicMock()
+    tmp.uuid = FakeUUID2
+    dial_mock.get_multizone_status.return_value.dynamic_groups = [tmp]
+
+    # Non-standard port -> audio group
+    info = get_fake_chromecast_info(port=23456)
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+    dynamic_group_info = get_fake_chromecast_info(host="host_1", uuid=FakeUUID2)
+
+    chromecast, discover_cast = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
+
+    # Discover a dynamic group
+    dynamic_group_chromecast = get_fake_chromecast(dynamic_group_info)
+    with patch(
+        "homeassistant.components.cast.discovery.pychromecast._get_chromecast_from_host",
+        return_value=dynamic_group_chromecast,
+    ) as get_chromecast_from_host:
+        discover_cast("service2", dynamic_group_info)
+        await hass.async_block_till_done()
+        assert get_chromecast_from_host.call_count == 1
+
+    _, _, dynamic_group_media_status_cb = get_status_callbacks(dynamic_group_chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "unknown"
+    assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
+
+    group_media_status = MagicMock(images=None)
+    player_media_status = MagicMock(images=None)
+
+    # Player has no state, dynamic group is playing -> Should forward calls to group
+    group_media_status.player_is_playing = True
+    dynamic_group_media_status_cb(group_media_status)
+    await common.async_media_play(hass, entity_id)
+    assert dynamic_group_chromecast.media_controller.play.called
+    assert not chromecast.media_controller.play.called
+
+    # Player is paused, dynamic group is playing -> Should not forward
+    player_media_status.player_is_playing = False
+    player_media_status.player_is_paused = True
+    media_status_cb(player_media_status)
+    await common.async_media_pause(hass, entity_id)
+    assert not dynamic_group_chromecast.media_controller.pause.called
+    assert chromecast.media_controller.pause.called
+
+    # Player is in unknown state, dynamic group is playing -> Should forward to group
+    player_media_status.player_state = "UNKNOWN"
+    media_status_cb(player_media_status)
+    await common.async_media_stop(hass, entity_id)
+    assert dynamic_group_chromecast.media_controller.stop.called
+    assert not chromecast.media_controller.stop.called
+
+    # Verify play_media is not forwarded
+    await common.async_play_media(hass, "music", "best.mp3", entity_id)
+    assert not dynamic_group_chromecast.media_controller.play_media.called
+    assert chromecast.media_controller.play_media.called
+
+
+async def test_dynamic_group_removed(hass, dial_mock, caplog):
+    """Test removal of dynamic group."""
+    entity_id = "media_player.speaker"
+    reg = await hass.helpers.entity_registry.async_get_registry()
+
+    # Fake dynamic group for later
+    tmp = MagicMock()
+    tmp.uuid = FakeUUID2
+    dial_mock.get_multizone_status.return_value.dynamic_groups = [tmp]
+
+    # Non-standard port -> audio group
+    info = get_fake_chromecast_info(port=23456)
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+    dynamic_group_info = get_fake_chromecast_info(host="host_1", uuid=FakeUUID2)
+
+    chromecast, discover_cast = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
+
+    # Discover a dynamic group
+    dynamic_group_chromecast = get_fake_chromecast(dynamic_group_info)
+    with patch(
+        "homeassistant.components.cast.discovery.pychromecast._get_chromecast_from_host",
+        return_value=dynamic_group_chromecast,
+    ) as get_chromecast_from_host:
+        discover_cast("service2", dynamic_group_info)
+        await hass.async_block_till_done()
+        assert get_chromecast_from_host.call_count == 1
+
+    (
+        _,
+        dynamic_group_conn_status_cb,
+        dynamic_group_media_status_cb,
+    ) = get_status_callbacks(dynamic_group_chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "unknown"
+    assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
+
+    group_media_status = MagicMock(images=None)
+
+    # Player has no state, dynamic group is playing -> Should report 'playing'
+    group_media_status.player_is_playing = True
+    dynamic_group_media_status_cb(group_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "playing"
+
+    # Dynamic group connected
+    group_connection_status = MagicMock()
+    group_connection_status.status = "CONNECTED"
+    dynamic_group_conn_status_cb(group_connection_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "playing"
+    assert "Dynamic group availability changed: CONNECTED" in caplog.text
+
+    # Dynamic group disconnected
+    group_connection_status = MagicMock()
+    group_connection_status.status = "DISCONNECTED"
+    dynamic_group_conn_status_cb(group_connection_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state != "playing"
+
+
 async def test_failed_cast_on_idle(hass, caplog):
     """Test no warning when unless player went idle with reason "ERROR"."""
     info = get_fake_chromecast_info()
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, _, media_status_cb = get_status_callbacks(chromecast)
 
     media_status = MagicMock(images=None)
@@ -939,7 +1177,7 @@ async def test_failed_cast_other_url(hass, caplog):
         )
 
     info = get_fake_chromecast_info()
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, _, media_status_cb = get_status_callbacks(chromecast)
 
     media_status = MagicMock(images=None)
@@ -962,7 +1200,7 @@ async def test_failed_cast_internal_url(hass, caplog):
         )
 
     info = get_fake_chromecast_info()
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, _, media_status_cb = get_status_callbacks(chromecast)
 
     media_status = MagicMock(images=None)
@@ -990,7 +1228,7 @@ async def test_failed_cast_external_url(hass, caplog):
         )
 
     info = get_fake_chromecast_info()
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, _, media_status_cb = get_status_callbacks(chromecast)
 
     media_status = MagicMock(images=None)
@@ -1014,7 +1252,7 @@ async def test_failed_cast_tts_base_url(hass, caplog):
         )
 
     info = get_fake_chromecast_info()
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
     _, _, media_status_cb = get_status_callbacks(chromecast)
 
     media_status = MagicMock(images=None)
@@ -1032,7 +1270,7 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
     """Test cast device disconnects socket on stop."""
     info = get_fake_chromecast_info()
 
-    chromecast = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
