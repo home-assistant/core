@@ -44,10 +44,7 @@ async def test_sensors(hass, torrent_info):
 
 async def test_status_seeding(hass):
     """Test the Transmission Status Seeding."""
-    tm_client = await mock_client_setup(hass)
-    # pylint: disable=protected-access
-    tm_client._tm_data.data.downloadSpeed = 0
-    await hass.async_block_till_done()
+    await mock_client_setup(hass, downloadSpeed=0)
 
     status = hass.states.get("sensor.transmission_status")
     assert status.state == "Seeding"
@@ -55,10 +52,7 @@ async def test_status_seeding(hass):
 
 async def test_status_downloading(hass):
     """Test the Transmission Status Downloading."""
-    tm_client = await mock_client_setup(hass)
-    # pylint: disable=protected-access
-    tm_client._tm_data.data.uploadSpeed = 0
-    await hass.async_block_till_done()
+    await mock_client_setup(hass, uploadSpeed=0)
 
     status = hass.states.get("sensor.transmission_status")
     assert status.state == "Downloading"
@@ -66,11 +60,7 @@ async def test_status_downloading(hass):
 
 async def test_status_idle(hass):
     """Test the Transmission Status Idle."""
-    tm_client = await mock_client_setup(hass)
-    # pylint: disable=protected-access
-    tm_client._tm_data.data.downloadSpeed = 0
-    tm_client._tm_data.data.uploadSpeed = 0
-    await hass.async_block_till_done()
+    await mock_client_setup(hass, downloadSpeed=0, uploadSpeed=0)
 
     status = hass.states.get("sensor.transmission_status")
     assert status.state == "idle"
@@ -87,7 +77,6 @@ async def test_torrent_info_limit(hass):
     """Test Torrent Info attributes old->new truncated."""
     entry = setup_transmission(hass, limit=MOCK_LIMIT_TRUNCATED)
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
@@ -100,7 +89,6 @@ async def test_torrent_info_order_recent(hass):
     """Test Torrent Info attributes new->old."""
     entry = setup_transmission(hass, order=ORDER_NEWEST_FIRST)
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
@@ -114,7 +102,6 @@ async def test_torrent_info_order_recent_limit(hass):
         hass, limit=MOCK_LIMIT_TRUNCATED, order=ORDER_NEWEST_FIRST
     )
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
@@ -126,7 +113,6 @@ async def test_torrent_info_order_ratio(hass):
     """Test Torrent Info attributes best->worst ratio."""
     entry = setup_transmission(hass, order=ORDER_BEST_RATIO_FIRST)
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
@@ -139,7 +125,6 @@ async def test_torrent_info_order_ratio_limit(hass):
         hass, limit=MOCK_LIMIT_TRUNCATED, order=ORDER_BEST_RATIO_FIRST
     )
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
@@ -152,7 +137,6 @@ async def test_torrent_info_order_ratio_worst(hass):
     """Test Torrent Info attributes worst->best ratio."""
     entry = setup_transmission(hass, order=ORDER_WORST_RATIO_FIRST)
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]
@@ -166,7 +150,6 @@ async def test_torrent_info_order_ratio_worst_limit(hass):
         hass, limit=MOCK_LIMIT_TRUNCATED, order=ORDER_WORST_RATIO_FIRST
     )
     await mock_client_setup(hass, entry)
-    await hass.async_block_till_done()
 
     total_torrents = hass.states.get("sensor.transmission_total_torrents")
     info = total_torrents.attributes["torrent_info"]

@@ -64,13 +64,19 @@ def get_correct_fixture(*args):
     return ""
 
 
-async def mock_client_setup(hass, entry=None):
+async def mock_client_setup(hass, entry=None, **kwargs):
     """Mock Transmission client setup."""
+    # pylint: disable=protected-access
     if entry is None:
         entry = setup_transmission(hass)
-    with patch("transmissionrpc.Client._http_query", side_effect=get_correct_fixture):
+    with patch(
+        "homeassistant.components.transmission.transmissionrpc.Client._http_query",
+        side_effect=get_correct_fixture,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
-        return hass.data[DOMAIN][entry.entry_id]
+        for k, v in kwargs.items():
+            setattr(hass.data[DOMAIN][entry.entry_id]._tm_data.data, k, v)
+        await hass.async_block_till_done()
 
 
 @pytest.fixture(name="torrent_info")
