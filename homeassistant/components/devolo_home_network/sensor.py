@@ -12,7 +12,7 @@ from .entity_classes import (
 )
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(
