@@ -41,15 +41,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the IPP component."""
-    if DOMAIN not in hass.data:
-        hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPP from a config entry."""
 
-    if entry.entry_id not in hass.data[DOMAIN]:
+    coordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if not coordinator:
         # Create IPP instance for this entry
         coordinator = IPPDataUpdateCoordinator(
             hass,
@@ -60,8 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             verify_ssl=entry.data[CONF_VERIFY_SSL],
         )
         hass.data[DOMAIN][entry.entry_id] = coordinator
-    else:
-        coordinator = hass.data[DOMAIN][entry.entry_id]
 
     await coordinator.async_refresh()
 
