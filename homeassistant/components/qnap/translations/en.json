@@ -2,8 +2,8 @@
     "config": {
       "step": {
         "user": {
-          "title": "Connect to the Qnap device",
-          "description": "",
+          "title": "Connect to the QNAP device",
+          "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
           "data": {
             "host":"Hostname",
             "username":"Username",
@@ -11,7 +11,7 @@
             "port":"Port",
             "ssl":"Enable HTTPS",
             "verify_ssl":"Verify SSL Certificat",
-            "timeout":"Timeout connection",
+            "timeout":"Timeout",
             "monitored_conditions":"Monitors",
             "nics":"Nic cards",
             "volumes":"Volumes",
