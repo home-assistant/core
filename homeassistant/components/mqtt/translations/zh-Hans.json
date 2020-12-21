@@ -39,12 +39,12 @@
         },
         "trigger_type": {
             "button_double_press": "\"{subtype}\" \u53cc\u51fb",
-            "button_long_press": "\"{subtype}\" \u6301\u7eed\u6309\u4e0b",
-            "button_long_release": "\"{subtype}\" \u957f\u6309\u540e\u91ca\u653e",
+            "button_long_press": "\"{subtype}\" \u957f\u6309",
+            "button_long_release": "\"{subtype}\" \u957f\u6309\u540e\u677e\u5f00",
             "button_quadruple_press": "\"{subtype}\" \u56db\u8fde\u51fb",
             "button_quintuple_press": "\"{subtype}\" \u4e94\u8fde\u51fb",
             "button_short_press": "\"{subtype}\" \u6309\u4e0b",
-            "button_short_release": "\"{subtype}\" \u91ca\u653e",
+            "button_short_release": "\"{subtype}\" \u677e\u5f00",
             "button_triple_press": "\"{subtype}\" \u4e09\u8fde\u51fb"
         }
     },
