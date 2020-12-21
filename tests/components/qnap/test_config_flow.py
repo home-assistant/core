@@ -75,7 +75,7 @@ YAML_CONFIG = {
     ],
 }
 
-MANUEL_CONFIG = {
+MANUAL_CONFIG = {
     CONF_HOST: "1.2.3.4",
     CONF_USERNAME: "myuser",
     CONF_PASSWORD: "password",
@@ -151,7 +151,7 @@ async def test_form(hass):
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            flow_id=result["flow_id"], user_input=MANUEL_CONFIG
+            flow_id=result["flow_id"], user_input=MANUAL_CONFIG
         )
         await hass.async_block_till_done()
 
@@ -193,7 +193,7 @@ async def test_form_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=MANUEL_CONFIG,
+            user_input=MANUAL_CONFIG,
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -254,7 +254,7 @@ async def test_options_flow(hass):
         return_value=API_RETURN,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MANUEL_CONFIG
+            DOMAIN, context={"source": "user"}, data=MANUAL_CONFIG
         )
     await hass.async_block_till_done()
 
