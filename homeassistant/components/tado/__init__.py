@@ -215,7 +215,7 @@ class TadoConnector:
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
                 return
-        except RuntimeError:
+        except:
             _LOGGER.error(
                 "Unable to connect to Tado while updating %s %s",
                 sensor_type,
