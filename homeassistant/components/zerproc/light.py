@@ -110,20 +110,16 @@ class ZerprocLight(LightEntity):
         """Run when entity about to be added to hass."""
         self.async_on_remove(
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown
+                EVENT_HOMEASSISTANT_STOP, self.async_will_remove_from_hass
             )
         )
 
-    async def async_will_remove_from_hass(self) -> None:
+    async def async_will_remove_from_hass(self, *args) -> None:
         """Run when entity will be removed from hass."""
         try:
             await self._light.disconnect()
         except pyzerproc.ZerprocException:
             pass
-
-    async def on_hass_shutdown(self, event):
-        """Execute when Home Assistant is shutting down."""
-        await self.async_will_remove_from_hass()
 
     @property
     def name(self):
