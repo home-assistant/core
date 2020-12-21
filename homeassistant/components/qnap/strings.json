@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "[%key:component::qnap::config::step::user::title%]",
-        "description": "[%key:component::qnap::config::step::user::description%]",
+        "title": "Connect to the QNAP device",
+        "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
         "data": {
           "host":"[%key:common::config_flow::data::host%]",
           "username":"[%key:common::config_flow::data::username%]",
@@ -11,11 +11,11 @@
           "port":"[%key:common::config_flow::data::port%]",
           "ssl":"[%key:common::config_flow::data::ssl%]",
           "verify_ssl":"[%key:common::config_flow::data::verify_ssl%]",
-          "timeout":"[%key:component::qnap::config::step::user::data::timeout%]",
-          "monitored_conditions":"[%key:component::qnap::config::step::user::data::monitored_conditions%]",
-          "nics":"[%key:component::qnap::config::step::user::data::nics%]",
-          "volumes":"[%key:component::qnap::config::step::user::data::volumes%]",
-          "drives":"[%key:component::qnap::config::step::user::data::drives%]"
+          "timeout":"Timeout",
+          "monitored_conditions":"Monitors",
+          "nics":"Nic cards",
+          "volumes":"Volumes",
+          "drives":"Drives"
         }
       }
     },
@@ -29,11 +29,11 @@
         "data": {
           "ssl":"[%key:common::config_flow::data::ssl%]",
           "verify_ssl":"[%key:common::config_flow::data::verify_ssl%]",
-          "timeout":"[%key:component::qnap::config::step::user::data::timeout%]",
-          "monitored_conditions":"[%key:component::qnap::config::step::user::data::monitored_conditions%]",
-          "nics":"[%key:component::qnap::config::step::user::data::nics%]",
-          "volumes":"[%key:component::qnap::config::step::user::data::volumes%]",
-          "drives":"[%key:component::qnap::config::step::user::data::drives%]"          
+          "timeout":"Tiemout",
+          "monitored_conditions":"Monitors",
+          "nics":"Nic cards",
+          "volumes":"Volumes",
+          "drives":"Drives"
         }
       }
     }
