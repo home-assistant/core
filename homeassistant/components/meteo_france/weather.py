@@ -72,10 +72,7 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
         self._mode = mode
-        if self._mode == FORECAST_MODE_HOURLY:
-            self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{FORECAST_MODE_HOURLY}"
-        else:
-            self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{self._mode}"
 
     @property
     def unique_id(self):
