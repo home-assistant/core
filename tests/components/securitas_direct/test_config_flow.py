@@ -21,7 +21,8 @@ from tests.common import MockConfigEntry
 
 
 def create_config_flow(hass):
-    """ Create a securitas direct config flow."""
+    """Create a securitas direct config flow."""
+
     flow = config_flow.SecuritasConfigFlow()
     flow.hass = hass
 
@@ -40,6 +41,7 @@ config = {
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
+
     flow = create_config_flow(hass)
     result = await flow.async_step_user(user_input=None)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -48,6 +50,7 @@ async def test_show_form(hass):
 
 async def test_multiple_config(hass):
     """Test multiple configurations."""
+
     flow = create_config_flow(hass)
     MockConfigEntry(
         domain=DOMAIN,
@@ -73,6 +76,7 @@ async def test_invalid_connection(hass):
 
 async def create_entry(hass, source):
     """Create an entry and asserts result from the operation."""
+
     with patch("homeassistant.components.securitas_direct.config_flow.Session"), patch(
         "homeassistant.components.securitas_direct.Session"
     ), patch("homeassistant.components.securitas_direct.Installation"):

@@ -1,4 +1,5 @@
 {
+  "title": "Securitas Direct",
   "config": {
     "step": {
       "user": {
@@ -9,8 +10,7 @@
           "country": "Country",
           "lang": "Language",
           "code": "Code"
-        },
-        "title": "Fill in your Securitas Direct login information"
+        }
       },
       "reauth_confirm": {
         "data": {
@@ -20,16 +20,15 @@
           "country": "Country",
           "lang": "Language",
           "code": "Code"
-        },
-        "title": "Fill in your Securitas Direct login information"
+        }
       }
+    },
+    "error": {
+      "unable_to_connect": "Unable to connect to Securitas Direct"
     },
     "abort": {
       "multiple_securitas_configs": "Multiple securitas direct configurations are not supported",
-      "reloaded": "Securitas direct configuration reloaded"
-    },
-    "error": {
-      "cannot_connect": "Unable to connecto to Securitas Direct"
+      "reloaded": "Securitas Direct configuration reloaded"
     }
   }
 }

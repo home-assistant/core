@@ -34,6 +34,7 @@ SECURITAS_STATUS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Setup securitas direct alarm control."""
+
     client = hass.data[DOMAIN]
     async_add_entities([SecuritasAlarm(client)])
 
@@ -43,6 +44,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
 
     def __init__(self, client):
         """Initialize the Securitas alarm panel."""
+
         self.client = client
         self._state = None
         self._changed_by = None
@@ -51,13 +53,17 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
         self._message = ""
 
     def get_arm_state(self):
+        """Returns the alarm state directly from alarm instead from log."""
+
         res = self.client.alarm.get_status()
-        for k, v in SECURITAS_STATUS.items():
-            if res["STATUS"] in v[0]:
-                return k
+        for key, value in SECURITAS_STATUS.items():
+            if res["STATUS"] in value[0]:
+                return key
+
+        return None
 
     def activate_state(self, code, state_action):
-        """ Validates the inserted code against configured one """
+        """Validates the inserted code against configured one."""
 
         if self.client.code is None or self.client.code == code:
             self._state = STATE_ALARM_DISARMING
@@ -68,36 +74,42 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
     @property
     def name(self):
         """Return the name of the device."""
+
         return f"securitas_{self.client.installation_alias or self.client.installation_num}"
 
     @property
     def state(self):
         """Return the state of the device."""
+
         return self._state
 
     @property
     def code_format(self):
         """Return one or more digits/characters."""
+
         return alarm.FORMAT_NUMBER
 
     @property
     def code_arm_required(self):
         """Whether the code is required for arm actions."""
+
         return False
 
     @property
     def changed_by(self):
         """Return the last change triggered by."""
+
         return self._changed_by
 
     def update(self):
-        """Update alarm status, from last alarm setting register or EST"""
+        """Update alarm status, from last alarm setting register or EST."""
+
         self.client.update_overview()
         status = self.client.overview
         try:
-            for k, v in SECURITAS_STATUS.items():
-                if status["@type"] in v[1]:
-                    self._state = k
+            for key, value in SECURITAS_STATUS.items():
+                if status["@type"] in value[1]:
+                    self._state = key
                     self._changed_by = f"{status['@user'] or status['@myverisureUser'] or ''}@{status['@source']}"
                     self._device = status["@device"]
                     self._time = datetime.datetime.strptime(
@@ -112,6 +124,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+
         return {
             "device": self._device,
             "time": self._time,

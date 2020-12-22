@@ -122,12 +122,12 @@ class SecuritasClient:
     def update_overview(self):
         """Update the overview."""
 
-        filter = ("1", "2", "31", "32", "46", "202", "311", "13", "24")
+        state_types = ("1", "2", "31", "32", "46", "202", "311", "13", "24")
         res = self.installation.get_activity_log()
         try:
             regs = res["LIST"]["REG"]
             for reg in regs:
-                if reg["@type"] in filter:
+                if reg["@type"] in state_types:
                     self.overview = reg
 
                     return
