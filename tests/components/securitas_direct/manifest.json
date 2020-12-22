@@ -1,0 +1,13 @@
+{
+  "domain": "securitas_direct",
+  "name": "Securitas Direct",
+  "documentation": "https://www.home-assistant.io/integrations/securitas_direct",
+  "requirements": [
+    "pysecuritas==0.1.5"
+  ],
+  "codeowners": [
+    "@nragon",
+    "@Cebeerre",
+    "@segalion"
+  ]
+}

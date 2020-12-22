@@ -1993,6 +1993,9 @@ schiene==0.23
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
+# homeassistant.components.securitas_direct
+pysecuritas==0.1.5
+
 # homeassistant.components.sendgrid
 sendgrid==6.4.6
 

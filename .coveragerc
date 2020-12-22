@@ -776,6 +776,7 @@ omit =
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py
+    homeassistant/components/securitas_direct/*
     homeassistant/components/sendgrid/notify.py
     homeassistant/components/sense/*
     homeassistant/components/sensehat/light.py
