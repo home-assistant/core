@@ -9,7 +9,6 @@ from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.nest.const import DATA_NEST, DOMAIN
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -24,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 from homeassistant.helpers.entity import Entity
 
 from . import local_auth
-from .const import SIGNAL_NEST_UPDATE
+from .const import DATA_NEST, DATA_NEST_CONFIG, DOMAIN, SIGNAL_NEST_UPDATE
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -32,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
 SERVICE_SET_ETA = "set_eta"
-
-DATA_NEST_CONFIG = "nest_config"
 
 NEST_CONFIG_FILE = "nest.conf"
 

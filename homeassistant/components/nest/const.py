@@ -1,7 +1,6 @@
 """Constants used by the Nest component."""
 
 DOMAIN = "nest"
-DATA_NEST = "nest"
 DATA_SDM = "sdm"
 DATA_SUBSCRIBER = "subscriber"
 

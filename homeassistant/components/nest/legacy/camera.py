@@ -4,10 +4,10 @@ import logging
 
 import requests
 
-from homeassistant.components import nest
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
-from homeassistant.components.nest.const import DATA_NEST
 from homeassistant.util.dt import utcnow
+
+from .const import DATA_NEST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class NestCamera(Camera):
     def device_info(self):
         """Return information about the device."""
         return {
-            "identifiers": {(nest.DOMAIN, self.device.device_id)},
+            "identifiers": {(DOMAIN, self.device.device_id)},
             "name": self.device.name_long,
             "manufacturer": "Nest Labs",
             "model": "Camera",

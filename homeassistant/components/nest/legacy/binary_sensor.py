@@ -11,7 +11,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS
 
-from . import DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
+from . import NestSensorDevice
+from .const import DATA_NEST, DATA_NEST_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 

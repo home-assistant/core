@@ -8,10 +8,6 @@ from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
-from homeassistant.components.nest.legacy import (
-    async_setup_legacy,
-    async_setup_legacy_entry,
-)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -41,6 +37,7 @@ from .const import (
     SIGNAL_NEST_UPDATE,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
+from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
