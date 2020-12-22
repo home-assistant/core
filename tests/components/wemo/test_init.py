@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pywemo
 
-from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
+from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, WemoDiscovery
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -122,7 +122,13 @@ async def test_discovery(hass, pywemo_registry):
         await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
         mock_discovery.assert_called()
         pywemo_devices.append(create_device(2))
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=11))
+
+        # Test that discovery runs periodically and the async_dispatcher_send code works.
+        async_fire_time_changed(
+            hass,
+            dt.utcnow()
+            + timedelta(seconds=WemoDiscovery.ADDITIONAL_SECONDS_BETWEEN_SCANS + 1),
+        )
         await hass.async_block_till_done()
 
     # Verify that the expected number of devices were setup.
