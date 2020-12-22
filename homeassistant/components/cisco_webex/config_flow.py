@@ -8,7 +8,7 @@ import webexteamssdk
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DATA_BOT_EMAIL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,48 +18,40 @@ STEP_USER_DATA_SCHEMA = vol.Schema({CONF_TOKEN: str, CONF_EMAIL: str})
 class ConfigValidationHub:
     """Methods for config validation."""
 
-    def validate_config(self, token, email) -> bool:
-        """Test if we can find a Webex user with email."""
+    def validate_config(self, api, data) -> bool:
+        """Test if auth and email are OK."""
 
-        api = webexteamssdk.WebexTeamsAPI(access_token=token)
-
-        self.validate_auth(api)
-        return self.validate_email(api, email)
-
-    def validate_auth(self, api) -> bool:
-        """Test if we can authenticate with Webex."""
         try:
             try:
                 # maybe check here it is a bot token as personal access tokens expire after 12 hours.
                 _LOGGER.debug("Authenticating with Webex")
-                api.people.me()
-                _LOGGER.debug("Authenticating OK.")
-            except webexteamssdk.ApiError as error:
-                _LOGGER.error(error)
-                if error.status_code == 401:
-                    raise InvalidAuth
-                raise error
+                person_me = api.people.me()
 
-        except requests.exceptions.ConnectionError as connection_error:
-            _LOGGER.error(connection_error)
-            raise CannotConnect
+                data[DATA_BOT_EMAIL] = person_me.emails[0]
+                _LOGGER.debug("api.people.me: %s", api.people.me())
+                _LOGGER.debug("Authenticated OK.")
 
-        return False
+                email = data[CONF_EMAIL]
+                _LOGGER.debug("Searching Webex for people with email: '%s'", email)
 
-    def validate_email(self, api, email) -> bool:
-        """Test if we can find a Webex user with email."""
-
-        try:
-            try:
-                _LOGGER.debug("Listing people with email: '%s'", email)
-                people_list = list(api.people.list(email=email))
-                if len(people_list) > 0:
-                    _LOGGER.debug("Listing people with email: '%s' success.", email)
+                person = next(iter(api.people.list(email=email)), None)
+                if person is not None:
+                    _LOGGER.debug(
+                        "Found person with email: '%s' success. person: %s",
+                        email,
+                        person,
+                    )
                     return True
+                else:
+                    _LOGGER.error("Cannot find any Webex user with email: %s", email)
+                    raise EmailNotFound
+
             except webexteamssdk.ApiError as error:
                 _LOGGER.error(error)
                 if error.status_code == 400:
                     raise EmailNotFound
+                if error.status_code == 401:
+                    raise InvalidAuth
                 raise error
         except requests.exceptions.ConnectionError as connection_error:
             _LOGGER.error(connection_error)
@@ -80,13 +72,12 @@ async def validate_token_and_email(hass: core.HomeAssistant, data):
         raise InvalidEmail
 
     hub = ConfigValidationHub()
+    api = webexteamssdk.WebexTeamsAPI(access_token=data[CONF_TOKEN])
 
-    await hass.async_add_executor_job(
-        hub.validate_config, data[CONF_TOKEN], data[CONF_EMAIL]
-    )
+    await hass.async_add_executor_job(hub.validate_config, api, data)
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{DEFAULT_NAME} {data[CONF_EMAIL]}"}
+    return {"title": f"{data[CONF_EMAIL]}"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -106,6 +97,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_DATA_SCHEMA,
             )
 
+        # Check if already configured
+        await self.async_set_unique_id(f"webex_{user_input[CONF_EMAIL]}")
+        self._abort_if_unique_id_configured(reload_on_update=True, updates=user_input)
+
         errors = {}
 
         try:
@@ -122,11 +117,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-
-            # Check if already configured
-            await self.async_set_unique_id(f"webex_{user_input[CONF_EMAIL]}")
-            self._abort_if_unique_id_configured()
-
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

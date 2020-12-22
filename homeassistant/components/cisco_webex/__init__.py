@@ -24,7 +24,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up cisco_webex from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][entry.unique_id] = {
         CONF_TOKEN: entry.data[CONF_TOKEN],
         API: WebexTeamsAPI(access_token=entry.data[CONF_TOKEN]),
     }
@@ -48,6 +48,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.unique_id)
 
     return unload_ok

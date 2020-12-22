@@ -2,22 +2,13 @@
 import logging
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_PRESENCE, Entity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import API, DEFAULT_NAME, DOMAIN
+from .const import API, DEFAULT_SENSOR_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the platform into a config entry."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
@@ -25,7 +16,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Webex sensor based on a config entry."""
 
-    webex_domain_data = hass.data[DOMAIN][config_entry.entry_id]
+    webex_domain_data = hass.data[DOMAIN][config_entry.unique_id]
     config = config_entry.data
 
     async_add_entities(
@@ -33,7 +24,7 @@ async def async_setup_entry(
             WebexPresenceSensor(
                 api=webex_domain_data[API],
                 email=config[CONF_EMAIL],
-                name=f"{DEFAULT_NAME} {config[CONF_EMAIL]}",
+                name=f"{DEFAULT_SENSOR_NAME} {config[CONF_EMAIL]}",
             )
         ]
     )
@@ -50,7 +41,7 @@ class WebexPresenceSensor(Entity):
         self._attributes = {}
         self._api = api
         self._name = name
-        self.uid = f"webex_status_{email}"
+        self._avatar = None
 
     @property
     def name(self):
@@ -76,20 +67,36 @@ class WebexPresenceSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique id identifying the entity."""
-        self.uid
+        return f"webex_sensor_{self._email}"
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN,)},
+            "manufacturer": "Cisco",
+            "model": "Webex.com",
+            "default_name": "Webex.com",
+            "entry_type": "service",
+        }
+
+    @property
+    def entity_picture(self):
+        """Avatar of the account."""
+        return self._avatar
 
     def update(self):
         """Update device state."""
         if self._user_id is None:
-
-            people_list = list(self._api.people.list(email=self._email))
-            if len(people_list) > 0:
-                person = people_list[0]
+            # First, get the user ID
+            person = next(iter(self._api.people.list(email=self._email)), None)
+            if person is not None:
                 self._user_id = person.id
+                self._name = f"Webex {person.displayName}"
+
                 self.update_with_data(person)
-                _LOGGER.debug(
-                    "WebexPresenceSensor init with _user_id: %s", self._user_id
-                )
+                _LOGGER.debug("%s user id: %s", self._email, self._user_id)
             else:
                 _LOGGER.error("Cannot find any Webex user with email: %s", self._email)
                 return
@@ -102,4 +109,5 @@ class WebexPresenceSensor(Entity):
         # available states documented here
         # https://developer.webex.com/docs/api/v1/people/list-people
         self._state = person.status
-        _LOGGER.debug("WebexPeopleSensor person state: %s", self._state)
+        self._avatar = person.avatar
+        _LOGGER.debug("%s state: %s", self._email, self._state)

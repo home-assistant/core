@@ -3,4 +3,6 @@
 DOMAIN = "cisco_webex"
 API = "api"
 
-DEFAULT_NAME = "Webex Presence"
+DEFAULT_SENSOR_NAME = "Webex Status"
+
+DATA_BOT_EMAIL = "bot_email"
