@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 
+# pylint: disable=unused-import
 from .const import (
     CONF_COUNTRY,
     CONF_INSTALLATION,
