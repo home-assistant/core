@@ -8,9 +8,9 @@ from meteofrance_api.helpers import is_valid_warning_department
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -20,6 +20,8 @@ from .const import (
     COORDINATOR_FORECAST,
     COORDINATOR_RAIN,
     DOMAIN,
+    FORECAST_MODE_DAILY,
+    FORECAST_MODE_HOURLY,
     PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
@@ -182,20 +184,50 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug(
+        "Migrating %s from version %s", config_entry.title, config_entry.version
+    )
 
     if config_entry.version == 1:
 
-        new = {**config_entry.data}
-        # TODO: modify Config Entry data
+        config_entries = hass.config_entries
+        config_entry_id = config_entry.entry_id
+        mode = config_entry.options.get(CONF_MODE, FORECAST_MODE_DAILY)
+        # TODO: Clean the option
 
-        config_entry.data = {**new}
+        # Get the entities registery.
+        registry = await entity_registry.async_get_registry(hass)
 
-        config_entry.version = 2
+        # Look for all weather entities linked to the config entry we are migrating.
+        weather_unique_ids_for_config_entry = [
+            entry
+            for entry in registry.entities.values()
+            if (entry.config_entry_id == config_entry_id and entry.domain == "weather")
+        ]
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+        # We expect to have one and only one.
+        if len(weather_unique_ids_for_config_entry) == 1:
+            unique_id = weather_unique_ids_for_config_entry[0].unique_id
+            entity_id = weather_unique_ids_for_config_entry[0].entity_id
+            if not unique_id.endswith((FORECAST_MODE_DAILY, FORECAST_MODE_HOURLY)):
+                new_unique_id = f"{unique_id}_{mode}"
 
-    return True
+                registry.async_update_entity(entity_id, new_entity_id=new_unique_id)
+                config_entry.version = 2
+                config_entries.async_update_entry(config_entry)
+                _LOGGER.info(
+                    "Migration %s to version %s successful",
+                    config_entry.title,
+                    config_entry.version,
+                )
+
+                return True
+        _LOGGER.error(
+            "Migration %s to version %s failed. Please remove the integration and configure it again.",
+            config_entry.title,
+            config_entry.version,
+        )
+        return False
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
