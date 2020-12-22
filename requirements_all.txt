@@ -2041,6 +2041,9 @@ screenlogicpy==0.4.1
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
+# homeassistant.components.securitas_direct
+pysecuritas==0.1.5
+
 # homeassistant.components.sendgrid
 sendgrid==6.6.0
 
