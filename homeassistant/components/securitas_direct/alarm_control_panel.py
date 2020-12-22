@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from . import DOMAIN
+from tests.components.securitas_direct import DOMAIN
 
 # some reported by @furetto72@Italy
 SECURITAS_STATUS = {
