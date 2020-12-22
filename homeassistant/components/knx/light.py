@@ -86,7 +86,7 @@ class KNXLight(KnxEntity, LightEntity):
         """Return the color temperature in mireds."""
         if self._device.supports_color_temperature:
             kelvin = self._device.current_color_temperature
-            # Avoid division by zero if actuator reported 0 Kelvin (eg. uninitialized DALI-Gateway)
+            # Avoid division by zero if actuator reported 0 Kelvin (e.g., uninitialized DALI-Gateway)
             if kelvin is not None and kelvin > 0:
                 return color_util.color_temperature_kelvin_to_mired(kelvin)
         if self._device.supports_tunable_white:
