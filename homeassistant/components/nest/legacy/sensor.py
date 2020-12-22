@@ -1,11 +1,6 @@
 """Support for Nest Thermostat sensors for the legacy API."""
 import logging
 
-from homeassistant.components.nest.legacy import (
-    DATA_NEST,
-    DATA_NEST_CONFIG,
-    NestSensorDevice,
-)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
@@ -16,6 +11,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+
+from . import DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
 SENSOR_TYPES = ["humidity", "operation_mode", "hvac_state"]
 

@@ -9,12 +9,9 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
-from homeassistant.components.nest.legacy import (
-    DATA_NEST,
-    DATA_NEST_CONFIG,
-    NestSensorDevice,
-)
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS
+
+from . import DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 

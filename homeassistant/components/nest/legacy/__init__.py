@@ -10,8 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.nest.const import DATA_NEST, DOMAIN
-from homeassistant.components.nest.legacy import local_auth
-from homeassistant.components.nest.legacy.const import SIGNAL_NEST_UPDATE
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -24,6 +22,9 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
+
+from . import local_auth
+from .const import SIGNAL_NEST_UPDATE
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
