@@ -199,7 +199,7 @@ class SensorFilter(Entity):
         """Process device state changes."""
         if new_state is None:
             _LOGGER.warning(
-                "While updating filter %s, the new_state is None.", self._name
+                "While updating filter %s, the new_state is None", self._name
             )
             self._state = STATE_UNKNOWN
             self.async_write_ha_state()
