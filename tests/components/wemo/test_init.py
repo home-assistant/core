@@ -1,14 +1,17 @@
 """Tests for the wemo component."""
+from datetime import timedelta
+
 import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt
 
 from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_SERIAL_NUMBER
 
-from tests.async_mock import Mock, create_autospec, patch
+from tests.async_mock import create_autospec, patch
+from tests.common import async_fire_time_changed
 
 
 async def test_config_no_config(hass):
@@ -109,42 +112,24 @@ async def test_discovery(hass, pywemo_registry):
         return device
 
     pywemo_devices = [create_device(0), create_device(1)]
-    mock_stop = Mock()
-    expected_device_count = 4
-
-    def async_call_later(hass, delay, action):
-        async def async_run_action_after_platform_setup():
-            """Run the 'action' after the platform has been setup.
-
-            This forces the async_dispatcher_send logic to be tested.
-            """
-            await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
-            count = len(pywemo_devices)
-            if count < expected_device_count:
-                pywemo_devices.append(create_device(count))
-                await action(dt_util.utcnow())
-
-        hass.async_create_task(async_run_action_after_platform_setup())
-        return mock_stop
-
     # Setup the component and start discovery.
     with patch(
         "pywemo.discover_devices", return_value=pywemo_devices
-    ) as mock_discovery, patch(
-        "homeassistant.components.wemo.async_call_later", side_effect=async_call_later
-    ):
+    ) as mock_discovery:
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}
         )
-        await hass.async_block_till_done()
+        await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
         mock_discovery.assert_called()
+        pywemo_devices.append(create_device(2))
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=11))
+        await hass.async_block_till_done()
 
     # Verify that the expected number of devices were setup.
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
     entity_entries = list(entity_reg.entities.values())
-    assert len(entity_entries) == expected_device_count
+    assert len(entity_entries) == 3
 
     # Verify that discovery stops when hass is stopped.
     await hass.async_stop()
     await hass.async_block_till_done()
-    mock_stop.assert_called_once()
