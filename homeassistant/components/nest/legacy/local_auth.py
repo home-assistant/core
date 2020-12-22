@@ -7,14 +7,14 @@ from nest.nest import AUTHORIZE_URL, AuthorizationError, NestAuth
 from homeassistant.const import HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 
-from . import config_flow
+from ..config_flow import CodeInvalid, NestAuthError, register_flow_implementation
 from .const import DOMAIN
 
 
 @callback
 def initialize(hass, client_id, client_secret):
     """Initialize a local auth provider."""
-    config_flow.register_flow_implementation(
+    register_flow_implementation(
         hass,
         DOMAIN,
         "configuration.yaml",
@@ -44,7 +44,7 @@ async def resolve_auth_code(hass, client_id, client_secret, code):
         return await result
     except AuthorizationError as err:
         if err.response.status_code == HTTP_UNAUTHORIZED:
-            raise config_flow.CodeInvalid()
-        raise config_flow.NestAuthError(
+            raise CodeInvalid() from err
+        raise NestAuthError(
             f"Unknown error: {err} ({err.response.status_code})"
-        )
+        ) from err

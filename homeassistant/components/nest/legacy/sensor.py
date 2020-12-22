@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
+    CONF_SENSORS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -11,7 +12,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from . import CONF_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
+from . import NestSensorDevice
+from .const import DATA_NEST, DATA_NEST_CONFIG
 
 SENSOR_TYPES = ["humidity", "operation_mode", "hvac_state"]
 
