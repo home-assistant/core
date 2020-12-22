@@ -9,10 +9,17 @@ import logging
 import async_timeout
 from pywemo import WeMoDevice
 from pywemo.exceptions import ActionException
+from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN as WEMO_DOMAIN
+from .const import (
+    CAPABILITY_LONG_PRESS,
+    DOMAIN as WEMO_DOMAIN,
+    TRIGGER_TYPE_LONG_PRESS,
+    WEMO_EVENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,6 +143,14 @@ class WemoSubscriptionEntity(WemoEntity):
         }
 
     @property
+    def capability_attributes(self) -> Dict[str, Any]:
+        """Return the capability attributes."""
+        return {
+            CAPABILITY_LONG_PRESS: self.wemo.supports_long_press(),
+            **(super().capability_attributes or {}),
+        }
+
+    @property
     def is_on(self) -> bool:
         """Return true if the state is on. Standby is on."""
         return self._state
@@ -172,6 +187,15 @@ class WemoSubscriptionEntity(WemoEntity):
         registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
+        if self.wemo.supports_long_press():
+            try:
+                await self.hass.async_add_executor_job(
+                    self.wemo.ensure_long_press_virtual_device
+                )
+            except (AttributeError, ActionException):
+                _LOGGER.exception(
+                    "Failed to enable long press support for %s", self.name
+                )
 
     async def async_will_remove_from_hass(self) -> None:
         """Wemo device removed from hass."""
@@ -179,12 +203,22 @@ class WemoSubscriptionEntity(WemoEntity):
         await self.hass.async_add_executor_job(registry.unregister, self.wemo)
 
     def _subscription_callback(
-        self, _device: WeMoDevice, _type: str, _params: str
+        self, _device: WeMoDevice, event_type: str, _params: str
     ) -> None:
         """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for %s", self.name)
-        updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(self._async_locked_subscription_callback(not updated))
+        _LOGGER.info("Subscription event (%s) for %s", event_type, self.name)
+        if event_type == EVENT_TYPE_LONG_PRESS:
+            self.hass.bus.fire(
+                WEMO_EVENT,
+                {
+                    CONF_DEVICE_ID: self.registry_entry.device_id,
+                    CONF_ENTITY_ID: self.entity_id,
+                    CONF_TYPE: TRIGGER_TYPE_LONG_PRESS,
+                },
+            )
+        else:
+            updated = self.wemo.subscription_update(event_type, _params)
+            self.hass.add_job(self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update: bool) -> None:
         """Handle an update from a subscription."""

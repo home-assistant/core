@@ -43,13 +43,15 @@ def pywemo_registry_fixture():
 @pytest.fixture(name="pywemo_device")
 def pywemo_device_fixture(pywemo_registry, pywemo_model):
     """Fixture for WeMoDevice instances."""
-    device = create_autospec(getattr(pywemo, pywemo_model), instance=True)
+    cls = getattr(pywemo, pywemo_model)
+    device = create_autospec(cls, instance=True)
     device.host = MOCK_HOST
     device.port = MOCK_PORT
     device.name = MOCK_NAME
     device.serialnumber = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model
     device.get_state.return_value = 0  # Default to Off
+    device.supports_long_press.return_value = cls.supports_long_press()
 
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
     with patch("pywemo.setup_url_for_address", return_value=url), patch(
@@ -58,9 +60,8 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
         yield device
 
 
-@pytest.fixture(name="wemo_entity")
-async def async_wemo_entity_fixture(hass, pywemo_device):
-    """Fixture for a Wemo entity in hass."""
+async def async_setup_wemo_entity(hass, pywemo_device):
+    """Create a Wemo entity in hass."""
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -77,4 +78,10 @@ async def async_wemo_entity_fixture(hass, pywemo_device):
     entity_entries = list(entity_registry.entities.values())
     assert len(entity_entries) == 1
 
-    yield entity_entries[0]
+    return entity_entries[0]
+
+
+@pytest.fixture(name="wemo_entity")
+async def async_wemo_entity_fixture(hass, pywemo_device):
+    """Fixture for a Wemo entity in hass."""
+    yield await async_setup_wemo_entity(hass, pywemo_device)
