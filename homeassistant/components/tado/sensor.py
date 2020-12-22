@@ -305,5 +305,7 @@ class TadoDeviceSensor(Entity):
             "identifiers": {(DOMAIN, self.device_id)},
             "name": self.device_name,
             "manufacturer": DEFAULT_NAME,
-            "model": TADO_BRIDGE,
+            "sw_version": self._tado.data["device"][self.device_id]["currentFwVersion"],
+            "model": self._tado.data["device"][self.device_id]["deviceType"],
+            "via_device": (DOMAIN, self._tado.data["device"][self.device_id]["serialNo"]),
         }
