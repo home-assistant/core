@@ -197,7 +197,12 @@ class SensorFilter(Entity):
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
         """Process device state changes."""
-        if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state is None:
+            self._state = STATE_UNKNOWN
+            self.async_write_ha_state()
+            return
+
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             self._state = new_state.state
             self.async_write_ha_state()
             return
