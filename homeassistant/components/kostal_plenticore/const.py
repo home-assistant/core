@@ -517,7 +517,7 @@ SENSOR_SETTINGS_DATA = [
     (
         "devices:local",
         "Battery:MinSoc",
-        "Battery Min Soc",
+        "Battery min Soc",
         {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
         "format_round",
     ),
