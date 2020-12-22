@@ -90,6 +90,18 @@ MANUAL_CONFIG = {
     CONF_VOLUMES: "1",
 }
 
+OPTIONS_CONFIG = {
+    CONF_MONITORED_CONDITIONS: [
+        "status",
+        "cpu_usage",
+        "memory_percent_used",
+        "network_tx",
+        "volume_percentage_used",
+    ],
+    CONF_NICS: "eth0,eth1",
+    CONF_VOLUMES: "1",
+}
+
 
 async def test_form_import(hass):
     """Test we can import yaml config."""
@@ -247,21 +259,31 @@ async def test_form_updates_unique_id(hass):
 
 
 async def test_options_flow(hass):
-    """Test options config flow for speaker."""
+    """Test options config flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "myuser",
+            CONF_PASSWORD: "password",
+        },
+        unique_id=123456,
+    )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
         return_value=API_RETURN,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MANUAL_CONFIG
-        )
-    await hass.async_block_till_done()
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    entry = result["result"]
-
-    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
-
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == "form"
     assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=OPTIONS_CONFIG
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    await hass.async_block_till_done()
