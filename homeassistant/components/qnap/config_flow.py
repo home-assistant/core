@@ -128,9 +128,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            user_input[CONF_NICS] = cv.ensure_list(user_input.get(CONF_NICS))
-            user_input[CONF_DRIVES] = cv.ensure_list(user_input.get(CONF_DRIVES))
-            user_input[CONF_VOLUMES] = cv.ensure_list(user_input.get(CONF_VOLUMES))
+            user_input[CONF_NICS] = cv.ensure_list(
+                user_input.get(CONF_NICS, "").split(",")
+            )
+            user_input[CONF_DRIVES] = cv.ensure_list(
+                user_input.get(CONF_DRIVES, "").split(",")
+            )
+            user_input[CONF_VOLUMES] = cv.ensure_list(
+                user_input.get(CONF_VOLUMES, "").split(",")
+            )
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = vol.Schema(
@@ -154,19 +160,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_NICS,
                     description={
-                        "suggested_value": ",".join(self.options.get(CONF_NICS))
+                        "suggested_value": ",".join(self.options.get(CONF_NICS, ""))
                     },
                 ): cv.string,
                 vol.Optional(
                     CONF_DRIVES,
                     description={
-                        "suggested_value": ",".join(self.options.get(CONF_DRIVES))
+                        "suggested_value": ",".join(self.options.get(CONF_DRIVES, ""))
                     },
                 ): cv.string,
                 vol.Optional(
                     CONF_VOLUMES,
                     description={
-                        "suggested_value": ",".join(self.options.get(CONF_VOLUMES))
+                        "suggested_value": ",".join(self.options.get(CONF_VOLUMES, ""))
                     },
                 ): cv.string,
             }
