@@ -6,29 +6,29 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "installation": "[%key:common::config_flow::data::installation%]",
-          "country": "[%key:common::config_flow::data::country%]",
-          "lang": "[%key:common::config_flow::data::lang%]",
-          "code": "[%key:common::config_flow::data::code%]"
+          "installation": "[%key:component::securitas_direct::config::step::user::data::installation%]",
+          "country": "[%key:component::securitas_direct::config::step::user::data::country%]",
+          "lang": "[%key:component::securitas_direct::config::step::user::data::lang%]",
+          "code": "[%key:component::securitas_direct::config::step::user::data::code%]"
         }
       },
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "installation": "[%key:common::config_flow::data::installation%]",
-          "country": "[%key:common::config_flow::data::country%]",
-          "lang": "[%key:common::config_flow::data::lang%]",
-          "code": "[%key:common::config_flow::data::code%]"
+          "installation": "[%key:component::securitas_direct::config::step::user::data::installation%]",
+          "country": "[%key:component::securitas_direct::config::step::user::data::country%]",
+          "lang": "[%key:component::securitas_direct::config::step::user::data::lang%]",
+          "code": "[%key:component::securitas_direct::config::step::user::data::code%]"
         }
       }
     },
     "error": {
-      "unable_to_connect": "[%key:common::config_flow::error::unable_to_connect%]"
+      "unable_to_connect": "[%key:component::securitas_direct::config::error::unable_to_connect%]"
     },
     "abort": {
-      "multiple_securitas_configs": "[%key:common::config_flow::abort::multiple_securitas_configs%]",
-      "reloaded": "[%key:common::config_flow::abort::reloaded%]"
+      "multiple_securitas_configs": "[%key:component::securitas_direct::config::abort::multiple_securitas_configs%]",
+      "reloaded": "[%key:component::securitas_direct::config::abort::reloaded%]"
     }
   }
 }

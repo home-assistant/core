@@ -23,7 +23,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def _connect(client):
-    """Connects to securitas."""
+    """Connect to securitas."""
 
     client.login()
 
@@ -31,7 +31,7 @@ def _connect(client):
 
 
 async def async_setup(hass, config) -> bool:
-    """Setup securitas direct."""
+    """Set up securitas direct."""
 
     if DOMAIN not in config:
         return True
@@ -48,7 +48,7 @@ async def async_setup(hass, config) -> bool:
 
 
 async def async_setup_entry(hass, config_entry):
-    """Setup securitas direct entry"""
+    """Set up securitas direct entry."""
 
     if config_entry.unique_id is None:
         hass.config_entries.async_update_entry(

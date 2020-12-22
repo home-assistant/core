@@ -21,7 +21,7 @@ from .const import (
 
 
 def _connect(session):
-    """Connects to securitas."""
+    """Connect to securitas."""
 
     session.connect()
 
@@ -49,7 +49,7 @@ class SecuritasConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def connect(self, step_id, config):
-        """Handles securitas direct login."""
+        """Handle securitas direct login."""
 
         uid = config[CONF_INSTALLATION]
         try:
@@ -71,10 +71,7 @@ class SecuritasConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.create_entry(config, uid)
 
     async def show_form_or_connect(self, step, user_input):
-        """
-        Shows a form asking for configuration or connects to securitas
-        if inputs are already provided
-        """
+        """Show a form asking for configuration or connects to securitas if inputs are already provided."""
 
         if user_input is None:
             return self.async_show_form(step_id=step, data_schema=self.config_schema)
@@ -82,7 +79,7 @@ class SecuritasConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.connect(step, user_input)
 
     async def create_entry(self, config_data, uid):
-        """Creates an entry."""
+        """Create an entry."""
 
         existing_entry = await self.async_set_unique_id(uid)
         if existing_entry:
@@ -98,14 +95,16 @@ class SecuritasConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=uid, data=config_data)
 
     async def async_step_user(self, user_input=None):
-        """Initial user setup."""
+        """Set up user."""
+
         if self._async_current_entries():
             return self.async_abort(reason=MULTI_SEC_CONFIGS)
 
         return await self.show_form_or_connect(STEP_USER, user_input)
 
     async def async_step_import(self, import_config):
-        """Imports a config from configuration.yaml."""
+        """Import a config from configuration.yaml."""
+
         return await self.async_step_user(import_config)
 
     async def async_step_reauth(self, config):

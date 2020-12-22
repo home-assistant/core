@@ -33,7 +33,7 @@ SECURITAS_STATUS = {
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup securitas direct alarm control."""
+    """Set up securitas direct alarm control."""
 
     client = hass.data[DOMAIN]
     async_add_entities([SecuritasAlarm(client)])
@@ -53,7 +53,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
         self._message = ""
 
     def get_arm_state(self):
-        """Returns the alarm state directly from alarm instead from log."""
+        """Return the alarm state directly from alarm instead from log."""
 
         res = self.client.alarm.get_status()
         for key, value in SECURITAS_STATUS.items():
@@ -63,7 +63,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
         return None
 
     def activate_state(self, code, state_action):
-        """Validates the inserted code against configured one."""
+        """Validate the inserted code against configured one."""
 
         if self.client.code is None or self.client.code == code:
             self._state = STATE_ALARM_DISARMING
@@ -91,7 +91,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
 
     @property
     def code_arm_required(self):
-        """Whether the code is required for arm actions."""
+        """Valiate if code is required."""
 
         return False
 

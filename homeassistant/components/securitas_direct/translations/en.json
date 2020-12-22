@@ -4,18 +4,6 @@
     "step": {
       "user": {
         "data": {
-          "username": "Username",
-          "password": "Password",
-          "installation": "Installation number",
-          "country": "Country",
-          "lang": "Language",
-          "code": "Code"
-        }
-      },
-      "reauth_confirm": {
-        "data": {
-          "username": "Username",
-          "password": "Password",
           "installation": "Installation number",
           "country": "Country",
           "lang": "Language",
