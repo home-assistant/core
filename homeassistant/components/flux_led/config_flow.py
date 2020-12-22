@@ -79,16 +79,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_DEVICES: devices,
                 },
             )
-=======
-        config_type = None
 
         if user_input is not None:
-            config_type = user_input[CONF_TYPE]
+            devices = user_input.get(CONF_DEVICES, {})
 
-            return (
-                await self.async_step_auto()
-                if config_type == "auto"
-                else await self.async_step_manual()
+            if user_input[CONF_AUTOMATIC_ADD]:
+                scanner = BulbScanner()
+                await self.hass.async_add_executor_job(scanner.scan)
+
+                for bulb in scanner.getBulbInfo():
+                    device_id = bulb["ipaddr"].replace(".", "_")
+                    if not devices.get(device_id, False):
+                        devices[device_id] = {
+                            CONF_NAME: bulb["ipaddr"],
+                            CONF_HOST: bulb["ipaddr"],
+                        }
+
+            return self.async_create_entry(
+                title="FluxLED/MagicHome",
+                data={
+                    CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
+                    CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+                    CONF_DEVICES: devices,
+                },
             )
 >>>>>>> Fix lint issues.
 

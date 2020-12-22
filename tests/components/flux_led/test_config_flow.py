@@ -33,7 +33,11 @@ async def test_setup_automatic_add(hass):
     )
 
     with patch(
+<<<<<<< HEAD
         "homeassistant.components.flux_led.BulbScanner.scan",
+=======
+        "homeassistant.components.flux_led.light.BulbScanner.scan",
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -42,7 +46,11 @@ async def test_setup_automatic_add(hass):
             }
         ],
     ), patch(
+<<<<<<< HEAD
         "homeassistant.components.flux_led.BulbScanner.getBulbInfo",
+=======
+        "homeassistant.components.flux_led.light.BulbScanner.getBulbInfo",
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -84,6 +92,7 @@ async def test_setup_manual_add(hass):
     )
 
     with patch(
+<<<<<<< HEAD
         "homeassistant.components.flux_led.async_setup",
         return_value=True,
     ) as mock_setup, patch(
@@ -153,32 +162,53 @@ async def test_import_automatic_add(hass):
             }
         ],
     ), patch(
+=======
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
         "homeassistant.components.flux_led.async_setup",
         return_value=True,
     ) as mock_setup, patch(
         "homeassistant.components.flux_led.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+<<<<<<< HEAD
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_AUTOMATIC_ADD: True},
+=======
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_AUTOMATIC_ADD: False,
+            },
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "FluxLED/MagicHome"
     assert result2["data"] == {
+<<<<<<< HEAD
         CONF_AUTOMATIC_ADD: True,
         CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
         CONF_DEVICES: {"1_1_1_1": {CONF_NAME: "1.1.1.1", CONF_HOST: "1.1.1.1"}},
+=======
+        CONF_AUTOMATIC_ADD: False,
+        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        CONF_DEVICES: {},
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
     }
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+<<<<<<< HEAD
 async def test_import_automatic_add_already_setup(hass):
     """Test import auto added when the integration is already configured."""
+=======
+async def test_already_configured(hass):
+    """Test config flow when flux_led component is already setup."""
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
     MockConfigEntry(
         domain="flux_led",
         data={
@@ -189,6 +219,7 @@ async def test_import_automatic_add_already_setup(hass):
     ).add_to_hass(hass)
 
     await setup.async_setup_component(hass, "persistent_notification", {})
+<<<<<<< HEAD
 
     with patch(
         "homeassistant.components.flux_led.BulbScanner.scan",
@@ -205,7 +236,169 @@ async def test_import_automatic_add_already_setup(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_AUTOMATIC_ADD: True},
         )
+=======
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
 
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
+
+
+<<<<<<< HEAD
+async def test_import_manual(hass):
+    """Test the import of an existing manual configuration."""
+=======
+async def test_import_automatic_add(hass):
+    """Test the import of an existing configuration when automatic add is enabled."""
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+<<<<<<< HEAD
+=======
+        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        return_value=[
+            {
+                "ipaddr": "1.1.1.1",
+                "id": "test_id",
+                "model": "test_model",
+            }
+        ],
+    ), patch(
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+        "homeassistant.components.flux_led.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.flux_led.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+<<<<<<< HEAD
+            data={
+                CONF_AUTOMATIC_ADD: False,
+                CONF_DEVICES: {
+                    "1_1_1_1": {
+                        CONF_NAME: "TestLight",
+                        CONF_HOST: "1.1.1.1",
+                    }
+                },
+            },
+=======
+            data={CONF_AUTOMATIC_ADD: True},
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "FluxLED/MagicHome"
+    assert result2["data"] == {
+<<<<<<< HEAD
+        CONF_AUTOMATIC_ADD: False,
+        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        CONF_DEVICES: {
+            "1_1_1_1": {
+                CONF_NAME: "TestLight",
+                CONF_HOST: "1.1.1.1",
+            }
+        },
+=======
+        CONF_AUTOMATIC_ADD: True,
+        CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        CONF_DEVICES: {},
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+<<<<<<< HEAD
+async def test_import_manual_already_setup(hass):
+    """Test import manual added when the device is already configured."""
+=======
+async def test_import_automatic_add_already_setup(hass):
+    """Test import auto added when the integration is already configured."""
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+    MockConfigEntry(
+        domain="flux_led",
+        data={
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+<<<<<<< HEAD
+            CONF_DEVICES: {
+                "1_1_1_1": {
+                    CONF_NAME: "TestLight",
+                    CONF_HOST: "1.1.1.1",
+                }
+            },
+=======
+            CONF_DEVICES: {},
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+        },
+    ).add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+<<<<<<< HEAD
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+<<<<<<< HEAD
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_AUTOMATIC_ADD: False,
+            CONF_DEVICES: {
+                "1_1_1_1": {
+                    CONF_NAME: "TestLight",
+                    CONF_HOST: "1.1.1.1",
+                }
+            },
+        context={
+            "source": config_entries.SOURCE_IMPORT,
+>>>>>>> Added test coverage in test_config_flow.py.
+        },
+        data={CONF_TYPE: "auto"},
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
+=======
+    with patch(
+        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        return_value=[
+            {
+                "ipaddr": "1.1.1.1",
+                "id": "test_id",
+                "model": "test_model",
+            }
+        ],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_AUTOMATIC_ADD: True},
+        )
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain="flux_led",
+        data={
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+            CONF_DEVICES: {
+                "1_1_1_1": {
+                    CONF_NAME: "TestLight",
+                    CONF_HOST: "1.1.1.1",
+                }
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+=======
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
 
@@ -214,8 +407,27 @@ async def test_import_manual(hass):
     """Test the import of an existing manual configuration."""
 
     await setup.async_setup_component(hass, "persistent_notification", {})
+>>>>>>> Added test coverage in test_config_flow.py.
 
     with patch(
+<<<<<<< HEAD
+        "homeassistant.components.flux_led.BulbScanner.scan",
+        return_value=[
+            {
+                "ipaddr": "1.1.1.1",
+                "id": "test_id",
+                "model": "test_model",
+            }
+        ],
+    ), patch(
+        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+=======
         "homeassistant.components.flux_led.async_setup",
         return_value=True,
     ) as mock_setup, patch(
@@ -248,11 +460,26 @@ async def test_import_manual(hass):
             }
         },
     }
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
 
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_AUTOMATIC_ADD: True, CONF_EFFECT_SPEED: 80},
+    )
 
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        "global": {
+            CONF_AUTOMATIC_ADD: True,
+            CONF_EFFECT_SPEED: 80,
+        }
+    }
+
+<<<<<<< HEAD
+=======
 async def test_import_manual_already_setup(hass):
     """Test import manual added when the device is already configured."""
     MockConfigEntry(
@@ -268,12 +495,16 @@ async def test_import_manual_already_setup(hass):
             },
         },
     ).add_to_hass(hass)
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
 
+async def test_options_add_and_remove_new_light(hass):
+    """Test manual adding and removing of new light through options flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
+<<<<<<< HEAD
+=======
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-<<<<<<< HEAD
         context={"source": config_entries.SOURCE_IMPORT},
         data={
             CONF_AUTOMATIC_ADD: False,
@@ -283,17 +514,17 @@ async def test_import_manual_already_setup(hass):
                     CONF_HOST: "1.1.1.1",
                 }
             },
-        context={
-            "source": config_entries.SOURCE_IMPORT,
->>>>>>> Added test coverage in test_config_flow.py.
         },
-        data={CONF_TYPE: "auto"},
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
 
+
+async def test_options_set_global_options(hass):
+    """Test set global options through options flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
     entry = MockConfigEntry(
         domain="flux_led",
         data={
@@ -308,17 +539,8 @@ async def test_import_manual_already_setup(hass):
         },
     )
     entry.add_to_hass(hass)
-=======
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured_device"
 
-
-async def test_manual_import(hass):
-    """Test the config flow for manual import from YAML."""
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
->>>>>>> Added test coverage in test_config_flow.py.
-
+<<<<<<< HEAD
     with patch(
         "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
@@ -334,7 +556,7 @@ async def test_manual_import(hass):
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
+=======
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
@@ -372,22 +594,7 @@ async def test_options_add_and_remove_new_light(hass):
         },
     )
     entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.flux_led.BulbScanner.scan",
-        return_value=[
-            {
-                "ipaddr": "1.1.1.1",
-                "id": "test_id",
-                "model": "test_model",
-            }
-        ],
-    ), patch(
-        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -401,6 +608,10 @@ async def test_options_add_and_remove_new_light(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
+<<<<<<< HEAD
+=======
+        "1_1_1_2": {CONF_EFFECT_SPEED: 50},
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
         "global": {
             CONF_AUTOMATIC_ADD: False,
             CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
@@ -424,6 +635,7 @@ async def test_options_add_and_remove_new_light(hass):
 
     # Remove the new light.
     result = await hass.config_entries.options.async_init(entry.entry_id)
+<<<<<<< HEAD
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -442,6 +654,26 @@ async def test_options_add_and_remove_new_light(hass):
         }
     }
 
+=======
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_REMOVE_DEVICE: "1_1_1_2"},
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        "global": {
+            CONF_AUTOMATIC_ADD: False,
+            CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
+        }
+    }
+
+    assert entry.data == {
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
         CONF_AUTOMATIC_ADD: False,
         CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
         CONF_DEVICES: {
@@ -451,8 +683,13 @@ async def test_options_add_and_remove_new_light(hass):
             },
         },
     }
+<<<<<<< HEAD
 
 
+=======
+
+
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
 async def test_options_configure_light(hass):
     """Test configuration of a light through options flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -472,6 +709,7 @@ async def test_options_configure_light(hass):
     )
     entry.add_to_hass(hass)
 
+<<<<<<< HEAD
     with patch(
         "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
@@ -488,6 +726,8 @@ async def test_options_configure_light(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+=======
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
@@ -516,6 +756,7 @@ async def test_options_configure_light(hass):
             CONF_EFFECT_SPEED: 80,
         },
     }
+<<<<<<< HEAD
     
 =======
     assert result["type"] == "create_entry"
@@ -526,3 +767,5 @@ async def test_options_configure_light(hass):
         CONF_TYPE: "manual",
     }
 
+=======
+>>>>>>> Add data update coordinator to new config_flow. Add add new device dispatcher. Remove and configure dispatchers pending.

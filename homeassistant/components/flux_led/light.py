@@ -100,6 +100,8 @@ FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
+    automatic_add = False
+    devices = {}
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
@@ -133,7 +135,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 },
             )
 
-    return True
+        devices[import_host.replace(".", "_")] = {
+            CONF_NAME: import_name,
+            CONF_HOST: import_host,
+        }
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_AUTOMATIC_ADD: automatic_add,
+            CONF_DEVICES: devices,
+        },
+    )
 
     lights = []
 
@@ -204,98 +218,41 @@ class FluxLight(LightEntity):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
-    config_type = hass.data[DOMAIN][entry.entry_id][CONF_TYPE]
-    lights = []
 
-    async def add_light(
-        bulb_name: str,
-        unique_id: str,
-        ip_address: str,
-        config_type: str,
-        bulb: dict,
-        bulb_coordinator: FluxLEDListUpdateCoordinator = None,
-    ):
-        """Structure the light to be added as an entity."""
-        coordinator = FluxLEDCoordinator(
-            hass=hass,
-            name=bulb_name,
-            update_interval=DEFAULT_SCAN_INTERVAL,
-            ip_address=ip_address,
-            config_type=config_type,
-            scan_coordinator=bulb_coordinator,
+    async def async_new_lights(bulbs: dict):
+        """Add new bulbs when they are found or configured."""
+        bulb_coordinator = (
+            hass.data[DOMAIN].get(entry.entry_id, {}).get(BULB_COORDINATOR)
         )
+        lights = []
 
-        await coordinator.async_refresh()
+        for bulb_id, bulb_details in bulbs.items():
+            effect_speed = entry.options.get(bulb_id, {}).get(
+                CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+            )
 
-        return FluxLight(
-            coordinator=coordinator,
-            unique_id=unique_id,
-            bulb_name=bulb_name,
-            config_type=config_type,
-            device=bulb,
-        )
+            coordinator = FluxLEDCoordinator(
+                hass=hass,
+                name=bulb_details[CONF_NAME],
+                update_interval=DEFAULT_SCAN_INTERVAL,
+                ip_address=bulb_details[CONF_HOST],
+                scan_coordinator=bulb_coordinator,
+            )
 
-    if config_type == "auto":
-        bulb_coordinator = hass.data[DOMAIN][entry.entry_id][BULB_COORDINATOR]
+            await coordinator.async_refresh()
 
-        for bulb_id, bulb in bulb_coordinator.data.items():
             lights.append(
-                await add_light(
-                    bulb_name=bulb_id,
-                    unique_id=bulb_id,
-                    ip_address=bulb["ipaddr"],
-                    config_type="auto",
-                    bulb=bulb,
-                    bulb_coordinator=bulb_coordinator,
-                )
-            )
-
-    else:
-        bulb = {
-            "ipaddr": hass.data[DOMAIN][entry.entry_id][CONF_HOST],
-            "id": hass.data[DOMAIN][entry.entry_id][CONF_HOST].replace(".", "_"),
-            "model": "Manual Configured Device",
-            "active": True,
-        }
-
-        lights.append(
-            await add_light(
-                bulb_name=hass.data[DOMAIN][entry.entry_id][CONF_NAME],
-                unique_id=bulb["ipaddr"].replace(".", "_"),
-                ip_address=bulb["ipaddr"],
-                config_type="manual",
-                bulb=bulb,
-            )
-        )
-
-    async_add_entities(lights)
-
-    async def async_new_lights(bulb: dict):
-        """Add a new bulb when it is connected to the network for auto configured."""
-        bulb_coordinator = hass.data[DOMAIN][entry.entry_id][BULB_COORDINATOR]
-
-        coordinator = FluxLEDCoordinator(
-            hass=hass,
-            name=bulb["id"],
-            update_interval=DEFAULT_SCAN_INTERVAL,
-            config_type="auto",
-            ip_address=bulb["ipaddr"],
-            scan_coordinator=bulb_coordinator,
-        )
-
-        await coordinator.async_refresh()
-
-        async_add_entities(
-            [
                 FluxLight(
                     coordinator=coordinator,
-                    unique_id=bulb["id"],
-                    bulb_name=bulb["id"],
-                    config_type="auto",
-                    device=bulb,
+                    unique_id=bulb_id,
+                    device=bulb_details,
+                    effect_speed=effect_speed,
                 )
-            ]
-        )
+            )
+
+        async_add_entities(lights)
+
+    await async_new_lights(entry.data[CONF_DEVICES])
 
     async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_lights)
 
@@ -309,7 +266,6 @@ class FluxLEDCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: int,
         ip_address: str,
-        config_type: str,
         scan_coordinator: FluxLEDListUpdateCoordinator = None,
     ):
         """Initialize the update coordinator."""
@@ -322,27 +278,15 @@ class FluxLEDCoordinator(DataUpdateCoordinator):
         )
 
         self._ip_address = ip_address
-        self._type = config_type
         self._name = name
         self.scan_coordinator = scan_coordinator
 
         self.light = WifiLedBulb(self._ip_address)
 
-    async def update_ip(self, ip_address: str):
-        """Update a change to the light IP address."""
-        self._ip_address = ip_address
-        self.light = None
-        self.light = WifiLedBulb(self._ip_address)
-
     async def _async_update_data(self):
         """Fetch the data from this light bulb."""
 
-        if self._type == "auto":
-            current_ip = self.scan_coordinator.data[self._name]["ipaddr"]
-            if current_ip != self._ip_address:
-                await self.update_ip(current_ip)
-
-        self.light.update_state()
+        await self.hass.async_add_executor_job(self.light.update_state)
 
 
 class FluxLight(CoordinatorEntity, LightEntity):
@@ -352,16 +296,14 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self,
         coordinator: FluxLEDCoordinator,
         unique_id: str,
-        bulb_name: str,
-        config_type: str,
         device: dict,
+        effect_speed: int,
     ):
         """Initialize the Flux light entity."""
         super().__init__(coordinator=coordinator)
 
-        self._name = bulb_name
+        self._name = device[CONF_NAME]
         self._unique_id = unique_id
-        self._config_type = config_type
         self._icon = "mdi:lightbulb"
         self._attrs = {}
         self._last_update = 0
@@ -371,8 +313,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._bulb = coordinator.light
         self._last_brightness = 255
         self._last_hs_color = color_util.color_RGB_to_hs(255, 255, 255)
-        self._model = device["model"]
-        self._ip_address = device["ipaddr"]
+        self._ip_address = device[CONF_HOST]
+        self._effect_speed = effect_speed
 
         if self._bulb.mode == "ww":
             self._mode = MODE_WHITE
@@ -391,17 +333,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def name(self):
         """Return the name of the light."""
         return self._name
-
-    @property
-    def available(self):
-        """Return if the light is available."""
-        available = True
-        if self._config_type == "auto":
-            available = self.coordinator.scan_coordinator.data[self._unique_id][
-                "active"
-            ]
-
-        return available
 
     @property
     def is_on(self):
@@ -464,12 +395,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        if self._config_type == "auto":
-            self._attrs["ip_address"] = self.coordinator.scan_coordinator.data[
-                self._unique_id
-            ]["ipaddr"]
-        else:
-            self._attrs["ip_address"] = self._ip_address
+        self._attrs["ip_address"] = self._ip_address
 
         return self._attrs
 

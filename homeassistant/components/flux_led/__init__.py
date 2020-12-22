@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
