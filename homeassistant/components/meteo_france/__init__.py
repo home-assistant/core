@@ -194,7 +194,7 @@ async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry
         registry = await entity_registry.async_get_registry(hass)
 
         # Look for all weather entities linked to the config entry we are migrating.
-        weather_unique_ids_for_config_entry = [
+        weather_entities_for_config_entry = [
             entry
             for entry in registry.entities.values()
             if (
@@ -204,12 +204,12 @@ async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry
         ]
 
         # We expect to have one and only one.
-        if len(weather_unique_ids_for_config_entry) == 1:
-            unique_id = weather_unique_ids_for_config_entry[0].unique_id
+        if len(weather_entities_for_config_entry) == 1:
+            unique_id = weather_entities_for_config_entry[0].unique_id
             if not unique_id.endswith((FORECAST_MODE_DAILY, FORECAST_MODE_HOURLY)):
                 # Update the weather entry unique ID.
                 registry.async_update_entity(
-                    weather_unique_ids_for_config_entry[0].entity_id,
+                    weather_entities_for_config_entry[0].entity_id,
                     new_unique_id=f"{unique_id}_{config_entry.options.get(CONF_MODE, FORECAST_MODE_DAILY)}",
                 )
                 config_entry.version = 2
