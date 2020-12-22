@@ -5,5 +5,4 @@ API = "api"
 
 DEFAULT_SENSOR_NAME = "Webex Status"
 
-DATA_BOT_EMAIL = "bot_email"
 DATA_DISPLAY_NAME = "display_name"

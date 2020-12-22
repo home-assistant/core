@@ -8,7 +8,7 @@ import webexteamssdk
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 
-from .const import DATA_BOT_EMAIL, DATA_DISPLAY_NAME, DOMAIN
+from .const import DATA_DISPLAY_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ class ConfigValidationHub:
                 _LOGGER.debug("Authenticated OK.")
                 _LOGGER.debug("api.people.me: %s", person_me)
 
-                data[DATA_BOT_EMAIL] = person_me.emails[0]
                 if person_me.type != "bot":
                     _LOGGER.error(
                         "Although auth passed, an invalid token type is being used: %s",
@@ -48,7 +47,6 @@ class ConfigValidationHub:
                         person,
                     )
                     data[DATA_DISPLAY_NAME] = person.displayName
-
                     return True
                 else:
                     _LOGGER.error("Cannot find any Webex user with email: %s", email)
@@ -81,6 +79,7 @@ async def validate_token_and_email(hass: core.HomeAssistant, data):
 
     hub = ConfigValidationHub()
     api = webexteamssdk.WebexTeamsAPI(access_token=data[CONF_TOKEN])
+    data[DATA_DISPLAY_NAME] = "unknown"
 
     await hass.async_add_executor_job(hub.validate_config, api, data)
 

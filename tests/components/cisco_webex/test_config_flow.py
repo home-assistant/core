@@ -35,8 +35,12 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Webex Presence test-email@test.com"
-    assert result2["data"] == {"token": "asdasdas", "email": "test-email@test.com"}
+    assert result2["title"] == "unknown - test-email@test.com"
+    assert result2["data"] == {
+        "token": "asdasdas",
+        "email": "test-email@test.com",
+        "display_name": "unknown",
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
