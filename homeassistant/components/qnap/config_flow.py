@@ -154,19 +154,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_NICS,
                     description={
-                        "suggested_value": ",".join(self.options.get(CONF_NICS))
+                        "suggested_value": ",".join(self.options.get(CONF_NICS, []))
                     },
                 ): cv.string,
                 vol.Optional(
                     CONF_DRIVES,
                     description={
-                        "suggested_value": ",".join(self.options.get(CONF_DRIVES))
+                        "suggested_value": ",".join(self.options.get(CONF_DRIVES, []))
                     },
                 ): cv.string,
                 vol.Optional(
                     CONF_VOLUMES,
                     description={
-                        "suggested_value": ",".join(self.options.get(CONF_VOLUMES))
+                        "suggested_value": ",".join(self.options.get(CONF_VOLUMES, []))
                     },
                 ): cv.string,
             }
