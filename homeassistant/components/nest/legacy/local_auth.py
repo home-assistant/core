@@ -44,5 +44,7 @@ async def resolve_auth_code(hass, client_id, client_secret, code):
         return await result
     except AuthorizationError as err:
         if err.response.status_code == HTTP_UNAUTHORIZED:
-            raise CodeInvalid()
-        raise NestAuthError(f"Unknown error: {err} ({err.response.status_code})")
+            raise CodeInvalid() from err
+        raise NestAuthError(
+            f"Unknown error: {err} ({err.response.status_code})"
+        ) from err
