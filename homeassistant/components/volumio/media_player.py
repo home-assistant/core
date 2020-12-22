@@ -204,7 +204,7 @@ class Volumio(MediaPlayerEntity):
 
     async def async_media_pause(self):
         """Send media_pause command to media player."""
-        if self._state["trackType"] == "webradio":
+        if self._state.get("trackType") == "webradio":
             await self._volumio.stop()
         else:
             await self._volumio.pause()
