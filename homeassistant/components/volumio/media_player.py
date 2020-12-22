@@ -5,7 +5,6 @@ Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 from datetime import timedelta
 import json
-from urllib.parse import unquote_plus
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -84,6 +83,7 @@ class Volumio(MediaPlayerEntity):
         self._state = {}
         self._playlists = []
         self._currentplaylist = None
+        self.thumbnail_cache = {}
 
     async def async_update(self):
         """Update state."""
@@ -269,5 +269,6 @@ class Volumio(MediaPlayerEntity):
         self, media_content_type, media_content_id, media_image_id=None
     ):
         """Get album art from Volumio."""
-        image_url = self._volumio.canonic_url(unquote_plus(media_content_id))
+        cached_url = self.thumbnail_cache.get(media_content_id)
+        image_url = self._volumio.canonic_url(cached_url)
         return await self._async_fetch_image(image_url)

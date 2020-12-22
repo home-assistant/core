@@ -1,6 +1,6 @@
 """Support for media browsing."""
+import hashlib
 import json
-from urllib.parse import quote_plus
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
@@ -105,9 +105,9 @@ def _raw_item_payload(entity, item, parent_item=None, title=None, info=None):
     if "type" in item:
         thumbnail = item.get("albumart")
         if thumbnail:
-            # we double encode because yarl is over-zealous with decoding
-            encoded_url = quote_plus(quote_plus(thumbnail))
-            thumbnail = entity.get_browse_image_url(MEDIA_TYPE_MUSIC, encoded_url)
+            item_hash = hashlib.md5(thumbnail.encode("utf-8")).hexdigest()
+            entity.thumbnail_cache.setdefault(item_hash, thumbnail)
+            thumbnail = entity.get_browse_image_url(MEDIA_TYPE_MUSIC, item_hash)
     else:
         # don't use the built-in volumio white-on-white icons
         thumbnail = None
