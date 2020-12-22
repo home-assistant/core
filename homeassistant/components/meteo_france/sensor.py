@@ -29,6 +29,8 @@ from .const import (
     ENTITY_ICON,
     ENTITY_NAME,
     ENTITY_UNIT,
+    MANUFACTURER,
+    NAME,
     SENSOR_TYPES,
 )
 
@@ -93,6 +95,16 @@ class MeteoFranceSensor(CoordinatorEntity):
     def name(self):
         """Return the name."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN,)},
+            "name": NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def state(self):
