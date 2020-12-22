@@ -135,7 +135,7 @@ class SomaEntity(Entity):
             )
             self.is_available = False
             return
-        battery = response["battery_level"] - 320
+        battery = 2.5 * response["battery_level"] - 922
         if battery < 0:
             battery = 0
         elif battery > 100:
