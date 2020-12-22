@@ -106,6 +106,7 @@ async def test_chain_history(hass, values, missing=False):
     else:
         fake_states = {
             "sensor.test_monitored": [
+                ha.State("sensor.test_monitored", None, last_changed=t_0),
                 ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
                 ha.State("sensor.test_monitored", "unknown", last_changed=t_1),
                 ha.State("sensor.test_monitored", 19.0, last_changed=t_2),
