@@ -19,6 +19,8 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
+from .const import DOMAIN
+
 # some reported by @furetto72@Italy
 SECURITAS_STATUS = {
     STATE_ALARM_DISARMED: ["0", ("1", "32")],
@@ -28,7 +30,6 @@ SECURITAS_STATUS = {
     STATE_ALARM_ARMED_CUSTOM_BYPASS: ["3", ("204",)],
     STATE_ALARM_TRIGGERED: ["???", ("13", "24")],
 }
-from .const import DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -21,6 +21,7 @@ from tests.common import MockConfigEntry
 
 
 def create_config_flow(hass):
+    """ Create a securitas direct config flow."""
     flow = config_flow.SecuritasConfigFlow()
     flow.hass = hass
 
@@ -70,32 +71,29 @@ async def test_invalid_connection(hass):
     assert result["errors"] == {"base": UNABLE_TO_CONNECT}
 
 
-async def test_create_entry(hass):
-    """Test create an entry."""
-
+async def create_entry(hass, source):
+    """Create an entry and asserts result from the operation."""
     with patch("homeassistant.components.securitas_direct.config_flow.Session"), patch(
         "homeassistant.components.securitas_direct.Session"
     ), patch("homeassistant.components.securitas_direct.Installation"):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config
+            DOMAIN, context={"source": source}, data=config
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == config[CONF_INSTALLATION]
         assert result["data"] == config
+
+
+async def test_create_entry(hass):
+    """Test create an entry."""
+
+    await create_entry(hass, SOURCE_USER)
 
 
 async def test_import_entry(hass):
     """Test import an entry."""
 
-    with patch("homeassistant.components.securitas_direct.config_flow.Session"), patch(
-        "homeassistant.components.securitas_direct.Session"
-    ), patch("homeassistant.components.securitas_direct.Installation"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == config[CONF_INSTALLATION]
-        assert result["data"] == config
+    await create_entry(hass, SOURCE_IMPORT)
 
 
 async def test_reauth(hass):
