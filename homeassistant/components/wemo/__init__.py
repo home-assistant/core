@@ -215,6 +215,7 @@ class WemoDiscovery:
         """Stop the periodic background scanning."""
         if self._stop:
             self._stop()
+            self._stop = None
 
 
 def validate_static_config(host, port):
