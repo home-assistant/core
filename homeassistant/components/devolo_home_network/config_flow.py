@@ -6,7 +6,7 @@ from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.httpx_client import get_async_client
@@ -57,19 +57,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        errors = {}
+
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
-
-        errors = {}
 
         try:
             info = await validate_input(self.hass, user_input)
         except DeviceNotFound:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -115,9 +113,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={"host_name": title},
         )
-
-    # TODO Add options flow for ability to change password
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
