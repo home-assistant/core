@@ -32,9 +32,7 @@ from .const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
-    SIGNAL_NEST_UPDATE,
 )
-from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _CONFIGURING = {}
