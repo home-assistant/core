@@ -8,7 +8,7 @@ import webexteamssdk
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 
-from .const import DATA_BOT_EMAIL, DOMAIN
+from .const import DATA_BOT_EMAIL, DATA_DISPLAY_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,10 +26,16 @@ class ConfigValidationHub:
                 # maybe check here it is a bot token as personal access tokens expire after 12 hours.
                 _LOGGER.debug("Authenticating with Webex")
                 person_me = api.people.me()
+                _LOGGER.debug("Authenticated OK.")
+                _LOGGER.debug("api.people.me: %s", person_me)
 
                 data[DATA_BOT_EMAIL] = person_me.emails[0]
-                _LOGGER.debug("api.people.me: %s", api.people.me())
-                _LOGGER.debug("Authenticated OK.")
+                if person_me.type != "bot":
+                    _LOGGER.error(
+                        "Although auth passed, an invalid token type is being used: %s",
+                        person_me.type,
+                    )
+                    raise InvalidAuthTokenType
 
                 email = data[CONF_EMAIL]
                 _LOGGER.debug("Searching Webex for people with email: '%s'", email)
@@ -41,6 +47,8 @@ class ConfigValidationHub:
                         email,
                         person,
                     )
+                    data[DATA_DISPLAY_NAME] = person.displayName
+
                     return True
                 else:
                     _LOGGER.error("Cannot find any Webex user with email: %s", email)
@@ -77,7 +85,7 @@ async def validate_token_and_email(hass: core.HomeAssistant, data):
     await hass.async_add_executor_job(hub.validate_config, api, data)
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{data[CONF_EMAIL]}"}
+    return {"title": f"{data[DATA_DISPLAY_NAME]} - {data[CONF_EMAIL]}"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -88,12 +96,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        description_placeholders = {
+            "bot_docs_url": "https://developer.webex.com/docs/bots"
+        }
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                description_placeholders={
-                    "bot_docs_url": "https://developer.webex.com/docs/bots"
-                },
+                description_placeholders=description_placeholders,
                 data_schema=STEP_USER_DATA_SCHEMA,
             )
 
@@ -109,6 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except InvalidAuthTokenType:
+            errors["base"] = "invalid_auth_token_type"
         except EmailNotFound:
             errors["base"] = "email_not_found"
         except InvalidEmail:
@@ -120,7 +131,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            description_placeholders=description_placeholders,
+            data_schema=vol.Schema(
+                # recycle the bad values. One of them might be OK.
+                {
+                    vol.Required(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
+                    vol.Required(CONF_EMAIL, default=user_input[CONF_EMAIL]): str,
+                }
+            ),
+            errors=errors,
         )
 
 
@@ -130,6 +150,10 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidAuthTokenType(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth token type."""
 
 
 class InvalidEmail(exceptions.HomeAssistantError):

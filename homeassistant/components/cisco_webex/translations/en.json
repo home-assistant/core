@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect. Check your internet connection.",
             "invalid_auth": "Invalid authentication. Ensure your auth token is from a bot at developer.webex.com/docs/bots",
+            "invalid_auth_token_type": "You are using an invalid token type. Only bot tokens are valid. Personal Access Token's expire after a few hours and are not allowed.",
             "invalid_email": "Invalid email.",
             "email_not_found": "Email provided is not a Webex user.",
             "unknown": "An unexpected error occurred."
