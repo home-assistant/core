@@ -32,6 +32,7 @@ ZONE_SENSORS = {
         "overlay",
         "early start",
         "open window",
+        "battery state",
     ],
     TYPE_AIR_CONDITIONING: [
         "temperature",
@@ -42,6 +43,7 @@ ZONE_SENSORS = {
         "tado mode",
         "overlay",
         "open window",
+        "battery state",
     ],
     TYPE_HOT_WATER: ["power", "link", "tado mode", "overlay"],
 }
@@ -228,6 +230,16 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
             )
             self._state_attributes = self._tado_zone_data.open_window_attr
 
+        elif self.zone_variable == "battery state":
+            for zone in self._tado.zones:
+                if zone["id"] == self.zone_id:
+                    self._state = []
+                    for device in zone["devices"]:
+                        if device["batteryState"]:
+                            self._state.append(device["batteryState"])
+                    if len(self._state) <= 1:
+                        self._state = self._state[0]
+                    break
 
 class TadoDeviceSensor(Entity):
     """Representation of a tado Sensor."""

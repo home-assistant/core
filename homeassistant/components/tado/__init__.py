@@ -194,6 +194,7 @@ class TadoConnector:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
+        self.zones = self.tado.getZones()
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
         for device in self.devices:
