@@ -19,8 +19,6 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from tests.components.securitas_direct import DOMAIN
-
 # some reported by @furetto72@Italy
 SECURITAS_STATUS = {
     STATE_ALARM_DISARMED: ["0", ("1", "32")],
@@ -30,12 +28,13 @@ SECURITAS_STATUS = {
     STATE_ALARM_ARMED_CUSTOM_BYPASS: ["3", ("204",)],
     STATE_ALARM_TRIGGERED: ["???", ("13", "24")],
 }
+from .const import DOMAIN
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Securitas platform."""
-
-    add_entities([SecuritasAlarm(hass.data[DOMAIN].client)])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Setup securitas direct alarm control."""
+    client = hass.data[DOMAIN]
+    async_add_entities([SecuritasAlarm(client)])
 
 
 class SecuritasAlarm(alarm.AlarmControlPanelEntity):

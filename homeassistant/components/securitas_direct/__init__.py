@@ -1,67 +1,87 @@
 """Support for Securitas Direct (AKA Verisure EU) alarm control panels."""
-
+from copy import deepcopy
 from datetime import timedelta
 
 from pysecuritas.api.alarm import Alarm
 from pysecuritas.api.installation import Installation
-from pysecuritas.core.session import Session
-import voluptuous as vol
+from pysecuritas.core.session import ConnectionException, Session
+from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-CONF_COUNTRY = "country"
-CONF_LANG = "lang"
-CONF_INSTALLATION = "installation"
-DOMAIN = "securitas_direct"
-MIN_SCAN_INTERVAL = timedelta(seconds=20)
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=40)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_INSTALLATION): cv.positive_int,
-                vol.Optional(CONF_COUNTRY, default="ES"): cv.string,
-                vol.Optional(CONF_LANG, default="es"): cv.string,
-                vol.Optional(CONF_CODE, default=None): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
-                    vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+from ...config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from .const import (
+    CONF_COUNTRY,
+    CONF_INSTALLATION,
+    CONF_LANG,
+    DOMAIN,
+    SECURITAS_DIRECT_PLATFORMS,
 )
 
+SCAN_INTERVAL = timedelta(seconds=60)
 
-def setup(hass, config):
-    """Set up the Securitas component."""
 
-    securitas_config = config[DOMAIN]
-    client = SecuritasClient(securitas_config)
-    client.update_overview = Throttle(securitas_config[CONF_SCAN_INTERVAL])(
-        client.update_overview
+def _connect(client):
+    """Connects to securitas."""
+
+    client.login()
+
+    return True
+
+
+async def async_setup(hass, config) -> bool:
+    """Setup securitas direct."""
+
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
+        )
     )
-    if not client.login():
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Setup securitas direct entry"""
+
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_INSTALLATION]
+        )
+
+    try:
+        client = SecuritasClient(config_entry.data)
+        client.update_overview = Throttle(SCAN_INTERVAL)(client.update_overview)
+        await hass.async_add_executor_job(_connect, client)
+    except (ConnectionException, ConnectTimeout, HTTPError):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data=config_entry.data,
+        )
+
         return False
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: client.logout())
-    client.update_overview()
-    for component in ("alarm_control_panel",):
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    hass.data[DOMAIN] = client
+    for platform in SECURITAS_DIRECT_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
 
-    hass.data[DOMAIN].client = client
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+
+    hass.data[DOMAIN].logout()
+    hass.data.pop(DOMAIN)
 
     return True
 

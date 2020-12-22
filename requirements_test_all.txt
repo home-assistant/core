@@ -834,6 +834,9 @@ pyrisco==0.3.1
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
+# homeassistant.components.securitas_direct
+pysecuritas==0.1.5
+
 # homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio==0.5
