@@ -118,14 +118,6 @@ async def test_setup_with_photo_session(hass, entry, setup_plex_server):
 async def test_setup_when_certificate_changed(hass, requests_mock):
     """Test setup component when the Plex certificate has changed."""
     await async_setup_component(hass, "persistent_notification", {})
-    requests_mock.get("https://plex.tv/users/account", text=PLEXTV_ACCOUNT_PAYLOAD)
-    requests_mock.get("https://plex.tv/api/resources", text=PLEXTV_RESOURCES)
-
-    old_domain = "1-2-3-4.1111111111ffffff1111111111ffffff.plex.direct"
-    old_url = f"https://{old_domain}:32400"
-
-    OLD_HOSTNAME_DATA = copy.deepcopy(DEFAULT_DATA)
-    OLD_HOSTNAME_DATA[const.PLEX_SERVER_CONFIG][CONF_URL] = old_url
 
     class WrongCertHostnameException(requests.exceptions.SSLError):
         """Mock the exception showing a mismatched hostname."""
@@ -135,7 +127,11 @@ async def test_setup_when_certificate_changed(hass, requests_mock):
                 f"hostname '{old_domain}' doesn't match"
             )
 
-    requests_mock.get(old_url, exc=WrongCertHostnameException)
+    old_domain = "1-2-3-4.1111111111ffffff1111111111ffffff.plex.direct"
+    old_url = f"https://{old_domain}:32400"
+
+    OLD_HOSTNAME_DATA = copy.deepcopy(DEFAULT_DATA)
+    OLD_HOSTNAME_DATA[const.PLEX_SERVER_CONFIG][CONF_URL] = old_url
 
     old_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -143,6 +139,10 @@ async def test_setup_when_certificate_changed(hass, requests_mock):
         options=DEFAULT_OPTIONS,
         unique_id=DEFAULT_DATA["server_id"],
     )
+
+    requests_mock.get("https://plex.tv/users/account", text=PLEXTV_ACCOUNT_PAYLOAD)
+    requests_mock.get("https://plex.tv/api/resources", text=PLEXTV_RESOURCES)
+    requests_mock.get(old_url, exc=WrongCertHostnameException)
 
     # Test with account failure
     requests_mock.get(f"{old_url}/accounts", status_code=401)
