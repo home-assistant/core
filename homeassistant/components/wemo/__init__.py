@@ -104,14 +104,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher)
 
-    @callback
-    def stop_wemo(event):
+    async def async_stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
-        registry.stop()
+        await hass.async_add_executor_job(registry.stop)
         wemo_discovery.async_stop_discovery()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
 
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:

@@ -130,6 +130,6 @@ async def test_discovery(hass, pywemo_registry):
     entity_entries = list(entity_reg.entities.values())
     assert len(entity_entries) == 3
 
-    # Verify that discovery stops when hass is stopped.
+    # Verify that hass stops cleanly.
     await hass.async_stop()
     await hass.async_block_till_done()
