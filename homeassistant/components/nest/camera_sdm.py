@@ -165,9 +165,11 @@ class NestCamera(Camera, AsyncEventCallback):
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_id = self._device_info.device_id
         device_entry = device_registry.async_get_device(device_id, ())
+        if not device_entry:
+            return
         for event in events:
             event_type = EVENT_NAME_MAP.get(event)
-            if event_type and device_id:
+            if event_type:
                 message = {
                     "device_id": device_entry.id,
                     "type": event_type,
