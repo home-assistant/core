@@ -4,13 +4,18 @@ from __future__ import annotations
 import logging
 from typing import Callable, List
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    ACCEPTED_VALUES,
+    ATTR_HDMI_OUTPUT,
     ATTR_PRESET,
     CONF_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME,
@@ -19,10 +24,18 @@ from .const import (
     DEFAULT_PLAYABLE_SOURCES,
     DEFAULT_RECEIVER_MAX_VOLUME,
     DOMAIN,
+    SERVICE_SELECT_HDMI_OUTPUT,
     SUPPORT_ONKYO,
     SUPPORT_ONKYO_WO_VOLUME,
     SUPPORTED_MAX_VOLUME,
     TIMEOUT_MESSAGE,
+)
+
+ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES),
+    }
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,6 +101,21 @@ async def async_setup_entry(
                 ),
             )
         )
+
+    async def async_service_handler(service):
+        """Handle for services."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        devices = [d for d in entities if d.entity_id in entity_ids]
+        for device in devices:
+            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SELECT_HDMI_OUTPUT,
+        async_service_handler,
+        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+    )
 
     async_add_entities(entities, True)
 
