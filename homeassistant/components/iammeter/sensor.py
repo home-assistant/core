@@ -9,10 +9,12 @@ from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import debounce
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -36,7 +38,15 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_TIMEOUT = 8
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+):
+    """Load the saved entities."""
+    await async_setup_platform(hass, entry.data, async_add_entities)
+    return True
+
+
+async def async_setup_platform(hass, config, async_add_entities):
     """Platform setup."""
     config_host = config[CONF_HOST]
     config_port = config[CONF_PORT]

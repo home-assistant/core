@@ -95,6 +95,7 @@ FLOWS = [
     "hunterdouglas_powerview",
     "hvv_departures",
     "hyperion",
+    "iammeter",
     "iaqualink",
     "icloud",
     "ifttt",
