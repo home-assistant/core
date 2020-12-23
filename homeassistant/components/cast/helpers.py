@@ -111,14 +111,6 @@ class ChromecastInfo:
             model_name=(self.model_name or http_device_status.model_name),
         )
 
-    def same_dynamic_group(self, other: "ChromecastInfo") -> bool:
-        """Test chromecast info is same dynamic group."""
-        return (
-            self.is_audio_group
-            and other.is_dynamic_group
-            and self.friendly_name == other.friendly_name
-        )
-
 
 class ChromeCastZeroconf:
     """Class to hold a zeroconf instance."""
@@ -144,19 +136,22 @@ class CastStatusListener:
     potentially arrive. This class allows invalidating past chromecast objects.
     """
 
-    def __init__(self, cast_device, chromecast, mz_mgr):
+    def __init__(self, cast_device, chromecast, mz_mgr, mz_only=False):
         """Initialize the status listener."""
         self._cast_device = cast_device
         self._uuid = chromecast.uuid
         self._valid = True
         self._mz_mgr = mz_mgr
 
+        if cast_device._cast_info.is_audio_group:
+            self._mz_mgr.add_multizone(chromecast)
+        if mz_only:
+            return
+
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if cast_device._cast_info.is_audio_group:
-            self._mz_mgr.add_multizone(chromecast)
-        else:
+        if not cast_device._cast_info.is_audio_group:
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, cast_status):
@@ -201,46 +196,4 @@ class CastStatusListener:
             self._mz_mgr.remove_multizone(self._uuid)
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
-        self._valid = False
-
-
-class DynamicGroupCastStatusListener:
-    """Helper class to handle pychromecast status callbacks.
-
-    Necessary because a CastDevice entity can create a new socket client
-    and therefore callbacks from multiple chromecast connections can
-    potentially arrive. This class allows invalidating past chromecast objects.
-    """
-
-    def __init__(self, cast_device, chromecast, mz_mgr):
-        """Initialize the status listener."""
-        self._cast_device = cast_device
-        self._uuid = chromecast.uuid
-        self._valid = True
-        self._mz_mgr = mz_mgr
-
-        chromecast.register_status_listener(self)
-        chromecast.socket_client.media_controller.register_status_listener(self)
-        chromecast.register_connection_listener(self)
-        self._mz_mgr.add_multizone(chromecast)
-
-    def new_cast_status(self, cast_status):
-        """Handle reception of a new CastStatus."""
-
-    def new_media_status(self, media_status):
-        """Handle reception of a new MediaStatus."""
-        if self._valid:
-            self._cast_device.new_dynamic_group_media_status(media_status)
-
-    def new_connection_status(self, connection_status):
-        """Handle reception of a new ConnectionStatus."""
-        if self._valid:
-            self._cast_device.new_dynamic_group_connection_status(connection_status)
-
-    def invalidate(self):
-        """Invalidate this status listener.
-
-        All following callbacks won't be forwarded.
-        """
-        self._mz_mgr.remove_multizone(self._uuid)
         self._valid = False
