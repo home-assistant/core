@@ -288,6 +288,36 @@ class FluxLEDCoordinator(DataUpdateCoordinator):
 
         await self.hass.async_add_executor_job(self.light.update_state)
 
+        getRGBW = await self.hass.async_add_executor_job(self.light.getRgbw)
+        getRGB = await self.hass.async_add_executor_job(self.light.getRgb)
+
+        light = {}
+
+        if self.light.mode == "ww":
+            light["mode"] = MODE_WHITE
+        elif self.light.rgbwcapable:
+            light["mode"] = MODE_RGBW
+        else:
+            light["mode"] = MODE_RGB
+
+        light["white_value"] = getRGBW[3]
+
+        if light["mode"] == MODE_WHITE:
+            light["brightness"] = light["white_value"]
+        else:
+            light["brightness"] = self.light.brightness
+
+        light["hs_color"] = color_util.color_RGB_to_hs(*getRGB)
+
+        light["current_effect"] = self.light.raw_state[3]
+
+        if self.light.is_on and light["brightness"] > 0:
+            light["state"] = True
+        else:
+            light["state"] = False
+
+        return light
+
 
 class FluxLight(CoordinatorEntity, LightEntity):
     """Represents a Flux Light entity."""
@@ -315,13 +345,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._last_hs_color = color_util.color_RGB_to_hs(255, 255, 255)
         self._ip_address = device[CONF_HOST]
         self._effect_speed = effect_speed
-
-        if self._bulb.mode == "ww":
-            self._mode = MODE_WHITE
-        elif self._bulb.rgbwcapable:
-            self._mode = MODE_RGBW
-        else:
-            self._mode = MODE_RGB
+        self._mode = coordinator.data["mode"]
 
     @property
 >>>>>>> Add dataupdate coordinator and code refactor for flux_led.
@@ -341,29 +365,27 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        brightness = self._brightness if self._brightness else 0
-        if time.time() - self._last_update < 1:
-            if self._mode == MODE_WHITE:
-                brightness = self.white_value
 
-            brightness = self._bulb.brightness
-            self._last_brightness = brightness
+        if time.time() - self._last_update > 1:
+            self._brightness = self.coordinator.data["brightness"]
+            self._last_brightness = self._brightness
 
-        return brightness
+        return self._brightness
 
     @property
     def hs_color(self):
         """Return the color property."""
-        hs_color = self._hs_color
-        if time.time() - self._last_update < 1:
-            hs_color = color_util.color_RGB_to_hs(*self._bulb.getRgb())
-            self._last_hs_color = hs_color
-        return hs_color
+
+        if time.time() - self._last_update > 1:
+            self._hs_color = self.coordinator.data["hs_color"]
+            self._last_hs_color = self._hs_color
+
+        return self._hs_color
 
     @property
     def white_value(self):
         """Return the white value of this light."""
-        return self._bulb.getRgbw()[3]
+        return self.coordinator.data["white_value"]
 
     @property
     def supported_features(self):
@@ -381,7 +403,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect(self):
         """Return the current effect."""
-        current_mode = self._bulb.raw_state[3]
+        current_mode = self.coordinator.data["current_effect"]
 
         if current_mode == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
