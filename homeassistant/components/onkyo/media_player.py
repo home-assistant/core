@@ -15,6 +15,7 @@ from .const import (
     CONF_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
+    DEFAULT_NAME,
     DEFAULT_PLAYABLE_SOURCES,
     DEFAULT_RECEIVER_MAX_VOLUME,
     DOMAIN,
@@ -65,7 +66,7 @@ async def async_setup_entry(
             receiver,
             config_entry.options.get(CONF_SOURCES),
             unique_id=config_entry.unique_id,
-            name=config_entry.data.get(CONF_NAME),
+            name=config_entry.data.get(CONF_NAME, DEFAULT_NAME),
             max_volume=config_entry.data.get(CONF_MAX_VOLUME, SUPPORTED_MAX_VOLUME),
             receiver_max_volume=config_entry.data.get(
                 CONF_RECEIVER_MAX_VOLUME, DEFAULT_RECEIVER_MAX_VOLUME
@@ -79,8 +80,8 @@ async def async_setup_entry(
                 zone,
                 receiver,
                 config_entry.options.get(CONF_SOURCES),
-                unique_id=f"{config_entry.unique_id}_{zone}",
-                name=f"{config_entry.data[CONF_NAME]} Zone {zone}",
+                unique_id=config_entry.unique_id,
+                name=config_entry.data.get(CONF_NAME, DEFAULT_NAME),
                 max_volume=config_entry.data.get(CONF_MAX_VOLUME, SUPPORTED_MAX_VOLUME),
                 receiver_max_volume=config_entry.data.get(
                     CONF_RECEIVER_MAX_VOLUME, DEFAULT_RECEIVER_MAX_VOLUME
@@ -99,7 +100,7 @@ class OnkyoDevice(MediaPlayerEntity):
         receiver,
         sources,
         unique_id,
-        name=None,
+        name,
         max_volume=SUPPORTED_MAX_VOLUME,
         receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
     ):
@@ -109,7 +110,7 @@ class OnkyoDevice(MediaPlayerEntity):
         self._volume = 0
         self._pwstate = STATE_OFF
         self._uid = receiver.info["identifier"]
-        self._name = name or f"{receiver.info['model_name']}_{self._uid}"
+        self._name = name
         self._max_volume = max_volume
         self._receiver_max_volume = receiver_max_volume
         self._current_source = None
@@ -308,13 +309,14 @@ class OnkyoDeviceZone(OnkyoDevice):
         receiver,
         sources,
         unique_id,
-        name=None,
+        name,
         max_volume=SUPPORTED_MAX_VOLUME,
         receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
     ):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
         self._supports_volume = True
+        self._unique_id = unique_id
         super().__init__(
             receiver, sources, unique_id, name, max_volume, receiver_max_volume
         )
@@ -368,6 +370,16 @@ class OnkyoDeviceZone(OnkyoDevice):
             self._volume = (
                 volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
             )
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{self._name} Zone {self._zone}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return f"{self._unique_id}_{self._zone}"
 
     @property
     def supported_features(self):
