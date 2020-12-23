@@ -4,32 +4,13 @@ import logging
 
 from eiscp import eISCP as onkyo_rcv
 from eiscp.commands import COMMANDS
-import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.media_player.const import DOMAIN as media_domain
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    device_registry as dr,
-)
+from homeassistant.const import CONF_HOST
+from homeassistant.helpers import config_per_platform, device_registry as dr
 
-from .const import (
-    ACCEPTED_VALUES,
-    ATTR_HDMI_OUTPUT,
-    COMPONENTS,
-    CONF_SOURCES,
-    DOMAIN,
-    SERVICE_SELECT_HDMI_OUTPUT,
-)
-
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES),
-    }
-)
+from .const import COMPONENTS, CONF_SOURCES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,33 +49,17 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         receiver = onkyo_rcv(config_entry.data[CONF_HOST])
-        hass.data[DOMAIN][config_entry.unique_id] = receiver
-    except CannotConnect as err:
-        raise exceptions.ConfigEntryNotReady from err
+    except CannotConnect as error:
+        raise exceptions.ConfigEntryNotReady from error
+
+    hass.data[DOMAIN][config_entry.unique_id] = receiver
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.unique_id)},
+        identifiers={(DOMAIN, receiver.identifier)},
         manufacturer="Onkyo",
         model=receiver.model_name,
-    )
-
-    hosts = []
-
-    async def async_service_handler(service):
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        devices = [d for d in hosts if d.entity_id in entity_ids]
-        for device in devices:
-            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SELECT_HDMI_OUTPUT,
-        async_service_handler,
-        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
     )
 
     for component in COMPONENTS:
