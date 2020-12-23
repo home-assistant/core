@@ -304,6 +304,12 @@ async def test_invalid_state(hass):
         state = hass.states.get("sensor.test")
         assert state.state == STATE_UNAVAILABLE
 
+        hass.states.async_set("sensor.test_monitored", "invalid")
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state.state == STATE_UNAVAILABLE
+
 
 async def test_outlier(values):
     """Test if outlier filter works."""
