@@ -4,7 +4,6 @@ import logging
 from urllib.parse import ParseResult, urlparse
 
 import async_timeout
-from const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from iammeter import real_time_api
 from iammeter.power_meter import IamMeterError
 import voluptuous as vol
@@ -15,6 +14,8 @@ from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
