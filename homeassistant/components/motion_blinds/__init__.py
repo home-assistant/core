@@ -40,7 +40,8 @@ async def async_setup_entry(
 
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = MotionMulticast()
+        multicast = MotionMulticast()
+        hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
         # start listening for local pushes (only once)
         await hass.async_add_executor_job(multicast.Start_listen)
 
