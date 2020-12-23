@@ -7,5 +7,5 @@ select_hdmi_output:
     hdmi_output:
       description: >-
         Known possible values are
-        NO, ANALOG, TES, OUT, OUT-SUB, SUB, HDBASET, BOTH, UP
-      example: "NO"
+        no, analog, tes, out, out-sub, sub, hdbaset, both, up
+      example: "no"
