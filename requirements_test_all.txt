@@ -661,7 +661,7 @@ pybotvac==0.0.19
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.6.0
+pychromecast==7.7.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
