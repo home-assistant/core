@@ -112,13 +112,13 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         port = DEFAULT_PORT
         dev_sn = friendly_name[-8:]
-        print(friendly_name, host)
         self.host = host
         self.discovered_conf = {
             CONF_NAME: friendly_name,
             CONF_HOST: host,
             CONF_PORT: port,
         }
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"sn": dev_sn}})
         if self._host_in_configuration_exists(friendly_name):
             return self.async_abort(reason="already_configured")
