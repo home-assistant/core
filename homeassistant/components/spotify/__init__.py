@@ -27,11 +27,14 @@ from .const import (
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
-                vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
-            }
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
+                    vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
+                }
+            ],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -43,14 +46,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    if CONF_CLIENT_ID in config[DOMAIN]:
+    for conf in config[DOMAIN]:
         config_flow.SpotifyFlowHandler.async_register_implementation(
             hass,
             config_entry_oauth2_flow.LocalOAuth2Implementation(
                 hass,
                 DOMAIN,
-                config[DOMAIN][CONF_CLIENT_ID],
-                config[DOMAIN][CONF_CLIENT_SECRET],
+                conf[CONF_CLIENT_ID],
+                conf[CONF_CLIENT_SECRET],
                 "https://accounts.spotify.com/authorize",
                 "https://accounts.spotify.com/api/token",
             ),
