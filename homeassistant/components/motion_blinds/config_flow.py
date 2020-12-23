@@ -7,12 +7,11 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 # pylint: disable=unused-import
-from .const import DOMAIN
+from .const import DEFAULT_GATEWAY_NAME, DOMAIN
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_GATEWAY_NAME = "Motion Gateway"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -26,7 +25,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Motion Blinds config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Motion Blinds flow."""
@@ -48,7 +47,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_connect(self, user_input=None):
         """Connect to the Motion Gateway."""
 
-        connect_gateway_class = ConnectMotionGateway(self.hass)
+        connect_gateway_class = ConnectMotionGateway(self.hass, None)
         if not await connect_gateway_class.async_connect_gateway(self.host, self.key):
             return self.async_abort(reason="connection_error")
         motion_gateway = connect_gateway_class.gateway_device
