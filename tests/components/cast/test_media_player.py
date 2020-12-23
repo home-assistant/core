@@ -514,6 +514,8 @@ async def test_discover_dynamic_group(hass, dial_mock, pycast_mock, caplog):
     """Test dynamic group does not create device or entity."""
     cast_1 = get_fake_chromecast_info(host="host_1", port=23456, uuid=FakeUUID)
     cast_2 = get_fake_chromecast_info(host="host_2", port=34567, uuid=FakeUUID2)
+    zconf_1 = get_fake_zconf(host="host_1", port=23456)
+    zconf_2 = get_fake_zconf(host="host_2", port=34567)
 
     reg = await hass.helpers.entity_registry.async_get_registry()
 
@@ -530,27 +532,39 @@ async def test_discover_dynamic_group(hass, dial_mock, pycast_mock, caplog):
     )
 
     # Discover cast service
-    discover_cast("service", cast_1)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service", cast_1)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()  # having tasks that add jobs
     pycast_mock.get_chromecast_from_service.assert_called()
     pycast_mock.get_chromecast_from_service.reset_mock()
     assert add_dev1.call_count == 0
     assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
 
     # Discover other dynamic group cast service
-    discover_cast("service", cast_2)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_2,
+    ):
+        discover_cast("service", cast_2)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()  # having tasks that add jobs
     pycast_mock.get_chromecast_from_service.assert_called()
     pycast_mock.get_chromecast_from_service.reset_mock()
     assert add_dev1.call_count == 0
     assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
 
     # Get update for cast service
-    discover_cast("service", cast_1)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        discover_cast("service", cast_1)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()  # having tasks that add jobs
     pycast_mock.get_chromecast_from_service.assert_not_called()
     assert add_dev1.call_count == 0
     assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
@@ -558,9 +572,13 @@ async def test_discover_dynamic_group(hass, dial_mock, pycast_mock, caplog):
     # Remove cast service
     assert "Disconnecting from chromecast" not in caplog.text
 
-    remove_cast("service", cast_1)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf_1,
+    ):
+        remove_cast("service", cast_1)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()  # having tasks that add jobs
 
     assert "Disconnecting from chromecast" in caplog.text
 
