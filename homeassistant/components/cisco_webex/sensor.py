@@ -35,7 +35,7 @@ class WebexPresenceSensor(Entity):
 
     def __init__(self, api, email, name):
         """Initialize the sensor."""
-        self._state = None
+        self._status = None
         self._user_id = None
         self._email = email
         self._attributes = {}
@@ -51,12 +51,16 @@ class WebexPresenceSensor(Entity):
     @property
     def state(self):
         """Return the status of the binary sensor."""
-        return self._state
+        return self._status
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attributes["on_a_call"] = self._state in ["call", "meeting", "presenting"]
+        self._attributes["on_a_call"] = self._status in [
+            "call",
+            "meeting",
+            "presenting",
+        ]
         return self._attributes
 
     @property
@@ -106,8 +110,8 @@ class WebexPresenceSensor(Entity):
     def update_with_data(self, person):
         """Update local data with the latest person."""
         self._attributes = person.to_dict()
-        # available states documented here
+        # available status documented here
         # https://developer.webex.com/docs/api/v1/people/list-people
-        self._state = person.status
+        self._status = person.status
         self._avatar = person.avatar
-        _LOGGER.debug("%s state: %s", self._email, self._state)
+        _LOGGER.debug("%s state: %s", self._email, self._status)
