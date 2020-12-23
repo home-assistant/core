@@ -7,7 +7,8 @@
             "auth_new_token_not_work_error": "Error al autenticarse con el token reci\u00e9n creado",
             "auth_required_error": "No se pudo determinar si se requiere autorizaci\u00f3n",
             "cannot_connect": "No se pudo conectar",
-            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su identificaci\u00f3n"
+            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su identificaci\u00f3n",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
