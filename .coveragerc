@@ -712,6 +712,7 @@ omit =
     homeassistant/components/ondilo_ico/oauth_impl.py
     homeassistant/components/ondilo_ico/sensor.py
     homeassistant/components/onkyo/media_player.py
+    homeassistant/components/onkyo/__init__.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/base.py
     homeassistant/components/onvif/binary_sensor.py
