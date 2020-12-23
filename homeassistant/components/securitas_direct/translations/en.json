@@ -4,6 +4,8 @@
     "step": {
       "user": {
         "data": {
+          "username": "Username",
+          "password": "Password",
           "installation": "Installation number",
           "country": "Country",
           "lang": "Language",

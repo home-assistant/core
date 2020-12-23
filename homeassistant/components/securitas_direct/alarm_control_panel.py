@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
     STATE_ALARM_PENDING,
@@ -62,12 +63,12 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
 
         return None
 
-    def activate_state(self, code, state_action):
+    def activate_state(self, code, state, state_action):
         """Validate the inserted code against configured one."""
 
-        if self.client.code is None or self.client.code == code:
-            self._state = STATE_ALARM_DISARMING
-            self.hass.states.set(self.entity_id, STATE_ALARM_DISARMING)
+        if not self.client.code or (code and self.client.code == int(code)):
+            self._state = state
+            self.hass.states.set(self.entity_id, state)
             state_action()
             self.client.update_overview(no_throttle=True)
 
@@ -135,27 +136,35 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
 
-        self.activate_state(code, self.client.alarm.disconnect)
+        self.activate_state(code, STATE_ALARM_DISARMING, self.client.alarm.disconnect)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
 
-        self.activate_state(code, self.client.alarm.activate_day_mode)
+        self.activate_state(
+            code, STATE_ALARM_ARMING, self.client.alarm.activate_day_mode
+        )
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
 
-        self.activate_state(code, self.client.alarm.activate_total_mode)
+        self.activate_state(
+            code, STATE_ALARM_ARMING, self.client.alarm.activate_total_mode
+        )
 
     def alarm_arm_night(self, code=None):
         """Send arm home command."""
 
-        self.activate_state(code, self.client.alarm.activate_night_mode)
+        self.activate_state(
+            code, STATE_ALARM_ARMING, self.client.alarm.activate_night_mode
+        )
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm perimeter command."""
 
-        self.activate_state(code, self.client.alarm.activate_perimeter_mode)
+        self.activate_state(
+            code, STATE_ALARM_ARMING, self.client.alarm.activate_perimeter_mode
+        )
 
     @property
     def supported_features(self) -> int:

@@ -18,7 +18,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+c
 
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
