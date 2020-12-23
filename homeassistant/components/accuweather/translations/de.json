@@ -25,6 +25,7 @@
     },
     "system_health": {
         "info": {
+            "can_reach_server": "AccuWeather Server erreichen",
             "remaining_requests": "Verbleibende erlaubte Anfragen"
         }
     }

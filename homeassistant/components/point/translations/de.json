@@ -5,7 +5,8 @@
             "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "external_setup": "Pointt erfolgreich von einem anderen Flow konfiguriert.",
-            "no_flows": "Du m\u00fcsst Point konfigurieren, bevor du dich damit authentifizieren kannst. [Bitte lese die Anweisungen] (https://www.home-assistant.io/components/point/)."
+            "no_flows": "Du m\u00fcsst Point konfigurieren, bevor du dich damit authentifizieren kannst. [Bitte lese die Anweisungen] (https://www.home-assistant.io/components/point/).",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
         },
         "create_entry": {
             "default": "Erfolgreich authentifiziert"

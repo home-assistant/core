@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte folgen Sie der Dokumentation.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte beachte die Dokumentation.",
             "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler sind [im Hilfebereich]({docs_url}) zu finden",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },

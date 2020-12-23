@@ -12,5 +12,10 @@
                 "title": "Authentifizierungsmethode ausw\u00e4hlen"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify-API-Endpunkt erreichbar"
+        }
     }
 }

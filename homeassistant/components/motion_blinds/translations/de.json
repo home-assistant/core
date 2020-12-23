@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "Jalousien",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "host": "IP-Adresse"
+                },
+                "description": "Ein 16-Zeichen-API-Schl\u00fcssel wird ben\u00f6tigt, siehe https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
+                "title": "Jalousien"
+            }
+        }
+    }
+}

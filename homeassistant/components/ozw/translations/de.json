@@ -5,9 +5,15 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet"
         },
+        "progress": {
+            "install_addon": "Bitte warten, bis die Installation des OpenZWave-Add-Ons abgeschlossen ist. Dies kann einige Minuten dauern."
+        },
         "step": {
             "hassio_confirm": {
-                "title": "Einrichten der OpenZWave Integration mit dem OpenZWave Add-On"
+                "title": "Richte die OpenZWave Integration mit dem OpenZWave Add-On ein"
+            },
+            "install_addon": {
+                "title": "Die Installation des OpenZWave-Add-On wurde gestartet"
             }
         }
     }

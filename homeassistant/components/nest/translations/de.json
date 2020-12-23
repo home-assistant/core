@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
-            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL"
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL",
+            "reauth_successful": "Neuathentifizierung erfolgreich",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
         },
         "error": {
             "internal_error": "Ein interner Fehler ist aufgetreten",
@@ -24,6 +26,10 @@
                 },
                 "description": "[Autorisiere dein Konto] ( {url} ), um deinen Nest-Account zu verkn\u00fcpfen.\n\n F\u00fcge anschlie\u00dfend den erhaltenen PIN Code hier ein.",
                 "title": "Nest-Konto verkn\u00fcpfen"
+            },
+            "reauth_confirm": {
+                "description": "Die Nest-Integration muss das Konto neu authentifizieren",
+                "title": "Integration neu authentifizieren"
             }
         }
     },
