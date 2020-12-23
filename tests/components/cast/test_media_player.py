@@ -13,6 +13,7 @@ from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
@@ -239,6 +240,64 @@ async def test_start_discovery_called_once(hass):
         assert start_discovery.call_count == 1
 
 
+async def test_internal_discovery_callback_fill_out(hass):
+    """Test internal discovery automatically filling out information."""
+    discover_cast, _, _ = await async_setup_cast_internal_discovery(hass)
+    info = get_fake_chromecast_info(host="host1")
+    zconf = get_fake_zconf(host="host1", port=8009)
+    full_info = attr.evolve(
+        info,
+        model_name="google home",
+        friendly_name="Speaker",
+        uuid=FakeUUID,
+        manufacturer="Nabu Casa"
+    )
+
+    with patch(
+        "homeassistant.components.cast.helpers.dial.get_device_status",
+        return_value=full_info,
+    ), patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf,
+    ):
+        signal = MagicMock()
+
+        async_dispatcher_connect(hass, "cast_discovered", signal)
+        discover_cast("the-service", info)
+        await hass.async_block_till_done()
+
+        # when called with incomplete info, it should use HTTP to get missing
+        discover = signal.mock_calls[0][1][0]
+        assert discover == full_info
+
+
+async def test_internal_discovery_callback_fill_out_default_manufacturer(hass):
+    """Test internal discovery automatically filling out information."""
+    discover_cast, _, _ = await async_setup_cast_internal_discovery(hass)
+    info = get_fake_chromecast_info(host="host1")
+    zconf = get_fake_zconf(host="host1", port=8009)
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+
+    with patch(
+        "homeassistant.components.cast.helpers.dial.get_device_status",
+        return_value=full_info,
+    ), patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf,
+    ):
+        signal = MagicMock()
+
+        async_dispatcher_connect(hass, "cast_discovered", signal)
+        discover_cast("the-service", info)
+        await hass.async_block_till_done()
+
+        # when called with incomplete info, it should use HTTP to get missing
+        discover = signal.mock_calls[0][1][0]
+        assert discover == attr.evolve(full_info, manufacturer="Google Inc.")
+
+
 async def test_stop_discovery_called_on_stop(hass):
     """Test pychromecast.stop_discovery called on shutdown."""
     browser = MagicMock(zc={})
@@ -376,6 +435,30 @@ async def test_auto_cast_chromecasts(hass):
     await hass.async_block_till_done()
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 2
+
+
+async def test_discover_dynamic_group(hass, dial_mock):
+    """Test dynamic group does not create device or entity."""
+    cast_1 = get_fake_chromecast_info(host="host_1", port=23456, uuid=FakeUUID)
+    zconf_1 = get_fake_zconf(host="host_1")
+
+    reg = await hass.helpers.entity_registry.async_get_registry()
+
+    # Fake dynamic group info
+    tmp = MagicMock()
+    tmp.uuid = FakeUUID
+    dial_mock.get_multizone_status.return_value.dynamic_groups = [tmp]
+
+    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(hass)
+    discover_cast("service", cast_1)
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+
+    assert add_dev1.call_count == 0
+
+
+    assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
 
 
 async def test_update_cast_chromecasts(hass):

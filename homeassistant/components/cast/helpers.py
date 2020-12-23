@@ -1,5 +1,5 @@
 """Helpers to deal with Cast devices."""
-from typing import Optional, Tuple
+from typing import Optional
 
 import attr
 from pychromecast import dial
@@ -21,6 +21,7 @@ class ChromecastInfo:
     uuid: Optional[str] = attr.ib(
         converter=attr.converters.optional(str), default=None
     )  # always convert UUID to string if not None
+    _manufacturer = attr.ib(type=Optional[str], default=None)
     model_name: str = attr.ib(default="")
     friendly_name: Optional[str] = attr.ib(default=None)
     is_dynamic_group = attr.ib(type=Optional[bool], default=None)
@@ -48,13 +49,10 @@ class ChromecastInfo:
         )
 
     @property
-    def host_port(self) -> Tuple[str, int]:
-        """Return the host+port tuple."""
-        return self.host, self.port
-
-    @property
     def manufacturer(self) -> str:
         """Return the manufacturer."""
+        if self._manufacturer:
+            return self._manufacturer
         if not self.model_name:
             return None
         return CAST_MANUFACTURERS.get(self.model_name.lower(), "Google Inc.")
@@ -109,7 +107,8 @@ class ChromecastInfo:
             port=self.port,
             uuid=(self.uuid or http_device_status.uuid),
             friendly_name=(self.friendly_name or http_device_status.friendly_name),
-            model_name=self.model_name,
+            manufacturer=(self.manufacturer or http_device_status.manufacturer),
+            model_name=(self.model_name or http_device_status.model_name),
         )
 
     def same_dynamic_group(self, other: "ChromecastInfo") -> bool:
