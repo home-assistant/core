@@ -1,14 +1,27 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account wurde schon konfiguriert",
+            "reauth_successful": "Neuauthentifizierung erfolgreich"
+        },
+        "create_entry": {
+            "default": "Authentifizierung erfolgreich"
+        },
+        "error": {
+            "invalid_auth": "Authentifizienung ung\u00fcltig"
+        },
         "step": {
             "reauth": {
                 "data": {
                     "password": "Passwort"
-                }
+                },
+                "description": "Authentifizierungs-Tokens sind ung\u00fcltig, melde dich an, um sie neu zu erstellen."
             },
             "user": {
                 "data": {
-                    "password": "Passwort"
+                    "password": "Passwort",
+                    "url": "Webseite",
+                    "username": "Nutzername"
                 }
             }
         }
