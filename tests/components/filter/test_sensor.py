@@ -15,7 +15,7 @@ from homeassistant.components.filter.sensor import (
     TimeThrottleFilter,
 )
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE
+from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -106,7 +106,6 @@ async def test_chain_history(hass, values, missing=False):
     else:
         fake_states = {
             "sensor.test_monitored": [
-                ha.State("sensor.test_monitored", None, last_changed=t_0),
                 ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
                 ha.State("sensor.test_monitored", "unknown", last_changed=t_1),
                 ha.State("sensor.test_monitored", 19.0, last_changed=t_2),
@@ -135,6 +134,62 @@ async def test_chain_history(hass, values, missing=False):
                 assert "18.05" == state.state
             else:
                 assert "17.05" == state.state
+
+
+async def test_source_state_none(hass, values):
+    """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
+    config = {
+        "sensor": [
+            {
+                "platform": "template",
+                "sensors": {"template_test": {"value_template": "{{ 0 }}"}},
+            },
+            {
+                "platform": "filter",
+                "name": "test",
+                "entity_id": "sensor.template_test",
+                "filters": [
+                    {
+                        "filter": "time_simple_moving_average",
+                        "window_size": "00:01",
+                        "precision": "2",
+                    }
+                ],
+            },
+        ]
+    }
+
+    with assert_setup_component(2, "sensor"):
+        assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.template_test")
+    assert state.state == "0"
+    state = hass.states.get("sensor.test")
+    assert state.state == "0.0"
+
+    # Force Template Reload
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "template/sensor_configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            "template",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Template state gets to None
+    state = hass.states.get("sensor.template_test")
+    assert state is None
+
+    # Filter sensor ignores None state setting state to STATE_UNKNOWN
+    state = hass.states.get("sensor.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_chain_history_missing(hass, values):
