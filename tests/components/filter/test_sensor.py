@@ -138,11 +138,17 @@ async def test_chain_history(hass, values, missing=False):
 
 async def test_source_state_none(hass, values):
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
+    await async_init_recorder_component(hass)
+
     config = {
         "sensor": [
             {
                 "platform": "template",
-                "sensors": {"template_test": {"value_template": "{{ 0 }}"}},
+                "sensors": {
+                    "template_test": {
+                        "value_template": "{{ states.sensor.test_state.state }}"
+                    }
+                },
             },
             {
                 "platform": "filter",
@@ -158,13 +164,16 @@ async def test_source_state_none(hass, values):
             },
         ]
     }
-
-    with assert_setup_component(2, "sensor"):
-        assert await async_setup_component(hass, "sensor", config)
+    await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
+    hass.states.async_set("sensor.test_state", 0)
+
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.template_test")
     assert state.state == "0"
+
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
     assert state.state == "0.0"
 
