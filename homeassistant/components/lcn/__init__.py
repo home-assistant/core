@@ -43,8 +43,6 @@ async def async_setup_entry(hass, config_entry):
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    config_entry.add_update_listener(async_entry_updated)
-
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
@@ -63,10 +61,6 @@ async def async_setup_entry(hass, config_entry):
         try:
             # establish connection to PCHK server
             await lcn_connection.async_connect(timeout=15)
-            _LOGGER.info('LCN connected to "%s"', config_entry.title)
-            hass.data[DOMAIN][config_entry.entry_id] = {
-                CONNECTION: lcn_connection,
-            }
         except pypck.connection.PchkAuthenticationError:
             _LOGGER.warning('Authentication on PCHK "%s" failed.', config_entry.title)
             return False
@@ -80,6 +74,12 @@ async def async_setup_entry(hass, config_entry):
         except TimeoutError:
             _LOGGER.warning('Connection to PCHK "%s" failed.', config_entry.title)
             return False
+
+        _LOGGER.info('LCN connected to "%s"', config_entry.title)
+        hass.data[DOMAIN][config_entry.entry_id] = {
+            CONNECTION: lcn_connection,
+        }
+        config_entry.add_update_listener(async_entry_updated)
 
         # remove orphans from entity registry which are in ConfigEntry but were removed
         # from configuration.yaml
@@ -170,7 +170,7 @@ class LcnEntity(Entity):
         self.config = config
         self.host_id = host_id
         self.device_connection = device_connection
-        self.unregister_for_inputs = None
+        self._unregister_for_inputs = None
         self._name = config[CONF_NAME]
 
     @property
@@ -195,8 +195,8 @@ class LcnEntity(Entity):
 
     async def async_will_remove_from_hass(self):
         """Run when entity will be removed from hass."""
-        if self.unregister_for_inputs is not None:
-            self.unregister_for_inputs()
+        if self._unregister_for_inputs is not None:
+            self._unregister_for_inputs()
 
     @property
     def name(self):

@@ -59,16 +59,18 @@ class LcnServiceCall:
 
     def get_device_connection(self, service):
         """Get address connection object."""
-        address, host_id = service.data[CONF_ADDRESS]
+        address, host_name = service.data[CONF_ADDRESS]
         unique_device_id = generate_unique_id(address)
 
         for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.title == host_id:
+            if config_entry.title == host_name:
                 device_connection = get_device_connection(
                     self.hass, unique_device_id, config_entry
                 )
+                if device_connection is None:
+                    raise ValueError("Wrong address.")
                 return device_connection
-        raise ValueError("Invalid host ID.")
+        raise ValueError("Invalid host name.")
 
     async def async_call_service(self, service):
         """Execute service call."""

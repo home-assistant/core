@@ -7,20 +7,26 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
+    CONF_COVERS,
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_HOST,
     CONF_IP_ADDRESS,
+    CONF_LIGHTS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_USERNAME,
 )
 
 from .const import (
     CONF_ADDRESS_ID,
+    CONF_CLIMATES,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
@@ -28,6 +34,7 @@ from .const import (
     CONF_HARDWARE_TYPE,
     CONF_IS_GROUP,
     CONF_RESOURCE,
+    CONF_SCENES,
     CONF_SEGMENT_ID,
     CONF_SK_NUM_TRIES,
     CONF_SOFTWARE_SERIAL,
@@ -46,13 +53,13 @@ PATTERN_ADDRESS = re.compile(
 
 
 DOMAIN_LOOKUP = {
-    "binary_sensors": "binary_sensor",
-    "climates": "climate",
-    "covers": "cover",
-    "lights": "light",
-    "scenes": "scene",
-    "sensors": "sensor",
-    "switches": "switch",
+    CONF_BINARY_SENSORS: "binary_sensor",
+    CONF_CLIMATES: "climate",
+    CONF_COVERS: "cover",
+    CONF_LIGHTS: "light",
+    CONF_SCENES: "scene",
+    CONF_SENSORS: "sensor",
+    CONF_SWITCHES: "switch",
 }
 
 
@@ -79,8 +86,7 @@ def get_device_connection(hass, unique_device_id, config_entry):
     if device_config:
         host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
         addr = pypck.lcn_addr.LcnAddr(*get_device_address(device_config))
-        device_connection = host_connection.get_address_conn(addr)
-        return device_connection
+        return host_connection.get_address_conn(addr)
     return None
 
 
@@ -99,23 +105,52 @@ def get_resource(domain_name, domain_data):
     raise ValueError("Unknown domain.")
 
 
-def generate_unique_id(
-    address=None,
-    domain_config=None,
-):
+def generate_unique_id(address):
     """Generate a unique_id from the given parameters."""
-    unique_id = ""
-    if address:
-        is_group = "g" if address[2] else "m"
-        unique_id += f"{is_group}{address[0]:03d}{address[1]:03d}"
-        if domain_config:
-            resource = get_resource(*domain_config)
-            unique_id += f"-{resource}".lower()
-    return unique_id
+    is_group = "g" if address[2] else "m"
+    return f"{is_group}{address[0]:03d}{address[1]:03d}"
 
 
 def import_lcn_config(lcn_config):
-    """Convert lcn settings from configuration.yaml to config_entries data."""
+    """Convert lcn settings from configuration.yaml to config_entries data.
+
+    Create a list of config_entry data structures like:
+
+    "data": {
+        "host": "pchk",
+        "ip_address": "192.168.2.41",
+        "port": 4114,
+        "username": "lcn",
+        "password": "lcn,
+        "sk_num_tries: 0,
+        "dim_mode: "STEPS200",
+        "devices": [
+            {
+                "unique_id": "m000007",
+                "name": "",
+                "segment_id": 0,
+                "address_id": 7,
+                "is_group": false,
+                "hardware_serial": -1,
+                "software_serial": -1,
+                "hardware_type": -1
+            }, ...
+        ],
+        "entities": [
+            {
+                "unique_device_id": "m000007",
+                "name": "Light_Output1",
+                "resource": "output1",
+                "domain": "light",
+                "domain_data": {
+                    "output": "OUTPUT1",
+                    "dimmable": true,
+                    "transition": 5000.0
+                }
+            }, ...
+        ]
+    }
+    """
     data = {}
     for connection in lcn_config[CONF_CONNECTIONS]:
         host = {
@@ -131,10 +166,10 @@ def import_lcn_config(lcn_config):
         }
         data[connection[CONF_NAME]] = host
 
-    for domain, domain_config in lcn_config.items():
-        if domain == CONF_CONNECTIONS:
+    for confkey, domain_config in lcn_config.items():
+        if confkey == CONF_CONNECTIONS:
             continue
-        domain_name = DOMAIN_LOOKUP[domain]
+        domain = DOMAIN_LOOKUP[confkey]
         # loop over entities in configuration.yaml
         for domain_data in domain_config:
             # remove name and address from domain_data
@@ -164,12 +199,12 @@ def import_lcn_config(lcn_config):
                 data[host_name][CONF_DEVICES].append(device_config)
 
             # insert entity config
-            resource = get_resource(domain_name, domain_data).lower()
+            resource = get_resource(domain, domain_data).lower()
             for entity_config in data[host_name][CONF_ENTITIES]:
                 if (
                     unique_device_id == entity_config[CONF_UNIQUE_DEVICE_ID]
                     and resource == entity_config[CONF_RESOURCE]
-                    and domain_name == entity_config[CONF_DOMAIN]
+                    and domain == entity_config[CONF_DOMAIN]
                 ):
                     break
             else:  # create new entity_config
@@ -177,26 +212,12 @@ def import_lcn_config(lcn_config):
                     CONF_UNIQUE_DEVICE_ID: unique_device_id,
                     CONF_NAME: entity_name,
                     CONF_RESOURCE: resource,
-                    CONF_DOMAIN: domain_name,
+                    CONF_DOMAIN: domain,
                     CONF_DOMAIN_DATA: domain_data.copy(),
                 }
                 data[host_name][CONF_ENTITIES].append(entity_config)
 
-    config_entries_data = list(data.values())
-    return config_entries_data
-
-
-def get_connection(connections, connection_id=None):
-    """Return the connection object from list."""
-    if connection_id is None:
-        connection = connections[0]
-    else:
-        for connection in connections:
-            if connection.connection_id == connection_id:
-                break
-        else:
-            raise ValueError("Unknown connection_id.")
-    return connection
+    return list(data.values())
 
 
 def has_unique_host_names(hosts):
