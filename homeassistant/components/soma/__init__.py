@@ -74,7 +74,7 @@ class SomaEntity(Entity):
         self.device = device
         self.api = api
         self.current_position = 50
-        self.state_attrs = None
+        self.state_attrs = {}
         self.is_available = True
 
     @property
@@ -140,6 +140,5 @@ class SomaEntity(Entity):
             battery = 0
         elif battery > 100:
             battery = 100
-        self.state_attrs = {}
         self.state_attrs[ATTR_BATTERY_LEVEL] = battery
         self.is_available = True
