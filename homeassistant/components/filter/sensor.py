@@ -201,7 +201,7 @@ class SensorFilter(Entity):
             _LOGGER.warning(
                 "While updating filter %s, the new_state is None", self._name
             )
-            self._state = STATE_UNKNOWN
+            self._state = None
             self.async_write_ha_state()
             return
 
