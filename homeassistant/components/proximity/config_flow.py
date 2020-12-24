@@ -33,19 +33,22 @@ class ProximityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
 
-        async def async_entities_list(hass):
-            """Return all entities."""
-            entities_reg = await hass.helpers.entity_registry.async_get_registry()
-            entities = list(entities_reg.entities.keys())
-            return entities
-
-        default_devices = await async_entities_list(self.hass)
+        entities_reg = await self.hass.helpers.entity_registry.async_get_registry()
+        entities = list(entities_reg.entities.keys())
+        zones_list = [
+            entity.original_name
+            for entity in entities_reg.entities.values()
+            if entity.domain == "zone"
+        ]
+        zones = ["home"] + zones_list
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE): cv.string,
-                vol.Required(CONF_DEVICES): cv.multi_select(default_devices),
-                vol.Optional(CONF_IGNORED_ZONES, default=[]): cv.string,
+                vol.Optional(CONF_ZONE, default=[DEFAULT_PROXIMITY_ZONE]): vol.All(
+                    cv.string, vol.In(zones)
+                ),
+                vol.Required(CONF_DEVICES): cv.multi_select(entities),
+                vol.Optional(CONF_IGNORED_ZONES, default=[]): cv.multi_select(zones),
                 vol.Optional(
                     CONF_TOLERANCE, default=DEFAULT_TOLERANCE
                 ): cv.positive_int,
