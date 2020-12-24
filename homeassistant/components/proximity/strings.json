@@ -1,3 +1,18 @@
 {
-  "title": "Proximity"
+  "title": "Proximity",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Proximity",
+        "description": "The proximity integration allows you to monitor the proximity of devices or persons to a particular zone and the direction of travel.",
+        "data": {
+          "zone": "name of zone",
+          "devices": "devices",
+          "ignored_zones": "ignored zones",
+          "tolerance": "tolerance",
+          "unit_of_measurement": "unit of measurement"
+        }
+      }
+    }
+  }  
 }

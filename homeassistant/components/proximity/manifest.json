@@ -1,6 +1,7 @@
 {
   "domain": "proximity",
   "name": "Proximity",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/proximity",
   "dependencies": ["device_tracker", "zone"],
   "codeowners": [],

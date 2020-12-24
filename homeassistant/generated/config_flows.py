@@ -157,6 +157,7 @@ FLOWS = [
     "powerwall",
     "profiler",
     "progettihwsw",
+    "proximity",
     "ps4",
     "pvpc_hourly_pricing",
     "rachio",
