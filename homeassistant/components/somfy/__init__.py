@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover", "switch"]
+SOMFY_COMPONENTS = ["climate", "cover", "sensor", "switch"]
 
 
 async def async_setup(hass, config):

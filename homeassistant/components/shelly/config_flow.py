@@ -27,12 +27,6 @@ HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
 
 
-def _remove_prefix(shelly_str):
-    if shelly_str.startswith("shellyswitch"):
-        return shelly_str[6:]
-    return shelly_str
-
-
 async def validate_input(hass: core.HomeAssistant, host, data):
     """Validate the user input allows us to connect.
 
@@ -65,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
     host = None
     info = None
 
@@ -159,7 +153,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            "name": _remove_prefix(zeroconf_info["properties"]["id"])
+            "name": zeroconf_info.get("name", "").split(".")[0]
         }
         return await self.async_step_confirm_discovery()
 

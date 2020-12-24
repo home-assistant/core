@@ -1,5 +1,7 @@
 """Tests for the PS4 media player platform."""
 from pyps4_2ndscreen.credential import get_ddp_message
+from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
+from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -8,6 +10,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_GAME,
 )
 from homeassistant.components.ps4.const import (
@@ -149,7 +152,7 @@ async def setup_mock_component(hass, entry=None):
 async def mock_ddp_response(hass, mock_status_data):
     """Mock raw UDP response from device."""
     mock_protocol = hass.data[PS4_DATA].protocol
-
+    assert mock_protocol.local_port == DEFAULT_UDP_PORT
     mock_code = mock_status_data.get("status_code")
     mock_status = mock_status_data.get("status")
     mock_status_header = f"{mock_code} {mock_status}"
@@ -224,7 +227,7 @@ async def test_media_attributes_are_fetched(hass):
     mock_result = MagicMock()
     mock_result.name = MOCK_TITLE_NAME
     mock_result.cover_art = MOCK_TITLE_ART_URL
-    mock_result.game_type = "game"
+    mock_result.game_type = "not_an_app"
 
     with patch(mock_func, return_value=mock_result) as mock_fetch:
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
@@ -240,6 +243,21 @@ async def test_media_attributes_are_fetched(hass):
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_ID) == MOCK_TITLE_ID
     assert mock_attrs.get(ATTR_MEDIA_TITLE) == MOCK_TITLE_NAME
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
+
+    # Change state so that the next fetch is called.
+    await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
+
+    # Test that content type of app is set.
+    mock_result.game_type = PS_TYPE_APP
+
+    with patch(mock_func, return_value=mock_result) as mock_fetch_app:
+        await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
+
+    mock_state = hass.states.get(mock_entity_id)
+    mock_attrs = dict(mock_state.attributes)
+
+    assert len(mock_fetch_app.mock_calls) == 1
+    assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
 
 
 async def test_media_attributes_are_loaded(hass, patch_load_json):

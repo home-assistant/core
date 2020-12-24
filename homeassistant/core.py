@@ -89,7 +89,7 @@ block_async_io.enable()
 fix_threading_exception_logging()
 
 T = TypeVar("T")
-_UNDEF: dict = {}
+_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]

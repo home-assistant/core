@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import device_tracker, mqtt
+from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import SOURCE_TYPES
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.const import (
@@ -29,6 +29,7 @@ from .. import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from ... import mqtt
 from ..const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
