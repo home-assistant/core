@@ -277,7 +277,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     @property
     def unique_id(self):
-        """Return the unique id of this cover."""
+        """Return the unique id of this thermostat."""
         return self._unique_id
 
     @property
