@@ -1,4 +1,4 @@
-"""The tests for Humidifier device actions."""
+"""The tests for Number device actions."""
 import pytest
 import voluptuous_serialize
 
