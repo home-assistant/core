@@ -36,19 +36,17 @@ SUPPORTED_CATEGORIES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
 
-    def get_covers():
-        """Retrieve covers."""
-        domain_data = hass.data[DOMAIN]
-        coordinator = domain_data[COORDINATOR]
-        api = domain_data[API]
+    domain_data = hass.data[DOMAIN]
+    coordinator = domain_data[COORDINATOR]
+    api = domain_data[API]
 
-        return [
-            SomfyCover(coordinator, device_id, api, domain_data[CONF_OPTIMISTIC])
-            for device_id, device in coordinator.data.items()
-            if SUPPORTED_CATEGORIES & set(device.categories)
-        ]
+    covers = [
+        SomfyCover(coordinator, device_id, api, domain_data[CONF_OPTIMISTIC])
+        for device_id, device in coordinator.data.items()
+        if SUPPORTED_CATEGORIES & set(device.categories)
+    ]
 
-    async_add_entities(await hass.async_add_executor_job(get_covers))
+    async_add_entities(covers)
 
 
 class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):

@@ -49,19 +49,17 @@ HVAC_MODES_MAPPING = {HvacState.COOL: HVAC_MODE_COOL, HvacState.HEAT: HVAC_MODE_
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy climate platform."""
 
-    def get_thermostats():
-        """Retrieve thermostats."""
-        domain_data = hass.data[DOMAIN]
-        coordinator = domain_data[COORDINATOR]
-        api = domain_data[API]
+    domain_data = hass.data[DOMAIN]
+    coordinator = domain_data[COORDINATOR]
+    api = domain_data[API]
 
-        return [
-            SomfyClimate(coordinator, device_id, api)
-            for device_id, device in coordinator.data.items()
-            if SUPPORTED_CATEGORIES & set(device.categories)
-        ]
+    climates = [
+        SomfyClimate(coordinator, device_id, api)
+        for device_id, device in coordinator.data.items()
+        if SUPPORTED_CATEGORIES & set(device.categories)
+    ]
 
-    async_add_entities(await hass.async_add_executor_job(get_thermostats))
+    async_add_entities(climates)
 
 
 class SomfyClimate(SomfyEntity, ClimateEntity):
