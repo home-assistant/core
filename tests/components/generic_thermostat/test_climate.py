@@ -1288,6 +1288,7 @@ async def test_reload(hass):
             "climate": {
                 "platform": "generic_thermostat",
                 "name": "test",
+                "unique_id": "generic_thermostat_test",
                 "heater": "switch.any",
                 "target_sensor": "sensor.any",
             }
