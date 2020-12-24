@@ -29,11 +29,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import api, config_flow
 from .const import (
     API_URL,
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
     SIGNAL_NEST_UPDATE,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
@@ -42,14 +43,13 @@ from .legacy import async_setup_legacy, async_setup_legacy_entry
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
-DATA_NEST_CONFIG = "nest_config"
-
 SENSOR_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
 )
 
+
+# The preferred method for set up is with an empty configuration.yaml, though
+# this is still present for backwards compatibility.
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -87,22 +87,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
         _LOGGER.error("Configuration option '{CONF_SUBSCRIBER_ID}' required")
         return False
 
-    # For setup of ConfigEntry below
+    # For setup of ConfigEntry below prior to full config flow support
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
-    project_id = config[DOMAIN][CONF_PROJECT_ID]
-    config_flow.NestFlowHandler.register_sdm_api(hass)
-    config_flow.NestFlowHandler.async_register_implementation(
-        hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        ),
-    )
-
     return True
 
 
@@ -153,14 +139,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
+    if CONF_PROJECT_ID in entry.data:
+        config = entry.data
+    else:
+        config = hass.data[DOMAIN][DATA_NEST_CONFIG]
+
+    implementation = config_flow.NestFlowHandler.async_register_oauth(
+        hass,
+        config[CONF_CLIENT_ID],
+        config[CONF_CLIENT_SECRET],
+        config[CONF_PROJECT_ID],
     )
-
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),

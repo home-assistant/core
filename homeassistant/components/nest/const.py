@@ -1,6 +1,7 @@
 """Constants used by the Nest component."""
 
 DOMAIN = "nest"
+DATA_NEST_CONFIG = "nest_config"
 DATA_SDM = "sdm"
 DATA_SUBSCRIBER = "subscriber"
 
@@ -16,3 +17,6 @@ SDM_SCOPES = [
     "https://www.googleapis.com/auth/pubsub",
 ]
 API_URL = "https://smartdevicemanagement.googleapis.com/v1"
+
+CONF_PROJECT_ID = "project_id"
+CONF_SUBSCRIBER_ID = "subscriber_id"

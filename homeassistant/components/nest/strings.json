@@ -4,6 +4,22 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
+      "device_access": {
+          "title": "Device Access Registration",
+          "description": "You must register for Device Access and create a project in order to manage your Nest devices. See [Device Access Registration](https://www.home-assistant.io/integrations/nest/#device-access-registration) for the detailed steps. Click submit to start the OAuth authorization flow to connect devices.",
+          "data": {
+              "project_id": "Device Access Project ID",
+              "client_id": "OAuth Client ID",
+              "client_secret": "OAuth Client Secret"
+          }
+      },
+      "pubsub": {
+          "title": "Configure Pub/Sub Subscriber",
+          "description": "The Cloud Pub/Sub Subscriber keeps Home Assistant informed of events or device changes in real time.  See [Pub/Sub subscriber setup](https://www.home-assistant.io/integrations/nest/#pubsub-subscriber-setup) for instructions on how to register.",
+          "data": {
+              "subscriber_id": "Subscription Name"
+          }
+      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"

@@ -7,14 +7,18 @@ from nest.nest import AUTHORIZE_URL, AuthorizationError, NestAuth
 from homeassistant.const import HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 
-from ..config_flow import CodeInvalid, NestAuthError, register_flow_implementation
+from ..config_flow import (
+    CodeInvalid,
+    NestAuthError,
+    register_legacy_flow_implementation,
+)
 from .const import DOMAIN
 
 
 @callback
 def initialize(hass, client_id, client_secret):
     """Initialize a local auth provider."""
-    register_flow_implementation(
+    register_legacy_flow_implementation(
         hass,
         DOMAIN,
         "configuration.yaml",

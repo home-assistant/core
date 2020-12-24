@@ -22,6 +22,11 @@ async def test_abort_if_no_implementation_registered(hass):
 
 async def test_abort_if_single_instance_allowed(hass):
     """Test we abort if Nest is already setup."""
+    gen_authorize_url = AsyncMock(return_value="https://example.com")
+    convert_code = Mock(side_effect=config_flow.CodeInvalid)
+    config_flow.register_legacy_flow_implementation(
+        hass, "test", "Test", gen_authorize_url, convert_code
+    )
     flow = config_flow.NestFlowHandler()
     flow.hass = hass
 
@@ -36,10 +41,10 @@ async def test_full_flow_implementation(hass):
     """Test registering an implementation and finishing flow works."""
     gen_authorize_url = AsyncMock(return_value="https://example.com")
     convert_code = AsyncMock(return_value={"access_token": "yoo"})
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, convert_code
     )
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test-other", "Test Other", None, None
     )
 
@@ -64,7 +69,7 @@ async def test_full_flow_implementation(hass):
 async def test_not_pick_implementation_if_only_one(hass):
     """Test we allow picking implementation if we have two."""
     gen_authorize_url = AsyncMock(return_value="https://example.com")
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, None
     )
 
@@ -78,7 +83,7 @@ async def test_not_pick_implementation_if_only_one(hass):
 async def test_abort_if_timeout_generating_auth_url(hass):
     """Test we abort if generating authorize url fails."""
     gen_authorize_url = Mock(side_effect=asyncio.TimeoutError)
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, None
     )
 
@@ -92,7 +97,7 @@ async def test_abort_if_timeout_generating_auth_url(hass):
 async def test_abort_if_exception_generating_auth_url(hass):
     """Test we abort if generating authorize url blows up."""
     gen_authorize_url = Mock(side_effect=ValueError)
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, None
     )
 
@@ -107,7 +112,7 @@ async def test_verify_code_timeout(hass):
     """Test verify code timing out."""
     gen_authorize_url = AsyncMock(return_value="https://example.com")
     convert_code = Mock(side_effect=asyncio.TimeoutError)
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, convert_code
     )
 
@@ -127,7 +132,7 @@ async def test_verify_code_invalid(hass):
     """Test verify code invalid."""
     gen_authorize_url = AsyncMock(return_value="https://example.com")
     convert_code = Mock(side_effect=config_flow.CodeInvalid)
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, convert_code
     )
 
@@ -147,7 +152,7 @@ async def test_verify_code_unknown_error(hass):
     """Test verify code unknown error."""
     gen_authorize_url = AsyncMock(return_value="https://example.com")
     convert_code = Mock(side_effect=config_flow.NestAuthError)
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, convert_code
     )
 
@@ -167,7 +172,7 @@ async def test_verify_code_exception(hass):
     """Test verify code blows up."""
     gen_authorize_url = AsyncMock(return_value="https://example.com")
     convert_code = Mock(side_effect=ValueError)
-    config_flow.register_flow_implementation(
+    config_flow.register_legacy_flow_implementation(
         hass, "test", "Test", gen_authorize_url, convert_code
     )
 

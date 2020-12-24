@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
@@ -19,6 +18,15 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "device_access": {
+                "data": {
+                    "client_id": "OAuth Client ID",
+                    "client_secret": "OAuth Client Secret",
+                    "project_id": "Device Access Project ID"
+                },
+                "description": "You must register for Device Access and create a project in order to manage your Nest devices. See [Device Access Registration](https://www.home-assistant.io/integrations/nest/#device-access-registration) for the detailed steps. Click submit to start the OAuth authorization flow to connect devices.",
+                "title": "Device Access Registration"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Provider"
@@ -35,6 +43,13 @@
             },
             "pick_implementation": {
                 "title": "Pick Authentication Method"
+            },
+            "pubsub": {
+                "data": {
+                    "subscriber_id": "Subscription Name"
+                },
+                "description": "The Cloud Pub/Sub Subscriber keeps Home Assistant informed of events or device changes in real time.  See [Pub/Sub subscriber setup](https://www.home-assistant.io/integrations/nest/#pubsub-subscriber-setup) for instructions on how to register.",
+                "title": "Configure Pub/Sub Subscriber"
             },
             "reauth_confirm": {
                 "description": "The Nest integration needs to re-authenticate your account",
