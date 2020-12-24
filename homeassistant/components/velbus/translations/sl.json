@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Ime za to velbus povezavo",
+                    "port": "Povezovalni niz"
+                },
+                "title": "Dolo\u010dite vrsto povezave z velbusom"
+            }
+        }
+    }
+}

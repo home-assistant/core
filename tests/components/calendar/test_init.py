@@ -8,6 +8,7 @@ import homeassistant.util.dt as dt_util
 async def test_events_http_api(hass, hass_client):
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
     client = await hass_client()
     response = await client.get("/api/calendars/calendar.calendar_2")
     assert response.status == 400
@@ -27,6 +28,7 @@ async def test_events_http_api(hass, hass_client):
 async def test_calendars_http_api(hass, hass_client):
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
     client = await hass_client()
     response = await client.get("/api/calendars")
     assert response.status == 200

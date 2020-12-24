@@ -1,0 +1,25 @@
+{
+    "topic": "OpenZWave/1/node/32/instance/1/commandclass/37/value/541671440/",
+    "payload": {
+        "Label": "Switch",
+        "Value": false,
+        "Units": "",
+        "Min": 0,
+        "Max": 0,
+        "Type": "Bool",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_SWITCH_BINARY",
+        "Index": 0,
+        "Node": 32,
+        "Genre": "User",
+        "Help": "Turn On/Off Device",
+        "ValueIDKey": 541671440,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1579566891
+    }
+}

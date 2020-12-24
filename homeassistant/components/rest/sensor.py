@@ -3,10 +3,8 @@ import json
 import logging
 from xml.parsers.expat import ExpatError
 
+import httpx
 from jsonpath import jsonpath
-import requests
-from requests import Session
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 import xmltodict
 
@@ -18,6 +16,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
@@ -33,6 +32,10 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.reload import async_setup_reload_service
+
+from . import DOMAIN, PLATFORMS
+from .data import DEFAULT_TIMEOUT, RestData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +43,6 @@ DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
-DEFAULT_TIMEOUT = 10
 
 
 CONF_JSON_ATTRS = "json_attributes"
@@ -55,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -76,8 +79,10 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     resource_template = config.get(CONF_RESOURCE_TEMPLATE)
@@ -87,6 +92,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -100,23 +106,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if resource_template is not None:
         resource_template.hass = hass
-        resource = resource_template.render()
+        resource = resource_template.async_render(parse_result=False)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
+            auth = httpx.DigestAuth(username, password)
         else:
-            auth = HTTPBasicAuth(username, password)
+            auth = (username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
-    rest.update()
+    rest = RestData(
+        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+    )
+
+    await rest.async_update()
+
     if rest.data is None:
         raise PlatformNotReady
 
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
-    add_entities(
+    async_add_entities(
         [
             RestSensor(
                 hass,
@@ -131,7 +141,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 json_attrs_path,
             )
         ],
-        True,
     )
 
 
@@ -195,12 +204,20 @@ class RestSensor(Entity):
         """Force update."""
         return self._force_update
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from REST API and update the state."""
         if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.render())
+            self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
-        self.rest.update()
+        await self.rest.async_update()
+        self._update_from_rest_data()
+
+    async def async_added_to_hass(self):
+        """Ensure the data from the initial update is reflected in the state."""
+        self._update_from_rest_data()
+
+    def _update_from_rest_data(self):
+        """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
         if self.rest.headers is not None:
@@ -210,13 +227,14 @@ class RestSensor(Entity):
             if content_type and (
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
+                or content_type.startswith("application/xhtml+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))
                     _LOGGER.debug("JSON converted from XML: %s", value)
                 except ExpatError:
                     _LOGGER.warning(
-                        "REST xml result could not be parsed and converted to JSON."
+                        "REST xml result could not be parsed and converted to JSON"
                     )
                     _LOGGER.debug("Erroneous XML: %s", value)
 
@@ -245,10 +263,14 @@ class RestSensor(Entity):
                 except ValueError:
                     _LOGGER.warning("REST result could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
+
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
+
         if value is not None and self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(value, None)
+            value = self._value_template.async_render_with_possible_json_value(
+                value, None
+            )
 
         self._state = value
 
@@ -256,50 +278,3 @@ class RestSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
-
-
-class RestData:
-    """Class for handling the data retrieval."""
-
-    def __init__(
-        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
-    ):
-        """Initialize the data object."""
-        self._method = method
-        self._resource = resource
-        self._auth = auth
-        self._headers = headers
-        self._request_data = data
-        self._verify_ssl = verify_ssl
-        self._timeout = timeout
-        self._http_session = Session()
-        self.data = None
-        self.headers = None
-
-    def __del__(self):
-        """Destroy the http session on destroy."""
-        self._http_session.close()
-
-    def set_url(self, url):
-        """Set url."""
-        self._resource = url
-
-    def update(self):
-        """Get the latest data from REST service with provided method."""
-        _LOGGER.debug("Updating from %s", self._resource)
-        try:
-            response = self._http_session.request(
-                self._method,
-                self._resource,
-                headers=self._headers,
-                auth=self._auth,
-                data=self._request_data,
-                timeout=self._timeout,
-                verify=self._verify_ssl,
-            )
-            self.data = response.text
-            self.headers = response.headers
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
-            self.data = None
-            self.headers = None

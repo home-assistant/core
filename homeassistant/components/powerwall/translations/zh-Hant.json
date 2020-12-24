@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
+            "wrong_version": "\u4e0d\u652f\u63f4\u60a8\u6240\u4f7f\u7528\u7684 Powerwall \u7248\u672c\u3002\u8acb\u8003\u616e\u9032\u884c\u5347\u7d1a\u6216\u56de\u5831\u6b64\u554f\u984c\u3001\u4ee5\u671f\u554f\u984c\u53ef\u4ee5\u7372\u5f97\u89e3\u6c7a\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP \u4f4d\u5740"
+                },
+                "title": "\u9023\u7dda\u81f3 Powerwall"
+            }
+        }
+    }
+}

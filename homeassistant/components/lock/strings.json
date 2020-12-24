@@ -14,5 +14,11 @@
       "locked": "{entity_name} locked",
       "unlocked": "{entity_name} unlocked"
     }
+  },
+  "state": {
+    "_": {
+      "locked": "[%key:common::state::locked%]",
+      "unlocked": "[%key:common::state::unlocked%]"
+    }
   }
 }

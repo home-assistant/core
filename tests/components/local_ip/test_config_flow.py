@@ -23,7 +23,10 @@ async def test_config_flow(hass):
 
 async def test_already_setup(hass):
     """Test we abort if already setup."""
-    MockConfigEntry(domain=DOMAIN, data={},).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+    ).add_to_hass(hass)
 
     # Should fail, same NAME
     result = await hass.config_entries.flow.async_init(

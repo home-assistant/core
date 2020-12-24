@@ -1,7 +1,7 @@
 """Support for tracking the online status of a UPS."""
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OnlineStatus(config, apcups_data)], True)
 
 
-class OnlineStatus(BinarySensorDevice):
+class OnlineStatus(BinarySensorEntity):
     """Representation of an UPS online status."""
 
     def __init__(self, config, data):

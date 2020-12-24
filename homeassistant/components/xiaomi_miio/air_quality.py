@@ -53,8 +53,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         device_info = await hass.async_add_executor_job(miio_device.info)
-    except DeviceException:
-        raise PlatformNotReady
+    except DeviceException as ex:
+        raise PlatformNotReady from ex
 
     model = device_info.model
     unique_id = f"{model}-{device_info.mac_address}"
@@ -195,8 +195,9 @@ class AirMonitorS1(AirMonitorB1):
             self._humidity = state.humidity
             self._available = True
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class AirMonitorV1(AirMonitorB1):
@@ -210,8 +211,9 @@ class AirMonitorV1(AirMonitorB1):
             self._air_quality_index = state.aqi
             self._available = True
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def unit_of_measurement(self):

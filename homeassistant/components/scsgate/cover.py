@@ -8,13 +8,11 @@ from scsgate.tasks import (
 )
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(SCSGATE_SCHEMA)}
@@ -29,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     scsgate = hass.data[DOMAIN]
 
     if devices:
-        for _, entity_info in devices.items():
+        for entity_info in devices.values():
             if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 
@@ -47,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers)
 
 
-class SCSGateCover(CoverDevice):
+class SCSGateCover(CoverEntity):
     """Representation of SCSGate cover."""
 
     def __init__(self, scs_id, name, logger, scsgate):

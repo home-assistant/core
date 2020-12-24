@@ -1,23 +1,34 @@
 """Test Alexa config."""
 import contextlib
-from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.async_mock import AsyncMock, Mock, patch
+from tests.common import async_fire_time_changed
 
 
 async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
     """Test Alexa config should expose using prefs."""
     entity_conf = {"should_expose": False}
-    await cloud_prefs.async_update(alexa_entity_configs={"light.kitchen": entity_conf})
+    await cloud_prefs.async_update(
+        alexa_entity_configs={"light.kitchen": entity_conf},
+        alexa_default_expose=["light"],
+    )
     conf = alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     assert not conf.should_expose("light.kitchen")
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
+
+    entity_conf["should_expose"] = None
+    assert conf.should_expose("light.kitchen")
+
+    await cloud_prefs.async_update(
+        alexa_default_expose=["sensor"],
+    )
+    assert not conf.should_expose("light.kitchen")
 
 
 async def test_alexa_config_report_state(hass, cloud_prefs):
@@ -28,7 +39,7 @@ async def test_alexa_config_report_state(hass, cloud_prefs):
     assert conf.should_report_state is False
     assert conf.is_reporting_states is False
 
-    with patch.object(conf, "async_get_access_token", return_value=mock_coro("hello")):
+    with patch.object(conf, "async_get_access_token", AsyncMock(return_value="hello")):
         await cloud_prefs.async_update(alexa_report_state=True)
         await hass.async_block_till_done()
 
@@ -60,7 +71,7 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
         cloud_prefs,
         Mock(
             alexa_access_token_url="http://example/alexa_token",
-            auth=Mock(async_check_token=Mock(side_effect=mock_coro)),
+            auth=Mock(async_check_token=AsyncMock()),
             websession=hass.helpers.aiohttp_client.async_get_clientsession(),
         ),
     )
@@ -89,7 +100,7 @@ def patch_sync_helper():
     to_update = []
     to_remove = []
 
-    async def sync_helper(to_upd, to_rem):
+    def sync_helper(to_upd, to_rem):
         to_update.extend([ent_id for ent_id in to_upd if ent_id not in to_update])
         to_remove.extend([ent_id for ent_id in to_rem if ent_id not in to_remove])
         return True
@@ -165,7 +176,18 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
                 "action": "update",
                 "entity_id": "light.kitchen",
                 "changes": ["entity_id"],
+                "old_entity_id": "light.living_room",
             },
+        )
+        await hass.async_block_till_done()
+
+    assert to_update == ["light.kitchen"]
+    assert to_remove == ["light.living_room"]
+
+    with patch_sync_helper() as (to_update, to_remove):
+        hass.bus.async_fire(
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
         )
         await hass.async_block_till_done()
 
@@ -178,13 +200,9 @@ async def test_alexa_update_report_state(hass, cloud_prefs):
     alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig."
-        "async_sync_entities",
-        side_effect=mock_coro,
+        "homeassistant.components.cloud.alexa_config.AlexaConfig.async_sync_entities",
     ) as mock_sync, patch(
-        "homeassistant.components.cloud.alexa_config."
-        "AlexaConfig.async_enable_proactive_mode",
-        side_effect=mock_coro,
+        "homeassistant.components.cloud.alexa_config.AlexaConfig.async_enable_proactive_mode",
     ):
         await cloud_prefs.async_update(alexa_report_state=True)
         await hass.async_block_till_done()

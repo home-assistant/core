@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud climate devices."""
-import logging
 from typing import Any, Dict, List, Optional, Union
 
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
@@ -8,7 +7,7 @@ from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -27,13 +26,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_PRESET_END_TIME = "preset_end_time"
 PERMANENT_END_TIME = "permanent"
@@ -57,8 +54,8 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
-    """Representation of a HomematicIP heating group.
+class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
+    """Representation of the HomematicIP heating group.
 
     Heat mode is supported for all heating devices incl. their defined profiles.
     Boost is available for radiator thermostats only.

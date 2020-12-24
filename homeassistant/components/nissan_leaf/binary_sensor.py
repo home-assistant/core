@@ -1,7 +1,7 @@
 """Plugged In Status Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
 
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
+class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
     """Plugged In Sensor class."""
 
     @property
@@ -43,7 +43,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
         return "mdi:power-plug-off"
 
 
-class LeafChargingSensor(LeafEntity, BinarySensorDevice):
+class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     """Charging Sensor class."""
 
     @property

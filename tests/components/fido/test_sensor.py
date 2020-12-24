@@ -1,11 +1,12 @@
 """The test for the fido sensor platform."""
 import logging
-import sys
-from unittest.mock import MagicMock, patch
+
+from pyfido.client import PyFidoError
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
 
+from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component
 
 CONTRACT = "123456789"
@@ -36,35 +37,12 @@ class FidoClientMockError(FidoClientMock):
 
     async def fetch_data(self):
         """Return fake fetching data."""
-        raise PyFidoErrorMock("Fake Error")
-
-
-class PyFidoErrorMock(Exception):
-    """Fake PyFido Error."""
-
-
-class PyFidoClientFakeModule:
-    """Fake pyfido.client module."""
-
-    PyFidoError = PyFidoErrorMock
-
-
-class PyFidoFakeModule:
-    """Fake pyfido module."""
-
-    FidoClient = FidoClientMockError
-
-
-def fake_async_add_entities(component, update_before_add=False):
-    """Fake async_add_entities function."""
-    pass
+        raise PyFidoError("Fake Error")
 
 
 async def test_fido_sensor(loop, hass):
     """Test the Fido number sensor."""
-    with patch(
-        "homeassistant.components.fido.sensor.FidoClient", new=FidoClientMock
-    ), patch("homeassistant.components.fido.sensor.PyFidoError", new=PyFidoErrorMock):
+    with patch("homeassistant.components.fido.sensor.FidoClient", new=FidoClientMock):
         config = {
             "sensor": {
                 "platform": "fido",
@@ -76,6 +54,7 @@ async def test_fido_sensor(loop, hass):
         }
         with assert_setup_component(1):
             await async_setup_component(hass, "sensor", config)
+            await hass.async_block_till_done()
         state = hass.states.get("sensor.fido_1112223344_balance")
         assert state.state == "160.12"
         assert state.attributes.get("number") == "1112223344"
@@ -86,10 +65,9 @@ async def test_fido_sensor(loop, hass):
 async def test_error(hass, caplog):
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
-    sys.modules["pyfido"] = PyFidoFakeModule()
-    sys.modules["pyfido.client"] = PyFidoClientFakeModule()
 
     config = {}
     fake_async_add_entities = MagicMock()
-    await fido.async_setup_platform(hass, config, fake_async_add_entities)
+    with patch("homeassistant.components.fido.sensor.FidoClient", FidoClientMockError):
+        await fido.async_setup_platform(hass, config, fake_async_add_entities)
     assert fake_async_add_entities.called is False

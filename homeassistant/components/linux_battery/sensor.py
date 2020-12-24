@@ -6,12 +6,7 @@ from batinfo import Batteries
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_NAME,
-    DEVICE_CLASS_BATTERY,
-    UNIT_PERCENTAGE,
-)
+from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -103,7 +98,7 @@ class LinuxBatterySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_state_attributes(self):

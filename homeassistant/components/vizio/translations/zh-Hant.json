@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "updated_entry": "\u6b64\u5be6\u9ad4\u5df2\u7d93\u8a2d\u5b9a\uff0c\u4f46\u8a2d\u5b9a\u4e4b\u540d\u7a31\u3001App \u53ca/\u6216\u9078\u9805\u8207\u5148\u524d\u532f\u5165\u7684\u5be6\u9ad4\u9078\u9805\u503c\u4e0d\u5408\uff0c\u56e0\u6b64\u8a2d\u5b9a\u5c07\u6703\u8ddf\u8457\u66f4\u65b0\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "complete_pairing_failed": "\u7121\u6cd5\u5b8c\u6210\u914d\u5c0d\uff0c\u50b3\u9001\u524d\u3001\u8acb\u78ba\u5b9a\u6240\u8f38\u5165\u7684 PIN \u78bc\u3001\u540c\u6642\u96fb\u8996\u5df2\u7d93\u958b\u555f\u4e26\u9023\u7dda\u81f3\u7db2\u8def\u3002",
+            "existing_config_entry_found": "\u5df2\u6709\u4e00\u7d44\u4f7f\u7528\u76f8\u540c\u5e8f\u865f\u7684 VIZIO SmartCast \u88dd\u7f6e \u5df2\u8a2d\u5b9a\u3002\u5fc5\u9808\u5148\u9032\u884c\u522a\u9664\u5f8c\u624d\u80fd\u91cd\u65b0\u8a2d\u5b9a\u3002"
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN \u78bc"
+                },
+                "description": "\u96fb\u8996\u4e0a\u61c9\u8a72\u6703\u986f\u793a\u4e00\u7d44\u4ee3\u78bc\u3002\u65bc\u8868\u683c\u4e2d\u8f38\u5165\u4ee3\u78bc\uff0c\u7136\u5f8c\u7e7c\u7e8c\u4e0b\u4e00\u6b65\u4ee5\u5b8c\u6210\u914d\u5c0d\u3002",
+                "title": "\u5b8c\u6210\u914d\u5c0d\u904e\u7a0b"
+            },
+            "pairing_complete": {
+                "description": "VIZIO SmartCast \u88dd\u7f6e \u5df2\u7d93\u9023\u7dda\u81f3 Home Assistant\u3002",
+                "title": "\u914d\u5c0d\u5b8c\u6210"
+            },
+            "pairing_complete_import": {
+                "description": "VIZIO SmartCast \u88dd\u7f6e \u5df2\u9023\u7dda\u81f3 Home Assistant\u3002\n\n\u5b58\u53d6\u5bc6\u9470\u70ba '**{access_token}**'\u3002",
+                "title": "\u914d\u5c0d\u5b8c\u6210"
+            },
+            "user": {
+                "data": {
+                    "access_token": "\u5b58\u53d6\u5bc6\u9470",
+                    "device_class": "\u88dd\u7f6e\u985e\u5225",
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u6b64\u96fb\u8996\u50c5\u9700\u5b58\u53d6\u5bc6\u9470\u5047\u5982\u60a8\u6b63\u5728\u8a2d\u5b9a\u96fb\u8996\u3001\u5c1a\u672a\u53d6\u5f97\u5b58\u53d6\u5bc6\u9470 \uff0c\u4fdd\u6301\u7a7a\u767d\u4ee5\u9032\u884c\u914d\u5c0d\u904e\u7a0b\u3002",
+                "title": "VIZIO SmartCast \u88dd\u7f6e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "\u6240\u8981\u5305\u542b\u6216\u6392\u9664\u7684 App",
+                    "include_or_exclude": "\u5305\u542b\u6216\u6392\u9664 App\uff1f",
+                    "volume_step": "\u97f3\u91cf\u5927\u5c0f"
+                },
+                "description": "\u5047\u5982\u60a8\u64c1\u6709 Smart TV\u3001\u53ef\u7531\u4f86\u6e90\u5217\u8868\u4e2d\u9078\u64c7\u6240\u8981\u904e\u6ffe\u5305\u542b\u6216\u6392\u9664\u7684 App\u3002\u3002",
+                "title": "\u66f4\u65b0 VIZIO SmartCast \u88dd\u7f6e \u9078\u9805"
+            }
+        }
+    }
+}

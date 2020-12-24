@@ -22,6 +22,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -66,6 +67,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "platform": "device",
             "domain": DOMAIN,
             "type": "triggered",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "arming",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },

@@ -1,15 +1,12 @@
 """Support for HomeKit Controller locks."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 STATE_JAMMED = "jammed"
 
@@ -24,17 +21,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "lock-mechanism":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.LOCK_MECHANISM:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitLock(conn, info)], True)
         return True
 
     conn.add_listener(async_add_service)
 
 
-class HomeKitLock(HomeKitEntity, LockDevice):
+class HomeKitLock(HomeKitEntity, LockEntity):
     """Representation of a HomeKit Controller Lock."""
 
     def get_characteristic_types(self):

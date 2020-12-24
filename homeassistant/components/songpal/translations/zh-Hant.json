@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "not_songpal_device": "\u4e26\u975e Songpal \u88dd\u7f6e"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "Sony Songpal {name} ({host})",
+        "step": {
+            "init": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "\u7aef\u9ede"
+                }
+            }
+        }
+    }
+}

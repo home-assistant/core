@@ -4,6 +4,7 @@ import logging
 import secrets
 
 from rachiopy import Rachio
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -18,7 +19,6 @@ from .const import (
     CONF_WEBHOOK_ID,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN,
-    RACHIO_API_EXCEPTIONS,
 )
 from .device import RachioPerson
 from .webhooks import (
@@ -113,17 +113,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Get the API user
     try:
         await hass.async_add_executor_job(person.setup, hass)
-    # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    # and there is not a reasonable timeout here so it can block for a long time
-    except RACHIO_API_EXCEPTIONS as error:
+    except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     # Check for Rachio controller devices
     if not person.controllers:
         _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
-    _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
+    _LOGGER.info(
+        "%d Rachio device(s) found; The url %s must be accessible from the internet in order to receive updates",
+        len(person.controllers),
+        webhook_url,
+    )
 
     # Enable component
     hass.data[DOMAIN][entry.entry_id] = person

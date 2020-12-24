@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "authorize_url_fail": "Errore sconosciuto nel generare l'url di autorizzazione",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "unknown": "Errore imprevisto",
+            "unknown_authorize_url_generation": "Errore sconosciuto durante la generazione di un URL di autorizzazione."
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "auth": {
+                "description": "Per collegare il tuo account TelldusLive:\n 1. Clicca sul link sottostante\n 2. Accedi a Telldus Live\n 3. Autorizzare **{app_name}** (cliccare **S\u00ec**).\n 4. Torna qui e clicca su **SUBMIT**.\n\n [Link per account TelldusLive]({auth_url})",
+                "title": "Autenticati con TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Vuoto",
+                "title": "Scegli l'endpoint."
+            }
+        }
+    }
+}

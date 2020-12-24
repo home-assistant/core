@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "idle": "Diam",
+            "off": "Off",
+            "on": "On",
+            "paused": "Jeda",
+            "playing": "Memainkan",
+            "standby": "Siaga"
+        }
+    },
+    "title": "Pemutar media"
+}

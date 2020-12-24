@@ -1,6 +1,5 @@
 """Sensor support for Skybell Doorbells."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -9,8 +8,6 @@ from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

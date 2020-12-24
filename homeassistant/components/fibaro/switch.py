@@ -1,12 +1,8 @@
 """Support for Fibaro switches."""
-import logging
-
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -19,7 +15,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroSwitch(FibaroDevice, SwitchDevice):
+class FibaroSwitch(FibaroDevice, SwitchEntity):
     """Representation of a Fibaro Switch."""
 
     def __init__(self, fibaro_device):

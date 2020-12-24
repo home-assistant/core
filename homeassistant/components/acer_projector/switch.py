@@ -5,7 +5,7 @@ import re
 import serial
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_FILENAME,
     CONF_NAME,
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([AcerSwitch(serial_port, name, timeout, write_timeout)], True)
 
 
-class AcerSwitch(SwitchDevice):
+class AcerSwitch(SwitchEntity):
     """Represents an Acer Projector as a switch."""
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):

@@ -1,6 +1,4 @@
 """The tests for local file camera component."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.camera import (
@@ -18,17 +16,18 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
+
 ENTITY_CAMERA = "camera.demo_camera"
 
 
 @pytest.fixture(autouse=True)
-def demo_camera(hass):
+async def demo_camera(hass):
     """Initialize a demo camera platform."""
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
-        )
+    assert await async_setup_component(
+        hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
     )
+    await hass.async_block_till_done()
 
 
 async def test_init_state_is_streaming(hass):

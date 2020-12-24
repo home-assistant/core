@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account al geconfigureerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

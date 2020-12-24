@@ -1,7 +1,7 @@
 """Support for Tahoma switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaSwitch(TahomaDevice, SwitchDevice):
+class TahomaSwitch(TahomaDevice, SwitchEntity):
     """Representation a Tahoma Switch."""
 
     def __init__(self, tahoma_device, controller):
@@ -47,9 +47,17 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             else:
                 self._state = STATE_OFF
 
+        if self.tahoma_device.type == "zwave:OnOffLightZWaveComponent":
+            if self.tahoma_device.active_states.get("core:OnOffState") == "on":
+                self._state = STATE_ON
+            else:
+                self._state = STATE_OFF
+
         # A RTS power socket doesn't have a feedback channel,
         # so we must assume the socket is available.
         if self.tahoma_device.type == "rts:OnOffRTSComponent":
+            self._available = True
+        elif self.tahoma_device.type == "zwave:OnOffLightZWaveComponent":
             self._available = True
         else:
             self._available = bool(

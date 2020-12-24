@@ -1,0 +1,21 @@
+{
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "\u9078\u9805\u5e03\u6797",
+                    "constant": "\u4e0d\u8b8a",
+                    "int": "\u6578\u503c\u8f38\u5165"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "\u591a\u91cd\u9078\u64c7",
+                    "select": "\u9078\u64c7\u9078\u9805",
+                    "string": "\u5b57\u4e32\u503c"
+                }
+            }
+        }
+    },
+    "title": "\u5c55\u793a"
+}

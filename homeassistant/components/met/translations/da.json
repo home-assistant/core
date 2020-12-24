@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevation",
+                    "latitude": "Breddegrad",
+                    "longitude": "L\u00e6ngdegrad",
+                    "name": "Navn"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "Lokalitet"
+            }
+        }
+    }
+}

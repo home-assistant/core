@@ -1,13 +1,12 @@
 """Test the DoorBird config flow."""
 import urllib
 
-from asynctest import MagicMock, patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.doorbird import CONF_CUSTOM_URL, CONF_TOKEN
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, init_recorder_component
 
 VALID_CONFIG = {
@@ -56,11 +55,14 @@ async def test_user_form(hass):
     ), patch(
         "homeassistant.components.doorbird.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.doorbird.async_setup_entry", return_value=True,
+        "homeassistant.components.doorbird.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], VALID_CONFIG,
+            result["flow_id"],
+            VALID_CONFIG,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "1.2.3.4"
@@ -70,7 +72,6 @@ async def test_user_form(hass):
         "password": "password",
         "username": "friend",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -99,13 +100,15 @@ async def test_form_import(hass):
     ), patch("homeassistant.components.logbook.async_setup", return_value=True), patch(
         "homeassistant.components.doorbird.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.doorbird.async_setup_entry", return_value=True,
+        "homeassistant.components.doorbird.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data=import_config,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "1.2.3.4"
@@ -122,7 +125,6 @@ async def test_form_import(hass):
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
     # used a fallback when they are not in options
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -166,13 +168,15 @@ async def test_form_import_with_zeroconf_already_discovered(hass):
     ), patch("homeassistant.components.logbook.async_setup", return_value=True), patch(
         "homeassistant.components.doorbird.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.doorbird.async_setup_entry", return_value=True,
+        "homeassistant.components.doorbird.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data=import_config,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "1.2.3.4"
@@ -189,7 +193,6 @@ async def test_form_import_with_zeroconf_already_discovered(hass):
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
     # used a fallback when they are not in options
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -265,11 +268,13 @@ async def test_form_zeroconf_correct_oui(hass):
     ), patch("homeassistant.components.logbook.async_setup", return_value=True), patch(
         "homeassistant.components.doorbird.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.doorbird.async_setup_entry", return_value=True,
+        "homeassistant.components.doorbird.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], VALID_CONFIG
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "1.2.3.4"
@@ -279,7 +284,6 @@ async def test_form_zeroconf_correct_oui(hass):
         "password": "password",
         "username": "friend",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -300,7 +304,8 @@ async def test_form_user_cannot_connect(hass):
         return_value=doorbirdapi,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], VALID_CONFIG,
+            result["flow_id"],
+            VALID_CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -326,7 +331,8 @@ async def test_form_user_invalid_auth(hass):
         return_value=doorbirdapi,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], VALID_CONFIG,
+            result["flow_id"],
+            VALID_CONFIG,
         )
 
     assert result2["type"] == "form"

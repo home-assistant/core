@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pizone import Controller, Zone
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_EXCLUDE,
     PRECISION_HALVES,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -100,7 +101,7 @@ def _return_on_connection_error(ret=None):
     return wrap
 
 
-class ControllerDevice(ClimateDevice):
+class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
     def __init__(self, controller: Controller) -> None:
@@ -250,7 +251,7 @@ class ControllerDevice(ClimateDevice):
     @property
     def precision(self) -> float:
         """Return the precision of the system."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def device_state_attributes(self):
@@ -266,7 +267,7 @@ class ControllerDevice(ClimateDevice):
                 self.hass,
                 self._controller.temp_setpoint,
                 self.temperature_unit,
-                self.precision,
+                PRECISION_HALVES,
             ),
         }
 
@@ -399,7 +400,7 @@ class ControllerDevice(ClimateDevice):
         await self.wrap_and_catch(self._controller.set_on(True))
 
 
-class ZoneDevice(ClimateDevice):
+class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
@@ -494,7 +495,7 @@ class ZoneDevice(ClimateDevice):
     @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self):
@@ -508,7 +509,7 @@ class ZoneDevice(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return list(self._state_to_pizone.keys())
+        return list(self._state_to_pizone)
 
     @property
     def current_temperature(self):

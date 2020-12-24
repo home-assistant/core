@@ -1,7 +1,6 @@
 """Configuration for HEOS tests."""
 from typing import Dict, Sequence
 
-from asynctest.mock import Mock, patch as patch
 from pyheos import Dispatcher, Heos, HeosPlayer, HeosSource, InputSource, const
 import pytest
 
@@ -9,6 +8,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.heos import DOMAIN
 from homeassistant.const import CONF_HOST
 
+from tests.async_mock import Mock, patch as patch
 from tests.common import MockConfigEntry
 
 

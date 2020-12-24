@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "P\u00e9riph\u00e9rique d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_access_token": "Jeton d'acc\u00e8s non valide",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Code \u00e0 deux facteurs"
+                },
+                "description": "Entrez le code PIN envoy\u00e9 \u00e0 votre e-mail",
+                "title": "Authentification \u00e0 deux facteurs"
+            },
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Identifiant"
+                },
+                "title": "Connectez-vous avec un compte Blink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Intervalle de balayage (secondes)"
+                },
+                "description": "Configurer l'int\u00e9gration Blink",
+                "title": "Options de clignotement"
+            }
+        }
+    }
+}

@@ -1,6 +1,4 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
-import logging
-
 from pyspcwebgw.const import AreaMode
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -20,8 +18,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_API, SIGNAL_UPDATE_ALARM
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _get_alarm_state(area):
@@ -47,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
-class SpcAlarm(alarm.AlarmControlPanel):
+class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     def __init__(self, area, api):

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<device-info>
+    <udn>015e5555-9000-5555-5555-b0a555555dfb</udn>
+    <serial-number>YN00H5555555</serial-number>
+    <device-id>0S596H055555</device-id>
+    <advertising-id>055555a9-d82b-5c75-b8fe-5555550cb7ee</advertising-id>
+    <vendor-name>Onn</vendor-name>
+    <model-name>100005844</model-name>
+    <model-number>7820X</model-number>
+    <model-region>US</model-region>
+    <is-tv>true</is-tv>
+    <is-stick>false</is-stick>
+    <screen-size>58</screen-size>
+    <panel-id>2</panel-id>
+    <tuner-type>ATSC</tuner-type>
+    <supports-ethernet>true</supports-ethernet>
+    <wifi-mac>d8:13:99:f8:b0:c6</wifi-mac>
+    <wifi-driver>realtek</wifi-driver>
+    <ethernet-mac>d4:3a:2e:07:fd:cb</ethernet-mac>
+    <network-type>wifi</network-type>
+    <network-name>NetworkSSID</network-name>
+    <friendly-device-name>58" Onn Roku TV</friendly-device-name>
+    <friendly-model-name>Onn Roku TV</friendly-model-name>
+    <default-device-name>Onn Roku TV - YN00H5555555</default-device-name>
+    <user-device-name>58" Onn Roku TV</user-device-name>
+    <user-device-location>Living room</user-device-location>
+    <build-number>AT9.20E04502A</build-number>
+    <software-version>9.2.0</software-version>
+    <software-build>4502</software-build>
+    <secure-device>true</secure-device>
+    <language>en</language>
+    <country>US</country>
+    <locale>en_US</locale>
+    <time-zone-auto>true</time-zone-auto>
+    <time-zone>US/Central</time-zone>
+    <time-zone-name>United States/Central</time-zone-name>
+    <time-zone-tz>America/Chicago</time-zone-tz>
+    <time-zone-offset>-300</time-zone-offset>
+    <clock-format>12-hour</clock-format>
+    <uptime>264789</uptime>
+    <power-mode>PowerOn</power-mode>
+    <supports-suspend>true</supports-suspend>
+    <supports-find-remote>true</supports-find-remote>
+    <find-remote-is-possible>false</find-remote-is-possible>
+    <supports-audio-guide>true</supports-audio-guide>
+    <supports-rva>true</supports-rva>
+    <developer-enabled>false</developer-enabled>
+    <keyed-developer-id/>
+    <search-enabled>true</search-enabled>
+    <search-channels-enabled>true</search-channels-enabled>
+    <voice-search-enabled>true</voice-search-enabled>
+    <notifications-enabled>true</notifications-enabled>
+    <notifications-first-use>false</notifications-first-use>
+    <supports-private-listening>true</supports-private-listening>
+    <supports-private-listening-dtv>true</supports-private-listening-dtv>
+    <supports-warm-standby>true</supports-warm-standby>
+    <headphones-connected>false</headphones-connected>
+    <expert-pq-enabled>0.9</expert-pq-enabled>
+    <supports-ecs-textedit>true</supports-ecs-textedit>
+    <supports-ecs-microphone>true</supports-ecs-microphone>
+    <supports-wake-on-wlan>true</supports-wake-on-wlan>
+    <has-play-on-roku>true</has-play-on-roku>
+    <has-mobile-screensaver>true</has-mobile-screensaver>
+    <support-url>https://www.onntvsupport.com/</support-url>
+    <grandcentral-version>2.9.57</grandcentral-version>
+    <trc-version>3.0</trc-version>
+    <trc-channel-version>2.9.42</trc-channel-version>
+    <davinci-version>2.8.20</davinci-version>
+    <has-wifi-extender>false</has-wifi-extender>
+    <has-wifi-5G-support>true</has-wifi-5G-support>
+    <can-use-wifi-extender>true</can-use-wifi-extender>
+</device-info>

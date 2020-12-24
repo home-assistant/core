@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "not_supported": "Collegato a AVM FRITZ!Box ma non \u00e8 in grado di controllare i dispositivi Smart Home."
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "AVM FRITZ!Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Vuoi impostare {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le informazioni del tuo AVM FRITZ!Box ."
+            }
+        }
+    }
+}

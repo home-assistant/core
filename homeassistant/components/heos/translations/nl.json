@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Voer de hostnaam of het IP-adres van een Heos-apparaat in (bij voorkeur een die via een kabel is verbonden met het netwerk).",
+                "title": "Verbinding maken met Heos"
+            }
+        }
+    }
+}

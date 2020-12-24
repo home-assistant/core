@@ -45,6 +45,7 @@ class TestMicrosoftFaceIdentifySetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.microsoftface_demo_camera")
 
@@ -66,6 +67,7 @@ class TestMicrosoftFaceIdentifySetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.test_local")
 
@@ -114,9 +116,10 @@ class TestMicrosoftFaceIdentify:
         )
 
         setup_component(self.hass, ip.DOMAIN, self.config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         face_events = []
 

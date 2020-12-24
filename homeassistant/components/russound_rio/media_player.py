@@ -1,10 +1,8 @@
 """Support for Russound multizone controllers using RIO Protocol."""
-import logging
-
 from russound_rio import Russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_SELECT_SOURCE,
@@ -23,8 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_RUSSOUND = (
     SUPPORT_VOLUME_MUTE
@@ -73,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class RussoundZoneDevice(MediaPlayerDevice):
+class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
     def __init__(self, russ, zone_id, name, sources):

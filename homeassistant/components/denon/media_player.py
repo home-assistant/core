@@ -4,7 +4,7 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([denon])
 
 
-class DenonDevice(MediaPlayerDevice):
+class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon device."""
 
     def __init__(self, name, host):
@@ -111,10 +111,18 @@ class DenonDevice(MediaPlayerDevice):
         if nsfrn:
             self._name = nsfrn
 
-        # SSFUN - Configured sources with names
+        # SSFUN - Configured sources with (optional) names
         self._source_list = {}
         for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
-            source, configured_name = line[len("SSFUN") :].split(" ", 1)
+            ssfun = line[len("SSFUN") :].split(" ", 1)
+
+            source = ssfun[0]
+            if len(ssfun) == 2 and ssfun[1]:
+                configured_name = ssfun[1]
+            else:
+                # No name configured, reusing the source name
+                configured_name = source
+
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
@@ -222,7 +230,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """Return the list of available input sources."""
-        return sorted(list(self._source_list.keys()))
+        return sorted(list(self._source_list))
 
     @property
     def media_title(self):

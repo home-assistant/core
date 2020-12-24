@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Al geconfigureerd",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "create_entry": {
+            "default": "Zie [Neato-documentatie] ({docs_url})."
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam",
+                    "vendor": "Leverancier"
+                },
+                "description": "Zie [Neato-documentatie] ({docs_url}).",
+                "title": "Neato-account info"
+            }
+        }
+    }
+}

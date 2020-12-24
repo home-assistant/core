@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Service is al geconfigureerd",
+            "invalid_sensor": "Sensor niet beschikbaar of ongeldig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Toon op kaart",
+                    "station_id": "Luftdaten Sensor ID"
+                },
+                "title": "Definieer Luftdaten"
+            }
+        }
+    }
+}

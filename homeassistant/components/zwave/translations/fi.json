@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "usb_path": "USB-polku"
+                },
+                "title": "Z-Waven m\u00e4\u00e4ritt\u00e4minen"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Kuollut",
+            "initializing": "Alustaa",
+            "ready": "Valmis",
+            "sleeping": "Lepotilassa"
+        },
+        "query_stage": {
+            "dead": "Kuollut ({query_stage})",
+            "initializing": "Alustaa ( {query_stage} )"
+        }
+    }
+}

@@ -65,6 +65,7 @@ class DiscordNotificationService(BaseNotificationService):
                     images.append(image)
                 else:
                     _LOGGER.warning("Image not found: %s", image)
+
         # pylint: disable=unused-variable
         @discord_bot.event
         async def on_ready():

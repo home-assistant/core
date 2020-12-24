@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SPC,
+    SURE_API_TIMEOUT,
     TOPIC_UPDATE,
 )
 
@@ -78,6 +79,7 @@ async def async_setup(hass, config) -> bool:
             conf[CONF_PASSWORD],
             hass.loop,
             async_get_clientsession(hass),
+            api_timeout=SURE_API_TIMEOUT,
         )
         await surepy.get_data()
     except SurePetcareAuthenticationError:
@@ -102,12 +104,13 @@ async def async_setup(hass, config) -> bool:
     )
 
     # discover hubs the flaps/feeders are connected to
+    hub_ids = set()
     for device in things.copy():
         device_data = await surepy.device(device[CONF_ID])
         if (
             CONF_PARENT in device_data
             and device_data[CONF_PARENT][CONF_PRODUCT_ID] == SureProductID.HUB
-            and device_data[CONF_PARENT][CONF_ID] not in things
+            and device_data[CONF_PARENT][CONF_ID] not in hub_ids
         ):
             things.append(
                 {
@@ -115,6 +118,7 @@ async def async_setup(hass, config) -> bool:
                     CONF_TYPE: SureProductID.HUB,
                 }
             )
+            hub_ids.add(device_data[CONF_PARENT][CONF_ID])
 
     # add pets
     things.extend(

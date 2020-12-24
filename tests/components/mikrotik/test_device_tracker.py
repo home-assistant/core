@@ -39,7 +39,7 @@ async def test_platform_manually_configured(hass):
     assert mikrotik.DOMAIN not in hass.data
 
 
-async def test_device_trackers(hass):
+async def test_device_trackers(hass, legacy_patchable_time):
     """Test device_trackers created by mikrotik."""
 
     # test devices are added from wireless list only

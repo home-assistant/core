@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "flow_title": "Denon AVR Network Receiver: {name}",
+        "step": {
+            "confirm": {
+                "title": "Denon AVR Network Receivers"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Receiver IP-adres"
+                },
+                "description": "Voer de installatie opnieuw uit als u extra ontvangers wilt aansluiten",
+                "title": "Selecteer de receiver waarmee u verbinding wilt maken"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adres"
+                },
+                "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Denon AVR Network Receivers"
+            }
+        }
+    }
+}

@@ -1,27 +1,23 @@
 """The Tesla Powerwall integration base entity."""
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
 
 
-class PowerWallEntity(Entity):
+class PowerWallEntity(CoordinatorEntity):
     """Base class for powerwall entities."""
 
-    def __init__(self, coordinator, site_info, status, device_type):
+    def __init__(
+        self, coordinator, site_info, status, device_type, powerwalls_serial_numbers
+    ):
         """Initialize the sensor."""
-        super().__init__()
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._site_info = site_info
         self._device_type = device_type
         self._version = status.version
-        # This group of properties will be unique to to the site
-        unique_group = (
-            site_info.utility,
-            site_info.grid_code,
-            str(site_info.nominal_system_energy_kWh),
-        )
-        self.base_unique_id = "_".join(unique_group)
+        # The serial numbers of the powerwalls are unique to every site
+        self.base_unique_id = "_".join(powerwalls_serial_numbers)
 
     @property
     def device_info(self):
@@ -36,28 +32,3 @@ class PowerWallEntity(Entity):
         device_info["model"] = model
         device_info["sw_version"] = self._version
         return device_info
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._coordinator.last_update_success
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)

@@ -1,21 +1,21 @@
 """Tests for the Point config flow."""
 import asyncio
-from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
-from tests.common import mock_coro
+from tests.async_mock import AsyncMock, patch
 
 
 def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
-    flow._get_authorization_url = Mock(  # pylint: disable=protected-access
-        return_value=mock_coro("https://example.com"), side_effect=side_effect
+    flow._get_authorization_url = AsyncMock(  # pylint: disable=protected-access
+        return_value="https://example.com", side_effect=side_effect
     )
     flow.hass = hass
     return flow
@@ -33,11 +33,13 @@ def mock_pypoint(is_authorized):  # pylint: disable=redefined-outer-name
     with patch(
         "homeassistant.components.point.config_flow.PointSession"
     ) as PointSession:
-        PointSession.return_value.get_access_token.return_value = {
-            "access_token": "boo"
-        }
+        PointSession.return_value.get_access_token = AsyncMock(
+            return_value={"access_token": "boo"}
+        )
         PointSession.return_value.is_authorized = is_authorized
-        PointSession.return_value.user.return_value = {"email": "john.doe@example.com"}
+        PointSession.return_value.user = AsyncMock(
+            return_value={"email": "john.doe@example.com"}
+        )
         yield PointSession
 
 
@@ -87,8 +89,8 @@ async def test_full_flow_implementation(
     result = await flow.async_step_code("123ABC")
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["refresh_args"] == {
-        "client_id": "id",
-        "client_secret": "secret",
+        CONF_CLIENT_ID: "id",
+        CONF_CLIENT_SECRET: "secret",
     }
     assert result["title"] == "john.doe@example.com"
     assert result["data"]["token"] == {"access_token": "boo"}
@@ -139,7 +141,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_abort_no_code(hass):

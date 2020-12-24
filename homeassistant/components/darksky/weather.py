@@ -7,6 +7,17 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -40,18 +51,18 @@ ATTRIBUTION = "Powered by Dark Sky"
 FORECAST_MODE = ["hourly", "daily"]
 
 MAP_CONDITION = {
-    "clear-day": "sunny",
-    "clear-night": "clear-night",
-    "rain": "rainy",
-    "snow": "snowy",
-    "sleet": "snowy-rainy",
-    "wind": "windy",
-    "fog": "fog",
-    "cloudy": "cloudy",
-    "partly-cloudy-day": "partlycloudy",
-    "partly-cloudy-night": "partlycloudy",
-    "hail": "hail",
-    "thunderstorm": "lightning",
+    "clear-day": ATTR_CONDITION_SUNNY,
+    "clear-night": ATTR_CONDITION_CLEAR_NIGHT,
+    "rain": ATTR_CONDITION_RAINY,
+    "snow": ATTR_CONDITION_SNOWY,
+    "sleet": ATTR_CONDITION_SNOWY_RAINY,
+    "wind": ATTR_CONDITION_WINDY,
+    "fog": ATTR_CONDITION_FOG,
+    "cloudy": ATTR_CONDITION_CLOUDY,
+    "partly-cloudy-day": ATTR_CONDITION_PARTLYCLOUDY,
+    "partly-cloudy-night": ATTR_CONDITION_PARTLYCLOUDY,
+    "hail": ATTR_CONDITION_HAIL,
+    "thunderstorm": ATTR_CONDITION_LIGHTNING,
     "tornado": None,
 }
 
@@ -241,6 +252,7 @@ class DarkSkyData:
         self.currently = None
         self.hourly = None
         self.daily = None
+        self._connect_error = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -252,8 +264,13 @@ class DarkSkyData:
             self.currently = self.data.currently()
             self.hourly = self.data.hourly()
             self.daily = self.data.daily()
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Reconnected to Dark Sky")
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky. %s", error)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             self.data = None
 
     @property

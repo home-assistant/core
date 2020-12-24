@@ -1,6 +1,4 @@
 """Test the solarlog config flow."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -8,7 +6,8 @@ from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 NAME = "Solarlog test 1 2 3"
 HOST = "http://1.1.1.1"
@@ -25,21 +24,21 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.solarlog.config_flow.SolarLogConfigFlow._test_connection",
-        return_value=mock_coro({"title": "solarlog test 1 2 3"}),
+        return_value={"title": "solarlog test 1 2 3"},
     ), patch(
-        "homeassistant.components.solarlog.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.solarlog.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.solarlog.async_setup_entry",
-        return_value=mock_coro(True),
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": HOST, "name": NAME}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "solarlog_test_1_2_3"
     assert result2["data"] == {"host": "http://1.1.1.1"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -49,7 +48,7 @@ def mock_controller():
     """Mock a successful _host_in_configuration_exists."""
     with patch(
         "homeassistant.components.solarlog.config_flow.SolarLogConfigFlow._test_connection",
-        side_effect=lambda *_: mock_coro(True),
+        return_value=True,
     ):
         yield
 

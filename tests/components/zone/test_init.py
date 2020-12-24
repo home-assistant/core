@@ -1,5 +1,4 @@
 """Test zone component."""
-from asynctest import patch
 import pytest
 
 from homeassistant import setup
@@ -16,6 +15,7 @@ from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

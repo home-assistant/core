@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Avalda IP aadress",
+                    "advertise_port": "Avalda port",
+                    "host_ip": "",
+                    "listen_port": "Kuula porti",
+                    "name": "Nimi",
+                    "upnp_bind_multicast": "Seo multicast (jah/ei)"
+                },
+                "title": "M\u00e4\u00e4ra serveri seaded"
+            }
+        }
+    },
+    "title": ""
+}

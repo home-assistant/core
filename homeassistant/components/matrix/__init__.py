@@ -289,7 +289,7 @@ class MatrixBot:
         if self._mx_id in self._auth_tokens:
             try:
                 client = self._login_by_token()
-                _LOGGER.debug("Logged in using stored token.")
+                _LOGGER.debug("Logged in using stored token")
 
             except MatrixRequestError as ex:
                 _LOGGER.warning(
@@ -302,7 +302,7 @@ class MatrixBot:
         if not client:
             try:
                 client = self._login_by_password()
-                _LOGGER.debug("Logged in using password.")
+                _LOGGER.debug("Logged in using password")
 
             except MatrixRequestError as ex:
                 _LOGGER.error(

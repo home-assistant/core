@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm"
+                }
+            }
+        }
+    }
+}

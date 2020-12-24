@@ -3,10 +3,9 @@ import asyncio
 
 from bravia_tv import BraviaRC
 
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_HOST, CONF_MAC
 
-from .const import CLIENTID_PREFIX, DOMAIN, NICKNAME
+from .const import BRAVIARC, DOMAIN, UNDO_UPDATE_LISTENER
 
 PLATFORMS = ["media_player"]
 
@@ -20,17 +19,14 @@ async def async_setup_entry(hass, config_entry):
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
-    pin = config_entry.data[CONF_PIN]
 
-    braviarc = BraviaRC(host, mac)
-
-    await hass.async_add_executor_job(braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME)
-
-    if not braviarc.is_connected():
-        raise ConfigEntryNotReady
+    undo_listener = config_entry.add_update_listener(update_listener)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = braviarc
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        BRAVIARC: BraviaRC(host, mac),
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -50,7 +46,15 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+
+    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass, config_entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

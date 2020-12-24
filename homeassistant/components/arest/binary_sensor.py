@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ArestBinarySensor(BinarySensorDevice):
+class ArestBinarySensor(BinarySensorEntity):
     """Implement an aREST binary sensor for a pin."""
 
     def __init__(self, arest, resource, name, device_class, pin):

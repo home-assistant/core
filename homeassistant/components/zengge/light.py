@@ -12,7 +12,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(lights, True)
 
 
-class ZenggeLight(Light):
+class ZenggeLight(LightEntity):
     """Representation of a Zengge light."""
 
     def __init__(self, device):
@@ -96,11 +96,6 @@ class ZenggeLight(Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_ZENGGE_LED
-
-    @property
-    def should_poll(self):
-        """Feel free to poll."""
-        return True
 
     @property
     def assumed_state(self):

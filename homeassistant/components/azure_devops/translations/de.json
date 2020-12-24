@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "reauth": {
+                "title": "Erneute Authentifizierung"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisation",
+                    "project": "Projekt"
+                }
+            }
+        }
+    }
+}

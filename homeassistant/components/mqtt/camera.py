@@ -3,24 +3,27 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import camera, mqtt
+from homeassistant.components import camera
 from homeassistant.components.camera import Camera
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
-    CONF_UNIQUE_ID,
+    DOMAIN,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
@@ -47,6 +50,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT camera through configuration.yaml."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await _async_setup_entity(config, async_add_entities)
 
 

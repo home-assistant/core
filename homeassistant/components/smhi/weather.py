@@ -10,6 +10,20 @@ from smhi import Smhi
 from smhi.smhi_lib import SmhiForecastException
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -29,20 +43,20 @@ _LOGGER = logging.getLogger(__name__)
 
 # Used to map condition from API results
 CONDITION_CLASSES = {
-    "cloudy": [5, 6],
-    "fog": [7],
-    "hail": [],
-    "lightning": [21],
-    "lightning-rainy": [11],
-    "partlycloudy": [3, 4],
-    "pouring": [10, 20],
-    "rainy": [8, 9, 18, 19],
-    "snowy": [15, 16, 17, 25, 26, 27],
-    "snowy-rainy": [12, 13, 14, 22, 23, 24],
-    "sunny": [1, 2],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_CLOUDY: [5, 6],
+    ATTR_CONDITION_FOG: [7],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: [21],
+    ATTR_CONDITION_LIGHTNING_RAINY: [11],
+    ATTR_CONDITION_PARTLYCLOUDY: [3, 4],
+    ATTR_CONDITION_POURING: [10, 20],
+    ATTR_CONDITION_RAINY: [8, 9, 18, 19],
+    ATTR_CONDITION_SNOWY: [15, 16, 17, 25, 26, 27],
+    ATTR_CONDITION_SNOWY_RAINY: [12, 13, 14, 22, 23, 24],
+    ATTR_CONDITION_SUNNY: [1, 2],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
 # 5 minutes between retrying connect to API again
@@ -99,15 +113,6 @@ class SmhiWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
-
-        def fail():
-            """Postpone updates."""
-            self._fail_count += 1
-            if self._fail_count < 3:
-                self.hass.helpers.event.async_call_later(
-                    RETRY_TIMEOUT, self.retry_update()
-                )
-
         try:
             with async_timeout.timeout(10):
                 self._forecasts = await self.get_weather_forecast()
@@ -115,11 +120,15 @@ class SmhiWeather(WeatherEntity):
 
         except (asyncio.TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
-            fail()
+            self._fail_count += 1
+            if self._fail_count < 3:
+                self.hass.helpers.event.async_call_later(
+                    RETRY_TIMEOUT, self.retry_update
+                )
 
-    async def retry_update(self):
+    async def retry_update(self, _):
         """Retry refresh weather forecast."""
-        self.async_update()
+        await self.async_update()
 
     async def get_weather_forecast(self) -> []:
         """Return the current forecasts from SMHI API."""

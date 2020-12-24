@@ -1,8 +1,4 @@
 """The tests for the image_processing component."""
-from unittest.mock import PropertyMock
-
-from asynctest import patch
-
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
@@ -10,6 +6,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 
+from tests.async_mock import PropertyMock, patch
 from tests.common import (
     assert_setup_component,
     get_test_home_assistant,
@@ -62,16 +59,18 @@ class TestImageProcessing:
         config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
 
         setup_component(self.hass, ip.DOMAIN, config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"Test",
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        return_value=b"Test",
     )
     def test_get_image_from_camera(self, mock_camera_read):
         """Grab an image from camera entity."""
@@ -116,9 +115,10 @@ class TestImageProcessingAlpr:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.alpr_events = []
 
@@ -221,9 +221,10 @@ class TestImageProcessingFace:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.face_events = []
 

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Une seule configuration d'Abode est autoris\u00e9e."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Adresse e-mail"
+                },
+                "title": "Remplissez vos informations de connexion Abode"
+            }
+        }
+    }
+}

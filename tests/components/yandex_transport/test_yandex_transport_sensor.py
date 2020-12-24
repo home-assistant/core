@@ -6,34 +6,31 @@ import pytest
 
 import homeassistant.components.sensor as sensor
 from homeassistant.const import CONF_NAME
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    MockDependency,
-    assert_setup_component,
-    async_setup_component,
-    load_fixture,
-)
+from tests.async_mock import AsyncMock, patch
+from tests.common import assert_setup_component, load_fixture
 
 REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
 
 
 @pytest.fixture
 def mock_requester():
-    """Create a mock ya_ma module and YandexMapsRequester."""
-    with MockDependency("ya_ma") as ya_ma:
-        instance = ya_ma.YandexMapsRequester.return_value
-        instance.get_stop_info.return_value = REPLY
+    """Create a mock for YandexMapsRequester."""
+    with patch("aioymaps.YandexMapsRequester") as requester:
+        instance = requester.return_value
+        instance.get_stop_info = AsyncMock(return_value=REPLY)
         yield instance
 
 
-STOP_ID = 9639579
+STOP_ID = "stop__9639579"
 ROUTES = ["194", "т36", "т47", "м10"]
 NAME = "test_name"
 TEST_CONFIG = {
     "sensor": {
         "platform": "yandex_transport",
-        "stop_id": 9639579,
+        "stop_id": "stop__9639579",
         "routes": ROUTES,
         "name": NAME,
     }
@@ -54,6 +51,7 @@ async def assert_setup_sensor(hass, config, count=1):
     """Set up the sensor and assert it's been created."""
     with assert_setup_component(count):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_platform_valid_config(hass, mock_requester):

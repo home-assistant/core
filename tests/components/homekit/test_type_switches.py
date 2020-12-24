@@ -10,8 +10,19 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
-from homeassistant.components.homekit.type_switches import Outlet, Switch, Valve
-from homeassistant.components.script import ATTR_CAN_CANCEL
+from homeassistant.components.homekit.type_switches import (
+    DockVacuum,
+    Outlet,
+    Switch,
+    Valve,
+)
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_START,
+    STATE_CLEANING,
+    STATE_DOCKED,
+)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_TYPE, STATE_OFF, STATE_ON
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
@@ -68,7 +79,7 @@ async def test_outlet_set_state(hass, hk_driver, events):
         ("automation.test", {}),
         ("input_boolean.test", {}),
         ("remote.test", {}),
-        ("script.test", {ATTR_CAN_CANCEL: True}),
+        ("script.test", {}),
         ("switch.test", {}),
     ],
 )
@@ -182,19 +193,58 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-@pytest.mark.parametrize(
-    "entity_id, attrs",
-    [
-        ("scene.test", {}),
-        ("script.test", {}),
-        ("script.test", {ATTR_CAN_CANCEL: False}),
-    ],
-)
-async def test_reset_switch(hass, hk_driver, entity_id, attrs, events):
-    """Test if switch accessory is reset correctly."""
-    domain = split_entity_id(entity_id)[0]
+async def test_vacuum_set_state(hass, hk_driver, events):
+    """Test if Vacuum accessory and HA are updated accordingly."""
+    entity_id = "vacuum.roomba"
 
-    hass.states.async_set(entity_id, None, attrs)
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+
+    acc = DockVacuum(hass, hk_driver, "DockVacuum", entity_id, 2, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc.aid == 2
+    assert acc.category == 8  # Switch
+
+    assert acc.char_on.value == 0
+
+    hass.states.async_set(entity_id, STATE_CLEANING)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 1
+
+    hass.states.async_set(entity_id, STATE_DOCKED)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 0
+
+    # Set from HomeKit
+    call_start = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_START)
+    call_return_to_base = async_mock_service(
+        hass, VACUUM_DOMAIN, SERVICE_RETURN_TO_BASE
+    )
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 1
+    assert call_start
+    assert call_start[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 0
+    assert call_return_to_base
+    assert call_return_to_base[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_reset_switch(hass, hk_driver, events):
+    """Test if switch accessory is reset correctly."""
+    domain = "scene"
+    entity_id = "scene.test"
+
+    hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
     await acc.run_handler()
@@ -237,12 +287,8 @@ async def test_reset_switch_reload(hass, hk_driver, events):
     await acc.run_handler()
     await hass.async_block_till_done()
 
-    assert acc.activate_only is True
-
-    hass.states.async_set(entity_id, None, {ATTR_CAN_CANCEL: True})
-    await hass.async_block_till_done()
     assert acc.activate_only is False
 
-    hass.states.async_set(entity_id, None, {ATTR_CAN_CANCEL: False})
+    hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    assert acc.activate_only is True
+    assert acc.char_on.value is False

@@ -5,11 +5,17 @@ import requests
 
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 
-from . import DOMAIN as VICARE_DOMAIN, VICARE_API, VICARE_HEATING_TYPE, VICARE_NAME
+from . import (
+    DOMAIN as VICARE_DOMAIN,
+    PYVICARE_ERROR,
+    VICARE_API,
+    VICARE_HEATING_TYPE,
+    VICARE_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +46,6 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
 
-PYVICARE_ERROR = "error"
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare water_heater devices."""
@@ -60,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareWater(WaterHeaterDevice):
+class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     def __init__(self, name, api, heating_type):

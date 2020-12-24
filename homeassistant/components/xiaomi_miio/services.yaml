@@ -149,6 +149,16 @@ fan_set_dry_off:
       description: Name of the xiaomi miio entity.
       example: "fan.xiaomi_miio_device"
 
+fan_set_motor_speed:
+  description: Set the target motor speed.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+    motor_speed:
+      description: Set RPM of motor speed, between 200 and 2000.
+      example: 1100
+
 light_set_scene:
   description: Set a fixed scene.
   fields:
@@ -223,6 +233,20 @@ remote_learn_command:
     timeout:
       description: "Define the timeout in seconds, before which the command must be learned."
       example: "30"
+
+remote_set_led_on:
+  description: 'Turn on blue LED.'
+  fields:
+    entity_id:
+      description: "Name of the entity to turn LED on."
+      example: "remote.xiaomi_miio"
+
+remote_set_led_off:
+  description: 'Turn off blue LED.'
+  fields:
+    entity_id:
+      description: "Name of the entity to turn LED off."
+      example: "remote.xiaomi_miio"
 
 switch_set_wifi_led_on:
   description: Turn the wifi led on.
@@ -316,3 +340,26 @@ vacuum_clean_zone:
     repeats:
       description: Number of cleaning repeats for each zone between 1 and 3.
       example: "1"
+
+vacuum_goto:
+  description: Go to the specified coordinates.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    x_coord:
+      description: x-coordinate.
+      example: 27500
+    y_coord:
+      description: y-coordinate.
+      example: 32000
+
+vacuum_clean_segment:
+  description: Start cleaning of the specified segment(s).
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    segments:
+      description: Segments.
+      example: "[1,2]"

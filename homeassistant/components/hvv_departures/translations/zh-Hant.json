@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "no_results": "\u6c92\u6709\u7d50\u679c\u3002\u8acb\u5617\u8a66\u5176\u4ed6\u8eca\u7ad9/\u5730\u5740"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "\u8eca\u7ad9/\u5730\u5740"
+                },
+                "title": "\u8f38\u5165\u8eca\u7ad9/\u5730\u5740"
+            },
+            "station_select": {
+                "data": {
+                    "station": "\u8eca\u7ad9/\u5730\u5740"
+                },
+                "title": "\u9078\u64c7\u8eca\u7ad9/\u5730\u5740"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u9023\u7dda\u81f3 HVV API"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "\u9078\u64c7\u73ed\u8eca",
+                    "offset": "\u504f\u79fb\uff08\u5206\uff09",
+                    "real_time": "\u4f7f\u7528\u5373\u6642\u8cc7\u6599"
+                },
+                "description": "\u8b8a\u66f4\u51fa\u767c\u611f\u6e2c\u5668\u9078\u9805",
+                "title": "\u9078\u9805"
+            }
+        }
+    }
+}

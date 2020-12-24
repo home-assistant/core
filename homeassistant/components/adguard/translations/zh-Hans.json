@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "\u66f4\u65b0\u4e86\u73b0\u6709\u914d\u7f6e\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                }
+            }
+        }
+    }
+}

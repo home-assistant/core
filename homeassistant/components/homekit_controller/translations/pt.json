@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "N\u00e3o \u00e9 poss\u00edvel adicionar o emparelhamento. O dispositivo n\u00e3o foi encontrado.",
+            "already_configured": "O acess\u00f3rio j\u00e1 est\u00e1 configurado com este controlador.",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o do dispositivo j\u00e1 est\u00e1 em andamento.",
+            "already_paired": "Este acess\u00f3rio j\u00e1 est\u00e1 emparelhado com outro dispositivo. Por favor restaure as defini\u00e7\u00f5es de f\u00e1brica do acess\u00f3rio e tente novamente.",
+            "ignored_model": "O suporte do HomeKit para este modelo est\u00e1 bloqueado, uma vez que est\u00e1 dispon\u00edvel uma integra\u00e7\u00e3o nativa mais completa.",
+            "invalid_config_entry": "Este dispositivo est\u00e1 pronto a emparelhar, mas j\u00e1 existe uma configura\u00e7\u00e3o no Home Assistant que precisa ser removida primeiro.",
+            "no_devices": "N\u00e3o foram encontrados dispositivos por emparelhar"
+        },
+        "error": {
+            "authentication_error": "C\u00f3digo incorreto do HomeKit. Por favor, verifique e tente novamente.",
+            "max_peers_error": "O dispositivo recusou-se a adicionar o emparelhamento, pois n\u00e3o possui espa\u00e7o livre para o emparelhamento.",
+            "pairing_failed": "Ocorreu um erro n\u00e3o tratado ao tentar emparelhar com este dispositivo. Poder\u00e1 ser uma falha tempor\u00e1ria ou o dispositivo pode n\u00e3o ser suportado agora.",
+            "unable_to_pair": "N\u00e3o foi poss\u00edvel emparelhar, por favor, tente novamente.",
+            "unknown_error": "O dispositivo reportou um erro desconhecido. O emparelhamento falhou."
+        },
+        "flow_title": "Acess\u00f3rio HomeKit: {name}",
+        "step": {
+            "busy_error": {
+                "title": "O dispositivo j\u00e1 est\u00e1 a emparelhar com outro controlador"
+            },
+            "pair": {
+                "data": {
+                    "pairing_code": "C\u00f3digo de emparelhamento"
+                },
+                "description": "Introduza o c\u00f3digo de emparelhamento do seu HomeKit (no formato XXX-XX-XXX) para utilizar este acess\u00f3rio",
+                "title": "Emparelhar com o acess\u00f3rio HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Selecione o dispositivo com o qual deseja emparelhar",
+                "title": "Emparelhar com o acess\u00f3rio HomeKit"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Bot\u00e3o 1",
+            "button10": "Bot\u00e3o 10",
+            "button2": "Bot\u00e3o 2",
+            "button3": "Bot\u00e3o 3",
+            "button4": "Bot\u00e3o 4",
+            "button5": "Bot\u00e3o 5",
+            "button6": "Bot\u00e3o 6",
+            "button7": "Bot\u00e3o 7",
+            "button8": "Bot\u00e3o 8",
+            "button9": "Bot\u00e3o 9"
+        },
+        "trigger_type": {
+            "single_press": "\"{subtype}\" pressionado"
+        }
+    },
+    "title": "Acess\u00f3rio HomeKit"
+}

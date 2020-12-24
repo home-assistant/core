@@ -1,6 +1,4 @@
 """Home Assistant Switcher Component Switch platform."""
-
-from logging import getLogger
 from typing import TYPE_CHECKING, Callable, Dict
 
 from aioswitcher.api import SwitcherV2Api
@@ -12,7 +10,7 @@ from aioswitcher.consts import (
     WAITING_TEXT,
 )
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -27,11 +25,9 @@ from . import (
 
 # pylint: disable=ungrouped-imports
 if TYPE_CHECKING:
-    from aioswitcher.devices import SwitcherV2Device
     from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
+    from aioswitcher.devices import SwitcherV2Device
 
-
-_LOGGER = getLogger(__name__)
 
 DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
     "power_consumption": ATTR_CURRENT_POWER_W,
@@ -53,7 +49,7 @@ async def async_setup_platform(
     async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
 
 
-class SwitcherControl(SwitchDevice):
+class SwitcherControl(SwitchEntity):
     """Home Assistant switch entity."""
 
     def __init__(self, device_data: "SwitcherV2Device") -> None:

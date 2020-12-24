@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slecht \u00e9\u00e9n configuratie mogelijk."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mailadres"
+                },
+                "title": "Voer gebruikersnaam en wachtwoord in"
+            }
+        }
+    }
+}

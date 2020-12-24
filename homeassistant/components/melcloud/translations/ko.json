@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc774 \uc774\uba54\uc77c\uc5d0 \ub300\ud55c MELCloud \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uac31\uc2e0\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc774\uba54\uc77c"
+                },
+                "description": "MELCloud \uacc4\uc815\uc73c\ub85c \uc5f0\uacb0\ud558\uc138\uc694.",
+                "title": "MELCloud \uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        }
+    }
+}

@@ -1,8 +1,15 @@
 """Constants for the Roku integration."""
 DOMAIN = "roku"
 
-DATA_CLIENT = "client"
-DATA_DEVICE_INFO = "device_info"
+# Attributes
+ATTR_IDENTIFIERS = "identifiers"
+ATTR_KEYWORD = "keyword"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
+ATTR_SOFTWARE_VERSION = "sw_version"
 
+# Default Values
 DEFAULT_PORT = 8060
-DEFAULT_MANUFACTURER = "Roku"
+
+# Services
+SERVICE_SEARCH = "search"

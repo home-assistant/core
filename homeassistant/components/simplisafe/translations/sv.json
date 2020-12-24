@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Kontot \u00e4r redan registrerat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "title": "Fyll i din information"
+            }
+        }
+    }
+}

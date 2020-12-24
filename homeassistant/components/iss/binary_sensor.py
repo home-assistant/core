@@ -6,7 +6,7 @@ import pyiss
 import requests
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
 
 
-class IssBinarySensor(BinarySensorDevice):
+class IssBinarySensor(BinarySensorEntity):
     """Implementation of the ISS binary sensor."""
 
     def __init__(self, iss_data, name, show):

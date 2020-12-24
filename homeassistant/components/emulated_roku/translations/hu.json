@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host_ip": "Hoszt IP",
+                    "listen_port": "Port figyel\u00e9se",
+                    "name": "N\u00e9v"
+                },
+                "title": "A kiszolg\u00e1l\u00f3 szerver konfigur\u00e1l\u00e1sa"
+            }
+        }
+    },
+    "title": "EmulatedRoku"
+}

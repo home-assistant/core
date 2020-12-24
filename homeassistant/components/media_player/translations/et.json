@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} on j\u00f5udeolekus",
+            "is_off": "{entity_name} on v\u00e4lja l\u00fclitatud",
+            "is_on": "{entity_name} on sisse l\u00fclitatud",
+            "is_paused": "{entity_name} on peatatud",
+            "is_playing": "{entity_name} m\u00e4ngib"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Ootel",
+            "off": "V\u00e4ljas",
+            "on": "Sees",
+            "paused": "Peatatud",
+            "playing": "M\u00e4ngib",
+            "standby": "Unere\u017eiimil"
+        }
+    },
+    "title": "Meediam\u00e4ngija"
+}

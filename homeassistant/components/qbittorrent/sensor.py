@@ -51,9 +51,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
         return
-    except RequestException:
+    except RequestException as err:
         _LOGGER.error("Connection failed")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     name = config.get(CONF_NAME)
 
@@ -113,6 +113,7 @@ class QBittorrentSensor(Entity):
         except RequestException:
             _LOGGER.error("Connection lost")
             self._available = False
+            return
         except self._exception:
             _LOGGER.error("Invalid authentication")
             return

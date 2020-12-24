@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AbodeLight(AbodeDevice, Light):
+class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
     def turn_on(self, **kwargs):

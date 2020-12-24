@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Numm g\u00ebtt et schonn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad",
+                    "mode": "Modus",
+                    "name": "Numm"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Standuert"
+            }
+        }
+    }
+}

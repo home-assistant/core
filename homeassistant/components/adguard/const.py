@@ -7,8 +7,6 @@ DATA_ADGUARD_VERION = "adguard_version"
 
 CONF_FORCE = "force"
 
-MIN_ADGUARD_HOME_VERSION = "v0.99.0"
-
 SERVICE_ADD_URL = "add_url"
 SERVICE_DISABLE_URL = "disable_url"
 SERVICE_ENABLE_URL = "enable_url"

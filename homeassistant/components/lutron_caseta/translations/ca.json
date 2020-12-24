@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "import_failed": {
+                "description": "No s'ha pogut configurar l'enlla\u00e7 (amfitri\u00f3: {host}) importat de configuration.yaml.",
+                "title": "No s'ha pogut importar la configuraci\u00f3 de l'enlla\u00e7 de Cas\u00e9ta."
+            }
+        }
+    }
+}

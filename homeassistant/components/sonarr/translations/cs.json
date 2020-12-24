@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "Integraci Sonarr je t\u0159eba ru\u010dn\u011b znovu ov\u011b\u0159it pomoc\u00ed API Sonarr hostovan\u00e9ho na adrese: {host}",
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "host": "Hostitel",
+                    "port": "Port",
+                    "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
+                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Po\u010det nadch\u00e1zej\u00edc\u00edch dn\u016f k zobrazen\u00ed",
+                    "wanted_max_items": "Maxim\u00e1ln\u00ed po\u017eadovan\u00fd po\u010det polo\u017eek k zobrazen\u00ed"
+                }
+            }
+        }
+    }
+}

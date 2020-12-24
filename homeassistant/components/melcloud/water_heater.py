@@ -11,14 +11,14 @@ from pymelcloud.device import PROPERTY_POWER
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN, MelCloudDevice
-from .const import ATTR_STATUS, TEMP_UNIT_LOOKUP
+from .const import ATTR_STATUS
 
 
 async def async_setup_entry(
@@ -35,7 +35,7 @@ async def async_setup_entry(
     )
 
 
-class AtwWaterHeater(WaterHeaterDevice):
+class AtwWaterHeater(WaterHeaterEntity):
     """Air-to-Water water heater."""
 
     def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
@@ -80,7 +80,7 @@ class AtwWaterHeater(WaterHeaterDevice):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_UNIT_LOOKUP.get(self._device.temp_unit, TEMP_CELSIUS)
+        return TEMP_CELSIUS
 
     @property
     def current_operation(self) -> Optional[str]:

@@ -1,11 +1,9 @@
 """Helpers for data entry flows for config entries."""
-from typing import Awaitable, Callable, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Union
 
 from homeassistant import config_entries
 
 from .typing import HomeAssistantType
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 
@@ -28,28 +26,31 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self._discovery_function = discovery_function
         self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        await self.async_set_unique_id(self._domain, raise_on_progress=False)
+
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Confirm setup."""
         if user_input is None:
             return self.async_show_form(step_id="confirm")
 
-        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            self.context
-            and self.context.get("source") != config_entries.SOURCE_DISCOVERY
-        ):
+        if self.source == config_entries.SOURCE_USER:
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
             has_devices = in_progress
             if not has_devices:
-                has_devices = await self.hass.async_add_job(
+                has_devices = await self.hass.async_add_job(  # type: ignore
                     self._discovery_function, self.hass
                 )
 
@@ -57,26 +58,41 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
                 return self.async_abort(reason="no_devices_found")
 
             # Cancel the discovered one.
+            assert self.hass is not None
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         return self.async_create_entry(title=self._title, data={})
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_discovery(
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
     async_step_zeroconf = async_step_discovery
     async_step_ssdp = async_step_discovery
+    async_step_mqtt = async_step_discovery
     async_step_homekit = async_step_discovery
 
-    async def async_step_import(self, _):
+    async def async_step_import(self, _: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """Handle a flow initialized by import."""
-        if self._async_in_progress() or self._async_current_entries():
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        # Cancel other flows.
+        assert self.hass is not None
+        in_progress = self._async_in_progress()
+        for flow in in_progress:
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         return self.async_create_entry(title=self._title, data={})
 
@@ -116,14 +132,17 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         self._description_placeholder = description_placeholder
         self._allow_multiple = allow_multiple
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")
 
+        assert self.hass is not None
         webhook_id = self.hass.components.webhook.async_generate_id()
 
         if (

@@ -7,11 +7,12 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_WINDOW,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-DEVICE_CLASS = "window"
 
 ATTR_REQUEST_POSITION = "request_position"
 NOTIFICATION_ID = "brunt_notification"
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         things = bapi.getThings()["things"]
         if not things:
-            _LOGGER.error("No things present in account.")
+            _LOGGER.error("No things present in account")
         else:
             add_entities(
                 [
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class BruntDevice(CoverDevice):
+class BruntDevice(CoverEntity):
     """
     Representation of a Brunt cover device.
 
@@ -141,7 +141,7 @@ class BruntDevice(CoverDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS
+        return DEVICE_CLASS_WINDOW
 
     @property
     def supported_features(self):

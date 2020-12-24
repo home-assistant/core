@@ -3,7 +3,7 @@ from pylutron import OccupancyGroup
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class LutronOccupancySensor(LutronDevice, BinarySensorDevice):
+class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     """Representation of a Lutron Occupancy Group.
 
     The Lutron integration API reports "occupancy groups" rather than
@@ -51,6 +51,4 @@ class LutronOccupancySensor(LutronDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr["lutron_integration_id"] = self._lutron_device.id
-        return attr
+        return {"lutron_integration_id": self._lutron_device.id}

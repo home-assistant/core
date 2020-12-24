@@ -2,8 +2,12 @@
 import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -37,17 +41,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
 
     pdp = proliphix.PDP(host, username, password)
+    pdp.update()
 
     add_entities([ProliphixThermostat(pdp)], True)
 
 
-class ProliphixThermostat(ClimateDevice):
+class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
-        self._name = self._pdp.name
+        self._name = None
 
     @property
     def supported_features(self):
@@ -62,6 +67,7 @@ class ProliphixThermostat(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         self._pdp.update()
+        self._name = self._pdp.name
 
     @property
     def name(self):
@@ -98,15 +104,25 @@ class ProliphixThermostat(ClimateDevice):
         return self._pdp.setback
 
     @property
+    def hvac_action(self):
+        """Return the current state of the thermostat."""
+        state = self._pdp.hvac_state
+        if state == 1:
+            return CURRENT_HVAC_OFF
+        if state in (3, 4, 5):
+            return CURRENT_HVAC_HEAT
+        if state in (6, 7):
+            return CURRENT_HVAC_COOL
+        return CURRENT_HVAC_IDLE
+
+    @property
     def hvac_mode(self):
         """Return the current state of the thermostat."""
-        state = self._pdp.hvac_mode
-        if state in (1, 2):
-            return HVAC_MODE_OFF
-        if state == 3:
+        if self._pdp.is_heating:
             return HVAC_MODE_HEAT
-        if state == 6:
+        if self._pdp.is_cooling:
             return HVAC_MODE_COOL
+        return HVAC_MODE_OFF
 
     @property
     def hvac_modes(self):

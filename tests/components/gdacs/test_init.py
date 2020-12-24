@@ -1,7 +1,7 @@
 """Define tests for the GDACS general setup."""
-from asynctest import patch
-
 from homeassistant.components.gdacs import DOMAIN, FEED
+
+from tests.async_mock import patch
 
 
 async def test_component_unload_config_entry(hass, config_entry):

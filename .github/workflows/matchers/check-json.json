@@ -1,0 +1,16 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "check-json",
+      "pattern": [
+        {
+          "regexp": "^(.+):\\s(.+\\sline\\s(\\d+)\\scolumn\\s(\\d+).+)$",
+          "file": 1,
+          "message": 2,
+          "line": 3,
+          "column": 4
+        }
+      ]
+    }
+  ]
+}

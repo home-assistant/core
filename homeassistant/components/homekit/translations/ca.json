@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Ja hi ha un enlla\u00e7 o accessori configurat amb aquest nom o port."
+        },
+        "step": {
+            "pairing": {
+                "description": "Tan aviat com {name} estigui llest, la vinculaci\u00f3 estar\u00e0 disponible a \"Notificacions\" com a \"Configuraci\u00f3 de l'enlla\u00e7 HomeKit\".",
+                "title": "Vinculaci\u00f3 HomeKit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autoarrencada (desactiva-ho si fas servir Z-Wave o algun altre sistema d'inici lent)",
+                    "include_domains": "Dominis a incloure"
+                },
+                "description": "La integraci\u00f3 HomeKit et permet l'acc\u00e9s a les teves entitats de Home Assistant a HomeKit. En mode enlla\u00e7, els enlla\u00e7os HomeKit estan limitats a un m\u00e0xim de 150 accessoris per inst\u00e0ncia (incl\u00f2s el propi enlla\u00e7). Si volguessis enlla\u00e7ar m\u00e9s accessoris que el m\u00e0xim perm\u00e8s, \u00e9s recomanable que utilitzis diferents enlla\u00e7os HomeKit per a dominis diferents. La configuraci\u00f3 avan\u00e7ada d'entitat nom\u00e9s est\u00e0 disponible en YAML per l'enlla\u00e7 prinipal.",
+                "title": "Activaci\u00f3 de HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "[%key::component::homekit::config::step::user::data::auto_start%]",
+                    "safe_mode": "Mode segur (habilita-ho nom\u00e9s si falla la vinculaci\u00f3)"
+                },
+                "description": "Aquests par\u00e0metres nom\u00e9s s'han d'ajustar si HomeKit no \u00e9s funcional.",
+                "title": "Configuraci\u00f3 avan\u00e7ada"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "C\u00e0meres que admeten fluxos H.264 natius"
+                },
+                "description": "Comprova les c\u00e0meres que suporten fluxos nadius H.264. Si alguna c\u00e0mera not proporciona una sortida H.264, el sistema transcodificar\u00e0 el v\u00eddeo a H.264 per a HomeKit. La transcodificaci\u00f3 necessita una CPU potent i probablement no funcioni en ordinadors petits (SBC).",
+                "title": "Selecci\u00f3 del c\u00f2dec de v\u00eddeo de c\u00e0mera"
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entitats",
+                    "mode": "Mode"
+                },
+                "description": "Tria les entitats que vulguis exposar. En mode accessori, nom\u00e9s s'exposa una sola entitat. En mode enlla\u00e7 inclusiu, s'exposaran totes les entitats del domini tret que se seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'exposaran totes les entitats del domini excepte les entitats excloses.",
+                "title": "Selecci\u00f3 de les entitats a exposar"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "[%key::component::homekit::config::step::user::data::include_domains%]",
+                    "mode": "Mode"
+                },
+                "description": "HomeKit es pot configurar per exposar un enlla\u00e7 o un sol accessori. En mode accessori, nom\u00e9s es pot utilitzar una entitat. El mode accessori \u00e9s necessari en reproductors multim\u00e8dia amb classe de dispositiu TV perqu\u00e8 funcionin correctament. Les entitats a \"Dominis a incloure\" s'exposaran a HomeKit. A la seg\u00fcent pantalla podr\u00e0s seleccionar quines entitats vols incloure o excloure d'aquesta llista.",
+                "title": "Selecci\u00f3 dels dominis a exposar."
+            },
+            "yaml": {
+                "description": "Aquesta entrada es controla en YAML",
+                "title": "Ajusta les opcions de HomeKit"
+            }
+        }
+    }
+}

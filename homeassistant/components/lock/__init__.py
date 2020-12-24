@@ -25,6 +25,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_CHANGED_BY = "changed_by"
 
 DOMAIN = "lock"
@@ -38,8 +40,6 @@ LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.st
 
 # Bitfield of features supported by the lock entity
 SUPPORT_OPEN = 1
-
-_LOGGER = logging.getLogger(__name__)
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
@@ -75,7 +75,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class LockDevice(Entity):
+class LockEntity(Entity):
     """Representation of a lock."""
 
     @property
@@ -99,7 +99,7 @@ class LockDevice(Entity):
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""
-        await self.hass.async_add_job(ft.partial(self.lock, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.lock, **kwargs))
 
     def unlock(self, **kwargs):
         """Unlock the lock."""
@@ -107,7 +107,7 @@ class LockDevice(Entity):
 
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
-        await self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.unlock, **kwargs))
 
     def open(self, **kwargs):
         """Open the door latch."""
@@ -115,7 +115,7 @@ class LockDevice(Entity):
 
     async def async_open(self, **kwargs):
         """Open the door latch."""
-        await self.hass.async_add_job(ft.partial(self.open, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.open, **kwargs))
 
     @property
     def state_attributes(self):
@@ -134,3 +134,15 @@ class LockDevice(Entity):
         if locked is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
+
+
+class LockDevice(LockEntity):
+    """Representation of a lock (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "LockDevice is deprecated, modify %s to extend LockEntity",
+            cls.__name__,
+        )

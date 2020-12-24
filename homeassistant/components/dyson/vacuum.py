@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    VacuumDevice,
+    VacuumEntity,
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class Dyson360EyeDevice(VacuumDevice):
+class Dyson360EyeDevice(VacuumEntity):
     """Dyson 360 Eye robot vacuum device."""
 
     def __init__(self, device):
@@ -64,7 +64,7 @@ class Dyson360EyeDevice(VacuumDevice):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
+        self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Handle a new messages that was received from the vacuum."""

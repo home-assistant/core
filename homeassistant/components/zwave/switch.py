@@ -1,14 +1,11 @@
 """Support for Z-Wave switches."""
-import logging
 import time
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ZWaveDeviceEntity, workaround
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -27,7 +24,7 @@ def get_device(values, **kwargs):
     return ZwaveSwitch(values)
 
 
-class ZwaveSwitch(ZWaveDeviceEntity, SwitchDevice):
+class ZwaveSwitch(ZWaveDeviceEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     def __init__(self, values):

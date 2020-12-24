@@ -2,10 +2,10 @@
 import copy
 import uuid
 
-from asynctest import patch
-
 from homeassistant.components.lovelace import dashboard, resources
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 RESOURCE_EXAMPLES = [
     {"type": "js", "url": "/local/bla.js"},

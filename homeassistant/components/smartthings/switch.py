@@ -3,7 +3,7 @@ from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -29,7 +29,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     return None
 
 
-class SmartThingsSwitch(SmartThingsEntity, SwitchDevice):
+class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     """Define a SmartThings switch."""
 
     async def async_turn_off(self, **kwargs) -> None:

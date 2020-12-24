@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 from zigpy import types
 import zigpy.exceptions
-from zigpy.profiles import zha, zll
+from zigpy.profiles import PROFILES
 import zigpy.quirks
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
@@ -32,6 +32,7 @@ from .const import (
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_ENDPOINT_NAMES,
     ATTR_ENDPOINTS,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
@@ -40,6 +41,7 @@ from .const import (
     ATTR_MANUFACTURER_CODE,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
@@ -66,8 +68,8 @@ from .const import (
 from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
-_CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
-_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
+CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
+CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
@@ -96,11 +98,6 @@ class ZHADevice(LogMixin):
         self._available_signal = f"{self.name}_{self.ieee}_{SIGNAL_AVAILABLE}"
         self._checkins_missed_count = 0
         self.unsubs = []
-        self.unsubs.append(
-            async_dispatcher_connect(
-                self.hass, self._available_signal, self.async_initialize
-            )
-        )
         self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = (
             f"{self._zigpy_device.__class__.__module__}."
@@ -108,9 +105,9 @@ class ZHADevice(LogMixin):
         )
 
         if self.is_mains_powered:
-            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_MAINS
+            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_MAINS
         else:
-            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_BATTERY
+            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_BATTERY
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self.unsubs.append(
             async_track_time_interval(
@@ -235,13 +232,9 @@ class ZHADevice(LogMixin):
     @property
     def is_groupable(self):
         """Return true if this device has a group cluster."""
-        if not self.available:
-            return False
-        clusters = self.async_get_clusters()
-        for cluster_map in clusters.values():
-            for clusters in cluster_map.values():
-                if Groups.cluster_id in clusters:
-                    return True
+        return self.is_coordinator or (
+            self.available and self.async_get_groupable_endpoints()
+        )
 
     @property
     def skip_configuration(self):
@@ -256,9 +249,16 @@ class ZHADevice(LogMixin):
     @property
     def device_automation_triggers(self):
         """Return the device automation triggers for this device."""
+        triggers = {
+            ("device_offline", "device_offline"): {
+                "device_event_type": "device_offline"
+            }
+        }
+
         if hasattr(self._zigpy_device, "device_automation_triggers"):
-            return self._zigpy_device.device_automation_triggers
-        return None
+            triggers.update(self._zigpy_device.device_automation_triggers)
+
+        return triggers
 
     @property
     def available_signal(self):
@@ -267,8 +267,13 @@ class ZHADevice(LogMixin):
 
     @property
     def available(self):
-        """Return True if sensor is available."""
+        """Return True if device is available."""
         return self._available
+
+    @available.setter
+    def available(self, new_availability: bool) -> None:
+        """Set device availability."""
+        self._available = new_availability
 
     @property
     def zigbee_signature(self) -> Dict[str, Any]:
@@ -277,10 +282,6 @@ class ZHADevice(LogMixin):
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
             ATTR_ENDPOINTS: self._channels.zigbee_signature,
         }
-
-    def set_available(self, available):
-        """Set availability from restore and prevent signals."""
-        self._available = available
 
     @classmethod
     def new(
@@ -346,13 +347,26 @@ class ZHADevice(LogMixin):
         if res is not None:
             self._checkins_missed_count = 0
 
-    def update_available(self, available):
-        """Set sensor availability."""
-        if self._available != available and available:
-            # Update the state the first time the device comes online
-            async_dispatcher_send(self.hass, self._available_signal, False)
-        async_dispatcher_send(self.hass, f"{self._available_signal}_entity", available)
-        self._available = available
+    def update_available(self, available: bool) -> None:
+        """Update device availability and signal entities."""
+        availability_changed = self.available ^ available
+        self.available = available
+        if availability_changed and available:
+            # reinit channels then signal entities
+            self.hass.async_create_task(self._async_became_available())
+            return
+        if availability_changed and not available:
+            self._channels.zha_send_event(
+                {
+                    "device_event_type": "device_offline",
+                },
+            )
+        async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
+
+    async def _async_became_available(self) -> None:
+        """Update device availability and signal entities."""
+        await self.async_initialize(False)
+        async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
 
     @property
     def device_info(self):
@@ -386,7 +400,7 @@ class ZHADevice(LogMixin):
         entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
-        if self._channels.identify_ch is not None:
+        if self._channels.identify_ch is not None and not self.skip_configuration:
             await self._channels.identify_ch.trigger_effect(
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )
@@ -411,8 +425,8 @@ class ZHADevice(LogMixin):
         if self._zigpy_device.last_seen is None and last_seen is not None:
             self._zigpy_device.last_seen = last_seen
 
-    @callback
-    def async_get_info(self):
+    @property
+    def zha_device_info(self):
         """Get ZHA device information."""
         device_info = {}
         device_info.update(self.device_info)
@@ -423,6 +437,39 @@ class ZHADevice(LogMixin):
             }
             for entity_ref in self.gateway.device_registry[self.ieee]
         ]
+
+        # Return the neighbor information
+        device_info[ATTR_NEIGHBORS] = [
+            {
+                "device_type": neighbor.neighbor.device_type.name,
+                "rx_on_when_idle": neighbor.neighbor.rx_on_when_idle.name,
+                "relationship": neighbor.neighbor.relationship.name,
+                "extended_pan_id": str(neighbor.neighbor.extended_pan_id),
+                "ieee": str(neighbor.neighbor.ieee),
+                "nwk": str(neighbor.neighbor.nwk),
+                "permit_joining": neighbor.neighbor.permit_joining.name,
+                "depth": str(neighbor.neighbor.depth),
+                "lqi": str(neighbor.neighbor.lqi),
+            }
+            for neighbor in self._zigpy_device.neighbors
+        ]
+
+        # Return endpoint device type Names
+        names = []
+        for endpoint in (ep for epid, ep in self.device.endpoints.items() if epid):
+            profile = PROFILES.get(endpoint.profile_id)
+            if profile and endpoint.device_type is not None:
+                # DeviceType provides undefined enums
+                names.append({ATTR_NAME: profile.DeviceType(endpoint.device_type).name})
+            else:
+                names.append(
+                    {
+                        ATTR_NAME: f"unknown {endpoint.device_type} device_type "
+                        "of 0x{endpoint.profile_id:04x} profile id"
+                    }
+                )
+        device_info[ATTR_ENDPOINT_NAMES] = names
+
         reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
         if reg_device is not None:
             device_info["user_given_name"] = reg_device.name_by_user
@@ -443,6 +490,15 @@ class ZHADevice(LogMixin):
         }
 
     @callback
+    def async_get_groupable_endpoints(self):
+        """Get device endpoints that have a group 'in' cluster."""
+        return [
+            ep_id
+            for (ep_id, clusters) in self.async_get_clusters().items()
+            if Groups.cluster_id in clusters[CLUSTER_TYPE_IN]
+        ]
+
+    @callback
     def async_get_std_clusters(self):
         """Get ZHA and ZLL clusters for this device."""
 
@@ -452,7 +508,7 @@ class ZHADevice(LogMixin):
                 CLUSTER_TYPE_OUT: endpoint.out_clusters,
             }
             for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
-            if ep_id != 0 and endpoint.profile_id in (zha.PROFILE_ID, zll.PROFILE_ID)
+            if ep_id != 0 and endpoint.profile_id in PROFILES
         }
 
     @callback
@@ -557,7 +613,15 @@ class ZHADevice(LogMixin):
 
     async def async_add_to_group(self, group_id):
         """Add this device to the provided zigbee group."""
-        await self._zigpy_device.add_to_group(group_id)
+        try:
+            await self._zigpy_device.add_to_group(group_id)
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to add device '%s' to group: 0x%04x ex: %s",
+                self._zigpy_device.ieee,
+                group_id,
+                str(ex),
+            )
 
     async def async_remove_from_group(self, group_id):
         """Remove this device from the provided zigbee group."""
@@ -566,6 +630,34 @@ class ZHADevice(LogMixin):
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to remove device '%s' from group: 0x%04x ex: %s",
+                self._zigpy_device.ieee,
+                group_id,
+                str(ex),
+            )
+
+    async def async_add_endpoint_to_group(self, endpoint_id, group_id):
+        """Add the device endpoint to the provided zigbee group."""
+        try:
+            await self._zigpy_device.endpoints[int(endpoint_id)].add_to_group(group_id)
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
+                endpoint_id,
+                self._zigpy_device.ieee,
+                group_id,
+                str(ex),
+            )
+
+    async def async_remove_endpoint_from_group(self, endpoint_id, group_id):
+        """Remove the device endpoint from the provided zigbee group."""
+        try:
+            await self._zigpy_device.endpoints[int(endpoint_id)].remove_from_group(
+                group_id
+            )
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
+                endpoint_id,
                 self._zigpy_device.ieee,
                 group_id,
                 str(ex),

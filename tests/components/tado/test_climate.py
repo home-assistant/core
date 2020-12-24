@@ -79,6 +79,7 @@ async def test_smartac_with_swing(hass):
         "min_temp": 16.0,
         "preset_mode": "home",
         "preset_modes": ["away", "home"],
+        "swing_modes": ["ON", "OFF"],
         "supported_features": 57,
         "target_temp_step": 1.0,
         "temperature": 20.0,

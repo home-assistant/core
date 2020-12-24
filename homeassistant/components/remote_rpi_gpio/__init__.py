@@ -1,10 +1,6 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
-import logging
-
 from gpiozero import LED, Button
 from gpiozero.pins.pigpio import PiGPIOFactory
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
@@ -26,7 +22,9 @@ def setup_output(address, port, invert_logic):
     """Set up a GPIO as output."""
 
     try:
-        return LED(port, active_high=invert_logic, pin_factory=PiGPIOFactory(address))
+        return LED(
+            port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address)
+        )
     except (ValueError, IndexError, KeyError):
         return None
 

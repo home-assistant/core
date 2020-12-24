@@ -1,11 +1,12 @@
 """Support for climate devices through the SmartThings cloud API."""
 import asyncio
+from collections.abc import Iterable
 import logging
-from typing import Iterable, Optional, Sequence
+from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateDevice
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -144,7 +145,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     return None
 
 
-class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
+class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
     def __init__(self, device):
@@ -323,7 +324,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         return UNIT_MAP.get(self._device.status.attributes[Attribute.temperature].unit)
 
 
-class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
+class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     def __init__(self, device):

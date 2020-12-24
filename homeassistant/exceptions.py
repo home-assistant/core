@@ -1,7 +1,5 @@
 """The exceptions used by Home Assistant."""
-from typing import TYPE_CHECKING, Optional, Tuple
-
-import jinja2
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .core import Context  # noqa: F401 pylint: disable=unused-import
@@ -22,7 +20,7 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: jinja2.TemplateError) -> None:
+    def __init__(self, exception: Exception) -> None:
         """Init the error."""
         super().__init__(f"{exception.__class__.__name__}: {exception}")
 
@@ -49,11 +47,15 @@ class Unauthorized(HomeAssistantError):
         entity_id: Optional[str] = None,
         config_entry_id: Optional[str] = None,
         perm_category: Optional[str] = None,
-        permission: Optional[Tuple[str]] = None,
+        permission: Optional[str] = None,
     ) -> None:
         """Unauthorized error."""
         super().__init__(self.__class__.__name__)
         self.context = context
+
+        if user_id is None and context is not None:
+            user_id = context.user_id
+
         self.user_id = user_id
         self.entity_id = entity_id
         self.config_entry_id = config_entry_id
@@ -78,4 +80,4 @@ class ServiceNotFound(HomeAssistantError):
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Unable to find service {self.domain}/{self.service}"
+        return f"Unable to find service {self.domain}.{self.service}"

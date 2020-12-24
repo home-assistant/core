@@ -116,5 +116,5 @@ class TMBSensor(Entity):
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
         except HTTPError:
             _LOGGER.error(
-                "Unable to fetch data from TMB API. Please check your API keys are valid."
+                "Unable to fetch data from TMB API. Please check your API keys are valid"
             )

@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
+class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
     def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):

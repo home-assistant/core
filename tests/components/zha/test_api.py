@@ -1,27 +1,47 @@
 """Test ZHA API."""
+from binascii import unhexlify
 
 import pytest
+import voluptuous as vol
 import zigpy.profiles.zha
+import zigpy.types
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.components.websocket_api import const
-from homeassistant.components.zha.api import ID, TYPE, async_load_api
+from homeassistant.components.zha import DOMAIN
+from homeassistant.components.zha.api import (
+    ATTR_DURATION,
+    ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
+    ATTR_SOURCE_IEEE,
+    ID,
+    SERVICE_PERMIT,
+    TYPE,
+    async_load_api,
+)
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     CLUSTER_TYPE_IN,
+    DATA_ZHA,
+    DATA_ZHA_GATEWAY,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
 )
+from homeassistant.core import Context
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
+
+from tests.async_mock import AsyncMock, patch
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -42,7 +62,7 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_SWITCH_DEVICE,
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 
@@ -65,7 +85,7 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_GROUPABLE_DEVICE,
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 
@@ -166,6 +186,8 @@ async def test_list_devices(zha_client):
         assert device[ATTR_NAME] is not None
         assert device[ATTR_QUIRK_APPLIED] is not None
         assert device["entities"] is not None
+        assert device[ATTR_NEIGHBORS] is not None
+        assert device[ATTR_ENDPOINT_NAMES] is not None
 
         for entity_reference in device["entities"]:
             assert entity_reference[ATTR_NAME] is not None
@@ -225,7 +247,7 @@ async def test_get_group(zha_client):
 
 async def test_get_group_not_found(zha_client):
     """Test not found response from get group API."""
-    await zha_client.send_json({ID: 9, TYPE: "zha/group", GROUP_ID: 1234567})
+    await zha_client.send_json({ID: 9, TYPE: "zha/group", GROUP_ID: 1_234_567})
 
     msg = await zha_client.receive_json()
 
@@ -244,24 +266,29 @@ async def test_list_groupable_devices(zha_client, device_groupable):
     assert msg["id"] == 10
     assert msg["type"] == const.TYPE_RESULT
 
-    devices = msg["result"]
-    assert len(devices) == 1
+    device_endpoints = msg["result"]
+    assert len(device_endpoints) == 1
 
-    for device in devices:
-        assert device[ATTR_IEEE] == "01:2d:6f:00:0a:90:69:e8"
-        assert device[ATTR_MANUFACTURER] is not None
-        assert device[ATTR_MODEL] is not None
-        assert device[ATTR_NAME] is not None
-        assert device[ATTR_QUIRK_APPLIED] is not None
-        assert device["entities"] is not None
+    for endpoint in device_endpoints:
+        assert endpoint["device"][ATTR_IEEE] == "01:2d:6f:00:0a:90:69:e8"
+        assert endpoint["device"][ATTR_MANUFACTURER] is not None
+        assert endpoint["device"][ATTR_MODEL] is not None
+        assert endpoint["device"][ATTR_NAME] is not None
+        assert endpoint["device"][ATTR_QUIRK_APPLIED] is not None
+        assert endpoint["device"]["entities"] is not None
+        assert endpoint["endpoint_id"] is not None
+        assert endpoint["entities"] is not None
 
-        for entity_reference in device["entities"]:
+        for entity_reference in endpoint["device"]["entities"]:
             assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
 
+        for entity_reference in endpoint["entities"]:
+            assert entity_reference["original_name"] is not None
+
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
-    device_groupable.set_available(False)
+    device_groupable.available = False
 
     await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
 
@@ -269,8 +296,8 @@ async def test_list_groupable_devices(zha_client, device_groupable):
     assert msg["id"] == 11
     assert msg["type"] == const.TYPE_RESULT
 
-    devices = msg["result"]
-    assert len(devices) == 0
+    device_endpoints = msg["result"]
+    assert len(device_endpoints) == 0
 
 
 async def test_add_group(zha_client):
@@ -330,3 +357,244 @@ async def test_remove_group(zha_client):
 
     groups = msg["result"]
     assert len(groups) == 0
+
+
+@pytest.fixture
+async def app_controller(hass, setup_zha):
+    """Fixture for zigpy Application Controller."""
+    await setup_zha()
+    controller = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].application_controller
+    p1 = patch.object(controller, "permit")
+    p2 = patch.object(controller, "permit_with_key", new=AsyncMock())
+    with p1, p2:
+        yield controller
+
+
+@pytest.mark.parametrize(
+    "params, duration, node",
+    (
+        ({}, 60, None),
+        ({ATTR_DURATION: 30}, 30, None),
+        (
+            {ATTR_DURATION: 33, ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:dd"},
+            33,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:dd"),
+        ),
+        (
+            {ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:d1"},
+            60,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
+        ),
+    ),
+)
+async def test_permit_ha12(
+    hass, app_controller, hass_admin_user, params, duration, node
+):
+    """Test permit service."""
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+    )
+    assert app_controller.permit.await_count == 1
+    assert app_controller.permit.await_args[1]["time_s"] == duration
+    assert app_controller.permit.await_args[1]["node"] == node
+    assert app_controller.permit_with_key.call_count == 0
+
+
+IC_TEST_PARAMS = (
+    (
+        {
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
+        },
+        zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+    (
+        {
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_INSTALL_CODE: "52797BF4A5084DAA8E1712B61741CA024051",
+        },
+        zigpy.types.EUI64.convert(IEEE_SWITCH_DEVICE),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+)
+
+
+@pytest.mark.parametrize("params, src_ieee, code", IC_TEST_PARAMS)
+async def test_permit_with_install_code(
+    hass, app_controller, hass_admin_user, params, src_ieee, code
+):
+    """Test permit service with install code."""
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+    )
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 1
+    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_key.await_args[1]["code"] == code
+
+
+IC_FAIL_PARAMS = (
+    {
+        # wrong install code
+        ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+        ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4052",
+    },
+    # incorrect service params
+    {ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051"},
+    {ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE},
+    {
+        # incorrect service params
+        ATTR_INSTALL_CODE: "5279-7BF4-A508-4DAA-8E17-12B6-1741-CA02-4051",
+        ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
+    },
+    {
+        # incorrect service params
+        ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+        ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
+    },
+    {
+        # good regex match, but bad code
+        ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024052"
+    },
+    {
+        # good aqara regex match, but bad code
+        ATTR_QR_CODE: (
+            "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
+            "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024052"
+        )
+    },
+    # good consciot regex match, but bad code
+    {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024052"},
+)
+
+
+@pytest.mark.parametrize("params", IC_FAIL_PARAMS)
+async def test_permit_with_install_code_fail(
+    hass, app_controller, hass_admin_user, params
+):
+    """Test permit service with install code."""
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        )
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 0
+
+
+IC_QR_CODE_TEST_PARAMS = (
+    (
+        {ATTR_QR_CODE: "000D6FFFFED4163B|52797BF4A5084DAA8E1712B61741CA024051"},
+        zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+    (
+        {ATTR_QR_CODE: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"},
+        zigpy.types.EUI64.convert("00:0D:6F:FF:FE:D4:16:3B"),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+    (
+        {
+            ATTR_QR_CODE: (
+                "G$M:751$S:357S00001579$D:000000000F350FFD%Z$A:04CF8CDF"
+                "3C3C3C3C$I:52797BF4A5084DAA8E1712B61741CA024051"
+            )
+        },
+        zigpy.types.EUI64.convert("04:CF:8C:DF:3C:3C:3C:3C"),
+        unhexlify("52797BF4A5084DAA8E1712B61741CA024051"),
+    ),
+)
+
+
+@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+async def test_permit_with_qr_code(
+    hass, app_controller, hass_admin_user, params, src_ieee, code
+):
+    """Test permit service with install code from qr code."""
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+    )
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 1
+    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_key.await_args[1]["code"] == code
+
+
+@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+async def test_ws_permit_with_qr_code(
+    app_controller, zha_client, params, src_ieee, code
+):
+    """Test permit service with install code from qr code."""
+
+    await zha_client.send_json(
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 14
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 1
+    assert app_controller.permit_with_key.await_args[1]["time_s"] == 60
+    assert app_controller.permit_with_key.await_args[1]["node"] == src_ieee
+    assert app_controller.permit_with_key.await_args[1]["code"] == code
+
+
+@pytest.mark.parametrize("params", IC_FAIL_PARAMS)
+async def test_ws_permit_with_install_code_fail(app_controller, zha_client, params):
+    """Test permit ws service with install code."""
+
+    await zha_client.send_json(
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 14
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
+
+    assert app_controller.permit.await_count == 0
+    assert app_controller.permit_with_key.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "params, duration, node",
+    (
+        ({}, 60, None),
+        ({ATTR_DURATION: 30}, 30, None),
+        (
+            {ATTR_DURATION: 33, ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:dd"},
+            33,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:dd"),
+        ),
+        (
+            {ATTR_IEEE: "aa:bb:cc:dd:aa:bb:cc:d1"},
+            60,
+            zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
+        ),
+    ),
+)
+async def test_ws_permit_ha12(app_controller, zha_client, params, duration, node):
+    """Test permit ws service."""
+
+    await zha_client.send_json(
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 14
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert app_controller.permit.await_count == 1
+    assert app_controller.permit.await_args[1]["time_s"] == duration
+    assert app_controller.permit.await_args[1]["node"] == node
+    assert app_controller.permit_with_key.call_count == 0

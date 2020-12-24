@@ -61,6 +61,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents the HEOS controller."""
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
+
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
@@ -71,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     # Disconnect when shutting down
     async def disconnect_controller(event):
@@ -95,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()

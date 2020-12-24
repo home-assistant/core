@@ -1,6 +1,4 @@
 """Component to integrate the Home Assistant cloud."""
-import logging
-
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
@@ -42,8 +40,6 @@ from .const import (
     MODE_PROD,
 )
 from .prefs import CloudPreferences
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MODE = MODE_PROD
 
@@ -190,8 +186,6 @@ async def async_setup(hass, config):
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
 
-    await cloud.start()
-
     async def _shutdown(event):
         """Shutdown event."""
         await cloud.stop()
@@ -233,6 +227,7 @@ async def async_setup(hass, config):
 
     cloud.iot.register_on_connect(_on_connect)
 
+    await cloud.start()
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)

@@ -1,7 +1,7 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -39,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraSwitch(SwitchDevice):
+class SatelIntegraSwitch(SwitchEntity):
     """Representation of an Satel switch."""
 
     def __init__(self, controller, device_number, device_name, code):

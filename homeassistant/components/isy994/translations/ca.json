@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key::common::config_flow::error::invalid_auth%]",
+            "invalid_host": "L'entrada de l'amfitri\u00f3 no t\u00e9 el fromat d'URL complet, ex: http://192.168.10.100:80",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "Dispositius universals ISY994 {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "[%key::common::config_flow::data::password%]",
+                    "tls": "Versi\u00f3 TLS del controlador ISY.",
+                    "username": "[%key::common::config_flow::data::username%]"
+                },
+                "description": "L'entrada de l'amfitri\u00f3 ha de tenir el format d'URL complet, ex: http://192.168.10.100:80",
+                "title": "Connexi\u00f3 amb ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "String Ignora",
+                    "restore_light_state": "Restaura la brillantor de la llum",
+                    "sensor_string": "String de Sensor Node",
+                    "variable_sensor_string": "String de Sensor Variable"
+                },
+                "description": "Configuraci\u00f3 de les opcions per a la integraci\u00f3 ISY: \n \u2022 String de Sensor Node: qualsevol dispositiu o carpeta que contingui 'String de Sensor Node' dins el nom ser\u00e0 tractat com a un sensor o sensor binari. \n \u2022 String Ignora: qualsevol dispositiu amb 'String Ignora' dins el nom ser\u00e0 ignorat. \n \u2022 String de Sensor Variable: qualsevol variable que contingui 'String de Sensor Variable' s'afegir\u00e0 com a un sensor.  \n \u2022 Restaura la brillantor de la llum: si est\u00e0 activat, en encendre un llum es restablir\u00e0 la brillantor anterior en lloc del valor integrat dins el dispositiu.",
+                "title": "Opcions d'ISY994"
+            }
+        }
+    }
+}

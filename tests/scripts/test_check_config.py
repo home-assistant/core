@@ -1,10 +1,12 @@
 """Test check_config script."""
 import logging
-from unittest.mock import patch
+
+import pytest
 
 from homeassistant.config import YAML_CONFIG_FILE
 import homeassistant.scripts.check_config as check_config
 
+from tests.async_mock import patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,6 +23,11 @@ BASE_CONFIG = (
 )
 
 BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+
+
+@pytest.fixture(autouse=True)
+async def apply_stop_hass(stop_hass):
+    """Make sure all hass are stopped."""
 
 
 def normalize_yaml_files(check_dict):
@@ -106,7 +113,6 @@ def test_secrets(isfile_patch, loop):
             "cors_allowed_origins": ["http://google.com"],
             "ip_ban_enabled": True,
             "login_attempts_threshold": -1,
-            "server_host": "0.0.0.0",
             "server_port": 8123,
             "ssl_profile": "modern",
         }

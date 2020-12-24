@@ -1,5 +1,5 @@
 """Support for Genius Hub switch/outlet devices."""
-from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchDevice
+from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import DOMAIN, GeniusZone
@@ -27,7 +27,7 @@ async def async_setup_platform(
     )
 
 
-class GeniusSwitch(GeniusZone, SwitchDevice):
+class GeniusSwitch(GeniusZone, SwitchEntity):
     """Representation of a Genius Hub switch."""
 
     @property

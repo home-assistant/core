@@ -1,10 +1,10 @@
 """Test the Luftdaten component setup."""
-from unittest.mock import patch
-
 from homeassistant.components import luftdaten
 from homeassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 async def test_config_with_sensor_passed_to_config_entry(hass):

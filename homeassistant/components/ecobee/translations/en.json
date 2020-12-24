@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "pin_request_failed": "Error requesting PIN from ecobee; please verify API key is correct.",
+            "token_request_failed": "Error requesting tokens from ecobee; please try again."
+        },
+        "step": {
+            "authorize": {
+                "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit.",
+                "title": "Authorize app on ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "description": "Please enter the API key obtained from ecobee.com.",
+                "title": "ecobee API key"
+            }
+        }
+    }
+}

@@ -1,6 +1,4 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
-import logging
-
 from raspyrfm_client import RaspyRFMClient
 from raspyrfm_client.device_implementations.controlunit.actions import Action
 from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
@@ -12,7 +10,7 @@ from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constan
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -21,8 +19,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_MANUFACTURER = "gateway_manufacturer"
 CONF_GATEWAY_MODEL = "gateway_model"
@@ -87,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switch_entities)
 
 
-class RaspyRFMSwitch(SwitchDevice):
+class RaspyRFMSwitch(SwitchEntity):
     """Representation of a RaspyRFM switch."""
 
     def __init__(self, raspyrfm_client, name: str, gateway, controlunit):

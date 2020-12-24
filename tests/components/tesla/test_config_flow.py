@@ -1,6 +1,4 @@
 """Test the Tesla config flow."""
-from unittest.mock import patch
-
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -20,7 +18,8 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -34,15 +33,16 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+        return_value=("test-refresh-token", "test-access-token"),
     ), patch(
-        "homeassistant.components.tesla.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.tesla.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.tesla.async_setup_entry", return_value=mock_coro(True)
+        "homeassistant.components.tesla.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test@email.com"
@@ -50,7 +50,6 @@ async def test_form(hass):
         CONF_TOKEN: "test-refresh-token",
         CONF_ACCESS_TOKEN: "test-access-token",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -71,7 +70,7 @@ async def test_form_invalid_auth(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_credentials"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass):
@@ -90,7 +89,7 @@ async def test_form_cannot_connect(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_repeat_identifier(hass):
@@ -103,7 +102,7 @@ async def test_form_repeat_identifier(hass):
     )
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+        return_value=("test-refresh-token", "test-access-token"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -111,7 +110,7 @@ async def test_form_repeat_identifier(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_USERNAME: "identifier_exists"}
+    assert result2["errors"] == {CONF_USERNAME: "already_configured"}
 
 
 async def test_import(hass):
@@ -119,7 +118,7 @@ async def test_import(hass):
 
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+        return_value=("test-refresh-token", "test-access-token"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

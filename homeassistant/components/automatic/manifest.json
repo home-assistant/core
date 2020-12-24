@@ -1,8 +1,0 @@
-{
-  "domain": "automatic",
-  "name": "Automatic",
-  "documentation": "https://www.home-assistant.io/integrations/automatic",
-  "requirements": ["aioautomatic==0.6.5"],
-  "dependencies": ["configurator", "http"],
-  "codeowners": ["@armills"]
-}

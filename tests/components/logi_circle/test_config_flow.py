@@ -13,6 +13,7 @@ from homeassistant.components.logi_circle.config_flow import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock
 from tests.common import mock_coro
 
 
@@ -51,8 +52,8 @@ def mock_logi_circle():
         "homeassistant.components.logi_circle.config_flow.LogiCircle"
     ) as logi_circle:
         LogiCircle = logi_circle()
-        LogiCircle.authorize = Mock(return_value=mock_coro(return_value=True))
-        LogiCircle.close = Mock(return_value=mock_coro(return_value=True))
+        LogiCircle.authorize = AsyncMock(return_value=True)
+        LogiCircle.close = AsyncMock(return_value=True)
         LogiCircle.account = mock_coro(return_value={"accountId": "testId"})
         LogiCircle.authorize_url = "http://authorize.url"
         yield LogiCircle
@@ -115,7 +116,7 @@ async def test_abort_if_no_implementation_registered(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_flows"
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_abort_if_already_setup(hass):
@@ -125,17 +126,17 @@ async def test_abort_if_already_setup(hass):
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_import()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_auth()
@@ -145,7 +146,10 @@ async def test_abort_if_already_setup(hass):
 
 @pytest.mark.parametrize(
     "side_effect,error",
-    [(asyncio.TimeoutError, "auth_timeout"), (AuthorizationFailed, "auth_error")],
+    [
+        (asyncio.TimeoutError, "authorize_url_timeout"),
+        (AuthorizationFailed, "invalid_auth"),
+    ],
 )
 async def test_abort_if_authorize_fails(
     hass, mock_logi_circle, side_effect, error

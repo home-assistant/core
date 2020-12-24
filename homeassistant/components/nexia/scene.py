@@ -1,5 +1,7 @@
 """Support for Nexia Automations."""
 
+from typing import Any
+
 from homeassistant.components.scene import Scene
 from homeassistant.helpers.event import async_call_later
 
@@ -32,7 +34,9 @@ class NexiaAutomationScene(NexiaEntity, Scene):
     def __init__(self, coordinator, automation):
         """Initialize the automation scene."""
         super().__init__(
-            coordinator, name=automation.name, unique_id=automation.automation_id,
+            coordinator,
+            name=automation.name,
+            unique_id=automation.automation_id,
         )
         self._automation = automation
 
@@ -48,11 +52,11 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         """Return the icon of the automation scene."""
         return "mdi:script-text-outline"
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate an automation scene."""
         await self.hass.async_add_executor_job(self._automation.activate)
 
         async def refresh_callback(_):
-            await self._coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
         async_call_later(self.hass, SCENE_ACTIVATION_TIME, refresh_callback)

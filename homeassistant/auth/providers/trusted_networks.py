@@ -190,7 +190,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
             ).async_validate_access(self._ip_address)
 
         except InvalidAuthError:
-            return self.async_abort(reason="not_whitelisted")
+            return self.async_abort(reason="not_allowed")
 
         if user_input is not None:
             return await self.async_finish(user_input)

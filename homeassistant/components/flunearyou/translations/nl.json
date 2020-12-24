@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Deze co\u00f6rdinaten zijn al geregistreerd."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "description": "Bewaak op gebruikers gebaseerde en CDC-repots voor een paar co\u00f6rdinaten.",
+                "title": "Configureer \nFlu Near You"
+            }
+        }
+    }
+}

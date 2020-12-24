@@ -34,8 +34,10 @@ class QSSensor(QSEntity):
         sensor_type = sensor["type"]
 
         self._decode, self.unit = SENSORS[sensor_type]
-        if isinstance(self.unit, type):
-            self.unit = f"{sensor_type}:{self.channel}"
+        # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
+        assert not isinstance(
+            self.unit, type
+        ), f"boolean sensor id={sensor['id']} name={sensor['name']}"
 
     @callback
     def update_packet(self, packet):

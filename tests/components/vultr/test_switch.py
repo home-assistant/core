@@ -1,7 +1,6 @@
 """Test the Vultr switch platform."""
 import json
 import unittest
-from unittest.mock import patch
 
 import pytest
 import requests_mock
@@ -20,6 +19,7 @@ from homeassistant.components.vultr import (
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 from tests.components.vultr.test_init import VALID_CONFIG
 
@@ -42,8 +42,9 @@ class TestVultrSwitchSetup(unittest.TestCase):
             {CONF_SUBSCRIPTION: "123456", CONF_NAME: "Failed Server"},
             {CONF_SUBSCRIPTION: "555555", CONF_NAME: vultr.DEFAULT_NAME},
         ]
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop our started services."""
         self.hass.stop()
 

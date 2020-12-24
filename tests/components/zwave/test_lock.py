@@ -1,9 +1,8 @@
 """Test Z-Wave locks."""
-from unittest.mock import MagicMock, patch
-
 from homeassistant import config_entries
 from homeassistant.components.zwave import const, lock
 
+from tests.async_mock import MagicMock, patch
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 

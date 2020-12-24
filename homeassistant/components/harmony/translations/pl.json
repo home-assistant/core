@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "Logitech Harmony Hub {name}",
+        "step": {
+            "link": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?",
+                "title": "Konfiguracja Logitech Harmony Hub"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa huba"
+                },
+                "title": "Konfiguracja Logitech Harmony Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Domy\u015blna aktywno\u015b\u0107 do wykonania, gdy \u017cadnej nie okre\u015blono.",
+                    "delay_secs": "Op\u00f3\u017anienie mi\u0119dzy wysy\u0142aniem polece\u0144."
+                },
+                "description": "Dostosuj opcje huba Harmony"
+            }
+        }
+    }
+}

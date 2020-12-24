@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         requests.exceptions.HTTPError,
     ) as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from error
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
@@ -89,7 +89,7 @@ def valid_stations(stations, given_stations):
         if station is None:
             continue
         if not any(s.code == station.upper() for s in stations):
-            _LOGGER.warning("Station '%s' is not a valid station.", station)
+            _LOGGER.warning("Station '%s' is not a valid station", station)
             return False
     return True
 
@@ -148,7 +148,6 @@ class NSDepartureSensor(Entity):
             "arrival_platform_planned": self._trips[0].arrival_platform_planned,
             "arrival_platform_actual": self._trips[0].arrival_platform_actual,
             "next": None,
-            "punctuality": None,
             "status": self._trips[0].status.lower(),
             "transfers": self._trips[0].nr_transfers,
             "route": route,
@@ -196,10 +195,6 @@ class NSDepartureSensor(Entity):
             and attributes["arrival_time_planned"] != attributes["arrival_time_actual"]
         ):
             attributes["arrival_delay"] = True
-
-        # Punctuality attributes
-        if self._trips[0].punctuality is not None:
-            attributes["punctuality"] = self._trips[0].punctuality
 
         # Next attributes
         if len(self._trips) > 1:

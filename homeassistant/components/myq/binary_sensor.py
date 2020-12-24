@@ -1,25 +1,20 @@
 """Support for MyQ gateways."""
-import logging
+from pymyq.const import (
+    DEVICE_FAMILY as MYQ_DEVICE_FAMILY,
+    DEVICE_FAMILY_GATEWAY as MYQ_DEVICE_FAMILY_GATEWAY,
+    DEVICE_STATE as MYQ_DEVICE_STATE,
+    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
+    KNOWN_MODELS,
+    MANUFACTURER,
+)
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    KNOWN_MODELS,
-    MANUFACTURER,
-    MYQ_COORDINATOR,
-    MYQ_DEVICE_FAMILY,
-    MYQ_DEVICE_FAMILY_GATEWAY,
-    MYQ_DEVICE_STATE,
-    MYQ_DEVICE_STATE_ONLINE,
-    MYQ_GATEWAY,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -32,17 +27,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for device in myq.devices.values():
         if device.device_json[MYQ_DEVICE_FAMILY] == MYQ_DEVICE_FAMILY_GATEWAY:
-            entities.append(MyQBinarySensorDevice(coordinator, device))
+            entities.append(MyQBinarySensorEntity(coordinator, device))
 
     async_add_entities(entities, True)
 
 
-class MyQBinarySensorDevice(BinarySensorDevice):
+class MyQBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._device = device
 
     @property
@@ -58,7 +53,7 @@ class MyQBinarySensorDevice(BinarySensorDevice):
     @property
     def is_on(self):
         """Return if the device is online."""
-        if not self._coordinator.last_update_success:
+        if not self.coordinator.last_update_success:
             return False
 
         # Not all devices report online so assume True if its missing
@@ -67,13 +62,14 @@ class MyQBinarySensorDevice(BinarySensorDevice):
         )
 
     @property
+    def available(self) -> bool:
+        """Entity is always available."""
+        return True
+
+    @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._device.device_id
-
-    async def async_update(self):
-        """Update status of cover."""
-        await self._coordinator.async_request_refresh()
 
     @property
     def device_info(self):
@@ -89,20 +85,3 @@ class MyQBinarySensorDevice(BinarySensorDevice):
             device_info["model"] = model
 
         return device_info
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via coordinator."""
-        return False
-
-    @callback
-    def _async_consume_update(self):
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self._coordinator.async_add_listener(self._async_consume_update)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self._async_consume_update)

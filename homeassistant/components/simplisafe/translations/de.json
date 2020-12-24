@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet."
+        },
+        "error": {
+            "identifier_exists": "Konto bereits registriert",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
+            "user": {
+                "data": {
+                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
+                    "password": "Passwort",
+                    "username": "E-Mail-Adresse"
+                },
+                "title": "Gib deine Informationen ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)"
+                },
+                "title": "Konfigurieren Sie SimpliSafe"
+            }
+        }
+    }
+}

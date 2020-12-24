@@ -1,6 +1,5 @@
 """Handle intents with scripts."""
 import copy
-import logging
 
 import voluptuous as vol
 
@@ -44,8 +43,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup(hass, config):
     """Activate Alexa component."""
@@ -55,7 +52,7 @@ async def async_setup(hass, config):
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
             conf[CONF_ACTION] = script.Script(
-                hass, conf[CONF_ACTION], f"Intent Script {intent_type}"
+                hass, conf[CONF_ACTION], f"Intent Script {intent_type}", DOMAIN
             )
         intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
 
@@ -84,19 +81,20 @@ class ScriptIntentHandler(intent.IntentHandler):
                     action.async_run(slots, intent_obj.context)
                 )
             else:
-                await action.async_run(slots)
+                await action.async_run(slots, intent_obj.context)
 
         response = intent_obj.create_response()
 
         if speech is not None:
             response.async_set_speech(
-                speech[CONF_TEXT].async_render(slots), speech[CONF_TYPE]
+                speech[CONF_TEXT].async_render(slots, parse_result=False),
+                speech[CONF_TYPE],
             )
 
         if card is not None:
             response.async_set_card(
-                card[CONF_TITLE].async_render(slots),
-                card[CONF_CONTENT].async_render(slots),
+                card[CONF_TITLE].async_render(slots, parse_result=False),
+                card[CONF_CONTENT].async_render(slots, parse_result=False),
                 card[CONF_TYPE],
             )
 

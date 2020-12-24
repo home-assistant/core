@@ -12,7 +12,7 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -200,7 +200,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class BluesoundPlayer(MediaPlayerDevice):
+class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
@@ -220,7 +220,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         self._last_status_update = None
         self._is_online = False
         self._retry_remove = None
-        self._lastvol = None
+        self._muted = False
         self._master = None
         self._is_master = False
         self._group_name = None
@@ -660,10 +660,13 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        volume = self.volume_level
-        if not volume:
-            return None
-        return 0 <= volume < 0.001
+        mute = self._status.get("mute")
+        if self.is_grouped:
+            mute = self._sync_status.get("@mute")
+
+        if mute is not None:
+            mute = bool(int(mute))
+        return mute
 
     @property
     def name(self):
@@ -1044,10 +1047,5 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Send mute command to media player."""
         if mute:
-            volume = self.volume_level
-            if volume > 0:
-                self._lastvol = volume
-            return await self.send_bluesound_command("Volume?level=0")
-        return await self.send_bluesound_command(
-            f"Volume?level={float(self._lastvol) * 100}"
-        )
+            return await self.send_bluesound_command("Volume?mute=1")
+        return await self.send_bluesound_command("Volume?mute=0")

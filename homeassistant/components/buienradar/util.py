@@ -76,7 +76,7 @@ class BrData:
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
-        _LOGGER.debug("Scheduling next update in %s minutes.", minute)
+        _LOGGER.debug("Scheduling next update in %s minutes", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
         async_track_point_in_utc_time(self.hass, self.async_update, nxt)
 
@@ -107,7 +107,6 @@ class BrData:
 
     async def async_update(self, *_):
         """Update the data from buienradar."""
-
         content = await self.get_data(JSON_FEED_URL)
 
         if content.get(SUCCESS) is not True:
@@ -115,8 +114,7 @@ class BrData:
             self.load_error_count += 1
             threshold_log(
                 self.load_error_count,
-                "Unable to retrieve json data from Buienradar."
-                "(Msg: %s, status: %s,)",
+                "Unable to retrieve json data from Buienradar" "(Msg: %s, status: %s,)",
                 content.get(MESSAGE),
                 content.get(STATUS_CODE),
             )
@@ -136,7 +134,7 @@ class BrData:
             # unable to get the data
             threshold_log(
                 self.rain_error_count,
-                "Unable to retrieve rain data from Buienradar." "(Msg: %s, status: %s)",
+                "Unable to retrieve rain data from Buienradar" "(Msg: %s, status: %s)",
                 raincontent.get(MESSAGE),
                 raincontent.get(STATUS_CODE),
             )
@@ -171,25 +169,21 @@ class BrData:
     @property
     def attribution(self):
         """Return the attribution."""
-
         return self.data.get(ATTRIBUTION)
 
     @property
     def stationname(self):
         """Return the name of the selected weatherstation."""
-
         return self.data.get(STATIONNAME)
 
     @property
     def condition(self):
         """Return the condition."""
-
         return self.data.get(CONDITION)
 
     @property
     def temperature(self):
         """Return the temperature, or None."""
-
         try:
             return float(self.data.get(TEMPERATURE))
         except (ValueError, TypeError):
@@ -198,7 +192,6 @@ class BrData:
     @property
     def pressure(self):
         """Return the pressure, or None."""
-
         try:
             return float(self.data.get(PRESSURE))
         except (ValueError, TypeError):
@@ -207,7 +200,6 @@ class BrData:
     @property
     def humidity(self):
         """Return the humidity, or None."""
-
         try:
             return int(self.data.get(HUMIDITY))
         except (ValueError, TypeError):
@@ -216,7 +208,6 @@ class BrData:
     @property
     def visibility(self):
         """Return the visibility, or None."""
-
         try:
             return int(self.data.get(VISIBILITY))
         except (ValueError, TypeError):
@@ -225,7 +216,6 @@ class BrData:
     @property
     def wind_speed(self):
         """Return the windspeed, or None."""
-
         try:
             return float(self.data.get(WINDSPEED))
         except (ValueError, TypeError):
@@ -234,7 +224,6 @@ class BrData:
     @property
     def wind_bearing(self):
         """Return the wind bearing, or None."""
-
         try:
             return int(self.data.get(WINDAZIMUTH))
         except (ValueError, TypeError):
@@ -243,5 +232,4 @@ class BrData:
     @property
     def forecast(self):
         """Return the forecast data."""
-
         return self.data.get(FORECAST)

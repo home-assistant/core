@@ -1,10 +1,8 @@
 """The tests for the hassio component."""
-from unittest.mock import Mock, patch
 
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.auth.providers.homeassistant import InvalidAuth
 
-from tests.common import mock_coro
+from tests.async_mock import Mock, patch
 
 
 async def test_auth_success(hass, hassio_client_supervisor):
@@ -12,7 +10,6 @@ async def test_auth_success(hass, hassio_client_supervisor):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(return_value=mock_coro()),
     ) as mock_login:
         resp = await hassio_client_supervisor.post(
             "/api/hassio_auth",
@@ -29,7 +26,6 @@ async def test_auth_fails_no_supervisor(hass, hassio_client):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(return_value=mock_coro()),
     ) as mock_login:
         resp = await hassio_client.post(
             "/api/hassio_auth",
@@ -46,7 +42,6 @@ async def test_auth_fails_no_auth(hass, hassio_noauth_client):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(return_value=mock_coro()),
     ) as mock_login:
         resp = await hassio_noauth_client.post(
             "/api/hassio_auth",
@@ -63,7 +58,7 @@ async def test_login_error(hass, hassio_client_supervisor):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(side_effect=HomeAssistantError()),
+        Mock(side_effect=InvalidAuth()),
     ) as mock_login:
         resp = await hassio_client_supervisor.post(
             "/api/hassio_auth",
@@ -80,7 +75,7 @@ async def test_login_no_data(hass, hassio_client_supervisor):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(side_effect=HomeAssistantError()),
+        Mock(side_effect=InvalidAuth()),
     ) as mock_login:
         resp = await hassio_client_supervisor.post("/api/hassio_auth")
 
@@ -94,7 +89,7 @@ async def test_login_no_username(hass, hassio_client_supervisor):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(side_effect=HomeAssistantError()),
+        Mock(side_effect=InvalidAuth()),
     ) as mock_login:
         resp = await hassio_client_supervisor.post(
             "/api/hassio_auth", json={"password": "123456", "addon": "samba"}
@@ -110,7 +105,6 @@ async def test_login_success_extra(hass, hassio_client_supervisor):
     with patch(
         "homeassistant.auth.providers.homeassistant."
         "HassAuthProvider.async_validate_login",
-        Mock(return_value=mock_coro()),
     ) as mock_login:
         resp = await hassio_client_supervisor.post(
             "/api/hassio_auth",
@@ -130,8 +124,8 @@ async def test_login_success_extra(hass, hassio_client_supervisor):
 async def test_password_success(hass, hassio_client_supervisor):
     """Test no auth needed for ."""
     with patch(
-        "homeassistant.components.hassio.auth.HassIOPasswordReset._change_password",
-        Mock(return_value=mock_coro()),
+        "homeassistant.auth.providers.homeassistant."
+        "HassAuthProvider.async_change_password",
     ) as mock_change:
         resp = await hassio_client_supervisor.post(
             "/api/hassio_auth/password_reset",
@@ -145,47 +139,32 @@ async def test_password_success(hass, hassio_client_supervisor):
 
 async def test_password_fails_no_supervisor(hass, hassio_client):
     """Test if only supervisor can access."""
-    with patch(
-        "homeassistant.auth.providers.homeassistant.Data.async_save",
-        Mock(return_value=mock_coro()),
-    ) as mock_save:
-        resp = await hassio_client.post(
-            "/api/hassio_auth/password_reset",
-            json={"username": "test", "password": "123456"},
-        )
+    resp = await hassio_client.post(
+        "/api/hassio_auth/password_reset",
+        json={"username": "test", "password": "123456"},
+    )
 
-        # Check we got right response
-        assert resp.status == 401
-        assert not mock_save.called
+    # Check we got right response
+    assert resp.status == 401
 
 
 async def test_password_fails_no_auth(hass, hassio_noauth_client):
     """Test if only supervisor can access."""
-    with patch(
-        "homeassistant.auth.providers.homeassistant.Data.async_save",
-        Mock(return_value=mock_coro()),
-    ) as mock_save:
-        resp = await hassio_noauth_client.post(
-            "/api/hassio_auth/password_reset",
-            json={"username": "test", "password": "123456"},
-        )
+    resp = await hassio_noauth_client.post(
+        "/api/hassio_auth/password_reset",
+        json={"username": "test", "password": "123456"},
+    )
 
-        # Check we got right response
-        assert resp.status == 401
-        assert not mock_save.called
+    # Check we got right response
+    assert resp.status == 401
 
 
 async def test_password_no_user(hass, hassio_client_supervisor):
-    """Test no auth needed for ."""
-    with patch(
-        "homeassistant.auth.providers.homeassistant.Data.async_save",
-        Mock(return_value=mock_coro()),
-    ) as mock_save:
-        resp = await hassio_client_supervisor.post(
-            "/api/hassio_auth/password_reset",
-            json={"username": "test", "password": "123456"},
-        )
+    """Test changing password for invalid user."""
+    resp = await hassio_client_supervisor.post(
+        "/api/hassio_auth/password_reset",
+        json={"username": "test", "password": "123456"},
+    )
 
-        # Check we got right response
-        assert resp.status == HTTP_INTERNAL_SERVER_ERROR
-        assert not mock_save.called
+    # Check we got right response
+    assert resp.status == 404

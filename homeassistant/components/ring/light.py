@@ -4,7 +4,7 @@ import logging
 
 import requests
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import LightEntity
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(lights)
 
 
-class RingLight(RingEntityMixin, Light):
+class RingLight(RingEntityMixin, LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
 
     def __init__(self, config_entry_id, device):

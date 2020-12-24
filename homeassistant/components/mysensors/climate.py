@@ -1,6 +1,6 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
 from homeassistant.components import mysensors
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -43,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
+class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     @property

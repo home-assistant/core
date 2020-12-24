@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "server": "Serveur",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Saisir les donn\u00e9es d'identification de Dexcom Share",
+                "title": "Configurer l'int\u00e9gration Dexcom"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unit\u00e9 de mesure"
+                }
+            }
+        }
+    }
+}

@@ -40,7 +40,7 @@ def set_arm_state(state, code=None):
     hub.update_overview(no_throttle=True)
 
 
-class VerisureAlarm(alarm.AlarmControlPanel):
+class VerisureAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Verisure alarm status."""
 
     def __init__(self):
@@ -55,7 +55,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         giid = hub.config.get(CONF_GIID)
         if giid is not None:
             aliass = {i["giid"]: i["alias"] for i in hub.session.installations}
-            if giid in aliass.keys():
+            if giid in aliass:
                 return "{} alarm".format(aliass[giid])
 
             _LOGGER.error("Verisure installation giid not found: %s", giid)

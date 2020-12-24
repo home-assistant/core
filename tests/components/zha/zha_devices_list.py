@@ -784,7 +784,7 @@ DEVICES = [
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
                 "channels": ["on_off"],
-                "entity_class": "Opening",
+                "entity_class": "Motion",
                 "entity_id": "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_on_off",
             },
         },
@@ -813,7 +813,7 @@ DEVICES = [
                 "entity_id": "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019"],
+        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019", "1:0x0102"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI on/off switch",
         "node_descriptor": b"\x02@\x80|\x11RR\x00\x00,R\x00\x00",
@@ -1036,16 +1036,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1094,16 +1094,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1152,16 +1152,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1378,16 +1378,6 @@ DEVICES = [
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
         ],
         "entity_map": {
-            ("switch", "00:11:22:33:44:55:66:77-1"): {
-                "channels": ["on_off"],
-                "entity_class": "Switch",
-                "entity_id": "switch.lumi_lumi_plug_maus01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
-                "channels": ["electrical_measurement"],
-                "entity_class": "ElectricalMeasurement",
-                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
                 "channels": ["analog_input"],
                 "entity_class": "AnalogInput",
@@ -1397,6 +1387,16 @@ DEVICES = [
                 "channels": ["analog_input"],
                 "entity_class": "AnalogInput",
                 "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.lumi_lumi_plug_maus01_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
+                "channels": ["electrical_measurement"],
+                "entity_class": "ElectricalMeasurement",
+                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -1426,7 +1426,6 @@ DEVICES = [
         "entities": [
             "light.lumi_lumi_relay_c2acn01_77665544_on_off",
             "light.lumi_lumi_relay_c2acn01_77665544_on_off_2",
-            "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement",
         ],
         "entity_map": {
@@ -1434,11 +1433,6 @@ DEVICES = [
                 "channels": ["on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_relay_c2acn01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 "channels": ["electrical_measurement"],
@@ -1482,32 +1476,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_2",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_3",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b186acn01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1541,32 +1515,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_2",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_3",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b286acn01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1897,32 +1851,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_2",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_3",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_86sw1_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1956,26 +1890,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_multistate_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -2161,8 +2081,6 @@ DEVICES = [
         },
         "entities": [
             "binary_sensor.lumi_lumi_sensor_smoke_77665544_ias_zone",
-            "sensor.lumi_lumi_sensor_smoke_77665544_analog_input",
-            "sensor.lumi_lumi_sensor_smoke_77665544_multistate_input",
             "sensor.lumi_lumi_sensor_smoke_77665544_power",
         ],
         "entity_map": {
@@ -2170,16 +2088,6 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_analog_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_multistate_input",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 "channels": ["ias_zone"],
@@ -2254,20 +2162,12 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_switch_aq3_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_switch_aq3_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_switch_aq3_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0006"],
@@ -3100,10 +3000,16 @@ DEVICES = [
             },
         },
         "entities": [
+            "climate.sinope_technologies_th1123zb_77665544_thermostat",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1123zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3142,8 +3048,14 @@ DEVICES = [
         "entities": [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
+            "climate.sinope_technologies_th1124zb_77665544_thermostat",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1124zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3326,7 +3238,7 @@ DEVICES = [
             }
         },
         "entities": [
-            "fan.zen_within_zen_01_77665544_fan",
+            "climate.zen_within_zen_01_77665544_fan_thermostat",
             "sensor.zen_within_zen_01_77665544_power",
         ],
         "entity_map": {
@@ -3335,10 +3247,10 @@ DEVICES = [
                 "entity_class": "Battery",
                 "entity_id": "sensor.zen_within_zen_01_77665544_power",
             },
-            ("fan", "00:11:22:33:44:55:66:77-1-514"): {
-                "channels": ["fan"],
-                "entity_class": "ZhaFan",
-                "entity_id": "fan.zen_within_zen_01_77665544_fan",
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat", "fan"],
+                "entity_class": "ZenWithinThermostat",
+                "entity_id": "climate.zen_within_zen_01_77665544_fan_thermostat",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -3539,5 +3451,285 @@ DEVICES = [
         "manufacturer": "sengled",
         "model": "Z01-A19NAE26",
         "node_descriptor": b"\x02@\x8c`\x11RR\x00\x00\x00R\x00\x00",
+    },
+    {
+        "device_no": 97,
+        "endpoints": {
+            1: {
+                "device_type": 512,
+                "endpoint_id": 1,
+                "in_clusters": [0, 3, 4, 5, 6, 8, 10, 21, 256, 64544, 64545],
+                "out_clusters": [3, 64544],
+                "profile_id": 260,
+            }
+        },
+        "entities": ["cover.unk_manufacturer_unk_model_77665544_level_on_off_shade"],
+        "entity_map": {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["level", "on_off", "shade"],
+                "entity_class": "Shade",
+                "entity_id": "cover.unk_manufacturer_unk_model_77665544_level_on_off_shade",
+            }
+        },
+        "event_channels": [],
+        "manufacturer": "unk_manufacturer",
+        "model": "unk_model",
+        "node_descriptor": b"\x01@\x8e\x10\x11RR\x00\x00\x00R\x00\x00",
+    },
+    {
+        "device_no": 98,
+        "endpoints": {
+            208: {
+                "endpoint_id": 208,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000C],
+                "out_clusters": [],
+            },
+            209: {
+                "endpoint_id": 209,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000C],
+                "out_clusters": [],
+            },
+            210: {
+                "endpoint_id": 210,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000C],
+                "out_clusters": [],
+            },
+            211: {
+                "endpoint_id": 211,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000C],
+                "out_clusters": [],
+            },
+            212: {
+                "endpoint_id": 212,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            213: {
+                "endpoint_id": 213,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            214: {
+                "endpoint_id": 214,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            215: {
+                "endpoint_id": 215,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000C],
+                "out_clusters": [],
+            },
+            216: {
+                "endpoint_id": 216,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            217: {
+                "endpoint_id": 217,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            218: {
+                "endpoint_id": 218,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000D],
+                "out_clusters": [],
+            },
+            219: {
+                "endpoint_id": 219,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006, 0x000D],
+                "out_clusters": [],
+            },
+            220: {
+                "endpoint_id": 220,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            221: {
+                "endpoint_id": 221,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            222: {
+                "endpoint_id": 222,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0006],
+                "out_clusters": [],
+            },
+            232: {
+                "endpoint_id": 232,
+                "profile_id": 49413,
+                "device_type": 0x0001,
+                "in_clusters": [0x0011, 0x0092],
+                "out_clusters": [0x0008, 0x0011],
+            },
+        },
+        "entities": [
+            "switch.digi_xbee3_77665544_on_off",
+            "switch.digi_xbee3_77665544_on_off_2",
+            "switch.digi_xbee3_77665544_on_off_3",
+            "switch.digi_xbee3_77665544_on_off_4",
+            "switch.digi_xbee3_77665544_on_off_5",
+            "switch.digi_xbee3_77665544_on_off_6",
+            "switch.digi_xbee3_77665544_on_off_7",
+            "switch.digi_xbee3_77665544_on_off_8",
+            "switch.digi_xbee3_77665544_on_off_9",
+            "switch.digi_xbee3_77665544_on_off_10",
+            "switch.digi_xbee3_77665544_on_off_11",
+            "switch.digi_xbee3_77665544_on_off_12",
+            "switch.digi_xbee3_77665544_on_off_13",
+            "switch.digi_xbee3_77665544_on_off_14",
+            "switch.digi_xbee3_77665544_on_off_15",
+            "sensor.digi_xbee3_77665544_analog_input",
+            "sensor.digi_xbee3_77665544_analog_input_2",
+            "sensor.digi_xbee3_77665544_analog_input_3",
+            "sensor.digi_xbee3_77665544_analog_input_4",
+            "number.digi_xbee3_77665544_analog_output",
+            "number.digi_xbee3_77665544_analog_output_2",
+        ],
+        "entity_map": {
+            ("switch", "00:11:22:33:44:55:66:77-208-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-209-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_2",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-210-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_3",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-211-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_4",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-212-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_5",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-213-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_6",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-214-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_7",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-215-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_8",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-216-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_9",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-217-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_10",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-218-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_11",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-219-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_12",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-220-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_13",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-221-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_14",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-222-6"): {
+                "channels": ["on_off"],
+                "entity_class": "Switch",
+                "entity_id": "switch.digi_xbee3_77665544_on_off_15",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-208-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.digi_xbee3_77665544_analog_input",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-209-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.digi_xbee3_77665544_analog_input_2",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-210-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.digi_xbee3_77665544_analog_input_3",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-211-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.digi_xbee3_77665544_analog_input_4",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-215-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.digi_xbee3_77665544_analog_input_5",
+            },
+            ("number", "00:11:22:33:44:55:66:77-218-13"): {
+                "channels": ["analog_output"],
+                "entity_class": "ZhaNumber",
+                "entity_id": "number.digi_xbee3_77665544_analog_output",
+            },
+            ("number", "00:11:22:33:44:55:66:77-219-13"): {
+                "channels": ["analog_output"],
+                "entity_class": "ZhaNumber",
+                "entity_id": "number.digi_xbee3_77665544_analog_output_2",
+            },
+        },
+        "event_channels": ["232:0x0008"],
+        "manufacturer": "Digi",
+        "model": "XBee3",
+        "node_descriptor": b"\x01@\x8e\x1e\x10R\xff\x00\x00,\xff\x00\x00",
     },
 ]

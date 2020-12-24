@@ -1,5 +1,9 @@
 """Support for LightwaveRF lights."""
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.const import CONF_NAME
 
 from . import LIGHTWAVE_LINK
@@ -22,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(lights)
 
 
-class LWRFLight(Light):
+class LWRFLight(LightEntity):
     """Representation of a LightWaveRF light."""
 
     def __init__(self, name, device_id, lwlink):

@@ -15,14 +15,13 @@ from homeassistant.components.google_assistant import const as gc, smart_home as
 from homeassistant.const import HTTP_OK
 from homeassistant.core import Context, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.aiohttp import MockRequest
 
 from . import alexa_config, google_config, utils
-from .const import DISPATCHER_REMOTE_UPDATE
+from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudClient(Interface):
@@ -109,19 +108,39 @@ class CloudClient(Interface):
         """When user logs in."""
         await self.prefs.async_set_username(self.cloud.username)
 
-        if self.alexa_config.enabled and self.alexa_config.should_report_state:
+        async def enable_alexa(_):
+            """Enable Alexa."""
             try:
                 await self.alexa_config.async_enable_proactive_mode()
+            except aiohttp.ClientError as err:  # If no internet available yet
+                if self._hass.is_running:
+                    logging.getLogger(__package__).warning(
+                        "Unable to activate Alexa Report State: %s. Retrying in 30 seconds",
+                        err,
+                    )
+                async_call_later(self._hass, 30, enable_alexa)
             except alexa_errors.NoTokenAvailable:
                 pass
 
-        if self._prefs.google_enabled:
+        async def enable_google(_):
+            """Enable Google."""
             gconf = await self.get_google_config()
 
             gconf.async_enable_local_sdk()
 
             if gconf.should_report_state:
                 gconf.async_enable_report_state()
+
+        tasks = []
+
+        if self.alexa_config.enabled and self.alexa_config.should_report_state:
+            tasks.append(enable_alexa)
+
+        if self._prefs.google_enabled:
+            tasks.append(enable_google)
+
+        if tasks:
+            await asyncio.gather(*[task(None) for task in tasks])
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
@@ -182,6 +201,7 @@ class CloudClient(Interface):
             headers=payload["headers"],
             method=payload["method"],
             query_string=payload["query"],
+            mock_source=DOMAIN,
         )
 
         response = await self._hass.components.webhook.async_handle_webhook(

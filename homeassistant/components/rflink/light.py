@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
@@ -159,11 +159,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
-class RflinkLight(SwitchableRflinkDevice, Light):
+class RflinkLight(SwitchableRflinkDevice, LightEntity):
     """Representation of a Rflink light."""
 
 
-class DimmableRflinkLight(SwitchableRflinkDevice, Light):
+class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
 
     _brightness = 255
@@ -197,10 +197,9 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
+        if self._brightness is None:
+            return {}
+        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):
@@ -208,7 +207,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-class HybridRflinkLight(SwitchableRflinkDevice, Light):
+class HybridRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -260,10 +259,9 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
+        if self._brightness is None:
+            return {}
+        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):
@@ -271,7 +269,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-class ToggleRflinkLight(SwitchableRflinkDevice, Light):
+class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device which sends out only 'on' commands.
 
     Some switches like for example Livolo light switches use the
@@ -279,11 +277,6 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     If the light is on and 'on' gets sent, the light will turn off
     and if the light is off and 'on' gets sent, the light will turn on.
     """
-
-    @property
-    def entity_id(self):
-        """Return entity id."""
-        return f"light.{self.name}"
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

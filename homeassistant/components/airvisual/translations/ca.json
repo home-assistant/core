@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "general_error": "Error inesperat",
+            "invalid_api_key": "Clau API inv\u00e0lida"
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "[%key::common::config_flow::data::api_key%]",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "Utilitza l'API d'AirVisual per monitoritzar una ubicaci\u00f3 geogr\u00e0fica.",
+                "title": "Configuraci\u00f3 localitzaci\u00f3 geogr\u00e0fica"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Amfitri\u00f3",
+                    "password": "Contrasenya"
+                },
+                "description": "Monitoritza una unitat personal d'AirVisual. Pots obtenir la contrasenya des de la interf\u00edcie d'usuari (UI) de la unitat.",
+                "title": "Configuraci\u00f3 d'AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "title": "Re-autenticaci\u00f3 amb AirVisual"
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Ubicaci\u00f3 geogr\u00e0fica",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Tipus d'integraci\u00f3"
+                },
+                "description": "Tria quin tipus de dades d'AirVisual vols monitoritzar.",
+                "title": "Configura AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra al mapa l'\u00e0rea geogr\u00e0fica monitoritzada"
+                },
+                "title": "Configuraci\u00f3 d'AirVisual"
+            }
+        }
+    }
+}

@@ -1,0 +1,105 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
+            "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
+            "not_deconz_bridge": "To nie jest mostek deCONZ",
+            "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
+        },
+        "error": {
+            "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
+        },
+        "flow_title": "Bramka deCONZ Zigbee ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek Hass.io {addon}?",
+                "title": "Bramka deCONZ Zigbee przez dodatek Hass.io"
+            },
+            "link": {
+                "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistantem. \n\n 1. Przejd\u017a do ustawienia deCONZ > bramka > Zaawansowane\n 2. Naci\u015bnij przycisk \"Uwierzytelnij aplikacj\u0119\"",
+                "title": "Po\u0142\u0105czenie z deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Wybierz znalezion\u0105 bramk\u0119 deCONZ"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "oba przyciski",
+            "bottom_buttons": "dolne przyciski",
+            "button_1": "pierwszy przycisk",
+            "button_2": "drugi przycisk",
+            "button_3": "trzeci przycisk",
+            "button_4": "czwarty",
+            "close": "zamknij",
+            "dim_down": "zmniejszenie jasno\u015bci",
+            "dim_up": "zwi\u0119kszenie jasno\u015bci",
+            "left": "w lewo",
+            "open": "otw\u00f3rz",
+            "right": "w prawo",
+            "side_1": "strona 1",
+            "side_2": "strona 2",
+            "side_3": "strona 3",
+            "side_4": "strona 4",
+            "side_5": "strona 5",
+            "side_6": "strona 6",
+            "top_buttons": "g\u00f3rne przyciski",
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
+        },
+        "trigger_type": {
+            "remote_awakened": "urz\u0105dzenie si\u0119 obudzi",
+            "remote_button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "remote_button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "remote_button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "remote_button_rotated": "przycisk zostanie obr\u00f3cony \"{subtype}\"",
+            "remote_button_rotated_fast": "przycisk zostanie szybko obr\u00f3cony \"{subtype}\"",
+            "remote_button_rotation_stopped": "nast\u0105pi zatrzymanie obrotu przycisku \"{subtype}\"",
+            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty",
+            "remote_double_tap": "urz\u0105dzenie \"{subtype}\" zostanie dwukrotnie pukni\u0119te",
+            "remote_double_tap_any_side": "urz\u0105dzenie dwukrotnie pukni\u0119te z dowolnej strony",
+            "remote_falling": "urz\u0105dzenie zarejestruje swobodny spadek",
+            "remote_flip_180_degrees": "urz\u0105dzenie odwr\u00f3cone o 180 stopni",
+            "remote_flip_90_degrees": "urz\u0105dzenie odwr\u00f3cone o 90 stopni",
+            "remote_gyro_activated": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
+            "remote_moved": "urz\u0105dzenie poruszone z \"{subtype}\" w g\u00f3r\u0119",
+            "remote_moved_any_side": "urz\u0105dzenie przesuni\u0119te dowoln\u0105 stron\u0105 do g\u00f3ry",
+            "remote_rotate_from_side_1": "urz\u0105dzenie obr\u00f3cone ze \"strona 1\" na \"{subtype}\"",
+            "remote_rotate_from_side_2": "urz\u0105dzenie obr\u00f3cone ze \"strona 2\" na \"{subtype}\"",
+            "remote_rotate_from_side_3": "urz\u0105dzenie obr\u00f3cone ze \"strona 3\" na \"{subtype}\"",
+            "remote_rotate_from_side_4": "urz\u0105dzenie obr\u00f3cone ze \"strona 4\" na \"{subtype}\"",
+            "remote_rotate_from_side_5": "urz\u0105dzenie obr\u00f3cone ze \"strona 5\" na \"{subtype}\"",
+            "remote_rotate_from_side_6": "urz\u0105dzenie obr\u00f3cone ze \"strona 6\" na \"{subtype}\"",
+            "remote_turned_clockwise": "urz\u0105dzenie obr\u00f3cone zgodnie z ruchem wskaz\u00f3wek zegara",
+            "remote_turned_counter_clockwise": "urz\u0105dzenie obr\u00f3cone przeciwnie do ruchu wskaz\u00f3wek zegara"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
+                    "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ",
+                    "allow_new_devices": "Zezwalaj na automatyczne dodawanie nowych urz\u0105dze\u0144"
+                },
+                "description": "Skonfiguruj widoczno\u015b\u0107 typ\u00f3w urz\u0105dze\u0144 deCONZ",
+                "title": "Opcje deCONZ"
+            }
+        }
+    }
+}

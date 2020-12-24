@@ -1,6 +1,4 @@
 """Support for Sense Hat LEDs."""
-import logging
-
 from sense_hat import SenseHat
 import voluptuous as vol
 
@@ -10,13 +8,11 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SENSEHAT = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
@@ -37,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SenseHatLight(sensehat, name)])
 
 
-class SenseHatLight(Light):
+class SenseHatLight(LightEntity):
     """Representation of an Sense Hat Light."""
 
     def __init__(self, sensehat, name):

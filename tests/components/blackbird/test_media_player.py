@@ -203,8 +203,9 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player = self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
         self.media_player.hass = self.hass
         self.media_player.entity_id = "media_player.zone_3"
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Tear down the test case."""
         self.hass.stop()
 

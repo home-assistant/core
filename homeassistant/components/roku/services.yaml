@@ -1,0 +1,9 @@
+search:
+  description: Emulates opening the search screen and entering the search keyword.
+  fields:
+    entity_id:
+      description: The entities to search on.
+      example: "media_player.roku"
+    keyword:
+      description: The keyword to search for.
+      example: "Space Jam"

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert"
+        },
+        "step": {
+            "user": {
+                "description": "Soll Akafsl\u00ebscht konfigur\u00e9iert ginn?",
+                "title": "Akafsl\u00ebscht"
+            }
+        }
+    },
+    "title": "Akafsl\u00ebscht"
+}

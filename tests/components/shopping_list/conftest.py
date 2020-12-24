@@ -1,9 +1,9 @@
 """Shopping list test helpers."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components.shopping_list import intent as sl_intent
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

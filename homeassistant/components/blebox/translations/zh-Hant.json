@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "\u4f4d\u65bc {address} \u7684 BleBox \u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
+            "unsupported_version": "BleBox \u88dd\u7f6e\u97cc\u9ad4\u904e\u820a\uff0c\u8acb\u5148\u9032\u884c\u66f4\u65b0\u3002"
+        },
+        "flow_title": "BleBox \u88dd\u7f6e\uff1a{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP \u4f4d\u5740",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u8a2d\u5b9a BleBox \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002",
+                "title": "\u8a2d\u5b9a BleBox \u88dd\u7f6e"
+            }
+        }
+    }
+}

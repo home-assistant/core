@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "edit": {
+                "data": {
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

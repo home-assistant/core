@@ -1,11 +1,10 @@
 """Support for Panasonic Blu-ray players."""
 from datetime import timedelta
-import logging
 
 from panacotta import PanasonicBD
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -22,8 +21,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Panasonic Blu-Ray"
 
@@ -49,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([PanasonicBluRay(conf[CONF_HOST], conf[CONF_NAME])])
 
 
-class PanasonicBluRay(MediaPlayerDevice):
+class PanasonicBluRay(MediaPlayerEntity):
     """Representation of a Panasonic Blu-ray device."""
 
     def __init__(self, ip, name):

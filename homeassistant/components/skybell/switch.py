@@ -1,15 +1,11 @@
 """Switch support for the Skybell HD Doorbell."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 # Switch types: Name
 SWITCH_TYPES = {
@@ -41,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class SkybellSwitch(SkybellDevice, SwitchDevice):
+class SkybellSwitch(SkybellDevice, SwitchEntity):
     """A switch implementation for Skybell devices."""
 
     def __init__(self, device, switch_type):
@@ -62,7 +58,7 @@ class SkybellSwitch(SkybellDevice, SwitchDevice):
         setattr(self._device, self._switch_type, True)
 
     def turn_off(self, **kwargs):
-        """Turn on the switch."""
+        """Turn off the switch."""
         setattr(self._device, self._switch_type, False)
 
     @property

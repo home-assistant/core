@@ -2,7 +2,6 @@
 from datetime import timedelta
 import re
 import unittest
-from unittest.mock import MagicMock, patch
 
 import forecastio
 from requests.exceptions import HTTPError
@@ -11,7 +10,8 @@ import requests_mock
 from homeassistant.components.darksky import sensor as darksky
 from homeassistant.setup import setup_component
 
-from tests.common import MockDependency, get_test_home_assistant, load_fixture
+from tests.async_mock import MagicMock, patch
+from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {
@@ -105,19 +105,20 @@ class TestDarkSkySetup(unittest.TestCase):
         self.lat = self.hass.config.latitude = 37.8267
         self.lon = self.hass.config.longitude = -122.423
         self.entities = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @MockDependency("forecastio")
     @patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
         new=load_forecastMock,
     )
-    def test_setup_with_config(self, mock_forecastio):
+    def test_setup_with_config(self):
         """Test the platform setup with configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_MINIMAL)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is not None
@@ -125,18 +126,19 @@ class TestDarkSkySetup(unittest.TestCase):
     def test_setup_with_invalid_config(self):
         """Test the platform setup with invalid configuration."""
         setup_component(self.hass, "sensor", INVALID_CONFIG_MINIMAL)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is None
 
-    @MockDependency("forecastio")
     @patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
         new=load_forecastMock,
     )
-    def test_setup_with_language_config(self, mock_forecastio):
+    def test_setup_with_language_config(self):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_LANG_DE)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is not None
@@ -144,6 +146,7 @@ class TestDarkSkySetup(unittest.TestCase):
     def test_setup_with_invalid_language_config(self):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", INVALID_CONFIG_LANG)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is None
@@ -164,14 +167,14 @@ class TestDarkSkySetup(unittest.TestCase):
         )
         assert not response
 
-    @MockDependency("forecastio")
     @patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
         new=load_forecastMock,
     )
-    def test_setup_with_alerts_config(self, mock_forecastio):
+    def test_setup_with_alerts_config(self):
         """Test the platform setup with alert configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_ALERTS)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.dark_sky_alerts")
         assert state.state == "0"
@@ -187,6 +190,7 @@ class TestDarkSkySetup(unittest.TestCase):
         mock_req.get(re.compile(uri), text=load_fixture("darksky.json"))
 
         assert setup_component(self.hass, "sensor", VALID_CONFIG_MINIMAL)
+        self.hass.block_till_done()
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
@@ -198,3 +202,7 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state.attributes.get("friendly_name") == "Dark Sky Summary"
         state = self.hass.states.get("sensor.dark_sky_alerts")
         assert state.state == "2"
+
+        state = self.hass.states.get("sensor.dark_sky_daytime_high_temperature_1d")
+        assert state is not None
+        assert state.attributes.get("device_class") == "temperature"

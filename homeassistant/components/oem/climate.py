@@ -1,11 +1,9 @@
 """OpenEnergyMonitor Thermostat Support."""
-import logging
-
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -25,9 +23,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities((ThermostatDevice(therm, name),), True)
 
 
-class ThermostatDevice(ClimateDevice):
+class ThermostatDevice(ClimateEntity):
     """Interface class for the oemthermostat module."""
 
     def __init__(self, thermostat, name):

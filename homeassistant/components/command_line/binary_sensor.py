@@ -1,13 +1,12 @@
 """Support for custom shell commands to retrieve values."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_COMMAND,
@@ -18,10 +17,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .sensor import CommandSensorData
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -29,8 +28,6 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-CONF_COMMAND_TIMEOUT = "command_timeout"
-DEFAULT_TIMEOUT = 15
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -47,6 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Command line Binary Sensor."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
     payload_off = config.get(CONF_PAYLOAD_OFF)
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class CommandBinarySensor(BinarySensorDevice):
+class CommandBinarySensor(BinarySensorEntity):
     """Representation of a command line binary sensor."""
 
     def __init__(

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "no_agreements": "Dieses Konto hat keine Toon-Anzeigen.",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
+        }
+    }
+}

@@ -1,0 +1,71 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Nur eine einzige Konfiguration von MQTT ist zul\u00e4ssig."
+        },
+        "error": {
+            "cannot_connect": "Es konnte keine Verbindung zum Broker hergestellt werden."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Server",
+                    "discovery": "Suche aktivieren",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Suche aktivieren"
+                },
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Hass.io Add-on {addon} bereitgestellt wird?",
+                "title": "MQTT Broker per Hass.io add-on"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Erste Taste",
+            "button_2": "Zweite Taste",
+            "button_3": "Dritte Taste",
+            "button_4": "Vierte Taste",
+            "button_5": "F\u00fcnfte Taste",
+            "button_6": "Sechste Taste",
+            "turn_off": "Ausschalten",
+            "turn_on": "Einschalten"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" doppelt angeklickt",
+            "button_long_press": "\"{subtype}\" kontinuierlich gedr\u00fcckt",
+            "button_long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen",
+            "button_quadruple_press": "\"{subtype}\" Vierfach geklickt",
+            "button_quintuple_press": "\"{subtype}\" f\u00fcnffach geklickt",
+            "button_short_press": "\"{subtype}\" gedr\u00fcckt",
+            "button_short_release": "\"{subtype}\" losgelassen",
+            "button_triple_press": "\"{subtype}\" dreifach geklickt"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            },
+            "options": {
+                "data": {
+                    "will_enable": "Letzten Willen aktivieren"
+                }
+            }
+        }
+    }
+}

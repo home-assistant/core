@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "De [%%] integratie is niet ingesteld",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        }
+    }
+}

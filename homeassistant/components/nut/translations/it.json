@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Risorse"
+                },
+                "title": "Scegliere le risorse da monitorare"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Risorse"
+                },
+                "title": "Scegliere l'UPS da monitorare"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Connessione al server NUT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Risorse",
+                    "scan_interval": "Intervallo di scansione (secondi)"
+                },
+                "description": "Scegliere le Risorse del Sensore."
+            }
+        }
+    }
+}

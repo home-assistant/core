@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "link": {
+                "description": "Vols configurar {name} ({host})?",
+                "title": "Connexi\u00f3 amb el Hub PowerView"
+            },
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP"
+                },
+                "title": "Connexi\u00f3 amb el Hub PowerView"
+            }
+        }
+    }
+}

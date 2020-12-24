@@ -3,7 +3,7 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -33,7 +33,6 @@ from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHER
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FLOOR_TEMP = False
-DEFAULT_PRECISION = None
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -51,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(ents)
 
 
-class OpenThermClimate(ClimateDevice):
+class OpenThermClimate(ClimateEntity):
     """Representation of a climate device."""
 
     def __init__(self, gw_dev, options):
@@ -62,7 +61,7 @@ class OpenThermClimate(ClimateDevice):
         )
         self.friendly_name = gw_dev.name
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
-        self.temp_precision = options.get(CONF_PRECISION, DEFAULT_PRECISION)
+        self.temp_precision = options.get(CONF_PRECISION)
         self._available = False
         self._current_operation = None
         self._current_temperature = None
@@ -177,7 +176,7 @@ class OpenThermClimate(ClimateDevice):
     @property
     def precision(self):
         """Return the precision of the system."""
-        if self.temp_precision is not None:
+        if self.temp_precision is not None and self.temp_precision != 0:
             return self.temp_precision
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES

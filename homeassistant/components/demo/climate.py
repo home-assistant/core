@@ -1,7 +1,5 @@
 """Demo platform that offers a fake climate device."""
-import logging
-
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -26,7 +24,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from . import DOMAIN
 
 SUPPORT_FLAGS = 0
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -97,7 +94,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoClimate(ClimateDevice):
+class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
     def __init__(
@@ -134,8 +131,6 @@ class DemoClimate(ClimateDevice):
             self._support_flags = self._support_flags | SUPPORT_TARGET_HUMIDITY
         if swing_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_SWING_MODE
-        if hvac_action is not None:
-            self._support_flags = self._support_flags
         if aux is not None:
             self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
         if HVAC_MODE_HEAT_COOL in hvac_modes or HVAC_MODE_AUTO in hvac_modes:
@@ -311,12 +306,12 @@ class DemoClimate(ClimateDevice):
         self._preset = preset_mode
         self.async_write_ha_state()
 
-    def turn_aux_heat_on(self):
+    async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
         self._aux = True
         self.async_write_ha_state()
 
-    def turn_aux_heat_off(self):
+    async def async_turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
         self.async_write_ha_state()

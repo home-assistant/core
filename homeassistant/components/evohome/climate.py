@@ -3,11 +3,8 @@ from datetime import datetime as dt
 import logging
 from typing import List, Optional
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -122,7 +119,7 @@ async def async_setup_platform(
     async_add_entities([controller] + zones, update_before_add=True)
 
 
-class EvoClimateDevice(EvoDevice, ClimateDevice):
+class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -142,7 +139,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         return self._preset_modes
 
 
-class EvoZone(EvoChild, EvoClimateDevice):
+class EvoZone(EvoChild, EvoClimateEntity):
     """Base for a Honeywell TCC Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -199,19 +196,6 @@ class EvoZone(EvoChild, EvoClimateDevice):
             return HVAC_MODE_AUTO
         is_off = self.target_temperature <= self.min_temp
         return HVAC_MODE_OFF if is_off else HVAC_MODE_HEAT
-
-    @property
-    def hvac_action(self) -> Optional[str]:
-        """Return the current running hvac operation if supported."""
-        if self._evo_tcs.systemModeStatus["mode"] == EVO_HEATOFF:
-            return CURRENT_HVAC_OFF
-        if self.target_temperature <= self.min_temp:
-            return CURRENT_HVAC_OFF
-        if not self._evo_device.temperatureStatus["isAvailable"]:
-            return None
-        if self.target_temperature <= self.current_temperature:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_HEAT
 
     @property
     def target_temperature(self) -> float:
@@ -315,7 +299,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
 
-class EvoController(EvoClimateDevice):
+class EvoController(EvoClimateEntity):
     """Base for a Honeywell TCC Controller/Location.
 
     The Controller (aka TCS, temperature control system) is the parent of all the child

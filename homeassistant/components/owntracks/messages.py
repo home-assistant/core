@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,
 )
-from homeassistant.const import STATE_HOME
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.util import decorator, slugify
 
 from .helper import supports_encryption
@@ -97,7 +97,10 @@ def _set_gps_from_zone(kwargs, location, zone):
     Async friendly.
     """
     if zone is not None:
-        kwargs["gps"] = (zone.attributes["latitude"], zone.attributes["longitude"])
+        kwargs["gps"] = (
+            zone.attributes[ATTR_LATITUDE],
+            zone.attributes[ATTR_LONGITUDE],
+        )
         kwargs["gps_accuracy"] = zone.attributes["radius"]
         kwargs["location_name"] = location
     return kwargs
@@ -377,7 +380,7 @@ async def async_handle_not_impl_msg(hass, context, message):
 
 async def async_handle_unsupported_msg(hass, context, message):
     """Handle an unsupported or invalid message type."""
-    _LOGGER.warning("Received unsupported message type: %s.", message.get("_type"))
+    _LOGGER.warning("Received unsupported message type: %s", message.get("_type"))
 
 
 async def async_handle_message(hass, context, message):

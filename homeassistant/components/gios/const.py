@@ -8,6 +8,7 @@ DEFAULT_NAME = "GIOŚ"
 # Term of service GIOŚ allow downloading data no more than twice an hour.
 SCAN_INTERVAL = timedelta(minutes=30)
 DOMAIN = "gios"
+MANUFACTURER = "Główny Inspektorat Ochrony Środowiska"
 
 AQI_GOOD = "dobry"
 AQI_MODERATE = "umiarkowany"

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat",
+            "wrong_version": "El teu Powerwall utilitza una versi\u00f3 de programari no compatible. L'hauries d'actualitzar o informar d'aquest problema perqu\u00e8 sigui solucionat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP"
+                },
+                "title": "Connexi\u00f3 amb el Powerwall"
+            }
+        }
+    }
+}

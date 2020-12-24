@@ -2,7 +2,11 @@
 import logging
 
 from homeassistant.components import light, tellduslive
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
@@ -25,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveLight(TelldusLiveEntity, Light):
+class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     """Representation of a Tellstick Net light."""
 
     def __init__(self, client, device_id):

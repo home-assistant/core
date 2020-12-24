@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech.",
+            "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
+            "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
+            "external_setup": "Point gouf vun engem anere Floss erfollegr\u00e4ich konfigur\u00e9iert.",
+            "no_flows": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich authentifiz\u00e9iert"
+        },
+        "error": {
+            "follow_link": "Follegt w.e.g dem Link an authentifiz\u00e9iert iech ier de op Ofsch\u00e9cken dr\u00e9ckt",
+            "no_token": "Ong\u00ebltegen Acc\u00e8s Jeton"
+        },
+        "step": {
+            "auth": {
+                "description": "Follegt dem Link \u00ebnnendr\u00ebnner an **accept\u00e9iert** den Acc\u00e8s zu \u00e4rem Minut Kont , a kommt dann zer\u00e9ck heihin an dr\u00e9ck op **ofsch\u00e9cken** hei \u00ebnnen.\n\n[Link]({authorization_url})",
+                "title": "Point authentifiz\u00e9ieren"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Ubidder"
+                },
+                "description": "Soll d'Konfiguration gestart ginn?",
+                "title": "Authentifikatioun Method auswielen"
+            }
+        }
+    }
+}

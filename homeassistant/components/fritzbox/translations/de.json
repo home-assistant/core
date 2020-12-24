@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Diese AVM FRITZ! Box ist bereits konfiguriert.",
+            "already_in_progress": "Die Konfiguration der AVM FRITZ! Box ist bereits in Bearbeitung.",
+            "not_supported": "Verbunden mit AVM FRITZ! Box, kann jedoch keine Smart Home-Ger\u00e4te steuern."
+        },
+        "flow_title": "AVM FRITZ! Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "M\u00f6chten Sie {name} einrichten?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Geben Sie Ihre AVM FRITZ! Box-Informationen ein."
+            }
+        }
+    }
+}

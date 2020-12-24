@@ -1,9 +1,6 @@
 """The tests for the Reddit platform."""
 import copy
-import unittest
-from unittest.mock import patch
 
-from homeassistant.components.reddit import sensor as reddit_sensor
 from homeassistant.components.reddit.sensor import (
     ATTR_BODY,
     ATTR_COMMENTS_NUMBER,
@@ -17,16 +14,22 @@ from homeassistant.components.reddit.sensor import (
     CONF_SORT_BY,
     DOMAIN,
 )
-from homeassistant.const import CONF_MAXIMUM, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import setup_component
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_MAXIMUM,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockDependency, get_test_home_assistant
+from tests.async_mock import patch
 
 VALID_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -36,8 +39,8 @@ VALID_CONFIG = {
 VALID_LIMITED_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -49,8 +52,8 @@ VALID_LIMITED_CONFIG = {
 INVALID_SORT_BY_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -146,47 +149,36 @@ class MockSubreddit:
         return data["results"][:limit]
 
 
-class TestRedditSetup(unittest.TestCase):
-    """Test the Reddit platform."""
+@patch("praw.Reddit", new=MockPraw)
+async def test_setup_with_valid_config(hass):
+    """Test the platform setup with Reddit configuration."""
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    await hass.async_block_till_done()
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
+    state = hass.states.get("sensor.reddit_worldnews")
+    assert int(state.state) == MOCK_RESULTS_LENGTH
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+    state = hass.states.get("sensor.reddit_news")
+    assert int(state.state) == MOCK_RESULTS_LENGTH
 
-    @MockDependency("praw")
-    @patch("praw.Reddit", new=MockPraw)
-    def test_setup_with_valid_config(self, mock_praw):
-        """Test the platform setup with Reddit configuration."""
-        with patch.object(reddit_sensor, "praw", mock_praw):
-            setup_component(self.hass, "sensor", VALID_CONFIG)
+    assert state.attributes[ATTR_SUBREDDIT] == "news"
 
-        state = self.hass.states.get("sensor.reddit_worldnews")
-        assert int(state.state) == MOCK_RESULTS_LENGTH
+    assert state.attributes[ATTR_POSTS][0] == {
+        ATTR_ID: 0,
+        ATTR_URL: "http://example.com/1",
+        ATTR_TITLE: "example1",
+        ATTR_SCORE: "1",
+        ATTR_COMMENTS_NUMBER: "1",
+        ATTR_CREATED: "",
+        ATTR_BODY: "example1 selftext",
+    }
 
-        state = self.hass.states.get("sensor.reddit_news")
-        assert int(state.state) == MOCK_RESULTS_LENGTH
+    assert state.attributes[CONF_SORT_BY] == "hot"
 
-        assert state.attributes[ATTR_SUBREDDIT] == "news"
 
-        assert state.attributes[ATTR_POSTS][0] == {
-            ATTR_ID: 0,
-            ATTR_URL: "http://example.com/1",
-            ATTR_TITLE: "example1",
-            ATTR_SCORE: "1",
-            ATTR_COMMENTS_NUMBER: "1",
-            ATTR_CREATED: "",
-            ATTR_BODY: "example1 selftext",
-        }
-
-        assert state.attributes[CONF_SORT_BY] == "hot"
-
-    @MockDependency("praw")
-    @patch("praw.Reddit", new=MockPraw)
-    def test_setup_with_invalid_config(self, mock_praw):
-        """Test the platform setup with invalid Reddit configuration."""
-        setup_component(self.hass, "sensor", INVALID_SORT_BY_CONFIG)
-        assert not self.hass.states.get("sensor.reddit_worldnews")
+@patch("praw.Reddit", new=MockPraw)
+async def test_setup_with_invalid_config(hass):
+    """Test the platform setup with invalid Reddit configuration."""
+    assert await async_setup_component(hass, "sensor", INVALID_SORT_BY_CONFIG)
+    await hass.async_block_till_done()
+    assert not hass.states.get("sensor.reddit_worldnews")

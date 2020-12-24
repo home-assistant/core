@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontot har redan konfigurerats"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "Inloggningsmetod",
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "validation": {
+                "title": "Tv\u00e5faktorsautentisering"
+            }
+        }
+    }
+}

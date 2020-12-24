@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         def _render(value):
             try:
-                return value_template.async_render({"value": value})
+                return value_template.async_render({"value": value}, parse_result=False)
             except TemplateError:
                 _LOGGER.exception("Error parsing value")
                 return value
@@ -205,7 +205,7 @@ class ArestData:
                 try:
                     if str(self._pin[0]) == "A":
                         response = requests.get(
-                            f"{self._resource,}/analog/{self._pin[1:]}", timeout=10
+                            f"{self._resource}/analog/{self._pin[1:]}", timeout=10
                         )
                         self.data = {"value": response.json()["return_value"]}
                 except TypeError:

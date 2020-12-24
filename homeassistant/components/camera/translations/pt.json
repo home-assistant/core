@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Em espera",
+            "recording": "A gravar",
+            "streaming": "A enviar"
+        }
+    },
+    "title": "C\u00e2mara"
+}

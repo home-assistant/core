@@ -1,0 +1,19 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Scheda di base",
+            "disk_total": "Disco totale",
+            "disk_used": "Disco utilizzato",
+            "docker_version": "Versione Docker",
+            "healthy": "Integrit\u00e0",
+            "host_os": "Sistema Operativo Host",
+            "installed_addons": "Componenti aggiuntivi installati",
+            "supervisor_api": "API Supervisore",
+            "supervisor_version": "Versione Supervisore",
+            "supported": "Supportato",
+            "update_channel": "Canale di aggiornamento",
+            "version_api": "Versione API"
+        }
+    },
+    "title": "Hass.io"
+}

@@ -1,7 +1,7 @@
 """Support for monitoring a Sense energy sensor device."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_POWER
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,7 +61,7 @@ def sense_to_mdi(sense_icon):
     return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
 
 
-class SenseDevice(BinarySensorDevice):
+class SenseDevice(BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
@@ -133,6 +133,9 @@ class SenseDevice(BinarySensorDevice):
     @callback
     def _async_update_from_data(self):
         """Get the latest data, update state. Must not do I/O."""
+        new_state = bool(self._sense_devices_data.get_device_by_id(self._id))
+        if self._available and self._state == new_state:
+            return
         self._available = True
-        self._state = bool(self._sense_devices_data.get_device_by_id(self._id))
+        self._state = new_state
         self.async_write_ha_state()

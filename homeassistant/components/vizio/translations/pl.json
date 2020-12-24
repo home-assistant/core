@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa, aplikacje i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "complete_pairing_failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
+            "existing_config_entry_found": "Istnieje ju\u017c wpis konfiguracyjny VIZIO SmartCast z tym samym numerem seryjnym. W celu skonfigurowania tego wpisu nale\u017cy usun\u0105\u0107 istniej\u0105cy."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "Kod PIN"
+                },
+                "description": "Tw\u00f3j telewizor powinien wy\u015bwietla\u0107 kod. Wprowad\u017a ten kod do formularza, a nast\u0119pnie przejd\u017a do nast\u0119pnego kroku, aby zako\u0144czy\u0107 parowanie.",
+                "title": "Ko\u0144czenie procesu parowania"
+            },
+            "pairing_complete": {
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.",
+                "title": "Parowanie zako\u0144czone"
+            },
+            "pairing_complete_import": {
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant.\n\nToken dost\u0119pu to '**{access_token}**'.",
+                "title": "Parowanie zako\u0144czone"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token dost\u0119pu",
+                    "device_class": "Typ urz\u0105dzenia",
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa"
+                },
+                "description": "Token dost\u0119pu potrzebny jest tylko dla telewizor\u00f3w. Je\u015bli konfigurujesz telewizor i nie masz jeszcze tokenu dost\u0119pu, pozostaw go pusty, aby przej\u015b\u0107 przez proces parowania.",
+                "title": "VIZIO SmartCast"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplikacje do do\u0142\u0105czenia lub wykluczenia",
+                    "include_or_exclude": "Do\u0142\u0105czanie lub wykluczanie aplikacji",
+                    "volume_step": "Skok g\u0142o\u015bno\u015bci"
+                },
+                "description": "Je\u015bli telewizor obs\u0142uguje aplikacje, mo\u017cesz opcjonalnie filtrowa\u0107 aplikacje, kt\u00f3re maj\u0105 zosta\u0107 uwzgl\u0119dnione lub wykluczone z listy \u017ar\u00f3de\u0142. Mo\u017cesz pomin\u0105\u0107 ten krok dla telewizor\u00f3w, kt\u00f3re nie obs\u0142uguj\u0105 aplikacji.",
+                "title": "Aktualizacja opcji VIZIO SmartCast"
+            }
+        }
+    }
+}

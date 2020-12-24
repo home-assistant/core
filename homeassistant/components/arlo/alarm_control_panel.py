@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(base_stations, True)
 
 
-class ArloBaseStation(AlarmControlPanel):
+class ArloBaseStation(AlarmControlPanelEntity):
     """Representation of an Arlo Alarm Control Panel."""
 
     def __init__(self, data, home_mode_name, away_mode_name, night_mode_name):

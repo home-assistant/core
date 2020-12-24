@@ -1,10 +1,8 @@
 """Support for Enigma2 media players."""
-import logging
-
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK,
@@ -31,8 +29,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
@@ -117,7 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([Enigma2Device(config[CONF_NAME], device)], True)
 
 
-class Enigma2Device(MediaPlayerDevice):
+class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
     def __init__(self, name, device):
@@ -131,11 +127,21 @@ class Enigma2Device(MediaPlayerDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique ID for this entity."""
+        return self.e2_box.mac_address
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
             return STATE_PLAYING
         return STATE_OFF if self.e2_box.in_standby else STATE_ON
+
+    @property
+    def available(self):
+        """Return True if the device is available."""
+        return not self.e2_box.is_offline
 
     @property
     def supported_features(self):
@@ -253,17 +259,13 @@ class Enigma2Device(MediaPlayerDevice):
         currservice_begin:  is in the format '21:00'.
         currservice_end:    is in the format '21:00'.
         """
-        attributes = {}
-        if not self.e2_box.in_standby:
-            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = self.e2_box.status_info[
-                "isRecording"
-            ]
-            attributes[ATTR_MEDIA_DESCRIPTION] = self.e2_box.status_info[
+        if self.e2_box.in_standby:
+            return {}
+        return {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
+            ATTR_MEDIA_DESCRIPTION: self.e2_box.status_info[
                 "currservice_fulldescription"
-            ]
-            attributes[ATTR_MEDIA_START_TIME] = self.e2_box.status_info[
-                "currservice_begin"
-            ]
-            attributes[ATTR_MEDIA_END_TIME] = self.e2_box.status_info["currservice_end"]
-
-        return attributes
+            ],
+            ATTR_MEDIA_START_TIME: self.e2_box.status_info["currservice_begin"],
+            ATTR_MEDIA_END_TIME: self.e2_box.status_info["currservice_end"],
+        }

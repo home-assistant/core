@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
+class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
     @property

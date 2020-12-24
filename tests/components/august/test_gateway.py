@@ -1,11 +1,10 @@
 """The gateway tests for the august platform."""
-from unittest.mock import MagicMock
-
-from asynctest import mock
+from august.authenticator_common import AuthenticationState
 
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.august.gateway import AugustGateway
 
+from tests.async_mock import MagicMock, patch
 from tests.components.august.mocks import _mock_august_authentication, _mock_get_config
 
 
@@ -14,11 +13,10 @@ async def test_refresh_access_token(hass):
     await _patched_refresh_access_token(hass, "new_token", 5678)
 
 
-@mock.patch(
-    "homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate"
-)
-@mock.patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
-@mock.patch(
+@patch("homeassistant.components.august.gateway.ApiAsync.async_get_operable_locks")
+@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
+@patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
+@patch(
     "homeassistant.components.august.gateway.AuthenticatorAsync.async_refresh_access_token"
 )
 async def _patched_refresh_access_token(
@@ -28,9 +26,12 @@ async def _patched_refresh_access_token(
     refresh_access_token_mock,
     should_refresh_mock,
     authenticate_mock,
+    async_get_operable_locks_mock,
 ):
     authenticate_mock.side_effect = MagicMock(
-        return_value=_mock_august_authentication("original_token", 1234)
+        return_value=_mock_august_authentication(
+            "original_token", 1234, AuthenticationState.AUTHENTICATED
+        )
     )
     august_gateway = AugustGateway(hass)
     mocked_config = _mock_get_config()
@@ -43,7 +44,7 @@ async def _patched_refresh_access_token(
 
     should_refresh_mock.return_value = True
     refresh_access_token_mock.return_value = _mock_august_authentication(
-        new_token, new_token_expire_time
+        new_token, new_token_expire_time, AuthenticationState.AUTHENTICATED
     )
     await august_gateway.async_refresh_access_token_if_needed()
     refresh_access_token_mock.assert_called()

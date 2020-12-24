@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "no_units": "Kunne ikke finde nogen klimaanl\u00e6g i CoolMasterNet-v\u00e6rt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Underst\u00f8tter k\u00f8lingstilstand",
+                    "dry": "Underst\u00f8tter t\u00f8rringstilstand",
+                    "fan_only": "Underst\u00f8tter kun-bl\u00e6ser-tilstand",
+                    "heat": "Underst\u00f8tter varmetilstand",
+                    "heat_cool": "Underst\u00f8tter automatisk varm/k\u00f8l-tilstand",
+                    "host": "V\u00e6rt",
+                    "off": "Kan slukkes"
+                },
+                "title": "Ops\u00e6t dine CoolMasterNet-forbindelsesdetaljer."
+            }
+        }
+    }
+}

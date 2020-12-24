@@ -1,10 +1,10 @@
 """Tests for the Home Assistant Websocket API."""
-from unittest.mock import Mock, patch
-
 from aiohttp import WSMsgType
 import voluptuous as vol
 
 from homeassistant.components.websocket_api import const, messages
+
+from tests.async_mock import Mock, patch
 
 
 async def test_invalid_message_format(websocket_client):

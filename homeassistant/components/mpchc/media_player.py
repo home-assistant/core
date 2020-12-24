@@ -5,7 +5,7 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([MpcHcDevice(name, url)], True)
 
 
-class MpcHcDevice(MediaPlayerDevice):
+class MpcHcDevice(MediaPlayerEntity):
     """Representation of a MPC-HC server."""
 
     def __init__(self, name, url):
@@ -82,7 +82,9 @@ class MpcHcDevice(MediaPlayerDevice):
                 self._player_variables[var[0]] = var[1].lower()
             self._available = True
         except requests.exceptions.RequestException:
-            _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            if self.available:
+                _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+
             self._player_variables = {}
             self._available = False
 

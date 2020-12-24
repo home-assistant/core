@@ -3,7 +3,7 @@ import logging
 
 from bimmer_connected.state import LockState
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class BMWLock(LockDevice):
+class BMWLock(LockEntity):
     """Representation of a BMW vehicle lock."""
 
     def __init__(self, account, vehicle, attribute: str, sensor_name):

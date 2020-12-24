@@ -2,6 +2,6 @@
   "domain": "hydrawise",
   "name": "Hunter Hydrawise",
   "documentation": "https://www.home-assistant.io/integrations/hydrawise",
-  "requirements": ["hydrawiser==0.1.1"],
-  "codeowners": []
+  "requirements": ["hydrawiser==0.2"],
+  "codeowners": ["@ptcryan"]
 }

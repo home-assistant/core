@@ -16,11 +16,13 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     binary_sensor,
+    climate,
     cover,
     device_tracker,
     fan,
     light,
     lock,
+    number,
     sensor,
     switch,
 )
@@ -38,12 +40,13 @@ async def async_add_entities(
             Tuple[str, zha_typing.ZhaDeviceType, List[zha_typing.ChannelType]],
         ]
     ],
+    update_before_add: bool = True,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
     to_add = [ent_cls(*args) for ent_cls, args in entities]
-    _async_add_entities(to_add, update_before_add=True)
+    _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 
 
@@ -235,21 +238,15 @@ class GroupProbe:
     ) -> List[str]:
         """Determine the entity domains for this group."""
         entity_domains: List[str] = []
-        if len(group.members) < 2:
-            _LOGGER.debug(
-                "Group: %s:0x%04x has less than 2 members so cannot default an entity domain",
-                group.name,
-                group.group_id,
-            )
-            return entity_domains
-
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
-        for device in group.members:
-            if device.is_coordinator:
+        for member in group.members:
+            if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry, device.device_id
+                zha_gateway.ha_entity_registry,
+                member.device.device_id,
+                include_disabled_entities=True,
             )
             all_domain_occurrences.extend(
                 [

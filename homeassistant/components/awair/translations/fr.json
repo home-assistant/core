@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
+            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
+            "reauth_successful": "Jeton d'acc\u00e8s mis \u00e0 jour avec succ\u00e8s"
+        },
+        "error": {
+            "invalid_access_token": "Jeton d'acc\u00e8s non valide",
+            "unknown": "Erreur d'API Awair inconnue."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Jeton d'acc\u00e8s",
+                    "email": "Email"
+                },
+                "description": "Veuillez ressaisir votre jeton d'acc\u00e8s d\u00e9veloppeur Awair."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Jeton d'acc\u00e8s",
+                    "email": "Email"
+                },
+                "description": "Vous devez vous inscrire pour un jeton d'acc\u00e8s d\u00e9veloppeur Awair sur: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

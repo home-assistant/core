@@ -19,6 +19,11 @@ async def test_reproducing_states(hass, caplog):
         "2010-10-10",
         {"has_date": True, "has_time": False},
     )
+    hass.states.async_set(
+        "input_datetime.invalid_data",
+        "unavailable",
+        {"has_date": False, "has_time": False},
+    )
 
     datetime_calls = async_mock_service(hass, "input_datetime", "set_datetime")
 
@@ -29,7 +34,6 @@ async def test_reproducing_states(hass, caplog):
             State("input_datetime.entity_time", "01:20:00"),
             State("input_datetime.entity_date", "2010-10-10"),
         ],
-        blocking=True,
     )
 
     assert len(datetime_calls) == 0
@@ -42,7 +46,6 @@ async def test_reproducing_states(hass, caplog):
             State("input_datetime.entity_datetime", "not:valid:time"),
             State("input_datetime.entity_datetime", "1234-56-78 90:12:34"),
         ],
-        blocking=True,
     )
 
     assert "not_supported" in caplog.text
@@ -59,8 +62,8 @@ async def test_reproducing_states(hass, caplog):
             State("input_datetime.entity_date", "2011-10-10"),
             # Should not raise
             State("input_datetime.non_existing", "2010-10-10 01:20:00"),
+            State("input_datetime.invalid_data", "2010-10-10 01:20:00"),
         ],
-        blocking=True,
     )
 
     valid_calls = [

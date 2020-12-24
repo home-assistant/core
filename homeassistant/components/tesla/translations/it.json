@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "description": "Si prega di inserire le tue informazioni.",
+                "title": "Tesla - Configurazione"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Forza il risveglio delle auto all'avvio",
+                    "scan_interval": "Secondi tra le scansioni"
+                }
+            }
+        }
+    }
+}

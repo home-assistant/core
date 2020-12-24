@@ -1,1 +1,9 @@
-{ "title": "Calendar" }
+{
+  "title": "Calendar",
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}

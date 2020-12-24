@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "description": "Monitorare i rapporti basati su utenti e quelli della CDC per una coppia di coordinate.",
+                "title": "Configurare Flu Near You"
+            }
+        }
+    }
+}

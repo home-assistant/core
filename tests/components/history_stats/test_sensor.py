@@ -1,19 +1,22 @@
 """The test for the History Statistics sensor platform."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
+from os import path
 import unittest
-from unittest.mock import patch
 
 import pytest
 import pytz
 
+from homeassistant import config as hass_config
+from homeassistant.components.history_stats import DOMAIN
 from homeassistant.components.history_stats.sensor import HistoryStatsSensor
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.template import Template
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -23,10 +26,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup(self):
         """Test the history statistics sensor setup."""
@@ -45,6 +45,29 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == STATE_UNKNOWN
+
+    def test_setup_multiple_states(self):
+        """Test the history statistics sensor setup for multiple states."""
+        self.init_recorder()
+        config = {
+            "history": {},
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "state": ["on", "true"],
+                "start": "{{ now().replace(hour=0)"
+                ".replace(minute=0).replace(second=0) }}",
+                "duration": "02:00",
+                "name": "Test",
+            },
+        }
+
+        assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
         assert state.state == STATE_UNKNOWN
@@ -130,6 +153,90 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
         sensor4 = HistoryStatsSensor(
             self.hass, "binary_sensor.test_id", "on", start, end, None, "ratio", "test"
+        )
+
+        assert sensor1._type == "time"
+        assert sensor3._type == "count"
+        assert sensor4._type == "ratio"
+
+        with patch(
+            "homeassistant.components.history.state_changes_during_period",
+            return_value=fake_states,
+        ):
+            with patch("homeassistant.components.history.get_state", return_value=None):
+                sensor1.update()
+                sensor2.update()
+                sensor3.update()
+                sensor4.update()
+
+        assert sensor1.state == 0.5
+        assert sensor2.state is None
+        assert sensor3.state == 2
+        assert sensor4.state == 50
+
+    def test_measure_multiple(self):
+        """Test the history statistics sensor measure for multiple states."""
+        t0 = dt_util.utcnow() - timedelta(minutes=40)
+        t1 = t0 + timedelta(minutes=20)
+        t2 = dt_util.utcnow() - timedelta(minutes=10)
+
+        # Start     t0        t1        t2        End
+        # |--20min--|--20min--|--10min--|--10min--|
+        # |---------|--orange-|-default-|---blue--|
+
+        fake_states = {
+            "input_select.test_id": [
+                ha.State("input_select.test_id", "orange", last_changed=t0),
+                ha.State("input_select.test_id", "default", last_changed=t1),
+                ha.State("input_select.test_id", "blue", last_changed=t2),
+            ]
+        }
+
+        start = Template("{{ as_timestamp(now()) - 3600 }}", self.hass)
+        end = Template("{{ now() }}", self.hass)
+
+        sensor1 = HistoryStatsSensor(
+            self.hass,
+            "input_select.test_id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "time",
+            "Test",
+        )
+
+        sensor2 = HistoryStatsSensor(
+            self.hass,
+            "unknown.id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "time",
+            "Test",
+        )
+
+        sensor3 = HistoryStatsSensor(
+            self.hass,
+            "input_select.test_id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "count",
+            "test",
+        )
+
+        sensor4 = HistoryStatsSensor(
+            self.hass,
+            "input_select.test_id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "ratio",
+            "test",
         )
 
         assert sensor1._type == "time"
@@ -257,3 +364,58 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Initialize the recorder."""
         init_recorder_component(self.hass)
         self.hass.start()
+
+
+async def test_reload(hass):
+    """Verify we can reload history_stats sensors."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
+
+    hass.state = ha.CoreState.not_running
+    hass.states.async_set("binary_sensor.test_id", "on")
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "test",
+                "state": "on",
+                "start": "{{ as_timestamp(now()) - 3600 }}",
+                "duration": "01:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "history_stats/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.second_test")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

@@ -9,7 +9,7 @@ from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevi
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import Throttle, dt
+from homeassistant.util import dt
 
 from .const import (
     ALL_DAY,
@@ -84,7 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -262,14 +262,13 @@ class TodoistProjectDevice(CalendarEventDevice):
             # No tasks, we don't REALLY need to show anything.
             return None
 
-        attributes = {}
-        attributes[DUE_TODAY] = self.data.event[DUE_TODAY]
-        attributes[OVERDUE] = self.data.event[OVERDUE]
-        attributes[ALL_TASKS] = self._cal_data[ALL_TASKS]
-        attributes[PRIORITY] = self.data.event[PRIORITY]
-        attributes[LABELS] = self.data.event[LABELS]
-
-        return attributes
+        return {
+            DUE_TODAY: self.data.event[DUE_TODAY],
+            OVERDUE: self.data.event[OVERDUE],
+            ALL_TASKS: self._cal_data[ALL_TASKS],
+            PRIORITY: self.data.event[PRIORITY],
+            LABELS: self.data.event[LABELS],
+        }
 
 
 class TodoistProjectData:
@@ -302,8 +301,7 @@ class TodoistProjectData:
     platform itself, but are not used by this component at all.
 
     The 'update' method polls the Todoist API for new projects/tasks, as well
-    as any updates to current projects/tasks. This is throttled to every
-    MIN_TIME_BETWEEN_UPDATES minutes.
+    as any updates to current projects/tasks. This occurs every SCAN_INTERVAL minutes.
     """
 
     def __init__(
@@ -500,19 +498,27 @@ class TodoistProjectData:
 
         events = []
         for task in project_task_data:
+            if task["due"] is None:
+                continue
             due_date = _parse_due_date(task["due"])
             if start_date < due_date < end_date:
+                if due_date.hour == 0 and due_date.minute == 0:
+                    # If the due date has no time data, return just the date so that it
+                    # will render correctly as an all day event on a calendar.
+                    due_date_value = due_date.strftime("%Y-%m-%d")
+                else:
+                    due_date_value = due_date.isoformat()
                 event = {
                     "uid": task["id"],
                     "title": task["content"],
-                    "start": due_date.isoformat(),
-                    "end": due_date.isoformat(),
+                    "start": due_date_value,
+                    "end": due_date_value,
                     "allDay": True,
+                    "summary": task["content"],
                 }
                 events.append(event)
         return events
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
         if self._id is None:

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "pin_request_failed": "ecobee \u6240\u9700\u4ee3\u78bc\u932f\u8aa4\uff0c\u8acb\u78ba\u8a8d\u5bc6\u9470\u6b63\u78ba\u6027\u3002",
+            "token_request_failed": "ecobee \u6240\u9700\u5bc6\u9470\u932f\u8aa4\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
+        },
+        "step": {
+            "authorize": {
+                "description": "\u8acb\u65bc https://www.ecobee.com/consumerportal/index.html \u8f38\u5165\u4e0b\u65b9\u4ee3\u78bc\uff0c\u8a8d\u8b49\u6b64 App\uff1a\n\n{pin}\n\n\u7136\u5f8c\u6309\u4e0b\u300cSubmit\u300d\u3002",
+                "title": "\u65bc ecobee.com \u4e0a\u8a8d\u8b49 App"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470"
+                },
+                "description": "\u8acb\u8f38\u5165\u7531 ecobee.com \u6240\u7372\u5f97\u7684 API \u5bc6\u9470\u3002",
+                "title": "ecobee API \u5bc6\u9470"
+            }
+        }
+    }
+}

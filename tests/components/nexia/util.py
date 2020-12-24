@@ -1,7 +1,6 @@
 """Tests for the nexia integration."""
 import uuid
 
-from asynctest import patch
 from nexia.home import NexiaHome
 import requests_mock
 
@@ -9,11 +8,13 @@ from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
 async def async_init_integration(
-    hass: HomeAssistant, skip_setup: bool = False,
+    hass: HomeAssistant,
+    skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 

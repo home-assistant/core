@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'ha trobat la classe de sistema necess\u00e0ria per a aquest component, assegura't que el nucli sigui recent (versi\u00f3 del kernel) i que el maquinari sigui compatible",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            }
+        }
+    },
+    "title": "Comprovador de font d'alimentaci\u00f3 de Raspberry Pi"
+}

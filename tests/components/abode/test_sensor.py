@@ -6,8 +6,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_HUMIDITY,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from .common import setup_platform
@@ -32,7 +32,7 @@ async def test_attributes(hass):
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")
     assert state.attributes.get("device_type") == "LM"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
 

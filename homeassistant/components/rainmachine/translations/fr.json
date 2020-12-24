@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce contr\u00f4leur RainMachine est d\u00e9j\u00e0 configur\u00e9."
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nom d'h\u00f4te ou adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port"
+                },
+                "title": "Veuillez saisir vos informations"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Dur\u00e9e d'ex\u00e9cution de la zone par d\u00e9faut (en secondes)"
+                },
+                "title": "Configurer RainMachine"
+            }
+        }
+    }
+}

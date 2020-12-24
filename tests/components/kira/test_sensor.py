@@ -1,9 +1,9 @@
 """The tests for Kira sensor platform."""
 import unittest
-from unittest.mock import MagicMock
 
 from homeassistant.components.kira import sensor as kira
 
+from tests.async_mock import MagicMock
 from tests.common import get_test_home_assistant
 
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
@@ -28,10 +28,7 @@ class TestKiraSensor(unittest.TestCase):
         mock_kira = MagicMock()
         self.hass.data[kira.DOMAIN] = {kira.CONF_SENSOR: {}}
         self.hass.data[kira.DOMAIN][kira.CONF_SENSOR]["kira"] = mock_kira
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     # pylint: disable=protected-access
     def test_kira_sensor_callback(self):

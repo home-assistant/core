@@ -1,6 +1,4 @@
 """Constants for the Vizio integration tests."""
-import logging
-
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV,
@@ -29,8 +27,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.util import slugify
-
-_LOGGER = logging.getLogger(__name__)
 
 NAME = "Vizio"
 NAME2 = "Vizio2"
@@ -72,7 +68,21 @@ INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 
 CURRENT_APP = "Hulu"
 CURRENT_APP_CONFIG = {CONF_APP_ID: "3", CONF_NAME_SPACE: 4, CONF_MESSAGE: None}
-APP_LIST = ["Hulu", "Netflix"]
+APP_LIST = [
+    {
+        "name": "Hulu",
+        "country": ["*"],
+        "id": ["1"],
+        "config": [{"NAME_SPACE": 4, "APP_ID": "3", "MESSAGE": None}],
+    },
+    {
+        "name": "Netflix",
+        "country": ["*"],
+        "id": ["2"],
+        "config": [{"NAME_SPACE": 1, "APP_ID": "2", "MESSAGE": None}],
+    },
+]
+APP_NAME_LIST = [app["name"] for app in APP_LIST]
 INPUT_LIST_WITH_APPS = INPUT_LIST + ["CAST"]
 CUSTOM_CONFIG = {CONF_APP_ID: "test", CONF_MESSAGE: None, CONF_NAME_SPACE: 10}
 ADDITIONAL_APP_CONFIG = {

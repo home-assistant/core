@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "project_error": "Konnt keng Projet Informatiounen ausliesen."
+        },
+        "flow_title": "Azure DevOps: {project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Pers\u00e9inlechen Acc\u00e8s Jeton (PAT)"
+                },
+                "description": "Feeler bei der Authentifikatioun fir {project_url}. G\u00ebff deng aktuell Umeldungsinformatiounen an.",
+                "title": "Reauthentifikatioun"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisatioun",
+                    "personal_access_token": "Pers\u00e9inlechen Acc\u00e8s Jeton (PAT)",
+                    "project": "Projet"
+                },
+                "description": "Riicht eng Azure DevOps Instanz an fir d\u00e4in Projet z'acc\u00e9d\u00e9ieren. E Pers\u00e9inlechen Acc\u00e8s Jetons ass n\u00ebmme fir ee Private Projet n\u00e9ideg.",
+                "title": "Azure DevOps Project dob\u00e4isetzen"
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "dpi_restrictions": "DPI k\u0131s\u0131tlama gruplar\u0131n\u0131n kontrol\u00fcne izin ver"
+                }
+            }
+        }
+    }
+}

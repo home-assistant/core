@@ -1,5 +1,4 @@
 """Tests for the insecure example auth provider."""
-from unittest.mock import Mock
 import uuid
 
 import pytest
@@ -7,7 +6,7 @@ import pytest
 from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import insecure_example
 
-from tests.common import mock_coro
+from tests.async_mock import AsyncMock
 
 
 @pytest.fixture
@@ -63,7 +62,7 @@ async def test_match_existing_credentials(store, provider):
         data={"username": "user-test"},
         is_new=False,
     )
-    provider.async_credentials = Mock(return_value=mock_coro([existing]))
+    provider.async_credentials = AsyncMock(return_value=[existing])
     credentials = await provider.async_get_or_create_credentials(
         {"username": "user-test", "password": "password-test"}
     )
