@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.setup import async_when_setup
 
 from .const import (
@@ -241,12 +242,10 @@ class AxisNetworkDevice:
     async def shutdown(self, event):
         """Stop the event stream."""
         self.disconnect_from_stream()
-        await self.api.vapix.close()
 
     async def async_reset(self):
         """Reset this device to default state."""
         self.disconnect_from_stream()
-        await self.api.vapix.close()
 
         unload_ok = all(
             await asyncio.gather(
@@ -269,9 +268,10 @@ class AxisNetworkDevice:
 
 async def get_device(hass, host, port, username, password):
     """Create a Axis device."""
+    session = get_async_client(hass, verify_ssl=False)
 
     device = axis.AxisDevice(
-        Configuration(host, port=port, username=username, password=password)
+        Configuration(session, host, port=port, username=username, password=password)
     )
 
     try:
@@ -282,15 +282,12 @@ async def get_device(hass, host, port, username, password):
 
     except axis.Unauthorized as err:
         LOGGER.warning("Connected to device at %s but not registered.", host)
-        await device.vapix.close()
         raise AuthenticationRequired from err
 
     except (asyncio.TimeoutError, axis.RequestError) as err:
         LOGGER.error("Error connecting to the Axis device at %s", host)
-        await device.vapix.close()
         raise CannotConnect from err
 
     except axis.AxisException as err:
         LOGGER.exception("Unknown Axis communication error occurred")
-        await device.vapix.close()
         raise AuthenticationRequired from err

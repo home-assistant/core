@@ -1,7 +1,7 @@
 """Test Axis device."""
 from copy import deepcopy
 from unittest import mock
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import axis as axislib
 from axis.event_stream import OPERATION_INITIALIZED
@@ -423,12 +423,10 @@ async def test_shutdown():
 
     axis_device = axis.device.AxisNetworkDevice(hass, entry)
     axis_device.api = Mock()
-    axis_device.api.vapix.close = AsyncMock()
 
     await axis_device.shutdown(None)
 
     assert len(axis_device.api.stream.stop.mock_calls) == 1
-    assert len(axis_device.api.vapix.close.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):
