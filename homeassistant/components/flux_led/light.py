@@ -288,8 +288,8 @@ class FluxLEDCoordinator(DataUpdateCoordinator):
 
         await self.hass.async_add_executor_job(self.light.update_state)
 
-        getRGBW = await self.hass.async_add_executor_job(self.light.getRgbw)
-        getRGB = await self.hass.async_add_executor_job(self.light.getRgb)
+        get_rgbw = await self.hass.async_add_executor_job(self.light.getRgbw)
+        get_rgb = await self.hass.async_add_executor_job(self.light.getRgb)
 
         light = {}
 
@@ -300,14 +300,14 @@ class FluxLEDCoordinator(DataUpdateCoordinator):
         else:
             light["mode"] = MODE_RGB
 
-        light["white_value"] = getRGBW[3]
+        light["white_value"] = get_rgbw[3]
 
         if light["mode"] == MODE_WHITE:
             light["brightness"] = light["white_value"]
         else:
             light["brightness"] = self.light.brightness
 
-        light["hs_color"] = color_util.color_RGB_to_hs(*getRGB)
+        light["hs_color"] = color_util.color_RGB_to_hs(*get_rgb)
 
         light["current_effect"] = self.light.raw_state[3]
 
