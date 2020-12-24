@@ -342,7 +342,6 @@ class OnkyoDevice(MediaPlayerEntity):
         if hdmi_out_raw[1] == "N/A":
             self._hdmi_out_supported = False
 
-
     @property
     def unique_id(self):
         """Return unique ID for this device."""
