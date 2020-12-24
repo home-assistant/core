@@ -43,7 +43,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-
+from homeassistant.util import slugify
 from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,7 +182,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._max_temp = max_temp
         self._target_temp = target_temp
         self._unit = unit
-        self._unique_id = unique_id
+        if unique_id is not None:
+            self._unique_id = unique_id
+        else: 
+            self._unique_id = slugify(f"{DOMAIN}_{heater_entity_id}_{sensor_entity_id}")
         self._support_flags = SUPPORT_FLAGS
         if away_temp:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
