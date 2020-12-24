@@ -197,7 +197,15 @@ class SensorFilter(Entity):
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
         """Process device state changes."""
-        if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state is None:
+            _LOGGER.warning(
+                "While updating filter %s, the new_state is None", self._name
+            )
+            self._state = None
+            self.async_write_ha_state()
+            return
+
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             self._state = new_state.state
             self.async_write_ha_state()
             return
@@ -218,7 +226,11 @@ class SensorFilter(Entity):
                     return
                 temp_state = filtered_state
         except ValueError:
-            _LOGGER.error("Could not convert state: %s to number", self._state)
+            _LOGGER.error(
+                "Could not convert state: %s (%s) to number",
+                new_state.state,
+                type(new_state.state),
+            )
             return
 
         self._state = temp_state.state
@@ -425,7 +437,7 @@ class Filter:
         """Implement a common interface for filters."""
         fstate = FilterState(new_state)
         if self._only_numbers and not isinstance(fstate.state, Number):
-            raise ValueError
+            raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
         filtered.set_precision(self.precision)
