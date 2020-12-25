@@ -121,8 +121,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     # import options from yaml if empty
     yaml_options = hass.data.get(DOMAIN, {}).pop("yaml_options", {})
-    if not entry.options:
-        entry.options = MappingProxyType(yaml_options or {})
+    if not entry.options and yaml_options:
+        hass.config_entries.async_update_entry(entry, options=yaml_options)
 
     router = AsusWrtRouter(hass, entry)
     await router.setup()
