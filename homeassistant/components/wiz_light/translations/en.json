@@ -4,8 +4,8 @@
             "can_not_connect": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
             "no_wiz_light": "The bulb can be connected via WiZ Light integration.",
-            "no_IP": "The enterd IP is not valid. Please use 1-254.1-254.1-254.1-254. Example: 192.168.1.1.",
-            "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or wrong IP was entered."
+            "no_IP": "The enterd IP is not valid. Please use for example: 192.168.1.1.",
+            "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!"
         },
         "step": {
             "user": {
@@ -18,5 +18,5 @@
             }
         }
     },
-    "title": "WiZ Light integration"
+    "title": "WiZ Light Integration"
 }

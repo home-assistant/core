@@ -1,11 +1,11 @@
 """WiZ Light integration."""
 import logging
+import os
 
 from pywizlight import SCENES, PilotBuilder, wizlight
 from pywizlight.exceptions import WizLightConnectionError
-import yaml
-import os
 import voluptuous as vol
+import yaml
 
 # Import the device class from the component
 from homeassistant.components.light import (
@@ -14,18 +14,16 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    PLATFORM_SCHEMA,
     LightEntity,
 )
-
 from homeassistant.const import CONF_HOST, CONF_NAME
-
-import homeassistant.util.color as color_utils
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_utils
 
 from .const import DOMAIN
 

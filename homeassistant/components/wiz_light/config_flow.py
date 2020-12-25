@@ -1,16 +1,16 @@
 """Config flow for wiz_light."""
-from homeassistant.data_entry_flow import AbortFlow
 import logging
 import re
 
-import voluptuous as vol
 from pywizlight import wizlight
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DOMAIN, DEFAULT_NAME
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     mac = await bulb.getMac()
                     await self.async_set_unique_id(mac)
                     self._abort_if_unique_id_configured()
-                    return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
                 else:
                     return self.async_abort(reason="no_IP")
             except WizLightTimeOutError:
@@ -46,8 +48,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="no_wiz_light")
             except AbortFlow:
                 return self.async_abort(reason="single_instance_allowed")
-
-
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(self.config), errors=errors
         )
@@ -58,5 +58,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def is_valid_ip(self, ip) -> bool:
         """Check the IP address."""
-        ipv = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$",ip)
-        return bool(ipv) and all(map(lambda n: 0<=int(n)<=255, ipv.groups()))
+        ipv = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+        return bool(ipv) and all(map(lambda n: 0 <= int(n) <= 255, ipv.groups()))
