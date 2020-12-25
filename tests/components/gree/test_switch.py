@@ -1,6 +1,5 @@
 """Tests for gree component."""
 from greeclimate.exceptions import DeviceTimeoutError
-import pytest
 
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from homeassistant.components.switch import DOMAIN
@@ -14,17 +13,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1_panel_light"
-
-
-@pytest.fixture
-def mock_now():
-    """Fixture for dtutil.now."""
-    return dt_util.utcnow()
 
 
 async def async_setup_gree(hass):
@@ -34,7 +26,7 @@ async def async_setup_gree(hass):
     await hass.async_block_till_done()
 
 
-async def test_send_panel_light_on(hass, discovery, device, mock_now):
+async def test_send_panel_light_on(hass, discovery, device):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -50,7 +42,7 @@ async def test_send_panel_light_on(hass, discovery, device, mock_now):
     assert state.state == STATE_ON
 
 
-async def test_send_panel_light_on_device_timeout(hass, discovery, device, mock_now):
+async def test_send_panel_light_on_device_timeout(hass, discovery, device):
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -68,7 +60,7 @@ async def test_send_panel_light_on_device_timeout(hass, discovery, device, mock_
     assert state.state == STATE_ON
 
 
-async def test_send_panel_light_off(hass, discovery, device, mock_now):
+async def test_send_panel_light_off(hass, discovery, device):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -84,7 +76,7 @@ async def test_send_panel_light_off(hass, discovery, device, mock_now):
     assert state.state == STATE_OFF
 
 
-async def test_send_panel_light_toggle(hass, discovery, device, mock_now):
+async def test_send_panel_light_toggle(hass, discovery, device):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
