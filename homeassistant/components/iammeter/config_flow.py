@@ -63,7 +63,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form
-            name = user_input.get(CONF_NAME)
+            name = user_input.get(CONF_NAME, DEFAULT_NAME)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
             host_entry = user_input.get(CONF_HOST)
             url = urlparse(host_entry, "http")
@@ -134,13 +134,18 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
         host_entry = user_input.get(CONF_HOST, DEFAULT_HOST)
+        name = user_input.get(CONF_NAME, DEFAULT_NAME)
+        port = user_input.get(CONF_PORT, DEFAULT_PORT)
 
         url = urlparse(host_entry, "http")
         netloc = url.netloc or url.path
         path = url.path if url.netloc else ""
         url = ParseResult("http", netloc, path, *url[3:])
         host = url.geturl()
+        user_input[CONF_NAME] = name
+        user_input[CONF_PORT] = port
+        user_input[CONF_HOST] = host
 
-        if self._host_in_configuration_exists(host):
+        if self._host_in_configuration_exists(name):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
