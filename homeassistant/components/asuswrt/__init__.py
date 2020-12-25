@@ -1,7 +1,6 @@
 """Support for ASUSWRT devices."""
 import asyncio
 import logging
-from types import MappingProxyType
 
 import voluptuous as vol
 
