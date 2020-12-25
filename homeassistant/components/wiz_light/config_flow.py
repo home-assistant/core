@@ -1,10 +1,11 @@
 """Config flow for wiz_light."""
 from homeassistant.data_entry_flow import AbortFlow
 import logging
+import re
 
 import voluptuous as vol
 from pywizlight import wizlight
-from pywizlight.exceptions import WizLightConnectionError
+from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
@@ -29,12 +30,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # TODO: check if IP is valide
-                bulb = wizlight(user_input[CONF_IP_ADDRESS])
-                mac = await bulb.getMac()
-                await self.async_set_unique_id(mac)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                if self.is_valid_ip(user_input[CONF_IP_ADDRESS]):
+                    bulb = wizlight(user_input[CONF_IP_ADDRESS])
+                    mac = await bulb.getMac()
+                    await self.async_set_unique_id(mac)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                else:
+                    return self.async_abort(reason="no_IP")
+            except WizLightTimeOutError:
+                return self.async_abort(reason="bulb_time_out")
             except ConnectionRefusedError:
                 return self.async_abort(reason="can_not_connect")
             except WizLightConnectionError:
@@ -50,3 +55,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import from config."""
         return await self.async_step_user(user_input=import_config)
+
+    def is_valid_ip(self, ip) -> bool:
+        """Check the IP address."""
+        ipv = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$",ip)
+        return bool(ipv) and all(map(lambda n: 0<=int(n)<=255, ipv.groups()))
