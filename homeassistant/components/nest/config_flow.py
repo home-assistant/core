@@ -111,8 +111,8 @@ class NestFlowHandler(
         super().__init__()
         # Allows updating an existing config entry
         self._reauth_data = None
-        # New ConfigEntry data created during the flow
-        self._data = None
+        # ConfigEntry data for SDM API
+        self._data = {DATA_SDM: {}}
 
     def is_sdm_api(self):
         """Return true if this flow is setup to use SDM API."""
@@ -152,7 +152,7 @@ class NestFlowHandler(
 
     @property
     def _defaults(self) -> dict:
-        """Return config flow default values."""
+        """Return default values from existing entry or configuration.yaml."""
         if self._reauth_data and CONF_PROJECT_ID in self._reauth_data:
             return self._reauth_data
         return self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
@@ -189,19 +189,21 @@ class NestFlowHandler(
     async def async_step_device_access(self, user_input=None):
         """Enter configuration options for the Device Access project."""
         if user_input is None:
-            defaults = self._defaults
             data_schema = {
                 vol.Required(
-                    CONF_PROJECT_ID, default=defaults.get(CONF_PROJECT_ID)
+                    CONF_PROJECT_ID, default=self._defaults.get(CONF_PROJECT_ID)
                 ): str,
-                vol.Required(CONF_CLIENT_ID, default=defaults.get(CONF_CLIENT_ID)): str,
                 vol.Required(
-                    CONF_CLIENT_SECRET, default=defaults.get(CONF_CLIENT_SECRET)
+                    CONF_CLIENT_ID, default=self._defaults.get(CONF_CLIENT_ID)
+                ): str,
+                vol.Required(
+                    CONF_CLIENT_SECRET, default=self._defaults.get(CONF_CLIENT_SECRET)
                 ): str,
             }
             return self.async_show_form(
                 step_id="device_access", data_schema=vol.Schema(data_schema)
             )
+        self._data.update(user_input)
         # Configure OAuth and invoke parent async_step_user to initiate flow
         NestFlowHandler.async_register_oauth(
             self.hass,
@@ -209,12 +211,6 @@ class NestFlowHandler(
             user_input[CONF_CLIENT_SECRET],
             user_input[CONF_PROJECT_ID],
         )
-        self._data = {
-            DATA_SDM: {},
-            CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
-            CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
-            CONF_PROJECT_ID: user_input[CONF_PROJECT_ID],
-        }
         return await super().async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> dict:
@@ -226,16 +222,15 @@ class NestFlowHandler(
     async def async_step_pubsub(self, user_input: dict = None) -> dict:
         """Configure Pub/Sub subscriber."""
         if user_input is None:
-            defaults = self._defaults
             data_schema = {
                 vol.Required(
-                    CONF_SUBSCRIBER_ID, default=defaults.get(CONF_SUBSCRIBER_ID)
+                    CONF_SUBSCRIBER_ID, default=self._defaults.get(CONF_SUBSCRIBER_ID)
                 ): str,
             }
             return self.async_show_form(
                 step_id="pubsub", data_schema=vol.Schema(data_schema)
             )
-        self._data[CONF_SUBSCRIBER_ID] = user_input[CONF_SUBSCRIBER_ID]
+        self._data.update(user_input)
         return await self.async_step_finish()
 
     async def async_step_finish(self, data=None):
