@@ -13,7 +13,7 @@
                     "ip_address": "IP Address",
                     "name": "Name"
                 },
-                "description": "Add the bulb via IP address.",
+                "description": "Add the bulb via IP Address.",
                 "title": "WiZ Light"
             }
         }
