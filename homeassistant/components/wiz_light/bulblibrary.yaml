@@ -104,6 +104,28 @@ ESP15_SHTW1_01I:
   kelvin_range:
     min: 2200
     max: 6500
+
+ESP03_SHTW1C_01:
+  name: ESP03_SHTW1C_01
+  features:
+    brightness: true
+    color: false
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2700
+    max: 6500
+
+ESP03_SHTW1W_01:
+  name: ESP03_SHTW1W_01
+  features:
+    brightness: true
+    color: false
+    effect: true
+    color_tmp: true
+  kelvin_range:
+    min: 2700
+    max: 6500
 # -----------------
 # Brightness, Color Temp, Color and Effect / all features
 # Added #50
