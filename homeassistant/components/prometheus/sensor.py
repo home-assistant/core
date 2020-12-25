@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
+    STATE_PROBLEM,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -81,7 +82,14 @@ class Prometheus:
             _LOGGER.error("Invalid query response: %s", error)
             return STATE_UNKNOWN
 
-        return float(result[0]["value"][1])
+        if not result:
+            _LOGGER.error("Expression '%s' yielded no result", expr)
+            return STATE_PROBLEM
+        elif len(result) > 1:
+            _LOGGER.error("Expression '%s' yielded multiple metrics", expr)
+            return STATE_PROBLEM
+
+        return result[0]["value"][1]
 
 
 class PrometheusSensor(Entity):
