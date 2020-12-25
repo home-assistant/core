@@ -1789,7 +1789,7 @@ python-juicenet==1.0.1
 python-miio==0.5.4
 
 # homeassistant.components.mpd
-python-mpd2==1.0.0
+python-mpd2==3.0.1
 
 # homeassistant.components.mystrom
 python-mystrom==1.1.2
