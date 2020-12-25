@@ -67,7 +67,7 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass):
+async def test_user(hass, test_connect):
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -94,7 +94,7 @@ async def test_ssdp(hass):
     assert result["step_id"] == "user"
 
 
-async def test_import(hass):
+async def test_import(hass, test_connect):
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -117,7 +117,7 @@ async def test_import(hass):
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass, test_connect):
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
