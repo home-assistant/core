@@ -7,6 +7,7 @@ from homeassistant.components.iammeter import config_flow
 from homeassistant.components.iammeter.const import DEFAULT_HOST, DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -92,6 +93,18 @@ async def test_ssdp(hass):
     result = await flow.async_step_ssdp(discovery_info=discovery_info)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+
+async def test_connect_exception(hass):
+    """Test connection timeout."""
+    flow = init_config_flow(hass)
+    with pytest.raises(PlatformNotReady):
+        flow = init_config_flow(hass)
+
+        result = await flow._test_connection(HOST, PORT)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "IamMeterTestDevice"
+        assert result["data"][CONF_HOST] == HOST
 
 
 async def test_import(hass, test_connect):
