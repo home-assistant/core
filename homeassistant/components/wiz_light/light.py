@@ -48,7 +48,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         bulb = wizlight(ip_address)
     except WizLightConnectionError:
-        _LOGGER.error("Cant add bulb with ip %s.", ip_address)
+        _LOGGER.error("Can't add bulb with ip %s.", ip_address)
 
     # Add devices
     async_add_entities([WizBulb(bulb, config[CONF_NAME])])
@@ -326,7 +326,8 @@ class WizBulb(LightEntity):
         """Get the mac from the bulb."""
         self._mac = await self._light.getMac()
 
-    def read_bulblib(self):
+    @staticmethod
+    def read_bulblib():
         """Read the library of bulbs from YAML."""
         # fetch the location of the lib yaml
         __location__ = os.path.realpath(
@@ -334,8 +335,8 @@ class WizBulb(LightEntity):
         )
         # open the yaml to read the bulb configs
         try:
-            with open(os.path.join(__location__, "bulblibrary.yaml")) as f:
-                lib = yaml.safe_load(f)
+            with open(os.path.join(__location__, "bulblibrary.yaml")) as yaml_file:
+                lib = yaml.safe_load(yaml_file)
                 # get version
                 _LOGGER.debug(
                     "Bulb Library YAML loaded in version %s", lib.get("Version")

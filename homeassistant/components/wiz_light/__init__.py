@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass):
     """Old way of setting up the wiz_light component."""
     hass.data[DOMAIN] = {}
 
@@ -23,9 +23,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the wiz_light integration from a config entry."""
-    ip = entry.data.get(CONF_IP_ADDRESS)
-    _LOGGER.debug("Get bulb with IP: %s", ip)
-    bulb = wizlight(ip)
+    ip_address = entry.data.get(CONF_IP_ADDRESS)
+    _LOGGER.debug("Get bulb with IP: %s", ip_address)
+    bulb = wizlight(ip_address)
     hass.data[DOMAIN][entry.unique_id] = bulb
 
     hass.async_create_task(

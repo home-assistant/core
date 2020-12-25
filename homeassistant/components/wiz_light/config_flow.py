@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=user_input[CONF_NAME], data=user_input
                     )
-                else:
-                    return self.async_abort(reason="no_IP")
+                return self.async_abort(reason="no_IP")
             except WizLightTimeOutError:
                 return self.async_abort(reason="bulb_time_out")
             except ConnectionRefusedError:
@@ -56,7 +55,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import from config."""
         return await self.async_step_user(user_input=import_config)
 
-    def is_valid_ip(self, ip) -> bool:
+    @staticmethod
+    def is_valid_ip(ip_address) -> bool:
         """Check the IP address."""
-        ipv = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+        ipv = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip_address)
         return bool(ipv) and all(map(lambda n: 0 <= int(n) <= 255, ipv.groups()))
