@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 from typing import Union
+from urllib.parse import urljoin
 
 import voluptuous as vol
 
@@ -61,7 +62,7 @@ class Prometheus:
     def __init__(self, url: str, session) -> None:
         """Initialize the Prometheus API wrapper."""
         self._session = session
-        self._url = f"{url}/api/v1/query"
+        self._url = urljoin(f"{url}/", "api/v1/query")
 
     async def query(self, expr: str) -> Union[str, float]:
         """Query expression response."""
