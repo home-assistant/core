@@ -7,7 +7,6 @@ from homeassistant.components.iammeter import config_flow
 from homeassistant.components.iammeter.const import DEFAULT_HOST, DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.exceptions import PlatformNotReady
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -66,21 +65,6 @@ def init_config_flow(hass):
     flow = config_flow.IammeterConfigFlow()
     flow.hass = hass
     return flow
-
-
-async def test_connection_error(hass):
-    """Test connection timeout."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = init_config_flow(hass)
-    # test with all provided
-    await flow.async_step_user(
-        user_input={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
-    )
-    with pytest.raises(PlatformNotReady):
-        print("PlatformNotReady")
 
 
 async def test_user(hass):
