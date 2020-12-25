@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from . import api
@@ -92,6 +93,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     async def _update_all_devices():
         """Update all the devices."""
         devices = await hass.async_add_executor_job(data[API].get_devices)
+        previous_devices = data[COORDINATOR].data
+        # Sometimes Somfy returns an empty list.
+        if not devices and previous_devices:
+            raise UpdateFailed("No devices returned")
         return {dev.id: dev for dev in devices}
 
     coordinator = DataUpdateCoordinator(
