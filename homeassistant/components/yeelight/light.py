@@ -76,13 +76,14 @@ SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 
 ATTR_MINUTES = "minutes"
 
-SERVICE_SET_MODE = "set_mode"
-SERVICE_START_FLOW = "start_flow"
-SERVICE_SET_COLOR_SCENE = "set_color_scene"
-SERVICE_SET_HSV_SCENE = "set_hsv_scene"
-SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
-SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
 SERVICE_SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
+SERVICE_SET_COLOR_SCENE = "set_color_scene"
+SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
+SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
+SERVICE_SET_HSV_SCENE = "set_hsv_scene"
+SERVICE_SET_MODE = "set_mode"
+SERVICE_SET_MUSIC_MODE = "set_music_mode"
+SERVICE_START_FLOW = "start_flow"
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -173,6 +174,10 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE = {
     vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
+}
+
+SERVICE_SCHEMA_SET_MUSIC_MODE = {
+    vol.Required(CONF_MODE_MUSIC): cv.boolean,
 }
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
@@ -367,6 +372,14 @@ def _async_setup_services(hass: HomeAssistant):
             )
         )
 
+    async def _async_set_music_mode(entity, service_call):
+        await hass.async_add_executor_job(
+            partial(
+                entity.set_music_mode,
+                service_call.data[CONF_MODE_MUSIC],
+            )
+        )
+
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
@@ -403,6 +416,11 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SET_AUTO_DELAY_OFF_SCENE,
         SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE,
         _async_set_auto_delay_off_scene,
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_MUSIC_MODE,
+        SERVICE_SCHEMA_SET_MUSIC_MODE,
+        _async_set_music_mode,
     )
 
 
@@ -550,7 +568,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
 
-        attributes = {"flowing": self.device.is_color_flow_enabled}
+        attributes = {
+            "flowing": self.device.is_color_flow_enabled,
+            "music_mode": self._bulb.music_mode
+        }
+
         if self.device.is_nightlight_supported:
             attributes["night_light"] = self.device.is_nightlight_enabled
 
@@ -597,6 +619,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             self._bulb.start_music()
         else:
             self._bulb.stop_music()
+
+        self.device.update()
 
     @_cmd
     def set_brightness(self, brightness, duration) -> None:
