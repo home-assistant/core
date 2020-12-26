@@ -4,7 +4,7 @@ import logging
 from urllib.parse import ParseResult, urlparse
 
 import async_timeout
-from iammeter import real_time_api
+import iammeter
 from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
@@ -13,7 +13,6 @@ from homeassistant.components import ssdp
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -51,11 +50,11 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, host, port):
         try:
             with async_timeout.timeout(PLATFORM_TIMEOUT):
-                await real_time_api(host, port)
+                await iammeter.real_time_api(host, port)
                 return True
-        except (IamMeterError, asyncio.TimeoutError) as err:
-            _LOGGER.error("Device is not ready")
-            raise PlatformNotReady from err
+        except (IamMeterError, asyncio.TimeoutError):
+            _LOGGER.error("Device is not ready!")
+            self._errors[CONF_NAME] = "cannot_connect"
         return False
 
     async def async_step_user(self, user_input=None):

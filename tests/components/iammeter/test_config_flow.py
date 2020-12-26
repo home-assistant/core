@@ -1,4 +1,5 @@
 """Test the IamMeter config flow."""
+from iammeter.power_meter import IamMeterError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -7,9 +8,8 @@ from homeassistant.components.iammeter import config_flow
 from homeassistant.components.iammeter.const import DEFAULT_HOST, DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.exceptions import PlatformNotReady
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 NAME = "IamMeterTestDevice"
@@ -61,6 +61,16 @@ def mock_controller():
         yield
 
 
+@pytest.fixture(name="test_api")
+def mock_failed_controller():
+    """Mock a successful Solaredge API."""
+    api = Mock()
+    api.get_details.return_value = {"details": {"status": "active"}}
+    # api.get_details.side_effect=asyncio.TimeoutError()
+    with patch("iammeter.real_time_api", return_value=api):
+        yield api
+
+
 def init_config_flow(hass):
     """Init a configuration flow."""
     flow = config_flow.IammeterConfigFlow()
@@ -94,17 +104,31 @@ async def test_ssdp(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    # Test ssdp abort add
+    with patch(
+        "homeassistant.components.iammeter.config_flow.IammeterConfigFlow._host_in_configuration_exists",
+        return_value=True,
+    ):
+        result = await flow.async_step_ssdp(discovery_info=discovery_info)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
 
 async def test_connect_exception(hass):
-    """Test connection timeout."""
-    flow = init_config_flow(hass)
-    with pytest.raises(PlatformNotReady):
+    """Test connect function."""
+    with patch("iammeter.real_time_api", side_effect=IamMeterError):
         flow = init_config_flow(hass)
+        result = await flow.async_step_user(
+            {CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_NAME: "cannot_connect"}
 
-        result = await flow._test_connection(HOST, PORT)
+    with patch("iammeter.real_time_api", return_value=True):
+        flow = init_config_flow(hass)
+        result = await flow.async_step_user(
+            {CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+        )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "IamMeterTestDevice"
-        assert result["data"][CONF_HOST] == HOST
 
 
 async def test_import(hass, test_connect):
