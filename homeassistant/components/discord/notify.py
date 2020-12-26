@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
+    ATTR_TITLE,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -19,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 ATTR_IMAGES = "images"
+ATTR_EMBEDS = "embeds"
 
 
 def get_service(hass, config, discovery_info=None):
@@ -47,6 +49,7 @@ class DiscordNotificationService(BaseNotificationService):
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client()
         images = None
+        embeds = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
@@ -86,7 +89,9 @@ class DiscordNotificationService(BaseNotificationService):
                         files = []
                         for image in images:
                             files.append(discord.File(image))
-                    await channel.send(message, files=files)
+                    if ATTR_EMBEDS in data:
+                        embeds = data[ATTR_EMBEDS]
+                    await channel.send(message, embeds, files=files)
             except (discord.errors.HTTPException, discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
             await discord_bot.logout()
