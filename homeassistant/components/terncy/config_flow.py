@@ -135,6 +135,6 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._terncy.ip = self.host
         self._terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)
-        _LOGGER.debug("try start discovery in %s", DOMAIN)
+        _LOGGER.info("try start discovery in %s", DOMAIN)
         await mgr.start_discovery()
         return await self.async_step_confirm()

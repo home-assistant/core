@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions Terncy platform in their
     config. But even in that case it would have been ignored.
     """
-    _LOGGER.debug(" terncy light async_setup_platform")
+    _LOGGER.info(" terncy light async_setup_platform")
 
 
 def get_attr_value(attrs, key):
@@ -42,7 +42,7 @@ def get_attr_value(attrs, key):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Terncy lights from a config entry."""
-    _LOGGER.debug("setup terncy light platorm")
+    _LOGGER.info("setup terncy light platform")
 
 
 class TerncyLight(LightEntity):
@@ -65,8 +65,7 @@ class TerncyLight(LightEntity):
 
     def update_state(self, attrs):
         """Updateterncy state."""
-        _LOGGER.debug("update state event to")
-        _LOGGER.debug(attrs)
+        _LOGGER.info("update state event to %s", attrs)
         on_off = get_attr_value(attrs, "on")
         if on_off is not None:
             self._onoff = on_off == 1
@@ -154,8 +153,7 @@ class TerncyLight(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on terncy light."""
-        _LOGGER.debug("turn on")
-        _LOGGER.debug(kwargs)
+        _LOGGER.info("turn on %s", kwargs)
         await self.api.set_onoff(self._device_id, 1)
         self._onoff = True
         if ATTR_BRIGHTNESS in kwargs:
@@ -183,7 +181,7 @@ class TerncyLight(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off terncy light."""
-        _LOGGER.debug("turn off")
+        _LOGGER.info("turn off")
         self._onoff = False
         await self.api.set_onoff(self._device_id, 0)
         self.async_write_ha_state()

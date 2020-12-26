@@ -203,7 +203,7 @@ async def update_or_create_entity(dev, tern):
 
 async def async_refresh_devices(hass: HomeAssistant, tern):
     """Get devices from terncy."""
-    _LOGGER.debug("refresh devices now")
+    _LOGGER.info("refresh devices now")
     response = await tern.get_entities("device", True)
     devices = response["rsp"]["entities"]
     pdata = tern.hass_platform_data
@@ -225,10 +225,7 @@ async def async_refresh_devices(hass: HomeAssistant, tern):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Terncy from a config entry."""
-    _LOGGER.debug("terncy domain async_setup_entry")
-    _LOGGER.debug(entry.unique_id)
-    _LOGGER.debug(entry.title)
-    _LOGGER.debug(entry.data)
+    _LOGGER.info("terncy domain async_setup_entry %s", entry.unique_id)
     dev_id = entry.data["identifier"]
     hass.data[DOMAIN] = {}
     mgr = TerncyHubManager.instance(hass)
@@ -262,7 +259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def on_terncy_svc_add(event):
         """Stop push updates when hass stops."""
         dev_id = event.data["dev_id"]
-        _LOGGER.debug("found terncy service: %s %s", dev_id, event.data)
+        _LOGGER.info("found terncy service: %s %s", dev_id, event.data)
         host = event.data["ip"]
         if dev_id == tern.dev_id and not tern.is_connected():
             tern.host = host
