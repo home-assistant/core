@@ -64,6 +64,15 @@ ACTIVE_COLOR_FLOWING = "1"
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
+PROPERTY_COLOR_MODE = "color_mode"
+PROPERTY_FLOWING = "flowing"
+
+COLOR_MODE_MAPPING = {
+    1: "Color",
+    2: "Color Temperature",
+    3: 'HSV'
+}
+
 SCAN_INTERVAL = timedelta(seconds=30)
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
@@ -441,12 +450,17 @@ class YeelightDevice:
         return self._color_flow == ACTIVE_COLOR_FLOWING
 
     @property
+    def color_mode(self) -> bool:
+        color_mode = int(self.bulb.last_properties.get(PROPERTY_COLOR_MODE))
+        return COLOR_MODE_MAPPING.get(color_mode, "Unknown")
+
+    @property
     def _active_mode(self):
         return self.bulb.last_properties.get("active_mode")
 
     @property
     def _color_flow(self):
-        return self.bulb.last_properties.get("flowing")
+        return self.bulb.last_properties.get(PROPERTY_FLOWING)
 
     @property
     def _nightlight_brightness(self):
