@@ -15,6 +15,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PA,
     TEMP_CELSIUS,
+
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -40,6 +41,10 @@ SENSOR_PRESSURE = "pressure"
 SENSOR_PRESSURE_AT_SEALEVEL = "pressure_at_sealevel"
 SENSOR_TEMPERATURE = "temperature"
 
+SENSOR_LAEQ = "noise_LAeq"
+SENSOR_LA_MIN = "noise_LA_min"
+SENSOR_LA_MAX = "noise_LA_max"
+
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSORS = {
@@ -57,6 +62,9 @@ SENSORS = {
         "mdi:thought-bubble-outline",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ],
+	SENSOR_LAEQ: ["LAeq", "mdi:waveform", "LAeq"],
+	SENSOR_LA_MIN: ["LAmin", "mdi:waveform", "LAmin"],
+	SENSOR_LA_MAX: ["LAmax", "mdi:waveform", "LAmax"],
 }
 
 SENSOR_SCHEMA = vol.Schema(
