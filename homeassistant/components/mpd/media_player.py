@@ -1,5 +1,6 @@
 """Support to interact with a Music Player Daemon."""
 from datetime import timedelta
+import hashlib
 import logging
 import os
 
@@ -107,6 +108,7 @@ class MpdDevice(MediaPlayerEntity):
         self._muted_volume = 0
         self._media_position_updated_at = None
         self._media_position = None
+        self._commands = None
 
         # set up MPD client
         self._client = MPDClient()
@@ -163,6 +165,7 @@ class MpdDevice(MediaPlayerEntity):
         try:
             if not self._is_connected:
                 await self._connect()
+                self._commands = list(await self._client.commands())
 
             await self._fetch_status()
         except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
@@ -251,6 +254,56 @@ class MpdDevice(MediaPlayerEntity):
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
         return self._currentsong.get("album")
+
+    @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        file = self._currentsong.get("file")
+        if file:
+            return hashlib.sha256(file.encode("utf-8")).hexdigest()[:16]
+
+        return None
+
+    async def async_get_media_image(self):
+        """Fetch media image of current playing track."""
+        file = self._currentsong.get("file")
+        if not file:
+            return None, None
+
+        # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
+        can_albumart = "albumart" in self._commands
+        can_readpicture = "readpicture" in self._commands
+
+        response = None
+
+        # read artwork embedded into the media file
+        if can_readpicture:
+            try:
+                response = await self._client.readpicture(file)
+            except mpd.CommandError as error:
+                _LOGGER.warning(
+                    "Retrieving artwork through `readpicture` command failed: %s",
+                    error,
+                )
+
+        # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
+        if can_albumart and not response:
+            try:
+                response = await self._client.albumart(file)
+            except mpd.CommandError as error:
+                _LOGGER.warning(
+                    "Retrieving artwork through `albumart` command failed: %s",
+                    error,
+                )
+
+        if not response:
+            return None, None
+
+        image = bytes(response.get("binary"))
+        mime = response.get(
+            "type", "image/png"
+        )  # readpicture has type, albumart does not
+        return (image, mime)
 
     @property
     def volume_level(self):
