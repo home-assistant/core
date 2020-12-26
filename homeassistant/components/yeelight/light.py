@@ -707,23 +707,32 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         flash = kwargs.get(ATTR_FLASH)
         effect = kwargs.get(ATTR_EFFECT)
 
+        turn_on_before_change = True
+
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_on(
-            duration=duration,
-            light_type=self.light_type,
-            power_mode=self._turn_on_power_mode,
-        )
+        # When in music mode, skip turn_on if there is no change, to speed up color
+        # changes
+        if self._bulb.music_mode:
+            if brightness or colortemp or rgb or flash or effect:
+                turn_on_before_change = False
+        else:
+            if self.config[CONF_MODE_MUSIC]:
+                try:
+                    self.set_music_mode(self.config[CONF_MODE_MUSIC])
+                except BulbException as ex:
+                    _LOGGER.error(
+                        "Unable to turn on music mode, consider disabling it: %s", ex
+                    )
 
-        if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
-            try:
-                self.set_music_mode(self.config[CONF_MODE_MUSIC])
-            except BulbException as ex:
-                _LOGGER.error(
-                    "Unable to turn on music mode, consider disabling it: %s", ex
-                )
+        if turn_on_before_change:
+            self.device.turn_on(
+                duration=duration,
+                light_type=self.light_type,
+                power_mode=self._turn_on_power_mode,
+            )
 
         try:
             # values checked for none in methods
