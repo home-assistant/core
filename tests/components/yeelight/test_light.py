@@ -46,7 +46,7 @@ from homeassistant.components.yeelight import (
     YEELIGHT_HSV_TRANSACTION,
     YEELIGHT_RGB_TRANSITION,
     YEELIGHT_SLEEP_TRANSACTION,
-    YEELIGHT_TEMPERATURE_TRANSACTION,
+    YEELIGHT_TEMPERATURE_TRANSACTION, PROPERTY_FLOWING, PROPERTY_COLOR_MODE,
 )
 from homeassistant.components.yeelight.light import (
     ATTR_MINUTES,
@@ -336,7 +336,8 @@ async def test_device_types(hass: HomeAssistant):
         state = hass.states.get(entity_id)
         assert state.state == "on"
         target_properties["friendly_name"] = name
-        target_properties["flowing"] = False
+        target_properties[PROPERTY_FLOWING] = False
+        target_properties[PROPERTY_COLOR_MODE] = "HSV"
         target_properties["night_light"] = True
         target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties

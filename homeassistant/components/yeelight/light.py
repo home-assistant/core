@@ -61,7 +61,7 @@ from . import (
     DATA_UPDATED,
     DOMAIN,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
-    YeelightEntity,
+    YeelightEntity, PROPERTY_FLOWING, PROPERTY_COLOR_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -569,7 +569,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return the device specific state attributes."""
 
         attributes = {
-            "flowing": self.device.is_color_flow_enabled,
+            PROPERTY_COLOR_MODE: self.device.color_mode,
+            PROPERTY_FLOWING: self.device.is_color_flow_enabled,
             "music_mode": self._bulb.music_mode,
         }
 
