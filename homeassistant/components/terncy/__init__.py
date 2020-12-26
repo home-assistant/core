@@ -25,6 +25,7 @@ from .const import (
     PROFILE_EXTENDED_COLOR_LIGHT2,
     PROFILE_ONOFF_LIGHT,
     TERNCY_EVENT_SVC_ADD,
+    TERNCY_EVENT_SVC_REMOVE,
     TERNCY_HUB_ID_PREFIX,
     TERNCY_MANU_NAME,
     TerncyHassPlatformData,
@@ -55,20 +56,20 @@ def find_dev_by_prefix(devices, prefix):
     return result
 
 
-def terncy_event_handler(t, ev):
+def terncy_event_handler(tern, ev):
     """Handle event from terncy system."""
-    hass = t.hass_platform_data.hass
-    parsed_devices = t.hass_platform_data.parsed_devices
+    hass = tern.hass_platform_data.hass
+    parsed_devices = tern.hass_platform_data.parsed_devices
     if isinstance(ev, terncy.event.Connected):
-        _LOGGER.info("got connected event %s", t.dev_id)
-        asyncio.ensure_future(async_refresh_devices(hass, t))
+        _LOGGER.info("got connected event %s", tern.dev_id)
+        asyncio.ensure_future(async_refresh_devices(hass, tern))
     if isinstance(ev, terncy.event.Disconnected):
-        _LOGGER.info("got disconnected event %s", t.dev_id)
+        _LOGGER.info("got disconnected event %s", tern.dev_id)
         for dev in parsed_devices.values():
-            dev._available = False
+            dev.is_available = False
             dev.schedule_update_ha_state()
     if isinstance(ev, terncy.event.EventMessage):
-        _LOGGER.info("got event message %s %s", t.dev_id, ev.msg)
+        _LOGGER.info("got event message %s %s", tern.dev_id, ev.msg)
         evt_type = ""
         if "type" in ev.msg:
             evt_type = ev.msg["type"]
@@ -76,62 +77,67 @@ def terncy_event_handler(t, ev):
             return
         ents = ev.msg["entities"]
         if evt_type == "report":
-            for e in ents:
-                if "attributes" not in e:
+            for ent in ents:
+                if "attributes" not in ent:
                     continue
-                devid = e["id"]
+                devid = ent["id"]
 
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
-                    attrs = e["attributes"]
+                    attrs = ent["attributes"]
                     dev.update_state(attrs)
+                    dev.schedule_update_ha_state()
         elif evt_type == "entityAvailable":
-            for e in ents:
-                devid = e["id"]
-                _LOGGER.info("[%s] %s is available", t.dev_id, devid)
-                hass.async_create_task(update_or_create_entity(e, t))
+            for ent in ents:
+                devid = ent["id"]
+                _LOGGER.info("[%s] %s is available", tern.dev_id, devid)
+                hass.async_create_task(update_or_create_entity(ent, tern))
         elif evt_type == "offline":
-            for e in ents:
-                devid = e["id"]
-                _LOGGER.info("[%s] %s is offline", t.dev_id, devid)
+            for ent in ents:
+                devid = ent["id"]
+                _LOGGER.info("[%s] %s is offline", tern.dev_id, devid)
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
-                    dev._available = False
+                    dev.is_available = False
                     dev.schedule_update_ha_state()
                 elif devid.rfind("-") > 0:
                     prefix = devid[0 : devid.rfind("-")]
-                    _LOGGER.info("[%s] %s not found, try find prefix", t.dev_id, prefix)
+                    _LOGGER.info(
+                        "[%s] %s not found, try find prefix", tern.dev_id, prefix
+                    )
                     devs = find_dev_by_prefix(parsed_devices, prefix)
-                    for d in devs:
-                        _LOGGER.info("[%s] %s is offline", t.dev_id, d.unique_id)
-                        d._available = False
-                        d.schedule_update_ha_state()
+                    for dev in devs:
+                        _LOGGER.info("[%s] %s is offline", tern.dev_id, dev.unique_id)
+                        dev.is_available = False
+                        dev.schedule_update_ha_state()
         elif evt_type == "entityDeleted":
             platform = None
-            for p in async_get_platforms(hass, DOMAIN):
-                if p.config_entry.unique_id == t.dev_id:
-                    if p.domain == "light":
-                        platform = p
+            for plat in async_get_platforms(hass, DOMAIN):
+                if plat.config_entry.unique_id == tern.dev_id:
+                    if plat.domain == "light":
+                        platform = plat
                         break
             if platform is None:
                 return
-            for e in ents:
-                devid = e["id"]
-                _LOGGER.info("[%s] %s is deleted", t.dev_id, devid)
+            for ent in ents:
+                devid = ent["id"]
+                _LOGGER.info("[%s] %s is deleted", tern.dev_id, devid)
                 if devid in parsed_devices:
                     dev = parsed_devices[devid]
-                    dev._available = False
+                    dev.is_available = False
                     dev.schedule_update_ha_state()
                 elif devid.rfind("-") > 0:
                     prefix = devid[0 : devid.rfind("-")]
-                    _LOGGER.info("[%s] %s not found, try find prefix", t.dev_id, prefix)
+                    _LOGGER.info(
+                        "[%s] %s not found, try find prefix", tern.dev_id, prefix
+                    )
                     devs = find_dev_by_prefix(parsed_devices, prefix)
-                    for d in devs:
-                        _LOGGER.info("[%s] %s is delete", t.dev_id, d.unique_id)
+                    for dev in devs:
+                        _LOGGER.info("[%s] %s is delete", tern.dev_id, dev.unique_id)
                         hass.async_create_task(
-                            platform.async_remove_entity(d.entity_id)
+                            platform.async_remove_entity(dev.entity_id)
                         )
-                        parsed_devices.pop(d.unique_id)
+                        parsed_devices.pop(dev.unique_id)
         else:
             _LOGGER.info("unsupported event type %s", evt_type)
 
@@ -141,15 +147,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-def get_attr_value(attrs, key):
-    """Read attr value from terncy attributes."""
-    for a in attrs:
-        if a["attr"] == key:
-            return a["value"]
-    return None
-
-
-async def update_or_create_entity(dev, t):
+async def update_or_create_entity(dev, tern):
     """Update or crate hass entity for given terncy device."""
     model = dev["model"] if "model" in dev else ""
     version = dev["version"] if "version" in dev else ""
@@ -178,7 +176,7 @@ async def update_or_create_entity(dev, t):
         elif profile == PROFILE_EXTENDED_COLOR_LIGHT2:
             features = SUPPORT_TERNCY_EXTENDED
         else:
-            _LOGGER.info("unsupported profile %d", profile)
+            _LOGGER.info(f"unsupported profile {profile}")
             return []
 
         devid = svc["id"]
@@ -186,57 +184,43 @@ async def update_or_create_entity(dev, t):
         if name == "":
             name = devid
         light = None
-        if devid in t.hass_platform_data.parsed_devices:
-            light = t.hass_platform_data.parsed_devices[devid]
+        if devid in tern.hass_platform_data.parsed_devices:
+            light = tern.hass_platform_data.parsed_devices[devid]
         else:
-            light = TerncyLight(t, devid, name, model, version, features)
-        on = get_attr_value(svc["attributes"], "on")
-        if on is not None:
-            light._onoff = on == 1
-        bri = get_attr_value(svc["attributes"], "brightness")
-        if bri:
-            light._bri = int(bri / 100 * 255)
-        ct = get_attr_value(svc["attributes"], "colorTemperature")
-        if ct:
-            light._ct = ct
-        hue = get_attr_value(svc["attributes"], "hue")
-        sat = get_attr_value(svc["attributes"], "saturation")
-        if hue is not None and sat is not None:
-            hue = hue / 255 * 360.0
-            sat = sat / 255 * 100
-            light._hs = (hue, sat)
-        light._available = available
-        if devid in t.hass_platform_data.parsed_devices:
+            light = TerncyLight(tern, devid, name, model, version, features)
+        light.update_state(svc["attributes"])
+        light.is_available = available
+        if devid in tern.hass_platform_data.parsed_devices:
             light.schedule_update_ha_state()
         else:
             platform = None
-            for platform in async_get_platforms(t.hass_platform_data.hass, DOMAIN):
-                if platform.config_entry.unique_id == t.dev_id:
+            for platform in async_get_platforms(tern.hass_platform_data.hass, DOMAIN):
+                if platform.config_entry.unique_id == tern.dev_id:
                     if platform.domain == "light":
                         await platform.async_add_entities([light])
-            t.hass_platform_data.parsed_devices[devid] = light
+            tern.hass_platform_data.parsed_devices[devid] = light
 
 
-async def async_refresh_devices(hass: HomeAssistant, t):
+async def async_refresh_devices(hass: HomeAssistant, tern):
     """Get devices from terncy."""
     _LOGGER.debug("refresh devices now")
-    response = await t.get_entities("device", True)
+    response = await tern.get_entities("device", True)
     devices = response["rsp"]["entities"]
-    pd = t.hass_platform_data
+    pdata = tern.hass_platform_data
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
-        config_entry_id=pd.hub_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, pd.mac)},
-        identifiers={(DOMAIN, pd.hub_entry.entry_id)},
+        config_entry_id=pdata.hub_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, pdata.mac)},
+        identifiers={(DOMAIN, pdata.hub_entry.entry_id)},
         manufacturer=TERNCY_MANU_NAME,
-        name=pd.hub_entry.title,
+        name=pdata.hub_entry.title,
         model="TERNCY-GW01",
         sw_version=1,
     )
 
     for dev in devices:
-        await update_or_create_entity(dev, t)
+        await update_or_create_entity(dev, tern)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -250,7 +234,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     mgr = TerncyHubManager.instance(hass)
     await mgr.start_discovery()
 
-    t = terncy.Terncy(
+    tern = terncy.Terncy(
         HA_CLIENT_ID,
         dev_id,
         entry.data["host"],
@@ -259,30 +243,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data["token"],
     )
 
-    pd = TerncyHassPlatformData()
+    pdata = TerncyHassPlatformData()
 
-    pd.hass = hass
-    pd.hub_entry = entry
-    pd.mac = dr.format_mac(entry.unique_id.replace(TERNCY_HUB_ID_PREFIX, ""))
-    t.hass_platform_data = pd
-    hass.data[DOMAIN][entry.entry_id] = t
+    pdata.hass = hass
+    pdata.hub_entry = entry
+    pdata.mac = dr.format_mac(entry.unique_id.replace(TERNCY_HUB_ID_PREFIX, ""))
+    tern.hass_platform_data = pdata
+    hass.data[DOMAIN][entry.entry_id] = tern
 
     async def setup_terncy_loop():
-        asyncio.create_task(t.start())
+        asyncio.create_task(tern.start())
 
     async def on_hass_stop(event):
         """Stop push updates when hass stops."""
         _LOGGER.info("terncy domain stop")
-        await t.stop()
+        await tern.stop()
 
     async def on_terncy_svc_add(event):
         """Stop push updates when hass stops."""
         dev_id = event.data["dev_id"]
         _LOGGER.debug("found terncy service: %s %s", dev_id, event.data)
         host = event.data["ip"]
-        if dev_id == t.dev_id and t._connection is None:
-            t.host = host
-            _LOGGER.info("start connection to %s %s", dev_id, t.host)
+        if dev_id == tern.dev_id and not tern.is_connected():
+            tern.host = host
+            _LOGGER.info("start connection to %s %s", dev_id, tern.host)
 
             hass.async_create_task(setup_terncy_loop())
 
@@ -290,24 +274,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Stop push updates when hass stops."""
         dev_id = event.data["dev_id"]
         _LOGGER.info("terncy svc remove %s", dev_id)
-        if t._connection is not None:
-            await t.stop()
+        if not tern.is_connected():
+            await tern.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     hass.bus.async_listen(TERNCY_EVENT_SVC_ADD, on_terncy_svc_add)
+    hass.bus.async_listen(TERNCY_EVENT_SVC_REMOVE, on_terncy_svc_remove)
 
     manager = TerncyHubManager.instance(hass)
     if dev_id in manager.hubs:
-        if t._connection is None:
-            t.host = manager.hubs[dev_id]["ip"]
-            _LOGGER.info("start connection to %s %s", dev_id, t.host)
+        if not tern.is_connected():
+            tern.host = manager.hubs[dev_id]["ip"]
+            _LOGGER.info("start connection to %s %s", dev_id, tern.host)
             hass.async_create_task(setup_terncy_loop())
 
-    t.register_event_handler(terncy_event_handler)
+    tern.register_event_handler(terncy_event_handler)
 
     for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(pd.hub_entry, component)
+            hass.config_entries.async_forward_entry_setup(pdata.hub_entry, component)
         )
 
     return True

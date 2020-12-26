@@ -34,9 +34,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def get_attr_value(attrs, key):
     """Read attr value from terncy attributes."""
-    for a in attrs:
-        if "attr" in a and a["attr"] == key:
-            return a["value"]
+    for att in attrs:
+        if "attr" in att and att["attr"] == key:
+            return att["value"]
     return None
 
 
@@ -56,7 +56,7 @@ class TerncyLight(LightEntity):
         self.model = model
         self.version = version
         self.api = api
-        self._available = False
+        self.is_available = False
         self._features = features
         self._onoff = False
         self._ct = 0
@@ -67,15 +67,15 @@ class TerncyLight(LightEntity):
         """Updateterncy state."""
         _LOGGER.debug("update state event to")
         _LOGGER.debug(attrs)
-        on = get_attr_value(attrs, "on")
-        if on is not None:
-            self._onoff = on == 1
+        on_off = get_attr_value(attrs, "on")
+        if on_off is not None:
+            self._onoff = on_off == 1
         bri = get_attr_value(attrs, "brightness")
         if bri:
             self._bri = int(bri / 100 * 255)
-        ct = get_attr_value(attrs, "colorTemperature")
-        if ct:
-            self._ct = ct
+        color_temp = get_attr_value(attrs, "colorTemperature")
+        if color_temp is not None:
+            self._ct = color_temp
         hue = get_attr_value(attrs, "hue")
         sat = get_attr_value(attrs, "saturation")
         if hue is not None:
@@ -84,7 +84,6 @@ class TerncyLight(LightEntity):
         if sat is not None:
             sat = sat / 255 * 100
             self._hs = (self._hs[0], sat)
-        self.schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -134,7 +133,7 @@ class TerncyLight(LightEntity):
     @property
     def available(self):
         """Return if terncy device is available."""
-        return self._available
+        return self.is_available
 
     @property
     def supported_features(self):
@@ -165,21 +164,22 @@ class TerncyLight(LightEntity):
             await self.api.set_attribute(self._device_id, "brightness", terncy_bri, 0)
             self._bri = bri
         if ATTR_COLOR_TEMP in kwargs:
-            ct = kwargs.get(ATTR_COLOR_TEMP)
-            if ct < 50:
-                ct = 50
-            if ct > 400:
-                ct = 400
-            await self.api.set_attribute(self._device_id, "colorTemperature", ct, 0)
-            self._ct = ct
+            color_temp = kwargs.get(ATTR_COLOR_TEMP)
+            if color_temp < 50:
+                color_temp = 50
+            if color_temp > 400:
+                color_temp = 400
+            await self.api.set_attribute(
+                self._device_id, "colorTemperature", color_temp, 0
+            )
+            self._ct = color_temp
         if ATTR_HS_COLOR in kwargs:
-            hs = kwargs.get(ATTR_HS_COLOR)
-            terncy_hue = int(hs[0] / 360 * 255)
-            terncy_sat = int(hs[1] / 100 * 255)
+            hs_color = kwargs.get(ATTR_HS_COLOR)
+            terncy_hue = int(hs_color[0] / 360 * 255)
+            terncy_sat = int(hs_color[1] / 100 * 255)
             await self.api.set_attribute(self._device_id, "hue", terncy_hue, 0)
             await self.api.set_attribute(self._device_id, "sat", terncy_sat, 0)
-            self._hs = hs
-        self.async_write_ha_state()
+            self._hs = hs_color
 
     async def async_turn_off(self, **kwargs):
         """Turn off terncy light."""
