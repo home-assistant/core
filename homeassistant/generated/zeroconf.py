@@ -146,7 +146,8 @@ ZEROCONF = {
     ],
     "_websocket._tcp.local.": [
         {
-            "domain": "terncy"
+            "domain": "terncy",
+            "name": "box-*"
         }
     ],
     "_wled._tcp.local.": [
