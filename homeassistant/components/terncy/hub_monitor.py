@@ -36,7 +36,7 @@ class TerncyZCListener:
     """Terncy zeroconf discovery listener."""
 
     def __init__(self, manager):
-        """Create terncy discovery listener."""
+        """Create Terncy discovery listener."""
         self.manager = manager
 
     def remove_service(self, zconf, svc_type, name):
