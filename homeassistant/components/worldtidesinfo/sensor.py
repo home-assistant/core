@@ -6,6 +6,8 @@ import time
 import requests
 import voluptuous as vol
 
+import base64
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -55,6 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([tides])
 
 
+
 class WorldTidesInfoSensor(Entity):
     """Representation of a WorldTidesInfo sensor."""
 
@@ -76,30 +79,56 @@ class WorldTidesInfoSensor(Entity):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-        if "High" in str(self.data["extremes"][0]["type"]):
-            attr["high_tide_time_utc"] = self.data["extremes"][0]["date"]
-            attr["high_tide_height"] = self.data["extremes"][0]["height"]
-            attr["low_tide_time_utc"] = self.data["extremes"][1]["date"]
-            attr["low_tide_height"] = self.data["extremes"][1]["height"]
-        elif "Low" in str(self.data["extremes"][0]["type"]):
-            attr["high_tide_time_utc"] = self.data["extremes"][1]["date"]
-            attr["high_tide_height"] = self.data["extremes"][1]["height"]
-            attr["low_tide_time_utc"] = self.data["extremes"][0]["date"]
-            attr["low_tide_height"] = self.data["extremes"][0]["height"]
+        current_time= int(time.time())
+        next_tide=0
+        for i in range(len(self.data["extremes"])):
+            if self.data["extremes"][i]["dt"]<current_time:
+                 next_tide=i
+        next_tide=next_tide+1
+
+
+        if "High" in str(self.data["extremes"][next_tide]["type"]):
+            attr["high_tide_time_utc"] = self.data["extremes"][next_tide]["date"]
+            attr["high_tide_height"] = self.data["extremes"][next_tide]["height"]
+            attr["low_tide_time_utc"] = self.data["extremes"][next_tide+1]["date"]
+            attr["low_tide_height"] = self.data["extremes"][next_tide+1]["height"]
+        elif "Low" in str(self.data["extremes"][next_tide]["type"]):
+            attr["high_tide_time_utc"] = self.data["extremes"][next_tide+1]["date"]
+            attr["high_tide_height"] = self.data["extremes"][next_tide+1]["height"]
+            attr["low_tide_time_utc"] = self.data["extremes"][next_tide]["date"]
+            attr["low_tide_height"] = self.data["extremes"][next_tide]["height"]
+        attr["plot"] = '/tmp/'+self._name+'.png'
+
+
+        std_string = "data:image/png;base64,"
+        str_to_convert=self.data["plot"][len(std_string):len(self.data["plot"])]
+
+        imgdata = base64.b64decode(str_to_convert)
+
+        filename2 = self.hass.config.path("www")+"/"+self._name+'.png'
+        with open(filename2, 'wb') as f:
+            f.write(imgdata)
+
         return attr
 
     @property
     def state(self):
         """Return the state of the device."""
         if self.data:
-            if "High" in str(self.data["extremes"][0]["type"]):
+            current_time= int(time.time())
+            next_tide=0
+            for i in range(len(self.data["extremes"])):
+               if self.data["extremes"][i]["dt"]<current_time:
+                   next_tide=i
+            next_tide=next_tide+1  
+            if "High" in str(self.data["extremes"][next_tide]["type"]):
                 tidetime = time.strftime(
-                    "%I:%M %p", time.localtime(self.data["extremes"][0]["dt"])
+                    "%I:%M %p", time.localtime(self.data["extremes"][next_tide]["dt"])
                 )
                 return f"High tide at {tidetime}"
-            if "Low" in str(self.data["extremes"][0]["type"]):
+            if "Low" in str(self.data["extremes"][next_tide]["type"]):
                 tidetime = time.strftime(
-                    "%I:%M %p", time.localtime(self.data["extremes"][0]["dt"])
+                    "%I:%M %p", time.localtime(self.data["extremes"][next_tide]["dt"])
                 )
                 return f"Low tide at {tidetime}"
             return None
@@ -109,9 +138,9 @@ class WorldTidesInfoSensor(Entity):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
         resource = (
-            "https://www.worldtides.info/api?extremes&length=86400"
-            "&key={}&lat={}&lon={}&start={}"
-        ).format(self._key, self._lat, self._lon, start)
+            "https://www.worldtides.info/api/v2?extremes&days=2&date=today&heights&plot"
+            "&key={}&lat={}&lon={}"
+        ).format(self._key, self._lat, self._lon)
 
         try:
             self.data = requests.get(resource, timeout=10).json()
