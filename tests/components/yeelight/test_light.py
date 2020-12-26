@@ -338,6 +338,7 @@ async def test_device_types(hass: HomeAssistant):
         target_properties["friendly_name"] = name
         target_properties["flowing"] = False
         target_properties["night_light"] = True
+        target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
 
         await hass.config_entries.async_unload(config_entry.entry_id)
