@@ -33,6 +33,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.port = 443
         self.token = ""
         self.token_id = 0
+        self.context = {}
         self._terncy = terncy.Terncy(
             self.client_id, self.identifier, self.host, self.port, self.username, ""
         )

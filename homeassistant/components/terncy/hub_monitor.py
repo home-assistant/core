@@ -78,6 +78,7 @@ class TerncyHubManager:
         self.hubs = {}
         TerncyHubManager.__instance = self
 
+    @staticmethod
     def instance(hass):
         """Get singleton instance of terncy manager."""
         if TerncyHubManager.__instance is None:
