@@ -98,7 +98,7 @@ TRANSITION_STROBE = "strobe"
 FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
     automatic_add = False
     devices = {}
