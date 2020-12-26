@@ -11,7 +11,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SLEEP_NUMBER,
+    SERVICE_SET_SLEEP_NUMBER,
+    ATTR_ENTITY,
+    ATTR_SLEEP_NUMBER,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -25,6 +31,14 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
             }
         )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+SERVICE_SET_SLEEP_NUMBER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY): cv.entity_ids,
+        vol.Optional(ATTR_SLEEP_NUMBER, default=100): vol.Range(0, 100),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -52,6 +66,16 @@ def setup(hass, config):
     hass.data[DOMAIN] = data
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
     discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+
+    def handle_set_sleep_number(call):
+        SleepIQService.set_sleepnumber(call, hass, client)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_SLEEP_NUMBER,
+        handle_set_sleep_number,
+        schema=SERVICE_SET_SLEEP_NUMBER_SCHEMA,
+    )
 
     return True
 
@@ -97,6 +121,11 @@ class SleepIQSensor(Entity):
             self.bed.name, self.side.sleeper.first_name, self._name
         )
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {"side": self._side, "bed_id": self._bed_id}
+
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
         # Call the API for new sleepiq data. Each sensor will re-trigger this
@@ -106,3 +135,32 @@ class SleepIQSensor(Entity):
 
         self.bed = self.sleepiq_data.beds[self._bed_id]
         self.side = getattr(self.bed, self._side)
+
+
+class SleepIQService:
+    """SleepIQ Services."""
+
+    @staticmethod
+    def set_sleepnumber(call, hass, client):
+        """Call sleepyq library to set the Sleep Number setting of a side of a bed."""
+        entity_ids = call.data.get("entity_id", {})
+        new_value = call.data.get(SLEEP_NUMBER, 100)
+
+        for entity_id in entity_ids:
+            entity = hass.states.get(entity_id)
+            if entity is not None:
+                bed_id = entity.attributes["bed_id"]
+                side = entity.attributes["side"]
+                try:
+                    """Make SleepIQ API call given a Sleep Number sensor entity and setting value."""
+                    client.set_sleepnumber(side, new_value, bed_id)
+                except ValueError:
+                    message = """
+                        SleepIQ failed to set the sleep number, check your username and password"
+                    """
+                    _LOGGER.error(message)
+            else:
+                _LOGGER.error("EntityID %s does not exist" % (entity_id))
+                return False
+
+        return True

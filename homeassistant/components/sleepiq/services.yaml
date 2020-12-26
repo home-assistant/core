@@ -1,0 +1,9 @@
+set_sleep_number:
+  description: Sets the Sleep Number setting of a side of a bed.
+  fields:
+    entity_id:
+      description: List of entities to set (required)
+      example: "sensor.sleepnumber_bedname_sleepername_sleepnumber"
+    sleep_number:
+      description: The new sleep number setting (optional).  If not provided, the default of 100 is applied.
+      example: 80
