@@ -450,6 +450,7 @@ class YeelightDevice:
 
     @property
     def color_mode(self) -> bool:
+        """Return current color_mode."""
         color_mode = int(self.bulb.last_properties.get(PROPERTY_COLOR_MODE))
         return COLOR_MODE_MAPPING.get(color_mode, "Unknown")
 
