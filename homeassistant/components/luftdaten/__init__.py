@@ -15,7 +15,6 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PA,
     TEMP_CELSIUS,
-
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
