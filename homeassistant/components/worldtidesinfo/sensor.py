@@ -55,6 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([tides])
 
+
 class WorldTidesInfoSensor(Entity):
     """Representation of a WorldTidesInfo sensor."""
 
@@ -93,14 +94,14 @@ class WorldTidesInfoSensor(Entity):
             attr["high_tide_height"] = self.data["extremes"][next_tide + 1]["height"]
             attr["low_tide_time_utc"] = self.data["extremes"][next_tide]["date"]
             attr["low_tide_height"] = self.data["extremes"][next_tide]["height"]
-        filename2 = self.hass.config.path("www") + "/" + self._name + '.png'
-        attr["plot"] = filename2
+        filename = self.hass.config.path("www") + "/" + self._name + ".png"
+        attr["plot"] = filename
 
         std_string = "data:image/png;base64,"
         str_to_convert = self.data["plot"][len(std_string) : len(self.data["plot"])]
         imgdata = base64.b64decode(str_to_convert)
 
-        with open(filename2, 'wb') as filehandler:
+        with open(filename, "wb") as filehandler:
             filehandler.write(imgdata)
 
         return attr
@@ -113,7 +114,7 @@ class WorldTidesInfoSensor(Entity):
             next_tide = 0
             for tide_index in range(len(self.data["extremes"])):
                 if self.data["extremes"][tide_index]["dt"] < current_time:
-                   next_tide = tide_index
+                    next_tide = tide_index
             next_tide = next_tide + 1
             if "High" in str(self.data["extremes"][next_tide]["type"]):
                 tidetime = time.strftime(
