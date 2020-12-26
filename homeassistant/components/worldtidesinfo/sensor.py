@@ -79,35 +79,32 @@ class WorldTidesInfoSensor(Entity):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-        current_time= int(time.time())
-        next_tide=0
-        for i in range(len(self.data["extremes"])):
-            if self.data["extremes"][i]["dt"]<current_time:
-                 next_tide=i
-        next_tide=next_tide+1
-
+        current_time = int(time.time())
+        next_tide = 0
+        for tide_index in range(len(self.data["extremes"])):
+            if self.data["extremes"][tide_index]["dt"] < current_time:
+                 next_tide = tide_index
+        next_tide = next_tide + 1
 
         if "High" in str(self.data["extremes"][next_tide]["type"]):
             attr["high_tide_time_utc"] = self.data["extremes"][next_tide]["date"]
             attr["high_tide_height"] = self.data["extremes"][next_tide]["height"]
-            attr["low_tide_time_utc"] = self.data["extremes"][next_tide+1]["date"]
-            attr["low_tide_height"] = self.data["extremes"][next_tide+1]["height"]
+            attr["low_tide_time_utc"] = self.data["extremes"][next_tide + 1]["date"]
+            attr["low_tide_height"] = self.data["extremes"][next_tide + 1]["height"]
         elif "Low" in str(self.data["extremes"][next_tide]["type"]):
-            attr["high_tide_time_utc"] = self.data["extremes"][next_tide+1]["date"]
-            attr["high_tide_height"] = self.data["extremes"][next_tide+1]["height"]
+            attr["high_tide_time_utc"] = self.data["extremes"][next_tide + 1]["date"]
+            attr["high_tide_height"] = self.data["extremes"][next_tide + 1]["height"]
             attr["low_tide_time_utc"] = self.data["extremes"][next_tide]["date"]
             attr["low_tide_height"] = self.data["extremes"][next_tide]["height"]
-        attr["plot"] = '/tmp/'+self._name+'.png'
-
+        filename2 = self.hass.config.path("www") + "/" + self._name+'.png'
+        attr["plot"] = filename2
 
         std_string = "data:image/png;base64,"
-        str_to_convert=self.data["plot"][len(std_string):len(self.data["plot"])]
-
+        str_to_convert = self.data["plot"][len(std_string):len(self.data["plot"])]
         imgdata = base64.b64decode(str_to_convert)
 
-        filename2 = self.hass.config.path("www")+"/"+self._name+'.png'
-        with open(filename2, 'wb') as f:
-            f.write(imgdata)
+        with open(filename2, 'wb') as filehandler:
+            filehandler.write(imgdata)
 
         return attr
 
@@ -115,12 +112,12 @@ class WorldTidesInfoSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self.data:
-            current_time= int(time.time())
-            next_tide=0
-            for i in range(len(self.data["extremes"])):
-               if self.data["extremes"][i]["dt"]<current_time:
-                   next_tide=i
-            next_tide=next_tide+1  
+            current_time = int(time.time())
+            next_tide = 0
+            for tide_index in range(len(self.data["extremes"])):
+               if self.data["extremes"][tide_index]["dt"] < current_time:
+                   next_tide = tide_index
+            next_tide = next_tide + 1
             if "High" in str(self.data["extremes"][next_tide]["type"]):
                 tidetime = time.strftime(
                     "%I:%M %p", time.localtime(self.data["extremes"][next_tide]["dt"])
@@ -135,8 +132,7 @@ class WorldTidesInfoSensor(Entity):
         return None
 
     def update(self):
-        """Get the latest data from WorldTidesInfo API."""
-        start = int(time.time())
+        """Get the latest data from WorldTidesInfo API v2."""
         resource = (
             "https://www.worldtides.info/api/v2?extremes&days=2&date=today&heights&plot"
             "&key={}&lat={}&lon={}"
@@ -145,7 +141,7 @@ class WorldTidesInfoSensor(Entity):
         try:
             self.data = requests.get(resource, timeout=10).json()
             _LOGGER.debug("Data: %s", self.data)
-            _LOGGER.debug("Tide data queried with start time set to: %s", start)
+            _LOGGER.debug("Tide data queried")
         except ValueError as err:
             _LOGGER.error("Error retrieving data from WorldTidesInfo: %s", err.args)
             self.data = None
