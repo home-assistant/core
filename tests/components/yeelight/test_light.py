@@ -366,6 +366,7 @@ async def test_device_types(hass: HomeAssistant):
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
         nightlight_properties["night_light"] = True
+        nightlight_properties["music_mode"] = False
         assert dict(state.attributes) == nightlight_properties
 
         await hass.config_entries.async_unload(config_entry.entry_id)
