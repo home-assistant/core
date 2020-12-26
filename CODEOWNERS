@@ -460,6 +460,7 @@ homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne
+homeassistant/components/terncy/* @rxwen
 homeassistant/components/tesla/* @zabuldon @alandtse
 homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff

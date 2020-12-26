@@ -144,6 +144,11 @@ ZEROCONF = {
             "domain": "vizio"
         }
     ],
+    "_websocket._tcp.local.": [
+        {
+            "domain": "terncy"
+        }
+    ],
     "_wled._tcp.local.": [
         {
             "domain": "wled"

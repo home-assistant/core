@@ -2171,6 +2171,9 @@ temperusb==1.5.3
 # homeassistant.components.tensorflow
 # tensorflow==2.3.0
 
+# homeassistant.components.terncy
+terncy==0.3.3
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.3
 
@@ -2283,6 +2286,9 @@ webexteamssdk==1.1.1
 # homeassistant.components.gpmdp
 websocket-client==0.54.0
 
+# homeassistant.components.terncy
+websockets==8.1
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 
@@ -2341,6 +2347,7 @@ zeep[async]==4.0.0
 # homeassistant.components.zengge
 zengge==0.2
 
+# homeassistant.components.terncy
 # homeassistant.components.zeroconf
 zeroconf==0.28.7
 

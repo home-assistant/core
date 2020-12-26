@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Home Center has already been configured."
+        },
+        "error": {
+            "invalid_auth": "Please approve access request in Terncy app first",
+            "need_new_auth": "Request a new token, then approve access request in Terncy app first, then submit again"
+        },
+        "flow_title": "Terncy: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Device"
+                }
+            },
+            "confirm": {
+                "description": "You are about to add the `{name}` to Home Assistant.\n\n**To complete the process, you may have to approve access request in Terncy App after you submit access request.**\n\n",
+                "title": "Confirm adding Terncy Home Center"
+            },
+            "begin_pairing": {
+                "description": "You are adding the `{name}` to Home Assistant.\n\n**To complete the process, please approve the access request in Terncy App. Then submit again.**\n\n",
+                "title": "Adding Terncy Home Center"
+            }
+        }
+    },
+    "title": "Terncy"
+}
