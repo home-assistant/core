@@ -1,6 +1,8 @@
 """Config flow for Legrand Home+ Control."""
 import logging
 import re
+import time
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
@@ -66,21 +68,45 @@ class HomePlusControlFlowHandler(
             step_id="user", data_schema=DOMAIN_SCHEMA, errors=errors
         )
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
-        """Create the config entry for the flow.
+    async def async_step_creation(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Create the config entry for the flow from the external authentication data.
 
-        Overrides the base class method to add additional config information for the entry.
+        Overrides the base class method to handle general exceptions and to add additional config information for the entry.
 
         Args:.
             data (dict): Dictionary containing the additional configuration data to be stored.
         """
-        data[CONF_CLIENT_ID] = self.flow_impl.client_id
-        data[CONF_CLIENT_SECRET] = self.flow_impl.client_secret
-        data[CONF_SUBSCRIPTION_KEY] = self.flow_impl.subscription_key
-        data[CONF_REDIRECT_URI] = self.flow_impl.redirect_uri
-        # self.logger.debug(f"Flow implementation: {self.flow_impl.name} ->  {data}")
+        try:
+            token = await self.flow_impl.async_resolve_external_data(self.external_data)
 
-        return self.async_create_entry(title=self.flow_impl.name, data=data)
+            # Force int for non-compliant oauth2 providers
+            token["expires_in"] = int(token["expires_in"])
+        except ValueError as err:
+            self.logger.warning("Error converting expires_in to int: %s", err)
+            return self.async_abort(reason="oauth_error")
+        except Exception as err:
+            self.logger.warning("Error retrieving authentication token: %s", err)
+            return self.async_abort(reason="oauth_error")
+
+        token["expires_at"] = time.time() + token["expires_in"]
+        self.logger.info("Successfully authenticated")
+
+        config_data = {}
+        config_data[CONF_CLIENT_ID] = self.flow_impl.client_id
+        config_data[CONF_CLIENT_SECRET] = self.flow_impl.client_secret
+        config_data[CONF_SUBSCRIPTION_KEY] = self.flow_impl.subscription_key
+        config_data[CONF_REDIRECT_URI] = self.flow_impl.redirect_uri
+
+        return self.async_create_entry(
+            title=self.flow_impl.name,
+            data={
+                "auth_implementation": self.flow_impl.domain,
+                "token": token,
+                **config_data,
+            },
+        )
 
     async def _is_valid(self, user_input, errors):
         """Validate the user input."""

@@ -9,6 +9,7 @@ from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
     SwitchEntity,
 )
+from homeassistant.helpers import entity_platform
 
 # from homeassistant.helpers import entity_platform
 from homeassistant.helpers.update_coordinator import (
@@ -73,6 +74,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for idx, ent in coordinator.data.items()
     )
     _LOGGER.debug("hass.data[%s]: %s", DOMAIN, hass.data[DOMAIN])
+    await view_data(hass)
+
+
+async def view_data(hass):
+    """Debug relevant Hass objects."""
+    platform = entity_platform.current_platform.get()
+    _LOGGER.debug("Platform %s entities: %s", platform.platform_name, platform.entities)
+    device_reg = await hass.helpers.device_registry.async_get_registry()
+    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    _LOGGER.debug("Entity registry entities: %s", entity_reg.entities)
+    _LOGGER.debug("Device registry devices: %s", device_reg.devices)
 
 
 class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
