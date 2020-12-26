@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up buienradar2 from a config entry."""
+    """Set up buienradar from a config entry."""
     for component in PLATFORMS:
         if entry.data[component]:
             hass.async_create_task(

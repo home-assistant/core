@@ -1,4 +1,4 @@
-"""Config flow for buienradar2 integration."""
+"""Config flow for buienradar integration."""
 import logging
 
 import voluptuous as vol
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def configured_instances(hass):
-    """Return a set of configured SimpliSafe instances."""
+    """Return a set of configured buienradar instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get(CONF_CAMERA):
