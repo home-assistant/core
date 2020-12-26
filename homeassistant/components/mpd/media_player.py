@@ -266,42 +266,44 @@ class MpdDevice(MediaPlayerEntity):
 
     async def async_get_media_image(self):
         """Fetch media image of current playing track."""
+        file = self._currentsong.get("file")
+        if not file:
+            return None, None
+
         # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
         can_albumart = "albumart" in self._commands
         can_readpicture = "readpicture" in self._commands
 
-        file = self._currentsong.get("file")
-        if file:
-            response = None
+        response = None
 
-            # read artwork embedded into the media file
-            if can_readpicture:
-                try:
-                    response = await self._client.readpicture(file)
-                except mpd.CommandError as error:
-                    _LOGGER.warning(
-                        "Retrieving artwork through `readpicture` command failed: %s",
-                        error,
-                    )
+        # read artwork embedded into the media file
+        if can_readpicture:
+            try:
+                response = await self._client.readpicture(file)
+            except mpd.CommandError as error:
+                _LOGGER.warning(
+                    "Retrieving artwork through `readpicture` command failed: %s",
+                    error,
+                )
 
-            # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if not embedded
-            if can_albumart and not response:
-                try:
-                    response = await self._client.albumart(file)
-                except mpd.CommandError as error:
-                    _LOGGER.warning(
-                        "Retrieving artwork through `albumart` command failed: %s",
-                        error,
-                    )
+        # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
+        if can_albumart and not response:
+            try:
+                response = await self._client.albumart(file)
+            except mpd.CommandError as error:
+                _LOGGER.warning(
+                    "Retrieving artwork through `albumart` command failed: %s",
+                    error,
+                )
 
-            if response:
-                image = bytes(response.get("binary"))
-                mime = response.get(
-                    "type", "image/png"
-                )  # readpicture has type, albumart does not
-                return (image, mime)
+        if not response:
+            return None, None
 
-        return None, None
+        image = bytes(response.get("binary"))
+        mime = response.get(
+            "type", "image/png"
+        )  # readpicture has type, albumart does not
+        return (image, mime)
 
     @property
     def volume_level(self):
