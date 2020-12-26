@@ -673,7 +673,7 @@ pycountry==19.8.18
 pydaikin==2.4.0
 
 # homeassistant.components.deconz
-pydeconz==76
+pydeconz==77
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
