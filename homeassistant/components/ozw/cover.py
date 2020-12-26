@@ -7,6 +7,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    SUPPORT_STOP,
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
@@ -16,9 +17,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
 
-SUPPORTED_FEATURES_POSITION = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+SUPPORTED_FEATURES_POSITION = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 VALUE_SELECTED_ID = "Selected_id"
+PRESS_BUTTON = True
+RELEASE_BUTTON = False
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -52,6 +55,12 @@ def percent_to_zwave_position(value):
 class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
+    def __init__(self, values):
+        """Initialize Z-Wave cover device entity."""
+        self._open_button_pressed = False
+        self._close_button_pressed = False
+        super().__init__(values)
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -73,11 +82,22 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self.values.primary.send_value(99)
+        self.values.open.send_value(PRESS_BUTTON)
+        self._open_button_pressed = True
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        self.values.primary.send_value(0)
+        self.values.close.send_value(PRESS_BUTTON)
+        self._close_button_pressed = True
+
+    async def async_stop_cover(self, **kwargs):
+        """Stop cover."""
+        if self._open_button_pressed:
+            self.values.open.send_value(RELEASE_BUTTON)
+            self._open_button_pressed = False
+        if self._close_button_pressed:
+            self.values.close.send_value(RELEASE_BUTTON)
+            self._close_button_pressed = False
 
 
 class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
