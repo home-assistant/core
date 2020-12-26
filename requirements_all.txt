@@ -784,7 +784,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.12
+huawei-lte-api==1.4.17
 
 # homeassistant.components.hydrawise
 hydrawiser==0.2
