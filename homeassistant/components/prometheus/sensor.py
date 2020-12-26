@@ -85,7 +85,7 @@ class Prometheus:
         if not result:
             _LOGGER.error("Expression '%s' yielded no result", expr)
             return STATE_PROBLEM
-        elif len(result) > 1:
+        if len(result) > 1:
             _LOGGER.error("Expression '%s' yielded multiple metrics", expr)
             return STATE_PROBLEM
 
