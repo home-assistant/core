@@ -49,7 +49,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.name = hub["dn"]
             self.host = hub["ip"]
             self.port = hub["port"]
-            _LOGGER.warning(f"construct Terncy obj for {self.name}, {self.host}")
+            _LOGGER.warning("construct Terncy obj for %s %s", self.name, self.host)
             self._terncy = terncy.Terncy(
                 self.client_id, self.identifier, self.host, self.port, self.username, ""
             )
@@ -72,7 +72,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self.identifier)
             self._abort_if_unique_id_configured()
         if self.token == "":
-            _LOGGER.warning(f"request a new token form terncy {self.identifier}")
+            _LOGGER.warning("request a new token form terncy %s", self.identifier)
             code, token_id, token, state = await self._terncy.request_token(
                 self.username, "HA User"
             )
@@ -92,7 +92,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
         if state == terncy.TokenState.APPROVED.value:
-            _LOGGER.warning(f"token valid, create entry for {self.identifier}")
+            _LOGGER.warning("token valid, create entry for %s", self.identifier)
             return self.async_create_entry(
                 title=self.name,
                 data={
@@ -104,14 +104,13 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "port": self.port,
                 },
             )
-        else:
-            errors = {}
-            errors["base"] = "invalid_auth"
-            return self.async_show_form(
-                step_id="begin_pairing",
-                description_placeholders={"name": self.name},
-                errors=errors,
-            )
+        errors = {}
+        errors["base"] = "invalid_auth"
+        return self.async_show_form(
+            step_id="begin_pairing",
+            description_placeholders={"name": self.name},
+            errors=errors,
+        )
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
@@ -136,5 +135,6 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._terncy.ip = self.host
         self._terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)
+        _LOGGER.debug("try start discovery in %s", DOMAIN)
         await mgr.start_discovery()
         return await self.async_step_confirm()

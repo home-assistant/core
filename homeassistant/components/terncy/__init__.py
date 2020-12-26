@@ -176,7 +176,7 @@ async def update_or_create_entity(dev, tern):
         elif profile == PROFILE_EXTENDED_COLOR_LIGHT2:
             features = SUPPORT_TERNCY_EXTENDED
         else:
-            _LOGGER.info(f"unsupported profile {profile}")
+            _LOGGER.info("unsupported profile %d", profile)
             return []
 
         devid = svc["id"]
