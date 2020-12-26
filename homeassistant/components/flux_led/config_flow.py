@@ -35,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data: dict = None):
         """Handle configuration via YAML import."""
-        _LOGGER.info("Importing configuration from YAML for flux_led.")
+        _LOGGER.debug("Importing configuration from YAML for flux_led")
         config_entry = self.hass.config_entries.async_entries(DOMAIN)
 
         if config_entry:
