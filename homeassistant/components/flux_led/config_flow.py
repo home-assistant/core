@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -17,8 +16,6 @@ from .const import (
     CONF_REMOVE_DEVICE,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
-    SIGNAL_ADD_DEVICE,
-    SIGNAL_REMOVE_DEVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,13 +39,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry = self.hass.config_entries.async_entries(DOMAIN)
 
         if config_entry:
-            _LOGGER.error(
-                "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml."
+            _LOGGER.warning(
+                "Your flux_led configuration has already been imported. Please remove configuration from your configuration.yaml"
             )
             return self.async_abort(reason="single_instance_allowed")
 
-        _LOGGER.error(
-            "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml."
+        _LOGGER.warning(
+            "Imported auto_add configuration for flux_led. Please remove from your configuration.yaml"
         )
         return await self.async_step_user(
             user_input={
@@ -133,10 +130,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 device_id = user_input[CONF_REMOVE_DEVICE]
                 del self._config_entry.data[CONF_DEVICES][device_id]
 
-                async_dispatcher_send(
-                    self.hass, SIGNAL_REMOVE_DEVICE, {"device_id": device_id}
-                )
-
                 options_data = self._config_entry.options.copy()
                 if device_id in options_data:
                     del options_data[device_id]
@@ -156,10 +149,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                     CONF_NAME: device_name,
                 }
                 self._config_entry.data[CONF_DEVICES][device_id] = device_data
-
-                async_dispatcher_send(
-                    self.hass, SIGNAL_ADD_DEVICE, {device_id: device_data}
-                )
 
                 options_data = self._config_entry.options.copy()
                 options_data["global"] = self._global_options
