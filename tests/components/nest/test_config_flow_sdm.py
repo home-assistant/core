@@ -211,7 +211,7 @@ async def test_full_flow_from_yaml(hass, flow_fixture):
 
 
 async def test_reauth(hass, flow_fixture):
-    """Test Nest reauthentication from configuration.yaml."""
+    """Test Nest reauthentication."""
     old_data = EXPECTED_CONFIG_ENTRY_DATA.copy()
     old_data["token"] = {"access_token": "some-revoked-token"}
     old_entry = MockConfigEntry(
@@ -317,6 +317,18 @@ async def test_reauth_from_yaml(hass, flow_fixture):
     entry.data["token"].pop("expires_at")
     assert entry.unique_id == DOMAIN
     assert dict(entry.data) == EXPECTED_CONFIG_ENTRY_DATA
+
+
+async def test_reauth_missing_input(hass, flow_fixture):
+    """Test Nest reauthentication with invalid parameters passed."""
+    assert await setup.async_setup_component(hass, DOMAIN, EMPTY_CONFIG)
+
+    result = await flow_fixture.async_init(
+        config_entries.SOURCE_REAUTH,
+        data=None,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_single_config_entry_from_yaml(hass, flow_fixture):

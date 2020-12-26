@@ -219,3 +219,21 @@ async def test_step_import_with_token_cache(hass):
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.data == {"impl_domain": "nest", "tokens": {"access_token": "yo"}}
+
+
+async def test_user_step(hass):
+    """Test that the user step redirects to the init step."""
+    gen_authorize_url = AsyncMock(return_value="https://example.com")
+    convert_code = AsyncMock(return_value={"access_token": "yoo"})
+    config_flow.register_legacy_flow_implementation(
+        hass, "test", "Test", gen_authorize_url, convert_code
+    )
+    config_flow.register_legacy_flow_implementation(
+        hass, "test-other", "Test Other", None, None
+    )
+
+    flow = config_flow.NestFlowHandler()
+    flow.hass = hass
+    result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
