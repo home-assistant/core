@@ -128,7 +128,12 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             if CONF_REMOVE_DEVICE in user_input:
                 device_id = user_input[CONF_REMOVE_DEVICE]
-                del self._config_entry.data[CONF_DEVICES][device_id]
+                config_data = self._config_entry.data.copy()
+                del config_data[CONF_DEVICES][device_id]
+
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry, data=config_data
+                )
 
                 options_data = self._config_entry.options.copy()
                 if device_id in options_data:
@@ -148,7 +153,13 @@ class OptionsFlow(config_entries.OptionsFlow):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_NAME: device_name,
                 }
-                self._config_entry.data[CONF_DEVICES][device_id] = device_data
+
+                config_data = self._config_entry.data.copy()
+                config_data[CONF_DEVICES][device_id] = device_data
+
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry, data=config_data
+                )
 
                 options_data = self._config_entry.options.copy()
                 options_data["global"] = self._global_options

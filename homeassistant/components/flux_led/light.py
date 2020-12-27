@@ -26,7 +26,13 @@ from homeassistant.const import ATTR_MODE, CONF_HOST, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-from .const import CONF_AUTOMATIC_ADD, CONF_DEVICES, DOMAIN
+from .const import (
+    CONF_AUTOMATIC_ADD,
+    CONF_DEVICES,
+    CONF_EFFECT_SPEED,
+    DEFAULT_EFFECT_SPEED,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,6 +179,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         CONF_AUTOMATIC_ADD, entry.data[CONF_AUTOMATIC_ADD]
     )
     config_devices = entry.data[CONF_DEVICES]
+    config_options = entry.options
 
     lights = []
 
@@ -189,10 +196,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for device_id, device in config_devices.items():
         add_device = {}
         add_device["name"] = device.get("name", device_id)
-        add_device["ipaddr"] = device["ipaddr"]
+        add_device[CONF_HOST] = device[CONF_HOST]
         add_device[CONF_PROTOCOL] = None
         add_device[ATTR_MODE] = None
         add_device[CONF_CUSTOM_EFFECT] = None
+        add_device[CONF_EFFECT_SPEED] = config_options.get(device_id, {}).get(
+            CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+        )
 
         light = FluxLight(add_device)
         lights.append(light)
@@ -206,10 +216,11 @@ class FluxLight(LightEntity):
     def __init__(self, device):
         """Initialize the light."""
         self._name = device["name"]
-        self._ipaddr = device["ipaddr"]
+        self._ipaddr = device[CONF_HOST]
         self._protocol = device[CONF_PROTOCOL]
         self._mode = device[ATTR_MODE]
         self._custom_effect = device[CONF_CUSTOM_EFFECT]
+        self._effect_speed = device[CONF_EFFECT_SPEED]
         self._bulb = None
         self._error_reported = False
 
@@ -350,7 +361,7 @@ class FluxLight(LightEntity):
 
         # Effect selection
         if effect in EFFECT_MAP:
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
             return
 
         # Preserve current brightness on color/white level change
