@@ -1,8 +1,9 @@
 """Support for Soma sensors."""
-from homeassistant.components.soma import API, DEVICES, DOMAIN, SomaEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
+from . import DEVICES, SomaEntity
+from .const import API, DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Soma sensor platform."""
