@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5B", "5", "4", "2.2"])
+            cv.string, vol.In(["5L", "5B", "5", "4", "2.2"])
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -85,7 +85,6 @@ async def async_setup_entry(
         ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
         ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
         ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
         ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1],
         ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2],
         ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
@@ -112,6 +111,24 @@ async def async_setup_entry(
         ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3],
     ]
 
+    if dsmr_version == "5L":
+        obis_mapping.extend(
+            [
+                [
+                    "Energy Consumption (total)",
+                    obis_ref.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
+                ],
+                [
+                    "Energy Production (total)",
+                    obis_ref.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+                ],
+            ]
+        )
+    else:
+        obis_mapping.extend(
+            [["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL]]
+        )
+
     # Generate device entities
     devices = [
         DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
@@ -120,7 +137,7 @@ async def async_setup_entry(
 
     # Protocol version specific obis
     if CONF_SERIAL_ID_GAS in config:
-        if dsmr_version in ("4", "5"):
+        if dsmr_version in ("4", "5", "5L"):
             gas_obis = obis_ref.HOURLY_GAS_METER_READING
         elif dsmr_version in ("5B",):
             gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
