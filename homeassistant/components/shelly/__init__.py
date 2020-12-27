@@ -229,6 +229,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.device.shutdown()
         self._async_remove_input_events_handler()
 
+    @callback
     def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
         _LOGGER.debug("Stopping ShellyDeviceWrapper for %s", self.name)
