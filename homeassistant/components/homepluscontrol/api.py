@@ -8,7 +8,7 @@ from homepluscontrol.homeplusplant import HomePlusPlant
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import CONF_REDIRECT_URI, CONF_SUBSCRIPTION_KEY, DOMAIN, PLANT_URL
 
@@ -73,6 +73,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
             subscription_key=self.config_entry.data[CONF_SUBSCRIPTION_KEY],
             redirect_uri=self.config_entry.data[CONF_REDIRECT_URI],
             token=self.config_entry.data["token"],
+            oauth_client=aiohttp_client.async_get_clientsession(self.hass),
         )
 
     @property
