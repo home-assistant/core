@@ -8,29 +8,31 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_registry import async_get_registry
 
-from . import DOMAIN
-from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO, TRANSLATE_SOURCE
+from . import DOMAIN, MultilineListFilter
+from .const import (
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    DEPRECATED_SENSOR_SOURCE_LOOKUP,
+    SENSOR_INFO,
+    TRANSLATE_SOURCE,
+)
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.addFilter(MultilineListFilter())
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the OpenTherm Gateway sensors."""
     sensors = []
+    deprecated_sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
     ent_reg = await async_get_registry(hass)
     for var, info in SENSOR_INFO.items():
-        old_style_entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
-        )
-        old_ent = ent_reg.async_get(old_style_entity_id)
-        if old_ent and old_ent.config_entry_id == config_entry.entry_id:
-            ent_reg.async_remove(old_style_entity_id)
-
         device_class = info[0]
         unit = info[1]
         friendly_name_format = info[2]
         status_sources = info[3]
+
         for source in status_sources:
             sensors.append(
                 OpenThermSensor(
@@ -43,7 +45,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
+        old_style_entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
+        )
+        old_ent = ent_reg.async_get(old_style_entity_id)
+        if old_ent and old_ent.config_entry_id == config_entry.entry_id:
+            if old_ent.disabled:
+                ent_reg.async_remove(old_style_entity_id)
+            else:
+                deprecated_sensors.append(
+                    DeprecatedOpenThermSensor(
+                        gw_dev,
+                        var,
+                        device_class,
+                        unit,
+                        friendly_name_format,
+                    )
+                )
+
     async_add_entities(sensors)
+    if deprecated_sensors:
+        _LOGGER.warning(
+            "The following sensor entities are deprecated and may no "
+            "longer behave as expected. They will be removed in a future "
+            "version. You can force removal of these entities by disabling "
+            "them and restarting Home Assistant.",
+            extra={"pretty_list": [s.entity_id for s in deprecated_sensors]},
+        )
+        async_add_entities(deprecated_sensors)
 
 
 class OpenThermSensor(Entity):
@@ -138,3 +167,26 @@ class OpenThermSensor(Entity):
     def should_poll(self):
         """Return False because entity pushes its state."""
         return False
+
+
+class DeprecatedOpenThermSensor(OpenThermSensor):
+    """Represent a deprecated OpenTherm Gateway Sensor."""
+
+    def __init__(self, gw_dev, var, device_class, unit, friendly_name_format):
+        """Initialize the OpenTherm Gateway sensor."""
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
+        )
+        self._gateway = gw_dev
+        self._var = var
+        self._source = DEPRECATED_SENSOR_SOURCE_LOOKUP[var]
+        self._value = None
+        self._device_class = device_class
+        self._unit = unit
+        self._friendly_name = friendly_name_format.format(gw_dev.name)
+        self._unsub_updates = None
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._gateway.gw_id}-{self._var}"

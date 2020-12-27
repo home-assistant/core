@@ -431,3 +431,14 @@ class OpenThermGatewayDevice:
             async_dispatcher_send(self.hass, self.update_signal, status)
 
         self.gateway.subscribe(handle_report)
+
+
+class MultilineListFilter(logging.Filter):
+    """Allow logging a variable length list in a pretty format."""
+
+    def filter(self, record):
+        """Convert the list to actual log output."""
+        if hasattr(record, "pretty_list") and len(record.pretty_list) > 0:
+            for item in record.pretty_list:
+                record.msg = f"{record.msg}\n\t- {item}"
+        return super().filter(record)
