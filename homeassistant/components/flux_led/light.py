@@ -21,19 +21,25 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import ATTR_MODE, CONF_HOST, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
+from .const import (
+    CONF_AUTOMATIC_ADD,
+    CONF_DEVICES,
+    CONF_EFFECT_SPEED,
+    DEFAULT_EFFECT_SPEED,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_CUSTOM_EFFECT = "custom_effect"
 CONF_COLORS = "colors"
 CONF_SPEED_PCT = "speed_pct"
 CONF_TRANSITION = "transition"
-
-DOMAIN = "flux_led"
 
 SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
@@ -139,41 +145,68 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the platform and manage importing from YAML."""
+    automatic_add = config["automatic_add"]
+    devices = {}
+
+    for import_host, import_item in config["devices"].items():
+        import_name = import_host
+        import_name = import_item.get("name", import_host)
+
+        devices[import_host.replace(".", "_")] = {
+            CONF_NAME: import_name,
+            CONF_HOST: import_host,
+        }
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_AUTOMATIC_ADD: automatic_add,
+            CONF_DEVICES: devices,
+        },
+    )
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
+    config_auto = entry.options["global"].get(
+        CONF_AUTOMATIC_ADD, entry.data[CONF_AUTOMATIC_ADD]
+    )
+    config_devices = entry.data[CONF_DEVICES]
+    config_options = entry.options
+
     lights = []
-    light_ips = []
 
-    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
-        device = {}
-        device["name"] = device_config[CONF_NAME]
-        device["ipaddr"] = ipaddr
-        device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
-        device[ATTR_MODE] = device_config[ATTR_MODE]
-        device[CONF_CUSTOM_EFFECT] = device_config.get(CONF_CUSTOM_EFFECT)
-        light = FluxLight(device)
-        lights.append(light)
-        light_ips.append(ipaddr)
+    if config_auto:
+        # Find the bulbs on the LAN
+        scanner = BulbScanner()
+        await hass.async_add_executor_job(scanner.scan)
 
-    if not config.get(CONF_AUTOMATIC_ADD, False):
-        add_entities(lights, True)
-        return
+        for device in scanner.getBulbInfo():
+            device_id = device["ipaddr"].replace(".", "_")
+            if device_id not in config_devices:
+                config_devices[device_id] = device
 
-    # Find the bulbs on the LAN
-    scanner = BulbScanner()
-    scanner.scan(timeout=10)
-    for device in scanner.getBulbInfo():
-        ipaddr = device["ipaddr"]
-        if ipaddr in light_ips:
-            continue
-        device["name"] = f"{device['id']} {ipaddr}"
-        device[ATTR_MODE] = None
-        device[CONF_PROTOCOL] = None
-        device[CONF_CUSTOM_EFFECT] = None
-        light = FluxLight(device)
+    for device_id, device in config_devices.items():
+        add_device = {}
+        add_device["name"] = device.get("name", device_id)
+        add_device[CONF_HOST] = device[CONF_HOST]
+        add_device[CONF_PROTOCOL] = None
+        add_device[ATTR_MODE] = None
+        add_device[CONF_CUSTOM_EFFECT] = None
+        add_device[CONF_EFFECT_SPEED] = config_options.get(device_id, {}).get(
+            CONF_EFFECT_SPEED,
+            config_options.get("global", {}).get(
+                CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+            ),
+        )
+
+        light = FluxLight(add_device)
         lights.append(light)
 
-    add_entities(lights, True)
+    async_add_entities(lights)
 
 
 class FluxLight(LightEntity):
@@ -182,10 +215,11 @@ class FluxLight(LightEntity):
     def __init__(self, device):
         """Initialize the light."""
         self._name = device["name"]
-        self._ipaddr = device["ipaddr"]
+        self._ipaddr = device[CONF_HOST]
         self._protocol = device[CONF_PROTOCOL]
         self._mode = device[ATTR_MODE]
         self._custom_effect = device[CONF_CUSTOM_EFFECT]
+        self._effect_speed = device[CONF_EFFECT_SPEED]
         self._bulb = None
         self._error_reported = False
 
@@ -326,7 +360,7 @@ class FluxLight(LightEntity):
 
         # Effect selection
         if effect in EFFECT_MAP:
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
             return
 
         # Preserve current brightness on color/white level change
