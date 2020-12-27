@@ -22,7 +22,7 @@ async def test_setup_form(hass):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert not result["errors"]
 
 
 async def test_setup_automatic_add(hass):
