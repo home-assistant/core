@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
@@ -24,7 +24,6 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import api, config_flow
 from .const import (
@@ -34,7 +33,6 @@ from .const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
-    SIGNAL_NEST_UPDATE,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
@@ -106,7 +104,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-class SignalUpdateCallback(AsyncEventCallback):
+class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
     def __init__(self, hass: HomeAssistant):
@@ -116,17 +114,8 @@ class SignalUpdateCallback(AsyncEventCallback):
     async def async_handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
         if not event_message.resource_update_name:
-            _LOGGER.debug("Ignoring event with no device_id")
             return
         device_id = event_message.resource_update_name
-        _LOGGER.debug("Update for %s @ %s", device_id, event_message.timestamp)
-        traits = event_message.resource_update_traits
-        if traits:
-            _LOGGER.debug("Trait update %s", traits.keys())
-            # This event triggered an update to a device that changed some
-            # properties which the DeviceManager should already have received.
-            # Send a signal to refresh state of all listening devices.
-            async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
         events = event_message.resource_update_events
         if not events:
             return
@@ -134,7 +123,6 @@ class SignalUpdateCallback(AsyncEventCallback):
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
         if not device_entry:
-            _LOGGER.debug("Ignoring event for unregistered device '%s'", device_id)
             return
         for event in events:
             event_type = EVENT_NAME_MAP.get(event)
@@ -170,7 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     subscriber = GoogleNestSubscriber(
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
-    subscriber.set_update_callback(SignalUpdateCallback(hass))
+    callback = SignalUpdateCallback(hass)
+    subscriber.set_update_callback(callback.async_handle_event)
 
     try:
         await subscriber.start_async()
