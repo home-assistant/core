@@ -113,7 +113,6 @@ def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
         supports_temperature_control,
         min_temp,
         max_temp,
-        zone["devices"][0],
     )
 
     return entity
@@ -130,12 +129,11 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         supports_temperature_control,
         min_temp,
         max_temp,
-        device_info,
     ):
         """Initialize of Tado water heater entity."""
 
         self._tado = tado
-        super().__init__(zone_name, device_info, tado.device_id, zone_id)
+        super().__init__(zone_name, tado.device_id, zone_id)
 
         self.zone_id = zone_id
         self._unique_id = f"{zone_id} {tado.device_id}"
