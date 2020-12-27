@@ -21,8 +21,8 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class ProximityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Proximity configuration flow."""
+class TimeDateConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Time & Date configuration flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
