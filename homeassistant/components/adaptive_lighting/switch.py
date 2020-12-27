@@ -241,12 +241,13 @@ async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: Servic
     else:
         switch.turn_on_off_listener.reset(*all_lights)
         # pylint: disable=protected-access
-        await switch._adapt_lights(
-            all_lights,
-            transition=switch._initial_transition,
-            force=True,
-            context=switch.create_context("service"),
-        )
+        if switch.is_on:
+            await switch._update_attrs_and_maybe_adapt_lights(
+                all_lights,
+                transition=switch._initial_transition,
+                force=True,
+                context=switch.create_context("service"),
+            )
 
 
 @callback
