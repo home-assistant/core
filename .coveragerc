@@ -914,6 +914,7 @@ omit =
     homeassistant/components/tikteck/light.py
     homeassistant/components/tile/__init__.py
     homeassistant/components/tile/device_tracker.py
+    homeassistant/components/time_date/__init__.py
     homeassistant/components/time_date/sensor.py
     homeassistant/components/tmb/sensor.py
     homeassistant/components/todoist/calendar.py

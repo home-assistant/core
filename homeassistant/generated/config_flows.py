@@ -205,6 +205,7 @@ FLOWS = [
     "tesla",
     "tibber",
     "tile",
+    "time_date",
     "toon",
     "totalconnect",
     "tplink",
