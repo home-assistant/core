@@ -142,6 +142,9 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self._async_input_events_handler
         )
         self._last_input_events_count = dict()
+        self._unsub_stop = hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
+        )
 
     @callback
     def _async_input_events_handler(self):
@@ -185,9 +188,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data."""
 
-        if self.hass.is_stopping:
-            return
-
         _LOGGER.debug("Polling Shelly Device - %s", self.name)
         try:
             async with async_timeout.timeout(
@@ -211,9 +211,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     async def async_setup(self):
         """Set up the wrapper."""
 
-        if self.hass.is_stopping:
-            return
-
         dev_reg = await device_registry.async_get_registry(self.hass)
         model_type = self.device.settings["device"]["type"]
         entry = dev_reg.async_get_or_create(
@@ -232,6 +229,11 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Shutdown the wrapper."""
         self.device.shutdown()
         self._async_remove_input_events_handler()
+
+    def _handle_ha_stop(self, _):
+        """Handle Home Assistant stopping."""
+        _LOGGER.debug("Stopping ShellyDeviceWrapper for %s", self.name)
+        self.shutdown()
 
 
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
