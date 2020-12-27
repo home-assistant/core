@@ -171,7 +171,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await subscriber.start_async()
     except AuthException as err:
-
         _LOGGER.debug("Subscriber authentication error: %s", err)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
