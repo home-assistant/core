@@ -201,7 +201,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         add_device[ATTR_MODE] = None
         add_device[CONF_CUSTOM_EFFECT] = None
         add_device[CONF_EFFECT_SPEED] = config_options.get(device_id, {}).get(
-            CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+            CONF_EFFECT_SPEED,
+            config_options.get("global", {}).get(
+                CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+            ),
         )
 
         light = FluxLight(add_device)
