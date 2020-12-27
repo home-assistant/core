@@ -75,7 +75,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
-    def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
+    def __init__(
+        self, gw_dev, var, source, device_class, friendly_name_format
+    ):  # pylint: disable=super-init-not-called
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
