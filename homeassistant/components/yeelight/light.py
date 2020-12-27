@@ -372,14 +372,6 @@ def _async_setup_services(hass: HomeAssistant):
             )
         )
 
-    async def _async_set_music_mode(entity, service_call):
-        await hass.async_add_executor_job(
-            partial(
-                entity.set_music_mode,
-                service_call.data[CONF_MODE_MUSIC],
-            )
-        )
-
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
@@ -420,7 +412,7 @@ def _async_setup_services(hass: HomeAssistant):
     platform.async_register_entity_service(
         SERVICE_SET_MUSIC_MODE,
         SERVICE_SCHEMA_SET_MUSIC_MODE,
-        _async_set_music_mode,
+        "set_music_mode",
     )
 
 
@@ -613,9 +605,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         return color_util.color_RGB_to_hs(red, green, blue)
 
-    def set_music_mode(self, mode) -> None:
+    def set_music_mode(self, use_music_mode) -> None:
         """Set the music mode on or off."""
-        if mode:
+        if use_music_mode:
             self._bulb.start_music()
         else:
             self._bulb.stop_music()
