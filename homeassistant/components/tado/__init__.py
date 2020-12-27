@@ -30,7 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-TADO_COMPONENTS = ["sensor", "climate", "water_heater"]
+TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -174,7 +174,6 @@ class TadoConnector:
         self.devices = None
         self.data = {
             "zone": {},
-            "device": {},
         }
 
     @property
@@ -188,16 +187,15 @@ class TadoConnector:
         self.tado.setDebugging(True)
         # Load zones and devices
         self.zones = self.tado.getZones()
-        self.devices = self.tado.getMe()["homes"]
-        self.device_id = self.devices[0]["id"]
+        self.devices = self.tado.getDevices()
+        self.device_id = self.tado.getMe()["homes"][0]["id"]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
-        for device in self.devices:
-            self.update_sensor("device", device["id"])
+        self.devices = self.tado.getDevices()
 
     def update_sensor(self, sensor_type, sensor):
         """Update the internal data from Tado."""
@@ -205,13 +203,6 @@ class TadoConnector:
         try:
             if sensor_type == "zone":
                 data = self.tado.getZoneState(sensor)
-            elif sensor_type == "device":
-                devices_data = self.tado.getDevices()
-                if not devices_data:
-                    _LOGGER.info("There are no devices to setup on this tado account")
-                    return
-
-                data = devices_data[0]
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
                 return

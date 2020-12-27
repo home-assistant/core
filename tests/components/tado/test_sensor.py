@@ -85,12 +85,3 @@ async def test_water_heater_create_sensors(hass):
 
     state = hass.states.get("sensor.water_heater_power")
     assert state.state == "ON"
-
-
-async def test_home_create_sensors(hass):
-    """Test creation of home sensors."""
-
-    await async_init_integration(hass)
-
-    state = hass.states.get("sensor.home_name_tado_bridge_status")
-    assert state.state == "True"
