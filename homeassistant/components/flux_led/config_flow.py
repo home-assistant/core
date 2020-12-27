@@ -233,4 +233,3 @@ class OptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="configure_device", data_schema=vol.Schema(options), errors=errors
         )
-        

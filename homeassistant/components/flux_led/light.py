@@ -193,23 +193,23 @@ class FluxLight(LightEntity):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
+<<<<<<< HEAD
+=======
+    config_auto = entry.options["global"].get(
+        CONF_AUTOMATIC_ADD, entry.data[CONF_AUTOMATIC_ADD]
+    )
+    config_devices = entry.data[CONF_DEVICES]
+    config_options = entry.options
 
-    async def async_new_lights(bulbs: dict):
-        """Add new bulbs when they are found or configured."""
-        bulb_coordinator = (
-            hass.data[DOMAIN].get(entry.entry_id, {}).get(BULB_COORDINATOR)
-        )
-        lights = []
+    lights = []
 
-        for bulb_id, bulb_details in bulbs.items():
-            effect_speed = entry.options.get(bulb_id, {}).get(
-                CONF_EFFECT_SPEED,
-                entry.options.get("global", {}).get(
-                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
-                ),
-            )
+    if config_auto:
+        # Find the bulbs on the LAN
+        scanner = BulbScanner()
+        await hass.async_add_executor_job(scanner.scan)
 
-            coordinator = FluxLEDCoordinator(
+        for device in scanner.getBulbInfo():
+            device_id = device["ipaddr"].replace(".", "_")
                 hass=hass,
                 name=bulb_details[CONF_NAME],
                 update_interval=DEFAULT_SCAN_INTERVAL,
@@ -477,8 +477,12 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
 
         if effect in EFFECT_MAP:
+<<<<<<< HEAD
             self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
             return
+=======
+<<<<<<< HEAD
+>>>>>>> Refactor flux led and add config_flow (#44320)
             self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_SPEED)
 
         if not brightness:
@@ -486,11 +490,18 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
         self._last_brightness = brightness
         self._brightness = brightness
+<<<<<<< HEAD
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
             return
 
         self._last_brightness = brightness
         self._brightness = brightness
+=======
+=======
+            self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
+            return
+>>>>>>> Refactor flux led and add config_flow (#44320)
+>>>>>>> Refactor flux led and add config_flow (#44320)
 
         if not rgb:
             rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
