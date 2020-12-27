@@ -1,6 +1,7 @@
 """Common libraries for test setup."""
 
 import time
+from typing import Awaitable, Callable
 
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
@@ -60,6 +61,10 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Initialize Fake Subscriber."""
         self._device_manager = device_manager
 
+    def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
+        """Capture the callback set by Home Assistant."""
+        self._callback = callback
+
     async def start_async(self) -> DeviceManager:
         """Return the fake device manager."""
         return self._device_manager
@@ -76,6 +81,7 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Simulate a received pubsub message, invoked by tests."""
         # Update device state, then invoke HomeAssistant to refresh
         await self._device_manager.async_handle_event(event_message)
+        await self._callback(event_message)
 
 
 async def async_setup_sdm_platform(hass, platform, devices={}, structures={}):
