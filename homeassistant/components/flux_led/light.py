@@ -104,8 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for import_host, import_item in config["devices"].items():
         import_name = import_host
-        if import_item:
-            import_name = import_item.get("name", import_host)
+        import_name = import_item.get("name", import_host)
 
         devices[import_host.replace(".", "_")] = {
             CONF_NAME: import_name,
