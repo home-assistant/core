@@ -793,14 +793,16 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if not self._separate_turn_on_commands:
             await turn_on(service_data)
         else:
-            service_data_color, service_data_brightness = _split_service_data(
+            # Could be a list of length 1 or 2
+            service_datas = _split_service_data(
                 service_data, adapt_brightness, adapt_color
             )
-            await turn_on(service_data_color)
-            transition = service_data_color.get(ATTR_TRANSITION)
-            if transition is not None:
-                await asyncio.sleep(transition)
-            await turn_on(service_data_brightness)
+            await turn_on(service_datas[0])
+            if len(service_datas) == 2:
+                transition = service_datas[0].get(ATTR_TRANSITION)
+                if transition is not None:
+                    await asyncio.sleep(transition)
+                await turn_on(service_datas[1])
 
     async def _update_attrs_and_maybe_adapt_lights(
         self,
