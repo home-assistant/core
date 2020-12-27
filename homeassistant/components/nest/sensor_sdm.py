@@ -5,7 +5,6 @@ from typing import Optional
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
-from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 
 from homeassistant.config_entries import ConfigEntry
@@ -80,11 +79,9 @@ class SensorBase(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-
-        async def handle_event(event_message: EventMessage):
-            self.async_write_ha_state()
-
-        self.async_on_remove(self._device.add_event_callback(handle_event))
+        self.async_on_remove(
+            self._device.add_update_listener(self.async_write_ha_state)
+        )
 
 
 class TemperatureSensor(SensorBase):
