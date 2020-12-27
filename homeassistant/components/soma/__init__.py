@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMA_COMPONENTS = ["cover"]
+SOMA_COMPONENTS = ["cover", "sensor"]
 
 
 async def async_setup(hass, config):
@@ -74,7 +74,7 @@ class SomaEntity(Entity):
         self.device = device
         self.api = api
         self.current_position = 50
-        self.state_attrs = {}
+        self.battery_state = 0
         self.is_available = True
 
     @property
@@ -135,10 +135,10 @@ class SomaEntity(Entity):
             )
             self.is_available = False
             return
-        battery = 2.5 * response["battery_level"] - 922
+        battery = round(2.111 * response["battery_level"] - 763.3)
         if battery < 0:
             battery = 0
         elif battery > 100:
             battery = 100
-        self.state_attrs[ATTR_BATTERY_LEVEL] = battery
+        self.battery_state = battery
         self.is_available = True
