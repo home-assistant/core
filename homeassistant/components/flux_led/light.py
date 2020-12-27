@@ -100,7 +100,7 @@ FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
-    automatic_add = False
+    automatic_add = config["automatic_add"]
     devices = {}
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -228,7 +228,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for bulb_id, bulb_details in bulbs.items():
             effect_speed = entry.options.get(bulb_id, {}).get(
-                CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+                CONF_EFFECT_SPEED,
+                entry.options.get("global", {}).get(
+                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
+                ),
             )
 
             coordinator = FluxLEDCoordinator(
@@ -247,6 +250,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     unique_id=bulb_id,
                     device=bulb_details,
                     effect_speed=effect_speed,
+                    hass=hass,
                 )
             )
 
@@ -328,6 +332,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
         unique_id: str,
         device: dict,
         effect_speed: int,
+        hass: HomeAssistant,
     ):
         """Initialize the Flux light entity."""
         super().__init__(coordinator=coordinator)
@@ -346,6 +351,36 @@ class FluxLight(CoordinatorEntity, LightEntity):
         self._ip_address = device[CONF_HOST]
         self._effect_speed = effect_speed
         self._mode = coordinator.data["mode"]
+
+        async def async_remove_light(device: dict):
+            """Remove a bulb device when it is removed from options."""
+
+            bulb_id = device["device_id"]
+
+            if self._unique_id != bulb_id:
+                return
+
+            entity_registry = await hass.helpers.entity_registry.async_get_registry()
+            entity_entry = entity_registry.async_get(self.entity_id)
+
+            device_registry = await hass.helpers.device_registry.async_get_registry()
+            device_entry = device_registry.async_get(entity_entry.device_id)
+
+            if (
+                len(
+                    async_entries_for_device(
+                        entity_registry,
+                        entity_entry.device_id,
+                        include_disabled_entities=True,
+                    )
+                )
+                == 1
+            ):
+                device_registry.async_remove_device(device_entry.id)
+
+            entity_registry.async_remove(self.entity_id)
+
+        async_dispatcher_connect(hass, SIGNAL_REMOVE_DEVICE, async_remove_light)
 
     @property
 >>>>>>> Add dataupdate coordinator and code refactor for flux_led.
