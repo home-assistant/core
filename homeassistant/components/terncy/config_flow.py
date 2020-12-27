@@ -49,7 +49,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.name = hub["dn"]
             self.host = hub["ip"]
             self.port = hub["port"]
-            _LOGGER.warning("construct Terncy obj for %s %s", self.name, self.host)
+            _LOGGER.info("construct Terncy obj for %s %s", self.name, self.host)
             self._terncy = terncy.Terncy(
                 self.client_id, self.identifier, self.host, self.port, self.username, ""
             )
