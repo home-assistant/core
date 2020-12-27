@@ -76,14 +76,14 @@ SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 
 ATTR_MINUTES = "minutes"
 
-SERVICE_SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
-SERVICE_SET_COLOR_SCENE = "set_color_scene"
-SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
-SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
-SERVICE_SET_HSV_SCENE = "set_hsv_scene"
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_MUSIC_MODE = "set_music_mode"
 SERVICE_START_FLOW = "start_flow"
+SERVICE_SET_COLOR_SCENE = "set_color_scene"
+SERVICE_SET_HSV_SCENE = "set_hsv_scene"
+SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
+SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
+SERVICE_SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
