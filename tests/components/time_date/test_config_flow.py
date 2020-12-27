@@ -33,8 +33,15 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=MOCK_IMPORT,
     )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_IMPORT,
+    )
+
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
