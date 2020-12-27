@@ -12,7 +12,6 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -48,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
 DATA_NEST_CONFIG = "nest_config"
+DATA_NEST_UNAVAILABLE = "nest_unavailable"
 
 NEST_SETUP_NOTIFICATION = "nest_setup"
 
@@ -171,6 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await subscriber.start_async()
     except AuthException as err:
+
         _LOGGER.debug("Subscriber authentication error: %s", err)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -179,40 +180,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 data=entry.data,
             )
         )
+        return False
     except ConfigurationException as err:
-        persistent_notification.async_create(
-            hass,
-            f"Please update configuration.yaml: {err}",
-            title="Nest configuration error",
-            notification_id=NEST_SETUP_NOTIFICATION,
-        )
+        if DATA_SUBSCRIBER not in hass.data[DOMAIN].get("A", {}):
+            _LOGGER.error("Configuration error: %s", err)
+            hass.data[DOMAIN][DATA_SUBSCRIBER] = None
         subscriber.stop_async()
         return False
     except GoogleNestException as err:
-        persistent_notification.async_create(
-            hass,
-            f"Subscriber error: {err}",
-            title="Nest unavailable",
-            notification_id=NEST_SETUP_NOTIFICATION,
-        )
+        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
+            _LOGGER.error("Subscriber error: %s", err)
+            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
     try:
         await subscriber.async_get_device_manager()
     except GoogleNestException as err:
-        persistent_notification.async_create(
-            hass,
-            f"Device manager error: {err}",
-            title="Nest unavailable",
-            notification_id=NEST_SETUP_NOTIFICATION,
-        )
+        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
+            _LOGGER.error("Device manager error: %s", err)
+            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
-    # Clear any previous error notifications
-    persistent_notification.async_dismiss(hass, NEST_SETUP_NOTIFICATION)
-
+    hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     for component in PLATFORMS:
@@ -241,5 +232,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
+        hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
 
     return unload_ok
