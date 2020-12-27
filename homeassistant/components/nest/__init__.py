@@ -3,6 +3,7 @@
 import asyncio
 import logging
 
+from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
@@ -33,6 +34,7 @@ from .const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _CONFIGURING = {}
@@ -102,6 +104,37 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
+class SignalUpdateCallback:
+    """An EventCallback invoked when new events arrive from subscriber."""
+
+    def __init__(self, hass: HomeAssistant):
+        """Initialize EventCallback."""
+        self._hass = hass
+
+    async def async_handle_event(self, event_message: EventMessage):
+        """Process an incoming EventMessage."""
+        if not event_message.resource_update_name:
+            return
+        device_id = event_message.resource_update_name
+        events = event_message.resource_update_events
+        if not events:
+            return
+        _LOGGER.debug("Event Update %s", events.keys())
+        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        if not device_entry:
+            return
+        for event in events:
+            event_type = EVENT_NAME_MAP.get(event)
+            if not event_type:
+                continue
+            message = {
+                "device_id": device_entry.id,
+                "type": event_type,
+            }
+            self._hass.bus.async_fire(NEST_EVENT, message)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nest from a config entry with dispatch between old/new flows."""
 
@@ -125,6 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     subscriber = GoogleNestSubscriber(
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
+    callback = SignalUpdateCallback(hass)
+    subscriber.set_update_callback(callback.async_handle_event)
 
     try:
         await subscriber.start_async()

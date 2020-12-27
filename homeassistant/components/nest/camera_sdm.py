@@ -6,7 +6,7 @@ from typing import Optional
 
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
-from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
 
@@ -20,7 +20,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
-from .events import EVENT_NAME_MAP, NEST_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class NestCamera(Camera, AsyncEventCallback):
+class NestCamera(Camera):
     """Devices that support cameras."""
 
     def __init__(self, device: Device):
@@ -152,29 +151,11 @@ class NestCamera(Camera, AsyncEventCallback):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-        self.async_on_remove(self._device.add_event_callback(self))
 
-    async def async_handle_event(self, event_message: EventMessage):
-        """Let Home Assistant know device state has been updated."""
-        # Note: This ignores resource_update_traits as there are really not
-        # any camera specific traits used besides the live stream
-        events = event_message.resource_update_events
-        if not events:
-            return
-        _LOGGER.debug("Event Update %s", events.keys())
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_id = self._device_info.device_id
-        device_entry = device_registry.async_get_device(device_id, ())
-        if not device_entry:
-            return
-        for event in events:
-            event_type = EVENT_NAME_MAP.get(event)
-            if event_type:
-                message = {
-                    "device_id": device_entry.id,
-                    "type": event_type,
-                }
-                self.hass.bus.async_fire(NEST_EVENT, message)
+        async def handle_event(event_message: EventMessage):
+            self.async_write_ha_state()
+
+        self.async_on_remove(self._device.add_event_callback(handle_event))
 
     async def async_camera_image(self):
         """Return bytes of camera image."""

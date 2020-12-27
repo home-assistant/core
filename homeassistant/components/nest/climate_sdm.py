@@ -4,7 +4,7 @@ from typing import Optional
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
-from google_nest_sdm.event import AsyncEventCallback, EventMessage
+from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
@@ -94,7 +94,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class ThermostatEntity(ClimateEntity, AsyncEventCallback):
+class ThermostatEntity(ClimateEntity):
     """A nest thermostat climate entity."""
 
     def __init__(self, device: Device):
@@ -127,11 +127,11 @@ class ThermostatEntity(ClimateEntity, AsyncEventCallback):
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
         self._supported_features = self._get_supported_features()
-        self.async_on_remove(self._device.add_event_callback(self))
 
-    async def async_handle_event(self, event_message: EventMessage):
-        """Let Home Assistant know device state has been updated."""
-        self.async_write_ha_state()
+        async def handle_event(event_message: EventMessage):
+            self.async_write_ha_state()
+
+        self.async_on_remove(self._device.add_event_callback(handle_event))
 
     @property
     def temperature_unit(self):
