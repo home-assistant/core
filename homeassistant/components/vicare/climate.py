@@ -2,6 +2,7 @@
 import logging
 
 import requests
+import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -16,6 +17,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.helpers import entity_platform
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
@@ -27,6 +29,8 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_SET_VICARE_MODE = "set_vicare_mode"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
@@ -79,13 +83,15 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Create the ViCare climate devices."""
     if discovery_info is None:
         return
     vicare_api = hass.data[VICARE_DOMAIN][VICARE_API]
     heating_type = hass.data[VICARE_DOMAIN][VICARE_HEATING_TYPE]
-    add_entities(
+    async_add_entities(
         [
             ViCareClimate(
                 f"{hass.data[VICARE_DOMAIN][VICARE_NAME]}  Heating",
@@ -93,6 +99,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 heating_type,
             )
         ]
+    )
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_VICARE_MODE,
+        {
+            vol.Required("vicare_mode"): vol.In(VICARE_TO_HA_HVAC_HEATING.keys()),
+        },
+        "async_set_vicare_mode",
     )
 
 
@@ -112,49 +128,61 @@ class ViCareClimate(ClimateEntity):
         self._heating_type = heating_type
         self._current_action = None
 
-    def update(self):
+    async def _async_set_program(self, program):
+        self._api.deactivateProgram(self._current_program)
+        self._api.activateProgram(program)
+
+    async def _async_set_program_temperature(self, program, temp):
+        self._api.setProgramTemperature(program, temp)
+
+    async def _async_set_mode(self, vicare_mode):
+        self._api.setMode(vicare_mode)
+
+    async def _async_fetch_state(self):
+        _room_temperature = self._api.getRoomTemperature()
+        _supply_temperature = self._api.getSupplyTemperature()
+        if _room_temperature is not None and _room_temperature != PYVICARE_ERROR:
+            self._current_temperature = _room_temperature
+        elif _supply_temperature != PYVICARE_ERROR:
+            self._current_temperature = _supply_temperature
+        else:
+            self._current_temperature = None
+        self._current_program = self._api.getActiveProgram()
+
+        # The getCurrentDesiredTemperature call can yield 'error' (str) when the system is in standby
+        desired_temperature = self._api.getCurrentDesiredTemperature()
+        if desired_temperature == PYVICARE_ERROR:
+            desired_temperature = None
+
+        self._target_temperature = desired_temperature
+
+        self._current_mode = self._api.getActiveMode()
+
+        # Update the generic device attributes
+        self._attributes = {}
+        self._attributes["room_temperature"] = _room_temperature
+        self._attributes["active_vicare_program"] = self._current_program
+        self._attributes["active_vicare_mode"] = self._current_mode
+        self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
+        self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
+        self._attributes[
+            "month_since_last_service"
+        ] = self._api.getMonthSinceLastService()
+        self._attributes["date_last_service"] = self._api.getLastServiceDate()
+        self._attributes["error_history"] = self._api.getErrorHistory()
+        self._attributes["active_error"] = self._api.getActiveError()
+
+        # Update the specific device attributes
+        if self._heating_type == HeatingType.gas:
+            self._current_action = self._api.getBurnerActive()
+
+        elif self._heating_type == HeatingType.heatpump:
+            self._current_action = self._api.getCompressorActive()
+
+    async def async_update(self):
         """Let HA know there has been an update from the ViCare API."""
         try:
-            _room_temperature = self._api.getRoomTemperature()
-            _supply_temperature = self._api.getSupplyTemperature()
-            if _room_temperature is not None and _room_temperature != PYVICARE_ERROR:
-                self._current_temperature = _room_temperature
-            elif _supply_temperature != PYVICARE_ERROR:
-                self._current_temperature = _supply_temperature
-            else:
-                self._current_temperature = None
-            self._current_program = self._api.getActiveProgram()
-
-            # The getCurrentDesiredTemperature call can yield 'error' (str) when the system is in standby
-            desired_temperature = self._api.getCurrentDesiredTemperature()
-            if desired_temperature == PYVICARE_ERROR:
-                desired_temperature = None
-
-            self._target_temperature = desired_temperature
-
-            self._current_mode = self._api.getActiveMode()
-
-            # Update the generic device attributes
-            self._attributes = {}
-            self._attributes["room_temperature"] = _room_temperature
-            self._attributes["active_vicare_program"] = self._current_program
-            self._attributes["active_vicare_mode"] = self._current_mode
-            self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
-            self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
-            self._attributes[
-                "month_since_last_service"
-            ] = self._api.getMonthSinceLastService()
-            self._attributes["date_last_service"] = self._api.getLastServiceDate()
-            self._attributes["error_history"] = self._api.getErrorHistory()
-            self._attributes["active_error"] = self._api.getActiveError()
-
-            # Update the specific device attributes
-            if self._heating_type == HeatingType.gas:
-                self._current_action = self._api.getBurnerActive()
-
-            elif self._heating_type == HeatingType.heatpump:
-                self._current_action = self._api.getCompressorActive()
-
+            await self.hass.async_add_executor_job(self._async_fetch_state)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
@@ -190,17 +218,16 @@ class ViCareClimate(ClimateEntity):
         """Return current hvac mode."""
         return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set a new hvac mode on the ViCare API."""
         vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
         if vicare_mode is None:
-            _LOGGER.error(
+            raise ValueError(
                 "Cannot set invalid vicare mode: %s / %s", hvac_mode, vicare_mode
             )
-            return
 
         _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
-        self._api.setMode(vicare_mode)
+        await self.hass.async_add_executor_job(self._async_set_mode, vicare_mode)
 
     @property
     def hvac_modes(self):
@@ -229,11 +256,13 @@ class ViCareClimate(ClimateEntity):
         """Return the precision of the system."""
         return PRECISION_WHOLE
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._api.setProgramTemperature(self._current_program, temp)
+            await self.hass.async_add_executor_job(
+                self._async_set_program_temperature, self._current_program, temp
+            )
             self._target_temperature = temp
 
     @property
@@ -246,22 +275,30 @@ class ViCareClimate(ClimateEntity):
         """Return the available preset mode."""
         return list(VICARE_TO_HA_PRESET_HEATING)
 
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode and deactivate any existing programs."""
         vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
         if vicare_program is None:
-            _LOGGER.error(
+            raise ValueError(
                 "Cannot set invalid vicare program: %s / %s",
                 preset_mode,
                 vicare_program,
             )
-            return
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
-        self._api.deactivateProgram(self._current_program)
-        self._api.activateProgram(vicare_program)
+        await self.hass.async_add_executor_job(
+            self._async_set_program, self._current_program
+        )
 
     @property
-    def device_state_attributes(self):
+    def async_device_state_attributes(self):
         """Show Device Attributes."""
         return self._attributes
+
+    async def async_set_vicare_mode(self, mode):
+        """Set a new hvac mode on the ViCare API."""
+        if mode not in VICARE_TO_HA_HVAC_HEATING:
+            raise ValueError("Cannot set invalid vicare mode: %s", mode)
+
+        _LOGGER.debug("Setting hvac mode to %s", mode)
+        await self.hass.async_add_executor_job(self._async_set_mode, mode)
