@@ -298,6 +298,19 @@ async def test_options_set_global_options(hass):
     )
     entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        return_value=[
+            {
+                "ipaddr": "1.1.1.1",
+                "id": "test_id",
+                "model": "test_model",
+            }
+        ],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
