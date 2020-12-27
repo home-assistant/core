@@ -5,8 +5,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     CONF_IGNORED_ZONES,
@@ -18,7 +18,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-# mypy: ignore-errors
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -37,11 +36,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the proximity environment."""
     hass.data.setdefault(DOMAIN, {})
 
-    if DOMAIN not in config:
+    if config.get(DOMAIN) is None:
         return True
 
     for conf in config[DOMAIN].values():
@@ -57,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
+    hass: HomeAssistantType, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set the config entry up."""
     hass.async_create_task(
@@ -67,7 +66,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
+    hass: HomeAssistantType, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
