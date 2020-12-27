@@ -5,6 +5,7 @@ from homeassistant.helpers.entity import Entity
 from . import DEVICES, SomaEntity
 from .const import API, DOMAIN
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Soma sensor platform."""
 
