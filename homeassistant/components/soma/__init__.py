@@ -135,7 +135,7 @@ class SomaEntity(Entity):
             )
             self.is_available = False
             return
-        battery = round(2.111 * response["battery_level"] - 763.3)
-        battery = max(min(100, battery), 0)
+        _battery = round(2 * (response["battery_level"] - 360))
+        battery = max(min(100, _battery), 0)
         self.battery_state = battery
         self.is_available = True
