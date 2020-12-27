@@ -79,7 +79,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
         "homeassistant.components.homepluscontrol.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    print(result)
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Home+ Control"
     config_data = result["data"]

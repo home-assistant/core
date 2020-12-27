@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Using an aiohttp-based API lib, so rely on async framework
+    # Add the API object to the domain's data in HA
     hass.data[DOMAIN][entry.entry_id] = api.HomePlusControlAsyncApi(
         hass, entry, implementation
     )

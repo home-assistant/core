@@ -184,6 +184,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
 
         # Discard plants that may have disappeared
         # TODO: Remove associated entities to the plant
+        plants_to_pop = []
         for existing_id in self._plants:
             if existing_id in current_plant_ids:
                 continue
@@ -191,7 +192,10 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                 "Plant with id %s is no longer present, so remove from cache.",
                 existing_id,
             )
-            self._plants.pop(existing_id, None)
+            plants_to_pop.append(existing_id)
+
+        for p in plants_to_pop:
+            self._plants.pop(p, None)
 
         return self._plants
 
@@ -262,6 +266,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                         self.switches[module.id] = module
 
             # Discard modules that may have disappeared from the topology
+            switches_to_pop = []
             for existing_id in self.switches:
                 if existing_id in current_module_ids:
                     continue
@@ -269,8 +274,9 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                     "Module with id %s is no longer present, so remove from the internal map.",
                     existing_id,
                 )
-                self.switches_to_remove[existing_id] = self.switches.pop(
-                    existing_id, None
-                )
+                switches_to_pop.append(existing_id)
+
+            for s in switches_to_pop:
+                self.switches_to_remove[s] = self.switches.pop(s, None)
 
         return self.switches
