@@ -1,31 +1,23 @@
 """Support for showing the date and the time."""
 from datetime import timedelta
 import logging
+from typing import Dict, Optional
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DISPLAY_OPTIONS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN, OPTION_TYPES, TIME_STR_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_STR_FORMAT = "%H:%M"
-
-OPTION_TYPES = {
-    "time": "Time",
-    "date": "Date",
-    "date_time": "Date & Time",
-    "date_time_utc": "Date & Time (UTC)",
-    "date_time_iso": "Date & Time (ISO)",
-    "time_date": "Time & Date",
-    "beat": "Internet Time",
-    "time_utc": "Time (UTC)",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -37,20 +29,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Time and Date sensor."""
-    if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant configuration")
-        return False
+    """Import the device and discontinue platform.
 
+    This is for backward compatibility.
+    Do not use this method.
+    """
+    _LOGGER.warning(
+        "The time_date platform is deprecated, please remove it from your configuration"
+    )
+    return True
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Time and Date sensor."""
     async_add_entities(
-        [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
+        [
+            TimeDateSensor(hass, variable)
+            for variable in config_entry.data[CONF_DISPLAY_OPTIONS]
+        ],
+        True,
     )
 
 
 class TimeDateSensor(Entity):
     """Implementation of a Time and Date sensor."""
 
-    def __init__(self, hass, option_type):
+    def __init__(self, hass: HomeAssistant, option_type: Dict[str, str]):
         """Initialize the sensor."""
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
@@ -61,17 +65,22 @@ class TimeDateSensor(Entity):
         self._update_internal_state(dt_util.utcnow())
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def state(self):
+    def unique_id(self) -> Optional[str]:
+        """Return the unique id of the entity."""
+        return slugify(f"{DOMAIN} {self.name}")
+
+    @property
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         if "date" in self.type and "time" in self.type:
             return "mdi:calendar-clock"
@@ -91,7 +100,7 @@ class TimeDateSensor(Entity):
             self.unsub()
             self.unsub = None
 
-    def get_next_interval(self):
+    def get_next_interval(self) -> timedelta:
         """Compute next time an update should occur."""
         now = dt_util.utcnow()
 
@@ -113,7 +122,7 @@ class TimeDateSensor(Entity):
 
         return next_interval
 
-    def _update_internal_state(self, time_date):
+    def _update_internal_state(self, time_date: timedelta) -> None:
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
@@ -150,7 +159,7 @@ class TimeDateSensor(Entity):
             self._state = dt_util.parse_datetime(f"{date} {time}").isoformat()
 
     @callback
-    def point_in_time_listener(self, time_date):
+    def point_in_time_listener(self, time_date: timedelta) -> None:
         """Get the latest data and update state."""
         self._update_internal_state(time_date)
         self.async_write_ha_state()

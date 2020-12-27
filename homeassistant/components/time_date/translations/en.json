@@ -1,0 +1,14 @@
+{
+    "title": "Time & Date",
+    "config": {
+      "step": {
+        "user": {
+          "title": "Time & Date",
+          "description": "The time and date sensor platform adds one or more sensors to your Home Assistant state machine.",
+          "data": {
+            "display_options": "The option to display."
+          }
+        }
+      }
+    }  
+  }
