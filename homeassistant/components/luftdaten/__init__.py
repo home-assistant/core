@@ -61,9 +61,9 @@ SENSORS = {
         "mdi:thought-bubble-outline",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ],
-	SENSOR_LAEQ: ["LAeq", "mdi:waveform", "LAeq"],
-	SENSOR_LA_MIN: ["LAmin", "mdi:waveform", "LAmin"],
-	SENSOR_LA_MAX: ["LAmax", "mdi:waveform", "LAmax"],
+    SENSOR_LAEQ: ["LAeq", "mdi:waveform", "LAeq"],
+    SENSOR_LA_MIN: ["LAmin", "mdi:waveform", "LAmin"],
+    SENSOR_LA_MAX: ["LAmax", "mdi:waveform", "LAmax"],
 }
 
 SENSOR_SCHEMA = vol.Schema(
