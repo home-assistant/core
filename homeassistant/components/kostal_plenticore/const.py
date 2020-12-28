@@ -80,7 +80,7 @@ SENSOR_PROCESS_DATA = [
     (
         "devices:local",
         "HomeOwn_P",
-        "Home Power",
+        "Home Power from Own",
         {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
         "format_round",
     ),
@@ -88,6 +88,13 @@ SENSOR_PROCESS_DATA = [
         "devices:local",
         "HomePv_P",
         "Home Power from PV",
+        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        "format_round",
+    ),
+    (
+        "devices:local",
+        "Home_P",
+        "Home Power",
         {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
         "format_round",
     ),
