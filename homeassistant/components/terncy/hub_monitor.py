@@ -8,6 +8,9 @@ from zeroconf import ServiceBrowser
 from homeassistant.components import zeroconf as hasszeroconf
 
 from .const import (
+    CONF_DEVID,
+    CONF_IP,
+    CONF_PORT,
     TERNCY_EVENT_SVC_ADD,
     TERNCY_EVENT_SVC_REMOVE,
     TERNCY_EVENT_SVC_UPDATE,
@@ -18,15 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _parse_svc(dev_id, info):
-    txt_records = {"dev_id": dev_id}
+    txt_records = {CONF_DEVID: dev_id}
     ip_addr = ""
     if len(info.addresses) > 0:
         if len(info.addresses[0]) == 4:
             ip_addr = str(ipaddress.IPv4Address(info.addresses[0]))
         if len(info.addresses[0]) == 16:
             ip_addr = str(ipaddress.IPv6Address(info.addresses[0]))
-    txt_records["ip"] = ip_addr
-    txt_records["port"] = info.port
+    txt_records[CONF_IP] = ip_addr
+    txt_records[CONF_PORT] = info.port
     for k in info.properties:
         txt_records[k.decode("utf-8")] = info.properties[k].decode("utf-8")
     return txt_records
@@ -44,7 +47,7 @@ class TerncyZCListener:
         dev_id = name.replace("." + svc_type, "")
         if dev_id in self.manager.hubs:
             del self.manager.hubs[dev_id]
-        txt_records = {"dev_id": dev_id}
+        txt_records = {CONF_DEVID: dev_id}
         self.manager.hass.bus.async_fire(TERNCY_EVENT_SVC_REMOVE, txt_records)
 
     def update_service(self, zconf, svc_type, name):

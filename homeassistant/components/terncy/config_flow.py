@@ -7,12 +7,18 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import DOMAIN, TERNCY_HUB_SVC_NAME
+from .const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_IP,
+    CONF_NAME,
+    CONF_PORT,
+    DOMAIN,
+    TERNCY_HUB_SVC_NAME,
+)
 from .hub_monitor import TerncyHubManager
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = "device"
 
 
 class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,9 +52,9 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             devid = user_input[CONF_DEVICE]
             hub = mgr.hubs[devid]
             self.identifier = devid
-            self.name = hub["dn"]
-            self.host = hub["ip"]
-            self.port = hub["port"]
+            self.name = hub[CONF_NAME]
+            self.host = hub[CONF_IP]
+            self.port = hub[CONF_PORT]
             _LOGGER.info("construct Terncy obj for %s %s", self.name, self.host)
             self._terncy = terncy.Terncy(
                 self.client_id, self.identifier, self.host, self.port, self.username, ""
@@ -59,7 +65,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         for devid, hub in mgr.hubs.items():
-            devices_name[devid] = hub["dn"]
+            devices_name[devid] = hub[CONF_NAME]
 
         return self.async_show_form(
             step_id="user",
@@ -125,13 +131,14 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         identifier = discovery_info["name"]
         identifier = identifier.replace("." + TERNCY_HUB_SVC_NAME, "")
         properties = discovery_info["properties"]
-        name = properties["dn"]
+        name = properties[CONF_NAME]
         self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
         self.identifier = identifier
         self.name = name
-        self.host = discovery_info["host"]
-        self.port = discovery_info["port"]
+        _LOGGER.warning(discovery_info)
+        self.host = discovery_info[CONF_HOST]
+        self.port = discovery_info[CONF_PORT]
         self._terncy.ip = self.host
         self._terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)

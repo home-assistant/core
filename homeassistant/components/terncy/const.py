@@ -21,6 +21,13 @@ PROFILE_EXTENDED_COLOR_LIGHT = 12
 PROFILE_EXTENDED_COLOR_LIGHT2 = 27
 PROFILE_ONOFF_LIGHT = 2
 
+CONF_DEVID = "dev_id"
+CONF_DEVICE = "device"
+CONF_NAME = "dn"
+CONF_HOST = "host"
+CONF_IP = "ip"
+CONF_PORT = "port"
+
 
 class TerncyHassPlatformData:
     """Hold HASS platform data for Terncy component."""
