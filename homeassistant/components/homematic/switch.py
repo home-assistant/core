@@ -46,8 +46,7 @@ class HMSwitch(HMDevice, SwitchEntity):
         if self._state == "INHIBIT":
             if self.is_on:
                 return "mdi:lock"
-            else:
-                return "mdi:lock-open"
+            return "mdi:lock-open"
         return super().icon
 
     def turn_on(self, **kwargs):
