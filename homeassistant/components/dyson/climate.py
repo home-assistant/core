@@ -5,6 +5,7 @@ from libpurecool.const import (
     FanPower,
     FanSpeed,
     FanState,
+    FanMode,
     FocusMode,
     HeatMode,
     HeatState,
