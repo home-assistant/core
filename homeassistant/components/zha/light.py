@@ -239,6 +239,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
+            self._hs_color = None
 
         if (
             light.ATTR_HS_COLOR in kwargs
@@ -254,6 +255,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
+            self._color_temp = None
 
         if (
             effect == light.EFFECT_COLORLOOP
