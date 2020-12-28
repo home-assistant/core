@@ -19,9 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: Dict, discovery_data: Dict = None
-):
+async def validate_input(hass: core.HomeAssistant, data: Dict):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -29,11 +27,7 @@ async def validate_input(
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     async_client = get_async_client(hass)
 
-    device = Device(
-        data[CONF_IP_ADDRESS],
-        zeroconf_instance=zeroconf_instance,
-        deviceapi=discovery_data,
-    )
+    device = Device(data[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
 
     await device.async_connect(session_instance=async_client)
     await device.async_disconnect()
