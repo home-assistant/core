@@ -831,8 +831,9 @@ omit =
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/*
     homeassistant/components/solax/sensor.py
-    homeassistant/components/soma/cover.py
     homeassistant/components/soma/__init__.py
+    homeassistant/components/soma/cover.py
+    homeassistant/components/soma/sensor.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonos/*
