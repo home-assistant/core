@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import CONF_ACCOUNT
+from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     else:
         attribute_info = ATTR_TO_HA_METRIC
 
-    account = hass.data[BMW_DOMAIN][config_entry.entry_id][CONF_ACCOUNT]
+    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
     entities = []
 
     for vehicle in account.account.vehicles:

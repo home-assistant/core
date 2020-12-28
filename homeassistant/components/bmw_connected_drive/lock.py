@@ -7,7 +7,7 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import CONF_ACCOUNT
+from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][config_entry.entry_id][CONF_ACCOUNT]
+    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
     entities = []
 
     if not account.read_only:

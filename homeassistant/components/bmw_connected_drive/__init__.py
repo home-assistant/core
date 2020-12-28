@@ -30,11 +30,12 @@ from .const import (
     CONF_READ_ONLY,
     CONF_REGION,
     CONF_USE_LOCATION,
+    DATA_ENTRIES,
+    DATA_HASS_CONFIG,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_HASS_CONFIG = "hass_config"
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
@@ -102,6 +103,7 @@ def _async_migrate_options_from_data_if_missing(hass, entry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BMW Connected Drive from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(DATA_ENTRIES, {})
 
     _async_migrate_options_from_data_if_missing(hass, entry)
 
@@ -118,13 +120,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     def _update_all() -> None:
         """Update all BMW accounts."""
-        for entry in [e for k, e in hass.data[DOMAIN].items() if k != DATA_HASS_CONFIG]:
+        for entry in hass.data[DOMAIN][DATA_ENTRIES].values():
             entry[CONF_ACCOUNT].update()
 
     # Add update listener for config entry changes (options)
     undo_listener = entry.add_update_listener(update_listener)
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id] = {
         CONF_ACCOUNT: account,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
@@ -169,19 +171,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Only remove services if it is the last account and not read only
     if (
-        len(hass.data[DOMAIN]) == 1
-        and not hass.data[DOMAIN][entry.entry_id][CONF_ACCOUNT].read_only
+        len(hass.data[DOMAIN][DATA_ENTRIES]) == 1
+        and not hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][CONF_ACCOUNT].read_only
     ):
         services = list(_SERVICE_MAP) + [SERVICE_UPDATE_STATE]
         for service in services:
             hass.services.async_remove(DOMAIN, service)
 
-    for vehicle in hass.data[DOMAIN][entry.entry_id][CONF_ACCOUNT].account.vehicles:
+    for vehicle in hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][
+        CONF_ACCOUNT
+    ].account.vehicles:
         hass.services.async_remove(NOTIFY_DOMAIN, slugify(f"{DOMAIN}_{vehicle.name}"))
 
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][UNDO_UPDATE_LISTENER]()
+        hass.data[DOMAIN][DATA_ENTRIES].pop(entry.entry_id)
 
     return unload_ok
 
@@ -215,8 +219,8 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> "BMWConnectedDriveAcco
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
             e
-            for k, e in hass.data[DOMAIN].items()
-            if k != DATA_HASS_CONFIG and not e[CONF_ACCOUNT].read_only
+            for e in hass.data[DOMAIN][DATA_ENTRIES].values()
+            if not e[CONF_ACCOUNT].read_only
         ]:
             vehicle = entry_data[CONF_ACCOUNT].account.get_vehicle(vin)
             if vehicle:
