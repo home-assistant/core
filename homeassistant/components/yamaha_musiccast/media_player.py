@@ -41,6 +41,20 @@ PARALLEL_UPDATES = 1
 
 DEFAULT_ZONE = "main"
 
+BROWSABLE_INPUTS = [
+    "usb",
+    "server",
+    "net_radio",
+    "rhapsody",
+    "napster",
+    "pandora",
+    "siriusxm",
+    "juke",
+    "radiko",
+    "qobuz",
+    "deezer",
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistantType,
@@ -446,28 +460,38 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
         print(f"BROWSE MEDIA ({media_content_type} / {media_content_id})")
 
-        list_info = None
-        menu_layer = None
-        list_type = self.source
+        inputs = list(set(BROWSABLE_INPUTS) & set(self.source_list))
+        inputs.sort()
 
-        if list_type in [
-            "usb",
-            "bluetooth",
-            "server",
-            "net_radio",
-            "rhapsody",
-            "napster",
-            "pandora",
-            "siriusxm",
-            "spotify",
-            "juke",
-            "airplay",
-            "radiko",
-            "qobuz",
-            "mc_link",
-        ]:
-            if media_content_id:
-                parts = media_content_id.split(":")
+        menu_layer = None
+
+        if media_content_id and media_content_type != "categories":
+            parts = media_content_id.split(":")
+
+            list_info = None
+
+            if parts[0] == "input":
+                input = parts[1]
+
+                # reset list info
+
+                while True:
+                    list_info = await (
+                        await self.coordinator.musiccast.device.request(
+                            NetUSB.get_list_info(input, 0, 8, "en", "main")
+                        )
+                    ).json()
+
+                    menu_layer = list_info.get("menu_layer")
+                    if menu_layer == 0:
+                        break
+                    else:
+                        await self.coordinator.musiccast.device.request(
+                            NetUSB.set_list_control("main", "return", "", self._zone_id)
+                        )
+
+            elif parts[0] == "list":
+                input = parts[1]
 
                 if parts[3] == "-1":
                     await self.coordinator.musiccast.device.request(
@@ -484,28 +508,13 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
                 list_info = await (
                     await self.coordinator.musiccast.device.request(
-                        NetUSB.get_list_info(list_type, 0, 8, "en", "main")
+                        NetUSB.get_list_info(input, 0, 8, "en", "main")
                     )
                 ).json()
 
                 menu_layer = list_info.get("menu_layer")
-            else:
-                # reset list info
 
-                while True:
-                    list_info = await (
-                        await self.coordinator.musiccast.device.request(
-                            NetUSB.get_list_info(list_type, 0, 8, "en", "main")
-                        )
-                    ).json()
-
-                    menu_layer = list_info.get("menu_layer")
-                    if menu_layer == 0:
-                        break
-                    else:
-                        await self.coordinator.musiccast.device.request(
-                            NetUSB.set_list_control("main", "return", "", self._zone_id)
-                        )
+            # Show first layer of list_info
 
             children = []
 
@@ -524,7 +533,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                     media_class=MEDIA_CLASS_DIRECTORY
                     if is_selectable
                     else MEDIA_CLASS_TRACK,
-                    media_content_id=f"list:{list_type}:{menu_layer+1}:{i}",
+                    media_content_id=f"list:{input}:{menu_layer+1}:{i}",
                     media_content_type=MEDIA_CLASS_DIRECTORY
                     if is_selectable
                     else MEDIA_TYPE_TRACK,
@@ -536,11 +545,11 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
                 parent_is_directory = parent_is_directory or is_selectable
 
-            subfolder = BrowseMedia(
+            input_folder = BrowseMedia(
                 title=list_info.get("menu_name"),
                 media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id=f"list:{list_type}:{menu_layer}:-1",
-                media_content_type="categories",
+                media_content_id=f"list:{input}:{menu_layer}:-1",
+                media_content_type=MEDIA_CLASS_DIRECTORY,
                 can_play=not parent_is_directory,
                 can_expand=True,
                 children=children,
@@ -549,13 +558,32 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                 else MEDIA_CLASS_TRACK,
             )
 
-            return subfolder
+            return input_folder
 
-        return BrowseMedia(
-            title=self.source,
+        # START MAIN CATEGORIES FOR INPUTS
+        menu_layer = 0
+
+        children = [
+            BrowseMedia(
+                title=self.coordinator.data.input_names.get(input, input),
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_id=f"input:{input}",
+                media_content_type=MEDIA_CLASS_DIRECTORY,
+                can_play=False,
+                can_expand=True,
+            )
+            for input in inputs
+        ]
+
+        overview = BrowseMedia(
+            title="Library",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
-            media_content_type="empty",
+            media_content_type="categories",
             can_play=False,
-            can_expand=False,
+            can_expand=True,
+            children=children,
+            children_media_class=MEDIA_CLASS_DIRECTORY,
         )
+
+        return overview

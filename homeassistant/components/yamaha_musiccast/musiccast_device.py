@@ -25,6 +25,7 @@ class MusicCastData:
 
         # features
         self.zones: Dict[str, MusicCastZoneData] = {}
+        self.input_names: Dict[str, str] = {}
 
         # NetUSB data
         self.netusb_input = None
@@ -95,6 +96,7 @@ class MusicCastDevice:
         self._features = None
         self._netusb_play_info = None
         self._tuner_play_info = None
+        self._name_text = None
 
         print(f"HANDLE UDP ON {self.device._udp_port}")
 
@@ -286,6 +288,15 @@ class MusicCastDevice:
                 zone_data.input_list = zone.get("input_list", [])
 
                 self.data.zones[zone_id] = zone_data
+
+        self._name_text = await (
+            await self.device.request(System.get_name_text(None))
+        ).json()
+
+        self.data.input_names = {
+            input.get("id"): input.get("text")
+            for input in self._name_text.get("input_list")
+        }
 
         await self._fetch_netusb()
         await self._fetch_tuner()
