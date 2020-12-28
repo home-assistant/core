@@ -11,9 +11,8 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from .const import DOMAIN
 
-SUPPORT_FAN = ["Auto", "Low", "Medium", "High", "Boost 10", "Boost 20", "Boost 30"]
-
-SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
+SUPPORT_FAN = []
+SUPPORT_HVAC = []
 
 HA_STATE_TO_SPIDER = {
     HVAC_MODE_COOL: "Cool",
@@ -43,6 +42,10 @@ class SpiderThermostat(ClimateEntity):
         """Initialize the thermostat."""
         self.api = api
         self.thermostat = thermostat
+        SUPPORT_FAN.append(thermostat.fan_speed_values)
+        operation_values = thermostat.operation_values
+        for operation_value in operation_values:
+            SUPPORT_HVAC.append(SPIDER_STATE_TO_HA.get(operation_value, lambda: "Invalid operation value"))
 
     @property
     def device_info(self):
