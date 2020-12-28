@@ -14,7 +14,7 @@ from tests.async_mock import patch
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 PROJECT_ID = "project-id-4321"
-SUBSCRIBER_ID = "subscriber-id-9876"
+SUBSCRIBER_ID = "projects/example/subscriptions/subscriber-id-9876"
 
 CONFIG = {
     DOMAIN: {
