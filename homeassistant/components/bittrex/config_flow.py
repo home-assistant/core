@@ -6,7 +6,7 @@ from bittrex_api.bittrex import Bittrex
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import CONN_CLASS_CLOUD_PULL, ConfigFlow
+from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,7 +44,9 @@ async def validate_input(hass: HomeAssistant, data: Dict):
 
     try:
         bittrex = Bittrex(data[CONF_API_KEY], data[CONF_API_SECRET], debug_level=3)
-        if not bittrex.v3.get_account()["accountId"]:
+        bittrex_account = bittrex.v3.get_account()["accountId"]
+
+        if not bittrex_account:
             raise InvalidAuth
     except Exception as error:
         raise InvalidAuth from error
@@ -67,7 +69,7 @@ class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bittrex."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_PULL
+    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the Bittrex config flow."""
