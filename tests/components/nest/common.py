@@ -19,7 +19,7 @@ CONFIG = {
         "client_secret": "some-client-secret",
         # Required fields for using SDM API
         "project_id": "some-project-id",
-        "subscriber_id": "some-subscriber-id",
+        "subscriber_id": "projects/example/subscriptions/subscriber-id-9876",
     },
 }
 
@@ -65,7 +65,7 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Capture the callback set by Home Assistant."""
         self._callback = callback
 
-    async def start_async(self) -> DeviceManager:
+    async def start_async(self):
         """Return the fake device manager."""
         return self._device_manager
 
