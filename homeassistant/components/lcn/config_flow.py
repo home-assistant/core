@@ -6,6 +6,19 @@ from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 from .const import DOMAIN
 
 
+def get_config_entry(hass, data):
+    """Check config entries for already configured entries based on the ip address/port."""
+    return next(
+        (
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.data[CONF_IP_ADDRESS] == data[CONF_IP_ADDRESS]
+            and entry.data[CONF_PORT] == data[CONF_PORT]
+        ),
+        None,
+    )
+
+
 @config_entries.HANDLERS.register(DOMAIN)
 class LcnFlowHandler(config_entries.ConfigFlow):
     """Handle a LCN config flow."""
@@ -15,10 +28,9 @@ class LcnFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, data):
         """Import existing configuration from LCN."""
-        # check if we already have a host with the same name configured
+        # check if we already have a host with the same address configured
+        entry = get_config_entry(self.hass, data)
         host_name = data.pop(CONF_HOST)
-        unique_id = f"{data[CONF_IP_ADDRESS]}:{data[CONF_PORT]}"
-        entry = await self.async_set_unique_id(unique_id)
         if entry:
             entry.source = config_entries.SOURCE_IMPORT
             self.hass.config_entries.async_update_entry(entry, data=data)

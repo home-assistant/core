@@ -36,9 +36,10 @@ async def test_step_import_existing_host(hass):
     """Test that the import step works."""
     flow = init_config_flow(hass)
 
+    mock_entry = MockConfigEntry()
     with patch(
-        "homeassistant.config_entries.ConfigFlow.async_set_unique_id",
-        return_value=MockConfigEntry(),
+        "homeassistant.components.lcn.config_flow.get_config_entry",
+        return_value=mock_entry,
     ):
         data = {
             CONF_IP_ADDRESS: "127.0.0.1",
@@ -49,3 +50,6 @@ async def test_step_import_existing_host(hass):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "existing_configuration_updated"
+        assert mock_entry.source == SOURCE_IMPORT
+        assert mock_entry.data == {CONF_IP_ADDRESS: "127.0.0.1", CONF_PORT: 4114}
