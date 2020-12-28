@@ -2,10 +2,10 @@
 import logging
 
 from libpurecool.const import (
+    FanMode,
     FanPower,
     FanSpeed,
     FanState,
-    FanMode,
     FocusMode,
     HeatMode,
     HeatState,
