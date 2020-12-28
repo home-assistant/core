@@ -35,10 +35,10 @@ class TadoDeviceEntity(Entity):
 class TadoZoneEntity(Entity):
     """Base implementation for Tado zone."""
 
-    def __init__(self, zone_name, device_id, zone_id):
+    def __init__(self, zone_name, home_id, zone_id):
         """Initialize a Tado zone."""
         super().__init__()
-        self._device_zone_id = f"{device_id}_{zone_id}"
+        self._device_zone_id = f"{home_id}_{zone_id}"
         self.zone_name = zone_name
 
     @property
