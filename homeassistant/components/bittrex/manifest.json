@@ -1,0 +1,12 @@
+{
+  "domain": "bittrex",
+  "name": "Bittrex",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bittrex",
+  "requirements": [
+    "bittrex-api==0.0.10"
+  ],
+  "codeowners": [
+    "@DevSecNinja"
+  ]
+}
