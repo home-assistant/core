@@ -1,5 +1,6 @@
 """Support for OpenTherm Gateway sensors."""
 import logging
+from pprint import pformat
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import CONF_ID
@@ -8,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_registry import async_get_registry
 
-from . import DOMAIN, MultilineListFilter
+from . import DOMAIN
 from .const import (
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
@@ -18,7 +19,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.addFilter(MultilineListFilter())
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -69,8 +69,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "The following sensor entities are deprecated and may no "
             "longer behave as expected. They will be removed in a future "
             "version. You can force removal of these entities by disabling "
-            "them and restarting Home Assistant.",
-            extra={"pretty_list": [s.entity_id for s in deprecated_sensors]},
+            "them and restarting Home Assistant.\n%s",
+            pformat([s.entity_id for s in deprecated_sensors]),
         )
         async_add_entities(deprecated_sensors)
 
@@ -78,9 +78,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class OpenThermSensor(Entity):
     """Representation of an OpenTherm Gateway sensor."""
 
-    def __init__(
-        self, gw_dev, var, source, device_class, unit, friendly_name_format
-    ):  # pylint: disable=super-init-not-called
+    def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
         """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
@@ -174,6 +172,7 @@ class OpenThermSensor(Entity):
 class DeprecatedOpenThermSensor(OpenThermSensor):
     """Represent a deprecated OpenTherm Gateway Sensor."""
 
+    # pylint: disable=super-init-not-called
     def __init__(self, gw_dev, var, device_class, unit, friendly_name_format):
         """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = async_generate_entity_id(

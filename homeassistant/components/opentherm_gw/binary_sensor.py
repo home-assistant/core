@@ -1,5 +1,6 @@
 """Support for OpenTherm Gateway binary sensors."""
 import logging
+from pprint import pformat
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
 from homeassistant.const import CONF_ID
@@ -8,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_registry import async_get_registry
 
-from . import DOMAIN, MultilineListFilter
+from . import DOMAIN
 from .const import (
     BINARY_SENSOR_INFO,
     DATA_GATEWAYS,
@@ -18,7 +19,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.addFilter(MultilineListFilter())
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -66,8 +66,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "The following binary_sensor entities are deprecated and may "
             "no longer behave as expected. They will be removed in a "
             "future version. You can force removal of these entities by "
-            "disabling them and restarting Home Assistant.",
-            extra={"pretty_list": [s.entity_id for s in deprecated_sensors]},
+            "disabling them and restarting Home Assistant.\n%s",
+            pformat([s.entity_id for s in deprecated_sensors]),
         )
         async_add_entities(deprecated_sensors)
 
@@ -75,9 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
-    def __init__(
-        self, gw_dev, var, source, device_class, friendly_name_format
-    ):  # pylint: disable=super-init-not-called
+    def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
@@ -165,6 +163,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
 class DeprecatedOpenThermBinarySensor(OpenThermBinarySensor):
     """Represent a deprecated OpenTherm Gateway Binary Sensor."""
 
+    # pylint: disable=super-init-not-called
     def __init__(self, gw_dev, var, device_class, friendly_name_format):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
