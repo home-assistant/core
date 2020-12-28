@@ -162,3 +162,11 @@ class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
     CONFIG_SCHEMA = vol.Schema({})
+
+
+# ais text
+@SELECTORS.register("text")
+class TextSelector(Selector):
+    """Selector of an action sequence (script syntax)."""
+
+    CONFIG_SCHEMA = vol.Schema({})
