@@ -181,9 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return False
     except ConfigurationException as err:
-        if DATA_SUBSCRIBER not in hass.data[DOMAIN].get("A", {}):
-            _LOGGER.error("Configuration error: %s", err)
-            hass.data[DOMAIN][DATA_SUBSCRIBER] = None
+        _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
     except GoogleNestException as err:
