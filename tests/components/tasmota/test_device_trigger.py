@@ -21,7 +21,42 @@ from tests.common import (
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
-async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):
+async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):
+    """Test we get the expected triggers from a discovered mqtt device."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["btn"][0] = 1
+    config["btn"][1] = 1
+    config["so"]["13"] = 1
+    config["so"]["73"] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    expected_triggers = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "discovery_id": "00000049A3BC_button_1_SINGLE",
+            "type": "button_short_press",
+            "subtype": "button_1",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "discovery_id": "00000049A3BC_button_2_SINGLE",
+            "type": "button_short_press",
+            "subtype": "button_2",
+        },
+    ]
+    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    assert_lists_same(triggers, expected_triggers)
+
+
+async def test_get_triggers_swc(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):
     """Test we get the expected triggers from a discovered mqtt device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 0
@@ -239,13 +274,83 @@ async def test_update_remove_triggers(
     assert triggers == []
 
 
-async def test_if_fires_on_mqtt_message(
+async def test_if_fires_on_mqtt_message_btn(
     hass, device_reg, calls, mqtt_mock, setup_tasmota
 ):
-    """Test triggers firing."""
+    """Test button triggers firing."""
+    # Discover a device with 2 device triggers
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["btn"][0] = 1
+    config["btn"][2] = 1
+    config["so"]["73"] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "00000049A3BC_button_1_SINGLE",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press_1")},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "00000049A3BC_button_3_SINGLE",
+                        "subtype": "button_3",
+                        "type": "button_short_press",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press_3")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake button 1 single press.
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Button1":{"Action":"SINGLE"}}'
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "short_press_1"
+
+    # Fake button 3 single press.
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Button3":{"Action":"SINGLE"}}'
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "short_press_3"
+
+
+async def test_if_fires_on_mqtt_message_swc(
+    hass, device_reg, calls, mqtt_mock, setup_tasmota
+):
+    """Test switch triggers firing."""
     # Discover a device with 2 device triggers
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 0
+    config["swc"][1] = 0
     config["swc"][2] = 9
     config["swn"][2] = "custom_switch"
     mac = config["mac"]
@@ -270,7 +375,21 @@ async def test_if_fires_on_mqtt_message(
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": ("short_press")},
+                        "data_template": {"some": ("short_press_1")},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "00000049A3BC_switch_2_TOGGLE",
+                        "type": "button_short_press",
+                        "subtype": "switch_2",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press_2")},
                     },
                 },
                 {
@@ -284,28 +403,36 @@ async def test_if_fires_on_mqtt_message(
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": ("long_press")},
+                        "data_template": {"some": ("long_press_3")},
                     },
                 },
             ]
         },
     )
 
-    # Fake short press.
+    # Fake switch 1 short press.
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"TOGGLE"}}'
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "short_press"
+    assert calls[0].data["some"] == "short_press_1"
 
-    # Fake long press.
+    # Fake switch 2 short press.
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch2":{"Action":"TOGGLE"}}'
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "short_press_2"
+
+    # Fake switch 3 long press.
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/RESULT", '{"custom_switch":{"Action":"HOLD"}}'
     )
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "long_press"
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "long_press_3"
 
 
 async def test_if_fires_on_mqtt_message_late_discover(

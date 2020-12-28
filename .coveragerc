@@ -73,8 +73,6 @@ omit =
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
-    homeassistant/components/avri/const.py
-    homeassistant/components/avri/sensor.py
     homeassistant/components/azure_devops/__init__.py
     homeassistant/components/azure_devops/const.py
     homeassistant/components/azure_devops/sensor.py
@@ -589,12 +587,9 @@ omit =
     homeassistant/components/nest/api.py
     homeassistant/components/nest/binary_sensor.py
     homeassistant/components/nest/camera.py
-    homeassistant/components/nest/camera_legacy.py
     homeassistant/components/nest/climate.py
-    homeassistant/components/nest/climate_legacy.py
-    homeassistant/components/nest/local_auth.py
+    homeassistant/components/nest/legacy/*
     homeassistant/components/nest/sensor.py
-    homeassistant/components/nest/sensor_legacy.py
     homeassistant/components/netatmo/__init__.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
@@ -843,8 +838,9 @@ omit =
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/*
     homeassistant/components/solax/sensor.py
-    homeassistant/components/soma/cover.py
     homeassistant/components/soma/__init__.py
+    homeassistant/components/soma/cover.py
+    homeassistant/components/soma/sensor.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonos/*

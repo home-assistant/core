@@ -1,4 +1,4 @@
-"""Support for Nest thermostats."""
+"""Legacy Works with Nest climate implementation."""
 import logging
 
 from nest.nest import APIError
@@ -33,8 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_NEST, DOMAIN as NEST_DOMAIN
-from .const import SIGNAL_NEST_UPDATE
+from .const import DATA_NEST, DOMAIN, SIGNAL_NEST_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +169,7 @@ class NestThermostat(ClimateEntity):
     def device_info(self):
         """Return information about the device."""
         return {
-            "identifiers": {(NEST_DOMAIN, self.device.device_id)},
+            "identifiers": {(DOMAIN, self.device.device_id)},
             "name": self.device.name_long,
             "manufacturer": "Nest Labs",
             "model": "Thermostat",
