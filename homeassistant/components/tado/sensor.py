@@ -78,12 +78,12 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
     def __init__(self, tado, zone_name, zone_id, zone_variable):
         """Initialize of the Tado Sensor."""
         self._tado = tado
-        super().__init__(zone_name, tado.device_id, zone_id)
+        super().__init__(zone_name, tado.home_id, zone_id)
 
         self.zone_id = zone_id
         self.zone_variable = zone_variable
 
-        self._unique_id = f"{zone_variable} {zone_id} {tado.device_id}"
+        self._unique_id = f"{zone_variable} {zone_id} {tado.home_id}"
 
         self._state = None
         self._state_attributes = None
@@ -96,7 +96,7 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.device_id, "zone", self.zone_id
+                    self._tado.home_id, "zone", self.zone_id
                 ),
                 self._async_update_callback,
             )

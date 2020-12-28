@@ -168,7 +168,7 @@ class TadoConnector:
         self._password = password
         self._fallback = fallback
 
-        self.device_id = None
+        self.home_id = None
         self.tado = None
         self.zones = None
         self.devices = None
@@ -188,7 +188,7 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.getZones()
         self.devices = self.tado.getDevices()
-        self.device_id = self.tado.getMe()["homes"][0]["id"]
+        self.home_id = self.tado.getMe()["homes"][0]["id"]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -218,14 +218,14 @@ class TadoConnector:
 
         _LOGGER.debug(
             "Dispatching update to %s %s %s: %s",
-            self.device_id,
+            self.home_id,
             sensor_type,
             sensor,
             data,
         )
         dispatcher_send(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.device_id, sensor_type, sensor),
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, sensor_type, sensor),
         )
 
     def get_capabilities(self, zone_id):
