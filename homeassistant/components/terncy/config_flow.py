@@ -21,6 +21,10 @@ from .hub_monitor import TerncyHubManager
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _start_discovery(mgr):
+    await mgr.start_discovery()
+
+
 def _get_discovered_devices(mgr):
     return mgr.hubs
 
@@ -153,6 +157,5 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._terncy.ip = self.host
         self._terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)
-        _LOGGER.info("try start discovery in %s", DOMAIN)
-        await mgr.start_discovery()
+        await _start_discovery(mgr)
         return await self.async_step_confirm()
