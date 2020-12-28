@@ -21,6 +21,18 @@ from .hub_monitor import TerncyHubManager
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_discovered_devices(mgr):
+    return mgr.hubs
+
+
+async def _request_token(tern, username, name):
+    return await tern.request_token(username, name)
+
+
+async def _check_token_state(tern, token_id, token):
+    return await tern.check_token_state(token_id, token)
+
+
 class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Terncy."""
 
@@ -50,7 +62,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mgr = TerncyHubManager.instance(self.hass)
         if user_input is not None and CONF_DEVICE in user_input:
             devid = user_input[CONF_DEVICE]
-            hub = mgr.hubs[devid]
+            hub = _get_discovered_devices(mgr)[devid]
             self.identifier = devid
             self.name = hub[CONF_NAME]
             self.host = hub[CONF_IP]
@@ -64,7 +76,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": self.name},
             )
 
-        for devid, hub in mgr.hubs.items():
+        for devid, hub in _get_discovered_devices(mgr).items():
             devices_name[devid] = hub[CONF_NAME]
 
         return self.async_show_form(
@@ -79,13 +91,13 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         if self.token == "":
             _LOGGER.warning("request a new token form terncy %s", self.identifier)
-            code, token_id, token, state = await self._terncy.request_token(
-                self.username, "HA User"
+            code, token_id, token, state = await _request_token(
+                self._terncy, self.username, "HA User"
             )
             self.token = token
             self.token_id = token_id
             self._terncy.token = token
-        code, state = await self._terncy.check_token_state(self.token_id, self.token)
+        code, state = await _check_token_state(self._terncy, self.token_id, self.token)
         if code != 200:
             _LOGGER.warning("current token invalid, clear it")
             self.token = ""

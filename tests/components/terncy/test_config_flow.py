@@ -1,6 +1,7 @@
 """Test the Terncy config flow."""
 from homeassistant import config_entries, setup
 from homeassistant.components.terncy.const import (
+    CONF_DEVICE,
     CONF_HOST,
     CONF_IP,
     CONF_NAME,
@@ -8,6 +9,29 @@ from homeassistant.components.terncy.const import (
     DOMAIN,
     TERNCY_HUB_SVC_NAME,
 )
+
+from tests.async_mock import patch
+
+PATCH_MODULE = "homeassistant.components.terncy"
+HUB_DEV_ID = "box-12-34-56-78-90-ab"
+
+
+def _patch_discovery(no_device=False):
+    def _mocked_get_discovered_devices(mgr):
+        if no_device:
+            return {}
+        return {
+            HUB_DEV_ID: {
+                CONF_NAME: "terncy hub",
+                CONF_IP: "192.168.1.100",
+                CONF_PORT: 443,
+            }
+        }
+
+    return patch(
+        f"{PATCH_MODULE}._get_discovered_devices",
+        side_effect=_mocked_get_discovered_devices,
+    )
 
 
 async def test_user_form(hass):
@@ -20,15 +44,14 @@ async def test_user_form(hass):
     assert result["step_id"] == "user"
 
     uinput = {
-        CONF_NAME: "terncy hub",
-        CONF_IP: "192.168.1.100",
-        CONF_PORT: 443,
+        CONF_DEVICE: HUB_DEV_ID,
     }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=uinput
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "begin_pairing"
+    with _patch_discovery():
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=uinput
+        )
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "begin_pairing"
 
 
 async def test_zeroconf(hass):
