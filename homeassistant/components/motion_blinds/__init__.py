@@ -47,7 +47,6 @@ SET_ABSOLUTE_POSITION_SCHEMA = CALL_SCHEMA.extend(
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_ABSOLUTE_POSITION: {
-        "method": SERVICE_SET_ABSOLUTE_POSITION,
         "schema": SET_ABSOLUTE_POSITION_SCHEMA,
     }
 }
@@ -57,9 +56,8 @@ def setup(hass: core.HomeAssistant, config: dict):
     """Set up the Motion Blinds component."""
 
     def service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
         data = service.data.copy()
-        data["method"] = method["method"]
+        data["method"] = service.service
         dispatcher_send(hass, DOMAIN, data)
 
     for service in SERVICE_TO_METHOD:
