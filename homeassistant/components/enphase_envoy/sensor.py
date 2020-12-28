@@ -79,14 +79,20 @@ async def async_setup_platform(
     else:
         envoy_reader = EnvoyReader(ip_address, username, password)
 
+    try:
+        await envoy_reader.getData()
+    except httpx.HTTPStatusError as err:
+        _LOGGER.error("Authentication failure during setup: %s", err)
+        return
+    except httpx.HTTPError as err:
+        raise PlatformNotReady from err
+
     async def async_update_data():
         """Fetch data from API endpoint."""
         data = {}
         async with async_timeout.timeout(30):
             try:
                 await envoy_reader.getData()
-            except httpx.HTTPStatusError as err:
-                _LOGGER.error("Error retrieving data: %s", err)
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
