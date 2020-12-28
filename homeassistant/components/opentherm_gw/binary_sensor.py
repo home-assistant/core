@@ -60,7 +60,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(sensors)
+    sensors.extend(deprecated_sensors)
+
     if deprecated_sensors:
         _LOGGER.warning(
             "The following binary_sensor entities are deprecated and may "
@@ -69,7 +70,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             "disabling them and restarting Home Assistant.\n%s",
             pformat([s.entity_id for s in deprecated_sensors]),
         )
-        async_add_entities(deprecated_sensors)
+
+    async_add_entities(sensors)
 
 
 class OpenThermBinarySensor(BinarySensorEntity):
