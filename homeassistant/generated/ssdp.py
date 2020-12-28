@@ -120,13 +120,6 @@ SSDP = {
             "st": "urn:hyperion-project.org:device:basic:1"
         }
     ],
-    "iammeter": [
-        {
-            "deviceType": "urn:schemas-micasaverde-com:service:EnergyMetering:1",
-            "manufacturer": "Devicebit",
-            "st": "upnp:rootdevice"
-        }
-    ],
     "isy994": [
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",

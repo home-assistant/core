@@ -9,8 +9,6 @@ from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
@@ -104,31 +102,6 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
-
-    async def async_step_ssdp(self, discovery_info):
-        """Handle a discovered Heos device."""
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        port = DEFAULT_PORT
-        dev_sn = friendly_name[-8:]
-        self.host = host
-        self.discovered_conf = {
-            CONF_NAME: friendly_name,
-            CONF_HOST: host,
-            CONF_PORT: port,
-        }
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update({"title_placeholders": {"sn": dev_sn}})
-        if self._host_in_configuration_exists(friendly_name):
-            return self.async_abort(reason="already_configured")
-
-        # unique_id should be serial for services purpose
-        await self.async_set_unique_id(dev_sn, raise_on_progress=False)
-
-        # Check if already configured
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_user()
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""

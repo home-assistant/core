@@ -3,10 +3,8 @@ from iammeter.power_meter import IamMeterError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components import ssdp
 from homeassistant.components.iammeter import config_flow
 from homeassistant.components.iammeter.const import DEFAULT_HOST, DOMAIN
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from tests.async_mock import Mock, patch
@@ -91,26 +89,6 @@ async def test_user(hass, test_connect):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "IamMeterTestDevice"
     assert result["data"][CONF_HOST] == HOST
-
-
-async def test_ssdp(hass):
-    """Test ssdp."""
-    flow = init_config_flow(hass)
-    discovery_info = {}
-    discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "iamMeter-ASDFASDF"
-    discovery_info[ATTR_SSDP_LOCATION] = "http://192.168.2.15/info.xml"
-    flow.context = {}
-    result = await flow.async_step_ssdp(discovery_info=discovery_info)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    # Test ssdp abort add
-    with patch(
-        "homeassistant.components.iammeter.config_flow.IammeterConfigFlow._host_in_configuration_exists",
-        return_value=True,
-    ):
-        result = await flow.async_step_ssdp(discovery_info=discovery_info)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_connect_exception(hass):

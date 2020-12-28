@@ -4,10 +4,5 @@
     "config_flow": true,
     "documentation": "https://www.home-assistant.io/integrations/iammeter",
     "codeowners": ["@lewei50"],
-    "requirements": ["iammeter==0.1.7"],
-    "ssdp": [{
-        "st": "upnp:rootdevice",
-        "manufacturer": "Devicebit",
-        "deviceType": "urn:schemas-micasaverde-com:service:EnergyMetering:1"
-    }]
+    "requirements": ["iammeter==0.1.7"]
 }
