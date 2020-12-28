@@ -77,10 +77,10 @@ class DeviceEntry:
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
-    id: str = attr.ib()
     config_entries: Set[str] = attr.ib()
     connections: Set[Tuple[str, str]] = attr.ib()
     identifiers: Set[Tuple[str, str]] = attr.ib()
+    id: str = attr.ib()
 
     def to_device_entry(
         self,
