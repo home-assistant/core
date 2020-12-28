@@ -305,9 +305,6 @@ av==8.0.2
 # homeassistant.components.avion
 # avion==0.10
 
-# homeassistant.components.avri
-avri-api==0.1.7
-
 # homeassistant.components.axis
 axis==41
 
@@ -684,7 +681,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.1
+google-nest-sdm==0.2.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -784,7 +781,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.12
+huawei-lte-api==1.4.17
 
 # homeassistant.components.hydrawise
 hydrawiser==0.2
@@ -1321,9 +1318,6 @@ pycomfoconnect==0.3
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
 
-# homeassistant.components.avri
-pycountry==19.8.18
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.4
 
@@ -1337,7 +1331,7 @@ pydaikin==2.4.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==76
+pydeconz==77
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1786,7 +1780,7 @@ python-juicenet==1.0.1
 python-miio==0.5.4
 
 # homeassistant.components.mpd
-python-mpd2==1.0.0
+python-mpd2==3.0.1
 
 # homeassistant.components.mystrom
 python-mystrom==1.1.2
@@ -1892,7 +1886,7 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.5.3
+pywemo==0.5.6
 
 # homeassistant.components.wilight
 pywilight==0.0.65
