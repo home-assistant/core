@@ -96,16 +96,13 @@ def _async_migrate_options_from_data_if_missing(hass, entry):
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
 
         hass.config_entries.async_update_entry(entry, data=data, options=options)
-        return True
-    return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BMW Connected Drive from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    _async_migrate_options_from_data_if_missing(hass, entry)  #:
-    # entry = hass.config_entries.async_get_entry(entry.entry_id)
+    _async_migrate_options_from_data_if_missing(hass, entry)
 
     try:
         account = await hass.async_add_executor_job(
@@ -117,8 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def _async_update_all(service_call=None):
         """Update all BMW accounts."""
         await hass.async_add_executor_job(_update_all)
-
-        return True
 
     def _update_all() -> None:
         """Update all BMW accounts."""
@@ -146,12 +141,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
-    await discovery.async_load_platform(
-        hass,
-        NOTIFY_DOMAIN,
-        DOMAIN,
-        {CONF_NAME: DOMAIN},
-        hass.data[DATA_HASS_CONFIG],
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {CONF_NAME: DOMAIN},
+            hass.data[DATA_HASS_CONFIG],
+        )
     )
 
     return True
@@ -219,6 +216,8 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> "BMWConnectedDriveAcco
             e for e in hass.data[DOMAIN].values() if not e[CONF_ACCOUNT].read_only
         ]:
             vehicle = entry_data[CONF_ACCOUNT].account.get_vehicle(vin)
+            if vehicle:
+                break
         if not vehicle:
             _LOGGER.error("Could not find a vehicle for VIN %s", vin)
             return
