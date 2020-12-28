@@ -40,19 +40,37 @@ class HMSwitch(HMDevice, SwitchEntity):
 
         return None
 
+    @property
+    def icon(self):
+        """Set lock icon for INHIBIT switches."""
+        if self._state == "INHIBIT":
+            if self.is_on:
+                return "mdi:lock"
+            else:
+                return "mdi:lock-open"
+        return super().icon
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._hmdevice.on(self._channel)
+        if self._state == "INHIBIT":
+            self._hmdevice.set_inhibit(True, self._channel)
+        else:
+            self._hmdevice.on(self._channel)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._hmdevice.off(self._channel)
+        if self._state == "INHIBIT":
+            self._hmdevice.set_inhibit(False, self._channel)
+        else:
+            self._hmdevice.off(self._channel)
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
-        self._state = "STATE"
+        if self._state is None:
+            self._state = "STATE"
         self._data.update({self._state: None})
 
         # Need sensor values for SwitchPowermeter
-        for node in self._hmdevice.SENSORNODE:
-            self._data.update({node: None})
+        if self._state != "INHIBIT":
+            for node in self._hmdevice.SENSORNODE:
+                self._data.update({node: None})

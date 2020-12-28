@@ -58,6 +58,7 @@ from .const import (
     DISCOVER_BINARY_SENSORS,
     DISCOVER_CLIMATE,
     DISCOVER_COVER,
+    DISCOVER_INHIBIT,
     DISCOVER_LIGHTS,
     DISCOVER_LOCKS,
     DISCOVER_SENSORS,
@@ -454,6 +455,7 @@ def _system_callback_handler(hass, config, src, *args):
                 ("climate", DISCOVER_CLIMATE),
                 ("lock", DISCOVER_LOCKS),
                 ("binary_sensor", DISCOVER_BATTERY),
+                ("switch", DISCOVER_INHIBIT),
             ):
                 # Get all devices of a specific type
                 found_devices = _get_devices(hass, discovery_type, addresses, interface)
@@ -491,6 +493,7 @@ def _get_devices(hass, discovery_type, keys, interface):
         # Class not supported by discovery type
         if (
             discovery_type != DISCOVER_BATTERY
+            and discovery_type != DISCOVER_INHIBIT
             and class_name not in HM_DEVICE_TYPES[discovery_type]
         ):
             continue
@@ -507,6 +510,9 @@ def _get_devices(hass, discovery_type, keys, interface):
                 metadata.update({ATTR_LOW_BAT: device.ATTRIBUTENODE[ATTR_LOW_BAT]})
             else:
                 continue
+        elif discovery_type == DISCOVER_INHIBIT:
+            if "INHIBIT" in device.WRITENODE:
+                metadata.update({"INHIBIT": device.WRITENODE["INHIBIT"]})
         else:
             metadata.update({None: device.ELEMENT})
 

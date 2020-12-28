@@ -10,6 +10,7 @@ DISCOVER_COVER = "homematic.cover"
 DISCOVER_CLIMATE = "homematic.climate"
 DISCOVER_LOCKS = "homematic.locks"
 DISCOVER_BATTERY = "homematic.battery"
+DISCOVER_INHIBIT = "homematic.inhibit"
 
 ATTR_DISCOVER_DEVICES = "devices"
 ATTR_PARAM = "param"
@@ -210,6 +211,7 @@ HM_ATTRIBUTE_SUPPORT = {
     "VOLTAGE": ["voltage", {}],
     "OPERATING_VOLTAGE": ["voltage", {}],
     "WORKING": ["working", {0: "No", 1: "Yes"}],
+    "INHIBIT": ["inhibit", {0: "Unlocked", 1: "Locked"}],
     "STATE_UNCERTAIN": ["state_uncertain", {}],
 }
 

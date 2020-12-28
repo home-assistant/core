@@ -80,12 +80,13 @@ class HMDevice(Entity):
             "interface": self._interface,
         }
 
-        # Generate a dictionary with attributes
-        for node, data in HM_ATTRIBUTE_SUPPORT.items():
-            # Is an attribute and exists for this object
-            if node in self._data:
-                value = data[1].get(self._data[node], self._data[node])
-                attr[data[0]] = value
+        if self._state != "INHIBIT":
+            # Generate a dictionary with attributes
+            for node, data in HM_ATTRIBUTE_SUPPORT.items():
+                # Is an attribute and exists for this object
+                if node in self._data:
+                    value = data[1].get(self._data[node], self._data[node])
+                    attr[data[0]] = value
 
         return attr
 
@@ -186,6 +187,9 @@ class HMDevice(Entity):
         # Add all attributes to data dictionary
         for data_note in self._hmdevice.ATTRIBUTENODE:
             self._data.update({data_note: None})
+
+        if "INHIBIT" in self._hmdevice.WRITENODE:
+            self._data.update({"INHIBIT": None})
 
         # Initialize device specific data
         self._init_data_struct()
