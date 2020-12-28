@@ -3,7 +3,6 @@ from typing import Any, Dict
 
 # pylint: disable=import-error, no-member
 import switchbot
-
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class SwitchBotCurtain(CoverEntity, RestoreEntity):
-    """Representation of a Switchbot Curtain"""
+    """Representation of a Switchbot Curtain."""
 
     def __init__(self, mac, name, password) -> None:
         """Initialize the Switchbot Curtain."""
