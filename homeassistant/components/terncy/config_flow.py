@@ -136,7 +136,6 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": name}
         self.identifier = identifier
         self.name = name
-        _LOGGER.warning(discovery_info)
         self.host = discovery_info[CONF_HOST]
         self.port = discovery_info[CONF_PORT]
         self._terncy.ip = self.host

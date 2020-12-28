@@ -39,9 +39,10 @@ async def test_zeroconf(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
             "name": "box-12-34-56-78-0a-bc." + TERNCY_HUB_SVC_NAME,
+            CONF_HOST: "192.168.1.100",
             "properties": {
                 CONF_NAME: "terncy hub",
-                CONF_HOST: "192.168.1.100",
+                CONF_IP: "192.168.1.100",
                 CONF_PORT: 443,
             },
         },
