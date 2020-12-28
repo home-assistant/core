@@ -30,11 +30,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     session = async_get_clientsession(hass)
     client = WebServiceAPI(data[CONF_API_KEY], session=session)
 
+    lat = data[CONF_LATITUDE]
+    lng = data[CONF_LONGITUDE]
+    distance = data[CONF_RADIUS]
+
     # Check that the provided latitude/longitude provide a response
     try:
-        lat = data[CONF_LATITUDE]
-        lng = data[CONF_LONGITUDE]
-        distance = data[CONF_RADIUS]
         test_data = await client.observations.latLong(lat, lng, distance=distance)
         if not test_data:
             raise InvalidLocation
