@@ -34,7 +34,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_HASS_CONFIG = "bmw_connected_drive_hass_config"
+DATA_HASS_CONFIG = "hass_config"
 DOMAIN = "bmw_connected_drive"
 ATTR_VIN = "vin"
 
@@ -73,7 +73,8 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the BMW Connected Drive component from configuration.yaml."""
-    hass.data[DATA_HASS_CONFIG] = config
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][DATA_HASS_CONFIG] = config
 
     if DOMAIN in config:
         for entry_config in config[DOMAIN].values():
@@ -117,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     def _update_all() -> None:
         """Update all BMW accounts."""
-        for entry in hass.data[DOMAIN].values():
+        for entry in [e for k, e in hass.data[DOMAIN].items() if k != DATA_HASS_CONFIG]:
             entry[CONF_ACCOUNT].update()
 
     # Add update listener for config entry changes (options)
@@ -147,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             NOTIFY_DOMAIN,
             DOMAIN,
             {CONF_NAME: DOMAIN},
-            hass.data[DATA_HASS_CONFIG],
+            hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )
 
@@ -213,7 +214,9 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> "BMWConnectedDriveAcco
         vehicle = None
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
-            e for e in hass.data[DOMAIN].values() if not e[CONF_ACCOUNT].read_only
+            e
+            for k, e in hass.data[DOMAIN].items()
+            if k != DATA_HASS_CONFIG and not e[CONF_ACCOUNT].read_only
         ]:
             vehicle = entry_data[CONF_ACCOUNT].account.get_vehicle(vin)
             if vehicle:
