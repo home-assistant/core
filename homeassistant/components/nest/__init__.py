@@ -4,7 +4,11 @@ import asyncio
 import logging
 
 from google_nest_sdm.event import EventMessage
-from google_nest_sdm.exceptions import AuthException, GoogleNestException
+from google_nest_sdm.exceptions import (
+    AuthException,
+    ConfigurationException,
+    GoogleNestException,
+)
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
@@ -43,6 +47,9 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
 DATA_NEST_CONFIG = "nest_config"
+DATA_NEST_UNAVAILABLE = "nest_unavailable"
+
+NEST_SETUP_NOTIFICATION = "nest_setup"
 
 SENSOR_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
@@ -173,18 +180,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
         )
         return False
+    except ConfigurationException as err:
+        _LOGGER.error("Configuration error: %s", err)
+        subscriber.stop_async()
+        return False
     except GoogleNestException as err:
-        _LOGGER.error("Subscriber error: %s", err)
+        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
+            _LOGGER.error("Subscriber error: %s", err)
+            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
     try:
         await subscriber.async_get_device_manager()
     except GoogleNestException as err:
-        _LOGGER.error("Device Manager error: %s", err)
+        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
+            _LOGGER.error("Device manager error: %s", err)
+            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
+    hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     for component in PLATFORMS:
@@ -213,5 +229,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
+        hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
 
     return unload_ok
