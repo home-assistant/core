@@ -159,10 +159,15 @@ async def test_update_connection_failure(hass, discovery, device, mock_now):
 
 async def test_update_connection_failure_recovery(hass, discovery, device, mock_now):
     """Testing update hvac connection failure recovery."""
-    device().update_state.side_effect = [DeviceTimeoutError, DEFAULT_MOCK]
+    device().update_state.side_effect = [
+        DeviceTimeoutError,
+        DeviceTimeoutError,
+        DEFAULT_MOCK,
+    ]
 
     await async_setup_gree(hass)
 
+    # First update becomes unavailable
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
@@ -172,6 +177,7 @@ async def test_update_connection_failure_recovery(hass, discovery, device, mock_
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
 
+    # Second update restores the connection
     next_update = mock_now + timedelta(minutes=10)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
@@ -187,11 +193,6 @@ async def test_update_unhandled_exception(hass, discovery, device, mock_now):
     device().update_state.side_effect = [DEFAULT_MOCK, Exception]
 
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
@@ -221,21 +222,9 @@ async def test_send_command_device_timeout(hass, discovery, device, mock_now):
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
 
-    device().update_state.side_effect = DeviceTimeoutError
     device().push_state_update.side_effect = DeviceTimeoutError
 
-    # Second update to make an initial error (device is still available)
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.name == "fake-device-1"
-    assert state.state != STATE_UNAVAILABLE
-
-    # Second attempt should make the device unavailable
+    # Send failure should not raise exceptions or change device state
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -246,46 +235,12 @@ async def test_send_command_device_timeout(hass, discovery, device, mock_now):
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_send_command_device_unknown_error(hass, discovery, device, mock_now):
-    """Test for sending power on command to the device with a device timeout."""
-    device().update_state.side_effect = [DEFAULT_MOCK, Exception]
-    device().push_state_update.side_effect = Exception
-
-    await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
-    # First update to make the device available
-    state = hass.states.get(ENTITY_ID)
-    assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
-
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVAC_MODE_AUTO},
-        blocking=True,
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_send_power_on(hass, discovery, device, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -305,11 +260,6 @@ async def test_send_power_on_device_timeout(hass, discovery, device, mock_now):
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -325,11 +275,6 @@ async def test_send_power_on_device_timeout(hass, discovery, device, mock_now):
 async def test_send_target_temperature(hass, discovery, device, mock_now):
     """Test for sending target temperature command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -351,11 +296,6 @@ async def test_send_target_temperature_device_timeout(
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -374,11 +314,6 @@ async def test_update_target_temperature(hass, discovery, device, mock_now):
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == 32
@@ -390,11 +325,6 @@ async def test_update_target_temperature(hass, discovery, device, mock_now):
 async def test_send_preset_mode(hass, discovery, device, mock_now, preset):
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -411,11 +341,6 @@ async def test_send_preset_mode(hass, discovery, device, mock_now, preset):
 async def test_send_invalid_preset_mode(hass, discovery, device, mock_now):
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -441,11 +366,6 @@ async def test_send_preset_mode_device_timeout(
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -470,11 +390,6 @@ async def test_update_preset_mode(hass, discovery, device, mock_now, preset):
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_PRESET_MODE) == preset
@@ -494,11 +409,6 @@ async def test_update_preset_mode(hass, discovery, device, mock_now, preset):
 async def test_send_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
     """Test for sending hvac mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -523,11 +433,6 @@ async def test_send_hvac_mode_device_timeout(
     device().push_state_update.side_effect = DeviceTimeoutError
 
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -559,11 +464,6 @@ async def test_update_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == hvac_mode
@@ -576,11 +476,6 @@ async def test_update_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
 async def test_send_fan_mode(hass, discovery, device, mock_now, fan_mode):
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -597,11 +492,6 @@ async def test_send_fan_mode(hass, discovery, device, mock_now, fan_mode):
 async def test_send_invalid_fan_mode(hass, discovery, device, mock_now):
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -628,11 +518,6 @@ async def test_send_fan_mode_device_timeout(
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_MODE,
@@ -655,11 +540,6 @@ async def test_update_fan_mode(hass, discovery, device, mock_now, fan_mode):
 
     await async_setup_gree(hass)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_FAN_MODE) == fan_mode
@@ -671,11 +551,6 @@ async def test_update_fan_mode(hass, discovery, device, mock_now, fan_mode):
 async def test_send_swing_mode(hass, discovery, device, mock_now, swing_mode):
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -692,11 +567,6 @@ async def test_send_swing_mode(hass, discovery, device, mock_now, swing_mode):
 async def test_send_invalid_swing_mode(hass, discovery, device, mock_now):
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -721,11 +591,6 @@ async def test_send_swing_mode_device_timeout(
     device().push_state_update.side_effect = DeviceTimeoutError
 
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -756,11 +621,6 @@ async def test_update_swing_mode(hass, discovery, device, mock_now, swing_mode):
     )
 
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
