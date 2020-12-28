@@ -63,7 +63,7 @@ class TadoDeviceSensor(TadoDeviceEntity, BinarySensorEntity):
 
         self.device_variable = device_variable
 
-        self._unique_id = f"{device_variable} {self.device_id} {tado.device_id}"
+        self._unique_id = f"{device_variable} {self.device_id} {tado.home_id}"
 
         self._state = None
 
@@ -74,7 +74,7 @@ class TadoDeviceSensor(TadoDeviceEntity, BinarySensorEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.device_id, "device", self.device_id
+                    self._tado.home_id, "device", self.device_id
                 ),
                 self._async_update_callback,
             )
