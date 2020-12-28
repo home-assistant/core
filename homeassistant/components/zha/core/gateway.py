@@ -634,7 +634,7 @@ class ZHAGateway:
                 tasks = []
                 for member in members:
                     _LOGGER.debug(
-                        "Adding member with IEEE: %s and endpoint id: %s to group: %s:0x%04x",
+                        "Adding member with IEEE: %s and endpoint ID: %s to group: %s:0x%04x",
                         member.ieee,
                         member.endpoint_id,
                         name,

@@ -464,7 +464,7 @@ class EntityPlatform:
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
             entity.add_to_platform_abort()
-            raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
+            raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 
         already_exists = entity.entity_id in self.entities
         restored = False
