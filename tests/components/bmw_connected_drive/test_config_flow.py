@@ -46,30 +46,15 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_auth_error(hass):
+async def test_connection_error(hass):
     """Test we show user form on BMW connected drive connection error."""
+
+    def _mock_get_oauth_token(*args, **kwargs):
+        pass
 
     with patch(
         "bimmer_connected.account.ConnectedDriveAccount._get_oauth_token",
         side_effect=OSError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_connection_error(hass):
-    """Test we show user form on BMW connected drive connection error."""
-
-    with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_oauth_token",
-        side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

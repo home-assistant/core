@@ -37,8 +37,6 @@ async def validate_input(hass: core.HomeAssistant, data):
             get_region_from_name(data[CONF_REGION]),
         )
     except OSError as ex:
-        raise InvalidAuth from ex
-    except Exception as ex:
         raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
@@ -65,8 +63,6 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
 
             if info:
                 return self.async_create_entry(title=info["title"], data=user_input)
@@ -121,7 +117,3 @@ class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
