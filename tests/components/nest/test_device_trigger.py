@@ -7,7 +7,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.nest import DOMAIN, NEST_EVENT
+from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.events import NEST_EVENT
 from homeassistant.setup import async_setup_component
 
 from .common import async_setup_sdm_platform
