@@ -7,11 +7,7 @@ from socket import timeout
 from motionblinds import MotionMulticast
 
 from homeassistant import config_entries, core
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
