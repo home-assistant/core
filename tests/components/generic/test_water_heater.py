@@ -97,7 +97,7 @@ async def test_turn_on_off_heater(hass):
 
 
 async def test_set_operation(hass):
-    """Test heater switches on."""
+    """Test operation change."""
     assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
 
     # increasing temperature turns the heater ON
@@ -110,3 +110,18 @@ async def test_set_operation(hass):
 
     assert state.attributes.get("operation_mode") == "off"
     assert state.state == "off"
+
+
+async def test_external_switch_interferance(hass):
+    """Test external event changes heater switch."""
+    assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
+
+    # increasing temperature turns the heater ON
+    hass.states.async_set(SWITCH_HEATER, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_HEATER).state == STATE_ON
+    state = hass.states.get(WATER_HEATER)
+
+    assert state.attributes.get("operation_mode") == "on"
+    assert state.state == "on"
