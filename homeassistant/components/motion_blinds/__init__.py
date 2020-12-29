@@ -5,7 +5,6 @@ import logging
 from socket import timeout
 
 from motionblinds import MotionMulticast
-import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import (
@@ -15,52 +14,24 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    ATTR_ABSOLUTE_POSITION,
-    ATTR_WIDTH,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
     MOTION_PLATFORMS,
-    SERVICE_SET_ABSOLUTE_POSITION,
 )
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-SET_ABSOLUTE_POSITION_SCHEMA = CALL_SCHEMA.extend(
-    {
-        vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(
-            cv.positive_int, vol.Range(max=100)
-        ),
-        vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
-    }
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_SET_ABSOLUTE_POSITION: SET_ABSOLUTE_POSITION_SCHEMA,
-}
-
 
 def setup(hass: core.HomeAssistant, config: dict):
     """Set up the Motion Blinds component."""
-
-    def service_handler(service):
-        data = service.data.copy()
-        data["method"] = service.service
-        dispatcher_send(hass, DOMAIN, data)
-
-    for (service, schema) in SERVICE_TO_METHOD.items():
-        hass.services.register(DOMAIN, service, service_handler, schema=schema)
-
     return True
 
 
