@@ -68,20 +68,16 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select(self, user_input=None):
         """Handle multiple motion gateways found."""
-        errors = {}
         if user_input is not None:
             self._host = user_input["select_ip"]
             return await self.async_step_connect()
 
         select_schema = vol.Schema({vol.Required("select_ip"): vol.In(self._ips)})
 
-        return self.async_show_form(
-            step_id="select", data_schema=select_schema, errors=errors
-        )
+        return self.async_show_form(step_id="select", data_schema=select_schema)
 
     async def async_step_connect(self, user_input=None):
         """Connect to the Motion Gateway."""
-        errors = {}
         if user_input is not None:
             self._key = user_input[CONF_API_KEY]
 
@@ -102,6 +98,4 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._host, CONF_API_KEY: self._key},
             )
 
-        return self.async_show_form(
-            step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors
-        )
+        return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS)
