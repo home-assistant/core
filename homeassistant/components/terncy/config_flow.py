@@ -30,12 +30,8 @@ def _get_discovered_devices(mgr):
     return mgr.hubs
 
 
-async def _request_token(tern, username, name):
-    return await tern.request_token(username, name)
-
-
-async def _check_token_state(tern, token_id, token):
-    return await tern.check_token_state(token_id, token)
+def _get_terncy_instance(flow):
+    return flow._terncy
 
 
 class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -58,7 +54,12 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.token_id = 0
         self.context = {}
         self._terncy = terncy.Terncy(
-            self.client_id, self.identifier, self.host, self.port, self.username, ""
+            self.client_id,
+            self.identifier,
+            self.host,
+            self.port,
+            self.username,
+            "VALID_TOKEN_NOT_ACQUIRED",
         )
 
     async def async_step_user(self, user_input=None):
@@ -94,15 +95,17 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self.unique_id is None:
             await self.async_set_unique_id(self.identifier)
             self._abort_if_unique_id_configured()
+        ternobj = _get_terncy_instance(self)
         if self.token == "":
             _LOGGER.warning("request a new token form terncy %s", self.identifier)
-            code, token_id, token, state = await _request_token(
-                self._terncy, self.username, "HA User"
+            code, token_id, token, state = await ternobj.request_token(
+                self.username, "HA User"
             )
             self.token = token
             self.token_id = token_id
             self._terncy.token = token
-        code, state = await _check_token_state(self._terncy, self.token_id, self.token)
+        ternobj = _get_terncy_instance(self)
+        code, state = await ternobj.check_token_state(self.token_id, self.token)
         if code != 200:
             _LOGGER.warning("current token invalid, clear it")
             self.token = ""
