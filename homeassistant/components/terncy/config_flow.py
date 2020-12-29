@@ -26,11 +26,11 @@ async def _start_discovery(mgr):
 
 
 def _get_discovered_devices(mgr):
-    return {} if mgr is None else mgr.hubs
+    return mgr.hubs
 
 
 def _get_terncy_instance(flow):
-    return flow._terncy
+    return flow.terncy
 
 
 class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,7 +52,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.token = ""
         self.token_id = 0
         self.context = {}
-        self._terncy = terncy.Terncy(
+        self.terncy = terncy.Terncy(
             self.client_id,
             self.identifier,
             self.host,
@@ -73,7 +73,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.host = hub[CONF_IP]
             self.port = hub[CONF_PORT]
             _LOGGER.info("construct Terncy obj for %s %s", self.name, self.host)
-            self._terncy = terncy.Terncy(
+            self.terncy = terncy.Terncy(
                 self.client_id, self.identifier, self.host, self.port, self.username, ""
             )
             return self.async_show_form(
@@ -102,7 +102,7 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self.token = token
             self.token_id = token_id
-            self._terncy.token = token
+            self.terncy.token = token
         ternobj = _get_terncy_instance(self)
         code, state = await ternobj.check_token_state(self.token_id, self.token)
         if code != 200:
@@ -157,8 +157,9 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.name = name
         self.host = discovery_info[CONF_HOST]
         self.port = discovery_info[CONF_PORT]
-        self._terncy.ip = self.host
-        self._terncy.port = self.port
+        self.terncy.ip = self.host
+        self.terncy.port = self.port
         mgr = TerncyHubManager.instance(self.hass)
+        _LOGGER.info("start discovery engine of domain %s", DOMAIN)
         await _start_discovery(mgr)
         return await self.async_step_confirm()
