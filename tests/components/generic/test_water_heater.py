@@ -2,38 +2,17 @@
 import pytest
 
 from homeassistant.components import switch, water_heater
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.common import mock_restore_cache
 from tests.components.water_heater import common
 
 WATER_HEATER = "water_heater.generic_water_heater"
 SWITCH_HEATER = "switch.ac_2"
 SENSOR_TEMPERATURE = "sensor.temperature"
-
-
-def _setup_switch(hass, state):
-    """Set up the test switch."""
-    hass.states.async_set(SWITCH_HEATER, state)
-    calls = []
-
-    @callback
-    def log_call(call):
-        """Log service calls."""
-        calls.append(call)
-
-    hass.services.async_register(HASS_DOMAIN, SERVICE_TURN_ON, log_call)
-    hass.services.async_register(HASS_DOMAIN, SERVICE_TURN_OFF, log_call)
-
-    return calls
 
 
 @pytest.fixture(autouse=True)
@@ -55,17 +34,40 @@ async def setup_entities(hass):
     hass.states.async_set(SENSOR_TEMPERATURE, 48)
     await hass.async_block_till_done()
 
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "water_heater.water_heater_restored",
+                STATE_OFF,
+                {ATTR_TEMPERATURE: "20"},
+            ),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
     assert await async_setup_component(
         hass,
         water_heater.DOMAIN,
         {
-            "water_heater": {
-                "platform": "generic",
-                "heater": SWITCH_HEATER,
-                "temperature_sensor": SENSOR_TEMPERATURE,
-                "target_temperature": 50,
-                "delta_temperature": 5,
-            }
+            "water_heater": [
+                {
+                    "platform": "generic",
+                    "heater": SWITCH_HEATER,
+                    "temperature_sensor": SENSOR_TEMPERATURE,
+                    "target_temperature": 50,
+                    "delta_temperature": 5,
+                },
+                {
+                    "platform": "generic",
+                    "name": "water_heater_restored",
+                    "heater": SWITCH_HEATER,
+                    "temperature_sensor": SENSOR_TEMPERATURE,
+                    "target_temperature": 51,
+                    "delta_temperature": 5,
+                },
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -77,6 +79,14 @@ async def test_setup_params(hass):
     assert state.attributes.get("temperature") == 50
     assert state.attributes.get("current_temperature") == 48
     assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
+
+
+async def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+
+    state = hass.states.get("water_heater.water_heater_restored")
+    assert state.attributes.get("temperature") == 20
+    assert state.state == STATE_OFF
 
 
 async def test_turn_on_off_heater(hass):
@@ -96,11 +106,9 @@ async def test_turn_on_off_heater(hass):
 
     assert hass.states.get(SWITCH_HEATER).state == STATE_ON
 
-    hass.states.async_set(SENSOR_TEMPERATURE, 53)
-    await hass.async_block_till_done()
-
-    hass.states.async_set(SENSOR_TEMPERATURE, 54)
-    await hass.async_block_till_done()
+    for temp in range(49, 50):
+        hass.states.async_set(SENSOR_TEMPERATURE, temp)
+        await hass.async_block_till_done()
 
     assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
 

@@ -170,6 +170,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         old_state = await self.async_get_last_state()
         if old_state is not None:
             self._target_temperature = float(old_state.attributes.get(ATTR_TEMPERATURE))
+            self._current_operation = old_state.state
 
         temp_sensor = self.hass.states.get(self.sensor_entity_id)
         if temp_sensor:
@@ -181,6 +182,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
             STATE_UNKNOWN,
         ):
             self._available = True
+        self.async_write_ha_state()
 
     async def _async_sensor_changed(self, event):
         """Handle temperature changes."""
