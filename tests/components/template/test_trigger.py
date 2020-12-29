@@ -627,6 +627,7 @@ async def test_if_fires_on_change_with_for_0_advanced(hass, calls):
 
 async def test_if_fires_on_change_with_for_2(hass, calls):
     """Test for firing on change with for."""
+    context = Context()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -637,17 +638,33 @@ async def test_if_fires_on_change_with_for_2(hass, calls):
                     "value_template": "{{ is_state('test.entity', 'world') }}",
                     "for": 5,
                 },
-                "action": {"service": "test.automation"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.%s }}"
+                        % "}} - {{ trigger.".join(
+                            (
+                                "platform",
+                                "entity_id",
+                                "from_state.state",
+                                "to_state.state",
+                                "for",
+                            )
+                        )
+                    },
+                },
             }
         },
     )
 
-    hass.states.async_set("test.entity", "world")
+    hass.states.async_set("test.entity", "world", context=context)
     await hass.async_block_till_done()
     assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+    assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
 
 
 async def test_if_not_fires_on_change_with_for(hass, calls):

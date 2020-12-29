@@ -61,23 +61,24 @@ async def async_attach_trigger(
         else:
             description = "time change or manual update via template"
 
+        template_variables = {
+            "platform": platform_type,
+            "entity_id": entity_id,
+            "from_state": from_s,
+            "to_state": to_s,
+        }
         trigger_variables = {
-            "trigger": {
-                "platform": platform_type,
-                "entity_id": entity_id,
-                "from_state": from_s,
-                "to_state": to_s,
-                "for": None,
-                "description": description,
-            }
+            "for": time_delta,
+            "description": description,
         }
 
         @callback
         def call_action(*_):
             """Call action with right context."""
+            nonlocal trigger_variables
             hass.async_run_hass_job(
                 job,
-                trigger_variables,
+                {"trigger": {**template_variables, **trigger_variables}},
                 (to_s.context if to_s else None),
             )
 
@@ -87,7 +88,7 @@ async def async_attach_trigger(
 
         try:
             period = cv.positive_time_period(
-                template.render_complex(time_delta, trigger_variables)
+                template.render_complex(time_delta, {"trigger": template_variables})
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
@@ -95,7 +96,7 @@ async def async_attach_trigger(
             )
             return
 
-        trigger_variables["trigger"]["for"] = period
+        trigger_variables["for"] = period
 
         delay_cancel = async_call_later(hass, period.seconds, call_action)
 
