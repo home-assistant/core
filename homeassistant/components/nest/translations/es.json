@@ -5,6 +5,7 @@
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
             "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
@@ -34,6 +35,10 @@
             },
             "pick_implementation": {
                 "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Nest necesita volver a autenticar tu cuenta",
+                "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
     },

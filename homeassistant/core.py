@@ -863,7 +863,7 @@ class State:
 
         if not valid_state(state):
             raise InvalidStateError(
-                f"Invalid state encountered for entity id: {entity_id}. "
+                f"Invalid state encountered for entity ID: {entity_id}. "
                 "State max length is 255 characters."
             )
 
