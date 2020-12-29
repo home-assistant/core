@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 NAME = "Roku 3"
-NAME_ROKUTV = "58\" Onn Roku TV"
+NAME_ROKUTV = '58" Onn Roku TV'
 
 HOST = "192.168.1.160"
 SSDP_LOCATION = "http://192.168.1.160/"
