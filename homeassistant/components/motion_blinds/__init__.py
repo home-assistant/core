@@ -46,9 +46,7 @@ SET_ABSOLUTE_POSITION_SCHEMA = CALL_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_ABSOLUTE_POSITION: {
-        "schema": SET_ABSOLUTE_POSITION_SCHEMA,
-    }
+    SERVICE_SET_ABSOLUTE_POSITION: SET_ABSOLUTE_POSITION_SCHEMA,
 }
 
 
@@ -60,8 +58,7 @@ def setup(hass: core.HomeAssistant, config: dict):
         data["method"] = service.service
         dispatcher_send(hass, DOMAIN, data)
 
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
+    for (service, schema) in SERVICE_TO_METHOD.items():
         hass.services.register(DOMAIN, service, service_handler, schema=schema)
 
     return True
