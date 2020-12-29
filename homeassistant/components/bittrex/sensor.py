@@ -15,7 +15,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     for market in coordinator.data:
-        entities.append(Ticker(coordinator, market))
+        entities.append(Ticker(coordinator, market["symbol"]))
 
     async_add_entities(entities, True)
 
@@ -36,26 +36,31 @@ class BittrexEntity(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "symbol": self.market["symbol"],
-            "lastTradeRate": self.market["lastTradeRate"],
-            "bidRate": self.market["bidRate"],
-            "askRate": self.market["askRate"],
+            "symbol": self._data["symbol"],
+            "lastTradeRate": self._data["lastTradeRate"],
+            "bidRate": self._data["bidRate"],
+            "askRate": self._data["askRate"],
+            "currency": self._currency,
+            "unit_of_measurement": self._unit_of_measurement,
         }
 
 
 class Ticker(BittrexEntity):
     """Implementation of the ticker sensor."""
 
-    def __init__(self, coordinator, market):
+    def __init__(self, coordinator, symbol):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.market = market
-        self._currency = self.market["symbol"].split("-")[0]
-        self._unit_of_measurement = self.market["symbol"].split("-")[1]
+        self.symbol = symbol
+        self._data = next(
+            item for item in coordinator.data if item["symbol"] == self.symbol
+        )
+        self._currency = self._data["symbol"].split("-")[0]
+        self._unit_of_measurement = self._data["symbol"].split("-")[1]
 
-        self._name = f"Bittrex Ticker - {self.market['symbol']}"
-        self._state = self.market["lastTradeRate"]
-        self._unique_id = f"bittrex_ticker_{self.market['symbol']})"
+        self._name = f"Bittrex Ticker - {self._data['symbol']}"
+        self._state = self._data["lastTradeRate"]
+        self._unique_id = f"bittrex_ticker_{self._data['symbol']})"
 
     @property
     def name(self):

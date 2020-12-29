@@ -83,7 +83,7 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         self.markets = markets
         self._authenticate()
 
-        update_interval = timedelta(seconds=30)
+        update_interval = timedelta(seconds=10)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
