@@ -1,6 +1,6 @@
 blueprint:
   name: Wykonanie komendy po zeskanowaniu TAG-a
-  description: Wykonanie komendy po zeskanowaniu TAG-a
+  description: Wykonanie wpisanej komendy po zeskanowaniu identyfikatora TAG-a
   domain: automation
   input:
     tag_code:

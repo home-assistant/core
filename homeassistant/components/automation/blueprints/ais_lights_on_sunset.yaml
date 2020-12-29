@@ -1,6 +1,6 @@
 blueprint:
-  name: Oświetlenie po zachodzie słońca
-  description: Włącz oświetlenie po zachodzie słońca na ustalony czas
+  name: Oświetlenie o zachodzie słońca
+  description: Włączenie wybranego oświetlenie o zachodzie słońca na ustalony czas
   domain: automation
   input:
     offset_before_start:

@@ -1,6 +1,6 @@
 blueprint:
   name: Wykonanie wydarzenie z kalendarza jako komendy
-  description: Wykonanie wydarzenie z kalendarza jako komendy
+  description: Nazwy wydarzeń z wybranego kalendarza będą w czasie ich wystąpienia wysyłane jako komendy do Asystenta domowego
   domain: automation
   input:
     calendar_entity:

@@ -1,6 +1,6 @@
 blueprint:
   name: Powiadomienie po opuszczeniu strefy
-  description: Wyślij powiadomienie, gdy osoba opuści określoną strefę.
+  description: Wysłanie powiadomienia, gdy wybrana osoba opuści określoną strefę.
   domain: automation
   input:
     person_entity:

@@ -1,6 +1,6 @@
 blueprint:
   name: Wykonanie komendy po naciśnięciu przycisku
-  description: Wykonanie komendy po naciśnięciu przycisku
+  description: Wykonanie wpisanej komendy po naciśnięciu na zdalnym kontrolerze ustalonego przycisku
   domain: automation
   input:
     key_code:
