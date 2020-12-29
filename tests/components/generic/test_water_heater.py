@@ -2,7 +2,13 @@
 import pytest
 
 from homeassistant.components import switch, water_heater
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -125,3 +131,32 @@ async def test_external_switch_interferance(hass):
 
     assert state.attributes.get("operation_mode") == "on"
     assert state.state == "on"
+
+
+async def test_invalid_heater_and_sensor_events(hass):
+    """Test invalid event changes in heater switch and temperature sensor."""
+    state = hass.states.get(WATER_HEATER)
+    assert state.attributes.get("operation_mode") == "on"
+    assert state.attributes.get("current_temperature") == 48
+
+    # switch unavailable -> water_heater unavailable
+    hass.states.async_set(SWITCH_HEATER, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get(WATER_HEATER)
+    assert state.state == STATE_UNAVAILABLE
+
+    # bring back water_heater
+    hass.states.async_set(SWITCH_HEATER, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(WATER_HEATER)
+    assert state.state == STATE_ON
+
+    # sensor unavailable -> failsafe
+    hass.states.async_set(SENSOR_TEMPERATURE, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCH_HEATER)
+    assert state.state == STATE_OFF
+    state = hass.states.get(WATER_HEATER)
+    assert state.attributes.get("current_temperature") is None

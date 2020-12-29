@@ -95,6 +95,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
             STATE_ON,
             STATE_OFF,
         ]
+        self._available = False
 
     @property
     def supported_features(self):
@@ -105,6 +106,11 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self._available
 
     @property
     def name(self):
@@ -171,13 +177,27 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         if temp_sensor:
             self._current_temperature = float(temp_sensor.state)
 
+        heater_switch = self.hass.states.get(self.heater_entity_id)
+        if heater_switch and heater_switch.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            self._available = True
+
     async def _async_sensor_changed(self, event):
         """Handle temperature changes."""
         new_state = event.data.get("new_state")
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return
+            # Failsafe
+            _LOGGER.info(
+                "No Temperature information, entering Failsafe, turning off heater %s",
+                self.heater_entity_id,
+            )
+            await self._async_heater_turn_off()
+            self._current_temperature = None
+        else:
+            self._current_temperature = float(new_state.state)
 
-        self._current_temperature = float(new_state.state)
         await self._async_control_heating()
         self.async_write_ha_state()
 
@@ -185,15 +205,18 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     def _async_switch_changed(self, event):
         """Handle heater switch state changes."""
         new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-        if new_state.state == STATE_ON and self._current_operation == STATE_OFF:
-            self._current_operation = new_state.state
-            self.async_write_ha_state()
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._available = False
+        else:
+            self._available = True
+            if new_state.state == STATE_ON and self._current_operation == STATE_OFF:
+                self._current_operation = new_state.state
+
+        self.async_write_ha_state()
 
     async def _async_control_heating(self):
         """Check if we need to turn heating on or off."""
-        if self._current_operation == STATE_OFF:
+        if self._current_operation == STATE_OFF or self._current_temperature is None:
             return
 
         if (
