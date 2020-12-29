@@ -87,8 +87,11 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, discovery_info):
         """Handle a flow initialized by homekit discovery."""
-        host = discovery_info["host"]
-        name = discovery_info["name"]
+
+        # If we already have the host configured do
+        # not open connections to it if we can avoid it.
+        if self._host_already_configured(discovery_info[CONF_HOST]):
+            return self.async_abort(reason="already_configured")
 
         try:
             info = await validate_input(self.hass, self.discovery_info)
@@ -100,12 +103,14 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["serial_number"])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info["host"]})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update({"title_placeholders": {"name": name}})
+        self.context.update({"title_placeholders": {"name": info["title"]}})
 
-        self.discovery_info.update({CONF_HOST: host, CONF_NAME: name})
+        self.discovery_info.update(
+            {CONF_HOST: discovery_info["host"], CONF_NAME: info["title"]},
+        )
 
         return await self.async_step_discovery_confirm()
 
@@ -152,3 +157,12 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self.discovery_info[CONF_NAME],
             data=self.discovery_info,
         )
+
+    def _host_already_configured(self, host):
+        """See if we already have a hub with the host address configured."""
+        existing_hosts = {
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
+        }
+        return host in existing_hosts
