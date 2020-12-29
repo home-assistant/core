@@ -27,15 +27,11 @@ class Ticker(CoordinatorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.symbol = symbol
-        self._data = next(
-            item for item in coordinator.data if item["symbol"] == self.symbol
-        )
-        self._currency = self._data["symbol"].split("-")[0]
-        self._unit_of_measurement = self._data["symbol"].split("-")[1]
+        self._currency = self.symbol.split("-")[0]
+        self._unit_of_measurement = self.symbol.split("-")[1]
 
-        self._name = f"Bittrex Ticker - {self._data['symbol']}"
-        self._state = self._data["lastTradeRate"]
-        self._unique_id = f"bittrex_ticker_{self._data['symbol']})"
+        self._name = f"Bittrex Ticker - {self.symbol}"
+        self._unique_id = f"bittrex_ticker_{self.symbol})"
 
     @property
     def name(self):
@@ -45,7 +41,9 @@ class Ticker(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return next(
+            item for item in self.coordinator.data if item["symbol"] == self.symbol
+        )["lastTradeRate"]
 
     @property
     def unique_id(self):
@@ -66,10 +64,18 @@ class Ticker(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "symbol": self._data["symbol"],
-            "lastTradeRate": self._data["lastTradeRate"],
-            "bidRate": self._data["bidRate"],
-            "askRate": self._data["askRate"],
+            "symbol": next(
+                item for item in self.coordinator.data if item["symbol"] == self.symbol
+            )["symbol"],
+            "lastTradeRate": next(
+                item for item in self.coordinator.data if item["symbol"] == self.symbol
+            )["lastTradeRate"],
+            "bidRate": next(
+                item for item in self.coordinator.data if item["symbol"] == self.symbol
+            )["bidRate"],
+            "askRate": next(
+                item for item in self.coordinator.data if item["symbol"] == self.symbol
+            )["askRate"],
             "currency": self._currency,
             "unit_of_measurement": self._unit_of_measurement,
         }
