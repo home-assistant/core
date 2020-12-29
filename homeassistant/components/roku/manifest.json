@@ -4,7 +4,11 @@
   "documentation": "https://www.home-assistant.io/integrations/roku",
   "requirements": ["rokuecp==0.6.0"],
   "homekit": {
-    "models": "Roku"
+    "models": [
+      "3810X",
+      "4660X",
+      "7820X",
+    ],
   },
   "ssdp": [
     {
