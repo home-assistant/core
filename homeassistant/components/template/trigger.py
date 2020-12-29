@@ -67,7 +67,7 @@ async def async_attach_trigger(
                 "entity_id": entity_id,
                 "from_state": from_s,
                 "to_state": to_s,
-                "for": time_delta,
+                "for": None,
                 "description": description,
             }
         }
