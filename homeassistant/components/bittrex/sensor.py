@@ -20,32 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, False)
 
 
-class BittrexEntity(CoordinatorEntity):
-    """Defines a base Bittrex entity."""
-
-    def __init__(self, coordinator):
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
-
-    @property
-    def device_state_attributes(self):
-        """Return additional sensor state attributes."""
-        return {
-            "symbol": self._data["symbol"],
-            "lastTradeRate": self._data["lastTradeRate"],
-            "bidRate": self._data["bidRate"],
-            "askRate": self._data["askRate"],
-            "currency": self._currency,
-            "unit_of_measurement": self._unit_of_measurement,
-        }
-
-
-class Ticker(BittrexEntity):
+class Ticker(CoordinatorEntity):
     """Implementation of the ticker sensor."""
 
     def __init__(self, coordinator, symbol):
@@ -81,3 +56,20 @@ class Ticker(BittrexEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        return {
+            "symbol": self._data["symbol"],
+            "lastTradeRate": self._data["lastTradeRate"],
+            "bidRate": self._data["bidRate"],
+            "askRate": self._data["askRate"],
+            "currency": self._currency,
+            "unit_of_measurement": self._unit_of_measurement,
+        }
