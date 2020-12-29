@@ -43,6 +43,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     markets = []
 
     try:
+        # TODO: Use data coordinator from init
         bittrex = Bittrex(data[CONF_API_KEY], data[CONF_API_SECRET], debug_level=3)
         bittrex_account = bittrex.v3.get_account()["accountId"]
 
