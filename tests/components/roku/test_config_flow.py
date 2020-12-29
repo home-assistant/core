@@ -1,6 +1,6 @@
 """Test the Roku config flow."""
 from homeassistant.components.roku.const import DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -12,7 +12,9 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
 from tests.components.roku import (
+    HOMEKIT_FRIENDLY_NAME,
     HOST,
+    MOCK_HOMEKIT_DISCOVERY_INFO,
     MOCK_SSDP_DISCOVERY_INFO,
     UPNP_FRIENDLY_NAME,
     mock_connection,
@@ -128,6 +130,43 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     assert len(mock_validate_input.mock_calls) == 1
 
 
+async def test_homekit_discovery(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the homekit discovery flow."""
+    mock_connection(aioclient_mock)
+
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {CONF_NAME: HOMEKIT_FRIENDLY_NAME}
+
+    with patch(
+        "homeassistant.components.roku.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.roku.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == HOMEKIT_FRIENDLY_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_NAME] == HOMEKIT_FRIENDLY_NAME
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_ssdp_cannot_connect(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -176,7 +215,7 @@ async def test_ssdp_discovery(
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "ssdp_confirm"
+    assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"] == {CONF_NAME: UPNP_FRIENDLY_NAME}
 
     with patch(
