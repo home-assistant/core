@@ -50,6 +50,7 @@ from . import (
     ATTR_ACTION,
     ATTR_COUNT,
     ATTR_TRANSITIONS,
+    ATTR_MODE_MUSIC,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH,
@@ -177,7 +178,7 @@ SERVICE_SCHEMA_SET_MODE = {
 }
 
 SERVICE_SCHEMA_SET_MUSIC_MODE = {
-    vol.Required(CONF_MODE_MUSIC): cv.boolean,
+    vol.Required(ATTR_MODE_MUSIC): cv.boolean,
 }
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
@@ -605,9 +606,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         return color_util.color_RGB_to_hs(red, green, blue)
 
-    def set_music_mode(self, use_music_mode) -> None:
+    def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
-        if use_music_mode:
+        if music_mode:
             self._bulb.start_music()
         else:
             self._bulb.stop_music()

@@ -91,6 +91,6 @@ set_music_mode:
     entity_id:
       description: Name of the light entity.
       example: "light.yeelight"
-    use_music_mode:
+    music_mode:
       description: Use true or false to enable / disable music_mode
       example: true
