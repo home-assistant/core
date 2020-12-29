@@ -106,7 +106,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-
     async def async_step_ssdp(
         self, discovery_info: Optional[Dict] = None
     ) -> Dict[str, Any]:
