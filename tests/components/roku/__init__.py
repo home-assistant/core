@@ -14,9 +14,10 @@ from homeassistant.helpers.typing import HomeAssistantType
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-HOST = "192.168.1.160"
 NAME = "Roku 3"
+NAME_ROKUTV = "58\" Onn Roku TV"
 
+HOST = "192.168.1.160"
 SSDP_LOCATION = "http://192.168.1.160/"
 UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
@@ -28,14 +29,12 @@ MOCK_SSDP_DISCOVERY_INFO = {
 }
 
 HOMEKIT_HOST = "192.168.1.161"
-HOMEKIT_NAME = "onn.hap._tcp.local."
-HOMEKIT_MAC = "2d:97:da:ee:dc:99"
 
 MOCK_HOMEKIT_DISCOVERY_INFO = {
-    CONF_NAME: HOMEKIT_NAME,
+    CONF_NAME: "onn.hap._tcp.local.",
     CONF_HOST: HOMEKIT_HOST,
     "properties": {
-        CONF_ID: HOMEKIT_MAC,
+        CONF_ID: "2d:97:da:ee:dc:99",
     },
 }
 
