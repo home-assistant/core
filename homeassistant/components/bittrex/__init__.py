@@ -1,9 +1,7 @@
 """Gather the market details from Bittrex."""
-from datetime import timedelta
 import logging
 from typing import Dict
 
-from async_timeout import timeout
 from bittrex_api.bittrex import BittrexV3
 import voluptuous as vol
 
@@ -11,11 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
+from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
-
     return True
 
 
@@ -49,20 +44,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bittrex from a config entry."""
     api_key = entry.data[CONF_API_KEY]
     api_secret = entry.data[CONF_API_SECRET]
-    markets = entry.data[CONF_MARKETS]
+    symbols = entry.data[CONF_MARKETS]
 
-    websession = async_get_clientsession(hass)
-
-    coordinator = BittrexDataUpdateCoordinator(
-        hass, websession, api_key, api_secret, markets
-    )
+    coordinator = BittrexDataUpdateCoordinator(hass, api_key, api_secret, symbols)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{coordinator.name}")
@@ -77,15 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Bittrex."""
 
-    def __init__(self, hass, session, api_key, api_secret, markets):
+    def __init__(self, hass, api_key, api_secret, symbols):
         """Initialize the data object."""
         self.bittrex = BittrexV3(api_key, api_secret, reverse_market_names=False)
-        self.markets = markets
+        self.symbols = symbols
         self._authenticate()
 
-        update_interval = timedelta(seconds=10)
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     def _authenticate(self):
         """Test authentication to Bittrex."""
@@ -97,21 +86,25 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as error:
             raise ConfigEntryNotReady from error
 
+    async def _get_tickers(self):
+        """Get the latest tickers."""
+        try:
+            result = self.bittrex.get_tickers()
+            return result
+        except Exception as error:
+            _LOGGER.error("Bittrex get_tickers error: %s", error)
+            return None
+
     async def _async_update_data(self):
         """Fetch Bittrex data."""
         try:
-            async with timeout(10):
-                tickers = self.bittrex.get_tickers()
+            tickers = await self._get_tickers()
+            data = []
 
-                data = []
+            for symbol in self.symbols:
+                data.append(next(item for item in tickers if item["symbol"] == symbol))
+            return data
 
-                for market in self.markets:
-                    data.append(
-                        next(item for item in tickers if item["symbol"] == market)
-                    )
-
-        except Exception as err:
-            _LOGGER.error("Bittrex sensor error: %s", err)
+        except Exception as error:
+            _LOGGER.error("Bittrex sensor error: %s", error)
             return None
-
-        return data

@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Bittrex sensors."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
 
@@ -76,3 +76,8 @@ class Ticker(BittrexEntity):
     def unique_id(self):
         """Return a unique id for the sensor."""
         return self._unique_id
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement

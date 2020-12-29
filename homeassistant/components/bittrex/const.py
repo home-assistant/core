@@ -1,4 +1,5 @@
 """Constants for Bittrex."""
+from datetime import timedelta
 
 DOMAIN = "bittrex"
 
@@ -16,3 +17,6 @@ CURRENCY_ICONS = {
 }
 
 DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
+
+# Integration setup
+SCAN_INTERVAL = timedelta(seconds=10)
