@@ -62,12 +62,11 @@ TDBU_DEVICE_MAP = {
 
 
 SET_ABSOLUTE_POSITION_SCHEMA = {
-        vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(
-            cv.positive_int, vol.Range(max=100)
-        ),
-        vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
-    }
-)
+    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(
+        cv.positive_int, vol.Range(max=100)
+    ),
+    vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
