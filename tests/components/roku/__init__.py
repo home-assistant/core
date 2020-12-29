@@ -27,7 +27,7 @@ UPNP_SERIAL = SERIAL
 MOCK_HOMEKIT_DISCOVERY_INFO = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
-    "properties: {
+    "properties": {
         CONF_ID: SERIAL,
     },
 }
