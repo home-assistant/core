@@ -34,7 +34,7 @@ SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 DEFAULT_NAME = "Generic Water Heater"
 
 CONF_HEATER = "heater"
-CONF_SENSOR = "target_sensor"
+CONF_SENSOR = "temperature_sensor"
 CONF_TARGET_TEMP = "target_temperature"
 CONF_TEMP_DELTA = "delta_temperature"
 
@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
     target_temp = config.get(CONF_TARGET_TEMP)
-    temp_delta = config.get(CONF_TARGET_TEMP)
+    temp_delta = config.get(CONF_TEMP_DELTA)
     unit = hass.config.units.temperature_unit
 
     async_add_entities(
@@ -90,6 +90,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         self._temperature_delta = temp_delta
         self._unit_of_measurement = unit
         self._current_operation = STATE_ON
+        self._current_temperature = None
         self._operation_list = [
             STATE_ON,
             STATE_OFF,
@@ -109,6 +110,11 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     def name(self):
         """Return the name of the water_heater device."""
         return self._name
+
+    @property
+    def current_temperature(self):
+        """Return current temperature."""
+        return self._current_temperature
 
     @property
     def temperature_unit(self):
@@ -142,38 +148,6 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         await self._async_control_heating()
         self.schedule_update_ha_state()
 
-    async def _async_sensor_changed(self, event):
-        """Handle temperature changes."""
-        new_state = event.data.get("new_state")
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return
-
-        self._cur_temp = float(new_state.state)
-        await self._async_control_heating()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_switch_changed(self, event):
-        """Handle heater switch state changes."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-        if new_state.state == STATE_ON and self._current_operation == STATE_OFF:
-            self._current_operation = new_state.state
-            self.async_write_ha_state()
-
-    async def _async_control_heating(self, time=None):
-        """Check if we need to turn heating on or off."""
-        if self._current_operation == STATE_OFF:
-            return
-
-        if self._cur_temp < self._target_temperature - self._temperature_delta:
-            _LOGGER.info("Turning on heater %s", self.heater_entity_id)
-            await self._async_heater_turn_on()
-        else:
-            _LOGGER.info("Turning off heater %s", self.heater_entity_id)
-            await self._async_heater_turn_off()
-
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -192,9 +166,45 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         old_state = await self.async_get_last_state()
         if old_state is not None:
             self._target_temperature = float(old_state.attributes.get(ATTR_TEMPERATURE))
+
+        temp_sensor = self.hass.states.get(self.sensor_entity_id)
+        if temp_sensor:
+            self._current_temperature = float(temp_sensor.state)
+
+    async def _async_sensor_changed(self, event):
+        """Handle temperature changes."""
+        new_state = event.data.get("new_state")
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return
+
+        self._current_temperature = float(new_state.state)
+        await self._async_control_heating()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_switch_changed(self, event):
+        """Handle heater switch state changes."""
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            return
+        if new_state.state == STATE_ON and self._current_operation == STATE_OFF:
+            self._current_operation = new_state.state
+            self.async_write_ha_state()
+
+    async def _async_control_heating(self):
+        """Check if we need to turn heating on or off."""
+        if self._current_operation == STATE_OFF:
+            return
+
+        if (
+            self._current_temperature
+            < self._target_temperature - self._temperature_delta
+        ):
+            _LOGGER.info("Turning on heater %s", self.heater_entity_id)
+            await self._async_heater_turn_on()
         else:
-            # Default to current temperature
-            self._target_temperature = None
+            _LOGGER.info("Turning off heater %s", self.heater_entity_id)
+            await self._async_heater_turn_off()
 
     async def _async_heater_turn_on(self):
         """Turn heater toggleable device on."""
