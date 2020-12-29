@@ -26,7 +26,7 @@ async def _start_discovery(mgr):
 
 
 def _get_discovered_devices(mgr):
-    return mgr.hubs
+    return {} if mgr is None else mgr.hubs
 
 
 def _get_terncy_instance(flow):
