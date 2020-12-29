@@ -36,7 +36,6 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Motion Blinds flow."""
         self._host = None
-        self._key = None
         self._ips = []
 
     async def async_step_user(self, user_input=None):
@@ -79,11 +78,11 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_connect(self, user_input=None):
         """Connect to the Motion Gateway."""
         if user_input is not None:
-            self._key = user_input[CONF_API_KEY]
+            key = user_input[CONF_API_KEY]
 
             connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
             if not await connect_gateway_class.async_connect_gateway(
-                self._host, self._key
+                self._host, key
             ):
                 return self.async_abort(reason="connection_error")
             motion_gateway = connect_gateway_class.gateway_device
@@ -95,7 +94,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=DEFAULT_GATEWAY_NAME,
-                data={CONF_HOST: self._host, CONF_API_KEY: self._key},
+                data={CONF_HOST: self._host, CONF_API_KEY: key},
             )
 
         return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS)
