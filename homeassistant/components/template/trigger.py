@@ -62,7 +62,7 @@ async def async_attach_trigger(
         if entity_id is not None:
             description = f"{entity_id} via template"
         else:
-            description = "time change via template"
+            description = "time change or manual update via template"
 
         trigger_variables = {
             "trigger": {
