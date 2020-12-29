@@ -42,6 +42,9 @@ async def async_attach_trigger(
     def template_listener(event, updates):
         """Listen for state changes and calls action."""
         nonlocal delay_cancel
+
+        _LOGGER.warning("template listener: %s %s", event, updates)
+
         result = updates.pop().result
 
         if delay_cancel:
@@ -52,25 +55,32 @@ async def async_attach_trigger(
         if not result_as_boolean(result):
             return
 
-        entity_id = event.data.get("entity_id")
-        from_s = event.data.get("old_state")
-        to_s = event.data.get("new_state")
+        entity_id = event.data and event.data.get("entity_id")
+        from_s = event.data and event.data.get("old_state")
+        to_s = event.data and event.data.get("new_state")
+
+        if entity_id is not None:
+            description = f"{entity_id} via template"
+        else:
+            description = f"time change to {event} via template"
+
+        trigger_variables = {
+            "trigger": {
+                "platform": platform_type,
+                "entity_id": entity_id,
+                "from_state": from_s,
+                "to_state": to_s,
+                "for": time_delta,
+                "description": description,
+            }
+        }
 
         @callback
         def call_action(*_):
             """Call action with right context."""
             hass.async_run_hass_job(
                 job,
-                {
-                    "trigger": {
-                        "platform": "template",
-                        "entity_id": entity_id,
-                        "from_state": from_s,
-                        "to_state": to_s,
-                        "for": time_delta if not time_delta else period,
-                        "description": f"{entity_id} via template",
-                    }
-                },
+                trigger_variables,
                 (to_s.context if to_s else None),
             )
 
@@ -78,24 +88,17 @@ async def async_attach_trigger(
             call_action()
             return
 
-        variables = {
-            "trigger": {
-                "platform": platform_type,
-                "entity_id": entity_id,
-                "from_state": from_s,
-                "to_state": to_s,
-            }
-        }
-
         try:
             period = cv.positive_time_period(
-                template.render_complex(time_delta, variables)
+                template.render_complex(time_delta, trigger_variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", automation_info["name"], ex
             )
             return
+
+        trigger_variables["trigger"]["for"] = period
 
         delay_cancel = async_call_later(hass, period.seconds, call_action)
 
