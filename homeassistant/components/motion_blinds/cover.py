@@ -16,7 +16,6 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -170,14 +169,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self._blind.position == 100
 
-    @callback
-    def _push_callback(self):
-        """Update entity state when a push has been received."""
-        self.schedule_update_ha_state(force_refresh=False)
-
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
-        self._blind.Register_callback(self.unique_id, self._push_callback)
+        self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
         )
