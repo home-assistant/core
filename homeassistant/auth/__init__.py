@@ -18,6 +18,9 @@ from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_REMOVED = "user_removed"
+CLAIM_HASS_NAMESPACE = "https://home-assistant.io/"
+CLAIM_HASS_REMOTE = "remote"
+CLAIM_HASS_PROVIDER = "provider"
 
 _MfaModuleDict = Dict[str, MultiFactorAuthModule]
 _ProviderKey = Tuple[str, Optional[str]]
@@ -450,6 +453,12 @@ class AuthManager:
                 "iss": refresh_token.id,
                 "iat": now,
                 "exp": now + refresh_token.access_token_expiration,
+                CLAIM_HASS_NAMESPACE: {
+                    CLAIM_HASS_REMOTE: remote_ip,
+                    CLAIM_HASS_PROVIDER: refresh_token.cred.auth_provider_type
+                    if refresh_token.cred
+                    else None,
+                },
             },
             refresh_token.jwt_key,
             algorithm="HS256",
@@ -476,8 +485,20 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt.decode(token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"])
+            claims = jwt.decode(
+                token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
+            )
         except jwt.InvalidTokenError:
+            return None
+
+        hass_claims = claims.get(CLAIM_HASS_NAMESPACE, {})
+        remote_claim = hass_claims.get(CLAIM_HASS_REMOTE)
+        provider_claim = hass_claims.get(CLAIM_HASS_PROVIDER)
+        if (
+            remote_claim
+            and provider_claim == "trusted_networks"
+            and remote != remote_claim
+        ):
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:

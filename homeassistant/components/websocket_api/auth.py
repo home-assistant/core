@@ -67,7 +67,7 @@ class AuthPhase:
         if "access_token" in msg:
             self._logger.debug("Received access_token")
             refresh_token = await self._hass.auth.async_validate_access_token(
-                msg["access_token"]
+                msg["access_token"], self._request.remote
             )
             if refresh_token is not None:
                 return await self._async_finish_auth(refresh_token.user, refresh_token)

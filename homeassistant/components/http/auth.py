@@ -56,7 +56,9 @@ def setup_auth(hass, app):
         if auth_type != "Bearer":
             return False
 
-        refresh_token = await hass.auth.async_validate_access_token(auth_val)
+        refresh_token = await hass.auth.async_validate_access_token(
+            auth_val, request.remote
+        )
 
         if refresh_token is None:
             return False
