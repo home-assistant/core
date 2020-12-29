@@ -55,9 +55,9 @@ async def async_attach_trigger(
         if not result_as_boolean(result):
             return
 
-        entity_id = event.data and event.data.get("entity_id")
-        from_s = event.data and event.data.get("old_state")
-        to_s = event.data and event.data.get("new_state")
+        entity_id = event and event.data.get("entity_id")
+        from_s = event and event.data.get("old_state")
+        to_s = event and event.data.get("new_state")
 
         if entity_id is not None:
             description = f"{entity_id} via template"
