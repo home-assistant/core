@@ -90,8 +90,23 @@ async def test_turn_on_off_heater(hass):
 
     assert hass.states.get(SWITCH_HEATER).state == STATE_ON
 
-    # decreasing temperature turns the heater OFF
-    await common.async_set_temperature(hass, 50, WATER_HEATER)
+    hass.states.async_set(SENSOR_TEMPERATURE, 53)
     await hass.async_block_till_done()
 
     assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
+
+
+async def test_set_operation(hass):
+    """Test heater switches on."""
+    assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
+
+    # increasing temperature turns the heater ON
+    await common.async_set_temperature(hass, 55, WATER_HEATER)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_HEATER).state == STATE_ON
+    await common.async_set_operation_mode(hass, "off", WATER_HEATER)
+    state = hass.states.get(WATER_HEATER)
+
+    assert state.attributes.get("operation_mode") == "off"
+    assert state.state == "off"
