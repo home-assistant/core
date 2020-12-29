@@ -51,7 +51,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Use MotionGateway discovery
             discover_class = MotionDiscovery()
             gateways = await self.hass.async_add_executor_job(discover_class.discover)
-            self.ips = list(gateways.keys())
+            self.ips = list(gateways)
 
             if len(self.ips) == 1:
                 self.host = self.ips[0]
