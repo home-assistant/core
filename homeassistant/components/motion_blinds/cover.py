@@ -16,10 +16,8 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -62,9 +60,7 @@ TDBU_DEVICE_MAP = {
 
 
 SET_ABSOLUTE_POSITION_SCHEMA = {
-    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(
-        cv.positive_int, vol.Range(max=100)
-    ),
+    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
     vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 

@@ -8,7 +8,6 @@ from motionblinds import MotionMulticast
 
 from homeassistant import config_entries, core
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
