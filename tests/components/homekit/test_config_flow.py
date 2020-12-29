@@ -1,4 +1,6 @@
 """Test the HomeKit config flow."""
+import pytest
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -25,7 +27,6 @@ def _mock_config_entry_with_options_populated():
                 ],
                 "exclude_entities": ["climate.front_gate"],
             },
-            "auto_start": False,
             "safe_mode": False,
         },
     )
@@ -46,7 +47,7 @@ async def test_user_form(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"auto_start": True, "include_domains": ["light"]},
+            {"include_domains": ["light"]},
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -68,7 +69,6 @@ async def test_user_form(hass):
     assert result3["title"][:11] == "HASS Bridge"
     bridge_name = (result3["title"].split(":"))[0]
     assert result3["data"] == {
-        "auto_start": True,
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
@@ -123,7 +123,8 @@ async def test_import(hass):
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_options_flow_exclude_mode_advanced(hass):
+@pytest.mark.parametrize("auto_start", [True, False])
+async def test_options_flow_exclude_mode_advanced(auto_start, hass):
     """Test config flow options in exclude mode with advanced options."""
 
     config_entry = _mock_config_entry_with_options_populated()
@@ -157,12 +158,12 @@ async def test_options_flow_exclude_mode_advanced(hass):
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
-            user_input={"auto_start": True, "safe_mode": True},
+            user_input={"auto_start": auto_start, "safe_mode": True},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": True,
+        "auto_start": auto_start,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -213,7 +214,7 @@ async def test_options_flow_exclude_mode_basic(hass):
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -266,7 +267,7 @@ async def test_options_flow_include_mode_basic(hass):
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -332,7 +333,7 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -387,7 +388,7 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -454,7 +455,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -509,7 +510,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -603,7 +604,7 @@ async def test_options_flow_include_mode_basic_accessory(hass):
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
-        "auto_start": False,
+        "auto_start": True,
         "mode": "accessory",
         "filter": {
             "exclude_domains": [],
