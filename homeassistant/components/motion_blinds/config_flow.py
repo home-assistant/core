@@ -81,7 +81,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._key = user_input[CONF_API_KEY]
 
-            connect_gateway_class = ConnectMotionGateway(self.hass, None)
+            connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
             if not await connect_gateway_class.async_connect_gateway(
                 self._host, self._key
             ):
