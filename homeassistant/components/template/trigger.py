@@ -42,9 +42,6 @@ async def async_attach_trigger(
     def template_listener(event, updates):
         """Listen for state changes and calls action."""
         nonlocal delay_cancel
-
-        _LOGGER.warning("template listener: %s %s", event, updates)
-
         result = updates.pop().result
 
         if delay_cancel:
