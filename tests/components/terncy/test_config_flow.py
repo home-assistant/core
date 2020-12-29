@@ -1,5 +1,6 @@
 """Test the Terncy config flow."""
 from homeassistant import config_entries, setup
+from homeassistant.components.terncy.config_flow import _get_discovered_devices
 from homeassistant.components.terncy.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -191,3 +192,9 @@ async def test_begin_pairing(hass):
                 result2["flow_id"], user_input=None
             )
             assert result3["type"] == "create_entry"
+
+
+async def test_get_discovered_hubs(hass):
+    """Test discovery."""
+    hubs = _get_discovered_devices(None)
+    assert isinstance(hubs, dict)
