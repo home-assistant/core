@@ -79,15 +79,11 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, session, api_key, api_secret, markets):
         """Initialize the data object."""
-        self.bittrex = BittrexV3(
-            api_key, api_secret, debug_level=3, reverse_market_names=False
-        )
+        self.bittrex = BittrexV3(api_key, api_secret, reverse_market_names=False)
         self.markets = markets
         self._authenticate()
 
         update_interval = timedelta(seconds=30)
-
-        # TODO: Updating doesn't work
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 

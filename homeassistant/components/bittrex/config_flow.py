@@ -45,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     api_secret = data[CONF_API_SECRET]
 
     try:
-        bittrex = BittrexV3(api_key, api_secret, debug_level=3)
+        bittrex = BittrexV3(api_key, api_secret, reverse_market_names=False)
         bittrex_account = bittrex.get_account()["accountId"]
 
         if not bittrex_account:

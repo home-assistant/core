@@ -23,9 +23,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BittrexEntity(CoordinatorEntity):
     """Defines a base Bittrex entity."""
 
+    def __init__(self, coordinator):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
+        """Icon to use in the frontend."""
         return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
@@ -49,19 +53,21 @@ class Ticker(BittrexEntity):
         self._currency = self.market["symbol"].split("-")[0]
         self._unit_of_measurement = self.market["symbol"].split("-")[1]
 
+        self._name = f"Bittrex Ticker - {self.market['symbol']}"
+        self._state = self.market["lastTradeRate"]
+        self._unique_id = f"bittrex_ticker_{self.market['symbol']})"
+
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Bittrex Ticker ({self.market['symbol']})"
+        return self._name
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.market:
-            return self.market["lastTradeRate"]
-        return None
+        return self._state
 
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
-        return self.market["symbol"]
+        return self._unique_id
