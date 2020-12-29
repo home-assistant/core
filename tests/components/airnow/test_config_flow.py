@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_API_KEY: "abc123",
@@ -169,3 +170,22 @@ async def test_form_unexpected(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_already_exists(hass):
+    """Test that the form aborts if the Lat/Lng is already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_id = f"{CONFIG[CONF_LATITUDE]}-{CONFIG[CONF_LONGITUDE]}"
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=mock_id)
+    mock_entry.add_to_hass(hass)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"

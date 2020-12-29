@@ -37,12 +37,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     # Check that the provided latitude/longitude provide a response
     try:
         test_data = await client.observations.latLong(lat, lng, distance=distance)
-        if not test_data:
-            raise InvalidLocation
+
     except InvalidKeyError as exc:
         raise InvalidAuth from exc
     except AirNowError as exc:
         raise CannotConnect from exc
+
+    if not test_data:
+        raise InvalidLocation
 
     # Validation Succeeded
     return True
