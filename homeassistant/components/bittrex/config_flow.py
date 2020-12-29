@@ -9,10 +9,10 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
+from .errors import CannotConnect, InvalidAuth, InvalidMarket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,15 +133,3 @@ class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return info, errors
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class InvalidMarket(HomeAssistantError):
-    """Error to indicate the market is invalid."""
