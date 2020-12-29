@@ -96,7 +96,7 @@ async def test_config_flow_manual_host_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] == None
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -128,7 +128,7 @@ async def test_config_flow_discovery_1_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] == None
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -164,8 +164,11 @@ async def test_config_flow_discovery_2_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "select"
-    assert result["data_schema"].schema['select_ip'].container == [TEST_HOST, TEST_HOST2]
-    assert result["errors"] == None
+    assert result["data_schema"].schema["select_ip"].container == [
+        TEST_HOST,
+        TEST_HOST2,
+    ]
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -174,7 +177,7 @@ async def test_config_flow_discovery_2_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] == None
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -206,7 +209,7 @@ async def test_config_flow_connection_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] == None
+    assert result["errors"] is None
 
     with patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",

@@ -81,9 +81,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             key = user_input[CONF_API_KEY]
 
             connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
-            if not await connect_gateway_class.async_connect_gateway(
-                self._host, key
-            ):
+            if not await connect_gateway_class.async_connect_gateway(self._host, key):
                 return self.async_abort(reason="connection_error")
             motion_gateway = connect_gateway_class.gateway_device
 
