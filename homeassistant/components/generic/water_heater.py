@@ -146,13 +146,11 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         """Set new target temperatures."""
         self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._async_control_heating()
-        self.schedule_update_ha_state()
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         self._current_operation = operation_mode
         await self._async_control_heating()
-        self.schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -189,7 +187,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         new_state = event.data.get("new_state")
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             # Failsafe
-            _LOGGER.info(
+            _LOGGER.warning(
                 "No Temperature information, entering Failsafe, turning off heater %s",
                 self.heater_entity_id,
             )
@@ -199,7 +197,6 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
             self._current_temperature = float(new_state.state)
 
         await self._async_control_heating()
-        self.async_write_ha_state()
 
     @callback
     def _async_switch_changed(self, event):
@@ -217,20 +214,24 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     async def _async_control_heating(self):
         """Check if we need to turn heating on or off."""
         if self._current_operation == STATE_OFF or self._current_temperature is None:
-            return
-
-        if (
+            pass
+        elif (
             self._current_temperature
             < self._target_temperature - self._temperature_delta
         ):
-            _LOGGER.info("Turning on heater %s", self.heater_entity_id)
+            _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
             await self._async_heater_turn_on()
         else:
-            _LOGGER.info("Turning off heater %s", self.heater_entity_id)
+            _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
             await self._async_heater_turn_off()
+        self.async_write_ha_state()
 
     async def _async_heater_turn_on(self):
         """Turn heater toggleable device on."""
+        heater = self.hass.states.get(self.heater_entity_id)
+        if heater.state == STATE_ON:
+            return
+
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
             HA_DOMAIN, SERVICE_TURN_ON, data, context=self._context
@@ -238,6 +239,10 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
 
     async def _async_heater_turn_off(self):
         """Turn heater toggleable device off."""
+        heater = self.hass.states.get(self.heater_entity_id)
+        if heater.state == STATE_OFF:
+            return
+
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
             HA_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
