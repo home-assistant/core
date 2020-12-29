@@ -100,7 +100,12 @@ omit =
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmp280/sensor.py
-    homeassistant/components/bmw_connected_drive/*
+    homeassistant/components/bmw_connected_drive/__init__.py
+    homeassistant/components/bmw_connected_drive/binary_sensor.py
+    homeassistant/components/bmw_connected_drive/device_tracker.py
+    homeassistant/components/bmw_connected_drive/lock.py
+    homeassistant/components/bmw_connected_drive/notify.py
+    homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
