@@ -143,7 +143,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self._last_input_events_count = dict()
 
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback
     def _async_input_events_handler(self):
