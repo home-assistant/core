@@ -99,6 +99,9 @@ async def test_turn_on_off_heater(hass):
     hass.states.async_set(SENSOR_TEMPERATURE, 53)
     await hass.async_block_till_done()
 
+    hass.states.async_set(SENSOR_TEMPERATURE, 54)
+    await hass.async_block_till_done()
+
     assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
 
 
@@ -111,32 +114,42 @@ async def test_set_operation(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get(SWITCH_HEATER).state == STATE_ON
-    await common.async_set_operation_mode(hass, "off", WATER_HEATER)
+    await common.async_set_operation_mode(hass, STATE_OFF, WATER_HEATER)
     state = hass.states.get(WATER_HEATER)
 
-    assert state.attributes.get("operation_mode") == "off"
-    assert state.state == "off"
+    assert state.attributes.get("operation_mode") == STATE_OFF
+    assert state.state == STATE_OFF
 
 
 async def test_external_switch_interferance(hass):
     """Test external event changes heater switch."""
+    # Start with Water Heater on
     assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
 
-    # increasing temperature turns the heater ON
     hass.states.async_set(SWITCH_HEATER, STATE_ON)
     await hass.async_block_till_done()
 
     assert hass.states.get(SWITCH_HEATER).state == STATE_ON
     state = hass.states.get(WATER_HEATER)
 
-    assert state.attributes.get("operation_mode") == "on"
-    assert state.state == "on"
+    assert state.attributes.get("operation_mode") == STATE_ON
+    assert state.state == STATE_ON
+
+    # Start with Water Heater off
+    await common.async_set_operation_mode(hass, STATE_OFF, WATER_HEATER)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(SWITCH_HEATER, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert state.attributes.get("operation_mode") == STATE_ON
+    assert state.state == STATE_ON
 
 
 async def test_invalid_heater_and_sensor_events(hass):
     """Test invalid event changes in heater switch and temperature sensor."""
     state = hass.states.get(WATER_HEATER)
-    assert state.attributes.get("operation_mode") == "on"
+    assert state.attributes.get("operation_mode") == STATE_ON
     assert state.attributes.get("current_temperature") == 48
 
     # switch unavailable -> water_heater unavailable
