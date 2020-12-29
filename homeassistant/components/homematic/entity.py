@@ -147,8 +147,7 @@ class HMDevice(Entity):
         def _channel_list_to_single_channel(channel_list):
             if len(channel_list) == 1:
                 return channel_list[0]
-            else:
-                return self._channel
+            return self._channel
 
         channel_dict = {
             node: _channel_list_to_single_channel(channels)
