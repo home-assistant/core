@@ -14,14 +14,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "friendly_name": "Utilizar nombres descriptivos para los tipos de recogida (cuando sea posible)"
-                }
-            }
-        }
     }
 }

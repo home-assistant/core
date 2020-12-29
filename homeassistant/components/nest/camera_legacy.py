@@ -4,10 +4,9 @@ import logging
 
 import requests
 
+from homeassistant.components import nest
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
 from homeassistant.util.dt import utcnow
-
-from .const import DATA_NEST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_legacy_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
-    camera_devices = await hass.async_add_executor_job(hass.data[DATA_NEST].cameras)
+    camera_devices = await hass.async_add_executor_job(
+        hass.data[nest.DATA_NEST].cameras
+    )
     cameras = [NestCamera(structure, device) for structure, device in camera_devices]
     async_add_entities(cameras, True)
 
@@ -62,7 +63,7 @@ class NestCamera(Camera):
     def device_info(self):
         """Return information about the device."""
         return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
+            "identifiers": {(nest.DOMAIN, self.device.device_id)},
             "name": self.device.name_long,
             "manufacturer": "Nest Labs",
             "model": "Camera",

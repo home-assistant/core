@@ -1,11 +1,8 @@
 """Support for Enphase Envoy solar energy monitor."""
-
-from datetime import timedelta
 import logging
 
-import async_timeout
 from envoy_reader.envoy_reader import EnvoyReader
-import httpx
+import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -18,13 +15,8 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,10 +38,9 @@ SENSORS = {
     "inverters": ("Envoy Inverter", POWER_WATT),
 }
 
+
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -64,9 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    homeassistant, config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -74,99 +63,55 @@ async def async_setup_platform(
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
-    if "inverters" in monitored_conditions:
-        envoy_reader = EnvoyReader(ip_address, username, password, inverters=True)
-    else:
-        envoy_reader = EnvoyReader(ip_address, username, password)
-
-    try:
-        await envoy_reader.getData()
-    except httpx.HTTPStatusError as err:
-        _LOGGER.error("Authentication failure during setup: %s", err)
-        return
-    except httpx.HTTPError as err:
-        raise PlatformNotReady from err
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        data = {}
-        async with async_timeout.timeout(30):
-            try:
-                await envoy_reader.getData()
-            except httpx.HTTPError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-            for condition in monitored_conditions:
-                if condition != "inverters":
-                    data[condition] = await getattr(envoy_reader, condition)()
-                else:
-                    data["inverters_production"] = await getattr(
-                        envoy_reader, "inverters_production"
-                    )()
-
-            _LOGGER.debug("Retrieved data from API: %s", data)
-
-            return data
-
-    coordinator = DataUpdateCoordinator(
-        homeassistant,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-    )
-
-    await coordinator.async_refresh()
-
-    if coordinator.data is None:
-        raise PlatformNotReady
+    envoy_reader = EnvoyReader(ip_address, username, password)
 
     entities = []
+    # Iterate through the list of sensors
     for condition in monitored_conditions:
-        entity_name = ""
-        if (
-            condition == "inverters"
-            and coordinator.data.get("inverters_production") is not None
-        ):
-            for inverter in coordinator.data["inverters_production"]:
-                entity_name = f"{name}{SENSORS[condition][0]} {inverter}"
-                split_name = entity_name.split(" ")
-                serial_number = split_name[-1]
-                entities.append(
-                    Envoy(
-                        condition,
-                        entity_name,
-                        serial_number,
-                        SENSORS[condition][1],
-                        coordinator,
-                    )
+        if condition == "inverters":
+            try:
+                inverters = await envoy_reader.inverters_production()
+            except requests.exceptions.HTTPError:
+                _LOGGER.warning(
+                    "Authentication for Inverter data failed during setup: %s",
+                    ip_address,
                 )
-        elif condition != "inverters":
-            entity_name = f"{name}{SENSORS[condition][0]}"
+                continue
+
+            if isinstance(inverters, dict):
+                for inverter in inverters:
+                    entities.append(
+                        Envoy(
+                            envoy_reader,
+                            condition,
+                            f"{name}{SENSORS[condition][0]} {inverter}",
+                            SENSORS[condition][1],
+                        )
+                    )
+
+        else:
             entities.append(
                 Envoy(
+                    envoy_reader,
                     condition,
-                    entity_name,
-                    None,
+                    f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
-                    coordinator,
                 )
             )
-
     async_add_entities(entities)
 
 
-class Envoy(CoordinatorEntity):
-    """Envoy entity."""
+class Envoy(Entity):
+    """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, sensor_type, name, serial_number, unit, coordinator):
-        """Initialize Envoy entity."""
+    def __init__(self, envoy_reader, sensor_type, name, unit):
+        """Initialize the sensor."""
+        self._envoy_reader = envoy_reader
         self._type = sensor_type
         self._name = name
-        self._serial_number = serial_number
         self._unit_of_measurement = unit
-
-        super().__init__(coordinator)
+        self._state = None
+        self._last_reported = None
 
     @property
     def name(self):
@@ -176,20 +121,7 @@ class Envoy(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._type != "inverters":
-            value = self.coordinator.data.get(self._type)
-
-        elif (
-            self._type == "inverters"
-            and self.coordinator.data.get("inverters_production") is not None
-        ):
-            value = self.coordinator.data.get("inverters_production").get(
-                self._serial_number
-            )[0]
-        else:
-            return None
-
-        return value
+        return self._state
 
     @property
     def unit_of_measurement(self):
@@ -204,13 +136,33 @@ class Envoy(CoordinatorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if (
-            self._type == "inverters"
-            and self.coordinator.data.get("inverters_production") is not None
-        ):
-            value = self.coordinator.data.get("inverters_production").get(
-                self._serial_number
-            )[1]
-            return {"last_reported": value}
+        if self._type == "inverters":
+            return {"last_reported": self._last_reported}
 
         return None
+
+    async def async_update(self):
+        """Get the energy production data from the Enphase Envoy."""
+        if self._type != "inverters":
+            _state = await getattr(self._envoy_reader, self._type)()
+            if isinstance(_state, int):
+                self._state = _state
+            else:
+                _LOGGER.error(_state)
+                self._state = None
+
+        elif self._type == "inverters":
+            try:
+                inverters = await (self._envoy_reader.inverters_production())
+            except requests.exceptions.HTTPError:
+                _LOGGER.warning(
+                    "Authentication for Inverter data failed during update: %s",
+                    self._envoy_reader.host,
+                )
+
+            if isinstance(inverters, dict):
+                serial_number = self._name.split(" ")[2]
+                self._state = inverters[serial_number][0]
+                self._last_reported = inverters[serial_number][1]
+            else:
+                self._state = None

@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Geslo",
-                    "port": "Vrata",
-                    "username": "Uporabni\u0161ko ime"
+                    "port": "Vrata"
                 }
             }
         }

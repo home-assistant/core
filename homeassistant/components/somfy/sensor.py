@@ -12,19 +12,21 @@ SUPPORTED_CATEGORIES = {Category.HVAC.value}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Somfy sensor platform."""
+    """Set up the Somfy climate platform."""
 
-    domain_data = hass.data[DOMAIN]
-    coordinator = domain_data[COORDINATOR]
-    api = domain_data[API]
+    def get_thermostats():
+        """Retrieve thermostats."""
+        domain_data = hass.data[DOMAIN]
+        coordinator = domain_data[COORDINATOR]
+        api = domain_data[API]
 
-    sensors = [
-        SomfyThermostatBatterySensor(coordinator, device_id, api)
-        for device_id, device in coordinator.data.items()
-        if SUPPORTED_CATEGORIES & set(device.categories)
-    ]
+        return [
+            SomfyThermostatBatterySensor(coordinator, device_id, api)
+            for device_id, device in coordinator.data.items()
+            if SUPPORTED_CATEGORIES & set(device.categories)
+        ]
 
-    async_add_entities(sensors)
+    async_add_entities(await hass.async_add_executor_job(get_thermostats))
 
 
 class SomfyThermostatBatterySensor(SomfyEntity):

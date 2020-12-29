@@ -11,7 +11,7 @@
     },
     "device_automation": {
         "action_type": {
-            "notify": "Sende eine Benachrichtigung"
+            "notify": "Eine Benachrichtigung senden"
         }
     }
 }

@@ -98,10 +98,6 @@
             "off": "Normaal",
             "on": "Laag"
         },
-        "battery_charging": {
-            "off": "Niet aan het opladen",
-            "on": "Opladen"
-        },
         "cold": {
             "off": "Normaal",
             "on": "Koud"
@@ -127,7 +123,6 @@
             "on": "Heet"
         },
         "light": {
-            "off": "Geen licht",
             "on": "Licht gedetecteerd"
         },
         "lock": {
@@ -142,10 +137,6 @@
             "off": "Niet gedetecteerd",
             "on": "Gedetecteerd"
         },
-        "moving": {
-            "off": "Niet bewegend",
-            "on": "In beweging"
-        },
         "occupancy": {
             "off": "Niet gedetecteerd",
             "on": "Gedetecteerd"
@@ -153,10 +144,6 @@
         "opening": {
             "off": "Gesloten",
             "on": "Open"
-        },
-        "plug": {
-            "off": "Unplugged",
-            "on": "Ingeplugd"
         },
         "presence": {
             "off": "Afwezig",

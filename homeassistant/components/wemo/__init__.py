@@ -11,12 +11,9 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 
@@ -93,7 +90,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass, entry):
     """Set up a wemo config entry."""
     config = hass.data[DOMAIN].pop("config")
 
@@ -101,16 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
     await hass.async_add_executor_job(registry.start)
 
-    wemo_dispatcher = WemoDispatcher(entry)
-    wemo_discovery = WemoDiscovery(hass, wemo_dispatcher)
-
-    async def async_stop_wemo(event):
+    def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
-        await hass.async_add_executor_job(registry.stop)
-        wemo_discovery.async_stop_discovery()
+        registry.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
+
+    devices = {}
 
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:
@@ -121,31 +116,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 for host, port in static_conf
             ]
         ):
-            if device:
-                wemo_dispatcher.async_add_unique_device(hass, device)
+            if device is None:
+                continue
+
+            devices.setdefault(device.serialnumber, device)
 
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
-        await wemo_discovery.async_discover_and_schedule()
+        _LOGGER.debug("Scanning network for WeMo devices...")
+        for device in await hass.async_add_executor_job(pywemo.discover_devices):
+            devices.setdefault(
+                device.serialnumber,
+                device,
+            )
 
-    return True
+    loaded_components = set()
 
-
-class WemoDispatcher:
-    """Dispatch WeMo devices to the correct platform."""
-
-    def __init__(self, config_entry: ConfigEntry):
-        """Initialize the WemoDispatcher."""
-        self._config_entry = config_entry
-        self._added_serial_numbers = set()
-        self._loaded_components = set()
-
-    @callback
-    def async_add_unique_device(
-        self, hass: HomeAssistant, device: pywemo.WeMoDevice
-    ) -> None:
-        """Add a WeMo device to hass if it has not already been added."""
-        if device.serialnumber in self._added_serial_numbers:
-            return
+    for device in devices.values():
+        _LOGGER.debug(
+            "Adding WeMo device at %s:%i (%s)",
+            device.host,
+            device.port,
+            device.serialnumber,
+        )
 
         component = WEMO_MODEL_DISPATCH.get(device.model_name, SWITCH_DOMAIN)
 
@@ -154,13 +146,11 @@ class WemoDispatcher:
         # - Component is being loaded, add to backlog
         # - Component is loaded, backlog is gone, dispatch discovery
 
-        if component not in self._loaded_components:
+        if component not in loaded_components:
             hass.data[DOMAIN]["pending"][component] = [device]
-            self._loaded_components.add(component)
+            loaded_components.add(component)
             hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, component
-                )
+                hass.config_entries.async_forward_entry_setup(entry, component)
             )
 
         elif component in hass.data[DOMAIN]["pending"]:
@@ -173,48 +163,7 @@ class WemoDispatcher:
                 device,
             )
 
-        self._added_serial_numbers.add(device.serialnumber)
-
-
-class WemoDiscovery:
-    """Use SSDP to discover WeMo devices."""
-
-    ADDITIONAL_SECONDS_BETWEEN_SCANS = 10
-    MAX_SECONDS_BETWEEN_SCANS = 300
-
-    def __init__(self, hass: HomeAssistant, wemo_dispatcher: WemoDispatcher) -> None:
-        """Initialize the WemoDiscovery."""
-        self._hass = hass
-        self._wemo_dispatcher = wemo_dispatcher
-        self._stop = None
-        self._scan_delay = 0
-
-    async def async_discover_and_schedule(self, *_) -> None:
-        """Periodically scan the network looking for WeMo devices."""
-        _LOGGER.debug("Scanning network for WeMo devices...")
-        try:
-            for device in await self._hass.async_add_executor_job(
-                pywemo.discover_devices
-            ):
-                self._wemo_dispatcher.async_add_unique_device(self._hass, device)
-        finally:
-            # Run discovery more frequently after hass has just started.
-            self._scan_delay = min(
-                self._scan_delay + self.ADDITIONAL_SECONDS_BETWEEN_SCANS,
-                self.MAX_SECONDS_BETWEEN_SCANS,
-            )
-            self._stop = async_call_later(
-                self._hass,
-                self._scan_delay,
-                self.async_discover_and_schedule,
-            )
-
-    @callback
-    def async_stop_discovery(self) -> None:
-        """Stop the periodic background scanning."""
-        if self._stop:
-            self._stop()
-            self._stop = None
+    return True
 
 
 def validate_static_config(host, port):

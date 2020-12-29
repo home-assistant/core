@@ -42,7 +42,6 @@ CONF_SAMPLE_RATE = "sample_rate"
 CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_VOICES = [
-    "Olivia",  # Female, Australian, Neural
     "Zhiyu",  # Chinese
     "Mads",
     "Naja",  # Danish

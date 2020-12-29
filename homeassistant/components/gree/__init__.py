@@ -1,14 +1,12 @@
 """The Gree Climate integration."""
-import asyncio
 import logging
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .bridge import CannotConnect, DeviceDataUpdateCoordinator, DeviceHelper
-from .const import COORDINATOR, DOMAIN
+from .bridge import CannotConnect, DeviceHelper
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,15 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         devices.append(device)
 
-    coordinators = [DeviceDataUpdateCoordinator(hass, d) for d in devices]
-    await asyncio.gather(*[x.async_refresh() for x in coordinators])
-
-    hass.data[DOMAIN][COORDINATOR] = coordinators
+    hass.data[DOMAIN]["devices"] = devices
+    hass.data[DOMAIN]["pending"] = devices
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
     )
 
     return True
@@ -58,15 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    results = asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN),
-        hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
+    unload_ok = await hass.config_entries.async_forward_entry_unload(
+        entry, CLIMATE_DOMAIN
     )
 
-    unload_ok = all(await results)
     if unload_ok:
         hass.data[DOMAIN].pop("devices", None)
-        hass.data[DOMAIN].pop(CLIMATE_DOMAIN, None)
-        hass.data[DOMAIN].pop(SWITCH_DOMAIN, None)
+        hass.data[DOMAIN].pop("pending", None)
 
     return unload_ok

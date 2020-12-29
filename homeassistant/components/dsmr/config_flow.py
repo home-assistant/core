@@ -35,15 +35,11 @@ class DSMRConnection:
         self._port = port
         self._dsmr_version = dsmr_version
         self._telegram = {}
-        if dsmr_version == "5L":
-            self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
-        else:
-            self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
 
     def equipment_identifier(self):
         """Equipment identifier."""
-        if self._equipment_identifier in self._telegram:
-            dsmr_object = self._telegram[self._equipment_identifier]
+        if obis_ref.EQUIPMENT_IDENTIFIER in self._telegram:
+            dsmr_object = self._telegram[obis_ref.EQUIPMENT_IDENTIFIER]
             return getattr(dsmr_object, "value", None)
 
     def equipment_identifier_gas(self):
@@ -56,7 +52,7 @@ class DSMRConnection:
         """Test if we can validate connection with the device."""
 
         def update_telegram(telegram):
-            if self._equipment_identifier in telegram:
+            if obis_ref.EQUIPMENT_IDENTIFIER in telegram:
                 self._telegram = telegram
                 transport.close()
 

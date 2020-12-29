@@ -14,9 +14,6 @@
                     "mfa_code": "MFA-code (6-cijfers)"
                 }
             },
-            "reauth_confirm": {
-                "title": "Vul uw Abode-inloggegevens in"
-            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

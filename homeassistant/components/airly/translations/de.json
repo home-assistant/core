@@ -18,10 +18,5 @@
                 "title": "Airly"
             }
         }
-    },
-    "system_health": {
-        "info": {
-            "can_reach_server": "Airly Server erreichen"
-        }
     }
 }

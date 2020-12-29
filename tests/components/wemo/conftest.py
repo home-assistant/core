@@ -1,6 +1,4 @@
 """Fixtures for pywemo."""
-import asyncio
-
 import pytest
 import pywemo
 
@@ -28,11 +26,9 @@ def pywemo_registry_fixture():
     registry = create_autospec(pywemo.SubscriptionRegistry, instance=True)
 
     registry.callbacks = {}
-    registry.semaphore = asyncio.Semaphore(value=0)
 
     def on_func(device, type_filter, callback):
         registry.callbacks[device.name] = callback
-        registry.semaphore.release()
 
     registry.on.side_effect = on_func
 

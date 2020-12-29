@@ -207,6 +207,7 @@ html_theme_options = {
     "github_repo": PROJECT_GITHUB_REPOSITORY,
     "github_type": "star",
     "github_banner": True,
+    "travis_button": True,
     "touch_icon": "logo-apple.png",
     # 'fixed_sidebar': True, # Re-enable when we have more content
 }
