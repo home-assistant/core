@@ -42,9 +42,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the component."""
     hass.data.setdefault(DOMAIN, {})
 
-    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
-        return True
-
     return True
 
 
@@ -73,13 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Bittrex config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
 

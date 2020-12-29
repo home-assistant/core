@@ -2,7 +2,7 @@
 import logging
 from typing import Dict, List, Optional
 
-from bittrex_api.bittrex import Bittrex
+from bittrex_api.bittrex import BittrexV3
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -41,11 +41,12 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     """
 
     markets = []
+    api_key = data[CONF_API_KEY]
+    api_secret = data[CONF_API_SECRET]
 
     try:
-        # TODO: Use data coordinator from init
-        bittrex = Bittrex(data[CONF_API_KEY], data[CONF_API_SECRET], debug_level=3)
-        bittrex_account = bittrex.v3.get_account()["accountId"]
+        bittrex = BittrexV3(api_key, api_secret, debug_level=3)
+        bittrex_account = bittrex.get_account()["accountId"]
 
         if not bittrex_account:
             raise InvalidAuth
@@ -53,7 +54,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
         raise InvalidAuth from error
 
     try:
-        marketEntries = bittrex.v3.get_markets()
+        marketEntries = bittrex.get_markets()
 
         for marketEntry in marketEntries:
             markets.append(marketEntry["symbol"])

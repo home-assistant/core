@@ -52,7 +52,7 @@ class Ticker(BittrexEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.market["symbol"]
+        return f"Bittrex Ticker ({self.market['symbol']})"
 
     @property
     def state(self):
