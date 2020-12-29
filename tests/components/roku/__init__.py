@@ -8,7 +8,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry, load_fixture
@@ -16,9 +16,21 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 HOST = "192.168.1.160"
 NAME = "Roku 3"
+SERIAL = "1GU48T017973"
+
+HOMEKIT_FRIENDLY_NAME = NAME
+
 SSDP_LOCATION = "http://192.168.1.160/"
 UPNP_FRIENDLY_NAME = "My Roku 3"
-UPNP_SERIAL = "1GU48T017973"
+UPNP_SERIAL = SERIAL
+
+MOCK_HOMEKIT_DISCOVERY_INFO = {
+    CONF_NAME: NAME,
+    CONF_HOST: HOST,
+    "properties: {
+        CONF_ID: SERIAL,
+    },
+}
 
 MOCK_SSDP_DISCOVERY_INFO = {
     ATTR_SSDP_LOCATION: SSDP_LOCATION,
