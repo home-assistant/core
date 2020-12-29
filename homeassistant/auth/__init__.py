@@ -124,7 +124,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
                     flow.available_mfa_modules = modules
                     return await flow.async_step_select_mfa_module()
 
-        result["result"] = await self.auth_manager.async_get_or_create_user(credentials)
+        result["result"] = credentials
         return result
 
 
@@ -367,6 +367,7 @@ class AuthManager:
         client_icon: Optional[str] = None,
         token_type: Optional[str] = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
+        cred: Optional[models.Credentials] = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -415,6 +416,7 @@ class AuthManager:
             client_icon,
             token_type,
             access_token_expiration,
+            cred,
         )
 
     async def async_get_refresh_token(
@@ -454,7 +456,7 @@ class AuthManager:
         ).decode()
 
     async def async_validate_access_token(
-        self, token: str
+        self, token: str, remote: Optional[str] = None
     ) -> Optional[models.RefreshToken]:
         """Return refresh token if an access token is valid."""
         try:

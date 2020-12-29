@@ -162,7 +162,10 @@ async def test_create_new_user(hass):
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
     assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    user = step["result"]
+    cred = step["result"]
+    assert cred is not None
+
+    user = await manager.async_get_or_create_user(cred)
     assert user is not None
     assert user.is_owner is False
     assert user.name == "Test Name"
@@ -229,7 +232,8 @@ async def test_login_as_existing_user(mock_hass):
     )
     assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    user = step["result"]
+    cred = step["result"]
+    user = await manager.async_get_user_by_credentials(cred)
     assert user is not None
     assert user.id == "mock-user"
     assert user.is_owner is False
@@ -259,7 +263,8 @@ async def test_linking_user_to_two_auth_providers(hass, hass_storage):
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    user = step["result"]
+    cred = step["result"]
+    user = await manager.async_get_or_create_user(cred)
     assert user is not None
 
     step = await manager.login_flow.async_init(
@@ -293,13 +298,15 @@ async def test_saving_loading(hass, hass_storage):
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    user = step["result"]
+    cred = step["result"]
+    user = await manager.async_get_or_create_user(cred)
+
     await manager.async_activate_user(user)
     # the first refresh token will be used to create access token
-    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID, cred=cred)
     manager.async_create_access_token(refresh_token, "192.168.0.1")
     # the second refresh token will not be used
-    await manager.async_create_refresh_token(user, "dummy-client")
+    await manager.async_create_refresh_token(user, "dummy-client", cred=cred)
 
     await flush_store(manager._store._store)
 
@@ -792,7 +799,8 @@ async def test_enable_mfa_for_user(hass, hass_storage):
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    user = step["result"]
+    cred = step["result"]
+    user = await manager.async_get_or_create_user(cred)
     assert user is not None
 
     # new user don't have mfa enabled

@@ -293,16 +293,16 @@ class TokenView(HomeAssistantView):
                 status_code=HTTP_BAD_REQUEST,
             )
 
-        user = self._retrieve_user(client_id, RESULT_TYPE_USER, code)
+        cred = self._retrieve_user(client_id, RESULT_TYPE_CREDENTIALS, code)
 
-        if user is None or not isinstance(user, User):
+        if cred is None or not isinstance(cred, Credentials):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTP_BAD_REQUEST,
             )
 
         # refresh user
-        user = await hass.auth.async_get_user(user.id)
+        user = await hass.auth.async_get_user_by_credentials(cred)
 
         if not user.is_active:
             return self.json(
@@ -310,7 +310,9 @@ class TokenView(HomeAssistantView):
                 status_code=HTTP_FORBIDDEN,
             )
 
-        refresh_token = await hass.auth.async_create_refresh_token(user, client_id)
+        refresh_token = await hass.auth.async_create_refresh_token(
+            user, client_id, cred=cred
+        )
         access_token = hass.auth.async_create_access_token(refresh_token, remote_addr)
 
         return self.json(
