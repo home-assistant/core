@@ -13,10 +13,10 @@ from homeassistant.setup import async_setup_component
 from tests.async_mock import patch
 from tests.components.roku import (
     HOMEKIT_HOST,
-    HOMEKIT_NAME,
     HOST,
     MOCK_HOMEKIT_DISCOVERY_INFO,
     MOCK_SSDP_DISCOVERY_INFO,
+    NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
     mock_connection,
     setup_integration,
@@ -135,7 +135,7 @@ async def test_homekit_discovery(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the homekit discovery flow."""
-    mock_connection(aioclient_mock)
+    mock_connection(aioclient_mock, device="rokutv", host=HOMEKIT_HOST)
 
     discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
     result = await hass.config_entries.flow.async_init(
@@ -144,7 +144,7 @@ async def test_homekit_discovery(
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"] == {CONF_NAME: HOMEKIT_NAME}
+    assert result["description_placeholders"] == {CONF_NAME: NAME_ROKUTV}
 
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
@@ -158,11 +158,11 @@ async def test_homekit_discovery(
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOMEKIT_NAME
+    assert result["title"] == NAME_ROKUTV
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOMEKIT_HOST
-    assert result["data"][CONF_NAME] == HOMEKIT_NAME
+    assert result["data"][CONF_NAME] == NAME_ROKUTV
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
