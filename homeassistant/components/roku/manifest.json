@@ -3,6 +3,9 @@
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/integrations/roku",
   "requirements": ["rokuecp==0.6.0"],
+  "homekit": {
+    "models": "Roku"
+  },
   "ssdp": [
     {
       "st": "roku:ecp",
