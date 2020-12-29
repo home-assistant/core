@@ -88,21 +88,24 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_homekit(self, discovery_info):
         """Handle a flow initialized by homekit discovery."""
         host = discovery_info["host"]
-
-        await self.async_set_unique_id(discovery_info["properties"]["id"])
-        self._abort_if_unique_id_configured({CONF_HOST: host})
-
         name = discovery_info["name"]
-        self.discovery_info.update({CONF_HOST: host, CONF_NAME: name})
 
         try:
-            await validate_input(self.hass, self.discovery_info)
+            info = await validate_input(self.hass, self.discovery_info)
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
+
+        await self.async_set_unique_id(info["serial_number"])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update({"title_placeholders": {"name": name}})
+
+        self.discovery_info.update({CONF_HOST: host, CONF_NAME: name})
 
         return await self.async_step_discovery_confirm()
 
