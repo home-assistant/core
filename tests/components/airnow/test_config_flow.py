@@ -172,7 +172,7 @@ async def test_form_unexpected(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_exists(hass):
+async def test_entry_already_exists(hass):
     """Test that the form aborts if the Lat/Lng is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
