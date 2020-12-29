@@ -3,6 +3,7 @@
 import logging
 
 from motionblinds import BlindType
+import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -15,9 +16,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -27,6 +26,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_GATEWAY,
     MANUFACTURER,
+    SERVICE_SET_ABSOLUTE_POSITION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +55,12 @@ TILT_DEVICE_MAP = {
 
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: DEVICE_CLASS_SHADE,
+}
+
+
+SET_ABSOLUTE_POSITION_SCHEMA = {
+    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
+    vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 
 
@@ -108,6 +114,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
 
     async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SET_ABSOLUTE_POSITION,
+        SET_ABSOLUTE_POSITION_SCHEMA,
+        SERVICE_SET_ABSOLUTE_POSITION,
+    )
 
 
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
@@ -170,33 +183,10 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self._blind.position == 100
 
-    @callback
-    def _push_callback(self):
-        """Update entity state when a push has been received."""
-        self.schedule_update_ha_state(force_refresh=False)
-
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
-        self._blind.Register_callback(self.unique_id, self._push_callback)
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
-        )
+        self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
-
-    def signal_handler(self, data):
-        """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
-
-        if entity_ids == ENTITY_MATCH_NONE:
-            return
-
-        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
-            params = {
-                key: value
-                for key, value in data.items()
-                if key not in ["entity_id", "method"]
-            }
-            getattr(self, data["method"])(**params)
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
