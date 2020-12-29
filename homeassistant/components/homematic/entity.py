@@ -130,24 +130,37 @@ class HMDevice(Entity):
 
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
-        for metadata in (
-            self._hmdevice.SENSORNODE,
-            self._hmdevice.BINARYNODE,
-            self._hmdevice.ATTRIBUTENODE,
-            self._hmdevice.WRITENODE,
-            self._hmdevice.EVENTNODE,
+        # Ordered list of nodes to determine priority when subscribing to
+        # events. Only one channel per parameter should be subscribed to
+        # to avoid jumping values.
+        # E.g., if a sensor node is given, that one should be used.
+        # Highest priority is on the bottom
+        node_priority = [
             self._hmdevice.ACTIONNODE,
-        ):
-            for node, channels in metadata.items():
-                # Data is needed for this instance
-                if node in self._data:
-                    # chan is current channel
-                    if len(channels) == 1:
-                        channel = channels[0]
-                    else:
-                        channel = self._channel
-                    # Remember the channel for this attribute to ignore invalid events later
-                    self._channel_map.add(f"{node}:{channel!s}")
+            self._hmdevice.EVENTNODE,
+            self._hmdevice.WRITENODE,
+            self._hmdevice.ATTRIBUTENODE,
+            self._hmdevice.BINARYNODE,
+            self._hmdevice.SENSORNODE,
+        ]
+
+        def _channel_list_to_single_channel(channel_list):
+            if len(channel_list) == 1:
+                return channel_list[0]
+            else:
+                return self._channel
+
+        channel_dict = {
+            node: _channel_list_to_single_channel(channels)
+            for metadata in node_priority
+            for node, channels in metadata.items()
+            if node in self._data  # Data is needed for this instance
+        }
+
+        for node, channel in channel_dict.items():
+            # Remember the channel for this attribute to ignore invalid events later
+            self._channel_map.add(f"{node}:{channel!s}")
+        _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))
 
         # Set callbacks
         self._hmdevice.setEventCallback(callback=self._hm_event_callback, bequeath=True)
