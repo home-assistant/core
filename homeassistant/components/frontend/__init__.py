@@ -341,6 +341,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)
 
+    if is_dev:
+        from .dev import async_setup_frontend_dev
+
+        async_setup_frontend_dev(hass)
+
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
