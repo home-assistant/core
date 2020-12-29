@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for market in coordinator.data:
         entities.append(Ticker(coordinator, market["symbol"]))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities, False)
 
 
 class BittrexEntity(CoordinatorEntity):

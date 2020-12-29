@@ -55,9 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=f"{coordinator.name}")
-
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
@@ -74,6 +71,8 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         self.symbols = symbols
         self._authenticate()
 
+        self.hass = hass
+
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     def _authenticate(self):
@@ -86,7 +85,7 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as error:
             raise ConfigEntryNotReady from error
 
-    async def _get_tickers(self):
+    def _get_tickers(self):
         """Get the latest tickers."""
         try:
             result = self.bittrex.get_tickers()
@@ -98,7 +97,7 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch Bittrex data."""
         try:
-            tickers = await self._get_tickers()
+            tickers = await self.hass.async_add_executor_job(self._get_tickers)
             data = []
 
             for symbol in self.symbols:
