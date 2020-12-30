@@ -93,6 +93,8 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._host_already_configured(discovery_info[CONF_HOST]):
             return self.async_abort(reason="already_configured")
 
+        self.discovery_info.update({CONF_HOST: discovery_info["host"]})
+
         try:
             info = await validate_input(self.hass, self.discovery_info)
         except RokuError:
@@ -107,10 +109,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": info["title"]}})
-
-        self.discovery_info.update(
-            {CONF_HOST: discovery_info["host"], CONF_NAME: info["title"]},
-        )
+        self.discovery_info.update({CONF_NAME: info["title"]})
 
         return await self.async_step_discovery_confirm()
 
