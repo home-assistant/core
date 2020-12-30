@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Old way of setting up the wiz_light component."""
     hass.data[DOMAIN] = {}
 

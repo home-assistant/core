@@ -38,13 +38,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=user_input[CONF_NAME], data=user_input
                     )
-                return self.async_abort(reason="no_IP")
+                errors["base"] = "no_IP"
             except WizLightTimeOutError:
-                return self.async_abort(reason="bulb_time_out")
+                errors["base"] = "bulb_time_out"
             except ConnectionRefusedError:
-                return self.async_abort(reason="can_not_connect")
+                errors["base"] = "cannot_connect"
             except WizLightConnectionError:
-                return self.async_abort(reason="no_wiz_light")
+                errors["base"] = "no_wiz_light"
             except AbortFlow:
                 return self.async_abort(reason="single_instance_allowed")
         return self.async_show_form(

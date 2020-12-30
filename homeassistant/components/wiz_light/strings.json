@@ -2,9 +2,22 @@
   "title": "WiZ Light integration",
   "config": {
     "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip_address%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "bulb_time_out": "[%key:common::config_flow::error::bulb_time_out%]",
+      "no_wiz_light": "[%key:common::config_flow::error::no_wiz_light%]",
+      "no_IP": "[%key:common::config_flow::error::no_IP%]"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
