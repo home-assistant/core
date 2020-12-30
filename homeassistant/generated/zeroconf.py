@@ -78,6 +78,10 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*"
+        },
+        {
+            "domain": "shelly",
+            "name": "Shelly*"
         }
     ],
     "_ipp._tcp.local.": [

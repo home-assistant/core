@@ -4,6 +4,9 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/shelly",
   "requirements": ["aioshelly==0.5.1"],
-  "zeroconf": [{ "type": "_http._tcp.local.", "name": "shelly*" }],
+  "zeroconf": [
+    { "type": "_http._tcp.local.", "name": "shelly*" },
+    { "type": "_http._tcp.local.", "name": "Shelly*" }
+  ],
   "codeowners": ["@balloob", "@bieniu", "@thecode"]
 }
