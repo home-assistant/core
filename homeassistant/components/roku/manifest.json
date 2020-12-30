@@ -5,10 +5,10 @@
   "requirements": ["rokuecp==0.6.0"],
   "homekit": {
     "models": [
-      "C105X",
       "3810X",
       "4660X",
-      "7820X"
+      "7820X",
+      "C105X"
     ]
   },
   "ssdp": [
