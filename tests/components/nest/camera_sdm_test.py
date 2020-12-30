@@ -387,6 +387,13 @@ async def test_camera_image_from_last_event(hass, auth):
     assert auth.url == TEST_IMAGE_URL
     assert auth.headers == IMAGE_AUTHORIZATION_HEADERS
 
+    # An additional fetch uses the cache and does not send another RPC
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_EVENT
+    # Verify expected image fetch request was captured
+    assert auth.url == TEST_IMAGE_URL
+    assert auth.headers == IMAGE_AUTHORIZATION_HEADERS
+
 
 async def test_camera_image_from_event_not_supported(hass, auth):
     """Test fallback to stream image when event images are not supported."""
