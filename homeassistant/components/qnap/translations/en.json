@@ -13,9 +13,9 @@
             "verify_ssl":"Verify SSL Certificat",
             "timeout":"Timeout",
             "monitored_conditions":"Monitors",
-            "nics":"Nic cards",
-            "volumes":"Volumes",
-            "drives":"Drives"
+            "nics":"Nic cards (ex: eth0,eth1)",
+            "volumes":"List of volumes to monitor (ex: media,data1)",
+            "drives":"List of drives to monitor (ex: 1,2)"
           }
         }
       },
@@ -33,7 +33,7 @@
             "monitored_conditions":"Monitors",
             "nics":"Nic cards (ex: eth0,eth1)",
             "volumes":"List of volumes to monitor (ex: media,data1)",
-            "drives":"List of drives to monitor (ex: 1,2)"            
+            "drives":"List of drives to monitor (ex: 1,2)"
           }
         }
       }
