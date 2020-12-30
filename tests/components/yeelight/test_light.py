@@ -137,7 +137,14 @@ async def test_services(hass: HomeAssistant, caplog):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    async def _async_test_service(service, data, method, payload=None, domain=DOMAIN, failure_side_effect=BulbException):
+    async def _async_test_service(
+        service,
+        data,
+        method,
+        payload=None,
+        domain=DOMAIN,
+        failure_side_effect=BulbException,
+    ):
         err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
 
         # success
