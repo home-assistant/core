@@ -5,6 +5,7 @@ import json
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -15,6 +16,7 @@ async def init_integration(
     aioclient_mock: AiohttpClientMocker,
     rgbw: bool = False,
     skip_setup: bool = False,
+    device_registry: DeviceRegistry = None,
 ) -> MockConfigEntry:
     """Set up the WLED integration in Home Assistant."""
 
@@ -46,10 +48,19 @@ async def init_integration(
     )
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.168.1.123", CONF_MAC: "aabbccddeeff"}
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.123", CONF_MAC: data["info"]["mac"]},
+        title="WLED Mock Config Entry",
     )
 
     entry.add_to_hass(hass)
+
+    if device_registry is not None:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, entry.data.get("mac"))},
+            name=data["info"]["name"],
+        )
 
     if not skip_setup:
         await hass.config_entries.async_setup(entry.entry_id)

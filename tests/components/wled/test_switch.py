@@ -25,10 +25,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switch_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test the creation and values of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -66,10 +66,10 @@ async def test_switch_state(
 
 
 async def test_switch_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test the change of state of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     # Nightlight
     with patch("wled.WLED.nightlight") as nightlight_mock:
@@ -136,11 +136,11 @@ async def test_switch_change_state(
 
 
 async def test_switch_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test error handling of the WLED switches."""
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
@@ -157,10 +157,10 @@ async def test_switch_error(
 
 
 async def test_switch_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test error handling of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("homeassistant.components.wled.WLED.update"), patch(
         "homeassistant.components.wled.WLED.nightlight", side_effect=WLEDConnectionError

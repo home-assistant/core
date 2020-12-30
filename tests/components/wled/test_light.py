@@ -44,10 +44,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_rgb_light_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test the creation and values of the WLED lights."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -101,10 +101,10 @@ async def test_rgb_light_state(
 
 
 async def test_segment_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test the change of state of the WLED segments."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
@@ -159,10 +159,10 @@ async def test_segment_change_state(
 
 
 async def test_master_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test the change of state of the WLED master light control."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("wled.WLED.master") as light_mock:
         await hass.services.async_call(
@@ -228,10 +228,10 @@ async def test_master_change_state(
 
 
 async def test_dynamically_handle_segments(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     assert hass.states.get("light.wled_rgb_light_master")
     assert hass.states.get("light.wled_rgb_light_segment_0")
@@ -261,10 +261,10 @@ async def test_dynamically_handle_segments(
 
 
 async def test_single_segment_behavior(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test the behavior of the integration with a single segment."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     data = json.loads(load_fixture("wled/rgb_single_segment.json"))
     device = WLEDDevice(data)
@@ -344,11 +344,11 @@ async def test_single_segment_behavior(
 
 
 async def test_light_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test error handling of the WLED lights."""
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
@@ -365,10 +365,10 @@ async def test_light_error(
 
 
 async def test_light_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test error handling of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("homeassistant.components.wled.WLED.update"), patch(
         "homeassistant.components.wled.WLED.segment", side_effect=WLEDConnectionError
@@ -386,10 +386,12 @@ async def test_light_connection_error(
 
 
 async def test_rgbw_light(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test RGBW support for WLED."""
-    await init_integration(hass, aioclient_mock, rgbw=True)
+    await init_integration(
+        hass, aioclient_mock, rgbw=True, device_registry=device_registry
+    )
 
     state = hass.states.get("light.wled_rgbw_light")
     assert state.state == STATE_ON
@@ -444,10 +446,10 @@ async def test_rgbw_light(
 
 
 async def test_effect_service(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test the effect service of a WLED light."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
@@ -570,11 +572,11 @@ async def test_effect_service(
 
 
 async def test_effect_service_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test error handling of the WLED effect service."""
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
@@ -591,10 +593,10 @@ async def test_effect_service_error(
 
 
 async def test_preset_service(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test the preset service of a WLED light."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("wled.WLED.preset") as light_mock:
         await hass.services.async_call(
@@ -613,11 +615,11 @@ async def test_preset_service(
 
 
 async def test_preset_service_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog, device_registry
 ) -> None:
     """Test error handling of the WLED preset service."""
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
 
     with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(

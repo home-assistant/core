@@ -30,11 +30,13 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, device_registry
 ) -> None:
     """Test the creation and values of the WLED sensors."""
 
-    entry = await init_integration(hass, aioclient_mock, skip_setup=True)
+    entry = await init_integration(
+        hass, aioclient_mock, skip_setup=True, device_registry=device_registry
+    )
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     # Pre-create registry entries for disabled by default sensors
@@ -181,10 +183,13 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_id: str,
+    device_registry,
 ) -> None:
     """Test the disabled by default WLED sensors."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, device_registry=device_registry)
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     state = hass.states.get(entity_id)

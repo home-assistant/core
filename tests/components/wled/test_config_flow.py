@@ -207,7 +207,7 @@ async def test_full_user_flow_implementation(
 
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert result["data"][CONF_MAC] == "aabbccddeeff"
-    assert result["title"] == "192.168.1.123"
+    assert result["title"] == "WLED RGB Light"
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
@@ -237,5 +237,5 @@ async def test_full_zeroconf_flow_implementation(
     result = await flow.async_step_zeroconf_confirm(user_input={})
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert result["data"][CONF_MAC] == "aabbccddeeff"
-    assert result["title"] == "example"
+    assert result["title"] == "WLED RGB Light"
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
