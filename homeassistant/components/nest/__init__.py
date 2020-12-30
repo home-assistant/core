@@ -138,6 +138,7 @@ class SignalUpdateCallback:
             message = {
                 "device_id": device_entry.id,
                 "type": event_type,
+                "timestamp": event_message.timestamp,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
