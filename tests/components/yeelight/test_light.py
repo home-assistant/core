@@ -31,6 +31,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.yeelight import (
     ATTR_COUNT,
+    ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
@@ -46,7 +47,7 @@ from homeassistant.components.yeelight import (
     YEELIGHT_HSV_TRANSACTION,
     YEELIGHT_RGB_TRANSITION,
     YEELIGHT_SLEEP_TRANSACTION,
-    YEELIGHT_TEMPERATURE_TRANSACTION, ATTR_MODE_MUSIC,
+    YEELIGHT_TEMPERATURE_TRANSACTION,
 )
 from homeassistant.components.yeelight.light import (
     ATTR_MINUTES,
@@ -72,13 +73,14 @@ from homeassistant.components.yeelight.light import (
     SERVICE_SET_COLOR_TEMP_SCENE,
     SERVICE_SET_HSV_SCENE,
     SERVICE_SET_MODE,
+    SERVICE_SET_MUSIC_MODE,
     SERVICE_START_FLOW,
     SUPPORT_YEELIGHT,
     SUPPORT_YEELIGHT_RGB,
     SUPPORT_YEELIGHT_WHITE_TEMP,
     YEELIGHT_COLOR_EFFECT_LIST,
     YEELIGHT_MONO_EFFECT_LIST,
-    YEELIGHT_TEMP_ONLY_EFFECT_LIST, SERVICE_SET_MUSIC_MODE,
+    YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
