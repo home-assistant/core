@@ -1,4 +1,8 @@
 """Constants for the MusicCast integration."""
+import voluptuous as vol
+
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import config_validation as cv
 
 DOMAIN = "yamaha_musiccast"
 
@@ -24,3 +28,23 @@ ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_SPEED = "speed"
 ATTR_TARGET_BRIGHTNESS = "target_brightness"
 ATTR_UDP_PORT = "udp_port"
+
+SERVICE_JOIN = "join"
+SERVICE_UNJOIN = "unjoin"
+ATTR_MASTER = "master"
+
+UNJOIN_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    }
+)
+
+JOIN_SERVICE_SCHEMA = UNJOIN_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_MASTER): cv.entity_id,
+    }
+)
+
+NULL_GROUP = "00000000000000000000000000000000"
+
+ATTR_MUSICCAST_GROUP = DOMAIN + "_group"

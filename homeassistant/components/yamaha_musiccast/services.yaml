@@ -1,0 +1,24 @@
+join:
+  description: Group player together.
+  fields:
+    master:
+      description: Entity ID of the player that should become the coordinator of the group.
+      example: "media_player.living_room"
+    entity_id:
+      description: Name(s) of entities that will join the master.
+      example: "media_player.living_room"
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+
+unjoin:
+  description: Unjoin the player from a group.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be unjoined from their group.
+      example: "media_player.living_room"
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player

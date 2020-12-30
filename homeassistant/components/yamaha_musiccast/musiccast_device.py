@@ -4,8 +4,9 @@ import asyncio
 import logging
 from typing import Dict
 
+from pyamaha import AsyncDevice, Dist, NetUSB, System, Tuner, Zone
+
 from homeassistant.util import dt
-from pyamaha import AsyncDevice, NetUSB, System, Tuner, Zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +51,14 @@ class MusicCastData:
         self.dab_service_label = ""
         self.dab_dls = ""
 
+        self.last_group_role = None
+        self.last_group_id = None
+        self.group_id = None
+        self.group_name = None
+        self.group_role = None
+        self.group_server_zone = None
+        self.group_client_list = []
+
     @property
     def fm_freq(self):
         """Return a formatted string with fm frequency."""
@@ -87,6 +96,7 @@ class MusicCastDevice:
         self.ip = ip
         self.device = AsyncDevice(client, ip, self.handle)
         self._callbacks = set()
+        self._group_update_callbacks = set()
         self.data = MusicCastData()
 
         # the following data must not be updated frequently
@@ -96,6 +106,7 @@ class MusicCastDevice:
         self._features = None
         self._netusb_play_info = None
         self._tuner_play_info = None
+        self._distribution_info = {None}
         self._name_text = None
 
         print(f"HANDLE UDP ON {self.device._udp_port}")
@@ -149,6 +160,13 @@ class MusicCastDevice:
             if message.get("tuner").get("play_info_updated"):
                 asyncio.run_coroutine_threadsafe(
                     self._fetch_tuner(), self.hass.loop
+                ).result()
+
+        if "dist" in message.keys():
+            print(message)
+            if message.get("dist").get("dist_info_updated"):
+                asyncio.run_coroutine_threadsafe(
+                    self._fetch_distribution_data(), self.hass.loop
                 ).result()
 
         for callback in self._callbacks:
@@ -300,6 +318,33 @@ class MusicCastDevice:
 
         await self._fetch_netusb()
         await self._fetch_tuner()
+        await self._fetch_distribution_data()
 
         for zone in self._zone_ids:
             await self._fetch_zone(zone)
+
+    def register_group_update_callback(self, callback):
+        """Register async methods called after changes of the distribution data here."""
+        self._group_update_callbacks.add(callback)
+
+    async def _fetch_distribution_data(self):
+        self._distribution_info = await (
+            await self.device.get(Dist.get_distribution_info())
+        ).json()
+        print("-------------")
+        print("Fetching distribution data")
+        print(self._distribution_info)
+        print("-------------")
+        self.data.last_group_role = self.data.group_role
+        self.data.last_group_id = self.data.group_id
+        self.data.group_id = self._distribution_info.get("group_id", None)
+        self.data.group_name = self._distribution_info.get("group_name", None)
+        self.data.group_role = self._distribution_info.get("role", None)
+        self.data.group_server_zone = self._distribution_info.get("server_zone", None)
+        self.data.group_client_list = [
+            client.get("ip_address", "")
+            for client in self._distribution_info.get("client_list", [])
+        ]
+
+        for cb in self._group_update_callbacks:
+            await cb()

@@ -1,4 +1,5 @@
 """The MusicCast integration."""
+import abc
 import asyncio
 from datetime import timedelta
 import logging
@@ -8,8 +9,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -20,10 +22,15 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
+    ATTR_MASTER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
     BRAND,
     DOMAIN,
+    JOIN_SERVICE_SCHEMA,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
+    UNJOIN_SERVICE_SCHEMA,
 )
 from .musiccast_device import MusicCastData, MusicCastDevice
 
@@ -52,6 +59,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    @service.verify_domain_control(hass, DOMAIN)
+    async def async_service_handle(service_call: ServiceCall):
+        """Handle services."""
+        entity_ids = service_call.data.get("entity_id", [])
+        if not entity_ids:
+            return
+
+        all_entities = list()
+        for coord in hass.data[DOMAIN].values():
+            all_entities += coord.entities
+
+        entities = [entity for entity in all_entities if entity.entity_id in entity_ids]
+
+        if service_call.service == SERVICE_JOIN:
+            master_id = service_call.data[ATTR_MASTER]
+            master = next(
+                (entity for entity in all_entities if entity.entity_id == master_id),
+                None,
+            )
+            if master and isinstance(master, MusicCastDeviceEntity):
+                await master.async_server_join(entities)
+            else:
+                _LOGGER.error(
+                    "Invalid master specified for join service: %s",
+                    service_call.data[ATTR_MASTER],
+                )
+        elif service_call.service == SERVICE_UNJOIN:
+            for entity in entities:
+                if isinstance(entity, MusicCastDeviceEntity):
+                    await entity.async_unjoin()
+                else:
+                    _LOGGER.error(
+                        "Invalid entity specified for unjoin service: %s",
+                        entity,
+                    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_JOIN,
+        async_service_handle,
+        JOIN_SERVICE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNJOIN,
+        async_service_handle,
+        UNJOIN_SERVICE_SCHEMA,
+    )
 
     for component in PLATFORMS:
         coordinator.platforms.append(component)
@@ -92,6 +149,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         """Initialize."""
         self.musiccast = client
         self.platforms = []
+        self.entities = []
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -141,7 +199,7 @@ class MusicCastEntity(CoordinatorEntity):
         return self._enabled_default
 
 
-class MusicCastDeviceEntity(MusicCastEntity):
+class MusicCastDeviceEntity(MusicCastEntity, abc.ABC):
     """Defines a MusicCast device entity."""
 
     @property
@@ -159,3 +217,11 @@ class MusicCastDeviceEntity(MusicCastEntity):
             ATTR_MODEL: self.coordinator.data.model_name,
             ATTR_SOFTWARE_VERSION: self.coordinator.data.system_version,
         }
+
+    async def async_server_join(self, entities):
+        """Let a server assign all given entities to its group."""
+        raise NotImplementedError
+
+    async def async_unjoin(self):
+        """Let the device leave a group."""
+        raise NotImplementedError

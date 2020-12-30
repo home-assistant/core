@@ -1,6 +1,8 @@
 """Demo implementation of the media player."""
 from typing import Callable, List
 
+from pyamaha import Dist, NetUSB, Tuner, Zone
+
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -31,10 +33,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from pyamaha import NetUSB, Tuner, Zone
+from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
-from .const import DOMAIN
+from .const import ATTR_MUSICCAST_GROUP, DOMAIN, NULL_GROUP
 from .musiccast_device import MusicCastData
 
 PARALLEL_UPDATES = 1
@@ -53,6 +55,7 @@ BROWSABLE_INPUTS = [
     "radiko",
     "qobuz",
     "deezer",
+    "amazon_music",
 ]
 
 
@@ -126,15 +129,25 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             icon="mdi:speaker",
         )
 
+        self.coordinator.entities.append(self)
+
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
         # Sensors should also register callbacks to HA when their state changes
         self.coordinator.musiccast.register_callback(self.async_write_ha_state)
+        self.coordinator.musiccast.register_group_update_callback(
+            self.async_check_if_client_left
+        )
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
         self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
+
+    @property
+    def ip_address(self):
+        """Return the ip address of the musiccast device."""
+        return self.coordinator.musiccast.ip
 
     @property
     def should_poll(self):
@@ -284,7 +297,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     def media_image_url(self):
         """Return the image url of current playing media."""
         return (
-            f"http://{self.coordinator.musiccast.ip}{self.coordinator.data.netusb_albumart_url}"
+            f"http://{self.ip_address}{self.coordinator.data.netusb_albumart_url}"
             if self._is_netusb and self.coordinator.data.netusb_albumart_url
             else ""
         )
@@ -422,12 +435,18 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self.coordinator.data.netusb_total_time
+        if self._is_netusb:
+            return self.coordinator.data.netusb_total_time
+
+        return None
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        return self.coordinator.data.netusb_play_time
+        if self._is_netusb:
+            return self.coordinator.data.netusb_play_time
+
+        return None
 
     @property
     def media_position_updated_at(self):
@@ -435,7 +454,10 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        return self.coordinator.data.netusb_play_time_updated
+        if self._is_netusb:
+            return self.coordinator.data.netusb_play_time_updated
+
+        return None
 
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
@@ -521,7 +543,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             parent_is_directory = False
 
             for i, info in enumerate(list_info.get("list_info", [])):
-
                 # b[1]     Capable of Select(common for all Net/USB sources
                 # b[2]     Capable of Play(common for all Net/USB sources)
 
@@ -533,7 +554,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                     media_class=MEDIA_CLASS_DIRECTORY
                     if is_selectable
                     else MEDIA_CLASS_TRACK,
-                    media_content_id=f"list:{input}:{menu_layer+1}:{i}",
+                    media_content_id=f"list:{input}:{menu_layer + 1}:{i}",
                     media_content_type=MEDIA_CLASS_DIRECTORY
                     if is_selectable
                     else MEDIA_TYPE_TRACK,
@@ -587,3 +608,135 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         )
 
         return overview
+
+    async def async_client_join(self, group_id, server):
+        """Let the client join a group. If this client is a server, the server will stop distributing."""
+        if self.is_server:
+            await self.async_unjoin()
+        await self.coordinator.musiccast.device.post(
+            *Dist.set_client_info(group_id, self._zone_id, server.ip_address)
+        )
+
+    async def async_server_join(self, entities):
+        """Add all clients given in entities to the group of the server. Creates a new group if necessary."""
+        group = (
+            self.coordinator.data.group_id
+            if self.is_server
+            else uuid.random_uuid_hex().upper()
+        )
+        for client in entities:
+            if client != self:
+                await client.async_client_join(group, self)
+
+        await self.coordinator.musiccast.device.post(
+            *Dist.set_server_info(
+                group, self._zone_id, "add", [e.ip_address for e in entities]
+            )
+        )
+
+        await self.coordinator.musiccast.device.get(Dist.start_distribution(0))
+
+    async def async_unjoin(self):
+        """Leave the group. Stops the distribution if device is server."""
+        if self.is_server:
+            await self.coordinator.musiccast.device.get(Dist.stop_distribution())
+            await self.coordinator.musiccast.device.post(
+                *Dist.set_server_info("", zone=self._zone_id)
+            )
+
+        else:
+            await self.coordinator.musiccast.device.post(
+                *Dist.set_client_info("", self._zone_id)
+            )
+
+    @property
+    def musiccast_group(self):
+        """Return all media players of the current group, if the media player is server."""
+        entities = []
+        for coordinator in self.hass.data[DOMAIN].values():
+            entities += coordinator.entities
+        clients = [
+            entity
+            for entity in entities
+            if entity.ip_address in self.coordinator.data.group_client_list
+            and entity != self
+        ]
+        return clients + [self]
+
+    @property
+    def device_state_attributes(self):
+        """Return entity specific state attributes."""
+        attributes = {
+            ATTR_MUSICCAST_GROUP: [e.entity_id for e in self.musiccast_group],
+        }
+        return attributes
+
+    @property
+    def is_server(self):
+        """Return whether the media player is the server/host of the group.
+
+        If the media player is not part of a group, False is returned.
+        """
+        return (
+            self.coordinator.data.group_role == "server"
+            and self.coordinator.data.group_id != NULL_GROUP
+            and self._zone_id == self.coordinator.data.group_server_zone
+        )
+
+    async def async_check_if_client_left(self):
+        """Handle an group update.
+
+        If the client left the group, the server speakers have to update their client lists.
+        """
+        print("Checking if client left the group")
+        print(self.coordinator.data.last_group_role)
+        print(self.coordinator.data.last_group_id)
+        print("--------------------")
+        print(self.coordinator.data.group_role)
+        print(self.coordinator.data.group_id)
+        if self.coordinator.data.last_group_role != "server" and (
+            (
+                self.coordinator.data.last_group_id != NULL_GROUP
+                and self.coordinator.data.group_id
+                != self.coordinator.data.last_group_id
+            )
+            or (
+                self.coordinator.data.last_group_role == "client"
+                and self.coordinator.data.group_role == "none"
+            )
+        ):
+            print(self.entity_id + " left the group. Updating servers.")
+            entities = []
+            for coordinator in self.hass.data[DOMAIN].values():
+                entities += coordinator.entities
+            for server in [
+                entity for entity in entities if len(entity.musiccast_group) > 1
+            ]:
+                await server.async_check_client_list()
+
+    async def async_check_client_list(self):
+        """Let the server check if all its clients are still part of his group."""
+        if self.coordinator.data.group_server_zone != self._zone_id:
+            return
+
+        client_ips_for_removal = list()
+        for client in self.musiccast_group:
+            if client == self:
+                continue
+            if (
+                client.coordinator.data.group_id != self.coordinator.data.group_id
+                or client.coordinator.data.group_role != "client"
+            ):
+                client_ips_for_removal.append(client.ip_address)
+
+        if len(client_ips_for_removal):
+            await self.coordinator.musiccast.device.post(
+                *Dist.set_server_info(
+                    self.coordinator.data.group_id,
+                    self._zone_id,
+                    "remove",
+                    client_ips_for_removal,
+                )
+            )
+
+        print(self.entity_id + " removed clients " + str(client_ips_for_removal))
