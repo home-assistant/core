@@ -408,7 +408,7 @@ async def test_camera_image_from_event_not_supported(hass, auth):
 
 
 async def test_generate_event_image_url_failure(hass, auth):
-    """Test fallback stream image fallback on creating an event image url."""
+    """Test fallback to stream on failure to create an image url."""
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("camera.my_camera")
@@ -428,7 +428,7 @@ async def test_generate_event_image_url_failure(hass, auth):
 
 
 async def test_fetch_event_image_failure(hass, auth):
-    """Test fallback to a stream still image on image event failure."""
+    """Test fallback to a stream on image download failure."""
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("camera.my_camera")
@@ -451,9 +451,6 @@ async def test_fetch_event_image_failure(hass, auth):
 
 async def test_event_image_expired(hass, auth):
     """Test fallback for an event event image that has expired."""
-    # The subscriber receives a message related to an image event.  The camera
-    # holds on to the event message. When the test asks for a capera snapshot
-    # it exchanges the event id for an image url and fetches the image.
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("camera.my_camera")
