@@ -73,6 +73,11 @@ class AirNowSensor(CoordinatorEntity):
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
+    def name(self):
+        """Return the name."""
+        return f"AirNow {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
+
+    @property
     def state(self):
         """Return the state."""
         self._state = self.coordinator.data[self.kind]

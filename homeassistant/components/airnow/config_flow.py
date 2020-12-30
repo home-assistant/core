@@ -75,7 +75,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Create Entry
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title=f"AirNow Sensor at {user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
