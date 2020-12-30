@@ -93,7 +93,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._host_already_configured(discovery_info[CONF_HOST]):
             return self.async_abort(reason="already_configured")
 
-        self.discovery_info.update({CONF_HOST: discovery_info["host"]})
+        self.discovery_info.update({CONF_HOST: discovery_info[CONF_HOST]})
 
         try:
             info = await validate_input(self.hass, self.discovery_info)
