@@ -428,7 +428,7 @@ coinbase==2.1.0
 coinmarketcap==5.0.3
 
 # homeassistant.scripts.check_config
-colorlog==4.5.0
+colorlog==4.6.2
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
