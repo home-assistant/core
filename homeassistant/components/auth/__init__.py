@@ -302,7 +302,7 @@ class TokenView(HomeAssistantView):
             )
 
         # refresh user
-        user = await hass.auth.async_get_user_by_credentials(cred)
+        user = await hass.auth.async_get_or_create_user(cred)
 
         if not user.is_active:
             return self.json(
