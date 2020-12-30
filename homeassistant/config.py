@@ -434,7 +434,7 @@ def _format_config_error(
         else:
             message += f"{humanize_error(config, ex)}."
     else:
-        message += str(ex)
+        message += str(ex) or repr(ex)
 
     try:
         domain_config = config.get(domain, config)
