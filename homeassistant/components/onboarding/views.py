@@ -183,7 +183,6 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     async def post(self, request, data):
         """Handle token creation."""
         hass = request.app["hass"]
-        user = request["hass_user"]
 
         async with self._lock:
             if self._async_is_done():
@@ -201,9 +200,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                     "invalid client id or redirect uri", HTTP_BAD_REQUEST
                 )
 
-            # Return authorization code so we can redirect user and log them in
-            auth_code = hass.components.auth.create_auth_code(data["client_id"], user)
-            return self.json({"auth_code": auth_code})
+            return self.json({})
 
 
 @callback
