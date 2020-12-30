@@ -69,9 +69,6 @@ PyViCare==0.2.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
 
-# homeassistant.components.wiz_light
-PyYAML==5.3.1
-
 # homeassistant.components.bmp280
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
