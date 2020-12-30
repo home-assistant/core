@@ -164,6 +164,7 @@ HOMEKIT = {
     "AC02": "tado",
     "Abode": "abode",
     "BSB002": "hue",
+    "C105X": "roku",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
