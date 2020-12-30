@@ -136,7 +136,9 @@ async def test_homekit_cannot_connect(
 ) -> None:
     """Test we abort homekit flow on connection error."""
     mock_connection(
-        aioclient_mock, host=HOMEKIT_HOST, error=True,
+        aioclient_mock,
+        host=HOMEKIT_HOST,
+        error=True,
     )
 
     discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
