@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_switch_toggles(mock_hc, hass, patched_remote):
+async def test_switch_toggles(mock_hc, hass, mock_write_config):
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -59,7 +59,7 @@ async def test_switch_toggles(mock_hc, hass, patched_remote):
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
 
-async def test_remote_toggles(mock_hc, hass, patched_remote):
+async def test_remote_toggles(mock_hc, hass, mock_write_config):
     """Ensure calls to the remote also updates the switches."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
