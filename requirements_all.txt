@@ -2330,7 +2330,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.12.07
+youtube_dl==2020.12.29
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
