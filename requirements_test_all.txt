@@ -1147,7 +1147,7 @@ zeep[async]==4.0.0
 zeroconf==0.28.7
 
 # homeassistant.components.zha
-zha-quirks==0.0.49
+zha-quirks==0.0.50
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
