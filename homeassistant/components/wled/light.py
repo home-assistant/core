@@ -29,7 +29,12 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
+from . import (
+    WLEDDataUpdateCoordinator,
+    WLEDDeviceEntity,
+    wled_exception_handler,
+    wled_get_title_base_for_config_entry,
+)
 from .const import (
     ATTR_COLOR_PRIMARY,
     ATTR_INTENSITY,
@@ -84,8 +89,10 @@ async def async_setup_entry(
         "async_preset",
     )
 
+    title_base = await wled_get_title_base_for_config_entry(entry, coordinator.hass)
+
     update_segments = partial(
-        async_update_segments, entry, coordinator, {}, async_add_entities
+        async_update_segments, entry, coordinator, {}, async_add_entities, title_base
     )
 
     coordinator.async_add_listener(update_segments)
@@ -95,12 +102,17 @@ async def async_setup_entry(
 class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     """Defines a WLED master light."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    def __init__(
+        self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, title_base=None
+    ):
+        if title_base is None:
+            title_base = coordinator.data.info.name
+
         """Initialize WLED master light."""
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
-            name=f"{coordinator.data.info.name} Master",
+            name=f"{title_base} Master",
             icon="mdi:led-strip-variant",
         )
 
@@ -154,16 +166,23 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
     """Defines a WLED light based on a segment."""
 
     def __init__(
-        self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, segment: int
+        self,
+        entry_id: str,
+        coordinator: WLEDDataUpdateCoordinator,
+        segment: int,
+        title_base=None,
     ):
+        if title_base is None:
+            title_base = coordinator.data.info.name
+
         """Initialize WLED segment light."""
         self._rgbw = coordinator.data.info.leds.rgbw
         self._segment = segment
 
         # If this is the one and only segment, use a simpler name
-        name = f"{coordinator.data.info.name} Segment {self._segment}"
+        name = f"{title_base} Segment {self._segment}"
         if len(coordinator.data.state.segments) == 1:
-            name = coordinator.data.info.name
+            name = title_base
 
         super().__init__(
             entry_id=entry_id,
@@ -400,6 +419,7 @@ def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current: Dict[int, WLEDSegmentLight],
     async_add_entities,
+    title_base=None,
 ) -> None:
     """Update segments."""
     segment_ids = {light.segment_id for light in coordinator.data.state.segments}
@@ -411,12 +431,14 @@ def async_update_segments(
     # Process new segments, add them to Home Assistant
     new_entities = []
     for segment_id in segment_ids - current_ids:
-        current[segment_id] = WLEDSegmentLight(entry.entry_id, coordinator, segment_id)
+        current[segment_id] = WLEDSegmentLight(
+            entry.entry_id, coordinator, segment_id, title_base
+        )
         new_entities.append(current[segment_id])
 
     # More than 1 segment now? Add master controls
     if len(current_ids) < 2 and len(segment_ids) > 1:
-        current[-1] = WLEDMasterLight(entry.entry_id, coordinator)
+        current[-1] = WLEDMasterLight(entry.entry_id, coordinator, title_base)
         new_entities.append(current[-1])
 
     if new_entities:

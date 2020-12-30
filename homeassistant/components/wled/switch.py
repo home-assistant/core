@@ -6,7 +6,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
+from . import (
+    WLEDDataUpdateCoordinator,
+    WLEDDeviceEntity,
+    wled_exception_handler,
+    wled_get_title_base_for_config_entry,
+)
 from .const import (
     ATTR_DURATION,
     ATTR_FADE,
@@ -26,10 +31,12 @@ async def async_setup_entry(
     """Set up WLED switch based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    title_base = await wled_get_title_base_for_config_entry(entry, coordinator.hass)
+
     switches = [
-        WLEDNightlightSwitch(entry.entry_id, coordinator),
-        WLEDSyncSendSwitch(entry.entry_id, coordinator),
-        WLEDSyncReceiveSwitch(entry.entry_id, coordinator),
+        WLEDNightlightSwitch(entry.entry_id, coordinator, title_base),
+        WLEDSyncSendSwitch(entry.entry_id, coordinator, title_base),
+        WLEDSyncReceiveSwitch(entry.entry_id, coordinator, title_base),
     ]
     async_add_entities(switches, True)
 
@@ -61,14 +68,19 @@ class WLEDSwitch(WLEDDeviceEntity, SwitchEntity):
 class WLEDNightlightSwitch(WLEDSwitch):
     """Defines a WLED nightlight switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+    def __init__(
+        self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, title_base=None
+    ) -> None:
         """Initialize WLED nightlight switch."""
+        if title_base is None:
+            title_base = coordinator.data.info.name
+
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
             icon="mdi:weather-night",
             key="nightlight",
-            name=f"{coordinator.data.info.name} Nightlight",
+            name=f"{title_base} Nightlight",
         )
 
     @property
@@ -99,14 +111,19 @@ class WLEDNightlightSwitch(WLEDSwitch):
 class WLEDSyncSendSwitch(WLEDSwitch):
     """Defines a WLED sync send switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+    def __init__(
+        self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, title_base=None
+    ) -> None:
         """Initialize WLED sync send switch."""
+        if title_base is None:
+            title_base = coordinator.data.info.name
+
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
             icon="mdi:upload-network-outline",
             key="sync_send",
-            name=f"{coordinator.data.info.name} Sync Send",
+            name=f"{title_base} Sync Send",
         )
 
     @property
@@ -133,14 +150,19 @@ class WLEDSyncSendSwitch(WLEDSwitch):
 class WLEDSyncReceiveSwitch(WLEDSwitch):
     """Defines a WLED sync receive switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    def __init__(
+        self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, title_base=None
+    ):
         """Initialize WLED sync receive switch."""
+        if title_base is None:
+            title_base = coordinator.data.info.name
+
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
             icon="mdi:download-network-outline",
             key="sync_receive",
-            name=f"{coordinator.data.info.name} Sync Receive",
+            name=f"{title_base} Sync Receive",
         )
 
     @property

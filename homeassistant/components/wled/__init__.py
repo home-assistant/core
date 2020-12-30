@@ -110,6 +110,18 @@ def wled_exception_handler(func):
     return handler
 
 
+async def wled_get_title_base_for_config_entry(entry: ConfigEntry, hass: HomeAssistant):
+    title_base = entry.title
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get_device({(DOMAIN, entry.data.get("mac"))}, set())
+    if device is not None:
+        title_base = device.name
+        if device.name_by_user is not None:
+            title_base = device.name_by_user
+
+    return title_base
+
+
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
