@@ -1,6 +1,4 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-import logging
-
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,8 +11,6 @@ from .const import (
     STATE_ATTR_TORRENT_INFO,
     SUPPORTED_ORDER_MODES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -149,12 +145,10 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes, if any."""
-        limit = self._tm_client.config_entry.options[CONF_LIMIT]
-        order = self._tm_client.config_entry.options[CONF_ORDER]
-        torrents = self._tm_client.api.torrents[0:limit]
         info = _torrents_info(
-            torrents,
-            order=order,
+            torrents=self._tm_client.api.torrents,
+            order=self._tm_client.config_entry.options[CONF_ORDER],
+            limit=self._tm_client.config_entry.options[CONF_LIMIT],
             statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
@@ -177,11 +171,11 @@ def _filter_torrents(torrents, statuses=None):
     ]
 
 
-def _torrents_info(torrents, order, statuses=None):
+def _torrents_info(torrents, order, limit, statuses=None):
     infos = {}
     torrents = _filter_torrents(torrents, statuses)
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
-    for torrent in _filter_torrents(torrents, statuses):
+    for torrent in torrents[:limit]:
         info = infos[torrent.name] = {
             "added_date": torrent.addedDate,
             "percent_done": f"{torrent.percentDone * 100:.2f}",

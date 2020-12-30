@@ -5,17 +5,18 @@ from pytest import fixture
 from tests.async_mock import MagicMock, patch
 
 
-def mock_canary_update(self, **kwargs):
-    """Get the latest data from py-canary."""
-    self._update(**kwargs)
+@fixture(autouse=True)
+def mock_ffmpeg(hass):
+    """Mock ffmpeg is loaded."""
+    hass.config.components.add("ffmpeg")
 
 
 @fixture
 def canary(hass):
     """Mock the CanaryApi for easier testing."""
     with patch.object(Api, "login", return_value=True), patch(
-        "homeassistant.components.canary.CanaryData.update", mock_canary_update
-    ), patch("homeassistant.components.canary.Api") as mock_canary:
+        "homeassistant.components.canary.Api"
+    ) as mock_canary:
         instance = mock_canary.return_value = Api(
             "test-username",
             "test-password",

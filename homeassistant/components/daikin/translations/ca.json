@@ -5,18 +5,18 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "error": {
-            "device_fail": "Error inesperat",
-            "device_timeout": "Ha fallat la connexi\u00f3",
-            "forbidden": "Autenticaci\u00f3 inv\u00e0lida"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
         },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "Clau API",
                     "host": "Amfitri\u00f3",
-                    "key": "Clau API",
                     "password": "Contrasenya"
                 },
-                "description": "Introdueix l'adre\u00e7a IP del teu AC Daikin.\n\nTingues en compte que la Clau API i la Contrasenya s'utilitzen als dispositius BRP072Cxx i SKYFi respectivament.",
+                "description": "Introdueix l'Adre\u00e7a IP del teu AC Daikin.\n\nTingues en compte que la Clau API i la Contrasenya s'utilitzen nom\u00e9s als dispositius BRP072Cxx i SKYFi respectivament.",
                 "title": "Configuraci\u00f3 de Daikin AC"
             }
         }

@@ -36,8 +36,14 @@ from homeassistant.const import (
 )
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
-from .helpers import trigger_plex_update
-from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer, MockResource
+from .helpers import trigger_plex_update, wait_for_debouncer
+from .mock_classes import (
+    MockGDM,
+    MockPlexAccount,
+    MockPlexClient,
+    MockPlexServer,
+    MockResource,
+)
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -434,10 +440,11 @@ async def test_option_flow_new_users_available(
     OPTIONS_OWNER_ONLY[MP_DOMAIN][CONF_MONITORED_USERS] = {"Owner": {"enabled": True}}
     entry.options = OPTIONS_OWNER_ONLY
 
-    mock_plex_server = await setup_plex_server(config_entry=entry)
-
-    trigger_plex_update(mock_websocket)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.plex.server.PlexClient", new=MockPlexClient):
+        mock_plex_server = await setup_plex_server(
+            config_entry=entry, disable_gdm=False
+        )
+        await hass.async_block_till_done()
 
     server_id = mock_plex_server.machineIdentifier
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
@@ -445,6 +452,8 @@ async def test_option_flow_new_users_available(
     new_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
     assert len(monitored_users) == 1
     assert len(new_users) == 2
+
+    await wait_for_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
@@ -640,7 +649,11 @@ async def test_manual_config(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
-    ), patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+    ), patch(
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
+    ), patch(
+        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
         )
@@ -674,7 +687,11 @@ async def test_manual_config_with_token(hass):
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()), patch(
         "plexapi.server.PlexServer", return_value=mock_plex_server
-    ), patch("homeassistant.components.plex.PlexWebsocket", autospec=True):
+    ), patch(
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
+    ), patch(
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )
@@ -739,7 +756,7 @@ async def test_trigger_reauth(hass, entry, mock_plex_server, mock_websocket):
         mock_plex_server, "clients", side_effect=plexapi.exceptions.Unauthorized
     ), patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized):
         trigger_plex_update(mock_websocket)
-        await hass.async_block_till_done()
+        await wait_for_debouncer(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state != ENTRY_STATE_LOADED

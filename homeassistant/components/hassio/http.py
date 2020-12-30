@@ -65,6 +65,7 @@ class HassIOView(HomeAssistantView):
 
         return await self._command_proxy(path, request)
 
+    delete = _handle
     get = _handle
     post = _handle
 
@@ -76,6 +77,7 @@ class HassIOView(HomeAssistantView):
         This method is a coroutine.
         """
         read_timeout = _get_timeout(path)
+        client_timeout = 10
         data = None
         headers = _init_header(request)
         if path == "snapshots/new/upload":
@@ -88,9 +90,10 @@ class HassIOView(HomeAssistantView):
             request._client_max_size = (  # pylint: disable=protected-access
                 MAX_UPLOAD_SIZE
             )
+            client_timeout = 300
 
         try:
-            with async_timeout.timeout(10):
+            with async_timeout.timeout(client_timeout):
                 data = await request.read()
 
             method = getattr(self._websession, request.method.lower())
@@ -110,7 +113,7 @@ class HassIOView(HomeAssistantView):
                 )
 
             # Stream response
-            response = web.StreamResponse(status=client.status)
+            response = web.StreamResponse(status=client.status, headers=client.headers)
             response.content_type = client.content_type
 
             await response.prepare(request)

@@ -74,11 +74,6 @@ class S20Switch(SwitchEntity):
         self._exc = S20Exception
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the switch."""
         return self._name

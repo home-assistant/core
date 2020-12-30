@@ -8,6 +8,7 @@ from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
@@ -70,6 +71,14 @@ DEVICES = [
 WLANS = [
     {"name": "SSID 1"},
     {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
+]
+
+DPI_GROUPS = [
+    {
+        "_id": "5ba29dd8e3c58f026e9d7c4a",
+        "name": "Default",
+        "site_id": "5ba29dd4e3c58f026e9d7c38",
+    },
 ]
 
 
@@ -307,7 +316,12 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
 async def test_advanced_option_flow(hass):
     """Test advanced config flow options."""
     controller = await setup_unifi_integration(
-        hass, clients_response=CLIENTS, devices_response=DEVICES, wlans_response=WLANS
+        hass,
+        clients_response=CLIENTS,
+        devices_response=DEVICES,
+        wlans_response=WLANS,
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=[],
     )
 
     result = await hass.config_entries.options.async_init(
@@ -336,7 +350,11 @@ async def test_advanced_option_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]], CONF_POE_CLIENTS: False},
+        user_input={
+            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+            CONF_POE_CLIENTS: False,
+            CONF_DPI_RESTRICTIONS: False,
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -359,6 +377,7 @@ async def test_advanced_option_flow(hass):
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_POE_CLIENTS: False,
+        CONF_DPI_RESTRICTIONS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
@@ -368,7 +387,11 @@ async def test_advanced_option_flow(hass):
 async def test_simple_option_flow(hass):
     """Test simple config flow options."""
     controller = await setup_unifi_integration(
-        hass, clients_response=CLIENTS, wlans_response=WLANS
+        hass,
+        clients_response=CLIENTS,
+        wlans_response=WLANS,
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=[],
     )
 
     result = await hass.config_entries.options.async_init(

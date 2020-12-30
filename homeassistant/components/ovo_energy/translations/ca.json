@@ -2,10 +2,18 @@
     "config": {
         "error": {
             "already_configured": "El compte ja ha estat configurat",
-            "authorization_error": "Error d'autoritzaci\u00f3. Comprova les teves credencials.",
-            "connection_error": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "L'autenticaci\u00f3 d'OVO Energy ha fallat. Introdueix les teves credencials actuals.",
+                "title": "Reautenticaci\u00f3"
+            },
             "user": {
                 "data": {
                     "password": "Contrasenya",

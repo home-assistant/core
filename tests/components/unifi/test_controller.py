@@ -81,6 +81,8 @@ async def setup_unifi_integration(
     devices_response=None,
     clients_all_response=None,
     wlans_response=None,
+    dpigroup_response=None,
+    dpiapp_response=None,
     known_wireless_clients=None,
     controllers=None,
 ):
@@ -116,6 +118,14 @@ async def setup_unifi_integration(
     if wlans_response:
         mock_wlans_responses.append(wlans_response)
 
+    mock_dpigroup_responses = deque()
+    if dpigroup_response:
+        mock_dpigroup_responses.append(dpigroup_response)
+
+    mock_dpiapp_responses = deque()
+    if dpiapp_response:
+        mock_dpiapp_responses.append(dpiapp_response)
+
     mock_requests = []
 
     async def mock_request(self, method, path, json=None):
@@ -129,6 +139,10 @@ async def setup_unifi_integration(
             return mock_client_all_responses.popleft()
         if path == "/rest/wlanconf" and mock_wlans_responses:
             return mock_wlans_responses.popleft()
+        if path == "/rest/dpigroup" and mock_dpigroup_responses:
+            return mock_dpigroup_responses.popleft()
+        if path == "/rest/dpiapp" and mock_dpiapp_responses:
+            return mock_dpiapp_responses.popleft()
         return {}
 
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
@@ -278,6 +292,22 @@ async def test_get_controller_login_failed(hass):
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.Unauthorized
     ), pytest.raises(AuthenticationRequired):
+        await get_controller(hass, **CONTROLLER_DATA)
+
+
+async def test_get_controller_controller_bad_gateway(hass):
+    """Check that get_controller can handle controller being unavailable."""
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", side_effect=aiounifi.BadGateway
+    ), pytest.raises(CannotConnect):
+        await get_controller(hass, **CONTROLLER_DATA)
+
+
+async def test_get_controller_controller_service_unavailable(hass):
+    """Check that get_controller can handle controller being unavailable."""
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", side_effect=aiounifi.ServiceUnavailable
+    ), pytest.raises(CannotConnect):
         await get_controller(hass, **CONTROLLER_DATA)
 
 

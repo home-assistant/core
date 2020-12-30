@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Authentifizierungsmethode w\u00e4hlen"
+            }
+        }
+    }
+}

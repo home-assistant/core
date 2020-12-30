@@ -32,7 +32,7 @@ from .common import (
     send_attributes_report,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, call, patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 
@@ -104,19 +104,13 @@ def zigpy_keen_vent(zigpy_device_mock):
 async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
     """Test zha cover platform."""
 
-    async def get_chan_attr(*args, **kwargs):
-        return 100
-
-    with patch(
-        "homeassistant.components.zha.core.channels.base.ZigbeeChannel.get_attribute_value",
-        new=MagicMock(side_effect=get_chan_attr),
-    ) as get_attr_mock:
-        # load up cover domain
-        zha_device = await zha_device_joined_restored(zigpy_cover_device)
-        assert get_attr_mock.call_count == 2
-        assert get_attr_mock.call_args[0][0] == "current_position_lift_percentage"
-
+    # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster.PLUGGED_ATTR_READS = {"current_position_lift_percentage": 100}
+    zha_device = await zha_device_joined_restored(zigpy_cover_device)
+    assert cluster.read_attributes.call_count == 2
+    assert "current_position_lift_percentage" in cluster.read_attributes.call_args[0][0]
+
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
@@ -144,9 +138,10 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
             DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
-        assert cluster.request.call_args == call(
-            False, 0x1, (), expect_reply=True, manufacturer=None, tsn=None
-        )
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x01
+        assert cluster.request.call_args[0][2] == ()
+        assert cluster.request.call_args[1]["expect_reply"] is True
 
     # open from UI
     with patch(
@@ -156,9 +151,10 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
             DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
-        assert cluster.request.call_args == call(
-            False, 0x0, (), expect_reply=True, manufacturer=None, tsn=None
-        )
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x00
+        assert cluster.request.call_args[0][2] == ()
+        assert cluster.request.call_args[1]["expect_reply"] is True
 
     # set position UI
     with patch(
@@ -171,15 +167,11 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
             blocking=True,
         )
         assert cluster.request.call_count == 1
-        assert cluster.request.call_args == call(
-            False,
-            0x5,
-            (zigpy.types.uint8_t,),
-            53,
-            expect_reply=True,
-            manufacturer=None,
-            tsn=None,
-        )
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x05
+        assert cluster.request.call_args[0][2] == (zigpy.types.uint8_t,)
+        assert cluster.request.call_args[0][3] == 53
+        assert cluster.request.call_args[1]["expect_reply"] is True
 
     # stop from UI
     with patch(
@@ -189,9 +181,10 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
             DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
-        assert cluster.request.call_args == call(
-            False, 0x2, (), expect_reply=True, manufacturer=None, tsn=None
-        )
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x02
+        assert cluster.request.call_args[0][2] == ()
+        assert cluster.request.call_args[1]["expect_reply"] is True
 
     # test rejoin
     await async_test_rejoin(hass, zigpy_cover_device, [cluster], (1,))

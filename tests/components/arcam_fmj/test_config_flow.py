@@ -99,7 +99,7 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unable_to_connect"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_update(hass):

@@ -1,14 +1,40 @@
 {
     "config": {
+        "error": {
+            "error_auth_app": "Vale rakenduse ID v\u00f5i salas\u00f5na",
+            "error_auth_mfa": "Vale kood",
+            "error_auth_user": "Vale kasutajanimi v\u00f5i salas\u00f5na"
+        },
         "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "Rakenduse ID",
+                    "app_secret": "Salas\u00f5na"
+                },
+                "description": "Rakenduse ID ja [StarLine'i arendajakonto] salakood (https://my.starline.ru/developer)",
+                "title": "Rakenduse mandaadid"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Kood pildilt"
+                },
+                "description": "",
+                "title": ""
+            },
             "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS-kood"
+                },
+                "description": "Sisesta telefonile {phone_number} saadetud kood",
                 "title": "Kaheastmeline autoriseerimine"
             },
             "auth_user": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "StarLine konto e-post ja salas\u00f5na",
+                "title": "Kasutaja mandaat"
             }
         }
     }

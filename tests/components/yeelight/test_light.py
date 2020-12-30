@@ -13,7 +13,7 @@ from yeelight import (
     TemperatureTransition,
     transitions,
 )
-from yeelight.flow import Flow
+from yeelight.flow import Action, Flow
 from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.light import (
@@ -51,10 +51,19 @@ from homeassistant.components.yeelight import (
 from homeassistant.components.yeelight.light import (
     ATTR_MINUTES,
     ATTR_MODE,
+    EFFECT_CANDLE_FLICKER,
+    EFFECT_DATE_NIGHT,
     EFFECT_DISCO,
     EFFECT_FACEBOOK,
     EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_HAPPY_BIRTHDAY,
+    EFFECT_HOME,
+    EFFECT_MOVIE,
+    EFFECT_NIGHT_MODE,
+    EFFECT_ROMANCE,
     EFFECT_STOP,
+    EFFECT_SUNRISE,
+    EFFECT_SUNSET,
     EFFECT_TWITTER,
     EFFECT_WHATSAPP,
     SERVICE_SET_AUTO_DELAY_OFF_SCENE,
@@ -71,8 +80,9 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
     color_hs_to_RGB,
@@ -90,6 +100,7 @@ from . import (
     MODULE,
     NAME,
     PROPERTIES,
+    UNIQUE_NAME,
     _mocked_bulb,
     _patch_discovery,
 )
@@ -97,15 +108,21 @@ from . import (
 from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
+CONFIG_ENTRY_DATA = {
+    CONF_HOST: IP_ADDRESS,
+    CONF_TRANSITION: DEFAULT_TRANSITION,
+    CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
+    CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+    CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
+}
+
 
 async def test_services(hass: HomeAssistant, caplog):
     """Test Yeelight services."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ID: "",
-            CONF_HOST: IP_ADDRESS,
-            CONF_TRANSITION: DEFAULT_TRANSITION,
+            **CONFIG_ENTRY_DATA,
             CONF_MODE_MUSIC: True,
             CONF_SAVE_ON_CHANGE: True,
             CONF_NIGHTLIGHT_SWITCH: True,
@@ -299,17 +316,13 @@ async def test_device_types(hass: HomeAssistant):
         model,
         target_properties,
         nightlight_properties=None,
-        name=NAME,
+        name=UNIQUE_NAME,
         entity_id=ENTITY_LIGHT,
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                CONF_ID: "",
-                CONF_HOST: IP_ADDRESS,
-                CONF_TRANSITION: DEFAULT_TRANSITION,
-                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+                **CONFIG_ENTRY_DATA,
                 CONF_NIGHTLIGHT_SWITCH: False,
             },
         )
@@ -329,6 +342,8 @@ async def test_device_types(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
+        registry = await entity_registry.async_get_registry(hass)
+        registry.async_clear_config_entry(config_entry.entry_id)
 
         # nightlight
         if nightlight_properties is None:
@@ -336,11 +351,7 @@ async def test_device_types(hass: HomeAssistant):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data={
-                CONF_ID: "",
-                CONF_HOST: IP_ADDRESS,
-                CONF_TRANSITION: DEFAULT_TRANSITION,
-                CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-                CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
+                **CONFIG_ENTRY_DATA,
                 CONF_NIGHTLIGHT_SWITCH: True,
             },
         )
@@ -358,6 +369,7 @@ async def test_device_types(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
+        registry.async_clear_config_entry(config_entry.entry_id)
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
     current_brightness = round(255 * int(PROPERTIES["current_brightness"]) / 100)
@@ -486,7 +498,7 @@ async def test_device_types(hass: HomeAssistant):
             "rgb_color": bg_rgb_color,
             "xy_color": bg_xy_color,
         },
-        name=f"{NAME} ambilight",
+        name=f"{UNIQUE_NAME} ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
@@ -518,14 +530,7 @@ async def test_effects(hass: HomeAssistant):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ID: "",
-            CONF_HOST: IP_ADDRESS,
-            CONF_TRANSITION: DEFAULT_TRANSITION,
-            CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
-            CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
-            CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
-        },
+        data=CONFIG_ENTRY_DATA,
     )
     config_entry.add_to_hass(hass)
 
@@ -573,6 +578,96 @@ async def test_effects(hass: HomeAssistant):
         EFFECT_WHATSAPP: Flow(count=2, transitions=transitions.pulse(37, 211, 102)),
         EFFECT_FACEBOOK: Flow(count=2, transitions=transitions.pulse(59, 89, 152)),
         EFFECT_TWITTER: Flow(count=2, transitions=transitions.pulse(0, 172, 237)),
+        EFFECT_HOME: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                TemperatureTransition(degrees=3200, duration=500, brightness=80)
+            ],
+        ),
+        EFFECT_NIGHT_MODE: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[RGBTransition(0xFF, 0x99, 0x00, duration=500, brightness=1)],
+        ),
+        EFFECT_DATE_NIGHT: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[RGBTransition(0xFF, 0x66, 0x00, duration=500, brightness=50)],
+        ),
+        EFFECT_MOVIE: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                RGBTransition(
+                    red=0x14, green=0x14, blue=0x32, duration=500, brightness=50
+                )
+            ],
+        ),
+        EFFECT_SUNRISE: Flow(
+            count=1,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0xFF, green=0x4D, blue=0x00, duration=50, brightness=1
+                ),
+                TemperatureTransition(degrees=1700, duration=360000, brightness=10),
+                TemperatureTransition(degrees=2700, duration=540000, brightness=100),
+            ],
+        ),
+        EFFECT_SUNSET: Flow(
+            count=1,
+            action=Action.off,
+            transitions=[
+                TemperatureTransition(degrees=2700, duration=50, brightness=10),
+                TemperatureTransition(degrees=1700, duration=180000, brightness=5),
+                RGBTransition(
+                    red=0xFF, green=0x4C, blue=0x00, duration=420000, brightness=1
+                ),
+            ],
+        ),
+        EFFECT_ROMANCE: Flow(
+            count=0,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0x59, green=0x15, blue=0x6D, duration=4000, brightness=1
+                ),
+                RGBTransition(
+                    red=0x66, green=0x14, blue=0x2A, duration=4000, brightness=1
+                ),
+            ],
+        ),
+        EFFECT_HAPPY_BIRTHDAY: Flow(
+            count=0,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0xDC, green=0x50, blue=0x19, duration=1996, brightness=80
+                ),
+                RGBTransition(
+                    red=0xDC, green=0x78, blue=0x1E, duration=1996, brightness=80
+                ),
+                RGBTransition(
+                    red=0xAA, green=0x32, blue=0x14, duration=1996, brightness=80
+                ),
+            ],
+        ),
+        EFFECT_CANDLE_FLICKER: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                TemperatureTransition(degrees=2700, duration=800, brightness=50),
+                TemperatureTransition(degrees=2700, duration=800, brightness=30),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=80),
+                TemperatureTransition(degrees=2700, duration=800, brightness=60),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=90),
+                TemperatureTransition(degrees=2700, duration=2400, brightness=50),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=80),
+                TemperatureTransition(degrees=2700, duration=800, brightness=60),
+                TemperatureTransition(degrees=2700, duration=400, brightness=70),
+            ],
+        ),
     }
 
     for name, target in effects.items():

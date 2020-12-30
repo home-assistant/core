@@ -211,7 +211,7 @@ async def test_user_not_successful(hass):
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_user_not_successful_2(hass):
@@ -229,7 +229,7 @@ async def test_user_not_successful_2(hass):
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_user_already_configured(hass, remote):
@@ -389,7 +389,7 @@ async def test_ssdp_not_successful(hass):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_not_successful_2(hass):
@@ -416,7 +416,7 @@ async def test_ssdp_not_successful_2(hass):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_already_in_progress(hass, remote):
@@ -570,7 +570,7 @@ async def test_autodetect_none(hass, remote, remotews):
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
         assert remote.call_count == 1
         assert remote.call_args_list == [
             call(AUTODETECT_LEGACY),

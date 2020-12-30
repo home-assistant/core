@@ -1,6 +1,5 @@
 """The Logitech Harmony Hub integration."""
 import asyncio
-import logging
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -15,8 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .remote import HarmonyRemote
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

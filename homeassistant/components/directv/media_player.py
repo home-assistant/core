@@ -126,14 +126,14 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
-        if not self._is_standby:
-            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = self.media_currently_recording
-            attributes[ATTR_MEDIA_RATING] = self.media_rating
-            attributes[ATTR_MEDIA_RECORDED] = self.media_recorded
-            attributes[ATTR_MEDIA_START_TIME] = self.media_start_time
-
-        return attributes
+        if self._is_standby:
+            return {}
+        return {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self.media_currently_recording,
+            ATTR_MEDIA_RATING: self.media_rating,
+            ATTR_MEDIA_RECORDED: self.media_recorded,
+            ATTR_MEDIA_START_TIME: self.media_start_time,
+        }
 
     @property
     def name(self):

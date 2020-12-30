@@ -15,7 +15,7 @@
     },
     "error": {
       "register_failed": "Failed to register, please try again",
-      "connection_failed": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

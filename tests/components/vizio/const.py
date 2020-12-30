@@ -1,6 +1,4 @@
 """Constants for the Vizio integration tests."""
-import logging
-
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV,
@@ -29,8 +27,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.util import slugify
-
-_LOGGER = logging.getLogger(__name__)
 
 NAME = "Vizio"
 NAME2 = "Vizio2"

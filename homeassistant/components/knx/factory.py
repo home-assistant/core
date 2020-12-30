@@ -82,6 +82,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
         travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
         invert_position=config[CoverSchema.CONF_INVERT_POSITION],
         invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
+        device_class=config.get(CONF_DEVICE_CLASS),
     )
 
 
@@ -164,6 +165,7 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
             ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
         ),
         operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
+        controller_modes=config.get(ClimateSchema.CONF_CONTROLLER_MODES),
     )
 
     return XknxClimate(
@@ -202,6 +204,7 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
         name=config[CONF_NAME],
         group_address=config[CONF_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+        invert=config.get(SwitchSchema.CONF_INVERT),
     )
 
 
@@ -212,6 +215,7 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         name=config[CONF_NAME],
         group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
+        always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
     )
 
@@ -243,10 +247,11 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         knx_module,
         name=device_name,
         group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
+        invert=config.get(BinarySensorSchema.CONF_INVERT),
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
-        context_timeout=config[BinarySensorSchema.CONF_CONTEXT_TIMEOUT],
+        context_timeout=config.get(BinarySensorSchema.CONF_CONTEXT_TIMEOUT),
         reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
     )
 

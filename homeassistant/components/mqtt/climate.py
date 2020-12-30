@@ -640,7 +640,7 @@ class MqttClimate(
             return self._hold
         if self._away:
             return PRESET_AWAY
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):

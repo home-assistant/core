@@ -1,4 +1,6 @@
 """The tests for the Canary sensor platform."""
+from datetime import timedelta
+
 from homeassistant.components.canary.const import DOMAIN, MANUFACTURER
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
@@ -13,14 +15,16 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import mock_device, mock_location, mock_reading
 
 from tests.async_mock import patch
-from tests.common import mock_device_registry, mock_registry
+from tests.common import async_fire_time_changed, mock_device_registry, mock_registry
 
 
 async def test_sensors_pro(hass, canary) -> None:
@@ -124,6 +128,8 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("air_quality", "0.4"),
     ]
 
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
 
@@ -137,6 +143,8 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("air_quality", "1.0"),
     ]
 
+    future += timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
 
@@ -180,7 +188,7 @@ async def test_sensors_flex(hass, canary) -> None:
         "home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
-            "dBm",
+            SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
             DEVICE_CLASS_SIGNAL_STRENGTH,
             None,
         ),

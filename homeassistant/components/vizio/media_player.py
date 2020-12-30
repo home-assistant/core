@@ -289,7 +289,7 @@ class VizioDevice(MediaPlayerEntity):
     ) -> None:
         """Send update event when Vizio config entry is updated."""
         # Move this method to component level if another entity ever gets added for a single config entry.
-        # See here: https://github.com/home-assistant/home-assistant/pull/30653#discussion_r366426121
+        # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
 
     async def _async_update_options(self, config_entry: ConfigEntry) -> None:

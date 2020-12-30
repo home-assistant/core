@@ -22,7 +22,7 @@
       }
     },
     "abort": {
-      "already_configured": "This DoorBird is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "link_local_address": "Link local addresses are not supported",
       "not_doorbird_device": "This device is not a DoorBird"
     },

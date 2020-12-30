@@ -1,5 +1,4 @@
 """The jewish_calendar component."""
-import logging
 from typing import Optional
 
 import hdate
@@ -8,8 +7,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "jewish_calendar"
 

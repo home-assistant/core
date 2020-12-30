@@ -34,11 +34,11 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": HOST, "name": NAME}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "solarlog_test_1_2_3"
     assert result2["data"] == {"host": "http://1.1.1.1"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

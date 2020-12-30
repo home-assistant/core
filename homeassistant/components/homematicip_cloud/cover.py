@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud cover devices."""
-import logging
 from typing import Optional
 
 from homematicip.aio.device import (
@@ -21,8 +20,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 HMIP_COVER_OPEN = 0
 HMIP_COVER_CLOSED = 1

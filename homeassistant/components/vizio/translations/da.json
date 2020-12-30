@@ -3,10 +3,6 @@
         "abort": {
             "updated_entry": "Denne post er allerede konfigureret, men navnet og/eller indstillingerne, der er defineret i konfigurationen, stemmer ikke overens med den tidligere importerede konfiguration, s\u00e5 konfigurationsposten er blevet opdateret i overensstemmelse hermed."
         },
-        "error": {
-            "host_exists": "Vizio-enhed med den specificerede v\u00e6rt er allerede konfigureret.",
-            "name_exists": "Vizio-enhed med det specificerede navn er allerede konfigureret."
-        },
         "step": {
             "user": {
                 "data": {

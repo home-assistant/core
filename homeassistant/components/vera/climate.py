@@ -1,5 +1,4 @@
 """Support for Vera thermostats."""
-import logging
 from typing import Any, Callable, List, Optional
 
 import pyvera as veraApi
@@ -27,8 +26,6 @@ from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
 

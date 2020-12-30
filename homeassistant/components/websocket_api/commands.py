@@ -1,6 +1,5 @@
 """Commands part of Websocket API."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -21,8 +20,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
-
-_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -257,13 +254,20 @@ async def handle_render_template(hass, connection, msg):
     timeout = msg.get("timeout")
     info = None
 
-    if timeout and await template.async_render_will_timeout(timeout):
-        connection.send_error(
-            msg["id"],
-            const.ERR_TEMPLATE_ERROR,
-            f"Exceeded maximum execution time of {timeout}s",
-        )
-        return
+    if timeout:
+        try:
+            timed_out = await template.async_render_will_timeout(timeout)
+        except TemplateError as ex:
+            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+            return
+
+        if timed_out:
+            connection.send_error(
+                msg["id"],
+                const.ERR_TEMPLATE_ERROR,
+                f"Exceeded maximum execution time of {timeout}s",
+            )
+            return
 
     @callback
     def _template_listener(event, updates):

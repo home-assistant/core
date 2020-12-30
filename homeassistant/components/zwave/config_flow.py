@@ -1,7 +1,6 @@
 """Config flow to configure Z-Wave."""
 # pylint: disable=import-outside-toplevel
 from collections import OrderedDict
-import logging
 
 import voluptuous as vol
 
@@ -13,8 +12,6 @@ from .const import (
     DEFAULT_CONF_USB_STICK_PATH,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -31,7 +28,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_only")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 

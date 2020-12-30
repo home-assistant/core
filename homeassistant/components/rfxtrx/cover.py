@@ -6,18 +6,22 @@ from homeassistant.const import CONF_DEVICES, STATE_OPEN
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    SIGNAL_EVENT,
     RfxtrxCommandEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def supported(event):
+    """Return whether an event supports cover."""
+    return event.device.known_to_be_rollershutter
 
 
 async def async_setup_entry(
@@ -28,9 +32,6 @@ async def async_setup_entry(
     """Set up config entry."""
     discovery_info = config_entry.data
     device_ids = set()
-
-    def supported(event):
-        return event.device.known_to_be_rollershutter
 
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
@@ -79,8 +80,7 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, cover_update)
+    connect_auto_add(hass, discovery_info, cover_update)
 
 
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):

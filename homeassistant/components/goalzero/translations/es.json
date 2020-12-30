@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_host": "Este no es el Yeti que est\u00e1s buscando",
-            "unknown": "Error desconocido"
+            "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

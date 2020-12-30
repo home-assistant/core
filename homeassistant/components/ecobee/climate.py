@@ -24,6 +24,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
@@ -161,6 +162,7 @@ SUPPORT_FLAGS = (
     | SUPPORT_AUX_HEAT
     | SUPPORT_TARGET_TEMPERATURE_RANGE
     | SUPPORT_FAN_MODE
+    | SUPPORT_TARGET_HUMIDITY
 )
 
 
@@ -351,7 +353,7 @@ class Thermostat(ClimateEntity):
             _LOGGER.error(
                 "Model number for ecobee thermostat %s not recognized. "
                 "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/home-assistant/issues/27172 "
+                "https://github.com/home-assistant/core/issues/27172 "
                 "Unrecognized model number: %s",
                 self.name,
                 self.thermostat["modelNumber"],
@@ -651,7 +653,7 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity):
         """Set the humidity level."""
-        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
+        self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
 
     def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""

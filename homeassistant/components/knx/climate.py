@@ -2,7 +2,7 @@
 from typing import List, Optional
 
 from xknx.devices import Climate as XknxClimate
-from xknx.dpt import HVACOperationMode
+from xknx.dpt import HVACControllerMode, HVACOperationMode
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -14,11 +14,11 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from .const import DOMAIN, OPERATION_MODES, PRESET_MODES
+from .const import CONTROLLER_MODES, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
 
-OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
-PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
+CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
+PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -92,27 +92,27 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if self._device.supports_on_off and not self._device.is_on:
             return HVAC_MODE_OFF
-        if self._device.mode.supports_operation_mode:
-            return OPERATION_MODES.get(
-                self._device.mode.operation_mode.value, HVAC_MODE_HEAT
+        if self._device.mode.supports_controller_mode:
+            return CONTROLLER_MODES.get(
+                self._device.mode.controller_mode.value, HVAC_MODE_HEAT
             )
         # default to "heat"
         return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self) -> Optional[List[str]]:
-        """Return the list of available operation modes."""
-        _operations = [
-            OPERATION_MODES.get(operation_mode.value)
-            for operation_mode in self._device.mode.operation_modes
+        """Return the list of available operation/controller modes."""
+        _controller_modes = [
+            CONTROLLER_MODES.get(controller_mode.value)
+            for controller_mode in self._device.mode.controller_modes
         ]
 
         if self._device.supports_on_off:
-            if not _operations:
-                _operations.append(HVAC_MODE_HEAT)
-            _operations.append(HVAC_MODE_OFF)
+            if not _controller_modes:
+                _controller_modes.append(HVAC_MODE_HEAT)
+            _controller_modes.append(HVAC_MODE_OFF)
 
-        _modes = list(set(filter(None, _operations)))
+        _modes = list(set(filter(None, _controller_modes)))
         # default to ["heat"]
         return _modes if _modes else [HVAC_MODE_HEAT]
 
@@ -123,11 +123,11 @@ class KNXClimate(KnxEntity, ClimateEntity):
         else:
             if self._device.supports_on_off and not self._device.is_on:
                 await self._device.turn_on()
-            if self._device.mode.supports_operation_mode:
-                knx_operation_mode = HVACOperationMode(
-                    OPERATION_MODES_INV.get(hvac_mode)
+            if self._device.mode.supports_controller_mode:
+                knx_controller_mode = HVACControllerMode(
+                    CONTROLLER_MODES_INV.get(hvac_mode)
                 )
-                await self._device.mode.set_operation_mode(knx_operation_mode)
+                await self._device.mode.set_controller_mode(knx_controller_mode)
         self.async_write_ha_state()
 
     @property

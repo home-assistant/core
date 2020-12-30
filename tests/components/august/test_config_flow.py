@@ -46,6 +46,7 @@ async def test_form(hass):
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "my@email.tld"
@@ -57,7 +58,6 @@ async def test_form(hass):
         CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -205,6 +205,7 @@ async def test_form_needs_validate(hass):
             result["flow_id"],
             {VERIFICATION_CODE_KEY: "correct"},
         )
+        await hass.async_block_till_done()
 
     assert len(mock_send_verification_code.mock_calls) == 0
     assert len(mock_validate_verification_code.mock_calls) == 1
@@ -218,7 +219,6 @@ async def test_form_needs_validate(hass):
         CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -261,9 +261,9 @@ async def test_form_reauth(hass):
                 CONF_PASSWORD: "new-test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

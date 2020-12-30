@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "Serveriga \u00fchenduse loomine nurjus. Kontrollige hosti ja porti ning proovige uuesti. Samuti veenduge, et kasutate oma serveris v\u00e4hemalt Minecrafti versiooni 1.7.",
+            "invalid_ip": "IP-aadress on vale (MAC-aadressi ei \u00f5nnestunud tuvastada). Paranda ja proovi uuesti.",
+            "invalid_port": "Lubatud pordivahemik on 1024\u201365535. Paranda ja proovi uuesti."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Nimi"
+                },
+                "description": "Seadista oma Minecraft Server, et lubada j\u00e4lgimist.",
+                "title": "Lingi oma Minecrafti server"
+            }
+        }
+    }
+}

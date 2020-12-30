@@ -1,6 +1,5 @@
 """Support for Modbus covers."""
 from datetime import timedelta
-import logging
 from typing import Any, Dict, Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -36,8 +35,6 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     MODBUS_DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -228,7 +225,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
             self._available = False
             return
 
-        value = bool(result.bits[0])
+        value = bool(result.bits[0] & 1)
         self._available = True
 
         return value

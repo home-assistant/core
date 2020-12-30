@@ -70,7 +70,8 @@ def get_codec_string(segment: io.BytesIO) -> str:
         ):
             profile = stsd_box[111:112].hex()
             compatibility = stsd_box[112:113].hex()
-            level = stsd_box[113:114].hex()
+            # Cap level at 4.1 for compatibility with some Google Cast devices
+            level = hex(min(stsd_box[113], 41))[2:]
             codec += "." + profile + compatibility + level
 
         # Handle H265

@@ -975,3 +975,49 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
     assert "test_domain.test1" in caplog.text
     assert "test_domain" in caplog.text
     assert "test" in caplog.text
+
+
+async def test_two_platforms_add_same_entity(hass):
+    """Test two platforms in the same domain adding an entity with the same name."""
+    entity_platform1 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = SlowEntity(name="entity_1")
+
+    entity_platform2 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity2 = SlowEntity(name="entity_1")
+
+    await asyncio.gather(
+        entity_platform1.async_add_entities([entity1]),
+        entity_platform2.async_add_entities([entity2]),
+    )
+
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    entity_platform1.async_register_entity_service("hello", {}, handle_service)
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert {entity1.entity_id, entity2.entity_id} == {
+        "mock_integration.entity_1",
+        "mock_integration.entity_1_2",
+    }
+    assert entity1 in entities
+    assert entity2 in entities
+
+
+class SlowEntity(MockEntity):
+    """An entity that will sleep during add."""
+
+    async def async_added_to_hass(self):
+        """Make sure control is returned to the event loop on add."""
+        await asyncio.sleep(0.1)
+        await super().async_added_to_hass()

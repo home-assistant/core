@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Kas seadistada {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

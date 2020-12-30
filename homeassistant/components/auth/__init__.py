@@ -115,7 +115,6 @@ Result will be a long-lived access token:
 
 """
 from datetime import timedelta
-import logging
 import uuid
 
 from aiohttp import web
@@ -178,8 +177,6 @@ SCHEMA_WS_SIGN_PATH = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 RESULT_TYPE_CREDENTIALS = "credentials"
 RESULT_TYPE_USER = "user"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass

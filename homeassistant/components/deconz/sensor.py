@@ -68,10 +68,6 @@ UNIT_OF_MEASUREMENT = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
@@ -80,7 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     battery_handler = DeconzBatteryHandler(gateway)
 
     @callback
-    def async_add_sensor(sensors):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Add sensors from deCONZ.
 
         Create DeconzBattery if sensor has a battery attribute.
@@ -112,7 +108,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(

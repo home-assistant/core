@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "one": "Leeg",
+            "other": "Leeg"
+        },
+        "step": {
+            "one": "Leeg",
+            "other": "Leeg"
+        }
+    }
+}

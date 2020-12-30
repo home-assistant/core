@@ -88,6 +88,7 @@ async def _device_form(hass, flow_id, connection, user_input):
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
+        await hass.async_block_till_done()
     return result, mock_setup, mock_setup_entry
 
 
@@ -130,7 +131,6 @@ async def test_form_select_plm(hass: HomeAssistantType):
     assert result2["type"] == "create_entry"
     assert result2["data"] == MOCK_USER_INPUT_PLM
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -149,7 +149,6 @@ async def test_form_select_hub_v1(hass: HomeAssistantType):
         CONF_HUB_VERSION: 1,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -168,7 +167,6 @@ async def test_form_select_hub_v2(hass: HomeAssistantType):
         CONF_HUB_VERSION: 2,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

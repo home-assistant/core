@@ -129,7 +129,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
         )
     else:
         try:
-            await hass.async_add_job(is_serial_port, device)
+            await hass.async_add_executor_job(is_serial_port, device)
             gateway = mysensors.AsyncSerialGateway(
                 device,
                 baud=baud_rate,
@@ -141,7 +141,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
             )
         except vol.Invalid:
             try:
-                await hass.async_add_job(is_socket_address, device)
+                await hass.async_add_executor_job(is_socket_address, device)
                 # valid ip address
                 gateway = mysensors.AsyncTCPGateway(
                     device,

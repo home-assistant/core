@@ -16,4 +16,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         "tests.components.unifi.test_controller",
         "test_wireless_client_event_calls_update_wireless_devices",
     ),
+    ("tests.components.iaqualink.test_config_flow", "test_with_invalid_credentials"),
+    ("tests.components.iaqualink.test_config_flow", "test_with_existing_config"),
 ]

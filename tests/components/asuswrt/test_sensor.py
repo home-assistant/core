@@ -1,5 +1,4 @@
 """The tests for the AsusWrt sensor platform."""
-from datetime import timedelta
 
 from aioasuswrt.asuswrt import Device
 
@@ -16,10 +15,8 @@ from homeassistant.components.asuswrt import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from tests.async_mock import AsyncMock, patch
-from tests.common import async_fire_time_changed
 
 VALID_CONFIG_ROUTER_SSH = {
     DOMAIN: {
@@ -61,8 +58,6 @@ async def test_sensors(hass: HomeAssistant, mock_device_tracker_conf):
         )
 
         assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_ROUTER_SSH)
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
         assert (

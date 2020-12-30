@@ -54,7 +54,11 @@ async def test_sensor_availability(
         # sensor has no more prices, state is "unavailable" from now on
         await _process_time_step(hass, mock_data, value="unavailable")
         await _process_time_step(hass, mock_data, value="unavailable")
-        num_errors = sum(1 for x in caplog.records if x.levelno == logging.ERROR)
+        num_errors = sum(
+            1
+            for x in caplog.records
+            if x.levelno == logging.ERROR and "unknown job listener" not in x.msg
+        )
         num_warnings = sum(1 for x in caplog.records if x.levelno == logging.WARNING)
         assert num_warnings == 1
         assert num_errors == 0

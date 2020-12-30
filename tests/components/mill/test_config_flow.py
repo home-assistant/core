@@ -87,4 +87,4 @@ async def test_connection_error(hass):
         )
 
     assert result["type"] == "form"
-    assert result["errors"]["connection_error"] == "connection_error"
+    assert result["errors"]["cannot_connect"] == "cannot_connect"

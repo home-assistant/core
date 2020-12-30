@@ -151,6 +151,27 @@ async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
     req_headers["Content-Type"] == content_type
 
 
+async def test_snapshot_download_headers(hassio_client, aioclient_mock):
+    """Test that we forward the full header for snapshot download."""
+    content_disposition = "attachment; filename=test.tar"
+    aioclient_mock.get(
+        "http://127.0.0.1/snapshots/slug/download",
+        headers={
+            "Content-Length": "50000000",
+            "Content-Disposition": content_disposition,
+        },
+    )
+
+    resp = await hassio_client.get("/api/hassio/snapshots/slug/download")
+
+    # Check we got right response
+    assert resp.status == 200
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    resp.headers["Content-Disposition"] == content_disposition
+
+
 def test_need_auth(hass):
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")

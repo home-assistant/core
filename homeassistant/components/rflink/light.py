@@ -197,10 +197,9 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
+        if self._brightness is None:
+            return {}
+        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):
@@ -260,10 +259,9 @@ class HybridRflinkLight(SwitchableRflinkDevice, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
+        if self._brightness is None:
+            return {}
+        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):

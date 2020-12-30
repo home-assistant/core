@@ -32,11 +32,11 @@ async def test_form(hass):
             result["flow_id"],
             CONFIG,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == CONFIG[CONF_USERNAME]
     assert result2["data"] == CONFIG
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -57,7 +57,7 @@ async def test_form_account_error(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "account_error"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_session_error(hass):
@@ -76,7 +76,7 @@ async def test_form_session_error(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "session_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_error(hass):

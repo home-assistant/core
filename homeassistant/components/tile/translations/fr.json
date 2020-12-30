@@ -4,7 +4,7 @@
             "already_configured": "Ce compte Tile est d\u00e9j\u00e0 enregistr\u00e9."
         },
         "error": {
-            "invalid_credentials": "Informations d'identification de Tile non valides."
+            "invalid_auth": "Authentification invalide"
         },
         "step": {
             "user": {

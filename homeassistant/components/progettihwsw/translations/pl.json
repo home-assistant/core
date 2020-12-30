@@ -26,13 +26,15 @@
                     "relay_7": "Przeka\u017anik 7",
                     "relay_8": "Przeka\u017anik 8",
                     "relay_9": "Przeka\u017anik 9"
-                }
+                },
+                "title": "Konfiguracja przeka\u017anik\u00f3w"
             },
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
-                }
+                },
+                "title": "Konfiguracja uk\u0142adu"
             }
         }
     }

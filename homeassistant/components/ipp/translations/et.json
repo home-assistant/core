@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba seadistatud",
-            "connection_error": "\u00dchendumine eba\u00f5nnestus",
-            "connection_upgrade": "Printeriga \u00fchenduse loomine eba\u00f5nnestus kuna \u00fchenduse uuendamine on vajalik.",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus kuna vajalik on \u00fchenduse uuendamine.",
             "ipp_error": "Ilmnes IPP viga.",
             "ipp_version_error": "Printer ei toeta seda IPP versiooni.",
             "parse_error": "Printeri vastuse s\u00f5elumine nurjus.",
             "unique_id_required": "Seadmel puudub avastamiseks vajalik kordumatu ID."
         },
         "error": {
-            "connection_error": "\u00dchendumine eba\u00f5nnestus",
+            "cannot_connect": "\u00dchendamine nurjus",
             "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus. Proovige uuesti kui SSL/TLS-i suvand on m\u00e4rgitud."
         },
         "flow_title": "Printer: {name}",

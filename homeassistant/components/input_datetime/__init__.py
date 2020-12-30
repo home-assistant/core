@@ -1,5 +1,5 @@
 """Support to select a date and/or a time."""
-import datetime
+import datetime as py_datetime
 import logging
 import typing
 
@@ -33,11 +33,15 @@ CONF_HAS_TIME = "has_time"
 CONF_INITIAL = "initial"
 
 DEFAULT_VALUE = "1970-01-01 00:00:00"
-DEFAULT_DATE = datetime.date(1970, 1, 1)
-DEFAULT_TIME = datetime.time(0, 0, 0)
+DEFAULT_DATE = py_datetime.date(1970, 1, 1)
+DEFAULT_TIME = py_datetime.time(0, 0, 0)
 
 ATTR_DATETIME = "datetime"
 ATTR_TIMESTAMP = "timestamp"
+
+FMT_DATE = "%Y-%m-%d"
+FMT_TIME = "%H:%M:%S"
+FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 
 
 def validate_set_datetime_attrs(config):
@@ -51,20 +55,6 @@ def validate_set_datetime_attrs(config):
     return config
 
 
-SERVICE_SET_DATETIME = "set_datetime"
-SERVICE_SET_DATETIME_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DATE): cv.date,
-            vol.Optional(ATTR_TIME): cv.time,
-            vol.Optional(ATTR_DATETIME): cv.datetime,
-            vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
-        },
-        extra=vol.ALLOW_EXTRA,
-    ),
-    cv.has_at_least_one_key(ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP),
-    validate_set_datetime_attrs,
-)
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -162,31 +152,24 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
-    async def async_set_datetime_service(entity, call):
-        """Handle a call to the input datetime 'set datetime' service."""
-        date = call.data.get(ATTR_DATE)
-        time = call.data.get(ATTR_TIME)
-        dttm = call.data.get(ATTR_DATETIME)
-        tmsp = call.data.get(ATTR_TIMESTAMP)
-
-        if tmsp:
-            dttm = dt_util.as_local(dt_util.utc_from_timestamp(tmsp)).replace(
-                tzinfo=None
-            )
-        if dttm:
-            date = dttm.date()
-            time = dttm.time()
-        if not entity.has_date:
-            date = None
-        if not entity.has_time:
-            time = None
-        if not date and not time:
-            raise vol.Invalid("Nothing to set")
-
-        entity.async_set_datetime(date, time)
-
     component.async_register_entity_service(
-        SERVICE_SET_DATETIME, SERVICE_SET_DATETIME_SCHEMA, async_set_datetime_service
+        "set_datetime",
+        vol.All(
+            vol.Schema(
+                {
+                    vol.Optional(ATTR_DATE): cv.date,
+                    vol.Optional(ATTR_TIME): cv.time,
+                    vol.Optional(ATTR_DATETIME): cv.datetime,
+                    vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+            cv.has_at_least_one_key(
+                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
+            ),
+            validate_set_datetime_attrs,
+        ),
+        "async_set_datetime",
     )
 
     return True
@@ -221,16 +204,31 @@ class InputDatetime(RestoreEntity):
         self._config = config
         self.editable = True
         self._current_datetime = None
+
         initial = config.get(CONF_INITIAL)
-        if initial:
-            if self.has_date and self.has_time:
-                self._current_datetime = dt_util.parse_datetime(initial)
-            elif self.has_date:
-                date = dt_util.parse_date(initial)
-                self._current_datetime = datetime.datetime.combine(date, DEFAULT_TIME)
-            else:
-                time = dt_util.parse_time(initial)
-                self._current_datetime = datetime.datetime.combine(DEFAULT_DATE, time)
+        if not initial:
+            return
+
+        if self.has_date and self.has_time:
+            current_datetime = dt_util.parse_datetime(initial)
+
+        elif self.has_date:
+            date = dt_util.parse_date(initial)
+            current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
+
+        else:
+            time = dt_util.parse_time(initial)
+            current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
+
+        # If the user passed in an initial value with a timezone, convert it to right tz
+        if current_datetime.tzinfo is not None:
+            self._current_datetime = current_datetime.astimezone(
+                dt_util.DEFAULT_TIME_ZONE
+            )
+        else:
+            self._current_datetime = dt_util.DEFAULT_TIME_ZONE.localize(
+                current_datetime
+            )
 
     @classmethod
     def from_yaml(cls, config: typing.Dict) -> "InputDatetime":
@@ -257,21 +255,27 @@ class InputDatetime(RestoreEntity):
         if self.has_date and self.has_time:
             date_time = dt_util.parse_datetime(old_state.state)
             if date_time is None:
-                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
-                return
-            self._current_datetime = date_time
+                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+            else:
+                current_datetime = date_time
+
         elif self.has_date:
             date = dt_util.parse_date(old_state.state)
             if date is None:
-                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
-                return
-            self._current_datetime = datetime.datetime.combine(date, DEFAULT_TIME)
+                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+            else:
+                current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
+
         else:
             time = dt_util.parse_time(old_state.state)
             if time is None:
-                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
-                return
-            self._current_datetime = datetime.datetime.combine(DEFAULT_DATE, time)
+                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+            else:
+                current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
+
+        self._current_datetime = current_datetime.replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        )
 
     @property
     def should_poll(self):
@@ -305,10 +309,12 @@ class InputDatetime(RestoreEntity):
             return None
 
         if self.has_date and self.has_time:
-            return self._current_datetime
+            return self._current_datetime.strftime(FMT_DATETIME)
+
         if self.has_date:
-            return self._current_datetime.date()
-        return self._current_datetime.time()
+            return self._current_datetime.strftime(FMT_DATE)
+
+        return self._current_datetime.strftime(FMT_TIME)
 
     @property
     def state_attributes(self):
@@ -338,11 +344,13 @@ class InputDatetime(RestoreEntity):
                 + self._current_datetime.minute * 60
                 + self._current_datetime.second
             )
+
         elif not self.has_time:
-            extended = datetime.datetime.combine(
-                self._current_datetime, datetime.time(0, 0)
+            extended = py_datetime.datetime.combine(
+                self._current_datetime, py_datetime.time(0, 0)
             )
             attrs["timestamp"] = extended.timestamp()
+
         else:
             attrs["timestamp"] = self._current_datetime.timestamp()
 
@@ -354,13 +362,33 @@ class InputDatetime(RestoreEntity):
         return self._config[CONF_ID]
 
     @callback
-    def async_set_datetime(self, date_val, time_val):
+    def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
-        if not date_val:
-            date_val = self._current_datetime.date()
-        if not time_val:
-            time_val = self._current_datetime.time()
-        self._current_datetime = datetime.datetime.combine(date_val, time_val)
+        if timestamp:
+            datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
+
+        if datetime:
+            date = datetime.date()
+            time = datetime.time()
+
+        if not self.has_date:
+            date = None
+
+        if not self.has_time:
+            time = None
+
+        if not date and not time:
+            raise vol.Invalid("Nothing to set")
+
+        if not date:
+            date = self._current_datetime.date()
+
+        if not time:
+            time = self._current_datetime.time()
+
+        self._current_datetime = dt_util.DEFAULT_TIME_ZONE.localize(
+            py_datetime.datetime.combine(date, time)
+        )
         self.async_write_ha_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:

@@ -33,17 +33,16 @@ async def test_form(hass):
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "home_control_url": "https://homecontrol.mydevolo.com",
         "mydevolo_url": "https://www.mydevolo.com",
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -66,7 +65,7 @@ async def test_form_invalid_credentials(hass):
             {"username": "test-username", "password": "test-password"},
         )
 
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_already_configured(hass):
@@ -114,20 +113,18 @@ async def test_form_advanced_options(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "home_control_url": "https://test_url.test",
                 "mydevolo_url": "https://test_mydevolo_url.test",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "devolo Home Control"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "home_control_url": "https://test_url.test",
         "mydevolo_url": "https://test_mydevolo_url.test",
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

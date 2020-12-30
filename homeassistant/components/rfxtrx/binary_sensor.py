@@ -19,11 +19,10 @@ from homeassistant.core import callback
 from homeassistant.helpers import event as evt
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
-    SIGNAL_EVENT,
     RfxtrxEntity,
+    connect_auto_add,
     find_possible_pt2262_device,
     get_device_id,
     get_pt2262_cmd,
@@ -61,6 +60,18 @@ DEVICE_TYPE_DEVICE_CLASS = {
 }
 
 
+def supported(event):
+    """Return whether an event supports binary_sensor."""
+    if isinstance(event, rfxtrxmod.ControlEvent):
+        return True
+    if isinstance(event, rfxtrxmod.SensorEvent):
+        return event.values.get("Sensor Status") in [
+            *SENSOR_STATUS_ON,
+            *SENSOR_STATUS_OFF,
+        ]
+    return False
+
+
 async def async_setup_entry(
     hass,
     config_entry,
@@ -73,16 +84,6 @@ async def async_setup_entry(
     pt2262_devices = []
 
     discovery_info = config_entry.data
-
-    def supported(event):
-        if isinstance(event, rfxtrxmod.ControlEvent):
-            return True
-        if isinstance(event, rfxtrxmod.SensorEvent):
-            return event.values.get("Sensor Status") in [
-                *SENSOR_STATUS_ON,
-                *SENSOR_STATUS_OFF,
-            ]
-        return False
 
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
@@ -145,10 +146,7 @@ async def async_setup_entry(
         async_add_entities([sensor])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_EVENT, binary_sensor_update
-        )
+    connect_auto_add(hass, discovery_info, binary_sensor_update)
 
 
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):

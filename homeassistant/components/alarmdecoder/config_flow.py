@@ -111,7 +111,7 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=title, data={CONF_PROTOCOL: self.protocol, **connection}
                 )
             except NoDeviceError:
-                errors["base"] = "service_unavailable"
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
                 errors["base"] = "unknown"

@@ -1,4 +1,5 @@
 """Provide the functionality to group entities."""
+from abc import abstractmethod
 import asyncio
 from contextvars import ContextVar
 import logging
@@ -398,7 +399,8 @@ class GroupEntity(Entity):
         assert self.hass is not None
 
         async def _update_at_start(_):
-            await self.async_update_ha_state(True)
+            await self.async_update()
+            self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
 
@@ -409,7 +411,12 @@ class GroupEntity(Entity):
         if self.hass.state != CoreState.running:
             return
 
-        await self.async_update_ha_state(True)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @abstractmethod
+    async def async_update(self) -> None:
+        """Abstract method to update the entity."""
 
 
 class Group(Entity):

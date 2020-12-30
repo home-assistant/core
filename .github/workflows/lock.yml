@@ -1,0 +1,20 @@
+name: Lock
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@v2.0.1
+        with:
+          github-token: ${{ github.token }}
+          issue-lock-inactive-days: "30"
+          issue-exclude-created-before: "2020-10-01T00:00:00Z"
+          issue-lock-reason: ""
+          pr-lock-inactive-days: "1"
+          pr-exclude-created-before: "2020-11-01T00:00:00Z"
+          pr-lock-reason: ""

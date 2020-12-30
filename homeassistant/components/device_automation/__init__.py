@@ -1,7 +1,6 @@
 """Helpers for device automations."""
 import asyncio
 from functools import wraps
-import logging
 from types import ModuleType
 from typing import Any, List, MutableMapping
 
@@ -21,8 +20,6 @@ from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 DOMAIN = "device_automation"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 TRIGGER_BASE_SCHEMA = vol.Schema(

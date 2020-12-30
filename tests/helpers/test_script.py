@@ -39,6 +39,7 @@ def async_watch_for_action(script_obj, message):
             flag.set()
 
     script_obj.change_listener = check_action
+    assert script_obj.change_listener is check_action
     return flag
 
 
@@ -194,8 +195,8 @@ async def test_multiple_runs_no_wait(hass):
 
         calls.append(service)
         logger.debug("simulated service (%s:%s) started", fire, listen)
-        unsub = hass.bus.async_listen(listen, service_done_cb)
-        hass.bus.async_fire(fire)
+        unsub = hass.bus.async_listen(str(listen), service_done_cb)
+        hass.bus.async_fire(str(fire))
         await service_done.wait()
         unsub()
 
@@ -834,14 +835,14 @@ async def test_wait_variables_out(hass, mode, action_type):
         assert not script_obj.is_running
         assert len(events) == 1
         if action_type == "template":
-            assert events[0].data["completed"] == str(mode != "timeout_not_finish")
+            assert events[0].data["completed"] == (mode != "timeout_not_finish")
         elif mode != "timeout_not_finish":
             assert "'to_state': <state switch.test=off" in events[0].data["trigger"]
         else:
-            assert events[0].data["trigger"] == "None"
+            assert events[0].data["trigger"] is None
         remaining = events[0].data["remaining"]
         if mode == "no_timeout":
-            assert remaining == "None"
+            assert remaining is None
         elif mode == "timeout_finish":
             assert 0.0 < float(remaining) < 5
         else:
@@ -977,9 +978,9 @@ async def test_repeat_count(hass):
 
     assert len(events) == count
     for index, event in enumerate(events):
-        assert event.data.get("first") == str(index == 0)
-        assert event.data.get("index") == str(index + 1)
-        assert event.data.get("last") == str(index == count - 1)
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
+        assert event.data.get("last") == (index == count - 1)
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1052,8 +1053,8 @@ async def test_repeat_conditional(hass, condition, direct_template):
 
     assert len(events) == count
     for index, event in enumerate(events):
-        assert event.data.get("first") == str(index == 0)
-        assert event.data.get("index") == str(index + 1)
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1089,8 +1090,8 @@ async def test_repeat_var_in_condition(hass, condition):
 @pytest.mark.parametrize(
     "variables,first_last,inside_x",
     [
-        (None, {"repeat": "None", "x": "None"}, "None"),
-        (MappingProxyType({"x": 1}), {"repeat": "None", "x": "1"}, "1"),
+        (None, {"repeat": None, "x": None}, None),
+        (MappingProxyType({"x": 1}), {"repeat": None, "x": 1}, 1),
     ],
 )
 async def test_repeat_nested(hass, variables, first_last, inside_x):
@@ -1168,14 +1169,14 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
     assert events[-1].data == first_last
     for index, result in enumerate(
         (
-            ("True", "1", "False", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("False", "2", "True", inside_x),
+            (True, 1, False, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (False, 2, True, inside_x),
         ),
         1,
     ):
@@ -1338,6 +1339,18 @@ async def test_referenced_entities(hass):
                     "data": {"entity_id": "{{ 'light.service_template' }}"},
                 },
                 {
+                    "service": "test.script",
+                    "entity_id": "light.direct_entity_referenced",
+                },
+                {
+                    "service": "test.script",
+                    "target": {"entity_id": "light.entity_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"entity_id": "light.entity_in_data_template"},
+                },
+                {
                     "condition": "state",
                     "entity_id": "sensor.condition",
                     "state": "100",
@@ -1356,6 +1369,9 @@ async def test_referenced_entities(hass):
         "light.service_list",
         "sensor.condition",
         "scene.hello",
+        "light.direct_entity_referenced",
+        "light.entity_in_target",
+        "light.entity_in_data_template",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -1373,12 +1389,36 @@ async def test_referenced_devices(hass):
                     "device_id": "condition-dev-id",
                     "domain": "switch",
                 },
+                {
+                    "service": "test.script",
+                    "data": {"device_id": "data-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"device_id": "data-template-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"device_id": "target-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"device_id": ["target-list-id-1", "target-list-id-2"]},
+                },
             ]
         ),
         "Test Name",
         "test_domain",
     )
-    assert script_obj.referenced_devices == {"script-dev-id", "condition-dev-id"}
+    assert script_obj.referenced_devices == {
+        "script-dev-id",
+        "condition-dev-id",
+        "data-string-id",
+        "data-template-string-id",
+        "target-string-id",
+        "target-list-id-1",
+        "target-list-id-2",
+    }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
 
@@ -1827,8 +1867,8 @@ async def test_set_redefines_variable(hass, caplog):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == "1"
-    assert mock_calls[1].data["value"] == "2"
+    assert mock_calls[0].data["value"] == 1
+    assert mock_calls[1].data["value"] == 2
 
 
 async def test_validate_action_config(hass):

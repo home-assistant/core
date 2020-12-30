@@ -1,6 +1,4 @@
 """Support for Rflink switches."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -19,8 +17,6 @@ from . import (
     DEVICE_DEFAULTS_SCHEMA,
     SwitchableRflinkDevice,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

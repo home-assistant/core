@@ -1,6 +1,4 @@
 """Support for Xiaomi Miio."""
-import logging
-
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
@@ -8,8 +6,6 @@ from homeassistant.helpers import device_registry as dr
 from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
 from .const import DOMAIN
 from .gateway import ConnectXiaomiGateway
-
-_LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 

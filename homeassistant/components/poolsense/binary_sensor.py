@@ -1,6 +1,4 @@
 """Support for PoolSense binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
@@ -9,8 +7,6 @@ from homeassistant.const import CONF_EMAIL
 
 from . import PoolSenseEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSORS = {
     "pH Status": {

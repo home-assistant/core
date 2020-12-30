@@ -32,7 +32,6 @@ ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"
 ATTR_USERNAME = "username"
-ATTR_USERNAME = "username"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
 
@@ -119,7 +118,7 @@ def _async_templatize_blocks(hass, value):
         }
 
     tmpl = template.Template(value, hass=hass)
-    return tmpl.async_render()
+    return tmpl.async_render(parse_result=False)
 
 
 class SlackNotificationService(BaseNotificationService):
@@ -199,23 +198,31 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Error while uploading file message: %s", err)
 
     async def _async_send_text_only_message(
-        self, targets, message, title, blocks, username, icon
+        self,
+        targets,
+        message,
+        title,
+        *,
+        username=None,
+        icon=None,
+        blocks=None,
     ):
         """Send a text-only message."""
-        message_dict = {
-            "blocks": blocks,
-            "link_names": True,
-            "text": message,
-            "username": username,
-        }
+        message_dict = {"link_names": True, "text": message}
 
-        if self._icon:
-            if self._icon.lower().startswith(("http://", "https://")):
+        if username:
+            message_dict["username"] = username
+
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
                 icon_type = "url"
             else:
                 icon_type = "emoji"
 
             message_dict[f"icon_{icon_type}"] = icon
+
+        if blocks:
+            message_dict["blocks"] = blocks
 
         tasks = {
             target: self._client.chat_postMessage(**message_dict, channel=target)
@@ -256,15 +263,15 @@ class SlackNotificationService(BaseNotificationService):
             elif ATTR_BLOCKS in data:
                 blocks = data[ATTR_BLOCKS]
             else:
-                blocks = {}
+                blocks = None
 
             return await self._async_send_text_only_message(
                 targets,
                 message,
                 title,
-                blocks,
                 username=data.get(ATTR_USERNAME, self._username),
                 icon=data.get(ATTR_ICON, self._icon),
+                blocks=blocks,
             )
 
         # Message Type 2: A message that uploads a remote file

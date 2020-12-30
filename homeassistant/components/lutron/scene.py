@@ -1,12 +1,9 @@
 """Support for Lutron scenes."""
-import logging
 from typing import Any
 
 from homeassistant.components.scene import Scene
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

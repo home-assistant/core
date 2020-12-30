@@ -1,11 +1,7 @@
 """Support for Fibaro locks."""
-import logging
-
 from homeassistant.components.lock import DOMAIN, LockEntity
 
 from . import FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

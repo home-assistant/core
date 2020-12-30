@@ -117,7 +117,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         return sensors
 
-    async_add_entities(await hass.async_add_job(get_binary_sensors), True)
+    async_add_entities(await hass.async_add_executor_job(get_binary_sensors), True)
 
 
 class NestBinarySensor(NestSensorDevice, BinarySensorEntity):

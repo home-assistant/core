@@ -1,6 +1,5 @@
 """Sensor for the Open Sky Network."""
 from datetime import timedelta
-import logging
 
 import requests
 import voluptuous as vol
@@ -20,8 +19,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance, location as util_location
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ALTITUDE = "altitude"
 

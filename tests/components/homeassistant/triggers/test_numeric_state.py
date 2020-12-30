@@ -34,6 +34,31 @@ def setup_comp(hass):
     mock_component(hass, "group")
 
 
+async def test_if_not_fires_on_entity_removal(hass, calls):
+    """Test the firing with removed entity."""
+    hass.states.async_set("test.entity", 11)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "below": 10,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Entity disappears
+    hass.states.async_remove("test.entity")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 async def test_if_fires_on_entity_change_below(hass, calls):
     """Test the firing with changed entity."""
     context = Context()

@@ -402,7 +402,7 @@ async def migrate_old_unique_ids(
 def convert_isy_value_to_hass(
     value: Union[int, float, None],
     uom: str,
-    precision: str,
+    precision: Union[int, str],
     fallback_precision: Optional[int] = None,
 ) -> Union[float, int]:
     """Fix ISY Reported Values.
@@ -418,7 +418,7 @@ def convert_isy_value_to_hass(
         return None
     if uom in [UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES]:
         return round(float(value) / 2.0, 1)
-    if precision != "0":
+    if precision not in ("0", 0):
         return round(float(value) / 10 ** int(precision), int(precision))
     if fallback_precision:
         return round(float(value), fallback_precision)

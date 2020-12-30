@@ -1,5 +1,4 @@
 """Config flow to configure the Arcam FMJ component."""
-import logging
 from urllib.parse import urlparse
 
 from arcam.fmj.client import Client, ConnectionFailed
@@ -12,8 +11,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_entry_client(hass, entry):
@@ -37,7 +34,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         try:
             await client.start()
         except ConnectionFailed:
-            return self.async_abort(reason="unable_to_connect")
+            return self.async_abort(reason="cannot_connect")
         finally:
             await client.stop()
 

@@ -471,6 +471,7 @@ async def test_loading_configuration(hass):
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
         },
     )
 
@@ -487,6 +488,7 @@ async def test_loading_configuration(hass):
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.legacy_templates is True
 
 
 async def test_loading_configuration_temperature_unit(hass):
@@ -1062,6 +1064,30 @@ async def test_component_config_exceptions(hass, caplog):
             in caplog.text
         )
 
+    # get_platform("config") raising
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {}},
+            integration=Mock(
+                pkg_path="homeassistant.components.test_domain",
+                domain="test_domain",
+                get_platform=Mock(
+                    side_effect=ImportError(
+                        "ModuleNotFoundError: No module named 'not_installed_something'",
+                        name="not_installed_something",
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert (
+        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
+        in caplog.text
+    )
+
 
 @pytest.mark.parametrize(
     "domain, schema, expected",
@@ -1090,7 +1116,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
         ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
-        ("openuv", cv.deprecated("openuv", invalidation_version="0.115"), None),
+        ("openuv", cv.deprecated("openuv"), None),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):
