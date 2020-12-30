@@ -157,10 +157,8 @@ async def test_services(hass: HomeAssistant, caplog):
         # failure
         if failure_side_effect:
             mocked_method = MagicMock(side_effect=failure_side_effect)
-            print(method)
             setattr(type(mocked_bulb), method, mocked_method)
             await hass.services.async_call(domain, service, data, blocking=True)
-            print(caplog.records)
             assert (
                 len([x for x in caplog.records if x.levelno == logging.ERROR])
                 == err_count + 1
