@@ -167,6 +167,15 @@ async def test_homekit_discovery(
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
+    # test abort on existing host
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
 
 async def test_ssdp_cannot_connect(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
