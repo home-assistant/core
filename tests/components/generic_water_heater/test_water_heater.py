@@ -58,7 +58,7 @@ async def setup_entities(hass):
         hass,
         DOMAIN,
         {
-            "generic_water_heater": {
+            DOMAIN: {
                 "my_water_heater": {
                     CONF_HEATER: SWITCH_HEATER,
                     CONF_SENSOR: SENSOR_TEMPERATURE,
@@ -87,7 +87,6 @@ async def test_setup_params(hass):
 
 async def test_restore_state(hass):
     """Ensure states are restored on startup."""
-
     state = hass.states.get("water_heater.water_heater_restored")
     assert state.attributes.get("temperature") == 20
     assert state.state == STATE_OFF

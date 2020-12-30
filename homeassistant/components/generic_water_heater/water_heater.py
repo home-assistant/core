@@ -31,7 +31,9 @@ SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 DEFAULT_NAME = "Generic Water Heater"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up the generic water_heater devices."""
     await async_setup_reload_service(hass, DOMAIN, [WATER_HEATER_DOMAIN])
 
