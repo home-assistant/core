@@ -372,7 +372,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
                 exc,
             )
 
-    def _mark_disconnected_if_unavailable(self):
+    def _mark_disconnected_if_unavailable(self, _):
         self._unsub_mark_disconnected = None
         if not self._available:
             # Still disconnected. Let the state engine know.
