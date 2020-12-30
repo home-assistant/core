@@ -1292,7 +1292,7 @@ pyblackbird==0.5
 pybotvac==0.0.19
 
 # homeassistant.components.nissan_leaf
-pycarwings2==2.9
+pycarwings2==2.10
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1
