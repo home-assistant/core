@@ -2,15 +2,9 @@
 import logging
 
 from homeassistant.components.water_heater import (
-    DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SET_OPERATION_MODE_SCHEMA,
-    SET_TEMPERATURE_SCHEMA,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
-    async_service_temperature_set,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,12 +18,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import CONF_HEATER, CONF_SENSOR, CONF_TARGET_TEMP, CONF_TEMP_DELTA, DOMAIN
+from . import CONF_HEATER, CONF_SENSOR, CONF_TARGET_TEMP, CONF_TEMP_DELTA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +33,6 @@ async def async_setup_platform(
     hass, hass_config, async_add_entities, discovery_info=None
 ):
     """Set up the generic water_heater devices."""
-    await async_setup_reload_service(hass, DOMAIN, [WATER_HEATER_DOMAIN])
-
     entities = []
 
     for config in discovery_info:
@@ -59,20 +49,7 @@ async def async_setup_platform(
             )
         )
 
-        async_add_entities(entities)
-
-        platform = entity_platform.current_platform.get()
-
-        platform.async_register_entity_service(
-            SERVICE_SET_TEMPERATURE,
-            SET_TEMPERATURE_SCHEMA,
-            async_service_temperature_set,
-        )
-        platform.async_register_entity_service(
-            SERVICE_SET_OPERATION_MODE,
-            SET_OPERATION_MODE_SCHEMA,
-            "async_set_operation_mode",
-        )
+    async_add_entities(entities)
 
 
 class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
