@@ -2,7 +2,7 @@
   "domain": "myq",
   "name": "MyQ",
   "documentation": "https://www.home-assistant.io/integrations/myq",
-  "requirements": ["pymyq==2.0.8"],
+  "requirements": ["pymyq==2.0.12"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "homekit": {

@@ -10,14 +10,18 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_NEW_DEVICES,
+    CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.async_mock import patch
 
 SENSORS = {
     "1": {
@@ -40,7 +44,7 @@ SENSORS = {
         "id": "CLIP presence sensor id",
         "name": "CLIP presence sensor",
         "type": "CLIPPresence",
-        "state": {},
+        "state": {"presence": False},
         "config": {},
         "uniqueid": "00:00:00:00:00:00:00:02-00",
     },
@@ -172,7 +176,7 @@ async def test_add_new_binary_sensor_ignored(hass):
     """Test that adding a new binary sensor is not allowed."""
     config_entry = await setup_deconz_integration(
         hass,
-        options={CONF_ALLOW_NEW_DEVICES: False},
+        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
     )
     gateway = get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
@@ -188,8 +192,23 @@ async def test_add_new_binary_sensor_ignored(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
+    assert not hass.states.get("binary_sensor.presence_sensor")
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )
+
+    with patch(
+        "pydeconz.DeconzSession.request",
+        return_value={
+            "groups": {},
+            "lights": {},
+            "sensors": {"1": deepcopy(SENSORS["1"])},
+        },
+    ):
+        await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("binary_sensor.presence_sensor")

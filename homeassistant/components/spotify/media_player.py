@@ -25,12 +25,16 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -71,11 +75,18 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_REPEAT_SET
     | SUPPORT_SEEK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_VOLUME_SET
 )
+
+REPEAT_MODE_MAPPING = {
+    "context": REPEAT_MODE_ALL,
+    "off": REPEAT_MODE_OFF,
+    "track": REPEAT_MODE_ONE,
+}
 
 BROWSE_LIMIT = 48
 
@@ -376,6 +387,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return bool(self._currently_playing.get("shuffle_state"))
 
     @property
+    def repeat(self) -> Optional[str]:
+        """Return current repeat mode."""
+        repeat_state = self._currently_playing.get("repeat_state")
+        return REPEAT_MODE_MAPPING.get(repeat_state)
+
+    @property
     def supported_features(self) -> int:
         """Return the media player features that are supported."""
         if self._me["product"] != "premium":
@@ -448,6 +465,13 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         self._spotify.shuffle(shuffle)
+
+    @spotify_exception_handler
+    def set_repeat(self, repeat: str) -> None:
+        """Set repeat mode."""
+        for spotify, home_assistant in REPEAT_MODE_MAPPING.items():
+            if home_assistant == repeat:
+                self._spotify.repeat(spotify)
 
     @spotify_exception_handler
     def update(self) -> None:

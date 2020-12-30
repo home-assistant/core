@@ -12,17 +12,21 @@
     "redhat.vscode-yaml",
     "esbenp.prettier-vscode"
   ],
+  // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.formatting.provider": "black",
+    "python.testing.pytestArgs": ["--no-cov"],
+    "python.testing.pytestEnabled": true,
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "files.trimTrailingWhitespace": true,
     "terminal.integrated.shell.linux": "/bin/bash",
     "yaml.customTags": [
+      "!input scalar",
       "!secret scalar",
       "!include_dir_named scalar",
       "!include_dir_list scalar",

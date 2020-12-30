@@ -17,22 +17,25 @@ from openzwavemqtt.const import (
 )
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
+from openzwavemqtt.util.mqtt_client import MQTTClient
 import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
 from .const import (
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_USE_ADDON,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
-    OPTIONS,
     PLATFORMS,
     TOPIC_OPENZWAVE,
 )
@@ -50,13 +53,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
+DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Initialize basic config of ozw component."""
-    if "mqtt" not in hass.config.components:
-        _LOGGER.error("MQTT integration is not set up")
-        return False
     hass.data[DOMAIN] = {}
     return True
 
@@ -69,16 +70,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data_nodes = {}
     data_values = {}
     removed_nodes = []
+    manager_options = {"topic_prefix": f"{TOPIC_OPENZWAVE}/"}
 
-    @callback
-    def send_message(topic, payload):
-        mqtt.async_publish(hass, topic, json.dumps(payload))
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
-    options = OZWOptions(send_message=send_message, topic_prefix=f"{TOPIC_OPENZWAVE}/")
+    if entry.data.get(CONF_USE_ADDON):
+        # Do not use MQTT integration. Use own MQTT client.
+        # Retrieve discovery info from the OpenZWave add-on.
+        discovery_info = await hass.components.hassio.async_get_addon_discovery_info(
+            "core_zwave"
+        )
+
+        if not discovery_info:
+            _LOGGER.error("Failed to get add-on discovery info")
+            raise ConfigEntryNotReady
+
+        discovery_info_config = discovery_info["config"]
+
+        host = discovery_info_config["host"]
+        port = discovery_info_config["port"]
+        username = discovery_info_config["username"]
+        password = discovery_info_config["password"]
+        mqtt_client = MQTTClient(host, port, username=username, password=password)
+        manager_options["send_message"] = mqtt_client.send_message
+
+    else:
+        if "mqtt" not in hass.config.components:
+            _LOGGER.error("MQTT integration is not set up")
+            return False
+
+        @callback
+        def send_message(topic, payload):
+            mqtt.async_publish(hass, topic, json.dumps(payload))
+
+        manager_options["send_message"] = send_message
+
+    options = OZWOptions(**manager_options)
     manager = OZWManager(options)
 
     hass.data[DOMAIN][MANAGER] = manager
-    hass.data[DOMAIN][OPTIONS] = options
 
     @callback
     def async_node_added(node):
@@ -234,11 +265,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 for component in PLATFORMS
             ]
         )
-        ozw_data[DATA_UNSUBSCRIBE].append(
-            await mqtt.async_subscribe(
-                hass, f"{TOPIC_OPENZWAVE}/#", async_receive_message
+        if entry.data.get(CONF_USE_ADDON):
+            mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))
+
+            async def async_stop_mqtt_client(event=None):
+                """Stop the mqtt client.
+
+                Do not unsubscribe the manager topic.
+                """
+                mqtt_client_task.cancel()
+                try:
+                    await mqtt_client_task
+                except asyncio.CancelledError:
+                    pass
+
+            ozw_data[DATA_UNSUBSCRIBE].append(
+                hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, async_stop_mqtt_client
+                )
             )
-        )
+            ozw_data[DATA_STOP_MQTT_CLIENT] = async_stop_mqtt_client
+
+        else:
+            ozw_data[DATA_UNSUBSCRIBE].append(
+                await mqtt.async_subscribe(
+                    hass, f"{manager.options.topic_prefix}#", async_receive_message
+                )
+            )
 
     hass.async_create_task(start_platforms())
 
@@ -262,6 +315,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # unsubscribe all listeners
     for unsubscribe_listener in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
         unsubscribe_listener()
+
+    if entry.data.get(CONF_USE_ADDON):
+        async_stop_mqtt_client = hass.data[DOMAIN][entry.entry_id][
+            DATA_STOP_MQTT_CLIENT
+        ]
+        await async_stop_mqtt_client()
+
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
@@ -332,6 +392,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
 def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
     """Handle a (central) scene activation message."""
     node_id = scene_value.node.id
+    ozw_instance_id = scene_value.ozw_instance.id
     scene_id = scene_value.index
     scene_label = scene_value.label
     if scene_value.command_class == CommandClass.SCENE_ACTIVATION:
@@ -346,7 +407,8 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
         scene_value_id = scene_value.value["Selected_id"]
 
     _LOGGER.debug(
-        "[SCENE_ACTIVATED] node_id: %s - scene_id: %s - scene_value_id: %s",
+        "[SCENE_ACTIVATED] ozw_instance: %s - node_id: %s - scene_id: %s - scene_value_id: %s",
+        ozw_instance_id,
         node_id,
         scene_id,
         scene_value_id,
@@ -355,6 +417,7 @@ def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
     hass.bus.async_fire(
         const.EVENT_SCENE_ACTIVATED,
         {
+            const.ATTR_INSTANCE_ID: ozw_instance_id,
             const.ATTR_NODE_ID: node_id,
             const.ATTR_SCENE_ID: scene_id,
             const.ATTR_SCENE_LABEL: scene_label,

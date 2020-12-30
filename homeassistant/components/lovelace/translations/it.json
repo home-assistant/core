@@ -3,7 +3,8 @@
         "info": {
             "dashboards": "Plance",
             "mode": "Modalit\u00e0",
-            "resources": "Risorse"
+            "resources": "Risorse",
+            "views": "Viste"
         }
     }
 }

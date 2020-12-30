@@ -1,0 +1,23 @@
+blueprint:
+  name: Wykonanie wydarzenie z kalendarza jako komendy
+  description: Nazwy wydarzeń z wybranego kalendarza będą w czasie ich wystąpienia wysyłane jako komendy do Asystenta domowego
+  domain: automation
+  input:
+    calendar_entity:
+      name: Kalendarz
+      selector:
+        entity:
+          domain: calendar
+variables:
+  calendar_entity: !input calendar_entity
+  # This is the state of the calendar
+  alendar_message: "{{ states[calendar_entity].message }}"
+
+trigger:
+  - platform: state
+    entity_id: !input calendar_entity
+    to: 'on'
+action:
+  - service: ais_ai_service.process
+    data_template:
+      text: "{{ alendar_message }}"
