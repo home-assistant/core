@@ -3,13 +3,7 @@ from pyairnow.errors import AirNowError, InvalidKeyError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.airnow.const import DOMAIN
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -19,7 +13,6 @@ CONFIG = {
     CONF_LATITUDE: 34.053718,
     CONF_LONGITUDE: -118.244842,
     CONF_RADIUS: 75,
-    CONF_NAME: "Home",
 }
 
 # Mock AirNow Response
@@ -92,9 +85,10 @@ async def test_form(hass):
             CONFIG,
         )
 
+        await hass.async_block_till_done()
+
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == CONFIG
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

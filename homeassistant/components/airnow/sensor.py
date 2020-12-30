@@ -4,7 +4,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_NAME,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -51,13 +50,11 @@ SENSOR_TYPES = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirNow sensor entities based on a config entry."""
-    name = config_entry.data[CONF_NAME]
-
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirNowSensor(coordinator, name, sensor))
+        sensors.append(AirNowSensor(coordinator, sensor))
 
     async_add_entities(sensors, False)
 
@@ -65,21 +62,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirNowSensor(CoordinatorEntity):
     """Define an AirNow sensor."""
 
-    def __init__(self, coordinator, name, kind):
+    def __init__(self, coordinator, kind):
         """Initialize."""
         super().__init__(coordinator)
-        self._name = name
         self.kind = kind
         self._device_class = None
         self._state = None
         self._icon = None
         self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
 
     @property
     def state(self):
