@@ -180,9 +180,9 @@ RESULT_TYPE_USER = "user"
 
 
 @bind_hass
-def create_auth_code(hass, client_id: str, user: User) -> str:
+def create_auth_code(hass, client_id: str, cred: Credentials) -> str:
     """Create an authorization code to fetch tokens."""
-    return hass.data[DOMAIN](client_id, user)
+    return hass.data[DOMAIN](client_id, cred)
 
 
 async def async_setup(hass, config):

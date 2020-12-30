@@ -132,7 +132,9 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            auth_code = hass.components.auth.create_auth_code(data["client_id"], user)
+            auth_code = hass.components.auth.create_auth_code(
+                data["client_id"], credentials
+            )
             return self.json({"auth_code": auth_code})
 
 
