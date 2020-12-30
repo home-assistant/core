@@ -1,7 +1,8 @@
 """Support for X10 dimmer over Mochad."""
+import logging
+
 from pymochad import device
 from pymochad.exceptions import MochadException
-import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
