@@ -78,7 +78,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
 
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
-        result.add_error(_format_config_error(ex, domain, config), domain, config)
+        result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
