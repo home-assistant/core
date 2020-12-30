@@ -105,7 +105,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["serial_number"])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info["host"]})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: discovery_info[CONF_HOST]},
+        )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": info["title"]}})
