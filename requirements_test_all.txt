@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==3.0.0
+HAP-python==3.1.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -254,7 +254,7 @@ debugpy==1.2.0
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.7
+denonavr==0.9.8
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -673,7 +673,7 @@ pycountry==19.8.18
 pydaikin==2.3.1
 
 # homeassistant.components.deconz
-pydeconz==76
+pydeconz==77
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -734,7 +734,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==0.2.1
+pyiqvia==0.3.1
 
 # homeassistant.components.isy994
 pyisy==2.1.0
@@ -782,7 +782,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.11
+pymyq==2.0.12
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -915,7 +915,7 @@ pytile==4.0.0
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.4
+pytradfri[async]==7.0.5
 
 # homeassistant.components.vera
 pyvera==0.3.11
@@ -960,7 +960,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.25
+roonapi==0.0.28
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
