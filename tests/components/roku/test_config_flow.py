@@ -131,6 +131,44 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     assert len(mock_validate_input.mock_calls) == 1
 
 
+async def test_homekit_cannot_connect(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort homekit flow on connection error."""
+    mock_connection(
+        aioclient_mock, host=HOMEKIT_HOST, error=True,
+    )
+
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_HOMEKIT},
+        data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_homekit_unknown_error(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort homekit flow on unknown error."""
+    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    with patch(
+        "homeassistant.components.roku.config_flow.Roku.update",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_HOMEKIT},
+            data=discovery_info,
+        )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
+
+
 async def test_homekit_discovery(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
