@@ -28,7 +28,7 @@ PLAY_COMMAND = "Play"
 STOP_COMMAND = "Stop"
 
 
-async def test_async_send_command(mock_hc, hass, patched_remote):
+async def test_async_send_command(mock_hc, hass, mock_write_config):
     """Ensure calls to send remote commands properly propagate to devices."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -161,7 +161,7 @@ async def test_async_send_command(mock_hc, hass, patched_remote):
     send_commands_mock.reset_mock()
 
 
-async def test_async_send_command_custom_delay(mock_hc, hass, patched_remote):
+async def test_async_send_command_custom_delay(mock_hc, hass, mock_write_config):
     """Ensure calls to send remote commands properly propagate to devices with custom delays."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -202,7 +202,7 @@ async def test_async_send_command_custom_delay(mock_hc, hass, patched_remote):
     send_commands_mock.reset_mock()
 
 
-async def test_change_channel(mock_hc, hass, patched_remote):
+async def test_change_channel(mock_hc, hass, mock_write_config):
     """Test change channel commands."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -227,7 +227,7 @@ async def test_change_channel(mock_hc, hass, patched_remote):
     change_channel_mock.assert_awaited_once_with(100)
 
 
-async def test_sync(mock_hc, patched_remote, hass):
+async def test_sync(mock_hc, mock_write_config, hass):
     """Test the sync command."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -250,7 +250,7 @@ async def test_sync(mock_hc, patched_remote, hass):
     await hass.async_block_till_done()
 
     sync_mock.assert_awaited_once()
-    assert patched_remote["write_config_file"].called
+    mock_write_config.assert_called()
 
 
 async def _send_commands_and_wait(hass, service_data):

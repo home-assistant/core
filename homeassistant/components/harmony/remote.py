@@ -1,5 +1,4 @@
 """Support for Harmony Hub devices."""
-import asyncio
 import json
 import logging
 
@@ -22,6 +21,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -52,6 +52,8 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
+
+TIME_MARK_DISCONNECTED = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -150,6 +152,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._unique_id = data.unique_id
         self._last_activity = None
         self._config_path = out_path
+        self._unsub_mark_disconnected = None
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -207,6 +210,11 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             return
 
         self._last_activity = last_state.attributes[ATTR_LAST_ACTIVITY]
+
+    async def async_will_remove_from_hass(self):
+        """Shutdown the entity."""
+        if self._unsub_mark_disconnected:
+            self._unsub_mark_disconnected()
 
     @property
     def device_info(self):
@@ -280,17 +288,18 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             # We were disconnected before.
             await self.new_config()
 
+            if self._unsub_mark_disconnected:
+                self._unsub_mark_disconnected()
+
     async def got_disconnected(self, _=None):
         """Notification that we're disconnected from the HUB."""
         _LOGGER.debug("%s: disconnected from the HUB", self._name)
         self._available = False
         # We're going to wait for 10 seconds before announcing we're
         # unavailable, this to allow a reconnection to happen.
-        await self.sleep(10)
-
-        if not self._available:
-            # Still disconnected. Let the state engine know.
-            self.async_write_ha_state()
+        self._unsub_mark_disconnected = async_call_later(
+            self.hass, TIME_MARK_DISCONNECTED, self._mark_disconnected_if_unavailable
+        )
 
     async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
@@ -363,6 +372,8 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
                 exc,
             )
 
-    async def sleep(self, time):
-        """Sleep for the given time."""
-        await asyncio.sleep(time)
+    def _mark_disconnected_if_unavailable(self):
+        self._unsub_mark_disconnected = None
+        if not self._available:
+            # Still disconnected. Let the state engine know.
+            self.async_write_ha_state()

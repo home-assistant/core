@@ -14,7 +14,7 @@ from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
 from tests.common import MockConfigEntry
 
 
-async def test_connection_state_changes(mock_hc, hass, patched_remote):
+async def test_connection_state_changes(mock_hc, hass, mock_write_config):
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -34,7 +34,8 @@ async def test_connection_state_changes(mock_hc, hass, patched_remote):
     data._disconnected()
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_UNAVAILABLE)
+    # Remote does not immediately show as unavailable
+    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
     assert hass.states.is_state(ENTITY_WATCH_TV, STATE_UNAVAILABLE)
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_UNAVAILABLE)
 

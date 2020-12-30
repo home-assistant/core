@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
 
-from tests.async_mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
+from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,11 +140,9 @@ def mock_hc():
 
 
 @pytest.fixture()
-def patched_remote():
-    """Create a patched remote that removes side effects."""
-    with patch.multiple(
-        "homeassistant.components.harmony.remote.HarmonyRemote",
-        sleep=DEFAULT,
-        write_config_file=DEFAULT,
-    ) as mocks:
-        yield mocks
+def mock_write_config():
+    """Patches write_config_file to remove side effects."""
+    with patch(
+        "homeassistant.components.harmony.remote.HarmonyRemote.write_config_file",
+    ) as mock:
+        yield mock
