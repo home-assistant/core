@@ -41,6 +41,14 @@ def verify_lowercase(value: str):
     return value
 
 
+def verify_uppercase(value: str):
+    """Verify a value is uppercase."""
+    if value.upper() != value:
+        raise vol.Invalid("Value needs to be uppercase")
+
+    return value
+
+
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
@@ -53,7 +61,7 @@ MANIFEST_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required("type"): str,
-                        vol.Optional("macaddress"): vol.All(str, verify_lowercase),
+                        vol.Optional("macaddress"): vol.All(str, verify_uppercase),
                         vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),

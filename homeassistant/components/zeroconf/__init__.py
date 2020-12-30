@@ -290,16 +290,16 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
             lowercase_name = None
 
         if "macaddress" in info.get("properties", {}):
-            lowercase_mac = info["properties"]["macaddress"].lower()
+            uppercase_mac = info["properties"]["macaddress"].upper()
         else:
-            lowercase_mac = None
+            uppercase_mac = None
 
         for entry in zeroconf_types[service_type]:
             if len(entry) > 1:
                 if (
-                    lowercase_mac is not None
+                    uppercase_mac is not None
                     and "macaddress" in entry
-                    and not fnmatch.fnmatch(lowercase_mac, entry["macaddress"])
+                    and not fnmatch.fnmatch(uppercase_mac, entry["macaddress"])
                 ):
                     continue
                 if (
