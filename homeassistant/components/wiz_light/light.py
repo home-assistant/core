@@ -1,12 +1,9 @@
 """WiZ Light integration."""
 import logging
-import os
 
 from pywizlight import SCENES, PilotBuilder, wizlight
 from pywizlight.exceptions import WizLightConnectionError, WizLightNotKnownBulb
-from pywizlight.bulblibrary import BulbLib, BulbType
 import voluptuous as vol
-
 
 # Import the device class from the component
 from homeassistant.components.light import (
@@ -324,7 +321,6 @@ class WizBulb(LightEntity):
         """Get the mac from the bulb."""
         self._mac = await self._light.getMac()
 
-
     def featuremap(self):
         """Map the features from WizLight Class."""
         features = 0
@@ -351,7 +347,9 @@ class WizBulb(LightEntity):
         """Map the maximum kelvin from YAML."""
         # Map features for better reading
         try:
-            kelvin = color_utils.color_temperature_kelvin_to_mired(self._bulbtype.kelvin_range.max)
+            kelvin = color_utils.color_temperature_kelvin_to_mired(
+                self._bulbtype.kelvin_range.max
+            )
             return kelvin
         except WizLightNotKnownBulb:
             _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
@@ -361,7 +359,9 @@ class WizBulb(LightEntity):
         """Map the minimum kelvin from YAML."""
         # Map features for better reading
         try:
-            return color_utils.color_temperature_kelvin_to_mired(self._bulbtype.kelvin_range.min)
+            return color_utils.color_temperature_kelvin_to_mired(
+                self._bulbtype.kelvin_range.min
+            )
         except WizLightNotKnownBulb:
             _LOGGER.info("Kelvin is not present in the library. Fallback to 2500")
             return 2500
