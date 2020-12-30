@@ -53,6 +53,7 @@ DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
 ATTR_TRANSITIONS = "transitions"
+ATTR_MODE_MUSIC = "music_mode"
 
 ACTION_RECOVER = "recover"
 ACTION_STAY = "stay"

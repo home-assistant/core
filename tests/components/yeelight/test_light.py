@@ -31,6 +31,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.yeelight import (
     ATTR_COUNT,
+    ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
@@ -72,6 +73,7 @@ from homeassistant.components.yeelight.light import (
     SERVICE_SET_COLOR_TEMP_SCENE,
     SERVICE_SET_HSV_SCENE,
     SERVICE_SET_MODE,
+    SERVICE_SET_MUSIC_MODE,
     SERVICE_START_FLOW,
     SUPPORT_YEELIGHT,
     SUPPORT_YEELIGHT_RGB,
@@ -135,7 +137,14 @@ async def test_services(hass: HomeAssistant, caplog):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    async def _async_test_service(service, data, method, payload=None, domain=DOMAIN):
+    async def _async_test_service(
+        service,
+        data,
+        method,
+        payload=None,
+        domain=DOMAIN,
+        failure_side_effect=BulbException,
+    ):
         err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
 
         # success
@@ -153,13 +162,14 @@ async def test_services(hass: HomeAssistant, caplog):
         )
 
         # failure
-        mocked_method = MagicMock(side_effect=BulbException)
-        setattr(type(mocked_bulb), method, mocked_method)
-        await hass.services.async_call(domain, service, data, blocking=True)
-        assert (
-            len([x for x in caplog.records if x.levelno == logging.ERROR])
-            == err_count + 1
-        )
+        if failure_side_effect:
+            mocked_method = MagicMock(side_effect=failure_side_effect)
+            setattr(type(mocked_bulb), method, mocked_method)
+            await hass.services.async_call(domain, service, data, blocking=True)
+            assert (
+                len([x for x in caplog.records if x.levelno == logging.ERROR])
+                == err_count + 1
+            )
 
     # turn_on
     brightness = 100
@@ -283,6 +293,29 @@ async def test_services(hass: HomeAssistant, caplog):
         [SceneClass.AUTO_DELAY_OFF, 50, 1],
     )
 
+    # set_music_mode failure enable
+    await _async_test_service(
+        SERVICE_SET_MUSIC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+        "start_music",
+        failure_side_effect=AssertionError,
+    )
+
+    # set_music_mode disable
+    await _async_test_service(
+        SERVICE_SET_MUSIC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "false"},
+        "stop_music",
+        failure_side_effect=None,
+    )
+
+    # set_music_mode success enable
+    await _async_test_service(
+        SERVICE_SET_MUSIC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+        "start_music",
+        failure_side_effect=None,
+    )
     # test _cmd wrapper error handler
     err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
     type(mocked_bulb).turn_on = MagicMock()
@@ -338,6 +371,7 @@ async def test_device_types(hass: HomeAssistant):
         target_properties["friendly_name"] = name
         target_properties["flowing"] = False
         target_properties["night_light"] = True
+        target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
 
         await hass.config_entries.async_unload(config_entry.entry_id)
@@ -365,6 +399,7 @@ async def test_device_types(hass: HomeAssistant):
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
         nightlight_properties["night_light"] = True
+        nightlight_properties["music_mode"] = False
         assert dict(state.attributes) == nightlight_properties
 
         await hass.config_entries.async_unload(config_entry.entry_id)
