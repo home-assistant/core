@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
@@ -69,6 +70,9 @@ SENSORS = {
         device_class=DEVICE_CLASS_POWER,
         default_enabled=False,
         removal_condition=is_momentary_input,
+    ),
+    ("sensor", "motion"): BlockAttributeDescription(
+        name="Motion", device_class=DEVICE_CLASS_MOTION
     ),
 }
 
