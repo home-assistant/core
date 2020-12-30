@@ -2,7 +2,7 @@
 import asyncio
 from functools import partial
 import logging
-from urllib.request import URLError
+from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
@@ -173,7 +173,6 @@ class Remote:
                 partial(RemoteControl, self._host, self._port, **params)
             )
 
-            self.state = STATE_ON
             self.available = True
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             if control_existed or during_setup:
@@ -201,6 +200,7 @@ class Remote:
         """Retrieve the latest data."""
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
+        self.state = STATE_ON
 
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
@@ -257,6 +257,8 @@ class Remote:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
+        except HTTPError:
+            self.state = STATE_OFF
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
