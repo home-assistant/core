@@ -85,3 +85,12 @@ start_flow:
     transitions:
       description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
       example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'
+set_music_mode:
+  description: Enable or disable music_mode
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: "light.yeelight"
+    music_mode:
+      description: Use true or false to enable / disable music_mode
+      example: true
