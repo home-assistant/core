@@ -19,4 +19,5 @@ CURRENCY_ICONS = {
 DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
 
 # Integration setup
-SCAN_INTERVAL = timedelta(seconds=10)
+# "In general, making a maximum of 60 API calls per minute should be safe..."
+SCAN_INTERVAL = timedelta(seconds=1)

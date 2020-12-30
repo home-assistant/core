@@ -69,9 +69,8 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the data object."""
         self.bittrex = BittrexV3(api_key, api_secret, reverse_market_names=False)
         self.symbols = symbols
-        self._authenticate()
-
         self.hass = hass
+        self.hass.async_add_executor_job(self._authenticate)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
