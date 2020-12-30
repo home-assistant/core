@@ -169,7 +169,10 @@ async def async_get_condition_capabilities(hass, config):
     )
 
     if not state or not unit_of_measurement:
-        raise InvalidDeviceAutomationConfig
+        raise InvalidDeviceAutomationConfig(
+            "No state or unit of measurement found for "
+            f"condition entity {config[CONF_ENTITY_ID]}"
+        )
 
     return {
         "extra_fields": vol.Schema(
