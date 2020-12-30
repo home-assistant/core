@@ -242,7 +242,7 @@ async def test_zeroconf_match(hass, mock_zeroconf):
         handlers[0](
             zeroconf,
             "_http._tcp.local.",
-            "shelly108._http._tcp.local.",
+            "Shelly108._http._tcp.local.",
             ServiceStateChange.Added,
         )
 

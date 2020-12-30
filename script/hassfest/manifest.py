@@ -33,6 +33,14 @@ def documentation_url(value: str) -> str:
     return value
 
 
+def verify_lowercase(value: str):
+    """Verify a value is lowercase."""
+    if value.lower() != value:
+        raise vol.Invalid("Value needs to be lowercase")
+
+    return value
+
+
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
@@ -45,8 +53,8 @@ MANIFEST_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required("type"): str,
-                        vol.Optional("macaddress"): str,
-                        vol.Optional("name"): str,
+                        vol.Optional("macaddress"): vol.All(str, verify_lowercase),
+                        vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),
             )
