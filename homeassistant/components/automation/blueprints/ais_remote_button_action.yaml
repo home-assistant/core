@@ -1,0 +1,28 @@
+blueprint:
+  name: Wykonanie komendy po naciśnięciu przycisku
+  description: Wykonanie wpisanej komendy po naciśnięciu na zdalnym kontrolerze ustalonego przycisku
+  domain: automation
+  input:
+    key_code:
+      name: Kod uruchamiający komendę
+      description: Kod ktory uruchamia komendę
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 1000
+    command_text:
+      name: Komenda do wykonania
+      description: Tekst komendy który ma być wykonany po wystąpieniu akcji
+      default: Włącz radio ZET
+      selector:
+        text:
+trigger:
+  - platform: event
+    event_type: ais_key_event
+    event_data:
+      code: !input key_code
+action:
+  - service: ais_ai_service.process
+    data:
+      text: !input command_text

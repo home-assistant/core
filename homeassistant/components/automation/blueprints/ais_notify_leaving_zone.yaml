@@ -1,0 +1,42 @@
+blueprint:
+  name: Powiadomienie po opuszczeniu strefy
+  description: Wysłanie powiadomienia, gdy wybrana osoba opuści określoną strefę.
+  domain: automation
+  input:
+    person_entity:
+      name: Osoba
+      selector:
+        entity:
+          domain: person
+    zone_entity:
+      name: Strefa
+      selector:
+        entity:
+          domain: zone
+    notify_device:
+      name: Telefon do wysłania powiadomienia
+      description: Aby otrzymywać powiadomienia, należy zainstalować na telefonie oficjalną aplikację AIS dom.
+      selector:
+        device:
+          integration: mobile_app
+
+trigger:
+  platform: state
+  entity_id: !input person_entity
+
+variables:
+  zone_entity: !input zone_entity
+  # This is the state of the person when it's in this zone.
+  zone_state: "{{ states[zone_entity].name }}"
+  person_entity: !input person_entity
+  person_name: "{{ states[person_entity].name }}"
+
+condition:
+  condition: template
+  value_template: "{{ trigger.from_state.state == zone_state and trigger.to_state.state != zone_state }}"
+
+action:
+  domain: ais_ai_service
+  type: mob_notify
+  device_id: !input notify_device
+  message: "Osoba {{ person_name }} opuściła strefę {{ zone_state }}"

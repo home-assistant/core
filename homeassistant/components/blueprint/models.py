@@ -343,3 +343,24 @@ class DomainBlueprints:
             )
 
         await self.hass.async_add_executor_job(populate)
+
+    # AIS repopulate blueprints
+    async def async_ais_populate(self) -> None:
+        import glob
+        import os
+
+        """Create folder if it doesn't exist and populate with examples."""
+        integration = await loader.async_get_integration(self.hass, self.domain)
+
+        def ais_populate():
+            if pathlib.Path(self.blueprint_folder, "ais").exists():
+                pass
+            else:
+                os.mkdir(os.path.join(self.blueprint_folder, "ais"))
+            for file in glob.glob(
+                str(pathlib.Path(integration.file_path / BLUEPRINT_FOLDER).absolute())
+                + "/ais_*.yaml"
+            ):
+                shutil.copy(file, pathlib.Path(self.blueprint_folder, "ais"))
+
+        await self.hass.async_add_executor_job(ais_populate)

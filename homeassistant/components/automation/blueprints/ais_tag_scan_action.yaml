@@ -1,0 +1,24 @@
+blueprint:
+  name: Wykonanie komendy po zeskanowaniu TAG-a
+  description: Wykonanie wpisanej komendy po zeskanowaniu identyfikatora TAG-a
+  domain: automation
+  input:
+    tag_code:
+      name: TAG uruchamiający komendę
+      description: Kod ktory uruchamia komendę
+      default: '123456789'
+      selector:
+        text:
+    command_text:
+      name: Komenda do wykonania
+      description: Tekst komendy który ma być wykonany po zeskanowaniu taga
+      default: Włącz radio RAM
+      selector:
+        text:
+trigger:
+  - platform: tag
+    tag_id: !input tag_code
+action:
+  - service: ais_ai_service.process
+    data:
+      text: !input command_text

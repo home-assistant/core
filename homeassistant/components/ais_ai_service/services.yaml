@@ -4,7 +4,7 @@ mob_notify:
    fields:
      device_id:
        description: 'Identyfikator urządzenia.'
-       example: 'mobile_ais_dom_'
+       example: 'mobile_ais_dom-'
      message:
        description: 'Tekst wiadomości'
        example: 'Dzwonek do drzwi.'
@@ -32,7 +32,7 @@ mob_request:
    fields:
      device_id:
        description: 'Identyfikator urządzenia.'
-       example: 'mobile_ais_dom_'
+       example: 'mobile_ais_dom-'
      request:
        description: 'Komenda np.: locationUpdate, micOn'
        example: 'micOn'

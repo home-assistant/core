@@ -168,6 +168,8 @@ async def async_setup(hass, config):
 
     if not await _async_process_config(hass, config, component):
         await async_get_blueprints(hass).async_populate()
+    # ais repopulate
+    await async_get_blueprints(hass).async_ais_populate()
 
     async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""

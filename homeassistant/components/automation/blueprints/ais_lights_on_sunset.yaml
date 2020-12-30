@@ -1,0 +1,40 @@
+blueprint:
+  name: Oświetlenie o zachodzie słońca
+  description: Włączenie wybranego oświetlenie o zachodzie słońca na ustalony czas
+  domain: automation
+  input:
+    offset_before_start:
+      name: Odstęp przed właczeniem oświetlenia
+      description: Przesunięcie właczenia oświetlenia w minutach
+      default: -15
+      selector:
+        number:
+          min: -60
+          max: 60
+          unit_of_measurement: minutes
+    wait_before_off:
+      name: Czas działania oświetlenia
+      description: Przez jaki czas w minutach ma być włączone oświetlenie
+      default: 240
+      selector:
+        number:
+          min: 15
+          max: 1380
+          unit_of_measurement: minutes
+    target_light:
+      name: Oświetlenie do włączenia
+      description: Oświetlenie które będzie właczane
+      selector:
+        target:
+          entity:
+            domain: light
+trigger:
+  platform: sun
+  event: sunset
+  offset: !input offset_before_start
+action:
+  - service: light.turn_on
+    target: !input target_light
+  - delay: !input wait_before_off
+  - service: light.turn_off
+    target: !input target_light
