@@ -14,12 +14,18 @@ from .const import (
     ATTR_NODE_ID,
     ATTR_SCENE_DATA,
     ATTR_SCENE_ID,
+    ATTR_CONFIG_ID,
+    ATTR_CONFIG_DATA,
+    ATTR_CONFIG_DATA_AUX,
+    ATTR_CONFIG_DATA_AUX2,
     COMMAND_CLASS_CENTRAL_SCENE,
+    COMMAND_CLASS_CONFIGURATION,
     COMMAND_CLASS_VERSION,
     COMMAND_CLASS_WAKE_UP,
     DOMAIN,
     EVENT_NODE_EVENT,
     EVENT_SCENE_ACTIVATED,
+    EVENT_CONFIG_CHANGED
 )
 from .util import is_node_parsed, node_device_id_and_name, node_name
 
@@ -197,6 +203,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         if value is not None and value.command_class == COMMAND_CLASS_CENTRAL_SCENE:
             self.central_scene_activated(value.index, value.data)
 
+        if value is not None and value.command_class == COMMAND_CLASS_CONFIGURATION:
+            self.configuration_changed(value.index, value.data)
+
         self.maybe_update_application_version(value)
 
         self.node_changed()
@@ -314,6 +323,45 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             },
         )
 
+    def configuration_changed(self, config_id, config_data):
+        """Handle a configuration report for this node."""
+        print("dionisis configuration_changed:"+str(config_data))
+        if self.hass is None:
+            return
+
+        config_data_aux = 0
+        config_data_aux2 = 0
+        if config_id == 9:
+            self.Value9 = config_data
+
+        if config_id == 10:
+            self.Value10 = config_data
+            config_data_aux = (self.Value9 - self.Value10)*254/30000
+            if config_data_aux> 254:
+                config_data_aux = 254
+            if config_data_aux< -254:
+                config_data_aux = -254
+
+        if 16800000 < self.Value9 < 16900000:
+            config_data_aux2 = 1
+        if 33000000 < self.Value9 < 34000000:
+            config_data_aux2 = 2
+        if 50000000 < self.Value9 < 51000000:
+            config_data_aux2 = 3
+        if 67000000 < self.Value9 < 68000000:
+            config_data_aux2 = 4
+
+        self.hass.bus.fire(
+            EVENT_CONFIG_CHANGED,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_NODE_ID: self.node_id,
+                ATTR_CONFIG_ID: config_id,
+                ATTR_CONFIG_DATA: config_data,
+                ATTR_CONFIG_DATA_AUX: config_data_aux,
+                ATTR_CONFIG_DATA_AUX2: config_data_aux2
+            },
+        )
     def central_scene_activated(self, scene_id, scene_data):
         """Handle an activated central scene for this node."""
         if self.hass is None:
