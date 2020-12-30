@@ -30,6 +30,7 @@ WEMO_MODEL_DISPATCH = {
     "LightSwitch": SWITCH_DOMAIN,
     "Maker": SWITCH_DOMAIN,
     "Motion": BINARY_SENSOR_DOMAIN,
+    "OutdoorPlug": SWITCH_DOMAIN,
     "Sensor": BINARY_SENSOR_DOMAIN,
     "Socket": SWITCH_DOMAIN,
 }
