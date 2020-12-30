@@ -31,7 +31,7 @@ MOCK_SSDP_DISCOVERY_INFO = {
 HOMEKIT_HOST = "192.168.1.161"
 
 MOCK_HOMEKIT_DISCOVERY_INFO = {
-    CONF_NAME: "onn.hap._tcp.local.",
+    CONF_NAME: "onn._hap._tcp.local.",
     CONF_HOST: HOMEKIT_HOST,
     "properties": {
         CONF_ID: "2d:97:da:ee:dc:99",
