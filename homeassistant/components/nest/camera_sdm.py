@@ -10,7 +10,6 @@ from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
 )
 from google_nest_sdm.device import Device
-from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
 
@@ -24,7 +23,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
-from .events import EVENT_NAME_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +63,9 @@ class NestCamera(Camera):
         self._device_info = DeviceInfo(device)
         self._stream = None
         self._stream_refresh_unsub = None
-        self._last_event = None
-        self._active_event_image_bytes = None
+        # Cache of most recent event image
+        self._event_id = None
+        self._event_image_bytes = None
 
     @property
     def should_poll(self) -> bool:
@@ -161,26 +160,6 @@ class NestCamera(Camera):
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
-        self.async_on_remove(self._device.add_event_callback(self._async_handle_event))
-
-    async def _async_handle_event(self, event_message: EventMessage):
-        """Let Home Assistant know device state has been updated."""
-        # Note: This ignores resource_update_traits as there are really not
-        # any camera specific traits used besides the live stream
-        events = event_message.resource_update_events
-        if not events:
-            return
-        for (event_name, event) in events.items():
-            event_type = EVENT_NAME_MAP.get(event_name)
-            if event_type:
-                # Preserve most recent event message for snapshots. Messages may
-                # arrive out of order so keep the latest.
-                if (
-                    self._last_event is None
-                    or self._last_event.timestamp <= event.timestamp
-                ):
-                    self._last_event = event
-                    self._active_event_bytes = None
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
@@ -194,34 +173,30 @@ class NestCamera(Camera):
             return None
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
-    @property
-    def _active_event(self):
-        """Return an active event message if available."""
-        if CameraEventImageTrait.NAME not in self._device.traits:
-            return None
-        if self._last_event is None:
-            return None
-        if self._last_event.expires_at < utcnow():
-            return None
-        return self._last_event
-
     async def _async_active_event_image(self):
         """Return image from any active events happening."""
-        active_event = self._active_event
-        if not active_event:
+        if CameraEventImageTrait.NAME not in self._device.traits:
             return None
-        if self._active_event_image_bytes:
-            return self._active_event_image_bytes
-        trait = self._device.traits[CameraEventImageTrait.NAME]
+        trait = self._device.active_event_trait
+        if not trait:
+            return None
+        # Reuse image bytes if they have already been fetched
+        event_id = trait.last_event.event_id
+        if self._event_id is not None and self._event_id == event_id:
+            return self._event_image_bytes
+        _LOGGER.info("Fetching URL for event_id %s", event_id)
         try:
-            event_image = await trait.generate_image(self._last_event.event_id)
+            event_image = await trait.generate_active_event_image()
         except GoogleNestException as err:
-            _LOGGER.debug("Unable to generate event image url: %s", err)
+            _LOGGER.debug("Unable to generate event image URL: %s", err)
+            return None
+        if not event_image:
             return None
         try:
             image_bytes = await event_image.contents()
         except GoogleNestException as err:
             _LOGGER.debug("Unable to fetch event image: %s", err)
             return None
-        self._active_event_image_bytes = image_bytes
+        self._event_id = event_id
+        self._event_image_bytes = image_bytes
         return image_bytes

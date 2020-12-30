@@ -38,6 +38,7 @@ DEVICE_TRAITS = {
         "audioCodecs": ["AAC"],
     },
     "sdm.devices.traits.CameraEventImage": {},
+    "sdm.devices.traits.CameraMotion": {},
 }
 DATETIME_FORMAT = "YY-MM-DDTHH:MM:SS"
 DOMAIN = "nest"
@@ -466,44 +467,4 @@ async def test_event_image_expired(hass, auth):
     auth.responses = [make_stream_url_response()]
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
-
-
-async def test_event_image_expired_in_cache(hass, auth):
-    """Test fallback for an event image that expired while in cache."""
-    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("camera.my_camera")
-
-    event_timestamp = utcnow()
-    await subscriber.async_receive_event(make_motion_event(event_timestamp))
-    await hass.async_block_till_done()
-
-    # Fallback to a stream url since the event message is expired.
-    auth.responses = [
-        # Fake response from API that returns url image
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        # Fake response for the image content fetch
-        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
-        # Once time advances, fallback to stream url happens
-        make_stream_url_response(),
-    ]
-
-    image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-
-    # Not yet 30 seconds.  Url image is cached and re-used.
-    new_time = event_timestamp + datetime.timedelta(seconds=25)
-    with patch(
-        "homeassistant.components.nest.camera_sdm.utcnow", return_value=new_time
-    ):
-        image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_EVENT
-
-    # Event image is now expired.  Fallback to live stream
-    new_time = event_timestamp + datetime.timedelta(seconds=31)
-    with patch(
-        "homeassistant.components.nest.camera_sdm.utcnow", return_value=new_time
-    ):
-        image = await async_get_image(hass)
     assert image.content == IMAGE_BYTES_FROM_STREAM
