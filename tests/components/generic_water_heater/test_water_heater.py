@@ -1,7 +1,14 @@
 """Tests for Generic Water heater."""
 import pytest
 
-from homeassistant.components import switch, water_heater
+from homeassistant.components import switch
+from homeassistant.components.generic_water_heater import (
+    CONF_HEATER,
+    CONF_SENSOR,
+    CONF_TARGET_TEMP,
+    CONF_TEMP_DELTA,
+    DOMAIN,
+)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
@@ -10,7 +17,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from tests.common import mock_restore_cache
 from tests.components.water_heater import common
 
-WATER_HEATER = "water_heater.generic_water_heater"
+WATER_HEATER = "water_heater.my_water_heater"
 SWITCH_HEATER = "switch.ac_2"
 SENSOR_TEMPERATURE = "sensor.temperature"
 
@@ -49,25 +56,22 @@ async def setup_entities(hass):
 
     assert await async_setup_component(
         hass,
-        water_heater.DOMAIN,
+        DOMAIN,
         {
-            "water_heater": [
-                {
-                    "platform": "generic",
-                    "heater": SWITCH_HEATER,
-                    "temperature_sensor": SENSOR_TEMPERATURE,
-                    "target_temperature": 50,
-                    "delta_temperature": 5,
+            "generic_water_heater": {
+                "my_water_heater": {
+                    CONF_HEATER: SWITCH_HEATER,
+                    CONF_SENSOR: SENSOR_TEMPERATURE,
+                    CONF_TARGET_TEMP: 50,
+                    CONF_TEMP_DELTA: 5,
                 },
-                {
-                    "platform": "generic",
-                    "name": "water_heater_restored",
-                    "heater": SWITCH_HEATER,
-                    "temperature_sensor": SENSOR_TEMPERATURE,
-                    "target_temperature": 51,
-                    "delta_temperature": 5,
+                "water_heater_restored": {
+                    CONF_HEATER: SWITCH_HEATER,
+                    CONF_SENSOR: SENSOR_TEMPERATURE,
+                    CONF_TARGET_TEMP: 51,
+                    CONF_TEMP_DELTA: 5,
                 },
-            ]
+            }
         },
     )
     await hass.async_block_till_done()

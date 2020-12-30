@@ -1,10 +1,8 @@
 """Support for generic water heater units."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.water_heater import (
-    PLATFORM_SCHEMA,
+    DOMAIN as WATER_HEATER_DOMAIN,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
@@ -21,58 +19,39 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, PLATFORMS
+from . import CONF_HEATER, CONF_SENSOR, CONF_TARGET_TEMP, CONF_TEMP_DELTA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 DEFAULT_NAME = "Generic Water Heater"
 
-CONF_HEATER = "heater"
-CONF_SENSOR = "temperature_sensor"
-CONF_TARGET_TEMP = "target_temperature"
-CONF_TEMP_DELTA = "delta_temperature"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HEATER): cv.entity_id,
-        vol.Required(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TEMP_DELTA): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-    }
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the generic water_heater devices."""
+    await async_setup_reload_service(hass, DOMAIN, [WATER_HEATER_DOMAIN])
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    entities = []
 
-    name = config.get(CONF_NAME)
-    heater_entity_id = config.get(CONF_HEATER)
-    sensor_entity_id = config.get(CONF_SENSOR)
-    target_temp = config.get(CONF_TARGET_TEMP)
-    temp_delta = config.get(CONF_TEMP_DELTA)
-    unit = hass.config.units.temperature_unit
+    for config in discovery_info:
+        name = config.get(CONF_NAME)
+        heater_entity_id = config.get(CONF_HEATER)
+        sensor_entity_id = config.get(CONF_SENSOR)
+        target_temp = config.get(CONF_TARGET_TEMP)
+        temp_delta = config.get(CONF_TEMP_DELTA)
+        unit = hass.config.units.temperature_unit
 
-    async_add_entities(
-        [
+        entities.append(
             GenericWaterHeater(
                 name, heater_entity_id, sensor_entity_id, target_temp, temp_delta, unit
-            ),
-        ]
-    )
+            )
+        )
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the generic config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+    async_add_entities(entities)
 
 
 class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
@@ -231,7 +210,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     async def _async_heater_turn_on(self):
         """Turn heater toggleable device on."""
         heater = self.hass.states.get(self.heater_entity_id)
-        if heater.state == STATE_ON:
+        if heater is None or heater.state == STATE_ON:
             return
 
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
@@ -242,7 +221,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     async def _async_heater_turn_off(self):
         """Turn heater toggleable device off."""
         heater = self.hass.states.get(self.heater_entity_id)
-        if heater.state == STATE_OFF:
+        if heater is None or heater.state == STATE_OFF:
             return
 
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
