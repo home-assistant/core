@@ -1168,7 +1168,7 @@ prometheus_client==0.7.1
 proxmoxer==1.1.1
 
 # homeassistant.components.systemmonitor
-psutil==5.7.2
+psutil==5.8.0
 
 # homeassistant.components.ptvsd
 ptvsd==4.3.2
