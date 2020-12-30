@@ -12,6 +12,7 @@ FLOWS = [
     "adguard",
     "advantage_air",
     "agent_dvr",
+    "ai_speaker",
     "airly",
     "airvisual",
     "alarmdecoder",

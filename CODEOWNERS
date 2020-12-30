@@ -25,6 +25,7 @@ homeassistant/components/acmeda/* @atmurray
 homeassistant/components/adguard/* @frenck
 homeassistant/components/advantage_air/* @Bre77
 homeassistant/components/agent_dvr/* @ispysoftware
+homeassistant/components/ai_speaker/* @asystentaka-jolka
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
