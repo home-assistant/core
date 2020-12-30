@@ -609,7 +609,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
         if music_mode:
-            self._bulb.start_music()
+            try:
+                self._bulb.start_music()
+            except AssertionError as ex:
+                _LOGGER.error(ex)
         else:
             self._bulb.stop_music()
 
