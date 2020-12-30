@@ -194,9 +194,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         if resp.status >= 400 and _LOGGER.isEnabledFor(logging.DEBUG):
             body = await resp.text()
             _LOGGER.debug(
-                "Token request failed with status=%s, message=%s, body=%s",
+                "Token request failed with status=%s, body=%s",
                 resp.status,
-                resp.reason,
                 body,
             )
         resp.raise_for_status()
