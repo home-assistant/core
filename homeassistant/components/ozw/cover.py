@@ -7,8 +7,6 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -17,9 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
 
-SUPPORTED_FEATURES_POSITION = (
-    SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
-)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 VALUE_SELECTED_ID = "Selected_id"
 PRESS_BUTTON = True
@@ -62,11 +57,6 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
         self._open_button_pressed = False
         self._close_button_pressed = False
         super().__init__(values)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_FEATURES_POSITION
 
     @property
     def is_closed(self):
