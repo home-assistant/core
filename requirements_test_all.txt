@@ -1107,7 +1107,7 @@ uvcclient==0.11.0
 vilfo-api-client==0.3.2
 
 # homeassistant.components.verisure
-vsure==1.5.4
+vsure==1.6.1
 
 # homeassistant.components.vultr
 vultr==0.1.2
