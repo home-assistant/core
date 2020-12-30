@@ -157,10 +157,14 @@ ZEROCONF = {
 }
 
 HOMEKIT = {
+    "3810X": "roku",
+    "4660X": "roku",
+    "7820X": "roku",
     "819LMB": "myq",
     "AC02": "tado",
     "Abode": "abode",
     "BSB002": "hue",
+    "C105X": "roku",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
