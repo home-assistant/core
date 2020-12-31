@@ -3,7 +3,7 @@
   "name": "Itho Daalderop Spider",
   "documentation": "https://www.home-assistant.io/integrations/spider",
   "requirements": [
-    "spiderpy==1.4.2"
+    "spiderpy==1.5.0"
   ],
   "codeowners": [
     "@peternijssen"
