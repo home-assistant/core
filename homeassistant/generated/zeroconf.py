@@ -116,7 +116,7 @@ ZEROCONF = {
     "_printer._tcp.local.": [
         {
             "domain": "brother",
-            "name": "Brother*"
+            "name": "brother*"
         }
     ],
     "_spotify-connect._tcp.local.": [

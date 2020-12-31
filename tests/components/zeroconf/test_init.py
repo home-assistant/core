@@ -242,13 +242,17 @@ async def test_zeroconf_match(hass, mock_zeroconf):
         handlers[0](
             zeroconf,
             "_http._tcp.local.",
-            "shelly108._http._tcp.local.",
+            "Shelly108._http._tcp.local.",
             ServiceStateChange.Added,
         )
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_http._tcp.local.": [{"domain": "shelly", "name": "shelly*"}]},
+        {
+            "_http._tcp.local.": [
+                {"domain": "shelly", "name": "shelly*", "macaddress": "FFAADD*"}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
