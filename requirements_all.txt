@@ -584,7 +584,7 @@ evohome-async==0.3.5.post1
 fastdotcom==0.0.3
 
 # homeassistant.components.feedreader
-feedparser-homeassistant==5.2.2.dev1
+feedparser==6.0.2
 
 # homeassistant.components.fibaro
 fiblary3==0.1.7
