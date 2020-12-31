@@ -144,6 +144,20 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         return logging.getLogger(__name__)
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available.
+
+        This is the case when the coordinator is able to update the data successfully
+        AND the switch entity is reachable.
+
+        This method overrides the one of the CoordinatorEntity
+        """
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data[self.idx].reachable
+        )
+
+    @property
     def is_on(self):
         """Return entity state."""
         self.logger.debug(
