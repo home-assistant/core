@@ -24,7 +24,7 @@ from homeassistant.helpers import (
 )
 
 from .const import (
-    BATTERY_DEVICES_WITH_PERNAMENT_CONNECTION,
+    BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -244,7 +244,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         """Initialize the Shelly device wrapper."""
         if (
             device.settings["device"]["type"]
-            in BATTERY_DEVICES_WITH_PERNAMENT_CONNECTION
+            in BATTERY_DEVICES_WITH_PERMANENT_CONNECTION
         ):
             update_interval = (
                 SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]

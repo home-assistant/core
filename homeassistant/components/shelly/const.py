@@ -34,4 +34,4 @@ INPUTS_EVENTS_DICT = {
 }
 
 # List of battery devices that maintain a permanent WiFi connection
-BATTERY_DEVICES_WITH_PERNAMENT_CONNECTION = ["SHMOS-01"]
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION = ["SHMOS-01"]
