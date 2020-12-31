@@ -1,5 +1,6 @@
 """Test the Legrand Home+ Control config flow."""
-from aiohttp import ServerTimeoutError
+import asyncio
+
 import pytest
 import voluptuous
 
@@ -238,10 +239,9 @@ async def test_flow_timeout(hass, aiohttp_client, aioclient_mock, current_reques
             "type": "Bearer",
             "expires_in": 60,
         },
-        exc=ServerTimeoutError,
+        exc=asyncio.TimeoutError,
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    print(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "oauth_error"
