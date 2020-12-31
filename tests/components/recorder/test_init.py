@@ -1,6 +1,6 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy.exc import OperationalError
 
@@ -361,7 +361,7 @@ def test_auto_purge(hass_recorder):
     dt_util.set_default_time_zone(tz)
 
     now = dt_util.utcnow()
-    test_time = tz.localize(datetime(now.year + 1, 1, 1, 4, 12, 0))
+    test_time = now + timedelta(days=365)
     async_fire_time_changed(hass, test_time)
 
     with patch(
