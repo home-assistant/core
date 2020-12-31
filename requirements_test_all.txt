@@ -299,7 +299,7 @@ ephem==3.7.7.0
 epson-projector==0.2.3
 
 # homeassistant.components.feedreader
-feedparser-homeassistant==5.2.2.dev1
+feedparser==6.0.2
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
