@@ -1,8 +1,8 @@
 """wled conftest."""
 import pytest
 
-from tests.components.light.conftest import mock_light_profiles  # noqa
 from tests.common import mock_device_registry
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture

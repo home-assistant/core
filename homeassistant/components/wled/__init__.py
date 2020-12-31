@@ -111,6 +111,7 @@ def wled_exception_handler(func):
 
 
 async def wled_get_title_base_for_config_entry(entry: ConfigEntry, hass: HomeAssistant):
+    """Decides what the entity names (and IDs) are based on."""
     title_base = entry.title
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get_device({(DOMAIN, entry.data.get("mac"))}, set())

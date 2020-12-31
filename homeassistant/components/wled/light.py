@@ -105,10 +105,10 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     def __init__(
         self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, title_base=None
     ):
+        """Initialize WLED master light."""
         if title_base is None:
             title_base = coordinator.data.info.name
 
-        """Initialize WLED master light."""
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
@@ -172,10 +172,10 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         segment: int,
         title_base=None,
     ):
+        """Initialize WLED segment light."""
         if title_base is None:
             title_base = coordinator.data.info.name
 
-        """Initialize WLED segment light."""
         self._rgbw = coordinator.data.info.leds.rgbw
         self._segment = segment
 
