@@ -51,6 +51,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         self._tracks = 12
         self._media_image_url = None
         self._shuffle = False
+        self._sound_mode = None
 
         self.service_calls = {
             "turn_on": mock_service(
@@ -95,11 +96,20 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
             "media_play_pause": mock_service(
                 hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PLAY_PAUSE
             ),
+            "select_sound_mode": mock_service(
+                hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOUND_MODE
+            ),
             "select_source": mock_service(
                 hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
             ),
+            "toggle": mock_service(
+                hass, media_player.DOMAIN, media_player.SERVICE_TOGGLE
+            ),
             "clear_playlist": mock_service(
                 hass, media_player.DOMAIN, media_player.SERVICE_CLEAR_PLAYLIST
+            ),
+            "repeat_set": mock_service(
+                hass, media_player.DOMAIN, media_player.SERVICE_REPEAT_SET
             ),
             "shuffle_set": mock_service(
                 hass, media_player.DOMAIN, media_player.SERVICE_SHUFFLE_SET
@@ -165,17 +175,29 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         """Mock pause."""
         self._state = STATE_PAUSED
 
+    def select_sound_mode(self, sound_mode):
+        """Set the sound mode."""
+        self._sound_mode = sound_mode
+
     def select_source(self, source):
         """Set the input source."""
         self._source = source
+
+    def async_toggle(self):
+        """Toggle the power on the media player."""
+        self._state = STATE_OFF if self._state == STATE_ON else STATE_ON
 
     def clear_playlist(self):
         """Clear players playlist."""
         self._tracks = 0
 
     def set_shuffle(self, shuffle):
-        """Clear players playlist."""
+        """Enable/disable shuffle mode."""
         self._shuffle = shuffle
+
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._repeat = repeat
 
 
 class TestMediaPlayer(unittest.TestCase):
@@ -208,8 +230,17 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_source_id = f"{input_select.DOMAIN}.source"
         self.hass.states.set(self.mock_source_id, "dvd")
 
+        self.mock_sound_mode_list_id = f"{input_select.DOMAIN}.sound_mode_list"
+        self.hass.states.set(self.mock_sound_mode_list_id, ["music", "movie"])
+
+        self.mock_sound_mode_id = f"{input_select.DOMAIN}.sound_mode"
+        self.hass.states.set(self.mock_sound_mode_id, "music")
+
         self.mock_shuffle_switch_id = switch.ENTITY_ID_FORMAT.format("shuffle")
         self.hass.states.set(self.mock_shuffle_switch_id, STATE_OFF)
+
+        self.mock_repeat_switch_id = switch.ENTITY_ID_FORMAT.format("repeat")
+        self.hass.states.set(self.mock_repeat_switch_id, STATE_OFF)
 
         self.config_children_only = {
             "name": "test",
@@ -233,6 +264,9 @@ class TestMediaPlayer(unittest.TestCase):
                 "source_list": self.mock_source_list_id,
                 "state": self.mock_state_switch_id,
                 "shuffle": self.mock_shuffle_switch_id,
+                "repeat": self.mock_repeat_switch_id,
+                "sound_mode_list": self.mock_sound_mode_list_id,
+                "sound_mode": self.mock_sound_mode_id,
             },
         }
         self.addCleanup(self.tear_down_cleanup)
@@ -510,6 +544,17 @@ class TestMediaPlayer(unittest.TestCase):
         asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         assert ump.is_volume_muted
 
+    def test_sound_mode_list_children_and_attr(self):
+        """Test sound mode list property w/ children and attrs."""
+        config = validate_config(self.config_children_and_attr)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        assert "['music', 'movie']" == ump.sound_mode_list
+
+        self.hass.states.set(self.mock_sound_mode_list_id, ["music", "movie", "game"])
+        assert "['music', 'movie', 'game']" == ump.sound_mode_list
+
     def test_source_list_children_and_attr(self):
         """Test source list property w/ children and attrs."""
         config = validate_config(self.config_children_and_attr)
@@ -520,6 +565,17 @@ class TestMediaPlayer(unittest.TestCase):
 
         self.hass.states.set(self.mock_source_list_id, ["dvd", "htpc", "game"])
         assert "['dvd', 'htpc', 'game']" == ump.source_list
+
+    def test_sound_mode_children_and_attr(self):
+        """Test sound modeproperty w/ children and attrs."""
+        config = validate_config(self.config_children_and_attr)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        assert "music" == ump.sound_mode
+
+        self.hass.states.set(self.mock_sound_mode_id, "movie")
+        assert "movie" == ump.sound_mode
 
     def test_source_children_and_attr(self):
         """Test source property w/ children and attrs."""
@@ -582,13 +638,16 @@ class TestMediaPlayer(unittest.TestCase):
             "volume_down": excmd,
             "volume_mute": excmd,
             "volume_set": excmd,
+            "select_sound_mode": excmd,
             "select_source": excmd,
+            "repeat_set": excmd,
             "shuffle_set": excmd,
             "media_play": excmd,
             "media_pause": excmd,
             "media_stop": excmd,
             "media_next_track": excmd,
             "media_previous_track": excmd,
+            "toggle": excmd,
             "clear_playlist": excmd,
         }
         config = validate_config(config)
@@ -607,7 +666,9 @@ class TestMediaPlayer(unittest.TestCase):
             | universal.SUPPORT_TURN_OFF
             | universal.SUPPORT_VOLUME_STEP
             | universal.SUPPORT_VOLUME_MUTE
+            | universal.SUPPORT_SELECT_SOUND_MODE
             | universal.SUPPORT_SELECT_SOURCE
+            | universal.SUPPORT_REPEAT_SET
             | universal.SUPPORT_SHUFFLE_SET
             | universal.SUPPORT_VOLUME_SET
             | universal.SUPPORT_PLAY
@@ -737,6 +798,11 @@ class TestMediaPlayer(unittest.TestCase):
         assert 1 == len(self.mock_mp_2.service_calls["media_play_pause"])
 
         asyncio.run_coroutine_threadsafe(
+            ump.async_select_sound_mode("music"), self.hass.loop
+        ).result()
+        assert 1 == len(self.mock_mp_2.service_calls["select_sound_mode"])
+
+        asyncio.run_coroutine_threadsafe(
             ump.async_select_source("dvd"), self.hass.loop
         ).result()
         assert 1 == len(self.mock_mp_2.service_calls["select_source"])
@@ -747,9 +813,17 @@ class TestMediaPlayer(unittest.TestCase):
         assert 1 == len(self.mock_mp_2.service_calls["clear_playlist"])
 
         asyncio.run_coroutine_threadsafe(
+            ump.async_set_repeat(True), self.hass.loop
+        ).result()
+        assert 1 == len(self.mock_mp_2.service_calls["repeat_set"])
+
+        asyncio.run_coroutine_threadsafe(
             ump.async_set_shuffle(True), self.hass.loop
         ).result()
         assert 1 == len(self.mock_mp_2.service_calls["shuffle_set"])
+
+        asyncio.run_coroutine_threadsafe(ump.async_toggle(), self.hass.loop).result()
+        assert 1 == len(self.mock_mp_2.service_calls["toggle"])
 
     def test_service_call_to_command(self):
         """Test service call to command."""
