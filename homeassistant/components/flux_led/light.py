@@ -537,18 +537,10 @@ class FluxLight(CoordinatorEntity, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off the light."""
 
-        rgb = self._bulb.getRgb()
         self._last_brightness = self.brightness
         self._last_hs_color = self.hs_color
 
-        if self._mode == MODE_WHITE:
-            self._bulb.setRgbw(0, 0, 0, w=0)
-
-        elif self._mode == MODE_RGBW:
-            self._bulb.setRgbw(*tuple(rgb), w=0, brightness=0)
-
-        else:
-            self._bulb.setRgb(*tuple(rgb), brightness=0)
+        self._bulb.turnOff()
 
         self._state = False
         self.async_write_ha_state()
