@@ -382,9 +382,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def brightness(self):
         """Return the brightness of the light."""
 
-        if time.time() - self._last_update > 1:
-            self._brightness = self.coordinator.data["brightness"]
-            self._last_brightness = self._brightness
+        self._brightness = self.coordinator.data["brightness"]
+        self._last_brightness = self._brightness
 
         return self._brightness
 
@@ -392,9 +391,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def hs_color(self):
         """Return the color property."""
 
-        if time.time() - self._last_update > 1:
-            self._hs_color = self.coordinator.data["hs_color"]
-            self._last_hs_color = self._hs_color
+        self._hs_color = self.coordinator.data["hs_color"]
+        self._last_hs_color = self._hs_color
 
         return self._hs_color
 
@@ -534,7 +532,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
         self._state = True
-        self._last_update = time.time()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the light."""
@@ -553,4 +551,4 @@ class FluxLight(CoordinatorEntity, LightEntity):
             self._bulb.setRgb(*tuple(rgb), brightness=0)
 
         self._state = False
-        self._last_update = time.time()
+        self.async_write_ha_state()
