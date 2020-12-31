@@ -58,6 +58,7 @@ class MusicCastData:
         self.group_role = None
         self.group_server_zone = None
         self.group_client_list = []
+        self.group_servers_updated = True
 
     @property
     def fm_freq(self):
@@ -335,6 +336,7 @@ class MusicCastDevice:
         print("Fetching distribution data")
         print(self._distribution_info)
         print("-------------")
+        self.data.group_servers_updated = False
         self.data.last_group_role = self.data.group_role
         self.data.last_group_id = self.data.group_id
         self.data.group_id = self._distribution_info.get("group_id", None)
@@ -348,3 +350,5 @@ class MusicCastDevice:
 
         for cb in self._group_update_callbacks:
             await cb()
+
+        self.data.group_servers_updated = True

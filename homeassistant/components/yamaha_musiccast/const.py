@@ -29,6 +29,9 @@ ATTR_SPEED = "speed"
 ATTR_TARGET_BRIGHTNESS = "target_brightness"
 ATTR_UDP_PORT = "udp_port"
 
+ATTR_MC_LINK = "mc_link"
+ATTR_MAIN_SYNC = "main_sync"
+ATTR_MC_LINK_SOURCES = [ATTR_MC_LINK, ATTR_MAIN_SYNC]
 SERVICE_JOIN = "join"
 SERVICE_UNJOIN = "unjoin"
 ATTR_MASTER = "master"

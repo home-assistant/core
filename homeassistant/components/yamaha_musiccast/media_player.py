@@ -1,4 +1,5 @@
 """Demo implementation of the media player."""
+import asyncio
 from typing import Callable, List
 
 from pyamaha import Dist, NetUSB, Tuner, Zone
@@ -36,7 +37,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
-from .const import ATTR_MUSICCAST_GROUP, DOMAIN, NULL_GROUP
+from .const import ATTR_MUSICCAST_GROUP, DOMAIN, NULL_GROUP, ATTR_MC_LINK_SOURCES, ATTR_MC_LINK, ATTR_MAIN_SYNC
 from .musiccast_device import MusicCastData
 
 PARALLEL_UPDATES = 1
@@ -613,12 +614,36 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Let the client join a group. If this client is a server, the server will stop distributing."""
         if self.is_server:
             await self.async_unjoin()
-        await self.coordinator.musiccast.device.post(
-            *Dist.set_client_info(group_id, self._zone_id, server.ip_address)
-        )
+
+        if self.ip_address == server.ip_address:
+            if self._zone_id != DEFAULT_ZONE:
+                await self.async_select_source(ATTR_MAIN_SYNC)
+            else:
+                print("Can not join the a zone of the same device from main.")
+        elif self.ip_address in server.coordinator.data.group_client_list and \
+            self.coordinator.data.group_id == server.coordinator.data.group_id and \
+                self.coordinator.data.group_role == "client":
+            await self.async_select_source(ATTR_MC_LINK)
+            print(self.entity_id + ": Already part of the group. Setting source to mc_link")
+        else:
+            await self.coordinator.musiccast.device.post(
+                *Dist.set_client_info(group_id, self._zone_id, server.ip_address)
+            )
+            print(self.entity_id + ": Joined " + group_id)
+
+    async def async_wait_until_group_data_updated(self):
+        while True:
+            if self.coordinator.data.group_role == "none" and self.coordinator.data.group_servers_updated:
+                return True
+            await asyncio.sleep(0.1)
 
     async def async_server_join(self, entities):
         """Add all clients given in entities to the group of the server. Creates a new group if necessary."""
+        mc_zone = self.musiccast_zone_entity
+        if mc_zone and not self.is_server:
+            print(self.entity_id + ": MusicCast is already in use for " + mc_zone.entity_id + ". Unjoining first.")
+            await mc_zone.async_unjoin()
+            await asyncio.wait_for(self.async_wait_until_group_data_updated(), 5)
         group = (
             self.coordinator.data.group_id
             if self.is_server
@@ -635,32 +660,49 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         )
 
         await self.coordinator.musiccast.device.get(Dist.start_distribution(0))
+        print(self.entity_id + ": Added clients " + str([e.ip_address for e in entities]))
 
     async def async_unjoin(self):
         """Leave the group. Stops the distribution if device is server."""
         if self.is_server:
+            for client in self.musiccast_group:
+                if client != self:
+                    await client.async_unjoin()
             await self.coordinator.musiccast.device.get(Dist.stop_distribution())
             await self.coordinator.musiccast.device.post(
                 *Dist.set_server_info("", zone=self._zone_id)
             )
 
         else:
-            await self.coordinator.musiccast.device.post(
-                *Dist.set_client_info("", self._zone_id)
-            )
+            if self.source == ATTR_MAIN_SYNC:
+                await self.async_turn_off()
+            else:
+                await self.coordinator.musiccast.device.post(
+                    *Dist.set_client_info("", self._zone_id)
+                )
+
+    def is_part_of_group(self, group_server):
+        return (
+                self.ip_address in
+                group_server.coordinator.data.group_client_list
+                + [group_server.ip_address]
+                and group_server != self
+                and self.source in ATTR_MC_LINK_SOURCES)
 
     @property
     def musiccast_group(self):
         """Return all media players of the current group, if the media player is server."""
+        if not self.is_server:
+            return [self]
         entities = []
         for coordinator in self.hass.data[DOMAIN].values():
             entities += coordinator.entities
         clients = [
             entity
             for entity in entities
-            if entity.ip_address in self.coordinator.data.group_client_list
-            and entity != self
+            if entity.is_part_of_group(self)
         ]
+        print(self.entity_id + " Group Members: " + str(clients))
         return clients + [self]
 
     @property
@@ -672,6 +714,11 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         return attributes
 
     @property
+    def is_musiccast_zone(self):
+        """Return whether this media player is the distribution zone"""
+        return self._zone_id == self.coordinator.data.group_server_zone
+
+    @property
     def is_server(self):
         """Return whether the media player is the server/host of the group.
 
@@ -680,20 +727,22 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         return (
             self.coordinator.data.group_role == "server"
             and self.coordinator.data.group_id != NULL_GROUP
-            and self._zone_id == self.coordinator.data.group_server_zone
+            and self.is_musiccast_zone
         )
+
+    @property
+    def musiccast_zone_entity(self):
+        for entity in self.coordinator.entities:
+            if entity.is_musiccast_zone and self.coordinator.data.group_role != "none":
+                return entity
+
+        return None
 
     async def async_check_if_client_left(self):
         """Handle an group update.
 
         If the client left the group, the server speakers have to update their client lists.
         """
-        print("Checking if client left the group")
-        print(self.coordinator.data.last_group_role)
-        print(self.coordinator.data.last_group_id)
-        print("--------------------")
-        print(self.coordinator.data.group_role)
-        print(self.coordinator.data.group_id)
         if self.coordinator.data.last_group_role != "server" and (
             (
                 self.coordinator.data.last_group_id != NULL_GROUP
@@ -725,7 +774,8 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                 continue
             if (
                 client.coordinator.data.group_id != self.coordinator.data.group_id
-                or client.coordinator.data.group_role != "client"
+                or (client.coordinator.data.group_role != "client" and
+                    client.ip_address != self.ip_address)
             ):
                 client_ips_for_removal.append(client.ip_address)
 
@@ -740,3 +790,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             )
 
         print(self.entity_id + " removed clients " + str(client_ips_for_removal))
+        if len(self.musiccast_group) < 2:
+            await self.async_unjoin()
+            print(self.entity_id + " : Group is empty. Unjoining.")
