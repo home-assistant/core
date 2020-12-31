@@ -381,8 +381,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-
-        self._brightness = self.coordinator.data["brightness"]
         self._last_brightness = self._brightness
 
         return self._brightness
@@ -390,8 +388,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def hs_color(self):
         """Return the color property."""
-
-        self._hs_color = self.coordinator.data["hs_color"]
         self._last_hs_color = self._hs_color
 
         return self._hs_color
@@ -399,7 +395,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def white_value(self):
         """Return the white value of this light."""
-        return self.coordinator.data["white_value"]
+        return self._white_value
 
     @property
     def supported_features(self):
@@ -417,7 +413,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def effect(self):
         """Return the current effect."""
-        current_mode = self.coordinator.data["current_effect"]
+        current_mode = self._current_effect
 
         if current_mode == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
