@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Vous ne pouvez configurer qu'un seul compte Almond",
             "cannot_connect": "Impossible de se connecter au serveur Almond",
             "missing_configuration": "Veuillez consulter la documentation pour savoir comment configurer Almond.",
             "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )",

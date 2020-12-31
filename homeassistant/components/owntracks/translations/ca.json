@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia.",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "create_entry": {

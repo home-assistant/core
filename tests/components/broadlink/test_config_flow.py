@@ -334,7 +334,7 @@ async def test_flow_auth_os_error(hass):
 
 
 async def test_flow_reset_works(hass):
-    """Test we finish a config flow after a factory reset."""
+    """Test we finish a config flow after a manual unlock."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()

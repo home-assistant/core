@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
         "flow_title": "Canary: {name}",
         "step": {
             "user": {

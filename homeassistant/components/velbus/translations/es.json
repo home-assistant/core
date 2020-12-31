@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "port_exists": "Este puerto ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "cannot_connect": "No se pudo conectar",
-            "connection_failed": "La conexi\u00f3n velbus fall\u00f3",
-            "port_exists": "Este puerto ya est\u00e1 configurado"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "user": {

@@ -11,17 +11,15 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Verbindungstyp",
-                    "host": "IP-Adresse",
-                    "password": "Smile ID",
-                    "port": "Port"
+                    "flow_type": "Verbindungstyp"
                 },
                 "description": "Details"
             },
             "user_gateway": {
                 "data": {
                     "port": "Port"
-                }
+                },
+                "description": "Bitte eingeben"
             }
         }
     },

@@ -12,11 +12,8 @@
         },
         "error": {
             "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
-            "busy_error": "Device refused to add pairing as it is already pairing with another controller.",
             "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
-            "max_tries_error": "Device refused to add pairing as it has received more than 100 unsuccessful authentication attempts.",
             "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently.",
-            "protocol_error": "Error communicating with the accessory. Device may not be in pairing mode and may require a physical or virtual button press.",
             "unable_to_pair": "Unable to pair, please try again.",
             "unknown_error": "Device reported an unknown error. Pairing failed."
         },
@@ -40,10 +37,6 @@
             "protocol_error": {
                 "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing.",
                 "title": "Error communicating with the accessory"
-            },
-            "try_pair_later": {
-                "description": "Ensure the device is in pairing mode or try restarting the device, then continue to re-start pairing.",
-                "title": "Pairing Unavailable"
             },
             "user": {
                 "data": {

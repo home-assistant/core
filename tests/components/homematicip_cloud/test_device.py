@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 231
+    assert len(mock_hap.hmip_device_by_entity_id) == 250
 
 
 async def test_hmip_remove_device(hass, default_mock_hap_factory):
@@ -268,4 +268,4 @@ async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
 
     # get the hap
     hap_device = device_registry.async_get(device.via_device_id)
-    assert hap_device.name == "Access Point"
+    assert hap_device.name == "Home"

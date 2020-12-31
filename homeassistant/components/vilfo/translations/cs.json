@@ -14,6 +14,7 @@
                     "access_token": "P\u0159\u00edstupov\u00fd token",
                     "host": "Hostitel"
                 },
+                "description": "Nastaven\u00ed integrace routeru Vilfo. Pot\u0159ebujete n\u00e1zev hostitele/IP adresu routeru Vilfo a p\u0159\u00edstupov\u00fd API token. Dal\u0161\u00ed informace o t\u00e9to integraci a o tom, jak tyto podrobnosti z\u00edskat, najdete na adrese: https://www.home-assistant.io/integrations/vilfo",
                 "title": "P\u0159ipojen\u00ed k routeru Vilfo"
             }
         }

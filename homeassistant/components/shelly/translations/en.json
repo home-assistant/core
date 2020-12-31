@@ -5,7 +5,6 @@
             "unsupported_firmware": "The device is using an unsupported firmware version."
         },
         "error": {
-            "auth_not_supported": "Shelly devices requiring authentication are not currently supported.",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
@@ -28,6 +27,5 @@
                 "description": "Before set up, battery-powered devices must be woken up by pressing the button on the device."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

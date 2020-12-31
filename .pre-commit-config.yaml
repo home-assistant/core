@@ -30,7 +30,7 @@ repos:
           - pydocstyle==5.1.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.6.2
+    rev: 1.7.0
     hooks:
       - id: bandit
         args:
@@ -48,6 +48,7 @@ repos:
       - id: check-executables-have-shebangs
         stages: [manual]
       - id: check-json
+        exclude: (.vscode|.devcontainer)
       - id: no-commit-to-branch
         args:
           - --branch=dev

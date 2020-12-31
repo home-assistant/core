@@ -35,11 +35,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_projector(
                     self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
                 )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
                 return self.async_create_entry(
                     title=user_input.pop(CONF_NAME), data=user_input
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

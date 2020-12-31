@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Una conexi\u00f3n de m\u00f3dem Insteon ya est\u00e1 configurada",
             "cannot_connect": "No se puede conectar al m\u00f3dem Insteon",
             "single_instance_allowed": "Ya esta configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
@@ -10,24 +9,6 @@
             "select_single": "Seleccione una opci\u00f3n."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Direcci\u00f3n IP del Hub",
-                    "port": "Puerto IP"
-                },
-                "description": "Configure el Insteon Hub Versi\u00f3n 1 (anterior a 2014).",
-                "title": "Insteon Hub Versi\u00f3n 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Direcci\u00f3n IP del Hub",
-                    "password": "Contrase\u00f1a",
-                    "port": "Puerto IP",
-                    "username": "Nombre de usuario"
-                },
-                "description": "Configure el Insteon Hub versi\u00f3n 2.",
-                "title": "Insteon Hub Versi\u00f3n 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "Direcci\u00f3n IP",
@@ -46,15 +27,6 @@
                 "description": "Configure el Insteon Hub versi\u00f3n 2.",
                 "title": "Insteon Hub Versi\u00f3n 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub versi\u00f3n 1 (anterior a 2014)",
-                    "hubv2": "Hub Versi\u00f3n 2",
-                    "plm": "M\u00f3dem PowerLink (PLM)"
-                },
-                "description": "Seleccione el tipo de m\u00f3dem Insteon.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "Ruta del dispositivo USB"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Ya est\u00e1 configurada una conexi\u00f3n del m\u00f3dem Insteon",
-            "cannot_connect": "No se puede conectar al m\u00f3dem Insteon"
-        },
         "error": {
             "cannot_connect": "No se pudo conectar",
             "input_error": "Entradas no v\u00e1lidas, compruebe sus valores.",

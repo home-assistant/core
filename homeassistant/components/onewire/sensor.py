@@ -10,6 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -30,7 +31,7 @@ from .const import (
     SENSOR_TYPE_VOLTAGE,
     SENSOR_TYPE_WETNESS,
 )
-from .onewire_entities import OneWire, OneWireProxy
+from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -243,7 +244,7 @@ def get_entities(onewirehub: OneWireHub, config):
         for device in onewirehub.devices:
             family = device["family"]
             device_type = device["type"]
-            sensor_id = os.path.split(os.path.split(device["path"])[0])[1]
+            device_id = os.path.split(os.path.split(device["path"])[0])[1]
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
@@ -253,38 +254,37 @@ def get_entities(onewirehub: OneWireHub, config):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
-                    sensor_id,
+                    device_id,
                 )
                 continue
             device_info = {
-                "identifiers": {(DOMAIN, sensor_id)},
+                "identifiers": {(DOMAIN, device_id)},
                 "manufacturer": "Maxim Integrated",
                 "model": device_type,
-                "name": sensor_id,
+                "name": device_id,
             }
-            for device_sensor in hb_info_from_type(dev_type)[family]:
-                if device_sensor["type"] == SENSOR_TYPE_MOISTURE:
-                    s_id = device_sensor["path"].split(".")[1]
+            for entity_specs in hb_info_from_type(dev_type)[family]:
+                if entity_specs["type"] == SENSOR_TYPE_MOISTURE:
+                    s_id = entity_specs["path"].split(".")[1]
                     is_leaf = int(
                         onewirehub.owproxy.read(
                             f"{device['path']}moisture/is_leaf.{s_id}"
                         ).decode()
                     )
                     if is_leaf:
-                        device_sensor["type"] = SENSOR_TYPE_WETNESS
-                        device_sensor["name"] = f"Wetness {s_id}"
-                device_file = os.path.join(
-                    os.path.split(device["path"])[0], device_sensor["path"]
+                        entity_specs["type"] = SENSOR_TYPE_WETNESS
+                        entity_specs["name"] = f"Wetness {s_id}"
+                entity_path = os.path.join(
+                    os.path.split(device["path"])[0], entity_specs["path"]
                 )
                 entities.append(
-                    OneWireProxy(
-                        device_names.get(sensor_id, sensor_id),
-                        device_file,
-                        device_sensor["type"],
-                        device_sensor["name"],
-                        device_info,
-                        device_sensor.get("default_disabled", False),
-                        onewirehub.owproxy,
+                    OneWireProxySensor(
+                        device_id=device_id,
+                        device_name=device_names.get(device_id, device_id),
+                        device_info=device_info,
+                        entity_path=entity_path,
+                        entity_specs=entity_specs,
+                        owproxy=onewirehub.owproxy,
                     )
                 )
 
@@ -311,7 +311,7 @@ def get_entities(onewirehub: OneWireHub, config):
             }
             device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
             entities.append(
-                OneWireDirect(
+                OneWireDirectSensor(
                     device_names.get(sensor_id, sensor_id),
                     device_file,
                     device_info,
@@ -350,7 +350,7 @@ def get_entities(onewirehub: OneWireHub, config):
                         os.path.split(family_file_path)[0], sensor_value
                     )
                     entities.append(
-                        OneWireOWFS(
+                        OneWireOWFSSensor(
                             device_names.get(sensor_id, sensor_id),
                             device_file,
                             sensor_key,
@@ -360,13 +360,27 @@ def get_entities(onewirehub: OneWireHub, config):
     return entities
 
 
-class OneWireDirect(OneWire):
+class OneWireProxySensor(OneWireProxyEntity):
+    """Implementation of a 1-Wire sensor connected through owserver."""
+
+    @property
+    def state(self) -> StateType:
+        """Return the state of the entity."""
+        return self._state
+
+
+class OneWireDirectSensor(OneWireBaseEntity):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
     def __init__(self, name, device_file, device_info, owsensor):
         """Initialize the sensor."""
         super().__init__(name, device_file, "temperature", "Temperature", device_info)
         self._owsensor = owsensor
+
+    @property
+    def state(self) -> StateType:
+        """Return the state of the entity."""
+        return self._state
 
     def update(self):
         """Get the latest data from the device."""
@@ -383,12 +397,17 @@ class OneWireDirect(OneWire):
         self._state = value
 
 
-class OneWireOWFS(OneWire):  # pragma: no cover
+class OneWireOWFSSensor(OneWireBaseEntity):  # pragma: no cover
     """Implementation of a 1-Wire sensor through owfs.
 
     This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
     https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
     """
+
+    @property
+    def state(self) -> StateType:
+        """Return the state of the entity."""
+        return self._state
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""

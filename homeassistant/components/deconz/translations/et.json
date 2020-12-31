@@ -6,7 +6,6 @@
             "no_bridges": "DeCONZ l\u00fc\u00fcse ei leitud",
             "no_hardware_available": "DeCONZi raadio riistvara puudub",
             "not_deconz_bridge": "See pole deCONZ-i sild",
-            "one_instance_only": "Komponent toetab ainult \u00fchte deCONZ-i sidumist",
             "updated_instance": "DeCONZ-i eksemplarile omistati uus hostiaadress"
         },
         "error": {

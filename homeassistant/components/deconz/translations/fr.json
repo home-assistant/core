@@ -6,7 +6,6 @@
             "no_bridges": "Aucun pont deCONZ n'a \u00e9t\u00e9 d\u00e9couvert",
             "no_hardware_available": "Aucun mat\u00e9riel radio connect\u00e9 \u00e0 deCONZ",
             "not_deconz_bridge": "Pas un pont deCONZ",
-            "one_instance_only": "Le composant prend uniquement en charge une instance deCONZ",
             "updated_instance": "Instance deCONZ mise \u00e0 jour avec la nouvelle adresse d'h\u00f4te"
         },
         "error": {

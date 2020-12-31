@@ -48,7 +48,9 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant."
 )
-_UNDEF = object()
+_UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+
+MAX_LOAD_CONCURRENTLY = 4
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:

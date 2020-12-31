@@ -7,6 +7,7 @@ import ssl
 import threading
 
 from aiohttp.test_utils import make_mocked_request
+import multidict
 import pytest
 import requests_mock as _requests_mock
 
@@ -22,11 +23,11 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import event
+from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import MagicMock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -277,17 +278,27 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
-def current_request(hass):
+def current_request():
     """Mock current request."""
-    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
             sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
         )
-        mock_request_context.get = Mock(return_value=mocked_request)
+        mock_request_context.get.return_value = mocked_request
         yield mock_request_context
+
+
+@pytest.fixture
+def current_request_with_host(current_request):
+    """Mock current request with a host header."""
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
+    )
 
 
 @pytest.fixture
@@ -389,7 +400,7 @@ def mqtt_client_mock(hass):
 async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     """Fixture to mock MQTT component."""
     if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
     result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
     assert result
@@ -526,3 +537,9 @@ def legacy_patchable_time():
         async_track_utc_time_change,
     ):
         yield
+
+
+@pytest.fixture
+def enable_custom_integrations(hass):
+    """Enable custom integrations defined in the test dir."""
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)

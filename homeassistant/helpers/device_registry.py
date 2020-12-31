@@ -11,7 +11,7 @@ import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
 from .singleton import singleton
-from .typing import HomeAssistantType
+from .typing import UNDEFINED, HomeAssistantType
 
 if TYPE_CHECKING:
     from . import entity_registry
@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 
 DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
@@ -37,6 +36,9 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_INTEGRATION = "integration"
+DISABLED_USER = "user"
+
 
 @attr.s(slots=True, frozen=True)
 class DeletedDeviceEntry:
@@ -47,12 +49,12 @@ class DeletedDeviceEntry:
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
-    def to_device_entry(self):
+    def to_device_entry(self, config_entry_id, connections, identifiers):
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
+            config_entries={config_entry_id},
+            connections=self.connections & connections,
+            identifiers=self.identifiers & identifiers,
             id=self.id,
             is_new=True,
         )
@@ -76,6 +78,21 @@ class DeviceEntry:
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    disabled_by: Optional[str] = attr.ib(
+        default=None,
+        validator=attr.validators.in_(
+            (
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
+                None,
+            )
+        ),
+    )
+
+    @property
+    def disabled(self) -> bool:
+        """Return if entry is disabled."""
+        return self.disabled_by is not None
 
 
 def format_mac(mac: str) -> str:
@@ -206,15 +223,17 @@ class DeviceRegistry:
         config_entry_id,
         connections=None,
         identifiers=None,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        default_manufacturer=_UNDEF,
-        default_model=_UNDEF,
-        default_name=_UNDEF,
-        sw_version=_UNDEF,
-        entry_type=_UNDEF,
+        manufacturer=UNDEFINED,
+        model=UNDEFINED,
+        name=UNDEFINED,
+        default_manufacturer=UNDEFINED,
+        default_model=UNDEFINED,
+        default_name=UNDEFINED,
+        sw_version=UNDEFINED,
+        entry_type=UNDEFINED,
         via_device=None,
+        # To disable a device if it gets created
+        disabled_by=UNDEFINED,
     ):
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
@@ -236,35 +255,38 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
-        if default_manufacturer is not _UNDEF and device.manufacturer is None:
+        if default_manufacturer is not UNDEFINED and device.manufacturer is None:
             manufacturer = default_manufacturer
 
-        if default_model is not _UNDEF and device.model is None:
+        if default_model is not UNDEFINED and device.model is None:
             model = default_model
 
-        if default_name is not _UNDEF and device.name is None:
+        if default_name is not UNDEFINED and device.name is None:
             name = default_name
 
         if via_device is not None:
             via = self.async_get_device({via_device}, set())
-            via_device_id = via.id if via else _UNDEF
+            via_device_id = via.id if via else UNDEFINED
         else:
-            via_device_id = _UNDEF
+            via_device_id = UNDEFINED
 
         return self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
             via_device_id=via_device_id,
-            merge_connections=connections or _UNDEF,
-            merge_identifiers=identifiers or _UNDEF,
+            merge_connections=connections or UNDEFINED,
+            merge_identifiers=identifiers or UNDEFINED,
             manufacturer=manufacturer,
             model=model,
             name=name,
             sw_version=sw_version,
             entry_type=entry_type,
+            disabled_by=disabled_by,
         )
 
     @callback
@@ -272,15 +294,16 @@ class DeviceRegistry:
         self,
         device_id,
         *,
-        area_id=_UNDEF,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        name_by_user=_UNDEF,
-        new_identifiers=_UNDEF,
-        sw_version=_UNDEF,
-        via_device_id=_UNDEF,
-        remove_config_entry_id=_UNDEF,
+        area_id=UNDEFINED,
+        manufacturer=UNDEFINED,
+        model=UNDEFINED,
+        name=UNDEFINED,
+        name_by_user=UNDEFINED,
+        new_identifiers=UNDEFINED,
+        sw_version=UNDEFINED,
+        via_device_id=UNDEFINED,
+        remove_config_entry_id=UNDEFINED,
+        disabled_by=UNDEFINED,
     ):
         """Update properties of a device."""
         return self._async_update_device(
@@ -294,6 +317,7 @@ class DeviceRegistry:
             sw_version=sw_version,
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
+            disabled_by=disabled_by,
         )
 
     @callback
@@ -301,19 +325,20 @@ class DeviceRegistry:
         self,
         device_id,
         *,
-        add_config_entry_id=_UNDEF,
-        remove_config_entry_id=_UNDEF,
-        merge_connections=_UNDEF,
-        merge_identifiers=_UNDEF,
-        new_identifiers=_UNDEF,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        sw_version=_UNDEF,
-        entry_type=_UNDEF,
-        via_device_id=_UNDEF,
-        area_id=_UNDEF,
-        name_by_user=_UNDEF,
+        add_config_entry_id=UNDEFINED,
+        remove_config_entry_id=UNDEFINED,
+        merge_connections=UNDEFINED,
+        merge_identifiers=UNDEFINED,
+        new_identifiers=UNDEFINED,
+        manufacturer=UNDEFINED,
+        model=UNDEFINED,
+        name=UNDEFINED,
+        sw_version=UNDEFINED,
+        entry_type=UNDEFINED,
+        via_device_id=UNDEFINED,
+        area_id=UNDEFINED,
+        name_by_user=UNDEFINED,
+        disabled_by=UNDEFINED,
     ):
         """Update device attributes."""
         old = self.devices[device_id]
@@ -323,13 +348,13 @@ class DeviceRegistry:
         config_entries = old.config_entries
 
         if (
-            add_config_entry_id is not _UNDEF
+            add_config_entry_id is not UNDEFINED
             and add_config_entry_id not in old.config_entries
         ):
             config_entries = old.config_entries | {add_config_entry_id}
 
         if (
-            remove_config_entry_id is not _UNDEF
+            remove_config_entry_id is not UNDEFINED
             and remove_config_entry_id in config_entries
         ):
             if config_entries == {remove_config_entry_id}:
@@ -338,7 +363,7 @@ class DeviceRegistry:
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
 
         for attr_name, value in (
@@ -347,10 +372,10 @@ class DeviceRegistry:
         ):
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
-            if value is not _UNDEF and not value.issubset(old_value):
+            if value is not UNDEFINED and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
 
-        if new_identifiers is not _UNDEF:
+        if new_identifiers is not UNDEFINED:
             changes["identifiers"] = new_identifiers
 
         for attr_name, value in (
@@ -360,14 +385,15 @@ class DeviceRegistry:
             ("sw_version", sw_version),
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
+            ("disabled_by", disabled_by),
         ):
-            if value is not _UNDEF and value != getattr(old, attr_name):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
 
-        if area_id is not _UNDEF and area_id != old.area_id:
+        if area_id is not UNDEFINED and area_id != old.area_id:
             changes["area_id"] = area_id
 
-        if name_by_user is not _UNDEF and name_by_user != old.name_by_user:
+        if name_by_user is not UNDEFINED and name_by_user != old.name_by_user:
             changes["name_by_user"] = name_by_user
 
         if old.is_new:
@@ -438,6 +464,8 @@ class DeviceRegistry:
                     # Introduced in 0.87
                     area_id=device.get("area_id"),
                     name_by_user=device.get("name_by_user"),
+                    # Introduced in 0.119
+                    disabled_by=device.get("disabled_by"),
                 )
             # Introduced in 0.111
             for device in data.get("deleted_devices", []):
@@ -476,6 +504,7 @@ class DeviceRegistry:
                 "via_device_id": entry.via_device_id,
                 "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
+                "disabled_by": entry.disabled_by,
             }
             for entry in self.devices.values()
         ]

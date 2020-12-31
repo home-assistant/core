@@ -8,8 +8,7 @@
             "onvif_error": "Erreur lors de la configuration du p\u00e9riph\u00e9rique ONVIF. Consultez les journaux pour plus d'informations."
         },
         "error": {
-            "cannot_connect": "\u00c9chec de connexion",
-            "connection_failed": "Impossible de se connecter au service ONVIF avec les informations d'identification fournies."
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
             "auth": {

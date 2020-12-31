@@ -133,9 +133,9 @@ async def test_set_operation_bad_attr_and_state(hass, mqtt_mock, caplog):
     assert state.state == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
-    assert ("value is not allowed for dictionary value @ data['hvac_mode']") in str(
-        excinfo.value
-    )
+    assert (
+        "value must be one of ['auto', 'cool', 'dry', 'fan_only', 'heat', 'heat_cool', 'off'] for dictionary value @ data['hvac_mode']"
+    ) in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
 
@@ -438,11 +438,11 @@ async def test_set_away_mode_pessimistic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
     await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
     async_fire_mqtt_message(hass, "away-state", "ON")
     state = hass.states.get(ENTITY_CLIMATE)
@@ -450,11 +450,11 @@ async def test_set_away_mode_pessimistic(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, "away-state", "OFF")
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
     async_fire_mqtt_message(hass, "away-state", "nonsense")
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
 
 async def test_set_away_mode(hass, mqtt_mock):
@@ -467,7 +467,7 @@ async def test_set_away_mode(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
     await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("away-mode-topic", "AN", 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -477,7 +477,7 @@ async def test_set_away_mode(hass, mqtt_mock):
     await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("away-mode-topic", "AUS", 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
     await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
     mqtt_mock.async_publish.reset_mock()
@@ -525,7 +525,7 @@ async def test_set_hold_pessimistic(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, "hold-state", "off")
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
 
 async def test_set_hold(hass, mqtt_mock):
@@ -534,7 +534,7 @@ async def test_set_hold(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
     await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("hold-topic", "hold-on", 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -550,7 +550,7 @@ async def test_set_hold(hass, mqtt_mock):
     await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("hold-topic", "off", 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
 
 async def test_set_preset_mode_twice(hass, mqtt_mock):
@@ -559,7 +559,7 @@ async def test_set_preset_mode_twice(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
     await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("hold-topic", "hold-on", 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -735,7 +735,7 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     assert state.attributes.get("temperature") == 1031
 
     # Away Mode
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
     async_fire_mqtt_message(hass, "away-state", '"ON"')
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "away"
@@ -743,7 +743,7 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     # Away Mode with JSON values
     async_fire_mqtt_message(hass, "away-state", "false")
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
     async_fire_mqtt_message(hass, "away-state", "true")
     state = hass.states.get(ENTITY_CLIMATE)

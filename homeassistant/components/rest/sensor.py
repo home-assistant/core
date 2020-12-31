@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
@@ -56,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -90,6 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -112,7 +115,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             auth = (username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(
+        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+    )
+
     await rest.async_update()
 
     if rest.data is None:
@@ -135,7 +141,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 json_attrs_path,
             )
         ],
-        True,
     )
 
 
@@ -205,7 +210,14 @@ class RestSensor(Entity):
             self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
         await self.rest.async_update()
+        self._update_from_rest_data()
 
+    async def async_added_to_hass(self):
+        """Ensure the data from the initial update is reflected in the state."""
+        self._update_from_rest_data()
+
+    def _update_from_rest_data(self):
+        """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
         if self.rest.headers is not None:
@@ -215,6 +227,7 @@ class RestSensor(Entity):
             if content_type and (
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
+                or content_type.startswith("application/xhtml+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))
@@ -260,10 +273,6 @@ class RestSensor(Entity):
             )
 
         self._state = value
-
-    async def async_will_remove_from_hass(self):
-        """Shutdown the session."""
-        await self.rest.async_remove()
 
     @property
     def device_state_attributes(self):

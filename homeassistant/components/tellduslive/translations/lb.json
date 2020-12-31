@@ -7,7 +7,6 @@
             "unknown": "Onerwaarte Feeler"
         },
         "error": {
-            "auth_error": "Feeler bei der Authentifikatioun, prob\u00e9iert w.e.g. nach emol",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {

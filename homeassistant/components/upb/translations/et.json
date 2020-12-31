@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "UPB PIM selle aadressiga on juba m\u00e4\u00e4ratud",
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
@@ -12,8 +11,12 @@
         "step": {
             "user": {
                 "data": {
-                    "address": "Aadress (vt \u00fclaltoodud kirjeldust)"
-                }
+                    "address": "Aadress (vt \u00fclaltoodud kirjeldust)",
+                    "file_path": "UPStart UPB ekspordifaili tee ja nimi.",
+                    "protocol": "Protokoll"
+                },
+                "description": "\u00dchenda Universal PowerLine Bus liidese moodul (UPB PIM). Aadressistring peab tcp puhul olema kujul \"aadress[:port]\" \"tcp\". Port on valikuline ja vaikimisi 2101. N\u00e4ide: \"192.168.1.42\". Jadaprotokolli puhul peab aadress olema kujul \"tty[:baud]\". Bood on valikuline ja vaikimisi 4800. N\u00e4ide: \"/dev/ttyS1\".",
+                "title": "\u00dchendu UPB PIM-iga"
             }
         }
     }

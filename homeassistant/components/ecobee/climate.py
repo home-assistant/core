@@ -24,6 +24,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
@@ -63,6 +64,11 @@ PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
+
+DEFAULT_MIN_HUMIDITY = 15
+DEFAULT_MAX_HUMIDITY = 50
+HUMIDIFIER_MANUAL_MODE = "manual"
+
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
@@ -330,6 +336,8 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
+        if self.has_humidifier_control:
+            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
         return SUPPORT_FLAGS
 
     @property
@@ -388,6 +396,31 @@ class Thermostat(ClimateEntity):
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
+
+    @property
+    def has_humidifier_control(self):
+        """Return true if humidifier connected to thermostat and set to manual/on mode."""
+        return (
+            self.thermostat["settings"]["hasHumidifier"]
+            and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
+        )
+
+    @property
+    def target_humidity(self) -> Optional[int]:
+        """Return the desired humidity set point."""
+        if self.has_humidifier_control:
+            return self.thermostat["runtime"]["desiredHumidity"]
+        return None
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return DEFAULT_MIN_HUMIDITY
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return DEFAULT_MAX_HUMIDITY
 
     @property
     def target_temperature(self):
@@ -651,7 +684,13 @@ class Thermostat(ClimateEntity):
 
     def set_humidity(self, humidity):
         """Set the humidity level."""
-        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
+        if humidity not in range(0, 101):
+            raise ValueError(
+                f"Invalid set_humidity value (must be in range 0-100): {humidity}"
+            )
+
+        self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
+        self.update_without_throttle = True
 
     def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""

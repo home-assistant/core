@@ -2,19 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje"
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
         },
         "create_entry": {
-            "default": "Viz [dokumentace Neato]({docs_url})."
+            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"
         },
         "error": {
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
-            "unexpected_error": "Neo\u010dek\u00e1van\u00e1 chyba",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            },
+            "reauth_confirm": {
+                "title": "Chcete za\u010d\u00edt nastavovat?"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",
@@ -24,5 +31,6 @@
                 "title": "Informace o \u00fa\u010dtu Neato"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

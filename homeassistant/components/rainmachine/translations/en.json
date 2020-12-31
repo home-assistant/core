@@ -4,9 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "identifier_exists": "Account is already configured",
-            "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {

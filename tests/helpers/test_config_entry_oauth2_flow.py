@@ -3,10 +3,10 @@ import asyncio
 import logging
 import time
 
+import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
@@ -146,14 +146,14 @@ async def test_abort_if_no_url_available(hass, flow_handler, local_impl):
 
 
 async def test_abort_if_oauth_error(
-    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
+    hass,
+    flow_handler,
+    local_impl,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
 ):
     """Check bad oauth token."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
-
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -171,7 +171,13 @@ async def test_abort_if_oauth_error(
         result["flow_id"], user_input={"implementation": TEST_DOMAIN}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -203,10 +209,6 @@ async def test_abort_if_oauth_error(
 
 async def test_step_discovery(hass, flow_handler, local_impl):
     """Check flow triggers from discovery."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -222,11 +224,6 @@ async def test_step_discovery(hass, flow_handler, local_impl):
 
 async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
     """Test if aborts when discovered multiple times."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
-
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -249,10 +246,6 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
 
 async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl):
     """Test if abort discovery when entries exists."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -273,14 +266,14 @@ async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl)
 
 
 async def test_full_flow(
-    hass, flow_handler, local_impl, aiohttp_client, aioclient_mock, current_request
+    hass,
+    flow_handler,
+    local_impl,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
 ):
     """Check full flow."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
-
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -298,7 +291,13 @@ async def test_full_flow(
         result["flow_id"], user_input={"implementation": TEST_DOMAIN}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -548,3 +547,32 @@ async def test_implementation_provider(hass, local_impl):
     assert await config_entry_oauth2_flow.async_get_implementations(
         hass, mock_domain_with_impl
     ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[mock_domain_with_impl]}
+
+
+async def test_oauth_session_refresh_failure(
+    hass, flow_handler, local_impl, aioclient_mock
+):
+    """Test the OAuth2 session helper when no refresh is needed."""
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, status=400)
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                # Already expired, requires a refresh
+                "expires_in": -500,
+                "expires_at": time.time() - 500,
+                "token_type": "bearer",
+                "random_other_data": "should_stay",
+            },
+        },
+    )
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with pytest.raises(aiohttp.client_exceptions.ClientResponseError):
+        await session.async_request("post", "https://example.com")

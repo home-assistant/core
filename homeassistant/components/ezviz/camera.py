@@ -217,7 +217,7 @@ class HassEzvizCamera(Camera):
 
     async def async_camera_image(self):
         """Return a frame from the camera stream."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
+        ffmpeg = ImageFrame(self._ffmpeg.binary)
 
         image = await asyncio.shield(
             ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG)

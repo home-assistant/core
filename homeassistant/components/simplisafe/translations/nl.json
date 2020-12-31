@@ -6,7 +6,6 @@
         "error": {
             "identifier_exists": "Account bestaat al",
             "invalid_auth": "Ongeldige authenticatie",
-            "invalid_credentials": "Ongeldige gebruikersgegevens",
             "unknown": "Onverwachte fout"
         },
         "step": {

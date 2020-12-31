@@ -3,9 +3,7 @@
         "error": {
             "already_configured": "Teenus on juba seadistatud",
             "cannot_connect": "\u00dchendamine nurjus",
-            "communication_error": "Luftdaten API-ga ei saa \u00fchendust",
-            "invalid_sensor": "Andur pole saadaval v\u00f5i vigane",
-            "sensor_exists": "Andur on juba registreeritud"
+            "invalid_sensor": "Andur pole saadaval v\u00f5i vigane"
         },
         "step": {
             "user": {

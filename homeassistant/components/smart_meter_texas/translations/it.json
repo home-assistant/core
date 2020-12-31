@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
-                },
-                "description": "Fornisci il tuo nome utente e la password per Smart Meter Texas."
+                }
             }
         }
-    },
-    "title": "Smart Meter Texas"
+    }
 }

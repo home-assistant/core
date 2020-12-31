@@ -95,6 +95,7 @@
                 "data": {
                     "activation": "V\u00e4ljund sissel\u00fclitatuna",
                     "momentary": "Impulsi kestus (ms) (valikuline)",
+                    "more_states": "Selle tsooni t\u00e4iendavate olekute konfigureerimine",
                     "name": "Nimi (valikuline)",
                     "pause": "Paus impulsside vahel (ms) (valikuline)",
                     "repeat": "Korduste arv (-1 = l\u00f5pmatu) (valikuline)"

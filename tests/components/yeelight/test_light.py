@@ -13,7 +13,7 @@ from yeelight import (
     TemperatureTransition,
     transitions,
 )
-from yeelight.flow import Flow
+from yeelight.flow import Action, Flow
 from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.light import (
@@ -31,6 +31,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.yeelight import (
     ATTR_COUNT,
+    ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
@@ -51,10 +52,19 @@ from homeassistant.components.yeelight import (
 from homeassistant.components.yeelight.light import (
     ATTR_MINUTES,
     ATTR_MODE,
+    EFFECT_CANDLE_FLICKER,
+    EFFECT_DATE_NIGHT,
     EFFECT_DISCO,
     EFFECT_FACEBOOK,
     EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_HAPPY_BIRTHDAY,
+    EFFECT_HOME,
+    EFFECT_MOVIE,
+    EFFECT_NIGHT_MODE,
+    EFFECT_ROMANCE,
     EFFECT_STOP,
+    EFFECT_SUNRISE,
+    EFFECT_SUNSET,
     EFFECT_TWITTER,
     EFFECT_WHATSAPP,
     SERVICE_SET_AUTO_DELAY_OFF_SCENE,
@@ -63,6 +73,7 @@ from homeassistant.components.yeelight.light import (
     SERVICE_SET_COLOR_TEMP_SCENE,
     SERVICE_SET_HSV_SCENE,
     SERVICE_SET_MODE,
+    SERVICE_SET_MUSIC_MODE,
     SERVICE_START_FLOW,
     SUPPORT_YEELIGHT,
     SUPPORT_YEELIGHT_RGB,
@@ -126,7 +137,14 @@ async def test_services(hass: HomeAssistant, caplog):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    async def _async_test_service(service, data, method, payload=None, domain=DOMAIN):
+    async def _async_test_service(
+        service,
+        data,
+        method,
+        payload=None,
+        domain=DOMAIN,
+        failure_side_effect=BulbException,
+    ):
         err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
 
         # success
@@ -144,13 +162,14 @@ async def test_services(hass: HomeAssistant, caplog):
         )
 
         # failure
-        mocked_method = MagicMock(side_effect=BulbException)
-        setattr(type(mocked_bulb), method, mocked_method)
-        await hass.services.async_call(domain, service, data, blocking=True)
-        assert (
-            len([x for x in caplog.records if x.levelno == logging.ERROR])
-            == err_count + 1
-        )
+        if failure_side_effect:
+            mocked_method = MagicMock(side_effect=failure_side_effect)
+            setattr(type(mocked_bulb), method, mocked_method)
+            await hass.services.async_call(domain, service, data, blocking=True)
+            assert (
+                len([x for x in caplog.records if x.levelno == logging.ERROR])
+                == err_count + 1
+            )
 
     # turn_on
     brightness = 100
@@ -274,6 +293,29 @@ async def test_services(hass: HomeAssistant, caplog):
         [SceneClass.AUTO_DELAY_OFF, 50, 1],
     )
 
+    # set_music_mode failure enable
+    await _async_test_service(
+        SERVICE_SET_MUSIC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+        "start_music",
+        failure_side_effect=AssertionError,
+    )
+
+    # set_music_mode disable
+    await _async_test_service(
+        SERVICE_SET_MUSIC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "false"},
+        "stop_music",
+        failure_side_effect=None,
+    )
+
+    # set_music_mode success enable
+    await _async_test_service(
+        SERVICE_SET_MUSIC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+        "start_music",
+        failure_side_effect=None,
+    )
     # test _cmd wrapper error handler
     err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
     type(mocked_bulb).turn_on = MagicMock()
@@ -329,6 +371,7 @@ async def test_device_types(hass: HomeAssistant):
         target_properties["friendly_name"] = name
         target_properties["flowing"] = False
         target_properties["night_light"] = True
+        target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
 
         await hass.config_entries.async_unload(config_entry.entry_id)
@@ -356,6 +399,7 @@ async def test_device_types(hass: HomeAssistant):
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
         nightlight_properties["night_light"] = True
+        nightlight_properties["music_mode"] = False
         assert dict(state.attributes) == nightlight_properties
 
         await hass.config_entries.async_unload(config_entry.entry_id)
@@ -569,6 +613,96 @@ async def test_effects(hass: HomeAssistant):
         EFFECT_WHATSAPP: Flow(count=2, transitions=transitions.pulse(37, 211, 102)),
         EFFECT_FACEBOOK: Flow(count=2, transitions=transitions.pulse(59, 89, 152)),
         EFFECT_TWITTER: Flow(count=2, transitions=transitions.pulse(0, 172, 237)),
+        EFFECT_HOME: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                TemperatureTransition(degrees=3200, duration=500, brightness=80)
+            ],
+        ),
+        EFFECT_NIGHT_MODE: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[RGBTransition(0xFF, 0x99, 0x00, duration=500, brightness=1)],
+        ),
+        EFFECT_DATE_NIGHT: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[RGBTransition(0xFF, 0x66, 0x00, duration=500, brightness=50)],
+        ),
+        EFFECT_MOVIE: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                RGBTransition(
+                    red=0x14, green=0x14, blue=0x32, duration=500, brightness=50
+                )
+            ],
+        ),
+        EFFECT_SUNRISE: Flow(
+            count=1,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0xFF, green=0x4D, blue=0x00, duration=50, brightness=1
+                ),
+                TemperatureTransition(degrees=1700, duration=360000, brightness=10),
+                TemperatureTransition(degrees=2700, duration=540000, brightness=100),
+            ],
+        ),
+        EFFECT_SUNSET: Flow(
+            count=1,
+            action=Action.off,
+            transitions=[
+                TemperatureTransition(degrees=2700, duration=50, brightness=10),
+                TemperatureTransition(degrees=1700, duration=180000, brightness=5),
+                RGBTransition(
+                    red=0xFF, green=0x4C, blue=0x00, duration=420000, brightness=1
+                ),
+            ],
+        ),
+        EFFECT_ROMANCE: Flow(
+            count=0,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0x59, green=0x15, blue=0x6D, duration=4000, brightness=1
+                ),
+                RGBTransition(
+                    red=0x66, green=0x14, blue=0x2A, duration=4000, brightness=1
+                ),
+            ],
+        ),
+        EFFECT_HAPPY_BIRTHDAY: Flow(
+            count=0,
+            action=Action.stay,
+            transitions=[
+                RGBTransition(
+                    red=0xDC, green=0x50, blue=0x19, duration=1996, brightness=80
+                ),
+                RGBTransition(
+                    red=0xDC, green=0x78, blue=0x1E, duration=1996, brightness=80
+                ),
+                RGBTransition(
+                    red=0xAA, green=0x32, blue=0x14, duration=1996, brightness=80
+                ),
+            ],
+        ),
+        EFFECT_CANDLE_FLICKER: Flow(
+            count=0,
+            action=Action.recover,
+            transitions=[
+                TemperatureTransition(degrees=2700, duration=800, brightness=50),
+                TemperatureTransition(degrees=2700, duration=800, brightness=30),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=80),
+                TemperatureTransition(degrees=2700, duration=800, brightness=60),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=90),
+                TemperatureTransition(degrees=2700, duration=2400, brightness=50),
+                TemperatureTransition(degrees=2700, duration=1200, brightness=80),
+                TemperatureTransition(degrees=2700, duration=800, brightness=60),
+                TemperatureTransition(degrees=2700, duration=400, brightness=70),
+            ],
+        ),
     }
 
     for name, target in effects.items():

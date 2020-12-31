@@ -24,7 +24,6 @@ COMMENT_REQUIREMENTS = (
     "credstash",
     "decora",
     "decora_wifi",
-    "env_canada",
     "envirophat",
     "evdev",
     "face_recognition",

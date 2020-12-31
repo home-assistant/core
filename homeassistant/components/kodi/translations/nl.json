@@ -19,14 +19,6 @@
                 },
                 "description": "Voer uw Kodi gebruikersnaam en wachtwoord in. Deze zijn te vinden in Systeem / Instellingen / Netwerk / Services."
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Poort",
-                    "ssl": "Maak verbinding via SSL"
-                },
-                "description": "Kodi verbindingsinformatie. Zorg ervoor dat u \"Controle van Kodi via HTTP toestaan\" in Systeem / Instellingen / Netwerk / Services inschakelt."
-            },
             "user": {
                 "data": {
                     "host": "Host",

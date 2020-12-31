@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
         "step": {
             "edit": {
                 "data": {
@@ -14,6 +17,5 @@
                 }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

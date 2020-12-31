@@ -638,8 +638,9 @@ async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock, mqtt_m
     assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_mock._mqtt_on_disconnect(None, None, 0)
-    mqtt_mock._mqtt_on_connect(None, None, None, 0)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0):
+        mqtt_mock._mqtt_on_connect(None, None, None, 0)
+        await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
 
 
@@ -671,8 +672,9 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
     mqtt_mock._mqtt_on_disconnect(None, None, 0)
-    mqtt_mock._mqtt_on_connect(None, None, None, 0)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0):
+        mqtt_mock._mqtt_on_connect(None, None, None, 0)
+        await hass.async_block_till_done()
 
     expected.append(call("test/state", 1))
     assert mqtt_client_mock.subscribe.mock_calls == expected
@@ -779,6 +781,18 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
         mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+            },
+        }
+    ],
+)
 async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
     birth = asyncio.Event()

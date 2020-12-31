@@ -1,4 +1,7 @@
 """Tests for async util methods from Python source."""
+import asyncio
+import time
+
 import pytest
 
 from homeassistant.util import async_ as hasync
@@ -144,3 +147,25 @@ def test_protect_loop_sync():
         hasync.protect_loop(calls.append)(1)
     assert len(mock_loop.mock_calls) == 1
     assert calls == [1]
+
+
+async def test_gather_with_concurrency():
+    """Test gather_with_concurrency limits the number of running tasks."""
+
+    runs = 0
+    now_time = time.time()
+
+    async def _increment_runs_if_in_time():
+        if time.time() - now_time > 0.1:
+            return -1
+
+        nonlocal runs
+        runs += 1
+        await asyncio.sleep(0.1)
+        return runs
+
+    results = await hasync.gather_with_concurrency(
+        2, *[_increment_runs_if_in_time() for i in range(4)]
+    )
+
+    assert results == [2, 2, -1, -1]

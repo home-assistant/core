@@ -4,6 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
+            "no_uuid": "Kodi-forekomsten har ikke en unik id. Dette skyldes mest sannsynlig en gammel Kodi-versjon (17.x eller under). Du kan konfigurere integreringen manuelt eller oppgradere til en nyere Kodi-versjon.",
             "unknown": "Uventet feil"
         },
         "error": {
@@ -23,14 +24,6 @@
             "discovery_confirm": {
                 "description": "Vil du legge til Kodi ({name}) i Home Assistant?",
                 "title": "Oppdaget Kodi"
-            },
-            "host": {
-                "data": {
-                    "host": "Vert",
-                    "port": "Port",
-                    "ssl": "Koble til via SSL"
-                },
-                "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
             },
             "user": {
                 "data": {

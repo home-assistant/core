@@ -24,7 +24,7 @@ SURE_IDS = "sure_ids"
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 # sure petcare api
-SURE_API_TIMEOUT = 15
+SURE_API_TIMEOUT = 60
 
 # flap
 BATTERY_ICON = "mdi:battery"

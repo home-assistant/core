@@ -3,9 +3,7 @@
         "error": {
             "already_configured": "Tjenesten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
-            "communication_error": "Kan ikke kommunisere med Luftdaten API",
-            "invalid_sensor": "Sensor er ikke tilgjengelig eller ugyldig",
-            "sensor_exists": "Sensor er allerede registrert"
+            "invalid_sensor": "Sensor er ikke tilgjengelig eller ugyldig"
         },
         "step": {
             "user": {

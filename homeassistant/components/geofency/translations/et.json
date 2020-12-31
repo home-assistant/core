@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Geofency'i s\u00f5numite vastuv\u00f5tmiseks peab  Home Assistanti eksemplar olema Interneti kaudu juurdep\u00e4\u00e4setav.",
-            "one_instance_allowed": "Lubatud on ainult \u00fcks sidumine.",
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "webhook_not_internet_accessible": "Veebikonksu s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu juurdep\u00e4\u00e4setav."
         },
         "create_entry": {
             "default": "S\u00fcndmuste saatmiseks Home Assistantile pead seadistama Geofency veebihaagi. \n\n Sisesta j\u00e4rgmine teave: \n\n - URL: \" {webhook_url} \" \n - Meetod: POST \n \n Lisateavet leiad [documentation] ( {docs_url} )."

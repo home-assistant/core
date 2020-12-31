@@ -92,7 +92,10 @@ class Scanner:
 
             entries_to_process.append(entry)
 
-            if entry.location not in self._description_cache:
+            if (
+                entry.location is not None
+                and entry.location not in self._description_cache
+            ):
                 unseen_locations.add(entry.location)
 
         if not entries_to_process:

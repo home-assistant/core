@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "name_exists": "Numm g\u00ebtt et schonn"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "step": {
             "user": {

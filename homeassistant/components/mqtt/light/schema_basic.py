@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -16,17 +15,6 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     LightEntity,
-)
-from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -43,6 +31,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from .. import (
+    CONF_COMMAND_TOPIC,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
+from ... import mqtt
 from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
@@ -546,12 +546,21 @@ class MqttLight(
     @property
     def hs_color(self):
         """Return the hs color value."""
+        if self._white_value:
+            return None
         return self._hs
 
     @property
     def color_temp(self):
         """Return the color temperature in mired."""
-        return self._color_temp
+        supports_color = (
+            self._topic[CONF_RGB_COMMAND_TOPIC]
+            or self._topic[CONF_HS_COMMAND_TOPIC]
+            or self._topic[CONF_XY_COMMAND_TOPIC]
+        )
+        if self._white_value or not supports_color:
+            return self._color_temp
+        return None
 
     @property
     def min_mireds(self):
@@ -569,7 +578,8 @@ class MqttLight(
         white_value = self._white_value
         if white_value:
             white_value = min(round(white_value), 255)
-        return white_value
+            return white_value
+        return None
 
     @property
     def should_poll(self):

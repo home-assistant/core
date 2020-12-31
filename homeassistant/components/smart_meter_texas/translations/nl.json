@@ -13,8 +13,7 @@
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Benutzername"
-                },
-                "description": "Geef uw gebruikersnaam en wachtwoord op voor Smart Meter Texas."
+                }
             }
         }
     }
