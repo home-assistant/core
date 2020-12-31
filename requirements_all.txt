@@ -1678,6 +1678,9 @@ pypoint==2.1.0
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
 
+# homeassistant.components.prosegur
+pyprosegur==0.0.1
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.2.0
 
