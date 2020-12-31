@@ -3,7 +3,6 @@
 from datetime import timedelta
 import logging
 import random
-import time
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
@@ -381,15 +380,11 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        self._last_brightness = self._brightness
-
         return self._brightness
 
     @property
     def hs_color(self):
         """Return the color property."""
-        self._last_hs_color = self._hs_color
-
         return self._hs_color
 
     @property
@@ -473,7 +468,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 color_green,
                 color_blue,
             )
-            self._last_update = time.time()
 
             return
 
@@ -492,7 +486,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if not brightness:
             brightness = self._last_brightness
 
-        self._last_brightness = brightness
         self._brightness = brightness
 <<<<<<< HEAD
 <<<<<<< HEAD
