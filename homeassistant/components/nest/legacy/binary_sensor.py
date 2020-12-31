@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_legacy_entry(hass, entry, async_add_entities):
     """Set up a Nest binary sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
