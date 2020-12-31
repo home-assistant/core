@@ -246,19 +246,17 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             device.settings["device"]["type"]
             in BATTERY_DEVICES_WITH_PERNAMENT_CONNECTION
         ):
-            update_interval = timedelta(
-                seconds=(
-                    SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
-                )
+            update_interval = (
+                SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
             )
         else:
-            update_interval = timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
+            update_interval = REST_SENSORS_UPDATE_INTERVAL
 
         super().__init__(
             hass,
             _LOGGER,
             name=get_device_name(device),
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=(update_interval)),
         )
         self.device = device
 
