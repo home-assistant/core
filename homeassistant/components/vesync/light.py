@@ -78,6 +78,7 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
 
     @property
     def supported_features(self):
+        """Get supported features for this entity."""
         return SUPPORT_BRIGHTNESS
 
     @property
