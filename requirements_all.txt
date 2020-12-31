@@ -1195,7 +1195,7 @@ pwmled==1.6.7
 py-august==0.25.2
 
 # homeassistant.components.canary
-py-canary==0.5.0
+py-canary==0.5.1
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==7.0.0
