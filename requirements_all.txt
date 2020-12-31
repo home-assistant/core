@@ -1174,7 +1174,7 @@ psutil==5.8.0
 ptvsd==4.3.2
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.8
+pubnubsub-handler==1.0.9
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
