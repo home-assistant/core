@@ -3,36 +3,48 @@ from homeassistant import config_entries, setup
 from homeassistant.components.ondilo_ico.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
+    OAUTH2_CLIENTID,
+    OAUTH2_CLIENTSECRET,
     OAUTH2_TOKEN,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
+CLIENT_ID = OAUTH2_CLIENTID
+CLIENT_SECRET = OAUTH2_CLIENTSECRET
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
-        "ondilo_ico",
+        DOMAIN,
         {
-            "ondilo_ico": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            DOMAIN: {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
             "http": {"base_url": "https://example.com"},
         },
     )
 
     result = await hass.config_entries.flow.async_init(
-        "ondilo_ico", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
+        "&scope=api"
     )
 
     client = await aiohttp_client(hass.http.app)

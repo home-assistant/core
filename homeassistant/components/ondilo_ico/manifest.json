@@ -4,12 +4,14 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
   "requirements": [
-    "ondilo==0.1.0"
+    "ondilo==0.2.0"
   ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": [],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@JeromeHXP"
   ]

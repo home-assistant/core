@@ -22,13 +22,13 @@ class OAuth2FlowHandler(
         """Handle a flow initialized by the user."""
         await self.async_set_unique_id(DOMAIN)
 
-        # As client_id and secret are always the same, let's hard-code them and create an entry as if created from config file
-        self.async_register_implementation(
-            self.hass, OndiloOauth2Implementation(self.hass),
-        )
-
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        self.async_register_implementation(
+            self.hass,
+            OndiloOauth2Implementation(self.hass),
+        )
 
         return await super().async_step_user(user_input)
 

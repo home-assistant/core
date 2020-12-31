@@ -1,4 +1,5 @@
 """Local implementation of OAuth2 specific to Ondilo to hard code client id and secret and return a proper name."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 
@@ -12,7 +13,7 @@ from .const import (
 
 
 class OndiloOauth2Implementation(LocalOAuth2Implementation):
-    """Ondilo specific LocalOAuth2Implmentation."""
+    """Local implementation of OAuth2 specific to Ondilo to hard code client id and secret and return a proper name."""
 
     def __init__(self, hass: HomeAssistant):
         """Just init default class with default values."""
@@ -24,7 +25,6 @@ class OndiloOauth2Implementation(LocalOAuth2Implementation):
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
         )
-        """Initialize local auth implementation."""
 
     @property
     def name(self) -> str:
