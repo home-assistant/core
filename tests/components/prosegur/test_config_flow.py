@@ -16,8 +16,13 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.prosegur.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.prosegur.config_flow.validate_input",
+        return_value={
+            "title": "Name of the device",
+            "contract": "123",
+            "username": "test-username",
+            "password": "test-password",
+        },
     ), patch(
         "homeassistant.components.prosegur.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -27,7 +32,6 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -37,7 +41,7 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
-        "host": "1.1.1.1",
+        "contract": "123",
         "username": "test-username",
         "password": "test-password",
     }
@@ -52,13 +56,12 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.prosegur.config_flow.PlaceholderHub.authenticate",
+        "pyprosegur.auth.Auth",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -75,13 +78,12 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.prosegur.config_flow.PlaceholderHub.authenticate",
+        "pyprosegur.installation.Installation",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },

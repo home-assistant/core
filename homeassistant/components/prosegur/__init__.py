@@ -1,7 +1,7 @@
 """The Prosegur Alarm integration."""
 import asyncio
 
-from pyprosegur import Auth
+from pyprosegur.auth import Auth
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,7 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["alarm_panel"]
+PLATFORMS = ["alarm_control_panel"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -23,7 +23,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Prosegur Alarm from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
-    hass.data[DOMAIN][entry.entry_id] = Auth(session, entry.username, entry.password)
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][entry.entry_id] = Auth(
+        session, entry.data["username"], entry.data["password"]
+    )
 
     for component in PLATFORMS:
         hass.async_create_task(
