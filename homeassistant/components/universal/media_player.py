@@ -33,8 +33,13 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -406,6 +411,22 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             flags |= SUPPORT_TURN_ON
         if SERVICE_TURN_OFF in self._cmds:
             flags |= SUPPORT_TURN_OFF
+
+        if SERVICE_MEDIA_PLAY_PAUSE in self._cmds:
+            flags |= SUPPORT_PLAY | SUPPORT_PAUSE
+        else:
+            if SERVICE_MEDIA_PLAY in self._cmds:
+                flags |= SUPPORT_PLAY
+            if SERVICE_MEDIA_PAUSE in self._cmds:
+                flags |= SUPPORT_PAUSE
+
+        if SERVICE_MEDIA_STOP in self._cmds:
+            flags |= SUPPORT_STOP
+
+        if SERVICE_MEDIA_NEXT_TRACK in self._cmds:
+            flags |= SUPPORT_NEXT_TRACK
+        if SERVICE_MEDIA_PREVIOUS_TRACK in self._cmds:
+            flags |= SUPPORT_PREVIOUS_TRACK
 
         if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP

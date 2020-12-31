@@ -71,6 +71,9 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
             "media_pause": mock_service(
                 hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PAUSE
             ),
+            "media_stop": mock_service(
+                hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_STOP
+            ),
             "media_previous_track": mock_service(
                 hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_PREVIOUS_TRACK
             ),
@@ -581,6 +584,12 @@ class TestMediaPlayer(unittest.TestCase):
             "volume_set": excmd,
             "select_source": excmd,
             "shuffle_set": excmd,
+            "media_play": excmd,
+            "media_pause": excmd,
+            "media_stop": excmd,
+            "media_next_track": excmd,
+            "media_previous_track": excmd,
+            "clear_playlist": excmd,
         }
         config = validate_config(config)
 
@@ -601,7 +610,33 @@ class TestMediaPlayer(unittest.TestCase):
             | universal.SUPPORT_SELECT_SOURCE
             | universal.SUPPORT_SHUFFLE_SET
             | universal.SUPPORT_VOLUME_SET
+            | universal.SUPPORT_PLAY
+            | universal.SUPPORT_PAUSE
+            | universal.SUPPORT_STOP
+            | universal.SUPPORT_NEXT_TRACK
+            | universal.SUPPORT_PREVIOUS_TRACK
+            | universal.SUPPORT_CLEAR_PLAYLIST
         )
+
+        assert check_flags == ump.supported_features
+
+    def test_supported_features_play_pause(self):
+        """Test supported media commands with play_pause function."""
+        config = copy(self.config_children_and_attr)
+        excmd = {"service": "media_player.test", "data": {"entity_id": "test"}}
+        config["commands"] = {"media_play_pause": excmd}
+        config = validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
+
+        self.mock_mp_1._state = STATE_PLAYING
+        self.mock_mp_1.schedule_update_ha_state()
+        self.hass.block_till_done()
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
+
+        check_flags = universal.SUPPORT_PLAY | universal.SUPPORT_PAUSE
 
         assert check_flags == ump.supported_features
 
@@ -662,6 +697,11 @@ class TestMediaPlayer(unittest.TestCase):
             ump.async_media_pause(), self.hass.loop
         ).result()
         assert 1 == len(self.mock_mp_2.service_calls["media_pause"])
+
+        asyncio.run_coroutine_threadsafe(
+            ump.async_media_stop(), self.hass.loop
+        ).result()
+        assert 1 == len(self.mock_mp_2.service_calls["media_stop"])
 
         asyncio.run_coroutine_threadsafe(
             ump.async_media_previous_track(), self.hass.loop
