@@ -1858,7 +1858,7 @@ pytraccar==0.9.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.5
+pytradfri[async]==7.0.6
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation

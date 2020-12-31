@@ -918,7 +918,7 @@ pytile==4.0.0
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.5
+pytradfri[async]==7.0.6
 
 # homeassistant.components.vera
 pyvera==0.3.11
