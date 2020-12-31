@@ -18,9 +18,9 @@ from .const import (
     VS_DISCOVERY,
     VS_DISPATCHERS,
     VS_FANS,
+    VS_LIGHTS,
     VS_MANAGER,
     VS_SWITCHES,
-    VS_LIGHTS,
 )
 
 PLATFORMS = ["switch", "fan", "light"]

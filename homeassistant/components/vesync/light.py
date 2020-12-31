@@ -4,8 +4,8 @@ import math
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    LightEntity,
     SUPPORT_BRIGHTNESS,
+    LightEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
