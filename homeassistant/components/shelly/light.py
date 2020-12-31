@@ -169,8 +169,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Turn on light."""
         params = {"turn": "on"}
         if ATTR_BRIGHTNESS in kwargs:
-            tmp_brightness = kwargs[ATTR_BRIGHTNESS]
-            params["brightness"] = params["gain"] = int(tmp_brightness / 255 * 100)
+            tmp_brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            if self._color_mode:
+                params["gain"] = tmp_brightness
+            else:
+                params["brightness"] = tmp_brightness
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             if color_temp > KELVIN_MAX_VALUE:
@@ -178,12 +181,12 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             elif color_temp < min_kelvin(self.wrapper.model):
                 color_temp = min_kelvin(self.wrapper.model)
             params["temp"] = int(color_temp)
-        if ATTR_HS_COLOR in kwargs:
+        elif ATTR_HS_COLOR in kwargs:
             red, green, blue = color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             params["red"] = red
             params["green"] = green
             params["blue"] = blue
-        if ATTR_WHITE_VALUE in kwargs:
+        elif ATTR_WHITE_VALUE in kwargs:
             params["white"] = int(kwargs[ATTR_WHITE_VALUE])
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
