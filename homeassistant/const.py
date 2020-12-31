@@ -396,6 +396,7 @@ DEGREE = "°"
 CURRENCY_EURO = "€"
 CURRENCY_DOLLAR = "$"
 CURRENCY_CENT = "¢"
+CURRENCY_INR = "₹"
 
 # Temperature units
 TEMP_CELSIUS = "°C"
