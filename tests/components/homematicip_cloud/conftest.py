@@ -46,7 +46,7 @@ def mock_connection_fixture() -> AsyncConnection:
 
 @pytest.fixture(name="hmip_config_entry")
 def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
-    """Create a mock config entriy for homematic ip cloud."""
+    """Create a mock config entry for homematic ip cloud."""
     entry_data = {
         HMIPC_HAPID: HAPID,
         HMIPC_AUTHTOKEN: AUTH_TOKEN,
