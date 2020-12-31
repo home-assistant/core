@@ -9,7 +9,6 @@ from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
     SwitchEntity,
 )
-from homeassistant.helpers import entity_platform
 
 # from homeassistant.helpers import entity_platform
 from homeassistant.helpers.update_coordinator import (
@@ -31,6 +30,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry (ConfigEntry): ConfigEntry object that configures this platform.
         async_add_entities (function): Function called to add entities of this platform.
     """
+    # Dictionaty of entities of this integration
+    hass.data[DOMAIN]["entities"] = {}
+
     # API object stored here by __init__.py
     api = hass.data[DOMAIN][entry.entry_id]
 
@@ -47,12 +49,46 @@ async def async_setup_entry(hass, entry, async_add_entities):
             async with async_timeout.timeout(10):
                 switch_data = await api.fetch_data()
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err} [{type(err)}]")
 
-        # Remove obsolete entities
-        # platform = entity_platform.current_platform.get()
-        for ent_id in api.switches_to_remove:
-            await coordinator.data[ent_id].async_remove()
+        _LOGGER.debug("Switch data %s", switch_data)
+
+        # Remove obsolete entities from the Entity and Device Registries
+        if coordinator.data and len(coordinator.data.keys()) > 0:
+            for id, ent in coordinator.data.items():
+                _LOGGER.debug("Coordinator item: " + id + ": " + str(ent))
+
+        device_reg = await hass.helpers.device_registry.async_get_registry()
+
+        for ent_id, ent in api.switches_to_remove.items():
+            r_entity = hass.data[DOMAIN]["entities"].pop(ent_id, None)
+            if r_entity is None:
+                _LOGGER.debug(
+                    "Entity %s was marked from deletion, but is not registered by the integration.",
+                    str(ent),
+                )
+                continue
+            _LOGGER.debug(
+                "Remove entity %s [device: %s] from HA registries.",
+                r_entity.entity_id,
+                r_entity.registry_entry.device_id,
+            )
+            device_reg.async_remove_device(r_entity.registry_entry.device_id)
+            await r_entity.async_remove()
+
+        # Reset the api object dictionary of deleted elements
+        api.switches_to_remove = {}
+
+        # Add entities to HomeAssistant domain and registries
+        new_entities = []
+        for idx, switch in switch_data.items():
+            if idx not in hass.data[DOMAIN]["entities"]:
+                hass.data[DOMAIN]["entities"][idx] = HomeControlSwitchEntity(
+                    coordinator, idx
+                )
+                new_entities.append(hass.data[DOMAIN]["entities"][idx])
+
+        async_add_entities(new_entities)
 
         return switch_data
 
@@ -66,25 +102,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
         update_interval=timedelta(seconds=60),
     )
 
+    # Add the coordinator to the domain's data in HA
+    hass.data[DOMAIN][entry.entry_id + "_coordinator"] = coordinator
+
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    async_add_entities(
-        HomeControlSwitchEntity(coordinator, idx)
-        for idx, ent in coordinator.data.items()
-    )
     _LOGGER.debug("hass.data[%s]: %s", DOMAIN, hass.data[DOMAIN])
     await view_data(hass)
 
 
 async def view_data(hass):
     """Debug relevant Hass objects."""
-    platform = entity_platform.current_platform.get()
-    _LOGGER.debug("Platform %s entities: %s", platform.platform_name, platform.entities)
     device_reg = await hass.helpers.device_registry.async_get_registry()
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
-    _LOGGER.debug("Entity registry entities: %s", entity_reg.entities)
-    _LOGGER.debug("Device registry devices: %s", device_reg.devices)
+    for ent in entity_reg.entities:
+        _LOGGER.debug("Entity registry entity: %s", str(ent.entity_id))
+    for dev in device_reg.devices:
+        _LOGGER.debug("Device registry device: %s", dev)
 
 
 class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
@@ -96,7 +131,6 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
       should_poll
       async_update
       async_added_to_hass
-      available
 
     The SwitchEntity class provides the functionality of a ToggleEntity and additional power consumption
     methods and state attributes.
@@ -180,3 +214,11 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         await self.coordinator.data[self.idx].turn_off()
         # Update the data
         await self.coordinator.async_request_refresh()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self.registry_entry is not None:
+            entity_reg = (
+                await self.coordinator.hass.helpers.entity_registry.async_get_registry()
+            )
+            entity_reg.async_remove(self.registry_entry.entity_id)
