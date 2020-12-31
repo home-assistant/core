@@ -302,7 +302,7 @@ ephem==3.7.7.0
 epson-projector==0.2.3
 
 # homeassistant.components.feedreader
-feedparser-homeassistant==5.2.2.dev1
+feedparser==6.0.2
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -600,7 +600,7 @@ pushbullet.py==0.11.0
 py-august==0.25.2
 
 # homeassistant.components.canary
-py-canary==0.5.0
+py-canary==0.5.1
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -915,7 +915,7 @@ pytile==4.0.0
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.5
+pytradfri[async]==7.0.6
 
 # homeassistant.components.vera
 pyvera==0.3.11
@@ -1031,7 +1031,7 @@ spotipy==2.16.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.20
+sqlalchemy==1.3.22
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.2
@@ -1104,7 +1104,7 @@ uvcclient==0.11.0
 vilfo-api-client==0.3.2
 
 # homeassistant.components.verisure
-vsure==1.5.4
+vsure==1.6.1
 
 # homeassistant.components.vultr
 vultr==0.1.2
@@ -1147,13 +1147,13 @@ zeep[async]==4.0.0
 zeroconf==0.28.7
 
 # homeassistant.components.zha
-zha-quirks==0.0.50
+zha-quirks==0.0.51
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.11.0
+zigpy-deconz==0.11.1
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0
@@ -1165,4 +1165,4 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.28.2
+zigpy==0.29.0

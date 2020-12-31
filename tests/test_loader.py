@@ -97,7 +97,7 @@ async def test_helpers_wrapper(hass):
 
 
 async def test_custom_component_name(hass):
-    """Test the name attribte of custom components."""
+    """Test the name attribute of custom components."""
     integration = await loader.async_get_integration(hass, "test_standalone")
     int_comp = integration.get_component()
     assert int_comp.__name__ == "custom_components.test_standalone"
