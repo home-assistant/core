@@ -253,3 +253,41 @@ async def test_unknown_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 0
+
+
+async def test_unknown_device_id(hass):
+    """Test a pubsub message for an unknown event type."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits("sdm.devices.traits.DoorbellChime"),
+    )
+    await subscriber.async_receive_event(
+        create_event("sdm.devices.events.DoorbellChime.Chime", "invalid-device-id")
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+
+async def test_event_message_without_device_event(hass):
+    """Test a pubsub message for an unknown event type."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits("sdm.devices.traits.DoorbellChime"),
+    )
+    timestamp = utcnow()
+    event = EventMessage(
+        {
+            "eventId": "some-event-id",
+            "timestamp": timestamp.isoformat(timespec="seconds"),
+        },
+        auth=None,
+    )
+    await subscriber.async_receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
