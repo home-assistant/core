@@ -1024,7 +1024,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.2
 
 # homeassistant.components.spider
-spiderpy==1.4.2
+spiderpy==1.5.0
 
 # homeassistant.components.spotify
 spotipy==2.16.1
