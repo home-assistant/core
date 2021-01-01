@@ -21,8 +21,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import CONFIG, async_setup_sdm_platform, create_config_entry
 
-from tests.async_mock import patch
-
 PLATFORM = "sensor"
 
 

@@ -9,6 +9,7 @@ The tests below exercise both cases during integration setup.
 """
 
 import time
+from unittest.mock import patch
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
@@ -24,8 +25,6 @@ from .common import (
     PROJECT_ID,
     create_config_entry,
 )
-
-from tests.async_mock import patch
 
 FAKE_UPDATED_TOKEN = "fake-updated-token"
 
