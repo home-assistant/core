@@ -37,15 +37,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             client = await self.hass.async_add_executor_job(
-<<<<<<< HEAD
-<<<<<<< HEAD
                 TotalConnectClient.TotalConnectClient, username, password, usercodes
-=======
-                TotalConnectClient.TotalConnectClient, username, password
->>>>>>> Add usercodes to totalconnect.
-=======
-                TotalConnectClient.TotalConnectClient, username, password, usercodes
->>>>>>> Fix tests
             )
 
             if client.is_valid_credentials():
@@ -68,15 +60,6 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_locations(self, usercodes=None):
         """Handle the user locations and associated usercodes."""
         errors = {}
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
-        _LOGGER.warning(f"TotalConnect async_step_locations is {usercodes}")
->>>>>>> Add usercodes to totalconnect.
-=======
-
->>>>>>> Fix tests
         if usercodes is not None:
             for location in usercodes:
                 valid = await self.hass.async_add_executor_job(
