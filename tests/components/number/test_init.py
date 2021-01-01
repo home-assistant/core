@@ -1,7 +1,7 @@
 """The tests for the Number component."""
-from homeassistant.components.number import NumberEntity
+from unittest.mock import MagicMock
 
-from tests.async_mock import MagicMock
+from homeassistant.components.number import NumberEntity
 
 
 class MockDefaultNumberEntity(NumberEntity):

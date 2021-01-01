@@ -1,10 +1,10 @@
 """Define fixtures available for all tests."""
+from unittest.mock import AsyncMock, patch
+
 from pytest import fixture
 from surepy import SurePetcare
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.async_mock import AsyncMock, patch
 
 
 @fixture

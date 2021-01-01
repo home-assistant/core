@@ -1,6 +1,7 @@
 """deCONZ light platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS,
@@ -32,8 +33,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import patch
 
 GROUPS = {
     "1": {

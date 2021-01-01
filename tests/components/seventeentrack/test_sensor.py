@@ -1,6 +1,7 @@
 """Tests for the seventeentrack sensor."""
 import datetime
 from typing import Union
+from unittest.mock import MagicMock, patch
 
 from py17track.package import Package
 import pytest
@@ -13,7 +14,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
-from tests.async_mock import MagicMock, patch
 from tests.common import async_fire_time_changed
 
 VALID_CONFIG_MINIMAL = {

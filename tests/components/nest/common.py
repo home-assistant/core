@@ -2,6 +2,7 @@
 
 import time
 from typing import Awaitable, Callable
+from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
@@ -10,7 +11,6 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from homeassistant.components.nest import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONFIG = {

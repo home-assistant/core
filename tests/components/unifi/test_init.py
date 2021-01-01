@@ -1,5 +1,5 @@
 """Test UniFi setup process."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
@@ -7,7 +7,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_controller import setup_unifi_integration
 
-from tests.async_mock import AsyncMock
 from tests.common import MockConfigEntry, mock_coro
 
 

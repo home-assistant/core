@@ -1,5 +1,6 @@
 """Test the HVV Departures config flow."""
 import json
+from unittest.mock import patch
 
 from pygti.exceptions import CannotConnect, InvalidAuth
 
@@ -13,7 +14,6 @@ from homeassistant.components.hvv_departures.const import (
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 FIXTURE_INIT = json.loads(load_fixture("hvv_departures/init.json"))

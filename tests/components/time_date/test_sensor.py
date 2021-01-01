@@ -1,10 +1,10 @@
 """The tests for time_date sensor platform."""
+from unittest.mock import patch
+
 import pytest
 
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 

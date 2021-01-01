@@ -1,5 +1,6 @@
 """Test requirements module."""
 import os
+from unittest.mock import call, patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.requirements import (
     async_process_requirements,
 )
 
-from tests.async_mock import call, patch
 from tests.common import MockModule, mock_integration
 
 

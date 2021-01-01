@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from types import MappingProxyType
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -19,7 +20,6 @@ from homeassistant.helpers import config_validation as cv, script
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,

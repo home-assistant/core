@@ -1,5 +1,6 @@
 """Tests for Plex server."""
 import copy
+from unittest.mock import patch
 
 from plexapi.exceptions import BadRequest, NotFound
 from requests.exceptions import ConnectionError, RequestException
@@ -38,8 +39,6 @@ from .mock_classes import (
     MockPlexServer,
     MockPlexShow,
 )
-
-from tests.async_mock import patch
 
 
 async def test_new_users_available(hass, entry, mock_websocket, setup_plex_server):

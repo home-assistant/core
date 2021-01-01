@@ -1,12 +1,12 @@
 """The tests for the openalpr cloud platform."""
 import asyncio
+from unittest.mock import PropertyMock, patch
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 from tests.components.image_processing import common
 
