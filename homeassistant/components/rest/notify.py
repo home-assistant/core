@@ -166,6 +166,8 @@ class RestNotificationService(BaseNotificationService):
                     return {
                         key: _data_template_creator(item) for key, item in value.items()
                     }
+                if isinstance(value, str):
+                    return value
                 value.hass = self._hass
                 return value.async_render(kwargs, parse_result=False)
 
