@@ -180,7 +180,7 @@ class ModbusRegisterSensor(RestoreEntity):
         precision,
         data_type,
         device_class,
-        bit,        
+        bit,
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
@@ -260,13 +260,13 @@ class ModbusRegisterSensor(RestoreEntity):
 
         if self._bit:
             bytes_as_bits = ''.join(format(byte, '08b') for byte in byte_string)
-            #Position is between 0 and len -1
-            position = len(bytes_as_bits) -1 -self._bit
+            # Position is between 0 and len -1
+            position = len(bytes_as_bits) - 1 - self._bit
             val = bytes_as_bits[position]
-            _LOGGER.error("Bit at position %s is: %s", self._bit,val)
+            _LOGGER.error("Bit at position %s is: %s", self._bit, val)
             self._value = str(val)
 
-        else:        
+        else:
             if self._data_type == DATA_TYPE_STRING:
                 self._value = byte_string.decode()
             else:
