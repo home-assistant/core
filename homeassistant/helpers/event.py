@@ -715,9 +715,9 @@ def async_track_template(
 
         hass.async_run_hass_job(
             job,
-            event.data.get("entity_id"),
-            event.data.get("old_state"),
-            event.data.get("new_state"),
+            event and event.data.get("entity_id"),
+            event and event.data.get("old_state"),
+            event and event.data.get("new_state"),
         )
 
     info = async_track_template_result(
