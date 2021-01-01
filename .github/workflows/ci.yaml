@@ -585,7 +585,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -609,6 +609,10 @@ jobs:
           Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
+          # Temporary addition of cmake, needed to build some Python 3.9 packages
+          apt-get update
+          apt-get -y install cmake
+
           python -m venv venv
           . venv/bin/activate
           pip install -U "pip<20.3" setuptools wheel
@@ -692,7 +696,7 @@ jobs:
     strategy:
       matrix:
         group: [1, 2, 3, 4]
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (group ${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
