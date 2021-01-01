@@ -221,15 +221,17 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         """Turn on the device."""
         _LOGGER.debug("Turning on HVAC for device %s", self._name)
 
-        self._device.power = True
-        await self._push_state_update()
+        self.coordinator.device.power = True
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         """Turn off the device."""
         _LOGGER.debug("Turning off HVAC for device %s", self._name)
 
-        self._device.power = False
-        await self._push_state_update()
+        self.coordinator.device.power = False
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def hvac_modes(self) -> List[str]:
