@@ -259,7 +259,7 @@ class ModbusRegisterSensor(RestoreEntity):
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
 
         if self._bit:
-            bytes_as_bits = ''.join(format(byte, '08b') for byte in byte_string)
+            bytes_as_bits = "".join(format(byte, '08b') for byte in byte_string)
             # Position is between 0 and len -1
             position = len(bytes_as_bits) - 1 - self._bit
             val = bytes_as_bits[position]
