@@ -4,6 +4,12 @@ import json
 import pytest
 
 from homeassistant.components import number
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -38,7 +44,7 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_run_number_setup(hass, aiohttp_client, mqtt_mock):
+async def test_run_number_setup(hass, mqtt_mock):
     """Test that it fetches the given payload."""
     topic = "test/number"
     await async_setup_component(
@@ -61,6 +67,29 @@ async def test_run_number_setup(hass, aiohttp_client, mqtt_mock):
 
     state = hass.states.get("number.test_number")
     assert state.state == "20.5"
+
+
+async def test_run_number_service(hass, mqtt_mock):
+    """Test that set_value service works."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {"number": {"platform": "mqtt", "topic": topic, "name": "Test Number"}},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(topic, "30", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("number.test_number")
+    assert state.state == "30"
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):

@@ -167,7 +167,10 @@ class MqttNumber(
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-        self._current_number = value
+        if value.is_integer():
+            self._current_number = int(value)
+        else:
+            self._current_number = value
 
         mqtt.async_publish(
             self.hass,
