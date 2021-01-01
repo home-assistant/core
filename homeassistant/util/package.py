@@ -2,6 +2,10 @@
 import asyncio
 import logging
 import os
+from importlib.metadata import (
+    PackageNotFoundError,
+    version,
+)
 from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
@@ -9,17 +13,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import pkg_resources
-
-if sys.version_info[:2] >= (3, 8):
-    from importlib.metadata import (  # pylint: disable=no-name-in-module,import-error
-        PackageNotFoundError,
-        version,
-    )
-else:
-    from importlib_metadata import (  # pylint: disable=import-error
-        PackageNotFoundError,
-        version,
-    )
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -307,12 +307,10 @@ def async_enable_logging(
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
         "Uncaught exception", exc_info=args  # type: ignore
     )
-
-    if sys.version_info[:2] >= (3, 8):
-        threading.excepthook = lambda args: logging.getLogger(None).exception(
-            "Uncaught thread exception",
-            exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
-        )
+    threading.excepthook = lambda args: logging.getLogger(None).exception(
+        "Uncaught thread exception",
+        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+    )
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
