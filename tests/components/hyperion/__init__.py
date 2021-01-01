@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
+from unittest.mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
 
 from hyperion import const
 
@@ -13,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
 from tests.common import MockConfigEntry
 
 TEST_HOST = "test"

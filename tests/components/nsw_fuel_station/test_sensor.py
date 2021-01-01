@@ -1,8 +1,9 @@
 """The tests for the NSW Fuel Station sensor platform."""
+from unittest.mock import patch
+
 from homeassistant.components import sensor
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 VALID_CONFIG = {

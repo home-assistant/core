@@ -1,4 +1,5 @@
 """Tests for the nexia integration."""
+from unittest.mock import patch
 import uuid
 
 from nexia.home import NexiaHome
@@ -8,7 +9,6 @@ from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 

@@ -1,5 +1,6 @@
 """Tests for Sentry integration."""
 import logging
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -17,7 +18,6 @@ from homeassistant.components.sentry.const import (
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

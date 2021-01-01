@@ -1,12 +1,12 @@
 """Define tests for the Luftdaten config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.luftdaten import DOMAIN, config_flow
 from homeassistant.components.luftdaten.const import CONF_SENSOR_ID
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

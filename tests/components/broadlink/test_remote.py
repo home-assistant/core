@@ -1,5 +1,6 @@
 """Tests for Broadlink remotes."""
 from base64 import b64decode
+from unittest.mock import call
 
 from homeassistant.components.broadlink.const import DOMAIN, REMOTE_DOMAIN
 from homeassistant.components.remote import (
@@ -12,7 +13,6 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
 
-from tests.async_mock import call
 from tests.common import mock_device_registry, mock_registry
 
 REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]

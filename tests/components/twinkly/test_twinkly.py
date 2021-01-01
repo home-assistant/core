@@ -1,6 +1,7 @@
 """Tests for the integration of a twinly device."""
 
 from typing import Tuple
+from unittest.mock import patch
 
 from homeassistant.components.twinkly.const import (
     CONF_ENTRY_HOST,
@@ -14,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.twinkly import (
     TEST_HOST,

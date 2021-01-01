@@ -1,12 +1,12 @@
 """Test AccuWeather system health."""
 import asyncio
+from unittest.mock import Mock
 
 from aiohttp import ClientError
 
 from homeassistant.components.accuweather.const import COORDINATOR, DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock
 from tests.common import get_system_health_info
 
 

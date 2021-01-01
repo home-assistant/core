@@ -1,5 +1,6 @@
 """The test for the NuHeat thermostat module."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
@@ -15,7 +16,6 @@ from .mocks import (
     _mock_get_config,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

@@ -1,5 +1,7 @@
 """Tests for the Atag climate platform."""
 
+from unittest.mock import PropertyMock, patch
+
 from homeassistant.components.atag import CLIMATE, DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
@@ -19,7 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import PropertyMock, patch
 from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
