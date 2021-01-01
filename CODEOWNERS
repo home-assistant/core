@@ -352,7 +352,6 @@ homeassistant/components/progettihwsw/* @ardaseremet
 homeassistant/components/prometheus/* @knyar
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
 homeassistant/components/ps4/* @ktnrg45
-homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/pvpc_hourly_pricing/* @azogue
