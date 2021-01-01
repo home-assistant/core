@@ -1,5 +1,5 @@
 """Test the NEW_NAME config flow."""
-from fromunittest.mock import patch
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
