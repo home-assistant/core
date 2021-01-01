@@ -7,10 +7,6 @@ from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
-
-""" Custom """
-CONF_BIT = 'bit'
-
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -66,6 +62,8 @@ def number(value: Any) -> Union[int, float]:
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
+""" Add bit option for single bit extraction from registry """
+CONF_BIT = 'bit'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -263,42 +261,40 @@ class ModbusRegisterSensor(RestoreEntity):
         
         
         if self._bit:
-            #_LOGGER.error("Bit Value: %s", self._bit)
             bytes_as_bits = ''.join(format(byte, '08b') for byte in byte_string)
             #Position is between 0 and len -1
             position = len(bytes_as_bits) -1 -self._bit
             val = bytes_as_bits[position]
             _LOGGER.error("Bit at position %s is: %s", self._bit,val)
             self._value = str(val)
-            self._available = True
-            return 
-        
-        if self._data_type == DATA_TYPE_STRING:
-            self._value = byte_string.decode()
+
         else:
-            val = struct.unpack(self._structure, byte_string)
-
-            # Issue: https://github.com/home-assistant/core/issues/41944
-            # If unpack() returns a tuple greater than 1, don't try to process the value.
-            # Instead, return the values of unpack(...) separated by commas.
-            if len(val) > 1:
-                self._value = ",".join(map(str, val))
+            if self._data_type == DATA_TYPE_STRING:
+                self._value = byte_string.decode()
             else:
-                val = val[0]
+                val = struct.unpack(self._structure, byte_string)
 
-                # Apply scale and precision to floats and ints
-                if isinstance(val, (float, int)):
-                    val = self._scale * val + self._offset
-
-                    # We could convert int to float, and the code would still work; however
-                    # we lose some precision, and unit tests will fail. Therefore, we do
-                    # the conversion only when it's absolutely necessary.
-                    if isinstance(val, int) and self._precision == 0:
-                        self._value = str(val)
-                    else:
-                        self._value = f"{float(val):.{self._precision}f}"
+                # Issue: https://github.com/home-assistant/core/issues/41944
+                # If unpack() returns a tuple greater than 1, don't try to process the value.
+                # Instead, return the values of unpack(...) separated by commas.
+                if len(val) > 1:
+                    self._value = ",".join(map(str, val))
                 else:
-                    # Don't process remaining datatypes (bytes and booleans)
-                    self._value = str(val)
+                    val = val[0]
+
+                    # Apply scale and precision to floats and ints
+                    if isinstance(val, (float, int)):
+                        val = self._scale * val + self._offset
+
+                        # We could convert int to float, and the code would still work; however
+                        # we lose some precision, and unit tests will fail. Therefore, we do
+                        # the conversion only when it's absolutely necessary.
+                        if isinstance(val, int) and self._precision == 0:
+                            self._value = str(val)
+                        else:
+                            self._value = f"{float(val):.{self._precision}f}"
+                    else:
+                        # Don't process remaining datatypes (bytes and booleans)
+                        self._value = str(val)
 
         self._available = True
