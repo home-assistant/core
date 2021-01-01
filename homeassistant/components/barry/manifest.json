@@ -1,0 +1,10 @@
+{
+  "domain": "barry",
+  "name": "Barry",
+  "documentation": "https://www.home-assistant.io/integrations/barry/",
+  "dependencies": [],
+  "codeowners": ["@yash", "@ThomasBLarsen"],
+  "requirements": ["pybarry==0.0.4"],
+  "quality_scale": "silver",
+  "config_flow": true
+}
