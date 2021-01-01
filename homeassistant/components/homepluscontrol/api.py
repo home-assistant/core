@@ -218,9 +218,18 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                 self.logger.debug(
                     "API update of plant topology for plant %s.", plant.id
                 )
-                await plant.update_topology()  # Call the API
-                # If all goes well, we update the last check time
-                self._last_check["TOPOLOGY"] = time.monotonic()
+                try:
+                    await plant.update_topology()  # Call the API
+                except Exception as err:
+                    self.logger.error(
+                        "Error encountered when updating plant topology for plant %s: %s [%s]",
+                        plant.id,
+                        err,
+                        type(err),
+                    )
+                else:
+                    # If all goes well, we update the last check time
+                    self._last_check["TOPOLOGY"] = time.monotonic()
 
             if self._should_check("STATUS", MODULE_STATUS_UPDATE_INTERVAL):
                 self.logger.debug("API update of module status for plant %s.", plant.id)

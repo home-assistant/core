@@ -51,8 +51,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err} [{type(err)}]")
 
-        _LOGGER.debug("Switch data %s", switch_data)
-
         # Remove obsolete entities from the Entity and Device Registries
         if coordinator.data and len(coordinator.data.keys()) > 0:
             for id, ent in coordinator.data.items():
