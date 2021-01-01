@@ -788,7 +788,6 @@ async def test_wait_template_with_utcnow(hass):
     start_time = dt_util.utcnow() + timedelta(hours=24)
 
     try:
-        hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         async_fire_time_changed(hass, start_time.replace(hour=5))
         assert not script_obj.is_running
