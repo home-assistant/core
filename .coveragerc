@@ -84,6 +84,9 @@ omit =
     homeassistant/components/azure_devops/const.py
     homeassistant/components/azure_devops/sensor.py
     homeassistant/components/azure_service_bus/*
+    homeassistant/components/barry/const.py
+    homeassistant/components/barry/__init__.py
+    homeassistant/components/barry/sensor.py
     homeassistant/components/baidu/tts.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*

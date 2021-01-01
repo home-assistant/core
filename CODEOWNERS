@@ -62,6 +62,7 @@ homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
+homeassistant/components/barry/* @YashYKhatri @ThomasBLarsen
 homeassistant/components/beewi_smartclim/* @alemuro
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
