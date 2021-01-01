@@ -48,7 +48,7 @@ COOLDOWN_TIME = 60
 
 MAX_LOAD_CONCURRENTLY = 6
 
-DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
+DEBUGGER_INTEGRATIONS = {"debugpy"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {
     # Set log levels

@@ -1170,9 +1170,6 @@ proxmoxer==1.1.1
 # homeassistant.components.systemmonitor
 psutil==5.8.0
 
-# homeassistant.components.ptvsd
-ptvsd==4.3.2
-
 # homeassistant.components.wink
 pubnubsub-handler==1.0.9
 
