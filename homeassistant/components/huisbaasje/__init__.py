@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
+    FETCH_TIMEOUT,
     POLLING_INTERVAL,
     SENSOR_TYPE_RATE,
     SENSOR_TYPE_THIS_DAY,
@@ -38,7 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         source_types=SOURCE_TYPES,
+        request_timeout=FETCH_TIMEOUT,
     )
+
+    # Attempt authentication. If this fails, an exception is thrown
+    await huisbaasje.authenticate()
 
     async def async_update_data():
         return await async_update_huisbaasje(huisbaasje)
@@ -89,7 +94,11 @@ async def async_update_huisbaasje(huisbaasje):
     try:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
-        async with async_timeout.timeout(10):
+        async with async_timeout.timeout(FETCH_TIMEOUT):
+            if not huisbaasje.is_authenticated():
+                _LOGGER.warn("Huisbaasje is unauthenticated. Reauthenticating...")
+                huisbaasje.authenticate()
+
             current_measurements = await huisbaasje.current_measurements()
 
             return {

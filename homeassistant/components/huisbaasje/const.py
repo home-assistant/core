@@ -22,7 +22,10 @@ DOMAIN = "huisbaasje"
 FLOW_CUBIC_METERS_PER_HOUR = f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}"
 
 """Interval in seconds between polls to huisbaasje."""
-POLLING_INTERVAL = 10
+POLLING_INTERVAL = 20
+
+"""Timeout for fetching sensor data"""
+FETCH_TIMEOUT = 10
 
 SENSOR_TYPE_RATE = "rate"
 SENSOR_TYPE_THIS_DAY = "thisDay"
