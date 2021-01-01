@@ -130,7 +130,10 @@ class MqttNumber(
             """Handle new MQTT messages."""
 
             try:
-                self._current_number = float(msg.payload)
+                if msg.payload.decode("utf-8").isnumeric():
+                    self._current_number = int(msg.payload)
+                else:
+                    self._current_number = float(msg.payload)
                 self.async_write_ha_state()
             except ValueError:
                 _LOGGER.warning("We received <%s> which is not a Number", msg.payload)
