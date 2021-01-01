@@ -26,9 +26,6 @@ from .const import DOMAIN, EQUIPMENT
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ON_VACATION = "on_vacation"
-ATTR_IN_USE = "in_use"
-
 ECONET_STATE_TO_HA = {
     WaterHeaterOperationMode.ENERGY_SAVING: STATE_ECO,
     WaterHeaterOperationMode.HIGH_DEMAND: STATE_HIGH_DEMAND,
@@ -84,15 +81,6 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        _attr = {
-            ATTR_ON_VACATION: self._econet.vacation,
-            ATTR_IN_USE: self._econet.running,
-        }
-        return _attr
 
     @property
     def current_operation(self):
