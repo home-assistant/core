@@ -199,7 +199,7 @@ class ModbusRegisterSensor(RestoreEntity):
         self._device_class = device_class
         self._value = None
         self._available = True
-        self._bit = bit        
+        self._bit = bit
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
