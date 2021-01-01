@@ -580,13 +580,8 @@ omit =
     homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
-    homeassistant/components/nest/__init__.py
     homeassistant/components/nest/api.py
-    homeassistant/components/nest/binary_sensor.py
-    homeassistant/components/nest/camera.py
-    homeassistant/components/nest/climate.py
     homeassistant/components/nest/legacy/*
-    homeassistant/components/nest/sensor.py
     homeassistant/components/netatmo/__init__.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
