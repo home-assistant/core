@@ -29,7 +29,6 @@ CONFIG = {
 }
 
 FAKE_TOKEN = "some-token"
-FAKE_UPDATED_TOKEN = "some-updated-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 

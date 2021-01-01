@@ -27,25 +27,23 @@ from .common import (
 
 from tests.async_mock import patch
 
-PLATFORMS = []  # No platforms needed to verify initialization
-
 FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
 async def async_setup_sdm(hass):
     """Set up the integration."""
-    with patch("homeassistant.components.nest.PLATFORMS", PLATFORMS):
-        assert await async_setup_component(hass, DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
 
 
-async def test_token_in_config_entry(hass, aioclient_mock):
-    """Verify that the Credentials are created properly."""
+async def test_auth(hass, aioclient_mock):
+    """Exercise authentication library creates valid credentials."""
 
     expiration_time = time.time() + 86400
     create_config_entry(hass, expiration_time)
 
-    # Prepare to capture credentials in API requests
+    # Prepare to capture credentials in API request.  Empty payloads just mean
+    # no devices or structures are loaded.
     aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/structures", json={})
     aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/devices", json={})
 
@@ -87,7 +85,7 @@ async def test_token_in_config_entry(hass, aioclient_mock):
     assert creds.scopes == SDM_SCOPES
 
 
-async def test_expired_token_in_config_entry(hass, aioclient_mock):
+async def test_auth_expired_token(hass, aioclient_mock):
     """Verify behavior of an expired token."""
 
     expiration_time = time.time() - 86400
@@ -102,7 +100,8 @@ async def test_expired_token_in_config_entry(hass, aioclient_mock):
             "expires_in": 86400,
         },
     )
-    # Prepare to capture credentials in API requests
+    # Prepare to capture credentials in API request.  Empty payloads just mean
+    # no devices or structures are loaded.
     aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/structures", json={})
     aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/devices", json={})
 
