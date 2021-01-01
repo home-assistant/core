@@ -39,6 +39,7 @@ from .const import (
     DEFAULT_HUB,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
+    CONF_BIT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,6 @@ def number(value: Any) -> Union[int, float]:
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
-CONF_BIT = "bit"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

@@ -60,6 +60,7 @@ DEFAULT_STRUCT_FORMAT = {
     DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
     DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
 }
+CONF_BIT = "bit"
 
 # switch.py
 CONF_STATE_OFF = "state_off"
