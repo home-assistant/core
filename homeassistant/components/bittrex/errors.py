@@ -2,13 +2,17 @@
 from homeassistant.exceptions import HomeAssistantError
 
 
-class CannotConnect(HomeAssistantError):
+class BittrexException(HomeAssistantError):
+    """Base class for Bittrex exceptions."""
+
+
+class CannotConnect(BittrexException):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(HomeAssistantError):
+class InvalidAuth(BittrexException):
     """Error to indicate there is invalid auth."""
 
 
-class InvalidMarket(HomeAssistantError):
-    """Error to indicate the market is invalid."""
+class InvalidResponse(BittrexException):
+    """Error to indicate the API response is invalid."""

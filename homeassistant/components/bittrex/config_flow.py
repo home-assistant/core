@@ -1,8 +1,13 @@
-"""Config flow for Cloudflare integration."""
+"""Config flow for Bittrex integration."""
 import logging
 from typing import Dict, List, Optional
 
-from bittrex_api.bittrex import BittrexV3
+from aiobittrexapi import Bittrex
+from aiobittrexapi.errors import (
+    BittrexApiError,
+    BittrexInvalidAuthentication,
+    BittrexResponseError,
+)
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -11,8 +16,9 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
-from .errors import CannotConnect, InvalidAuth, InvalidMarket
+from .const import CONF_API_SECRET, CONF_MARKETS
+from .const import DOMAIN  # pylint:disable=unused-import
+from .errors import CannotConnect, InvalidAuth, InvalidResponse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,31 +46,27 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    markets = []
+    symbols = []
     api_key = data[CONF_API_KEY]
     api_secret = data[CONF_API_SECRET]
 
     try:
-        bittrex = BittrexV3(api_key, api_secret, reverse_market_names=False)
-        bittrex_account = bittrex.get_account()["accountId"]
+        bittrex = Bittrex(api_key, api_secret)
+        await bittrex.get_account()
 
-        if not bittrex_account:
-            raise InvalidAuth
-    except Exception as error:
+        markets = await bittrex.get_markets()
+        for market in markets:
+            symbols.append(market["symbol"])
+    except BittrexInvalidAuthentication as error:
         raise InvalidAuth from error
+    except BittrexApiError as error:
+        raise CannotConnect from error
+    except BittrexResponseError as error:
+        raise InvalidResponse from error
+    finally:
+        await bittrex.close()
 
-    try:
-        marketEntries = bittrex.get_markets()
-
-        for marketEntry in marketEntries:
-            markets.append(marketEntry["symbol"])
-
-        if "BTC-USDT" not in markets:
-            raise InvalidMarket
-    except Exception as error:
-        raise InvalidMarket from error
-
-    return {"markets": markets}
+    return {"markets": symbols}
 
 
 class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -126,8 +128,8 @@ class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except InvalidMarket:
-            errors["base"] = "invalid_market"
+        except InvalidResponse:
+            errors["base"] = "invalid_response"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

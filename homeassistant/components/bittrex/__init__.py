@@ -2,7 +2,12 @@
 import logging
 from typing import Dict
 
-from bittrex_api.bittrex import BittrexV3
+from aiobittrexapi import Bittrex
+from aiobittrexapi.errors import (
+    BittrexApiError,
+    BittrexInvalidAuthentication,
+    BittrexResponseError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -67,42 +72,22 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, api_key, api_secret, symbols):
         """Initialize the data object."""
-        self.bittrex = BittrexV3(api_key, api_secret, reverse_market_names=False)
+        self.bittrex = Bittrex(api_key, api_secret)
         self.symbols = symbols
         self.hass = hass
-        self.hass.async_add_executor_job(self._authenticate)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-
-    def _authenticate(self):
-        """Test authentication to Bittrex."""
-        try:
-            bittrex_account = self.bittrex.get_account()["accountId"]
-
-            if not bittrex_account:
-                raise Exception("Authentication failed")
-        except Exception as error:
-            raise ConfigEntryNotReady from error
-
-    def _get_tickers(self):
-        """Get the latest tickers."""
-        try:
-            result = self.bittrex.get_tickers()
-            return result
-        except Exception as error:
-            _LOGGER.error("Bittrex get_tickers error: %s", error)
-            return None
 
     async def _async_update_data(self):
         """Fetch Bittrex data."""
         try:
-            tickers = await self.hass.async_add_executor_job(self._get_tickers)
-            data = []
-
-            for symbol in self.symbols:
-                data.append(next(item for item in tickers if item["symbol"] == symbol))
-            return data
-
-        except Exception as error:
+            return await self.bittrex.get_tickers(symbol=self.symbols)
+        except BittrexInvalidAuthentication as error:
+            _LOGGER.error("Bittrex authentication error: %s", error)
+            raise ConfigEntryNotReady from error
+        except BittrexApiError as error:
+            _LOGGER.error("Bittrex API error: %s", error)
+            raise ConfigEntryNotReady from error
+        except BittrexResponseError as error:
             _LOGGER.error("Bittrex sensor error: %s", error)
             return None

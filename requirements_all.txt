@@ -143,6 +143,9 @@ aioasuswrt==1.3.4
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
 
+# homeassistant.components.bittrex
+aiobittrexapi==1.2.0
+
 # homeassistant.components.aws
 aiobotocore==1.2.2
 
@@ -353,9 +356,6 @@ bellows==0.24.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
-
-# homeassistant.components.bittrex
-bittrex-api==0.0.10
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
