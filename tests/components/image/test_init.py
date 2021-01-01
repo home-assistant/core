@@ -1,14 +1,13 @@
 """Test that we can upload images."""
 import pathlib
 import tempfile
+from unittest.mock import patch
 
 from aiohttp import ClientSession, ClientWebSocketResponse
 
 from homeassistant.components.websocket_api import const as ws_const
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as util_dt
-
-from tests.async_mock import patch
 
 
 async def test_upload_image(hass, hass_client, hass_ws_client):

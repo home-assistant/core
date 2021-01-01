@@ -1,6 +1,7 @@
 """Tests for syncthru config flow."""
 
 import re
+from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import ssdp
@@ -8,7 +9,6 @@ from homeassistant.components.syncthru.config_flow import SyncThru
 from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 FIXTURE_USER_INPUT = {

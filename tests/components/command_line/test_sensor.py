@@ -1,10 +1,10 @@
 """The tests for the Command line sensor platform."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.components.command_line import sensor as command_line
 from homeassistant.helpers.template import Template
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 

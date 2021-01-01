@@ -1,5 +1,6 @@
 """Test the Shelly config flow."""
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import aioshelly
@@ -8,7 +9,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.shelly.const import DOMAIN
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 MOCK_SETTINGS = {

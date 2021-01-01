@@ -1,5 +1,6 @@
 """Define tests for the GeoNet NZ Volcano config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_volcano import config_flow
@@ -10,8 +11,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
-
-from tests.async_mock import patch
 
 
 async def test_duplicate_error(hass, config_entry):

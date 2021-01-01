@@ -1,5 +1,6 @@
 """The tests for the uk_transport platform."""
 import re
+from unittest.mock import patch
 
 import requests_mock
 
@@ -18,7 +19,6 @@ from homeassistant.components.uk_transport.sensor import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
-from tests.async_mock import patch
 from tests.common import load_fixture
 
 BUS_ATCOCODE = "340000368SHE"
