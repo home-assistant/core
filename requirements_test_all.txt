@@ -245,7 +245,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.2.0
+debugpy==1.2.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
