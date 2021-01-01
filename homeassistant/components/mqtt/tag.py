@@ -6,7 +6,10 @@ import voluptuous as vol
 from homeassistant.const import CONF_PLATFORM, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from . import (
     ATTR_DISCOVERY_HASH,
@@ -21,7 +24,12 @@ from . import (
     subscription,
 )
 from .. import mqtt
-from .discovery import MQTT_DISCOVERY_NEW, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .discovery import (
+    MQTT_DISCOVERY_DONE,
+    MQTT_DISCOVERY_NEW,
+    MQTT_DISCOVERY_UPDATED,
+    clear_discovery_hash,
+)
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +58,11 @@ async def async_setup_entry(hass, config_entry):
             config = PLATFORM_SCHEMA(discovery_payload)
             await async_setup_tag(hass, config, config_entry, discovery_data)
         except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
             raise
 
     async_dispatcher_connect(
@@ -142,6 +154,10 @@ class MQTTTagScanner:
             self._setup_from_config(config)
             await self.subscribe_topics()
 
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+        )
+
     def _setup_from_config(self, config):
         self._value_template = lambda value, error_value: value
         if CONF_VALUE_TEMPLATE in config:
@@ -162,6 +178,9 @@ class MQTTTagScanner:
             self.hass,
             MQTT_DISCOVERY_UPDATED.format(discovery_hash),
             self.discovery_update,
+        )
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
         )
 
     async def subscribe_topics(self):

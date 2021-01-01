@@ -4,11 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.vacuum import DOMAIN
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from .. import ATTR_DISCOVERY_HASH, DOMAIN as MQTT_DOMAIN, PLATFORMS
-from ..discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from ..discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy
 from .schema_state import PLATFORM_SCHEMA_STATE, async_setup_entity_state
@@ -45,7 +48,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
             raise
 
     async_dispatcher_connect(
