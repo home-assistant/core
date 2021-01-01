@@ -889,7 +889,7 @@ linode-api==4.1.9b1
 lmnotify==0.0.4
 
 # homeassistant.components.google_maps
-locationsharinglib==4.1.0
+locationsharinglib==4.1.5
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.2
