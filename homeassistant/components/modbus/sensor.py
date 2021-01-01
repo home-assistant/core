@@ -7,6 +7,10 @@ from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
+
+""" Custom """
+CONF_BIT = 'bit'
+
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -91,10 +95,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_SLAVE): cv.positive_int,
                 vol.Optional(CONF_STRUCTURE): cv.string,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(CONF_BIT): cv.positive_int,
             }
         ]
     }
 )
+
+
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -148,6 +155,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 register[CONF_PRECISION],
                 register[CONF_DATA_TYPE],
                 register.get(CONF_DEVICE_CLASS),
+                register.get(CONF_BIT),
             )
         )
 
@@ -175,6 +183,7 @@ class ModbusRegisterSensor(RestoreEntity):
         precision,
         data_type,
         device_class,
+        bit,
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
@@ -193,6 +202,7 @@ class ModbusRegisterSensor(RestoreEntity):
         self._device_class = device_class
         self._value = None
         self._available = True
+        self._bit = bit
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -250,6 +260,19 @@ class ModbusRegisterSensor(RestoreEntity):
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
+        
+        
+        if self._bit:
+            #_LOGGER.error("Bit Value: %s", self._bit)
+            bytes_as_bits = ''.join(format(byte, '08b') for byte in byte_string)
+            #Position is between 0 and len -1
+            position = len(bytes_as_bits) -1 -self._bit
+            val = bytes_as_bits[position]
+            _LOGGER.error("Bit at position %s is: %s", self._bit,val)
+            self._value = str(val)
+            self._available = True
+            return 
+        
         if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
         else:
