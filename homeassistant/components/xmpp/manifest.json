@@ -2,6 +2,6 @@
   "domain": "xmpp",
   "name": "Jabber (XMPP)",
   "documentation": "https://www.home-assistant.io/integrations/xmpp",
-  "requirements": ["slixmpp==1.5.2"],
+  "requirements": ["slixmpp==1.6.0"],
   "codeowners": ["@fabaff", "@flowolf"]
 }
