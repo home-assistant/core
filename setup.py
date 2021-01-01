@@ -39,6 +39,7 @@ REQUIRES = [
     "bcrypt==3.1.7",
     "certifi>=2020.12.5",
     "ciso8601==2.1.3",
+    "h11==0.12.0",
     "httpx==0.16.1",
     "importlib-metadata==1.6.0;python_version<'3.8'",
     "jinja2>=2.11.2",
