@@ -606,7 +606,7 @@ def _augment_data_with_context(
         if event.context_parent_id:
             context_event = context_lookup.get(event.context_parent_id)
         # Ensure the (parent) context_event is not the root cause of this log entry
-        if event == context_event:
+        if not context_event or event == context_event:
             return
 
     event_type = context_event.event_type
