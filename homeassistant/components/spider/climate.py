@@ -42,10 +42,15 @@ class SpiderThermostat(ClimateEntity):
         """Initialize the thermostat."""
         self.api = api
         self.thermostat = thermostat
-        SUPPORT_FAN.append(thermostat.fan_speed_values)
+        for fan_speed_value in thermostat.fan_speed_values:
+            SUPPORT_FAN.append(fan_speed_value)
         operation_values = thermostat.operation_values
         for operation_value in operation_values:
-            SUPPORT_HVAC.append(SPIDER_STATE_TO_HA.get(operation_value, lambda: "Invalid operation value"))
+            SUPPORT_HVAC.append(
+                SPIDER_STATE_TO_HA.get(
+                    operation_value, lambda: "Invalid operation value"
+                )
+            )
 
     @property
     def device_info(self):
