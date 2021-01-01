@@ -908,6 +908,33 @@ async def test_track_template_error_can_recover(hass, caplog):
     assert "UndefinedError" not in caplog.text
 
 
+async def test_track_template_time_change(hass, caplog):
+    """Test tracking template with time change."""
+    template_error = Template("{{ utcnow().minute % 2 == 0 }}", hass)
+    calls = []
+
+    @ha.callback
+    def error_callback(entity_id, old_state, new_state):
+        calls.append((entity_id, old_state, new_state))
+
+    start_time = dt_util.utcnow() + timedelta(hours=24)
+    time_that_will_not_match_right_away = start_time.replace(minute=1, second=0)
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        async_track_template(hass, template_error, error_callback)
+        await hass.async_block_till_done()
+        assert not calls
+
+    first_time = start_time.replace(minute=2, second=0)
+    with patch("homeassistant.util.dt.utcnow", return_value=first_time):
+        async_fire_time_changed(hass, first_time)
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0] == (None, None, None)
+
+
 async def test_track_template_result(hass):
     """Test tracking template."""
     specific_runs = []
