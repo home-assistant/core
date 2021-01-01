@@ -197,7 +197,7 @@ class RestNotificationService(BaseNotificationService):
             response = requests.get(
                 self._resource,
                 headers=self._headers,
-                params=self._params.update(data),
+                params={**self._params, **data} if self._params else data,
                 timeout=10,
                 auth=self._auth,
                 verify=self._verify_ssl,
