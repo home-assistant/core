@@ -811,7 +811,7 @@ pyotgw==1.0b1
 pyotp==2.3.0
 
 # homeassistant.components.openweathermap
-pyowm==3.1.0
+pyowm==3.1.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
