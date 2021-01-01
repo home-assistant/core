@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.template import Template
 
 from . import DOMAIN, PLATFORMS
 
@@ -56,8 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
         vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_DATA): dict,
-        vol.Optional(CONF_DATA_TEMPLATE): {cv.match_all: cv.template_complex},
+        vol.Optional(CONF_DATA): vol.All(dict, cv.template_complex),
+        vol.Optional(CONF_DATA_TEMPLATE): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -155,9 +156,7 @@ class RestNotificationService(BaseNotificationService):
             # integrations, so just return the first target in the list.
             data[self._target_param_name] = kwargs[ATTR_TARGET][0]
 
-        if self._data:
-            data.update(self._data)
-        elif self._data_template:
+        if self._data_template or self._data:
             kwargs[ATTR_MESSAGE] = message
 
             def _data_template_creator(value):
@@ -168,10 +167,15 @@ class RestNotificationService(BaseNotificationService):
                     return {
                         key: _data_template_creator(item) for key, item in value.items()
                     }
+                if not isinstance(value, Template):
+                    return value
                 value.hass = self._hass
                 return value.async_render(kwargs, parse_result=False)
 
-            data.update(_data_template_creator(self._data_template))
+            if self._data:
+                data.update(_data_template_creator(self._data))
+            if self._data_template:
+                data.update(_data_template_creator(self._data_template))
 
         if self._method == "POST":
             response = requests.post(
