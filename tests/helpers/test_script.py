@@ -780,6 +780,32 @@ async def test_wait_template_variables_in(hass):
         assert not script_obj.is_running
 
 
+async def test_wait_template_with_utcnow(hass):
+    """Test the wait template with utcnow."""
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hours == 12 }}"})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    start_time = dt_util.utcnow() + timedelta(hours=24)
+
+    try:
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        async_fire_time_changed(hass, start_time.replace(hour=5))
+        assert not script_obj.is_running
+        async_fire_time_changed(hass, start_time.replace(hour=12))
+
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        async_fire_time_changed(hass, start_time.replace(hour=3))
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+
+
 @pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_variables_out(hass, mode, action_type):
