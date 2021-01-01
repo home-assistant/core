@@ -334,9 +334,11 @@ class DysonPureHotCoolEntity(ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        if self._device.state.auto_mode != AutoMode.AUTO_ON.value and \
-            self._device.state.fan_state == FanState.FAN_OFF.value:
-                return FAN_OFF
+        if (
+            self._device.state.auto_mode != AutoMode.AUTO_ON.value
+            and self._device.state.fan_state == FanState.FAN_OFF.value
+        ):
+            return FAN_OFF
 
         return SPEED_MAP[self._device.state.speed]
 
