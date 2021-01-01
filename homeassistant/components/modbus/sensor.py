@@ -62,8 +62,6 @@ def number(value: Any) -> Union[int, float]:
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
-
-""" Add bit option for single bit extraction from registry """
 CONF_BIT = "bit"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
