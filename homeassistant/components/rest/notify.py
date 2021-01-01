@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.template import Template
 
 from . import DOMAIN, PLATFORMS
 
@@ -166,7 +167,7 @@ class RestNotificationService(BaseNotificationService):
                     return {
                         key: _data_template_creator(item) for key, item in value.items()
                     }
-                if isinstance(value, str):
+                if not isinstance(value, Template):
                     return value
                 value.hass = self._hass
                 return value.async_render(kwargs, parse_result=False)
