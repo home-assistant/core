@@ -25,6 +25,7 @@ CONF_TEXT_TYPE = "text_type"
 SUPPORTED_LANGUAGES = [
     "ar-XA",
     "bn-IN",
+    "yue-HK",
     "cmn-CN",
     "cmn-TW",
     "cs-CZ",
