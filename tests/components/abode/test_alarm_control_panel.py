@@ -1,4 +1,6 @@
 """Tests for the Abode alarm control panel device."""
+from unittest.mock import PropertyMock, patch
+
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
@@ -16,8 +18,6 @@ from homeassistant.const import (
 )
 
 from .common import setup_platform
-
-from tests.async_mock import PropertyMock, patch
 
 DEVICE_ID = "alarm_control_panel.abode_alarm"
 

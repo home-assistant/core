@@ -1,11 +1,12 @@
 """The tests for the Rfxtrx component."""
 
+from unittest.mock import call
+
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import call
 from tests.common import MockConfigEntry
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 

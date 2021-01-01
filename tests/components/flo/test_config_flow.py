@@ -1,14 +1,13 @@
 """Test the flo config flow."""
 import json
 import time
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.const import CONTENT_TYPE_JSON
 
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
-
-from tests.async_mock import patch
 
 
 async def test_form(hass, aioclient_mock_fixture):

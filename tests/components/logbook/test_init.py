@@ -3,6 +3,7 @@
 import collections
 from datetime import datetime, timedelta
 import json
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -36,7 +37,6 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant, init_recorder_component, mock_platform
 from tests.components.recorder.common import trigger_db_commit
 

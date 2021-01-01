@@ -1,11 +1,11 @@
 """Test the nexia config flow."""
+from unittest.mock import MagicMock, patch
+
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.async_mock import MagicMock, patch
 
 
 async def test_form(hass):

@@ -1,8 +1,9 @@
 """Tests for Met.no."""
+from unittest.mock import patch
+
 from homeassistant.components.met.const import DOMAIN
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

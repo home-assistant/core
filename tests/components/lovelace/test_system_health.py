@@ -1,8 +1,9 @@
 """Tests for Lovelace system health."""
+from unittest.mock import patch
+
 from homeassistant.components.lovelace import dashboard
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import get_system_health_info
 
 

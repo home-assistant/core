@@ -1,10 +1,10 @@
 """Light conftest."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant.components.light import Profiles
-
-from tests.async_mock import AsyncMock, patch
 
 
 @pytest.fixture(autouse=True)

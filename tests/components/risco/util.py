@@ -1,10 +1,11 @@
 """Utilities for Risco tests."""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 from pytest import fixture
 
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 
-from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 TEST_CONFIG = {

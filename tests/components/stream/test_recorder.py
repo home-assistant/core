@@ -1,6 +1,7 @@
 """The tests for hls streams."""
 from datetime import timedelta
 from io import BytesIO
+from unittest.mock import patch
 
 import av
 import pytest
@@ -10,7 +11,6 @@ from homeassistant.components.stream.recorder import recorder_save_worker
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
