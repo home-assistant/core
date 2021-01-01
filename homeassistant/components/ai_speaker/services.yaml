@@ -1,0 +1,14 @@
+# Describes the format for available AI-Speaker services
+
+publish_command:
+  description: Send the command to AI-Speaker.
+  fields:
+    ais_url:
+      description: AI-Speaker WS URL.
+      example: "http://ais-dom.local:8122"
+    key:
+      description: Action to be performed.
+      example: "playAudio"
+    val:
+      description: Message / data to perform the action.
+      example: "http://n-15-1.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx?audio=5"

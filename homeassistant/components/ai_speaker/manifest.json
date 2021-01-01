@@ -1,6 +1,6 @@
 {
   "domain": "ai_speaker",
-  "name": "Aktualne ceny złota i walut z NBP",
+  "name": "AI-Speaker integration",
   "documentation": "https://ai-speaker.com",
   "dependencies": [],
   "codeowners": ["@asystentaka-jolka"],
