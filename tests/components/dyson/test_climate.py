@@ -678,7 +678,6 @@ async def test_purehotcool_set_fan_mode(devices, login, hass):
         True,
     )
     assert device.enable_auto_mode.call_count == 1
-    device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_AUTO)
 
 
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
