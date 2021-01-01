@@ -1,131 +1,147 @@
-"""Tests for the Nest integration API glue library."""
+"""Tests for the Nest integration API glue library.
+
+There are two interesting cases to exercise that have different strategies
+for token refresh and for testing:
+- API based requests, tested using aioclient_mock
+- Pub/sub subcriber initialization, intercepted with patch()
+
+The tests below exercise both cases during integration setup.
+"""
 
 import time
 
-from google_nest_sdm.google_nest_subscriber import (
-    AbstractSubscriberFactory,
-    GoogleNestSubscriber,
-)
-
-from homeassistant.components.nest.api import AsyncConfigEntryAuth
-from homeassistant.components.nest.const import OAUTH2_TOKEN, SDM_SCOPES
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from tests.async_mock import MagicMock, PropertyMock
+from .common import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    CONFIG,
+    FAKE_REFRESH_TOKEN,
+    FAKE_TOKEN,
+    PROJECT_ID,
+    create_config_entry,
+)
 
-DOMAIN = "nest"
+from tests.async_mock import patch
 
-CLIENT_ID = "some-client-id"
-CLIENT_SECRET = "some-client-secret"
+PLATFORMS = []  # No platforms needed to verify initialization
 
-FAKE_TOKEN = "some-token"
-FAKE_REFRESH_TOKEN = "some-refresh-token"
-
-PROJECT_ID = "project-id"
-SUBSCRIBER_ID = "projects/example/subscriptions/example"
-
-
-class FakeSubscriberFactory(AbstractSubscriberFactory):
-    """Fake subscriber for capturing credentials."""
-
-    def __init__(self):
-        """Initialize FakeSubscriberFactory."""
-        self.creds = None
-
-    async def async_new_subscriber(
-        self, creds, subscription_name, loop, async_callback
-    ):
-        """Capture credentials for tests."""
-        self.creds = creds
-        return None
+FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
-async def test_get_access_token(hass, aioclient_mock, session):
-    """Verify that the access token is loaded from the ConfigEntry."""
-    session = MagicMock(config_entry_oauth2_flow.OAuth2Session)
-    type(session).valid_token = PropertyMock(return_value=True)
-    type(session).token = PropertyMock(
-        return_value={
-            "access_token": FAKE_TOKEN,
-        }
-    )
-
-    auth = AsyncConfigEntryAuth(aioclient_mock, session, CLIENT_ID, CLIENT_SECRET)
-
-    token = await auth.async_get_access_token()
-    assert len(session.async_ensure_token_valid.mock_calls) == 0
-    assert token == FAKE_TOKEN
+async def async_setup_sdm(hass):
+    """Set up the integration."""
+    with patch("homeassistant.components.nest.PLATFORMS", PLATFORMS):
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
+        await hass.async_block_till_done()
 
 
-async def test_get_creds(hass, aioclient_mock):
+async def test_token_in_config_entry(hass, aioclient_mock):
     """Verify that the Credentials are created properly."""
+
     expiration_time = time.time() + 86400
-    session = MagicMock(config_entry_oauth2_flow.OAuth2Session)
-    type(session).token = PropertyMock(
-        return_value={
-            "access_token": FAKE_TOKEN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
-            "expires_at": expiration_time,
-        }
-    )
-    auth = AsyncConfigEntryAuth(aioclient_mock, session, CLIENT_ID, CLIENT_SECRET)
+    create_config_entry(hass, expiration_time)
 
-    subscriber_factory = FakeSubscriberFactory()
-    subscriber = GoogleNestSubscriber(
-        auth, PROJECT_ID, SUBSCRIBER_ID, subscriber_factory
-    )
-    await subscriber.start_async()
+    # Prepare to capture credentials in API requests
+    aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/structures", json={})
+    aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/devices", json={})
 
-    creds = subscriber_factory.creds
+    # Prepare to capture credentials for Subscriber
+    captured_creds = None
+
+    async def async_new_subscriber(creds, subscription_name, loop, async_callback):
+        """Capture credentials for tests."""
+        nonlocal captured_creds
+        captured_creds = creds
+        return None  # GoogleNestSubscriber
+
+    with patch(
+        "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
+        side_effect=async_new_subscriber,
+    ) as new_subscriber_mock:
+        await async_setup_sdm(hass)
+
+    # Verify API requests are made with the correct credentials
+    calls = aioclient_mock.mock_calls
+    assert len(calls) == 2
+    (method, url, data, headers) = calls[0]
+    assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
+    (method, url, data, headers) = calls[1]
+    assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
+
+    # Verify the susbcriber was created with the correct credentials
+    assert len(new_subscriber_mock.mock_calls) == 1
+    assert captured_creds
+    creds = captured_creds
     assert creds.token == FAKE_TOKEN
     assert creds.refresh_token == FAKE_REFRESH_TOKEN
     assert int(dt.as_timestamp(creds.expiry)) == int(expiration_time)
     assert creds.valid
     assert not creds.expired
     assert creds.token_uri == OAUTH2_TOKEN
-    assert creds.client_id == "some-client-id"
-    assert creds.client_secret == "some-client-secret"
+    assert creds.client_id == CLIENT_ID
+    assert creds.client_secret == CLIENT_SECRET
     assert creds.scopes == SDM_SCOPES
 
 
-async def test_get_access_token_is_refreshed(hass, aioclient_mock):
-    """Verify that an expired access token is refreshed when accessed."""
-    session = MagicMock(config_entry_oauth2_flow.OAuth2Session)
-    type(session).valid_token = PropertyMock(return_value=False)
-    type(session).token = PropertyMock(
-        return_value={
-            "access_token": FAKE_TOKEN,
-        }
-    )
-    auth = AsyncConfigEntryAuth(aioclient_mock, session, CLIENT_ID, CLIENT_SECRET)
-    token = await auth.async_get_access_token()
-    assert len(session.async_ensure_token_valid.mock_calls) == 1
-    assert token == FAKE_TOKEN
+async def test_expired_token_in_config_entry(hass, aioclient_mock):
+    """Verify behavior of an expired token."""
 
-
-async def test_get_creds_is_expired(hass, aioclient_mock):
-    """Verify that Credentials objects are properly created when expired."""
     expiration_time = time.time() - 86400
-    session = MagicMock(config_entry_oauth2_flow.OAuth2Session)
-    type(session).token = PropertyMock(
-        return_value={
-            "access_token": FAKE_TOKEN,
-            "refresh_token": FAKE_REFRESH_TOKEN,
-            "expires_at": expiration_time,
-        }
-    )
-    auth = AsyncConfigEntryAuth(aioclient_mock, session, CLIENT_ID, CLIENT_SECRET)
+    create_config_entry(hass, expiration_time)
 
-    subscriber_factory = FakeSubscriberFactory()
-    subscriber = GoogleNestSubscriber(
-        auth, PROJECT_ID, SUBSCRIBER_ID, subscriber_factory
+    # Prepare a token refresh response
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": FAKE_UPDATED_TOKEN,
+            "expires_at": time.time() + 86400,
+            "expires_in": 86400,
+        },
     )
-    await subscriber.start_async()
+    # Prepare to capture credentials in API requests
+    aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/structures", json={})
+    aioclient_mock.get(f"{API_URL}/enterprises/{PROJECT_ID}/devices", json={})
 
-    # This credential is not refreshed (Pub/sub subscriber handles this).
-    # Assert that it is still expired.
-    creds = subscriber_factory.creds
+    # Prepare to capture credentials for Subscriber
+    captured_creds = None
+
+    async def async_new_subscriber(creds, subscription_name, loop, async_callback):
+        """Capture credentials for tests."""
+        nonlocal captured_creds
+        captured_creds = creds
+        return None  # GoogleNestSubscriber
+
+    with patch(
+        "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
+        side_effect=async_new_subscriber,
+    ) as new_subscriber_mock:
+        await async_setup_sdm(hass)
+
+    calls = aioclient_mock.mock_calls
+    assert len(calls) == 3
+    # Verify refresh token call to get an updated token
+    (method, url, data, headers) = calls[0]
+    assert data == {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": FAKE_REFRESH_TOKEN,
+    }
+    # Verify API requests are made with the new token
+    (method, url, data, headers) = calls[1]
+    assert headers == {"Authorization": f"Bearer {FAKE_UPDATED_TOKEN}"}
+    (method, url, data, headers) = calls[2]
+    assert headers == {"Authorization": f"Bearer {FAKE_UPDATED_TOKEN}"}
+
+    # The subscriber is created with a token that is expired.  Verify that the
+    # credential is expired so the subscriber knows it needs to refresh it.
+    assert len(new_subscriber_mock.mock_calls) == 1
+    assert captured_creds
+    creds = captured_creds
     assert creds.token == FAKE_TOKEN
     assert creds.refresh_token == FAKE_REFRESH_TOKEN
     assert int(dt.as_timestamp(creds.expiry)) == int(expiration_time)
