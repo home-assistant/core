@@ -703,7 +703,6 @@ omit =
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
-    homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
