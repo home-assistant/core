@@ -6,7 +6,6 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
@@ -98,7 +97,7 @@ async def test_one_lock_operation(hass):
     assert lock_operator_sensor
     assert (
         hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == STATE_UNAVAILABLE
+        == STATE_UNKNOWN
     )
 
 

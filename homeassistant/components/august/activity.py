@@ -11,7 +11,7 @@ from .subscriber import AugustSubscriberMixin
 _LOGGER = logging.getLogger(__name__)
 
 ACTIVITY_STREAM_FETCH_LIMIT = 10
-ACTIVITY_CATCH_UP_FETCH_LIMIT = 1000
+ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 
 
 class ActivityStream(AugustSubscriberMixin):
@@ -102,11 +102,14 @@ class ActivityStream(AugustSubscriberMixin):
     def _process_newer_device_activities(self, activities):
         updated_device_ids = set()
         for activity in activities:
-            self._latest_activities_by_id_type.setdefault(activity.device_id, {})
+            device_id = activity.device_id
+            activity_type = activity.activity_type
 
-            lastest_activity = self._latest_activities_by_id_type[
-                activity.device_id
-            ].get(activity.activity_type)
+            self._latest_activities_by_id_type.setdefault(device_id, {})
+
+            lastest_activity = self._latest_activities_by_id_type[device_id].get(
+                activity_type
+            )
 
             # Ignore activities that are older than the latest one
             if (
@@ -115,10 +118,8 @@ class ActivityStream(AugustSubscriberMixin):
             ):
                 continue
 
-            self._latest_activities_by_id_type[activity.device_id][
-                activity.activity_type
-            ] = activity
+            self._latest_activities_by_id_type[device_id][activity_type] = activity
 
-            updated_device_ids.add(activity.device_id)
+            updated_device_ids.add(device_id)
 
         return updated_device_ids
