@@ -22,6 +22,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_BIT,
     CONF_COUNT,
     CONF_DATA_TYPE,
     CONF_HUB,
@@ -39,7 +40,6 @@ from .const import (
     DEFAULT_HUB,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
-    CONF_BIT,
 )
 
 _LOGGER = logging.getLogger(__name__)
