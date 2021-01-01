@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -36,8 +37,6 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.host = None
-        self._errors = {}
-        self.discovered_conf = {}
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
@@ -46,18 +45,20 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def _test_connection(self, host, port):
+        errors = {}
         try:
             with async_timeout.timeout(PLATFORM_TIMEOUT):
                 await iammeter.real_time_api(host, port)
                 return True
-        except (IamMeterError, asyncio.TimeoutError):
+        except (IamMeterError, asyncio.TimeoutError) as err:
             _LOGGER.error("Device is not ready!")
-            self._errors[CONF_NAME] = "cannot_connect"
+            errors[CONF_NAME] = "cannot_connect"
+            raise PlatformNotReady from err
         return False
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
-        self._errors = {}
+        errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form
             name = user_input.get(CONF_NAME, DEFAULT_NAME)
@@ -70,28 +71,27 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = netloc
 
             if self._host_in_configuration_exists(name):
-                self._errors[CONF_NAME] = "already_configured"
-            else:
-                if await self._test_connection(host, port):
+                errors[CONF_NAME] = "already_configured"
+            if not errors:
+                try:
+                    await self._test_connection(host, port)
                     return self.async_create_entry(
                         title=name,
                         data={CONF_NAME: name, CONF_HOST: host, CONF_PORT: port},
                     )
+                except PlatformNotReady:
+                    errors[CONF_NAME] = "cannot_connect"
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
             user_input[CONF_PORT] = DEFAULT_PORT
             user_input[CONF_HOST] = DEFAULT_HOST
-            if self.discovered_conf:
-                user_input.update(self.discovered_conf)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
+                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
                     ): str,
@@ -100,7 +100,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
-            errors=self._errors,
+            errors=errors,
         )
 
     async def async_step_import(self, user_input=None):

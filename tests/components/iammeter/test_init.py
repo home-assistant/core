@@ -1,17 +1,28 @@
 """Test the IamMeter component."""
-from homeassistant.components import iammeter
 
-from tests.async_mock import Mock
+from homeassistant.components.iammeter.const import DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
+from .const import HOST, NAME, PORT
 
-async def test_setup(hass):
-    """Test setup function."""
-    config = {}
-    assert await iammeter.async_setup(hass, config) is True
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass):
     """Test that it will forward setup entry."""
-    hass = Mock()
-    assert await iammeter.async_setup_entry(hass, {}) is True
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN] == {}
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert not hass.data.get(DOMAIN)

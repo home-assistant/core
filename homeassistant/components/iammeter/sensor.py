@@ -41,13 +41,9 @@ PLATFORM_TIMEOUT = 8
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ):
-    """Load the saved entities."""
-    await async_setup_platform(hass, entry.data, async_add_entities)
-    return True
-
-
-async def async_setup_platform(hass, config, async_add_entities):
-    """Platform setup."""
+    """Add an IamMeter entry."""
+    # await async_setup_platform(hass, entry.data, async_add_entities)
+    config = entry.data
     config_host = config[CONF_HOST]
     config_port = config[CONF_PORT]
     config_name = config[CONF_NAME]
@@ -82,6 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities):
         uid = f"{serial_number}-{row}-{idx}"
         entities.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
     async_add_entities(entities)
+    return True
 
 
 class IamMeter(CoordinatorEntity):
