@@ -516,6 +516,24 @@ async def test_purehotcool_empty_env_attributes(devices, login, hass):
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
+async def test_purehotcool_fan_state_auto(devices, login, hass):
+    """Test device fan state auto."""
+    device = devices.return_value[0]
+    device.state.fan_state = FanState.FAN_AUTO.value
+    await async_setup_component(hass, DYSON_DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
+
+    assert attributes[ATTR_FAN_MODE] == FAN_AUTO
+
+
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purehotcool_device()],
+)
 async def test_purehotcool_fan_state_off(devices, login, hass):
     """Test device fan state off."""
     device = devices.return_value[0]
