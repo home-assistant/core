@@ -1,11 +1,12 @@
 """Test the MyQ config flow."""
+from unittest.mock import patch
+
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.myq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

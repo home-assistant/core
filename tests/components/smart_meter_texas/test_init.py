@@ -1,4 +1,6 @@
 """Test the Smart Meter Texas module."""
+from unittest.mock import patch
+
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -14,8 +16,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
-
-from tests.async_mock import patch
 
 
 async def test_setup_with_no_config(hass):

@@ -6,6 +6,7 @@ import functools
 import logging
 import os
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 import pytz
@@ -40,7 +41,6 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import async_capture_events, async_mock_service
 
 PST = pytz.timezone("America/Los_Angeles")

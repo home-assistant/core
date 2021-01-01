@@ -1,4 +1,6 @@
 """Tests for various Plex services."""
+from unittest.mock import patch
+
 from homeassistant.components.plex.const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -18,7 +20,6 @@ from homeassistant.const import (
 from .const import MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexLibrarySection
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

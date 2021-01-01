@@ -1,6 +1,7 @@
 """Axis switch platform tests."""
 
 from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,8 +20,6 @@ from .test_device import (
     NAME,
     setup_axis_integration,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 EVENTS = [
     {

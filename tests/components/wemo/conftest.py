@@ -1,5 +1,6 @@
 """Fixtures for pywemo."""
 import asyncio
+from unittest.mock import create_autospec, patch
 
 import pytest
 import pywemo
@@ -7,8 +8,6 @@ import pywemo
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import create_autospec, patch
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000

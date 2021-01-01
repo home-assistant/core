@@ -1,9 +1,10 @@
 """Tests for the SRP Energy integration."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components import srp_energy
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ENTRY_OPTIONS = {}

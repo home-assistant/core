@@ -1,13 +1,12 @@
 """Tests for the Point config flow."""
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-
-from tests.async_mock import AsyncMock, patch
 
 
 def init_config_flow(hass, side_effect=None):

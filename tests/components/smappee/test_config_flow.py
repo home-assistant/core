@@ -1,4 +1,6 @@
 """Test the Smappee component config flow module."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.smappee.const import (
     CONF_HOSTNAME,
@@ -12,7 +14,6 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"

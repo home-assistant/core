@@ -1,5 +1,5 @@
 """Tests for the Canary integration."""
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from canary.api import SensorType
 
@@ -12,7 +12,6 @@ from homeassistant.components.canary.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {

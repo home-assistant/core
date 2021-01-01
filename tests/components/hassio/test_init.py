@@ -1,5 +1,6 @@
 """The tests for the hassio component."""
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -7,8 +8,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 

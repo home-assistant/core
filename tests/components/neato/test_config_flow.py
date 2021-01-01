@@ -1,4 +1,6 @@
 """Test the Neato Botvac config flow."""
+from unittest.mock import patch
+
 from pybotvac.neato import Neato
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -6,7 +8,6 @@ from homeassistant.components.neato.const import NEATO_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"

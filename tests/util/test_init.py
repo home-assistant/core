@@ -1,12 +1,11 @@
 """Test Home Assistant util methods."""
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import util
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import MagicMock, patch
 
 
 def test_sanitize_filename():

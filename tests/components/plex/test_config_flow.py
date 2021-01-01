@@ -1,6 +1,7 @@
 """Tests for Plex config flow."""
 import copy
 import ssl
+from unittest.mock import patch
 
 import plexapi.exceptions
 import requests.exceptions
@@ -45,7 +46,6 @@ from .mock_classes import (
     MockResource,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

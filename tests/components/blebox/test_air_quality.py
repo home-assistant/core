@@ -1,6 +1,7 @@
 """Blebox air_quality tests."""
 
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -9,8 +10,6 @@ from homeassistant.components.air_quality import ATTR_PM_0_1, ATTR_PM_2_5, ATTR_
 from homeassistant.const import ATTR_ICON, STATE_UNKNOWN
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 
 @pytest.fixture(name="airsensor")

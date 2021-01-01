@@ -1,5 +1,6 @@
 """Test for Melissa climate component."""
 import json
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
@@ -15,7 +16,6 @@ from homeassistant.components.melissa import DATA_MELISSA, climate as melissa
 from homeassistant.components.melissa.climate import MelissaClimate
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import load_fixture
 
 _SERIAL = "12345678"

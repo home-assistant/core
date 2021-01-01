@@ -1,5 +1,6 @@
 """The tests for the notify file platform."""
 import os
+from unittest.mock import call, mock_open, patch
 
 import pytest
 
@@ -8,7 +9,6 @@ from homeassistant.components.notify import ATTR_TITLE_DEFAULT
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import call, mock_open, patch
 from tests.common import assert_setup_component
 
 

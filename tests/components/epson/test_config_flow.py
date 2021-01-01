@@ -1,9 +1,9 @@
 """Test the epson config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.epson.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_UNAVAILABLE
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):

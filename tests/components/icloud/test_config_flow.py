@@ -1,4 +1,6 @@
 """Tests for the iCloud config flow."""
+from unittest.mock import MagicMock, Mock, patch
+
 from pyicloud.exceptions import PyiCloudFailedLoginException
 import pytest
 
@@ -20,7 +22,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_US
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 USERNAME = "username@me.com"

@@ -1,5 +1,7 @@
 """Tests for the Awair sensor platform."""
 
+from unittest.mock import patch
+
 from homeassistant.components.awair.const import (
     API_CO2,
     API_HUMID,
@@ -40,7 +42,6 @@ from .const import (
     USER_FIXTURE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

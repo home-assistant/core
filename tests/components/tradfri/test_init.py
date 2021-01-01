@@ -1,4 +1,6 @@
 """Tests for Tradfri setup."""
+from unittest.mock import patch
+
 from homeassistant.components import tradfri
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
@@ -6,7 +8,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

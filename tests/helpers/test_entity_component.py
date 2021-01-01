@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from datetime import timedelta
 import logging
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -15,7 +16,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,

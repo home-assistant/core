@@ -1,11 +1,11 @@
 """The tests for the mochad switch platform."""
+import unittest.mock as mock
+
 import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.mochad import switch as mochad
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 
 @pytest.fixture(autouse=True)

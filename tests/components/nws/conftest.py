@@ -1,7 +1,8 @@
 """Fixtures for National Weather Service tests."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
-from tests.async_mock import AsyncMock, patch
 from tests.components.nws.const import DEFAULT_FORECAST, DEFAULT_OBSERVATION
 
 

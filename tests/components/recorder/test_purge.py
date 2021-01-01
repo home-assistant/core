@@ -1,6 +1,7 @@
 """Test data purging."""
 from datetime import datetime, timedelta
 import json
+from unittest.mock import patch
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
@@ -10,8 +11,6 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
-
-from tests.async_mock import patch
 
 
 def test_purge_old_states(hass, hass_recorder):

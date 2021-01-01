@@ -2,6 +2,7 @@
 from collections import deque
 from copy import deepcopy
 from datetime import timedelta
+from unittest.mock import patch
 
 import aiounifi
 import pytest
@@ -35,7 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONTROLLER_HOST = {

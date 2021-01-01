@@ -1,10 +1,10 @@
 """Test the Kodi integration init."""
+from unittest.mock import patch
+
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 
 from . import init_integration
-
-from tests.async_mock import patch
 
 
 async def test_unload_entry(hass):

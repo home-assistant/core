@@ -1,5 +1,7 @@
 """Test Hue init with multiple bridges."""
 
+from unittest.mock import Mock, patch
+
 from aiohue.groups import Groups
 from aiohue.lights import Lights
 from aiohue.scenes import Scenes
@@ -10,8 +12,6 @@ from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 
 async def setup_component(hass):

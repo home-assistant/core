@@ -1,10 +1,10 @@
 """Tests for eafm config flow."""
+from unittest.mock import patch
+
 import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.eafm import const
-
-from tests.async_mock import patch
 
 
 async def test_flow_no_discovered_stations(hass, mock_get_stations):

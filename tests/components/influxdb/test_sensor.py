@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Dict, List, Type
+from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
@@ -24,7 +25,6 @@ from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_T
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import async_fire_time_changed
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"

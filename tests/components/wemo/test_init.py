@@ -1,5 +1,6 @@
 """Tests for the wemo component."""
 from datetime import timedelta
+from unittest.mock import create_autospec, patch
 
 import pywemo
 
@@ -10,7 +11,6 @@ from homeassistant.util import dt
 
 from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_SERIAL_NUMBER
 
-from tests.async_mock import create_autospec, patch
 from tests.common import async_fire_time_changed
 
 

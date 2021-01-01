@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import json
 from typing import Optional
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
@@ -16,7 +17,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import ANY, AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.media_player import common
 

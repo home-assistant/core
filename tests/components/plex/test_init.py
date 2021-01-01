@@ -2,6 +2,7 @@
 import copy
 from datetime import timedelta
 import ssl
+from unittest.mock import patch
 
 import plexapi
 import requests
@@ -20,7 +21,6 @@ from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update, wait_for_debouncer
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

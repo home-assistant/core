@@ -1,10 +1,10 @@
 """Test the Kuler Sky config flow."""
+from unittest.mock import patch
+
 import pykulersky
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kulersky.config_flow import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_flow_success(hass):

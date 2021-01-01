@@ -1,12 +1,12 @@
 """Tests for the nut integration."""
 
 import json
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, load_fixture
 
 

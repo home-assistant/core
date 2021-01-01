@@ -1,10 +1,11 @@
 """Test the Omnilogic config flow."""
+from unittest.mock import patch
+
 from omnilogic import LoginException, OmniLogicException
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.omnilogic.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DATA = {"username": "test-username", "password": "test-password"}

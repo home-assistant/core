@@ -1,11 +1,12 @@
 """Test the AirNow config flow."""
+from unittest.mock import patch
+
 from pyairnow.errors import AirNowError, InvalidKeyError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.airnow.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONFIG = {

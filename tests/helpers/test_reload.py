@@ -1,6 +1,7 @@
 """Tests for the reload helper."""
 import logging
 from os import path
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.helpers.reload import (
 )
 from homeassistant.loader import async_get_integration
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockModule,
     MockPlatform,

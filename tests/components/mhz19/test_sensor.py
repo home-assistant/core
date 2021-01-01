@@ -1,4 +1,6 @@
 """Tests for MH-Z19 sensor."""
+from unittest.mock import DEFAULT, Mock, patch
+
 from pmsensor import co2sensor
 from pmsensor.co2sensor import read_mh_z19_with_temperature
 
@@ -11,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import DEFAULT, Mock, patch
 from tests.common import assert_setup_component
 
 

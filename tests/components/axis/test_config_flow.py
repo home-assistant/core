@@ -1,4 +1,6 @@
 """Test Axis config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
@@ -25,7 +27,6 @@ from homeassistant.data_entry_flow import (
 
 from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_request
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

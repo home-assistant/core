@@ -1,4 +1,5 @@
 """Tests for the SmartThings config flow module."""
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 from aiohttp import ClientResponseError
@@ -23,7 +24,6 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

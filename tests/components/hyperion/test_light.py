@@ -2,6 +2,7 @@
 import logging
 from types import MappingProxyType
 from typing import Any, Optional
+from unittest.mock import AsyncMock, call, patch  # type: ignore[attr-defined]
 
 from hyperion import const
 
@@ -54,8 +55,6 @@ from . import (
     create_mock_client,
     setup_test_config_entry,
 )
-
-from tests.async_mock import AsyncMock, call, patch  # type: ignore[attr-defined]
 
 _LOGGER = logging.getLogger(__name__)
 

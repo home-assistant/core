@@ -1,9 +1,10 @@
 """Test the Volumio config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.volumio.config_flow import CannotConnectError
 from homeassistant.components.volumio.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_SYSTEM_INFO = {"id": "1111-1111-1111-1111", "name": "TestVolumio"}

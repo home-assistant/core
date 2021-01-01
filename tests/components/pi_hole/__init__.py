@@ -1,4 +1,6 @@
 """Tests for the pi_hole component."""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from hole.exceptions import HoleError
 
 from homeassistant.components.pi_hole.const import CONF_LOCATION
@@ -10,8 +12,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-
-from tests.async_mock import AsyncMock, MagicMock, patch
 
 ZERO_DATA = {
     "ads_blocked_today": 0,

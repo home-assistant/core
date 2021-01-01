@@ -1,12 +1,12 @@
 """The tests for the mochad light platform."""
 
+import unittest.mock as mock
+
 import pytest
 
 from homeassistant.components import light
 from homeassistant.components.mochad import light as mochad
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 
 @pytest.fixture(autouse=True)

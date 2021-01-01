@@ -1,5 +1,7 @@
 """Axis camera platform tests."""
 
+from unittest.mock import patch
+
 from homeassistant.components import camera
 from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
@@ -10,8 +12,6 @@ from homeassistant.const import STATE_IDLE
 from homeassistant.setup import async_setup_component
 
 from .test_device import ENTRY_OPTIONS, NAME, setup_axis_integration
-
-from tests.async_mock import patch
 
 
 async def test_platform_manually_configured(hass):

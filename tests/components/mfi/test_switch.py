@@ -1,11 +1,11 @@
 """The tests for the mFi switch platform."""
+import unittest.mock as mock
+
 import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 PLATFORM = mfi
 COMPONENT = switch_component

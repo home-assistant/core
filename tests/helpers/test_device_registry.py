@@ -1,5 +1,6 @@
 """Tests for the Device Registry."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +8,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import device_registry, entity_registry
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_device_registry
 
 

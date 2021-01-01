@@ -1,4 +1,6 @@
 """Tests for Plex player playback methods/services."""
+from unittest.mock import patch
+
 from plexapi.exceptions import NotFound
 
 from homeassistant.components.media_player.const import (
@@ -17,7 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_OPTIONS, SECONDARY_DATA
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

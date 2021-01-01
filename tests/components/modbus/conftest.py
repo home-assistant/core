@@ -1,5 +1,6 @@
 """The tests for the Modbus sensor component."""
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +15,6 @@ from homeassistant.const import CONF_PLATFORM, CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

@@ -1,4 +1,6 @@
 """Tests for the Abode light device."""
+from unittest.mock import patch
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,8 +18,6 @@ from homeassistant.const import (
 )
 
 from .common import setup_platform
-
-from tests.async_mock import patch
 
 DEVICE_ID = "light.living_room_lamp"
 

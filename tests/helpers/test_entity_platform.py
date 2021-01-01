@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,

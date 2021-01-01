@@ -6,6 +6,7 @@ pubsub subscriber.
 """
 
 import datetime
+from unittest.mock import patch
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -18,7 +19,6 @@ from homeassistant.util.dt import utcnow
 
 from .common import async_setup_sdm_platform
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 PLATFORM = "camera"

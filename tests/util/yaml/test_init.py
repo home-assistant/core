@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import unittest
+from unittest.mock import patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.async_mock import patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 

@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,7 +11,6 @@ import homeassistant.config as config_util
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     MockModule,
     MockPlatform,

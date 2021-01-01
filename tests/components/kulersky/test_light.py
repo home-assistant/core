@@ -1,5 +1,6 @@
 """Test the Kuler Sky lights."""
 import asyncio
+from unittest.mock import MagicMock, patch
 
 import pykulersky
 import pytest
@@ -27,7 +28,6 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

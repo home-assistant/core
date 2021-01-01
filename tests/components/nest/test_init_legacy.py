@@ -1,10 +1,10 @@
 """Test basic initialization for the Legacy Nest API using mocks for the Nest python library."""
 
 import time
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 DOMAIN = "nest"

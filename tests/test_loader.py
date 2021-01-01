@@ -1,11 +1,12 @@
 """Test to verify that we can load components."""
+from unittest.mock import ANY, patch
+
 import pytest
 
 from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 
-from tests.async_mock import ANY, patch
 from tests.common import MockModule, async_mock_service, mock_integration
 
 

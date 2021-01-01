@@ -1,5 +1,5 @@
 """Collection of fixtures and functions for the HomeKit tests."""
-from tests.async_mock import Mock, patch
+from unittest.mock import Mock, patch
 
 EMPTY_8_6_JPEG = b"empty_8_6"
 

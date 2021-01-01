@@ -1,5 +1,6 @@
 """Test the Yeelight light."""
 import logging
+from unittest.mock import MagicMock, patch
 
 from yeelight import (
     BulbException,
@@ -107,7 +108,6 @@ from . import (
     _patch_discovery,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_DATA = {

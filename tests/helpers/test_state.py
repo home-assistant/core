@@ -1,6 +1,7 @@
 """Test state helpers."""
 import asyncio
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -21,7 +22,6 @@ import homeassistant.core as ha
 from homeassistant.helpers import state
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

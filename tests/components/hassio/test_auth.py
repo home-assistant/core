@@ -1,8 +1,8 @@
 """The tests for the hassio component."""
 
-from homeassistant.auth.providers.homeassistant import InvalidAuth
+from unittest.mock import Mock, patch
 
-from tests.async_mock import Mock, patch
+from homeassistant.auth.providers.homeassistant import InvalidAuth
 
 
 async def test_auth_success(hass, hassio_client_supervisor):

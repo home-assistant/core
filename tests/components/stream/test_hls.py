@@ -1,5 +1,6 @@
 """The tests for hls streams."""
 from datetime import timedelta
+from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
@@ -10,7 +11,6 @@ from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 

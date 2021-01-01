@@ -2,14 +2,13 @@
 import asyncio
 import logging
 import queue
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import callback
-
-from tests.async_mock import MagicMock, patch
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}

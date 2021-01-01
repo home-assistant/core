@@ -1,11 +1,11 @@
 """Test the Logitech Harmony Hub config flow."""
 import asyncio
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry, load_fixture
 
 

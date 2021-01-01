@@ -6,6 +6,7 @@ and failure modes.
 """
 
 import logging
+from unittest.mock import patch
 
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 
@@ -20,7 +21,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import CONFIG, CONFIG_ENTRY_DATA, async_setup_sdm_platform
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 PLATFORM = "sensor"

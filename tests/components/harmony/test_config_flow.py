@@ -1,10 +1,11 @@
 """Test the Logitech Harmony Hub config flow."""
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 

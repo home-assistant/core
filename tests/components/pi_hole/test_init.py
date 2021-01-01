@@ -1,5 +1,6 @@
 """Test pi_hole component."""
 import logging
+from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
 
@@ -29,7 +30,6 @@ from . import (
     _patch_init_hole,
 )
 
-from tests.async_mock import AsyncMock
 from tests.common import MockConfigEntry
 
 

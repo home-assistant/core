@@ -1,5 +1,6 @@
 """The tests for the Xiaomi router device tracker platform."""
 import logging
+from unittest.mock import MagicMock, call, patch
 
 import requests
 
@@ -7,8 +8,6 @@ from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.xiaomi.device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
-
-from tests.async_mock import MagicMock, call, patch
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 """The tests for the StatsD feeder."""
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -8,8 +9,6 @@ import homeassistant.components.statsd as statsd
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture

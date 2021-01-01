@@ -1,10 +1,10 @@
 """Test the SRP Energy config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, SRP_ENERGY_DOMAIN
 
 from . import ENTRY_CONFIG, init_integration
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):

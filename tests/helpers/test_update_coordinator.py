@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
 
 import aiohttp
@@ -11,7 +12,6 @@ import requests
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)

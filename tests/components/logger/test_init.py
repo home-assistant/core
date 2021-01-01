@@ -1,14 +1,13 @@
 """The tests for the Logger component."""
 from collections import defaultdict
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"

@@ -1,4 +1,6 @@
 """Test hassbian config."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
@@ -6,8 +8,6 @@ from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.util import dt as dt_util, location
-
-from tests.async_mock import patch
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 

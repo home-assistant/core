@@ -3,6 +3,7 @@ import asyncio
 from copy import copy
 from os import path
 import unittest
+from unittest.mock import patch
 
 from voluptuous.error import MultipleInvalid
 
@@ -23,7 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, mock_service
 
 

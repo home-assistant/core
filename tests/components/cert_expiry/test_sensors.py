@@ -2,6 +2,7 @@
 from datetime import timedelta
 import socket
 import ssl
+from unittest.mock import patch
 
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
@@ -11,7 +12,6 @@ from homeassistant.util.dt import utcnow
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

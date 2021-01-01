@@ -2,6 +2,7 @@
 import json
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool
@@ -27,7 +28,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 

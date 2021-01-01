@@ -1,6 +1,7 @@
 """Test config entries API."""
 
 from collections import OrderedDict
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -12,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,

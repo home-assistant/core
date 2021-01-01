@@ -1,4 +1,6 @@
 """Tests for the Tuya config flow."""
+from unittest.mock import Mock, patch
+
 import pytest
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 
@@ -6,7 +8,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.tuya.const import CONF_COUNTRYCODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 USERNAME = "myUsername"

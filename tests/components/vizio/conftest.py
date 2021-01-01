@@ -1,4 +1,6 @@
 """Configure py.test."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
@@ -21,8 +23,6 @@ from .const import (
     MockCompletePairingResponse,
     MockStartPairingResponse,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 
 class MockInput:

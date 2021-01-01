@@ -1,13 +1,13 @@
 """HomeKit controller session fixtures."""
 import datetime
 from unittest import mock
+import unittest.mock
 
 from aiohomekit.testing import FakeController
 import pytest
 
 import homeassistant.util.dt as dt_util
 
-import tests.async_mock
 from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
@@ -25,5 +25,5 @@ def utcnow(request):
 def controller(hass):
     """Replace aiohomekit.Controller with an instance of aiohomekit.testing.FakeController."""
     instance = FakeController()
-    with tests.async_mock.patch("aiohomekit.Controller", return_value=instance):
+    with unittest.mock.patch("aiohomekit.Controller", return_value=instance):
         yield instance

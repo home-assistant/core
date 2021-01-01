@@ -1,9 +1,10 @@
 """Test the devolo_home_control config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

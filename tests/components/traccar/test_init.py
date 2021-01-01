@@ -1,4 +1,6 @@
 """The tests the for Traccar device tracker platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -14,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811

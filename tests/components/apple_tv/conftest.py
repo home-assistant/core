@@ -1,11 +1,11 @@
 """Fixtures for component."""
 
+from unittest.mock import patch
+
 from pyatv import conf, net
 import pytest
 
 from .common import MockPairingHandler, create_conf
-
-from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True, name="mock_scan")

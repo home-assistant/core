@@ -2,6 +2,7 @@
 from datetime import timedelta
 import time
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
@@ -14,7 +15,6 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

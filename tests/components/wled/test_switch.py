@@ -1,4 +1,6 @@
 """Tests for the WLED switch platform."""
+from unittest.mock import patch
+
 from wled import WLEDConnectionError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

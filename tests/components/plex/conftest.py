@@ -1,4 +1,6 @@
 """Fixtures for Plex tests."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.plex.const import DOMAIN
@@ -7,7 +9,6 @@ from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import websocket_connected
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

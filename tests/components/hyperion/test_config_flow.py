@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock, patch  # type: ignore[attr-defined]
 
 from hyperion import const
 
@@ -43,7 +44,6 @@ from . import (
     create_mock_client,
 )
 
-from tests.async_mock import AsyncMock, patch  # type: ignore[attr-defined]
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

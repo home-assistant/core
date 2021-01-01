@@ -3,6 +3,7 @@ import os
 from os import path
 import tempfile
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 
@@ -17,8 +18,6 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 @pytest.fixture

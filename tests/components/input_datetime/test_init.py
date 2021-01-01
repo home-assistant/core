@@ -1,6 +1,7 @@
 """Tests for the Input slider component."""
 # pylint: disable=protected-access
 import datetime
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -31,7 +32,6 @@ from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 INITIAL_DATE = "2020-01-10"

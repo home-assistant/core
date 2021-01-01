@@ -1,4 +1,6 @@
 """Test the AlarmDecoder config flow."""
+from unittest.mock import patch
+
 from alarmdecoder.util import NoDeviceError
 import pytest
 
@@ -29,7 +31,6 @@ from homeassistant.components.binary_sensor import DEVICE_CLASS_WINDOW
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

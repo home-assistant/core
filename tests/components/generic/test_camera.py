@@ -1,6 +1,7 @@
 """The tests for generic camera component."""
 import asyncio
 from os import path
+from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.generic import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_fetching_url(aioclient_mock, hass, hass_client):

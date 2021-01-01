@@ -1,4 +1,6 @@
 """Test the WiLight config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.wilight.config_flow import (
@@ -15,7 +17,6 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.wilight import (
     CONF_COMPONENTS,

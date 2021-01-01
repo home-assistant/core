@@ -1,5 +1,6 @@
 """The tests for the manual Alarm Control Panel component."""
 from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.demo import alarm_control_panel as demo
@@ -17,7 +18,6 @@ from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import async_fire_time_changed, mock_component, mock_restore_cache
 from tests.components.alarm_control_panel import common
 

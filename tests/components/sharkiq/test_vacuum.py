@@ -2,6 +2,7 @@
 from copy import deepcopy
 import enum
 from typing import Any, Iterable, List, Optional
+from unittest.mock import patch
 
 import pytest
 from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
@@ -56,7 +57,6 @@ from .const import (
     TEST_USERNAME,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"

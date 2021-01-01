@@ -1,5 +1,6 @@
 """Test the condition helper."""
 from logging import ERROR
+from unittest.mock import patch
 
 import pytest
 
@@ -8,8 +9,6 @@ from homeassistant.helpers import condition
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
-
-from tests.async_mock import patch
 
 
 async def test_invalid_condition(hass):

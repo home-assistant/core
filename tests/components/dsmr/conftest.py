@@ -1,5 +1,6 @@
 """Common test tools."""
 import asyncio
+from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
 from dsmr_parser.obis_references import (
@@ -9,8 +10,6 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject
 import pytest
-
-from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture

@@ -1,10 +1,10 @@
 """The tests for MQTT tag scanner."""
 import copy
 import json
+from unittest.mock import ANY, patch
 
 import pytest
 
-from tests.async_mock import ANY, patch
 from tests.common import (
     async_fire_mqtt_message,
     async_get_device_automations,

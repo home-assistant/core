@@ -1,4 +1,6 @@
 """Tests for the Risco alarm control panel device."""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -29,7 +31,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
 
-from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"

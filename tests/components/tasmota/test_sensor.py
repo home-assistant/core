@@ -3,6 +3,7 @@ import copy
 import datetime
 from datetime import timedelta
 import json
+from unittest.mock import Mock, patch
 
 import hatasmota
 from hatasmota.utils import (
@@ -31,7 +32,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import Mock, patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_SENSOR_CONFIG = {

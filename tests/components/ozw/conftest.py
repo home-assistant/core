@@ -1,11 +1,11 @@
 """Helpers for tests."""
 import json
+from unittest.mock import patch
 
 import pytest
 
 from .common import MQTTMessage
 
-from tests.async_mock import patch
 from tests.common import load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa
 

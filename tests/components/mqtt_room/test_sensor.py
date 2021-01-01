@@ -1,6 +1,7 @@
 """The tests for the MQTT room presence sensor."""
 import datetime
 import json
+from unittest.mock import patch
 
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
 import homeassistant.components.sensor as sensor
@@ -8,7 +9,6 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 DEVICE_ID = "123TESTMAC"

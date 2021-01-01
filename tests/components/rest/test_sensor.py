@@ -1,6 +1,7 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from os import path
+from unittest.mock import patch
 
 import httpx
 import respx
@@ -17,8 +18,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_setup_missing_config(hass):

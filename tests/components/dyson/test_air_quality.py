@@ -1,6 +1,7 @@
 """Test the Dyson air quality component."""
 import json
 from unittest import mock
+from unittest.mock import patch
 
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
@@ -17,8 +18,6 @@ from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
-
-from tests.async_mock import patch
 
 
 def _get_dyson_purecool_device():

@@ -7,6 +7,7 @@ import os
 import sys
 from tempfile import mkdtemp
 import unittest
+from unittest.mock import Mock
 
 import pytest
 
@@ -18,8 +19,6 @@ from homeassistant.util.json import (
     load_json,
     save_json,
 )
-
-from tests.async_mock import Mock
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}

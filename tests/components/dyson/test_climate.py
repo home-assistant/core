@@ -1,5 +1,6 @@
 """Test the Dyson fan component."""
 import json
+from unittest.mock import Mock, call, patch
 
 from libpurecool.const import (
     FanPower,
@@ -60,8 +61,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
-
-from tests.async_mock import Mock, call, patch
 
 
 class MockDysonState(DysonPureHotCoolState):

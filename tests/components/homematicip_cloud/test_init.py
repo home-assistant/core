@@ -1,5 +1,7 @@
 """Test HomematicIP Cloud setup process."""
 
+from unittest.mock import AsyncMock, Mock, patch
+
 from homematicip.base.base_connection import HmipConnectionError
 
 from homeassistant.components.homematicip_cloud.const import (
@@ -20,7 +22,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

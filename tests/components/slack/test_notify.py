@@ -1,9 +1,7 @@
 """Test slack notifications."""
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from homeassistant.components.slack.notify import SlackNotificationService
-
-from tests.async_mock import AsyncMock
 
 
 async def test_message_includes_default_emoji():

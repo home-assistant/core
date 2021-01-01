@@ -1,4 +1,6 @@
 """Test the Azure DevOps config flow."""
+from unittest.mock import patch
+
 from aioazuredevops.core import DevOpsProject
 import aiohttp
 
@@ -11,7 +13,6 @@ from homeassistant.components.azure_devops.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_REAUTH_INPUT = {CONF_PAT: "abc123"}

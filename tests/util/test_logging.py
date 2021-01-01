@@ -2,12 +2,11 @@
 import asyncio
 import logging
 import queue
+from unittest.mock import patch
 
 import pytest
 
 import homeassistant.util.logging as logging_util
-
-from tests.async_mock import patch
 
 
 def test_sensitive_data_filter():

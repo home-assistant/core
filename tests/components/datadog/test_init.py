@@ -1,5 +1,6 @@
 """The tests for the Datadog component."""
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import homeassistant.components.datadog as datadog
 from homeassistant.const import (
@@ -11,7 +12,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component
 
 

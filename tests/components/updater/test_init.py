@@ -1,11 +1,12 @@
 """The tests for the Updater component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import updater
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component
 
 NEW_VERSION = "10000.0"

@@ -1,6 +1,7 @@
 """Common test objects."""
 import copy
 import json
+from unittest.mock import ANY
 
 from hatasmota.const import (
     CONF_MAC,
@@ -20,7 +21,6 @@ from hatasmota.utils import (
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 
-from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {

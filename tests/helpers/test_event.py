@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from astral import Astral
 import jinja2
@@ -39,7 +40,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE

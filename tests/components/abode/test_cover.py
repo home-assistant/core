@@ -1,4 +1,6 @@
 """Tests for the Abode cover device."""
+from unittest.mock import patch
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.const import (
@@ -10,8 +12,6 @@ from homeassistant.const import (
 )
 
 from .common import setup_platform
-
-from tests.async_mock import patch
 
 DEVICE_ID = "cover.garage_door"
 

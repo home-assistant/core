@@ -1,9 +1,9 @@
 """Tests for Plex media_players."""
+from unittest.mock import patch
+
 from plexapi.exceptions import NotFound
 
 from homeassistant.components.plex.const import DOMAIN, SERVERS
-
-from tests.async_mock import patch
 
 
 async def test_plex_tv_clients(hass, entry, mock_plex_account, setup_plex_server):

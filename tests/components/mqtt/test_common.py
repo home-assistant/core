@@ -2,6 +2,7 @@
 import copy
 from datetime import datetime
 import json
+from unittest.mock import ANY, patch
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
@@ -10,7 +11,6 @@ from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import ANY, patch
 from tests.common import async_fire_mqtt_message, mock_registry
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {

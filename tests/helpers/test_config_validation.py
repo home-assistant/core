@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 import enum
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+from unittest.mock import Mock, patch
 import uuid
 
 import pytest
@@ -10,8 +11,6 @@ import voluptuous as vol
 
 import homeassistant
 from homeassistant.helpers import config_validation as cv, template
-
-from tests.async_mock import Mock, patch
 
 
 def test_boolean():

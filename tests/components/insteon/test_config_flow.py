@@ -1,5 +1,7 @@
 """Test the config flow for the Insteon integration."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.insteon.config_flow import (
     HUB1,
@@ -50,7 +52,6 @@ from .const import (
     PATCH_CONNECTION,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

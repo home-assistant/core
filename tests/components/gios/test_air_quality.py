@@ -1,6 +1,7 @@
 """Test air_quality of GIOS integration."""
 from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from gios import ApiError
 
@@ -24,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.gios import init_integration
 

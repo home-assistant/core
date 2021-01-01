@@ -1,4 +1,6 @@
 """Tests for 1-Wire config flow."""
+from unittest.mock import patch
+
 from pyownet import protocol
 
 from homeassistant.components.onewire.const import (
@@ -18,8 +20,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from . import setup_onewire_owserver_integration, setup_onewire_sysbus_integration
-
-from tests.async_mock import patch
 
 
 async def test_user_owserver(hass):

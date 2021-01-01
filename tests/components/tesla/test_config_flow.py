@@ -1,4 +1,6 @@
 """Test the Tesla config flow."""
+from unittest.mock import patch
+
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -18,7 +20,6 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

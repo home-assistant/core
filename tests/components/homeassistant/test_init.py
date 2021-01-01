@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -32,7 +33,6 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     async_capture_events,
     async_mock_service,
