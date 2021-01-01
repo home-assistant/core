@@ -32,11 +32,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     sensors = []
     for water_heater in equipment[EquipmentType.WATER_HEATER]:
-        if water_heater.tank_hot_water_availability:
+        if water_heater.tank_hot_water_availability is not None:
             sensors.append(EcoNetSensor(water_heater, AVAILIBLE_HOT_WATER))
-        if water_heater.tank_health:
+        if water_heater.tank_health is not None:
             sensors.append(EcoNetSensor(water_heater, TANK_HEALTH))
-        if water_heater.compressor_health:
+        if water_heater.compressor_health is not None:
             sensors.append(EcoNetSensor(water_heater, COMPRESSOR_HEALTH))
         if water_heater.override_status:
             sensors.append(EcoNetSensor(water_heater, OVERRIDE_STATUS))
