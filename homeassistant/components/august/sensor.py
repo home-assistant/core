@@ -4,7 +4,7 @@ import logging
 from august.activity import ActivityType
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE
+from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
@@ -193,7 +193,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state:
+        if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
         self._state = last_state.state
