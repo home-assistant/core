@@ -22,7 +22,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         auth = Auth(session, data["username"], data["password"])
         install = await Installation.retrieve(auth)
     except ConnectionRefusedError:
-        raise InvalidAuth
+        raise InvalidAuth from ConnectionRefusedError
 
     # Return info that you want to store in the config entry.
     return {
@@ -37,8 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Prosegur Alarm."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

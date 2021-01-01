@@ -22,9 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Prosegur alarm control panel platform."""
-    import pprint
-
-    pprint.pprint(entry.data)
     async_add_entities(
         [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])]
     )
@@ -75,7 +72,7 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
             self._state = STATE_ALARM_DISARMED
         elif self._installation.status == Status.ARMED:
             self._state = STATE_ALARM_ARMED_AWAY
-        elif self._installation.status == Status.ARMED_PARTIALLY:
+        elif self._installation.status == Status.PARTIALLY:
             self._state = STATE_ALARM_ARMED_HOME
 
     async def async_alarm_disarm(self, code=None):
