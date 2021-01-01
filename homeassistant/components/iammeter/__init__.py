@@ -21,6 +21,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry():
+async def async_unload_entry(hass, _):
     """Unload a config entry."""
     return True
