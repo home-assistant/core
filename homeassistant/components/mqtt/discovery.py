@@ -168,7 +168,7 @@ async def async_start(
             async def discovery_done(_):
                 pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
                 _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
-                if not len(pending):
+                if not pending:
                     hass.data[PENDING_DISCOVERED][discovery_hash]["unsub"]()
                     hass.data[PENDING_DISCOVERED].pop(discovery_hash)
                 else:
