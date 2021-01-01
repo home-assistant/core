@@ -2,8 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Az eszk\u00f6zt m\u00e1r konfigur\u00e1ltuk",
-            "device_unavailable": "Az eszk\u00f6z nem \u00e9rhet\u0151 el",
-            "faulty_credentials": "Rossz felhaszn\u00e1l\u00f3i hiteles\u00edt\u0151 adatok"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "flow_title": "Axis eszk\u00f6z: {name} ({host})",
         "step": {
@@ -13,6 +12,15 @@
                     "password": "Jelsz\u00f3",
                     "port": "Port",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "V\u00e1lassza ki a haszn\u00e1lni k\u00edv\u00e1nt adatfolyam-profilt"
                 }
             }
         }

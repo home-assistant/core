@@ -60,7 +60,7 @@ class DiscoverYandexTransport(Entity):
         self._name = name
         self._attrs = None
 
-    async def async_update(self):
+    async def async_update(self, *, tries=0):
         """Get the latest data from maps.yandex.ru and update the states."""
         attrs = {}
         closer_time = None
@@ -73,8 +73,12 @@ class DiscoverYandexTransport(Entity):
                 key_error,
                 yandex_reply,
             )
+            if tries > 0:
+                return
             await self.requester.set_new_session()
-            data = (await self.requester.get_stop_info(self._stop_id))["data"]
+            await self.async_update(tries=tries + 1)
+            return
+
         stop_name = data["name"]
         transport_list = data["transports"]
         for transport in transport_list:

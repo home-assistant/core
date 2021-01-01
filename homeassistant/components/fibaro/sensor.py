@@ -1,15 +1,14 @@
 """Support for Fibaro sensors."""
-import logging
-
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -31,14 +30,12 @@ SENSOR_TYPES = {
     "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
     "com.fibaro.humiditySensor": [
         "Humidity",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         DEVICE_CLASS_HUMIDITY,
     ],
-    "com.fibaro.lightSensor": ["Light", "lx", None, DEVICE_CLASS_ILLUMINANCE],
+    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -71,7 +68,7 @@ class FibaroSensor(FibaroDevice, Entity):
         try:
             if not self._unit:
                 if self.fibaro_device.properties.unit == "lux":
-                    self._unit = "lx"
+                    self._unit = LIGHT_LUX
                 elif self.fibaro_device.properties.unit == "C":
                     self._unit = TEMP_CELSIUS
                 elif self.fibaro_device.properties.unit == "F":

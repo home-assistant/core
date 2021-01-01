@@ -164,6 +164,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a harmony entry matching the host."""
         for entry in self._async_current_entries():
+            if CONF_HOST not in entry.data:
+                continue
+
             if entry.data[CONF_HOST] == host:
                 return True
         return False

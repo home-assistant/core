@@ -37,7 +37,9 @@ def netdisco_mock():
 
 async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     """Mock discoveries."""
-    with patch("homeassistant.components.zeroconf.async_get_instance"):
+    with patch("homeassistant.components.zeroconf.async_get_instance"), patch(
+        "homeassistant.components.zeroconf.async_setup", return_value=True
+    ):
         assert await async_setup_component(hass, "discovery", config)
         await hass.async_block_till_done()
         await hass.async_start()

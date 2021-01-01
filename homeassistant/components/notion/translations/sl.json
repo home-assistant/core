@@ -4,7 +4,6 @@
             "already_configured": "To uporabni\u0161ko ime je \u017ee v uporabi."
         },
         "error": {
-            "invalid_credentials": "Neveljavno uporabni\u0161ko ime ali geslo",
             "no_devices": "V ra\u010dunu ni najdene nobene naprave"
         },
         "step": {

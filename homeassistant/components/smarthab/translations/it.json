@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Autenticazione non valida",
             "service": "Errore durante il tentativo di raggiungere SmartHab. Il servizio potrebbe non essere attivo. Controllare la connessione.",
-            "unknown_error": "Errore imprevisto",
-            "wrong_login": "Autenticazione non valida"
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {

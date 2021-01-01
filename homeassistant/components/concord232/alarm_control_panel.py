@@ -101,7 +101,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to %(host)s: %(reason)s",
-                dict(host=self._url, reason=ex),
+                {"host": self._url, "reason": ex},
             )
             return
         except IndexError:

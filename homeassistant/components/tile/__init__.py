@@ -8,8 +8,11 @@ from pytile.errors import SessionExpiredError, TileError
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DATA_COORDINATOR, DOMAIN, LOGGER
 
@@ -48,7 +51,7 @@ async def async_setup_entry(hass, config_entry):
             LOGGER.info("Tile session expired; creating a new one")
             await client.async_init()
         except TileError as err:
-            raise UpdateFailed(f"Error while retrieving data: {err}")
+            raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -85,15 +88,15 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-class TileEntity(Entity):
+class TileEntity(CoordinatorEntity):
     """Define a generic Tile entity."""
 
     def __init__(self, coordinator):
         """Initialize."""
+        super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._name = None
         self._unique_id = None
-        self.coordinator = coordinator
 
     @property
     def device_state_attributes(self):
@@ -111,14 +114,15 @@ class TileEntity(Entity):
         return self._name
 
     @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
     def unique_id(self):
         """Return the unique ID of the entity."""
         return self._unique_id
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Respond to a DataUpdateCoordinator update."""
+        self._update_from_latest_data()
+        self.async_write_ha_state()
 
     @callback
     def _update_from_latest_data(self):
@@ -126,21 +130,6 @@ class TileEntity(Entity):
         raise NotImplementedError
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self._update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
         self._update_from_latest_data()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

@@ -1,6 +1,5 @@
 """Sensor that can display the current Home Assistant versions."""
 from datetime import timedelta
-import logging
 
 from pyhaversion import (
     DockerVersion,
@@ -18,8 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
-
 ALL_IMAGES = [
     "default",
     "intel-nuc",
@@ -35,6 +32,7 @@ ALL_IMAGES = [
     "raspberrypi4-64",
     "tinker",
     "odroid-c2",
+    "odroid-n2",
     "odroid-xu",
 ]
 ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]

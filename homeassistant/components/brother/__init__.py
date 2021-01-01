@@ -6,7 +6,7 @@ import logging
 from brother import Brother, SnmpError, UnsupportedModel
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
+        coordinator.shutdown()
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
@@ -58,7 +59,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id).shutdown()
 
     return unload_ok
 
@@ -69,15 +70,35 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, host, kind):
         """Initialize."""
         self.brother = Brother(host, kind=kind)
+        self._unsub_stop = hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
+        )
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self):
         """Update data via library."""
+        # Race condition on shutdown. Stop all the fetches.
+        if self._unsub_stop is None:
+            return None
+
         try:
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel) as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
         return self.brother.data
+
+    def shutdown(self):
+        """Shutdown the Brother coordinator."""
+        self._unsub_stop()
+        self._unsub_stop = None
+        self.brother.shutdown()
+
+    def _handle_ha_stop(self, _):
+        """Handle Home Assistant stopping."""
+        self.shutdown()

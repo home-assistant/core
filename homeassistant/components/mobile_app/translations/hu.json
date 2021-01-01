@@ -8,5 +8,10 @@
                 "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a mobil alkalmaz\u00e1s komponenst?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "\u00c9rtes\u00edt\u00e9s k\u00fcld\u00e9se"
+        }
     }
 }

@@ -51,6 +51,4 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr["lutron_integration_id"] = self._lutron_device.id
-        return attr
+        return {"lutron_integration_id": self._lutron_device.id}

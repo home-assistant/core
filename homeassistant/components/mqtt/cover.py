@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import cover, mqtt
+from homeassistant.components import cover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -33,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
@@ -41,13 +43,15 @@ from . import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
+    DOMAIN,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
@@ -170,7 +174,8 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT cover through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -182,7 +187,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
+                hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
             clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
@@ -194,10 +199,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_data=None
+    hass, config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(config, config_entry, discovery_data)])
+    async_add_entities([MqttCover(hass, config, config_entry, discovery_data)])
 
 
 class MqttCover(
@@ -209,8 +214,9 @@ class MqttCover(
 ):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the cover."""
+        self.hass = hass
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._position = None
         self._state = None
@@ -253,8 +259,6 @@ class MqttCover(
         )
         self._tilt_optimistic = config[CONF_TILT_STATE_OPTIMISTIC]
 
-    async def _subscribe_topics(self):
-        """(Re)Subscribe to topics."""
         template = self._config.get(CONF_VALUE_TEMPLATE)
         if template is not None:
             template.hass = self.hass
@@ -265,6 +269,8 @@ class MqttCover(
         if tilt_status_template is not None:
             tilt_status_template.hass = self.hass
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
         topics = {}
 
         @callback
@@ -272,6 +278,7 @@ class MqttCover(
         def tilt_message_received(msg):
             """Handle tilt updates."""
             payload = msg.payload
+            tilt_status_template = self._config.get(CONF_TILT_STATUS_TEMPLATE)
             if tilt_status_template is not None:
                 payload = tilt_status_template.async_render_with_possible_json_value(
                     payload
@@ -292,6 +299,7 @@ class MqttCover(
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
+            template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
                 payload = template.async_render_with_possible_json_value(payload)
 
@@ -317,6 +325,7 @@ class MqttCover(
         def position_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
+            template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
                 payload = template.async_render_with_possible_json_value(payload)
 
@@ -549,7 +558,7 @@ class MqttCover(
         position = kwargs[ATTR_POSITION]
         percentage_position = position
         if set_position_template is not None:
-            position = set_position_template.async_render(**kwargs)
+            position = set_position_template.async_render(parse_result=False, **kwargs)
         else:
             position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 

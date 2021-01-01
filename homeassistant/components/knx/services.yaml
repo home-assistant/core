@@ -7,3 +7,6 @@ send:
     payload:
       description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
       example: "[0, 4]"
+    type:
+      description: "Optional. If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      example: "temperature"

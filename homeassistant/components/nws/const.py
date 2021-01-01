@@ -1,4 +1,20 @@
 """Constants for National Weather Service Integration."""
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
+
 DOMAIN = "nws"
 
 CONF_STATION = "station"
@@ -6,11 +22,10 @@ CONF_STATION = "station"
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
 ATTR_FORECAST_DETAILED_DESCRIPTION = "detailed_description"
-ATTR_FORECAST_PRECIP_PROB = "precipitation_probability"
 ATTR_FORECAST_DAYTIME = "daytime"
 
 CONDITION_CLASSES = {
-    "exceptional": [
+    ATTR_CONDITION_EXCEPTIONAL: [
         "Tornado",
         "Hurricane conditions",
         "Tropical storm conditions",
@@ -20,37 +35,37 @@ CONDITION_CLASSES = {
         "Hot",
         "Cold",
     ],
-    "snowy": ["Snow", "Sleet", "Blizzard"],
-    "snowy-rainy": [
+    ATTR_CONDITION_SNOWY: ["Snow", "Sleet", "Blizzard"],
+    ATTR_CONDITION_SNOWY_RAINY: [
         "Rain/snow",
         "Rain/sleet",
         "Freezing rain/snow",
         "Freezing rain",
         "Rain/freezing rain",
     ],
-    "hail": [],
-    "lightning-rainy": [
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING_RAINY: [
         "Thunderstorm (high cloud cover)",
         "Thunderstorm (medium cloud cover)",
         "Thunderstorm (low cloud cover)",
     ],
-    "lightning": [],
-    "pouring": [],
-    "rainy": [
+    ATTR_CONDITION_LIGHTNING: [],
+    ATTR_CONDITION_POURING: [],
+    ATTR_CONDITION_RAINY: [
         "Rain",
         "Rain showers (high cloud cover)",
         "Rain showers (low cloud cover)",
     ],
-    "windy-variant": ["Mostly cloudy and windy", "Overcast and windy"],
-    "windy": [
+    ATTR_CONDITION_WINDY_VARIANT: ["Mostly cloudy and windy", "Overcast and windy"],
+    ATTR_CONDITION_WINDY: [
         "Fair/clear and windy",
         "A few clouds and windy",
         "Partly cloudy and windy",
     ],
-    "fog": ["Fog/mist"],
+    ATTR_CONDITION_FOG: ["Fog/mist"],
     "clear": ["Fair/clear"],  # sunny and clear-night
-    "cloudy": ["Mostly cloudy", "Overcast"],
-    "partlycloudy": ["A few clouds", "Partly cloudy"],
+    ATTR_CONDITION_CLOUDY: ["Mostly cloudy", "Overcast"],
+    ATTR_CONDITION_PARTLYCLOUDY: ["A few clouds", "Partly cloudy"],
 }
 
 DAYNIGHT = "daynight"

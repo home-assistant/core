@@ -1,17 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ya est\u00e1 configurado",
-            "invalid_credentials": "Credenciales no v\u00e1lidas"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "create_entry": {
             "default": "Ver [documentaci\u00f3n Neato]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Credenciales no v\u00e1lidas",
-            "unexpected_error": "Error inesperado"
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "title": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
@@ -22,5 +32,6 @@
                 "title": "Informaci\u00f3n de la cuenta de Neato"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

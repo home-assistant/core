@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "connection_error": "\u00c9chec de la connexion \u00e0 l'instance CoolMasterNet. S'il vous pla\u00eet v\u00e9rifier votre h\u00f4te.",
+            "cannot_connect": "\u00c9chec de connexion",
             "no_units": "Impossible de trouver des unit\u00e9s HVAC dans l'h\u00f4te CoolMasterNet."
         },
         "step": {

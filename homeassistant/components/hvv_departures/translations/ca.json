@@ -4,7 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "no_results": "Sense resultats. Prova-ho amb una altra estaci\u00f3/adre\u00e7a"
         },
@@ -43,6 +43,5 @@
                 "title": "Opcions"
             }
         }
-    },
-    "title": "HVV Departures"
+    }
 }

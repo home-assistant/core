@@ -6,12 +6,11 @@ from homeassistant.const import CONF_DEVICES, STATE_OPEN
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    SIGNAL_EVENT,
     RfxtrxCommandEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -20,15 +19,19 @@ from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 _LOGGER = logging.getLogger(__name__)
 
 
+def supported(event):
+    """Return whether an event supports cover."""
+    return event.device.known_to_be_rollershutter
+
+
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up config entry."""
     discovery_info = config_entry.data
     device_ids = set()
-
-    def supported(event):
-        return event.device.known_to_be_rollershutter
 
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
@@ -77,8 +80,7 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, cover_update)
+    connect_auto_add(hass, discovery_info, cover_update)
 
 
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
@@ -98,17 +100,23 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         """Return if the cover is closed."""
         return not self._state
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Move the cover up."""
-        self._send_command("roll_up")
+        await self._async_send(self._device.send_open)
+        self._state = True
+        self.async_write_ha_state()
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Move the cover down."""
-        self._send_command("roll_down")
+        await self._async_send(self._device.send_close)
+        self._state = False
+        self.async_write_ha_state()
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._send_command("stop_roll")
+        await self._async_send(self._device.send_stop)
+        self._state = True
+        self.async_write_ha_state()
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""

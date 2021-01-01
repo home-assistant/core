@@ -23,7 +23,8 @@ async def test_async_setup_imports_from_config(hass: HomeAssistant):
     with patch(
         "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
     ) as mock_loadCloudData, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry", return_value=True,
+        "homeassistant.components.plum_lightpad.async_setup_entry",
+        return_value=True,
     ) as mock_async_setup_entry:
         result = await async_setup_component(
             hass,

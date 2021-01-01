@@ -1,0 +1,9 @@
+{
+  "domain": "profiler",
+  "name": "Profiler",
+  "documentation": "https://www.home-assistant.io/integrations/profiler",
+  "requirements": ["pyprof2calltree==1.4.5", "guppy3==3.1.0", "objgraph==3.4.1"],
+  "codeowners": ["@bdraco"],
+  "quality_scale": "internal",
+  "config_flow": true
+}

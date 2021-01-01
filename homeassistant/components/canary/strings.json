@@ -1,0 +1,31 @@
+{
+  "config": {
+    "flow_title": "Canary: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to Canary",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras",
+          "timeout": "Request Timeout (seconds)"
+        }
+      }
+    }
+  }
+}

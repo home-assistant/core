@@ -19,13 +19,13 @@
       }
     },
     "abort": {
-      "already_in_progress": "AVM FRITZ!Box configuration is already in progress.",
-      "already_configured": "This AVM FRITZ!Box is already configured.",
-      "not_found": "No supported AVM FRITZ!Box found on the network.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices."
     },
     "error": {
-      "auth_failed": "Username and/or password are incorrect."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

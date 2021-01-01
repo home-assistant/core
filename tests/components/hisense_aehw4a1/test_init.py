@@ -78,7 +78,8 @@ async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(h
 async def test_configuring_hisense_w4a1_not_creates_entry_for_empty_import(hass):
     """Test that specifying config will not create an entry."""
     with patch(
-        "homeassistant.components.hisense_aehw4a1.async_setup_entry", return_value=True,
+        "homeassistant.components.hisense_aehw4a1.async_setup_entry",
+        return_value=True,
     ) as mock_setup:
         await async_setup_component(hass, hisense_aehw4a1.DOMAIN, {})
         await hass.async_block_till_done()

@@ -21,8 +21,8 @@ from .const import CONF_CLOUDHOOK_URL, DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToonDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching WLED data from single endpoint."""
+class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
+    """Class to manage fetching Toon data from single endpoint."""
 
     def __init__(
         self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
@@ -70,6 +70,9 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
             webhook_url = self.hass.components.webhook.async_generate_url(
                 self.entry.data[CONF_WEBHOOK_ID]
             )
+
+        # Ensure the webhook is not registered already
+        webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
 
         webhook_register(
             self.hass,
@@ -138,4 +141,4 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self.toon.update()
         except ToonError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error

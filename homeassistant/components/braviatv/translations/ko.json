@@ -11,9 +11,6 @@
         },
         "step": {
             "authorize": {
-                "data": {
-                    "pin": "PIN \ucf54\ub4dc"
-                },
                 "description": "Sony Bravia TV \uc5d0 \ud45c\uc2dc\ub41c PIN \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.\n\nPIN \ucf54\ub4dc\uac00 \ud45c\uc2dc\ub418\uc9c0 \uc54a\uc73c\uba74 TV \uc5d0\uc11c Home Assistant \ub97c \ub4f1\ub85d \ud574\uc81c\ud558\uc5ec\uc57c \ud569\ub2c8\ub2e4. Settings -> Network -> Remote device settings -> Unregister remote device \ub85c \uc774\ub3d9\ud558\uc5ec \ub4f1\ub85d\uc744 \ud574\uc81c\ud574\uc8fc\uc138\uc694.",
                 "title": "Sony Bravia TV \uc2b9\uc778\ud558\uae30"
             },

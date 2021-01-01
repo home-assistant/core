@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Voc\u00ea s\u00f3 pode configurar uma \u00fanica conex\u00e3o Heos, pois ela suportar\u00e1 todos os dispositivos na rede."
-        },
-        "error": {
-            "connection_failure": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao host especificado."
-        },
         "step": {
             "user": {
                 "data": {

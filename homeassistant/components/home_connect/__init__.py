@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -59,8 +59,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Home Connect from a config entry."""
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
 
     hc_api = api.ConfigEntryAuth(hass, entry, implementation)

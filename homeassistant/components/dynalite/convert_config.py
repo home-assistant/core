@@ -20,6 +20,7 @@ from .const import (
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
+    CONF_LEVEL,
     CONF_NO_DEFAULT,
     CONF_OPEN_PRESET,
     CONF_POLL_TIMER,
@@ -70,6 +71,7 @@ def convert_preset(config: Dict[str, Any]) -> Dict[str, Any]:
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,
         CONF_FADE: dyn_const.CONF_FADE,
+        CONF_LEVEL: dyn_const.CONF_LEVEL,
     }
     return convert_with_map(config, my_map)
 

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja ZHA."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem ZHA."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "pick_radio": {
@@ -39,15 +39,15 @@
         },
         "trigger_subtype": {
             "both_buttons": "oba przyciski",
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
-            "button_4": "czwarty przycisk",
-            "button_5": "pi\u0105ty przycisk",
-            "button_6": "sz\u00f3sty przycisk",
-            "close": "nast\u0105pi zamkni\u0119cie",
-            "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
-            "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
+            "close": "zamknij",
+            "dim_down": "zmniejszenie jasno\u015bci",
+            "dim_up": "zwi\u0119kszenie jasno\u015bci",
             "face_1": "z aktywowan\u0105 twarz\u0105 1",
             "face_2": "z aktywowan\u0105 twarz\u0105 2",
             "face_3": "z aktywowan\u0105 twarz\u0105 3",
@@ -56,15 +56,16 @@
             "face_6": "z aktywowan\u0105 twarz\u0105 6",
             "face_any": "z dowoln\u0105 twarz\u0105 aktywowan\u0105",
             "left": "w lewo",
-            "open": "otwarcie",
+            "open": "otw\u00f3rz",
             "right": "w prawo",
-            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
-            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "device_dropped": "nast\u0105pi upadek urz\u0105dzenia",
             "device_flipped": "nast\u0105pi odwr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
             "device_knocked": "nast\u0105pi pukni\u0119cie w urz\u0105dzenie \"{subtype}\"",
+            "device_offline": "urz\u0105dzenie przejdzie w tryb offline",
             "device_rotated": "nast\u0105pi obr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
             "device_shaken": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
             "device_slid": "nast\u0105pi przesuni\u0119cie urz\u0105dzenia \"{subtype}\"",

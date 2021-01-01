@@ -61,7 +61,8 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
 async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client):
     """Test startup and discovery with hass discovery."""
     aioclient_mock.post(
-        "http://127.0.0.1/supervisor/options", json={"result": "ok", "data": {}},
+        "http://127.0.0.1/supervisor/options",
+        json={"result": "ok", "data": {}},
     )
     aioclient_mock.get(
         "http://127.0.0.1/discovery",

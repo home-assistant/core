@@ -1,12 +1,8 @@
 """Support for Xiaomi curtain."""
-import logging
-
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CURTAIN_LEVEL = "curtain_level"
 

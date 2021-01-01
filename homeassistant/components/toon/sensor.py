@@ -1,5 +1,4 @@
 """Support for Toon sensors."""
-import logging
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,9 +23,8 @@ from .models import (
     ToonEntity,
     ToonGasMeterDeviceEntity,
     ToonSolarDeviceEntity,
+    ToonWaterMeterDeviceEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -64,6 +62,20 @@ async def async_setup_entry(
                 "gas_daily_usage",
                 "gas_meter_reading",
                 "gas_value",
+            )
+        ]
+    )
+
+    sensors.extend(
+        [
+            ToonWaterMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "water_average_daily",
+                "water_average",
+                "water_daily_cost",
+                "water_daily_usage",
+                "water_meter_reading",
+                "water_value",
             )
         ]
     )
@@ -144,6 +156,10 @@ class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEnt
 
 class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
+
+
+class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
+    """Defines a Water Meter sensor."""
 
 
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):

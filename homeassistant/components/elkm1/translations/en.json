@@ -5,7 +5,7 @@
             "already_configured": "An ElkM1 with this prefix is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

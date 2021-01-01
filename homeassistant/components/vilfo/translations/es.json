@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este router Vilfo ya est\u00e1 configurado."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar. Comprueba la informaci\u00f3n que proporcionaste e int\u00e9ntalo de nuevo.",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida. Comprueba el token de acceso e int\u00e9ntalo de nuevo.",
-            "unknown": "Se ha producido un error inesperado al configurar la integraci\u00f3n."
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

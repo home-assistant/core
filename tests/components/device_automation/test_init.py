@@ -13,6 +13,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -764,7 +765,7 @@ async def test_automation_with_bad_trigger(hass, caplog):
 
 
 async def test_websocket_device_not_found(hass, hass_ws_client):
-    """Test caling command with unknown device."""
+    """Test calling command with unknown device."""
     await async_setup_component(hass, "device_automation", {})
     client = await hass_ws_client(hass)
     await client.send_json(

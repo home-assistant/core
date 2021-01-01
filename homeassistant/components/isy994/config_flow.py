@@ -94,13 +94,12 @@ def _fetch_isy_configuration(
             password,
             use_https,
             tls_ver,
-            log=_LOGGER,
             webroot=webroot,
         )
     except ValueError as err:
-        raise InvalidAuth(err.args[0])
+        raise InvalidAuth(err.args[0]) from err
 
-    return Configuration(log=_LOGGER, xml=isy_conn.get_config())
+    return Configuration(xml=isy_conn.get_config())
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

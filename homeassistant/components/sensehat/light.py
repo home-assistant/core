@@ -1,6 +1,4 @@
 """Support for Sense Hat LEDs."""
-import logging
-
 from sense_hat import SenseHat
 import voluptuous as vol
 
@@ -15,8 +13,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SENSEHAT = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 

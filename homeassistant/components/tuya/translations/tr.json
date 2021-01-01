@@ -1,0 +1,32 @@
+{
+    "options": {
+        "abort": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "max_temp": "Maksimum hedef s\u0131cakl\u0131k (varsay\u0131lan olarak min ve maks = 0 kullan\u0131n)",
+                    "min_kelvin": "Kelvin destekli min renk s\u0131cakl\u0131\u011f\u0131",
+                    "min_temp": "Minimum hedef s\u0131cakl\u0131k (varsay\u0131lan i\u00e7in min ve maks = 0 kullan\u0131n)",
+                    "support_color": "Vurgu rengi",
+                    "temp_divider": "S\u0131cakl\u0131k de\u011ferleri ay\u0131r\u0131c\u0131 (0 = varsay\u0131lan\u0131 kullan)",
+                    "tuya_max_coltemp": "Cihaz taraf\u0131ndan bildirilen maksimum renk s\u0131cakl\u0131\u011f\u0131",
+                    "unit_of_measurement": "Cihaz\u0131n kulland\u0131\u011f\u0131 s\u0131cakl\u0131k birimi"
+                },
+                "description": "{device_type} ayg\u0131t\u0131 '{device_name}' i\u00e7in g\u00f6r\u00fcnt\u00fclenen bilgileri ayarlamak i\u00e7in se\u00e7enekleri yap\u0131land\u0131r\u0131n",
+                "title": "Tuya Cihaz\u0131n\u0131 Yap\u0131land\u0131r\u0131n"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Cihaz\u0131 yoklama aral\u0131\u011f\u0131 saniye cinsinden",
+                    "list_devices": "Yap\u0131land\u0131rmay\u0131 kaydetmek i\u00e7in yap\u0131land\u0131r\u0131lacak veya bo\u015f b\u0131rak\u0131lacak cihazlar\u0131 se\u00e7in",
+                    "query_device": "Daha h\u0131zl\u0131 durum g\u00fcncellemesi i\u00e7in sorgu y\u00f6ntemini kullanacak cihaz\u0131 se\u00e7in",
+                    "query_interval": "Ayg\u0131t yoklama aral\u0131\u011f\u0131 saniye cinsinden"
+                },
+                "description": "Yoklama aral\u0131\u011f\u0131 de\u011ferlerini \u00e7ok d\u00fc\u015f\u00fck ayarlamay\u0131n, aksi takdirde \u00e7a\u011fr\u0131lar g\u00fcnl\u00fckte hata mesaj\u0131 olu\u015fturarak ba\u015far\u0131s\u0131z olur",
+                "title": "Tuya Se\u00e7eneklerini Konfig\u00fcre Et"
+            }
+        }
+    }
+}

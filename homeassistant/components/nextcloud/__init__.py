@@ -111,6 +111,7 @@ def setup(hass, config):
             return False
 
         hass.data[DOMAIN] = get_data_points(ncm.data)
+        hass.data[DOMAIN]["instance"] = conf[CONF_URL]
 
     # Update sensors on time interval
     track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])

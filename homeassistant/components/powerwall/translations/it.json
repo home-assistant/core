@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il Powerwall \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto",
             "wrong_version": "Il tuo powerwall utilizza una versione del software non supportata. Si prega di considerare l'aggiornamento o la segnalazione di questo problema in modo che possa essere risolto."
         },

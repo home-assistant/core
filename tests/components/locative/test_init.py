@@ -35,7 +35,8 @@ async def locative_client(loop, hass, hass_client):
 async def webhook_id(hass, locative_client):
     """Initialize the Geofency component and get the webhook_id."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         "locative", context={"source": "user"}

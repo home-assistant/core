@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

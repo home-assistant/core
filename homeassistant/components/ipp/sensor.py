@@ -1,9 +1,9 @@
 """Support for IPP sensors."""
 from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
@@ -114,7 +114,7 @@ class IPPMarkerSensor(IPPSensor):
             icon="mdi:water",
             key=f"marker_{marker_index}",
             name=f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}",
-            unit_of_measurement=UNIT_PERCENTAGE,
+            unit_of_measurement=PERCENTAGE,
         )
 
     @property
@@ -133,7 +133,7 @@ class IPPMarkerSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> Optional[int]:
         """Return the state of the sensor."""
         level = self.coordinator.data.markers[self.marker_index].level
 
@@ -174,7 +174,7 @@ class IPPPrinterSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data.state.printer_state
 
@@ -197,7 +197,7 @@ class IPPUptimeSensor(IPPSensor):
         )
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> str:
         """Return the state of the sensor."""
         uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
         return uptime.replace(microsecond=0).isoformat()

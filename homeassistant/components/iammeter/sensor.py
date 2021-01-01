@@ -13,8 +13,11 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import debounce
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,16 +44,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config_host, config_port)
-    except (IamMeterError, asyncio.TimeoutError):
+    except (IamMeterError, asyncio.TimeoutError) as err:
         _LOGGER.error("Device is not ready")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     async def async_update_data():
         try:
             with async_timeout.timeout(PLATFORM_TIMEOUT):
                 return await api.get_data()
-        except (IamMeterError, asyncio.TimeoutError):
-            raise UpdateFailed
+        except (IamMeterError, asyncio.TimeoutError) as err:
+            raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -71,12 +74,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class IamMeter(Entity):
+class IamMeter(CoordinatorEntity):
     """Class for a sensor."""
 
     def __init__(self, coordinator, uid, sensor_name, unit, dev_name):
         """Initialize an iammeter sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.uid = uid
         self.sensor_name = sensor_name
         self.unit = unit
@@ -106,25 +109,3 @@ class IamMeter(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.unit
-
-    @property
-    def should_poll(self):
-        """Poll needed."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
-
-    async def async_update(self):
-        """Update the entity."""
-        await self.coordinator.async_request_refresh()

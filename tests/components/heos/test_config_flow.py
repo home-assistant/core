@@ -20,7 +20,7 @@ async def test_flow_aborts_already_setup(hass, config_entry):
     flow.hass = hass
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_no_host_shows_form(hass):
@@ -41,7 +41,7 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"][CONF_HOST] == "connection_failure"
+    assert result["errors"][CONF_HOST] == "cannot_connect"
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
     controller.connect.reset_mock()
@@ -118,7 +118,7 @@ async def test_discovery_flow_aborts_already_setup(
     flow.hass = hass
     result = await flow.async_step_ssdp(discovery_data)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_discovery_sets_the_unique_id(hass, controller, discovery_data):

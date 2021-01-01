@@ -35,7 +35,8 @@ async def test_connect_error(hass):
     conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
 
     with patch(
-        "aioguardian.client.Client.connect", side_effect=GuardianError,
+        "aioguardian.client.Client.connect",
+        side_effect=GuardianError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -137,4 +138,4 @@ async def test_step_zeroconf_no_discovery_info(hass):
         DOMAIN, context={"source": SOURCE_ZEROCONF}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"

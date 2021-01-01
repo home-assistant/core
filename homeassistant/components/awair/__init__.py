@@ -96,13 +96,15 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 if not matching_flows:
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_init(
-                            DOMAIN, context=flow_context, data=self._config_entry.data,
+                            DOMAIN,
+                            context=flow_context,
+                            data=self._config_entry.data,
                         )
                     )
 
-                raise UpdateFailed(err)
+                raise UpdateFailed(err) from err
             except Exception as err:
-                raise UpdateFailed(err)
+                raise UpdateFailed(err) from err
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""

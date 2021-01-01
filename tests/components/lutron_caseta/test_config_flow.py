@@ -50,7 +50,8 @@ async def test_bridge_import_flow(hass):
     }
 
     with patch(
-        "homeassistant.components.lutron_caseta.async_setup_entry", return_value=True,
+        "homeassistant.components.lutron_caseta.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
         "homeassistant.components.lutron_caseta.async_setup", return_value=True
     ), patch.object(
@@ -143,7 +144,8 @@ async def test_duplicate_bridge_import(hass):
     mock_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.lutron_caseta.async_setup_entry", return_value=True,
+        "homeassistant.components.lutron_caseta.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         # Mock entry added, try initializing flow with duplicate host
         result = await hass.config_entries.flow.async_init(

@@ -1,7 +1,7 @@
 """Support for Waterfurnace."""
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import POWER_WATT, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -34,10 +34,10 @@ SENSORS = [
         "Loop Temp", "enteringwatertemp", "mdi:thermometer", TEMP_FAHRENHEIT
     ),
     WFSensorConfig(
-        "Humidity Set Point", "tstathumidsetpoint", "mdi:water-percent", UNIT_PERCENTAGE
+        "Humidity Set Point", "tstathumidsetpoint", "mdi:water-percent", PERCENTAGE
     ),
     WFSensorConfig(
-        "Humidity", "tstatrelativehumidity", "mdi:water-percent", UNIT_PERCENTAGE
+        "Humidity", "tstatrelativehumidity", "mdi:water-percent", PERCENTAGE
     ),
     WFSensorConfig("Compressor Power", "compressorpower", "mdi:flash", POWER_WATT),
     WFSensorConfig("Fan Power", "fanpower", "mdi:flash", POWER_WATT),

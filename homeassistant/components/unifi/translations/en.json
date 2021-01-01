@@ -16,7 +16,7 @@
                     "port": "Port",
                     "site": "Site ID",
                     "username": "Username",
-                    "verify_ssl": "Controller using proper certificate"
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "title": "Set up UniFi Controller"
             }
@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
+                    "dpi_restrictions": "Allow control of DPI restriction groups",
                     "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
@@ -54,7 +55,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients"
+                    "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients",
+                    "allow_uptime_sensors": "Uptime sensors for network clients"
                 },
                 "description": "Configure statistics sensors",
                 "title": "UniFi options 3/3"

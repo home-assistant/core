@@ -1,13 +1,9 @@
 """Support for binary sensors using Tellstick Net."""
-import logging
-
 from homeassistant.components import binary_sensor, tellduslive
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

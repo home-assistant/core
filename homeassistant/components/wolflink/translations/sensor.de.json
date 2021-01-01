@@ -1,0 +1,15 @@
+{
+    "state": {
+        "wolflink__state": {
+            "solarbetrieb": "Solarmodus",
+            "sparbetrieb": "Sparmodus",
+            "sparen": "Sparen",
+            "stabilisierung": "Stabilisierung",
+            "standby": "Standby",
+            "start": "Start",
+            "storung": "Fehler",
+            "test": "Test",
+            "tpw": "TPW"
+        }
+    }
+}

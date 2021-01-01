@@ -75,7 +75,9 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_CLIMATE_TIMER, CLIMATE_TIMER_SCHEMA, "set_timer",
+        SERVICE_CLIMATE_TIMER,
+        CLIMATE_TIMER_SCHEMA,
+        "set_timer",
     )
 
     if entities:
@@ -87,15 +89,13 @@ def _generate_entities(tado):
     entities = []
     for zone in tado.zones:
         if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
-            entity = create_climate_entity(
-                tado, zone["name"], zone["id"], zone["devices"][0]
-            )
+            entity = create_climate_entity(tado, zone["name"], zone["id"])
             if entity:
                 entities.append(entity)
     return entities
 
 
-def create_climate_entity(tado, name: str, zone_id: int, zone: dict):
+def create_climate_entity(tado, name: str, zone_id: int):
     """Create a Tado climate entity."""
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
@@ -178,7 +178,6 @@ def create_climate_entity(tado, name: str, zone_id: int, zone: dict):
         supported_hvac_modes,
         supported_fan_modes,
         support_flags,
-        zone,
     )
     return entity
 
@@ -201,15 +200,14 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         supported_hvac_modes,
         supported_fan_modes,
         support_flags,
-        device_info,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
-        super().__init__(zone_name, device_info, tado.device_id, zone_id)
+        super().__init__(zone_name, tado.home_id, zone_id)
 
         self.zone_id = zone_id
         self.zone_type = zone_type
-        self._unique_id = f"{zone_type} {zone_id} {tado.device_id}"
+        self._unique_id = f"{zone_type} {zone_id} {tado.home_id}"
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._supported_hvac_modes = supported_hvac_modes
@@ -247,7 +245,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.device_id, "zone", self.zone_id
+                    self._tado.home_id, "zone", self.zone_id
                 ),
                 self._async_update_callback,
             )

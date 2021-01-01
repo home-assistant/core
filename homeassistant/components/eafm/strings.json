@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Track a flood monitoring station",
+                "description": "Select the station you want to monitor",
+                "data": {
+                    "station": "Station"
+                }
+            }
+        },
+        "abort": {
+            "no_stations": "No flood monitoring stations found.",
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        }
+    }
+}

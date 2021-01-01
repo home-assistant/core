@@ -1,0 +1,16 @@
+{
+  "domain": "srp_energy",
+  "name": "SRP Energy",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/srp_energy",
+  "requirements": [
+    "srpenergy==1.3.2"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@briglx"
+  ]
+}

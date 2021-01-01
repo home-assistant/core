@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except aiohttp.ClientError as error:
         _LOGGER.error("Could not reach the JuiceNet API %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     if not juicenet.devices:
         _LOGGER.error("No JuiceNet devices found for this account")

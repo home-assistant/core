@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "E-Mail"
+                }
+            }
+        }
+    }
+}

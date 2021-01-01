@@ -1,6 +1,4 @@
 """OpenEnergyMonitor Thermostat Support."""
-import logging
-
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
@@ -25,9 +23,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

@@ -1,6 +1,4 @@
 """Support for Alexa skill service end point."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
@@ -23,8 +21,6 @@ from .const import (
     CONF_UID,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"

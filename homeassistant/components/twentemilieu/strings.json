@@ -12,9 +12,9 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_address": "Address not found in Twente Milieu service area."
     },
-    "abort": { "address_exists": "Address already set up." }
+    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_location%]" }
   }
 }

@@ -98,6 +98,10 @@
             "off": "Normal",
             "on": "Niddreg"
         },
+        "battery_charging": {
+            "off": "Lued net",
+            "on": "Lued"
+        },
         "cold": {
             "off": "Normal",
             "on": "Kal"
@@ -122,6 +126,10 @@
             "off": "Normal",
             "on": "Waarm"
         },
+        "light": {
+            "off": "Keng Luucht",
+            "on": "Luucht detekt\u00e9iert"
+        },
         "lock": {
             "off": "Gespaart",
             "on": "Net gespaart"
@@ -134,6 +142,10 @@
             "off": "Roueg",
             "on": "Detekt\u00e9iert"
         },
+        "moving": {
+            "off": "Keng Beweegung",
+            "on": "Beweegung"
+        },
         "occupancy": {
             "off": "Roueg",
             "on": "Detekt\u00e9iert"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Zou",
             "on": "Op"
+        },
+        "plug": {
+            "off": "Net ugeschloss",
+            "on": "Ugeschloss"
         },
         "problem": {
             "off": "OK",
