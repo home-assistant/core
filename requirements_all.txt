@@ -236,7 +236,7 @@ airly==1.0.0
 aladdin_connect==0.3
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.2.0
+alpha_vantage==2.3.1
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
