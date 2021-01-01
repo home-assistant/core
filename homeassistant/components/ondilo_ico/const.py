@@ -2,7 +2,6 @@
 
 DOMAIN = "ondilo_ico"
 
-# TODO Update with your own urls
 OAUTH2_AUTHORIZE = "https://interop.ondilo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://interop.ondilo.com/oauth2/token"
 OAUTH2_CLIENTID = "customer_api"

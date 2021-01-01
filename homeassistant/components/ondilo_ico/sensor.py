@@ -66,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             return pools
 
         except OndiloError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -83,7 +83,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for poolidx, pool in enumerate(coordinator.data):
-        for devidx, dev in enumerate(pool["devices"]):
+        for devidx, _ in enumerate(pool["devices"]):
             entities.append(OndiloICO(coordinator, poolidx, devidx))
 
     async_add_entities(entities)

@@ -1,5 +1,6 @@
 """Test the Ondilo ICO config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.ondilo_ico import config_flow
 from homeassistant.components.ondilo_ico.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -14,6 +15,20 @@ from tests.async_mock import patch
 
 CLIENT_ID = OAUTH2_CLIENTID
 CLIENT_SECRET = OAUTH2_CLIENTSECRET
+
+
+async def test_abort_if_existing_entry(hass):
+    """Check flow abort when an entry already exist."""
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    flow = config_flow.OAuth2FlowHandler()
+    flow.hass = hass
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow(
