@@ -1,5 +1,6 @@
 """Test the Legrand Home+ Control config flow."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 import voluptuous
@@ -12,13 +13,13 @@ from homeassistant.components.homepluscontrol.const import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-SUBSCRIPTION_KEY = "12345678901234567890123456789012"
-REDIRECT_URI = "https://example.com:8213/auth/external/callback"
+from tests.components.homepluscontrol.conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    REDIRECT_URI,
+    SUBSCRIPTION_KEY,
+)
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):

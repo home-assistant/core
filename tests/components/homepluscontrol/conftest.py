@@ -1,6 +1,49 @@
 """Test setup and fixtures for component Home+ Control by Legrand."""
 import pytest
 
+from homeassistant import config_entries
+from homeassistant.components.homepluscontrol.const import DOMAIN
+
+CLIENT_ID = "1234"
+CLIENT_SECRET = "5678"
+SUBSCRIPTION_KEY = "12345678901234567890123456789012"
+REDIRECT_URI = "https://example.com:8213/auth/external/callback"
+
+
+@pytest.fixture()
+def mock_config_entry():
+    """Return a fake config entry.
+
+    This is a minimal entry to setup the integration and to ensure that the
+    OAuth access token will not expire.
+    """
+    return config_entries.ConfigEntry(
+        1,
+        DOMAIN,
+        "Home+ Control",
+        {
+            "auth_implementation": "homepluscontrol",
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 9999999999,
+                "expires_at": 9999999999.99999999,
+                "expires_on": 9999999999,
+            },
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "subscription_key": SUBSCRIPTION_KEY,
+            "redirect_uri": REDIRECT_URI,
+        },
+        "test",
+        config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
+        options={"disable_new_entities": False},
+        unique_id=DOMAIN,
+        entry_id="homepluscontrol_entry_id",
+    )
+
 
 @pytest.fixture()
 def plant_data():
