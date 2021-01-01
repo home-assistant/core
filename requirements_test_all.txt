@@ -284,7 +284,7 @@ eebrightbox==0.0.4
 elgato==1.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.8
+elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -1088,7 +1088,7 @@ twilio==6.32.0
 twinkly-client==0.0.2
 
 # homeassistant.components.upb
-upb_lib==0.4.11
+upb_lib==0.4.12
 
 # homeassistant.components.upcloud
 upcloud-api==0.4.5
