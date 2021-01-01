@@ -157,8 +157,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
             self._device_id, [ActivityType.LOCK_OPERATION]
         )
 
+        self._available = True
         if lock_activity is not None:
-            self._available = True
             self._state = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
