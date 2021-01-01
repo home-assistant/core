@@ -236,7 +236,7 @@ airly==1.0.0
 aladdin_connect==0.3
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.2.0
+alpha_vantage==2.3.1
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -460,7 +460,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.2.0
+debugpy==1.2.1
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1428,7 +1428,7 @@ pyhik==0.2.8
 pyhiveapi==0.2.20.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.70
+pyhomematic==0.1.71
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1998,7 +1998,7 @@ sense-hat==2.2.0
 sense_energy==0.8.1
 
 # homeassistant.components.sentry
-sentry-sdk==0.19.4
+sentry-sdk==0.19.5
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2245,7 +2245,7 @@ venstarcolortouch==0.13
 vilfo-api-client==0.3.2
 
 # homeassistant.components.volkszaehler
-volkszaehler==0.1.3
+volkszaehler==0.2.1
 
 # homeassistant.components.volvooncall
 volvooncall==0.8.12
