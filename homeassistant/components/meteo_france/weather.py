@@ -28,6 +28,8 @@ from .const import (
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
+    MANUFACTURER,
+    MODEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +84,17 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._city_name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
+            "name": self.coordinator.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "entry_type": "service",
+        }
 
     @property
     def condition(self):
