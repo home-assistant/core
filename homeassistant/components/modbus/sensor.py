@@ -62,6 +62,7 @@ def number(value: Any) -> Union[int, float]:
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
+
 """ Add bit option for single bit extraction from registry """
 CONF_BIT = 'bit'
 
@@ -98,8 +99,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ]
     }
 )
-
-
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -181,7 +180,7 @@ class ModbusRegisterSensor(RestoreEntity):
         precision,
         data_type,
         device_class,
-        bit,
+        bit,        
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
@@ -200,7 +199,7 @@ class ModbusRegisterSensor(RestoreEntity):
         self._device_class = device_class
         self._value = None
         self._available = True
-        self._bit = bit
+        self._bit = bit        
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -258,8 +257,7 @@ class ModbusRegisterSensor(RestoreEntity):
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        
-        
+
         if self._bit:
             bytes_as_bits = ''.join(format(byte, '08b') for byte in byte_string)
             #Position is between 0 and len -1
@@ -268,7 +266,7 @@ class ModbusRegisterSensor(RestoreEntity):
             _LOGGER.error("Bit at position %s is: %s", self._bit,val)
             self._value = str(val)
 
-        else:
+        else:        
             if self._data_type == DATA_TYPE_STRING:
                 self._value = byte_string.decode()
             else:
