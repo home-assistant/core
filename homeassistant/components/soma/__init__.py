@@ -63,7 +63,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    return True
+    rtn_value = True
+    for component in SOMA_COMPONENTS:
+        unload_ok = await hass.config_entries.async_forward_entry_unload(
+            entry, component
+        )
+        rtn_value = rtn_value & unload_ok
+
+    return rtn_value
 
 
 class SomaEntity(Entity):
