@@ -4,7 +4,6 @@ from homeassistant.components.wiz_light.config_flow import (
     WizLightConnectionError,
     WizLightTimeOutError,
 )
-
 from homeassistant.components.wiz_light.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 
@@ -125,9 +124,9 @@ async def test_form_updates_unique_id(hass):
         "homeassistant.components.wiz_light.wizlight.getMac",
         return_value="ABCABCABCABC",
     ), patch(
-        "homeassistant.components.volumio.async_setup", return_value=True
+        "homeassistant.components.wiz_light.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.volumio.async_setup_entry",
+        "homeassistant.components.wiz_light.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(

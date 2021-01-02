@@ -71,7 +71,7 @@ class WizBulb(LightEntity):
         self._rgb_color = None
         self._temperature = None
         self._hscolor = None
-        self._available = None
+        self._available = True
         self._effect = None
         self._scenes = []
         self._bulbtype = None
