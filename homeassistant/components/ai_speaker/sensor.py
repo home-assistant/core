@@ -13,12 +13,13 @@ SCAN_INTERVAL = timedelta(minutes=60)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for AI-Speaker status sensor."""
+    _LOGGER.debug("AI-Speaker sensor, async_setup_entry")
     async_add_entities([AisSensor(hass, config_entry.data)], True)
 
 
 async def async_unload_entry(hass, entry):
     """Clean up when integrations are removed - add code if you need to do more."""
-    pass
+    _LOGGER.debug("AI-Speaker sensor, async_unload_entry")
 
 
 class AisSensor(Entity):
@@ -75,8 +76,8 @@ class AisSensor(Entity):
             ws_resp = await self._web_session.get(self._ais_ws_url, timeout=5)
             json_info = await ws_resp.json()
             return json_info
-        except Exception as e:
-            _LOGGER.error("Ask AI-Speaker status, error: " + str(e))
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.exception("Ask AI-Speaker status, unexpected exception: %s", error)
 
     async def async_update(self):
         """Update the sensor."""
