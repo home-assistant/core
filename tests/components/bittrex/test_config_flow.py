@@ -1,5 +1,6 @@
 """Define tests for the Bittrex config flow."""
 import json
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.bittrex.const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
@@ -9,7 +10,6 @@ from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 
 from . import INTEGRATION_TITLE, USER_INPUT, USER_INPUT_MARKETS
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
