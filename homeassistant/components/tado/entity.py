@@ -40,6 +40,7 @@ class TadoZoneEntity(Entity):
         super().__init__()
         self._device_zone_id = f"{home_id}_{zone_id}"
         self.zone_name = zone_name
+        self.zone_id = zone_id
 
     @property
     def device_info(self):

@@ -23,25 +23,16 @@ ZONE_SENSORS = {
     TYPE_HEATING: [
         "temperature",
         "humidity",
-        "power",
-        "link",
         "heating",
         "tado mode",
-        "overlay",
-        "early start",
-        "open window",
     ],
     TYPE_AIR_CONDITIONING: [
         "temperature",
         "humidity",
-        "power",
-        "link",
         "ac",
         "tado mode",
-        "overlay",
-        "open window",
     ],
-    TYPE_HOT_WATER: ["power", "link", "tado mode", "overlay"],
+    TYPE_HOT_WATER: ["tado mode"],
 }
 
 
@@ -51,10 +42,10 @@ async def async_setup_entry(
     """Set up the Tado sensor platform."""
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
-    # Create zone sensors
     zones = tado.zones
     entities = []
 
+    # Create zone sensors
     for zone in zones:
         zone_type = zone["type"]
         if zone_type not in ZONE_SENSORS:
@@ -80,7 +71,6 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
         self._tado = tado
         super().__init__(zone_name, tado.home_id, zone_id)
 
-        self.zone_id = zone_id
         self.zone_variable = zone_variable
 
         self._unique_id = f"{zone_variable} {zone_id} {tado.home_id}"
@@ -172,12 +162,6 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
                 "time": self._tado_zone_data.current_humidity_timestamp
             }
 
-        elif self.zone_variable == "power":
-            self._state = self._tado_zone_data.power
-
-        elif self.zone_variable == "link":
-            self._state = self._tado_zone_data.link
-
         elif self.zone_variable == "heating":
             self._state = self._tado_zone_data.heating_power_percentage
             self._state_attributes = {
@@ -188,26 +172,5 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
             self._state = self._tado_zone_data.ac_power
             self._state_attributes = {"time": self._tado_zone_data.ac_power_timestamp}
 
-        elif self.zone_variable == "tado bridge status":
-            self._state = self._tado_zone_data.connection
-
         elif self.zone_variable == "tado mode":
             self._state = self._tado_zone_data.tado_mode
-
-        elif self.zone_variable == "overlay":
-            self._state = self._tado_zone_data.overlay_active
-            self._state_attributes = (
-                {"termination": self._tado_zone_data.overlay_termination_type}
-                if self._tado_zone_data.overlay_active
-                else {}
-            )
-
-        elif self.zone_variable == "early start":
-            self._state = self._tado_zone_data.preparation
-
-        elif self.zone_variable == "open window":
-            self._state = bool(
-                self._tado_zone_data.open_window
-                or self._tado_zone_data.open_window_detected
-            )
-            self._state_attributes = self._tado_zone_data.open_window_attr
