@@ -158,7 +158,7 @@ class AlarmControlPanelEntity(Entity):
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
-    
+
     def alarm_arm_vacation(self, code=None):
         """Send arm vacation command."""
         raise NotImplementedError()
