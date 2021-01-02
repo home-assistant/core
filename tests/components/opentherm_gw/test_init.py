@@ -1,4 +1,4 @@
-"""Test the Opentherm Gateway config flow."""
+"""Test Opentherm Gateway init."""
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
@@ -10,7 +10,7 @@ from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
 from tests.common import MockConfigEntry, mock_device_registry
 
 VERSION_OLD = "4.2.5"
-VERSION_NEW = "4.2.8"
+VERSION_NEW = "4.2.8.1"
 MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: f"OpenTherm Gateway {VERSION_OLD}"}}
 MINIMAL_STATUS_UPD = {OTGW: {OTGW_ABOUT: f"OpenTherm Gateway {VERSION_NEW}"}}
 MOCK_GATEWAY_ID = "mock_gateway"
