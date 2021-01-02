@@ -1,6 +1,7 @@
 """Test the Minecraft Server config flow."""
 
 import asyncio
+from unittest.mock import patch
 
 import aiodns
 from mcstatus.pinger import PingResponse
@@ -19,7 +20,6 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

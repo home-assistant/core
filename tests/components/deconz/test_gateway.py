@@ -1,6 +1,7 @@
 """Test deCONZ gateway."""
 
 from copy import deepcopy
+from unittest.mock import Mock, patch
 
 import pydeconz
 import pytest
@@ -31,7 +32,6 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 API_KEY = "1234567890ABCDEF"

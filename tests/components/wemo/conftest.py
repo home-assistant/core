@@ -1,12 +1,13 @@
 """Fixtures for pywemo."""
+import asyncio
+from unittest.mock import create_autospec, patch
+
 import pytest
 import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import create_autospec, patch
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -23,12 +24,14 @@ def pywemo_model_fixture():
 @pytest.fixture(name="pywemo_registry")
 def pywemo_registry_fixture():
     """Fixture for SubscriptionRegistry instances."""
-    registry = create_autospec(pywemo.SubscriptionRegistry)
+    registry = create_autospec(pywemo.SubscriptionRegistry, instance=True)
 
     registry.callbacks = {}
+    registry.semaphore = asyncio.Semaphore(value=0)
 
     def on_func(device, type_filter, callback):
         registry.callbacks[device.name] = callback
+        registry.semaphore.release()
 
     registry.on.side_effect = on_func
 
@@ -39,12 +42,13 @@ def pywemo_registry_fixture():
 @pytest.fixture(name="pywemo_device")
 def pywemo_device_fixture(pywemo_registry, pywemo_model):
     """Fixture for WeMoDevice instances."""
-    device = create_autospec(getattr(pywemo, pywemo_model))
+    device = create_autospec(getattr(pywemo, pywemo_model), instance=True)
     device.host = MOCK_HOST
     device.port = MOCK_PORT
     device.name = MOCK_NAME
     device.serialnumber = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model
+    device.get_state.return_value = 0  # Default to Off
 
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
     with patch("pywemo.setup_url_for_address", return_value=url), patch(

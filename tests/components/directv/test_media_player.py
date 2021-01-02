@@ -1,6 +1,7 @@
 """The tests for the DirecTV Media player platform."""
 from datetime import datetime, timedelta
 from typing import Optional
+from unittest.mock import patch
 
 from pytest import fixture
 
@@ -55,7 +56,6 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

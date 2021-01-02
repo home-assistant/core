@@ -1,5 +1,6 @@
 """Tests for the Google Assistant traits."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -53,7 +54,6 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"

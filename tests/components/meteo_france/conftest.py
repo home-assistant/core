@@ -1,7 +1,7 @@
 """Meteo-France generic test utils."""
-import pytest
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import pytest
 
 
 @pytest.fixture(autouse=True)

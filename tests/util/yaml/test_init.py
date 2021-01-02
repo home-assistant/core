@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import unittest
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.async_mock import Mock, patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 
@@ -358,7 +358,7 @@ class TestScraps(unittest.TestCase):
     def test_scraps_from_parent_folder(self):
         """Test scraps loading from parent folder."""
         with patch(
-            "os.path.exists",
+            "homeassistant.util.yaml.loader.os.path.exists",
             Mock(return_value=True),
         ):
             yaml = load_yaml(

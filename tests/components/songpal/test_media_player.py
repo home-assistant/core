@@ -1,6 +1,7 @@
 """Test songpal media_player."""
 from datetime import timedelta
 import logging
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from songpal import (
     ConnectChange,
@@ -32,7 +33,6 @@ from . import (
     _patch_media_player_device,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

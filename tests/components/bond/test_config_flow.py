@@ -1,5 +1,6 @@
 """Test the Bond config flow."""
 from typing import Any, Dict
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
@@ -9,7 +10,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
 from .common import patch_bond_device_ids, patch_bond_version
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 

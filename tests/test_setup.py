@@ -3,6 +3,7 @@
 import asyncio
 import os
 import threading
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -18,7 +19,6 @@ from homeassistant.helpers.config_validation import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,

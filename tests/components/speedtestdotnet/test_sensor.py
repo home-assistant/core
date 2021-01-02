@@ -1,11 +1,12 @@
 """Tests for SpeedTest sensors."""
+from unittest.mock import patch
+
 from homeassistant.components import speedtestdotnet
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.speedtestdotnet.const import DEFAULT_NAME, SENSOR_TYPES
 
 from . import MOCK_RESULTS, MOCK_SERVERS, MOCK_STATES
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

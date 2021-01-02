@@ -1,4 +1,6 @@
 """Test the NZBGet config flow."""
+from unittest.mock import patch
+
 from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
@@ -21,7 +23,6 @@ from . import (
     _patch_version,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

@@ -132,15 +132,16 @@ async def handle_call_service(hass, connection, msg):
         blocking = False
 
     try:
+        context = connection.context(msg)
         await hass.services.async_call(
             msg["domain"],
             msg["service"],
             msg.get("service_data"),
             blocking,
-            connection.context(msg),
+            context,
         )
         connection.send_message(
-            messages.result_message(msg["id"], {"context": connection.context(msg)})
+            messages.result_message(msg["id"], {"context": context})
         )
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:

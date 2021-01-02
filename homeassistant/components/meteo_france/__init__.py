@@ -3,8 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from meteofrance.client import MeteoFranceClient
-from meteofrance.helpers import is_valid_warning_department
+from meteofrance_api.client import MeteoFranceClient
+from meteofrance_api.helpers import is_valid_warning_department
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry

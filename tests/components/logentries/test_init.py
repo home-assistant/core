@@ -1,12 +1,12 @@
 """The tests for the Logentries component."""
 
+from unittest.mock import MagicMock, call, patch
+
 import pytest
 
 import homeassistant.components.logentries as logentries
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, call, patch
 
 
 async def test_setup_config_full(hass):

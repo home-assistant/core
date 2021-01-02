@@ -1,5 +1,6 @@
 """Test the Shelly config flow."""
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import aioshelly
@@ -8,7 +9,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.shelly.const import DOMAIN
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 MOCK_SETTINGS = {
@@ -19,11 +19,6 @@ DISCOVERY_INFO = {
     "host": "1.1.1.1",
     "name": "shelly1pm-12345",
     "properties": {"id": "shelly1pm-12345"},
-}
-SWITCH25_DISCOVERY_INFO = {
-    "host": "1.1.1.1",
-    "name": "shellyswitch25-12345",
-    "properties": {"id": "shellyswitch25-12345"},
 }
 
 
@@ -67,7 +62,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_title_without_name_and_prefix(hass):
+async def test_title_without_name(hass):
     """Test we set the title to the hostname when the device doesn't have a name."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -360,29 +355,6 @@ async def test_zeroconf(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_with_switch_prefix(hass):
-    """Test we get remove shelly from the prefix."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "aioshelly.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data=SWITCH25_DISCOVERY_INFO,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-        )
-        assert result["type"] == "form"
-        assert result["errors"] == {}
-        context = next(
-            flow["context"]
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
-        assert context["title_placeholders"]["name"] == "switch25-12345"
-
-
 @pytest.mark.parametrize(
     "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
 )
@@ -516,14 +488,3 @@ async def test_zeroconf_require_auth(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_zeroconf_not_shelly(hass):
-    """Test we filter out non-shelly devices."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={"host": "1.1.1.1", "name": "notshelly"},
-        context={"source": config_entries.SOURCE_ZEROCONF},
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_shelly"

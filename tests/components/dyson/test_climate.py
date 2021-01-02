@@ -1,5 +1,6 @@
 """Test the Dyson fan component."""
 import json
+from unittest.mock import Mock, call, patch
 
 from libpurecool.const import (
     FanPower,
@@ -60,8 +61,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
-
-from tests.async_mock import Mock, call, patch
 
 
 class MockDysonState(DysonPureHotCoolState):
@@ -677,8 +676,7 @@ async def test_purehotcool_set_fan_mode(devices, login, hass):
         {ATTR_ENTITY_ID: "climate.living_room", ATTR_FAN_MODE: FAN_AUTO},
         True,
     )
-    assert device.set_fan_speed.call_count == 4
-    device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_AUTO)
+    assert device.enable_auto_mode.call_count == 1
 
 
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
