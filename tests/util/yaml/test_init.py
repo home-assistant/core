@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 
@@ -294,6 +294,88 @@ def load_yaml(fname, string):
         return load_yaml_config_file(fname)
 
 
+class TestScraps(unittest.TestCase):
+    """Test the scraps parameter in the yaml utility."""
+
+    # pylint: disable=protected-access,invalid-name
+
+    def setUp(self):
+        """Create & load scraps file."""
+        config_dir = get_test_config_dir()
+        self._config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
+        self._scrap_path = os.path.join(config_dir, yaml.SCRAP_YAML)
+        self._sub_folder_path = os.path.join(config_dir, "sub_folder")
+
+        self._config_yaml = (
+            "config1: ~scrap scrap1\n"
+            "config2:\n"
+            "  - const\n"
+            "  - ~scrap scrap2\n"
+            ""
+        )
+
+        self._scraps_yaml = "scrap1: str1\n" "scrap2:\n" "  - str2\n" "  - str3\n" ""
+        load_yaml(self._scrap_path, self._scraps_yaml)
+
+    def tearDown(self):
+        """Clean up config cache."""
+        yaml.clear_config_cache()
+        FILES.clear()
+
+    def test_scraps_from_yaml(self):
+        """Test loading basic scraps."""
+        try:
+            self._yaml = load_yaml(self._config_path, self._config_yaml)
+        except Exception as exc:
+            self.fail("load_yaml() raised unexpected exception: " + str(exc))
+
+        assert self._yaml["config1"] == "str1"
+
+        expected = ["const", "str2", "str3"]
+        assert self._yaml["config2"] == expected
+
+    def test_scraps_missing(self):
+        """Test correctly handle missing scrap file."""
+        with pytest.raises(HomeAssistantError) as exc:
+            load_yaml(
+                os.path.join(self._sub_folder_path, "sub.yaml"), self._config_yaml
+            )
+        assert "not defined" in str(exc.value)
+
+        self._config_yaml += "config3: ~scrap scrap_missing\n" ""
+        with pytest.raises(HomeAssistantError) as exc:
+            load_yaml(self._config_path, self._config_yaml)
+        assert "not defined" in str(exc.value)
+
+    def test_circular_scraps(self):
+        """Test cicrular scraps are caught correctly."""
+        scraps_yaml = "scrap1: ~scrap scrap2\n" "scrap2: ~scrap scrap1\n" ""
+        load_yaml(self._scrap_path, scraps_yaml)
+        with pytest.raises(HomeAssistantError) as exc:
+            load_yaml(self._config_path, self._config_yaml)
+        assert "loop detected" in str(exc.value)
+
+    def test_scraps_from_parent_folder(self):
+        """Test scraps loading from parent folder."""
+        with patch(
+            "homeassistant.util.yaml.os.path.exists",
+            Mock(spec="os.path.exists", return_value=True),
+        ):
+            self._yaml = load_yaml(
+                os.path.join(self._sub_folder_path, "sub.yaml"), self._config_yaml
+            )
+
+        assert self._yaml["config1"] == "str1"
+
+    def test_nested_scraps(self):
+        """Test scraps that are nested."""
+        self._scraps_yaml = "scrap1: ~scrap scrap2\n" "scrap2: str1\n" ""
+        load_yaml(self._scrap_path, self._scraps_yaml)
+        self._yaml = load_yaml(self._config_path, self._config_yaml)
+
+        assert self._yaml["config1"] == "str1"
+
+
 class FakeKeyring:
     """Fake a keyring class."""
 
@@ -316,7 +398,7 @@ class TestSecrets(unittest.TestCase):
     def setUp(self):
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
-        yaml.clear_secret_cache()
+        yaml.clear_config_cache()
         self._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
         self._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
         self._sub_folder_path = os.path.join(config_dir, "subFolder")
@@ -341,8 +423,8 @@ class TestSecrets(unittest.TestCase):
         )
 
     def tearDown(self):
-        """Clean up secrets."""
-        yaml.clear_secret_cache()
+        """Clean up config cache."""
+        yaml.clear_config_cache()
         FILES.clear()
 
     def test_secrets_from_yaml(self):
@@ -424,7 +506,7 @@ class TestSecrets(unittest.TestCase):
     @patch("homeassistant.util.yaml.loader._LOGGER.error")
     def test_bad_logger_value(self, mock_error):
         """Ensure logger: debug was removed."""
-        yaml.clear_secret_cache()
+        yaml.clear_config_cache()
         load_yaml(self._secret_path, "logger: info\npw: abc")
         load_yaml(self._yaml_path, "api_password: !secret pw")
         assert mock_error.call_count == 1, "Expected an error about logger: value"
@@ -434,7 +516,7 @@ class TestSecrets(unittest.TestCase):
         FILES[
             self._secret_path
         ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
-        yaml.clear_secret_cache()
+        yaml.clear_config_cache()
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 self._yaml_path,

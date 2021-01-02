@@ -26,7 +26,7 @@ MOCKS: Dict[str, Tuple[str, Callable]] = {
     "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
     "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
-SILENCE = ("homeassistant.scripts.check_config.yaml_loader.clear_secret_cache",)
+SILENCE = ("homeassistant.scripts.check_config.yaml_loader.clear_config_cache",)
 
 PATCHES: Dict[str, Any] = {}
 
@@ -220,7 +220,7 @@ def check(config_dir, secrets=False):
             yaml_loader.yaml.SafeLoader.add_constructor(
                 "!secret", yaml_loader.secret_yaml
             )
-        bootstrap.clear_secret_cache()
+        bootstrap.clear_config_cache()
 
     return res
 

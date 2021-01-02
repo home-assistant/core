@@ -91,7 +91,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     except HomeAssistantError as err:
         return result.add_error(f"Error loading {config_path}: {err}")
     finally:
-        yaml_loader.clear_secret_cache()
+        yaml_loader.clear_config_cache()
 
     # Extract and validate core [homeassistant] config
     try:
