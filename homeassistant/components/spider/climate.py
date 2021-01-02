@@ -37,19 +37,10 @@ class SpiderThermostat(ClimateEntity):
 
     def __init__(self, api, thermostat):
         """Initialize the thermostat."""
-        self.support_fan = []
-        self.support_hvac = []
         self.api = api
         self.thermostat = thermostat
-        for fan_speed_value in thermostat.fan_speed_values:
-            self.support_fan.append(fan_speed_value)
-        operation_values = thermostat.operation_values
-        for operation_value in operation_values:
-            self.support_hvac.append(
-                SPIDER_STATE_TO_HA.get(
-                    operation_value, lambda: "Invalid operation value"
-                )
-            )
+        self.support_fan = thermostat.fan_speed_values
+        self.support_hvac = thermostat.operation_values
 
     @property
     def device_info(self):
@@ -116,7 +107,12 @@ class SpiderThermostat(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self.support_hvac
+        hvac_mode_list = []
+        for operation_value in self.support_hvac:
+            hvac_mode_list.append(
+                SPIDER_STATE_TO_HA.get(operation_value, "Invalid operation value")
+            )
+        return hvac_mode_list
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
