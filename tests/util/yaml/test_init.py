@@ -325,14 +325,14 @@ class TestScraps(unittest.TestCase):
     def test_scraps_from_yaml(self):
         """Test loading basic scraps."""
         try:
-            self._yaml = load_yaml(self._config_path, self._config_yaml)
+            yaml = load_yaml(self._config_path, self._config_yaml)
         except Exception as exc:
             self.fail("load_yaml() raised unexpected exception: " + str(exc))
 
-        assert self._yaml["config1"] == "str1"
+        assert yaml["config1"] == "str1"
 
         expected = ["const", "str2", "str3"]
-        assert self._yaml["config2"] == expected
+        assert yaml["config2"] == expected
 
     def test_scraps_missing(self):
         """Test correctly handle missing scrap file."""
@@ -358,22 +358,22 @@ class TestScraps(unittest.TestCase):
     def test_scraps_from_parent_folder(self):
         """Test scraps loading from parent folder."""
         with patch(
-            "homeassistant.util.yaml.os.path.exists",
-            Mock(spec="os.path.exists", return_value=True),
+            "os.path.exists",
+            Mock(return_value=True),
         ):
-            self._yaml = load_yaml(
+            yaml = load_yaml(
                 os.path.join(self._sub_folder_path, "sub.yaml"), self._config_yaml
             )
 
-        assert self._yaml["config1"] == "str1"
+        assert yaml["config1"] == "str1"
 
     def test_nested_scraps(self):
         """Test scraps that are nested."""
         self._scraps_yaml = "scrap1: ~scrap scrap2\n" "scrap2: str1\n" ""
         load_yaml(self._scrap_path, self._scraps_yaml)
-        self._yaml = load_yaml(self._config_path, self._config_yaml)
+        yaml = load_yaml(self._config_path, self._config_yaml)
 
-        assert self._yaml["config1"] == "str1"
+        assert yaml["config1"] == "str1"
 
 
 class FakeKeyring:
