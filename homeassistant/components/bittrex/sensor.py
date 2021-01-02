@@ -30,9 +30,9 @@ class Ticker(CoordinatorEntity):
         self._currency = self._symbol.split("-")[0]
         self._unit_of_measurement = self._symbol.split("-")[1]
 
-        self._lastTradeRate = self.coordinator.data[self._symbol]["lastTradeRate"]
-        self._bidRate = self.coordinator.data[self._symbol]["bidRate"]
-        self._askRate = self.coordinator.data[self._symbol]["askRate"]
+        self._last_trade_rate = self.coordinator.data[self._symbol]["lastTradeRate"]
+        self._bid_rate = self.coordinator.data[self._symbol]["bidRate"]
+        self._ask_rate = self.coordinator.data[self._symbol]["askRate"]
 
         self._name = f"Bittrex Ticker - {self._symbol}"
         self._unique_id = f"bittrex_ticker_{self._symbol})"
@@ -45,7 +45,7 @@ class Ticker(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._lastTradeRate
+        return self._last_trade_rate
 
     @property
     def unique_id(self):
@@ -67,9 +67,9 @@ class Ticker(CoordinatorEntity):
         """Return additional sensor state attributes."""
         return {
             "symbol": self._symbol,
-            "lastTradeRate": self._lastTradeRate,
-            "bidRate": self._bidRate,
-            "askRate": self._askRate,
+            "lastTradeRate": self._last_trade_rate,
+            "bidRate": self._bid_rate,
+            "askRate": self._ask_rate,
             "currency": self._currency,
             "unit_of_measurement": self._unit_of_measurement,
         }
