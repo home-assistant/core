@@ -226,6 +226,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         payload_arm_home,
         payload_arm_away,
         payload_arm_night,
+        payload_arm_vacation,
         config,
     ):
         """Init the manual MQTT alarm panel."""
