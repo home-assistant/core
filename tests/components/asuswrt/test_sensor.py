@@ -117,23 +117,9 @@ async def test_sensors(hass, connect):
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-        hass.states.get(f"{sensor.DOMAIN}.{obj_prefix}_download_speed").state == "160.0"
-    )
-    assert hass.states.get(f"{sensor.DOMAIN}.{obj_prefix}_download").state == "60.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.{obj_prefix}_upload_speed").state == "80.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.{obj_prefix}_upload").state == "50.0"
-
-    # add one device and remove another
-    MOCK_DEVICES.pop("a1:b1:c1:d1:e1:f1")
-    MOCK_DEVICES["a3:b3:c3:d3:e3:f3"] = Device(
-        "a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree"
-    )
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_HOME
-    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_HOME
-    assert (
-        hass.states.get(f"{sensor.DOMAIN}.{obj_prefix}_devices_connected").state == "2"
-    )
+    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_connected_devices").state == "3"
+    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download_speed").state == "160.0"
+    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download").state == "60.0"
+    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_upload_speed").state == "80.0"
+    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_upload").state == "50.0"
