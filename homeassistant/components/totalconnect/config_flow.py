@@ -91,7 +91,3 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"base": "description"},
         )
-
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)

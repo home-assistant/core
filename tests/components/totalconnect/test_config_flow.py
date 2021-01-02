@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 
 from .common import CONFIG_DATA, CONFIG_DATA_NO_USERCODES, USERNAME
 
@@ -59,24 +59,6 @@ async def test_user_all_info(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_import_good_credentials(hass):
-    """Test import step with good credentials."""
-    with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
-    ) as client_mock, patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectLocation"
-    ) as location_mock:
-        client_mock.return_value.is_valid_credentials.return_value = True
-        location_mock.return_value.set_usercode.return_value = True
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_DATA,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
 async def test_abort_if_already_setup(hass):
     """Test abort if the account is already setup."""
     MockConfigEntry(
@@ -84,20 +66,6 @@ async def test_abort_if_already_setup(hass):
         data=CONFIG_DATA,
         unique_id=USERNAME,
     ).add_to_hass(hass)
-
-    # Should fail, same USERNAME (import)
-    with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
-    ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = True
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_DATA,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
     # Should fail, same USERNAME (flow)
     with patch(
