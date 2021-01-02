@@ -1,11 +1,12 @@
 """Test the Opentherm Gateway config flow."""
+from unittest.mock import patch
+
 from pyotgw.vars import OTGW, OTGW_ABOUT
 
 from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_device_registry
 
 VERSION_OLD = "4.2.5"
