@@ -26,6 +26,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UV_INDEX,
 )
 
 DOMAIN = "meteo_france"
@@ -84,6 +85,14 @@ SENSOR_TYPES = {
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "probability_forecast:freezing",
     },
+    "wind_gust": {
+        ENTITY_NAME: "Wind gust",
+        ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
+        ENTITY_ICON: "mdi:weather-windy-variant",
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:wind:gust",
+    },
     "wind_speed": {
         ENTITY_NAME: "Wind speed",
         ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
@@ -110,7 +119,7 @@ SENSOR_TYPES = {
     },
     "uv": {
         ENTITY_NAME: "UV",
-        ENTITY_UNIT: None,
+        ENTITY_UNIT: UV_INDEX,
         ENTITY_ICON: "mdi:sunglasses",
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
@@ -139,6 +148,22 @@ SENSOR_TYPES = {
         ENTITY_DEVICE_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "current_forecast:clouds",
+    },
+    "original_condition": {
+        ENTITY_NAME: "Original condition",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "current_forecast:weather:desc",
+    },
+    "daily_original_condition": {
+        ENTITY_NAME: "Daily original condition",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_DEVICE_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "today_forecast:weather12H:desc",
     },
 }
 

@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "Verbindungsfehler",
             "invalid_address": "Adresse nicht im Einzugsgebiet von Twente Milieu gefunden."
         },
         "step": {

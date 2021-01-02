@@ -21,5 +21,14 @@
                 "title": "Maak verbinding met NZBGet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequentie (seconden)"
+                }
+            }
+        }
     }
 }

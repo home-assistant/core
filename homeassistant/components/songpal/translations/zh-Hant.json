@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "not_songpal_device": "\u4e26\u975e Songpal \u8a2d\u5099"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "not_songpal_device": "\u4e26\u975e Songpal \u88dd\u7f6e"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"

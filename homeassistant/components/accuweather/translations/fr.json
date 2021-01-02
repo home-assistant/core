@@ -31,5 +31,10 @@
                 "title": "Options AccuWeather"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Acc\u00e8s au serveur AccuWeather"
+        }
     }
 }
