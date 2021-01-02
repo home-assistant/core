@@ -9,6 +9,7 @@ MONTHLY = "monthly"
 BIMONTHLY = "bimonthly"
 QUARTERLY = "quarterly"
 YEARLY = "yearly"
+NONE = "none"
 
 METER_TYPES = [
     QUARTER_HOURLY,
@@ -19,6 +20,7 @@ METER_TYPES = [
     BIMONTHLY,
     QUARTERLY,
     YEARLY,
+    NONE,
 ]
 
 DATA_UTILITY = "utility_meter_data"
