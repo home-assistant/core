@@ -1,10 +1,11 @@
 """Tests for the LCN config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.lcn import config_flow
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

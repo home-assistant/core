@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as DOMAIN_BINARY_SENSOR,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 
 from . import LcnEntity
 from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, CONF_UNIQUE_DEVICE_ID, SETPOINTS
@@ -16,7 +16,7 @@ def create_lcn_binary_sensor_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
     host_id = config_entry.entry_id
     device_connection = get_device_connection(
-        hass, entity_config[CONF_UNIQUE_DEVICE_ID], config_entry
+        hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
     if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in SETPOINTS:

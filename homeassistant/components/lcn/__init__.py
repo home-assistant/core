@@ -176,10 +176,14 @@ class LcnEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return (
-            f"{self.host_id}-{self.config[CONF_UNIQUE_DEVICE_ID]}"
-            f"-{self.config[CONF_RESOURCE]}"
+        unique_device_id = generate_unique_id(
+            (
+                self.device_connection.seg_id,
+                self.device_connection.addr_id,
+                self.device_connection.is_group,
+            )
         )
+        return f"{self.host_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
 
     @property
     def should_poll(self):

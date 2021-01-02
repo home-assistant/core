@@ -20,25 +20,20 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SWITCHES,
-    CONF_UNIQUE_ID,
     CONF_USERNAME,
 )
 
 from .const import (
-    CONF_ADDRESS_ID,
     CONF_CLIMATES,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
-    CONF_IS_GROUP,
     CONF_RESOURCE,
     CONF_SCENES,
-    CONF_SEGMENT_ID,
     CONF_SK_NUM_TRIES,
     CONF_SOFTWARE_SERIAL,
-    CONF_UNIQUE_DEVICE_ID,
     CONNECTION,
     DEFAULT_NAME,
     DOMAIN,
@@ -63,35 +58,26 @@ DOMAIN_LOOKUP = {
 }
 
 
-def get_device_config(unique_device_id, config_entry):
+def get_device_config(address, config_entry):
     """Return the device configuration for given unique_device_id from ConfigEntry."""
     for device_config in config_entry.data[CONF_DEVICES]:
-        if device_config[CONF_UNIQUE_ID] == unique_device_id:
+        if tuple(device_config[CONF_ADDRESS]) == address:
             return device_config
     return None
 
 
-def get_device_address(device_config):
-    """Return a tuple with address information."""
-    return (
-        device_config[CONF_SEGMENT_ID],
-        device_config[CONF_ADDRESS_ID],
-        device_config[CONF_IS_GROUP],
-    )
-
-
-def get_device_connection(hass, unique_device_id, config_entry):
+def get_device_connection(hass, address, config_entry):
     """Return a lcn device_connection."""
-    device_config = get_device_config(unique_device_id, config_entry)
+    device_config = get_device_config(address, config_entry)
     if device_config:
         host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
-        addr = pypck.lcn_addr.LcnAddr(*get_device_address(device_config))
+        addr = pypck.lcn_addr.LcnAddr(*address)
         return host_connection.get_address_conn(addr)
     return None
 
 
 def get_resource(domain_name, domain_data):
-    """Return the reosurce for the specified domain_data."""
+    """Return the resource for the specified domain_data."""
     if domain_name in ["switch", "light"]:
         return f'{domain_data["output"]}'
     if domain_name in ["binary_sensor", "sensor"]:
@@ -126,11 +112,8 @@ def import_lcn_config(lcn_config):
         "dim_mode: "STEPS200",
         "devices": [
             {
-                "unique_id": "m000007",
+                "address": (0, 7, False)
                 "name": "",
-                "segment_id": 0,
-                "address_id": 7,
-                "is_group": false,
                 "hardware_serial": -1,
                 "software_serial": -1,
                 "hardware_type": -1
@@ -138,13 +121,13 @@ def import_lcn_config(lcn_config):
         ],
         "entities": [
             {
-                "unique_device_id": "m000007",
+                "address": (0, 7, False)
                 "name": "Light_Output1",
                 "resource": "output1",
                 "domain": "light",
                 "domain_data": {
                     "output": "OUTPUT1",
-                    "dimmable": true,
+                    "dimmable": True,
                     "transition": 5000.0
                 }
             }, ...
@@ -180,17 +163,13 @@ def import_lcn_config(lcn_config):
                 host_name = DEFAULT_NAME
 
             # check if we have a new device config
-            unique_device_id = generate_unique_id(address)
             for device_config in data[host_name][CONF_DEVICES]:
-                if unique_device_id == device_config[CONF_UNIQUE_ID]:
+                if address == device_config[CONF_ADDRESS]:
                     break
             else:  # create new device_config
                 device_config = {
-                    CONF_UNIQUE_ID: unique_device_id,
+                    CONF_ADDRESS: address,
                     CONF_NAME: "",
-                    CONF_SEGMENT_ID: address[0],
-                    CONF_ADDRESS_ID: address[1],
-                    CONF_IS_GROUP: address[2],
                     CONF_HARDWARE_SERIAL: -1,
                     CONF_SOFTWARE_SERIAL: -1,
                     CONF_HARDWARE_TYPE: -1,
@@ -202,14 +181,14 @@ def import_lcn_config(lcn_config):
             resource = get_resource(domain, domain_data).lower()
             for entity_config in data[host_name][CONF_ENTITIES]:
                 if (
-                    unique_device_id == entity_config[CONF_UNIQUE_DEVICE_ID]
+                    address == entity_config[CONF_ADDRESS]
                     and resource == entity_config[CONF_RESOURCE]
                     and domain == entity_config[CONF_DOMAIN]
                 ):
                     break
             else:  # create new entity_config
                 entity_config = {
-                    CONF_UNIQUE_DEVICE_ID: unique_device_id,
+                    CONF_ADDRESS: address,
                     CONF_NAME: entity_name,
                     CONF_RESOURCE: resource,
                     CONF_DOMAIN: domain,

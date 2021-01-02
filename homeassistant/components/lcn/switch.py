@@ -3,10 +3,10 @@
 import pypck
 
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
-from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
 
 from . import LcnEntity
-from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, CONF_UNIQUE_DEVICE_ID, OUTPUT_PORTS
+from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS
 from .helpers import get_device_connection
 
 PARALLEL_UPDATES = 0
@@ -16,7 +16,7 @@ def create_lcn_switch_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
     host_id = config_entry.entry_id
     device_connection = get_device_connection(
-        hass, entity_config[CONF_UNIQUE_DEVICE_ID], config_entry
+        hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
     if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:

@@ -3,15 +3,10 @@
 import pypck
 
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER, CoverEntity
-from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
 
 from . import LcnEntity
-from .const import (
-    CONF_DOMAIN_DATA,
-    CONF_MOTOR,
-    CONF_REVERSE_TIME,
-    CONF_UNIQUE_DEVICE_ID,
-)
+from .const import CONF_DOMAIN_DATA, CONF_MOTOR, CONF_REVERSE_TIME
 from .helpers import get_device_connection
 
 PARALLEL_UPDATES = 0
@@ -21,7 +16,7 @@ def create_lcn_cover_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
     host_id = config_entry.entry_id
     device_connection = get_device_connection(
-        hass, entity_config[CONF_UNIQUE_DEVICE_ID], config_entry
+        hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
     if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
