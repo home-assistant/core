@@ -276,10 +276,12 @@ def _load_scrap_yaml(scrap_path: str) -> Dict[str, JSON_TYPE]:
     """Load the scraps yaml from path."""
     scrap_path = os.path.join(scrap_path, SCRAP_YAML)
     if scrap_path in __SCRAP_CACHE:
+        # scraps should always be a string key -> JSON dict.
         return cast(Dict[str, JSON_TYPE], __SCRAP_CACHE[scrap_path])
 
     _LOGGER.debug("Loading %s", scrap_path)
     try:
+        # scraps should always be a string key -> JSON dict.
         scraps = cast(Dict[str, JSON_TYPE], load_yaml(scrap_path))
         if not isinstance(scraps, dict):
             raise HomeAssistantError("Scraps %s is not a dictionary", scrap_path)
@@ -294,7 +296,9 @@ def _load_scrap_yaml(scrap_path: str) -> Dict[str, JSON_TYPE]:
     # to resolve all the scraps.
     for i in range(5):
         scraps = cast(
-            Dict[str, JSON_TYPE], transform_scraps(os.path.dirname(scrap_path), scraps)
+            # scraps should always be a string key -> JSON dict.
+            Dict[str, JSON_TYPE],
+            transform_scraps(os.path.dirname(scrap_path), scraps),
         )
         __SCRAP_CACHE[scrap_path] = scraps
         if not _has_scraps(scraps):
