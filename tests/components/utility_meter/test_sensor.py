@@ -378,7 +378,7 @@ async def test_no_reset_yearly_offset(hass, legacy_patchable_time):
         "2018-01-30T23:59:00.000000+00:00",
         expect_reset=False,
     )
- async def test_self_no_reset_none(hass, legacy_patchable_time):
+async def test_self_no_reset_none(hass, legacy_patchable_time):
     """Test quarter-hourly reset of meter."""
     await _test_self_reset(
         hass, gen_config("quarter-hourly"), "2017-12-31T23:44:00.000000+00:00",
