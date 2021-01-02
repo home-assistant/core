@@ -1,4 +1,6 @@
 """Test the Ondilo ICO config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.ondilo_ico import config_flow
 from homeassistant.components.ondilo_ico.const import (
@@ -11,7 +13,7 @@ from homeassistant.components.ondilo_ico.const import (
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 CLIENT_ID = OAUTH2_CLIENTID
 CLIENT_SECRET = OAUTH2_CLIENTSECRET
