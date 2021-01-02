@@ -2,9 +2,14 @@
 import json
 from unittest.mock import patch
 
+from aiobittrexapi.errors import (
+    BittrexApiError,
+    BittrexInvalidAuthentication,
+    BittrexResponseError,
+)
+
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.bittrex.const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
-from homeassistant.components.bittrex.errors import InvalidAuth
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 
@@ -98,7 +103,7 @@ async def test_invalid_api_key(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
         "homeassistant.components.bittrex.Bittrex.get_markets",
-        side_effect=InvalidAuth("Invalid API key"),
+        side_effect=BittrexInvalidAuthentication("Invalid API key"),
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -108,6 +113,63 @@ async def test_invalid_api_key(hass):
         )
 
         assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_invalid_api_response(hass):
+    """Test that errors are shown when API request is invalid."""
+    with patch(
+        "homeassistant.components.bittrex.Bittrex.get_markets",
+        side_effect=BittrexResponseError("Failed", "Invalid API Response"),
+    ), patch(
+        "homeassistant.components.bittrex.Bittrex.get_account",
+        return_value=json.loads(load_fixture("bittrex/account_data.json")),
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=USER_INPUT,
+        )
+
+        assert result["errors"] == {"base": "invalid_response"}
+
+
+async def test_api_error(hass):
+    """Test that errors are shown when the API returns an error."""
+    with patch(
+        "homeassistant.components.bittrex.Bittrex.get_markets",
+        side_effect=BittrexApiError("Invalid API Response"),
+    ), patch(
+        "homeassistant.components.bittrex.Bittrex.get_account",
+        return_value=json.loads(load_fixture("bittrex/account_data.json")),
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=USER_INPUT,
+        )
+
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_api_unexpected_exception(hass):
+    """Test that errors are shown when the API returns an unexpected exception."""
+    with patch(
+        "homeassistant.components.bittrex.Bittrex.get_markets",
+        side_effect=Exception("Unexpected exception"),
+    ), patch(
+        "homeassistant.components.bittrex.Bittrex.get_account",
+        return_value=json.loads(load_fixture("bittrex/account_data.json")),
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=USER_INPUT,
+        )
+
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_integration_already_exists(hass):
