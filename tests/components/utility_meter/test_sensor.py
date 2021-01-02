@@ -381,69 +381,69 @@ async def test_no_reset_yearly_offset(hass, legacy_patchable_time):
 async def test_self_no_reset_none(hass, legacy_patchable_time):
     """Test quarter-hourly reset of meter."""
     await _test_self_reset(
-        hass, gen_config("quarter-hourly"), "2017-12-31T23:44:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:44:00.000000+00:00",
         expect_reset=False,
     )
     """Test hourly reset of meter."""
     await _test_self_reset(
-        hass, gen_config("hourly"), "2017-12-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test daily reset of meter."""
     await _test_self_reset(
-        hass, gen_config("daily"), "2017-12-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test weekly reset of meter."""
     await _test_self_reset(
-        hass, gen_config("weekly"), "2017-12-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test monthly reset of meter."""
     await _test_self_reset(
-        hass, gen_config("monthly"), "2017-12-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test bimonthly reset of meter occurs on even months."""
     await _test_self_reset(
-        hass, gen_config("bimonthly"), "2017-12-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test bimonthly reset of meter does not occur on odd months."""
     await _test_self_reset(
         hass,
-        gen_config("bimonthly"),
+        gen_config("none"),
         "2018-01-01T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test quarterly reset of meter."""
     await _test_self_reset(
-        hass, gen_config("quarterly"), "2017-03-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-03-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test yearly reset of meter."""
     await _test_self_reset(
-        hass, gen_config("yearly"), "2017-12-31T23:59:00.000000+00:00",
+        hass, gen_config("none"), "2017-12-31T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test yearly reset of meter does not occur after 1st January."""
     await _test_self_reset(
         hass,
-        gen_config("yearly"),
+        gen_config("none"),
         "2018-01-01T23:59:00.000000+00:00",
         expect_reset=False,
     )
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,
-        gen_config("yearly", timedelta(days=1, minutes=10)),
+        gen_config("none", timedelta(days=1, minutes=10)),
         "2018-01-02T00:09:00.000000+00:00",
         expect_reset=False,
     )
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,
-        gen_config("yearly", timedelta(31)),
+        gen_config("none", timedelta(31)),
         "2018-01-30T23:59:00.000000+00:00",
         expect_reset=False,
     )
