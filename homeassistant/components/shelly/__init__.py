@@ -256,7 +256,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=get_device_name(device),
-            update_interval=timedelta(seconds=(update_interval)),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
 
