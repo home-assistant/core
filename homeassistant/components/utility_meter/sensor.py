@@ -42,6 +42,7 @@ from .const import (
     SIGNAL_RESET_METER,
     WEEKLY,
     YEARLY,
+    NONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
