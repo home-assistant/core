@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -47,7 +47,6 @@ from .const import (
     DOMAIN,
     SIGNAL_INSTANCE_REMOVED,
     SIGNAL_INSTANCES_UPDATED,
-    SOURCE_IMPORT,
     TYPE_HYPERION_LIGHT,
 )
 

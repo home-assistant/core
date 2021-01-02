@@ -7,7 +7,8 @@
             "auth_new_token_not_work_error": "\u4f7f\u7528\u65b0\u5275\u5bc6\u9470\u8a8d\u8b49\u5931\u6557",
             "auth_required_error": "\u7121\u6cd5\u5224\u5b9a\u662f\u5426\u9700\u8981\u9a57\u8b49",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "no_id": "Hyperion Ambilight \u5be6\u9ad4\u672a\u56de\u5831\u5176 ID"
+            "no_id": "Hyperion Ambilight \u5be6\u9ad4\u672a\u56de\u5831\u5176 ID",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",

@@ -2,6 +2,20 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "invalid_path": "Directory niet gevonden."
+        },
+        "step": {
+            "owserver": {
+                "title": "Owserver-details instellen"
+            },
+            "user": {
+                "data": {
+                    "type": "Verbindingstype"
+                },
+                "title": "Stel 1-Wire in"
+            }
         }
     }
 }

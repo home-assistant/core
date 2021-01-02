@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "El akarod kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            }
+        }
+    }
+}
