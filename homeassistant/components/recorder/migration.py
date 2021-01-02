@@ -313,6 +313,9 @@ def _apply_update(engine, new_version, old_version):
         _drop_index(engine, "events", "ix_events_event_type")
     elif new_version == 10:
         _update_states_table_with_foreign_key_options(engine)
+    elif new_version == 11:
+        _create_index(engine, "states", "ix_states_old_state_id")
+
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
