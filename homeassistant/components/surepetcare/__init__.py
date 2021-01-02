@@ -220,4 +220,4 @@ class SurePetcareAPI:
         elif state.lower() == SureLockStateID.LOCKED_ALL.name.lower():
             await self.surepy.lock(flap_id)
         else:
-            _LOGGER.error(f"Unknown lock state: {state}")
+            _LOGGER.error("Unknown lock state: %s", state)
