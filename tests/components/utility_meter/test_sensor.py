@@ -55,6 +55,21 @@ async def test_state(hass):
     )
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.energy_bill_onpeak")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == "collecting"
+
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == "paused"
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == "paused"
+
     now = dt_util.utcnow() + timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
@@ -68,14 +83,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "1"
+    assert state.attributes.get("status") == "collecting"
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
+    assert state.attributes.get("status") == "paused"
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "0"
+    assert state.attributes.get("status") == "paused"
 
     await hass.services.async_call(
         DOMAIN,
@@ -99,14 +117,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "1"
+    assert state.attributes.get("status") == "paused"
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
+    assert state.attributes.get("status") == "paused"
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "3"
+    assert state.attributes.get("status") == "collecting"
 
     await hass.services.async_call(
         DOMAIN,

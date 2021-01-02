@@ -271,7 +271,6 @@ class UtilityMeterSensor(RestoreEntity):
             self._last_reset = dt_util.parse_datetime(
                 state.attributes.get(ATTR_LAST_RESET)
             )
-            self.async_write_ha_state()
             if state.attributes.get(ATTR_STATUS) == PAUSED:
                 # Fake cancellation function to init the meter paused
                 self._collecting = lambda: None
@@ -293,6 +292,7 @@ class UtilityMeterSensor(RestoreEntity):
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
+            self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_source_tracking
