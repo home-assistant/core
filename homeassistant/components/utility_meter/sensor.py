@@ -36,13 +36,13 @@ from .const import (
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
+    NONE,
     QUARTER_HOURLY,
     QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
     WEEKLY,
     YEARLY,
-    NONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
