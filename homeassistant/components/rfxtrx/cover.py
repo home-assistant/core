@@ -6,7 +6,6 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
     SUPPORT_OPEN_TILT,
-    SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
     CoverEntity,
@@ -138,7 +137,6 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
                 SUPPORT_OPEN_TILT
                 | SUPPORT_CLOSE_TILT
                 | SUPPORT_STOP_TILT
-                | SUPPORT_SET_TILT_POSITION
             )
 
         return supported_features
