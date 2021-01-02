@@ -648,7 +648,14 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if self.state.state in (cover.STATE_CLOSING, cover.STATE_OPENING):
+                if (
+                    self.state.state
+                    in (
+                        cover.STATE_CLOSING,
+                        cover.STATE_OPENING,
+                    )
+                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
+                ):
                     await self.hass.services.async_call(
                         self.state.domain,
                         cover.SERVICE_STOP_COVER,
