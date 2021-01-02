@@ -8,7 +8,7 @@
       }
     },
     "abort": {
-      "already_configured": "The shopping list is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

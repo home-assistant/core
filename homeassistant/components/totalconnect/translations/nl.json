@@ -4,7 +4,7 @@
             "already_configured": "Account al geconfigureerd"
         },
         "error": {
-            "login": "Aanmeldingsfout: controleer uw gebruikersnaam en wachtwoord"
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "user": {

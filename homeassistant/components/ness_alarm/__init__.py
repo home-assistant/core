@@ -1,7 +1,6 @@
 """Support for Ness D8X/D16X devices."""
 from collections import namedtuple
 import datetime
-import logging
 
 from nessclient import ArmingState, Client
 import voluptuous as vol
@@ -17,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ness_alarm"
 DATA_NESS = "ness_alarm"
@@ -56,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_DEVICE_PORT): cv.port,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.time_period, cv.positive_timedelta),
+                ): cv.positive_time_period,
                 vol.Optional(CONF_ZONES, default=DEFAULT_ZONES): vol.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),

@@ -13,6 +13,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_DUST,
@@ -32,7 +33,8 @@ from .const import (
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string}, extra=vol.ALLOW_EXTRA,
+    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -43,7 +45,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
     )
 
@@ -79,21 +83,19 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AwairSensor(Entity):
+class AwairSensor(CoordinatorEntity):
     """Defines an Awair sensor entity."""
 
     def __init__(
-        self, kind: str, device: AwairDevice, coordinator: AwairDataUpdateCoordinator,
+        self,
+        kind: str,
+        device: AwairDevice,
+        coordinator: AwairDataUpdateCoordinator,
     ) -> None:
         """Set up an individual AwairSensor."""
+        super().__init__(coordinator)
         self._kind = kind
         self._device = device
-        self._coordinator = coordinator
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def name(self) -> str:
@@ -122,7 +124,7 @@ class AwairSensor(Entity):
     def available(self) -> bool:
         """Determine if the sensor is available based on API results."""
         # If the last update was successful...
-        if self._coordinator.last_update_success and self._air_data:
+        if self.coordinator.last_update_success and self._air_data:
             # and the results included our sensor type...
             if self._kind in self._air_data.sensors:
                 # then we are available.
@@ -225,20 +227,10 @@ class AwairSensor(Entity):
 
         return info
 
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update Awair entity."""
-        await self._coordinator.async_request_refresh()
-
     @property
     def _air_data(self) -> Optional[AwairResult]:
         """Return the latest data for our device, or None."""
-        result: Optional[AwairResult] = self._coordinator.data.get(self._device.uuid)
+        result: Optional[AwairResult] = self.coordinator.data.get(self._device.uuid)
         if result:
             return result.air_data
 

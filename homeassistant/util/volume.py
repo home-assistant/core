@@ -1,6 +1,4 @@
 """Volume conversion util functions."""
-
-import logging
 from numbers import Number
 
 from homeassistant.const import (
@@ -11,8 +9,6 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 VALID_UNITS = [VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE]
 

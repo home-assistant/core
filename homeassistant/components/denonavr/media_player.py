@@ -308,14 +308,13 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
         if (
             self._sound_mode_raw is not None
             and self._sound_mode_support
             and self._power == "ON"
         ):
-            attributes[ATTR_SOUND_MODE_RAW] = self._sound_mode_raw
-        return attributes
+            return {ATTR_SOUND_MODE_RAW: self._sound_mode_raw}
+        return {}
 
     def media_play_pause(self):
         """Play or pause the media player."""
@@ -339,6 +338,9 @@ class DenonDevice(MediaPlayerEntity):
 
     def select_source(self, source):
         """Select input source."""
+        # Ensure that the AVR is turned on, which is necessary for input
+        # switch to work.
+        self.turn_on()
         return self._receiver.set_input_func(source)
 
     def select_sound_mode(self, sound_mode):

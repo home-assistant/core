@@ -44,7 +44,8 @@ SUPPORT_C = 4
 def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_entity_call", return_value=None,
+        "homeassistant.helpers.service._handle_entity_call",
+        return_value=None,
     ) as mock_call:
         yield mock_call
 
@@ -92,7 +93,7 @@ def area_mock(hass):
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
     device_in_area = dev_reg.DeviceEntry(area_id="test-area")
-    device_no_area = dev_reg.DeviceEntry()
+    device_no_area = dev_reg.DeviceEntry(id="device-no-area-id")
     device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
 
     mock_device_registry(
@@ -104,11 +105,31 @@ def area_mock(hass):
         },
     )
 
+    entity_in_own_area = ent_reg.RegistryEntry(
+        entity_id="light.in_own_area",
+        unique_id="in-own-area-id",
+        platform="test",
+        area_id="own-area",
+    )
     entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
+    )
+    entity_in_other_area = ent_reg.RegistryEntry(
+        entity_id="light.in_other_area",
+        unique_id="in-other-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        area_id="other-area",
+    )
+    entity_assigned_to_area = ent_reg.RegistryEntry(
+        entity_id="light.assigned_to_area",
+        unique_id="assigned-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        area_id="test-area",
     )
     entity_no_area = ent_reg.RegistryEntry(
         entity_id="light.no_area",
@@ -125,7 +146,10 @@ def area_mock(hass):
     mock_registry(
         hass,
         {
+            entity_in_own_area.entity_id: entity_in_own_area,
             entity_in_area.entity_id: entity_in_area,
+            entity_in_other_area.entity_id: entity_in_other_area,
+            entity_assigned_to_area.entity_id: entity_assigned_to_area,
             entity_no_area.entity_id: entity_no_area,
             entity_diff_area.entity_id: entity_diff_area,
         },
@@ -144,25 +168,45 @@ class TestServiceHelpers(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    def test_template_service_call(self):
+    def test_service_call(self):
         """Test service call with templating."""
+        config = {
+            "service": "{{ 'test_domain.test_service' }}",
+            "entity_id": "hello.world",
+            "data": {
+                "hello": "{{ 'goodbye' }}",
+                "effect": {"value": "{{ 'complex' }}", "simple": "simple"},
+            },
+            "data_template": {"list": ["{{ 'list' }}", "2"]},
+            "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+        }
+
+        service.call_from_config(self.hass, config)
+        self.hass.block_till_done()
+
+        assert dict(self.calls[0].data) == {
+            "hello": "goodbye",
+            "effect": {
+                "value": "complex",
+                "simple": "simple",
+            },
+            "list": ["list", "2"],
+            "entity_id": ["hello.world"],
+            "area_id": ["test-area-id"],
+        }
+
+    def test_service_template_service_call(self):
+        """Test legacy service_template call with templating."""
         config = {
             "service_template": "{{ 'test_domain.test_service' }}",
             "entity_id": "hello.world",
-            "data_template": {
-                "hello": "{{ 'goodbye' }}",
-                "data": {"value": "{{ 'complex' }}", "simple": "simple"},
-                "list": ["{{ 'list' }}", "2"],
-            },
+            "data": {"hello": "goodbye"},
         }
 
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
         assert self.calls[0].data["hello"] == "goodbye"
-        assert self.calls[0].data["data"]["value"] == "complex"
-        assert self.calls[0].data["data"]["simple"] == "simple"
-        assert self.calls[0].data["list"][0] == "list"
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -253,6 +297,8 @@ async def test_extract_entity_ids(hass):
     hass.states.async_set("light.Ceiling", STATE_OFF)
     hass.states.async_set("light.Kitchen", STATE_OFF)
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await hass.components.group.Group.async_create_group(
         hass, "test", ["light.Ceiling", "light.Kitchen"]
     )
@@ -282,15 +328,25 @@ async def test_extract_entity_ids(hass):
 
 async def test_extract_entity_ids_from_area(hass, area_mock):
     """Test extract_entity_ids method with areas."""
+    call = ha.ServiceCall("light", "turn_on", {"area_id": "own-area"})
+
+    assert {
+        "light.in_own_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
     call = ha.ServiceCall("light", "turn_on", {"area_id": "test-area"})
 
-    assert {"light.in_area"} == await service.async_extract_entity_ids(hass, call)
+    assert {
+        "light.in_area",
+        "light.assigned_to_area",
+    } == await service.async_extract_entity_ids(hass, call)
 
     call = ha.ServiceCall("light", "turn_on", {"area_id": ["test-area", "diff-area"]})
 
     assert {
         "light.in_area",
         "light.diff_area",
+        "light.assigned_to_area",
     } == await service.async_extract_entity_ids(hass, call)
 
     assert (
@@ -688,7 +744,9 @@ async def test_domain_control_unauthorized(hass, hass_read_only_user):
         hass,
         {
             "light.kitchen": ent_reg.RegistryEntry(
-                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
             )
         },
     )
@@ -725,7 +783,9 @@ async def test_domain_control_admin(hass, hass_admin_user):
         hass,
         {
             "light.kitchen": ent_reg.RegistryEntry(
-                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
             )
         },
     )
@@ -761,7 +821,9 @@ async def test_domain_control_no_user(hass):
         hass,
         {
             "light.kitchen": ent_reg.RegistryEntry(
-                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
             )
         },
     )
@@ -822,7 +884,11 @@ async def test_extract_from_service_available_device(hass):
         await service.async_extract_entities(
             hass,
             entities,
-            ha.ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_NONE},),
+            ha.ServiceCall(
+                "test",
+                "service",
+                data={"entity_id": ENTITY_MATCH_NONE},
+            ),
         )
         == []
     )
@@ -881,3 +947,53 @@ async def test_extract_from_service_area_id(hass, area_mock):
         "light.diff_area",
         "light.in_area",
     ]
+
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {"area_id": ["test-area", "diff-area"], "device_id": "device-no-area-id"},
+    )
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 3
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.diff_area",
+        "light.in_area",
+        "light.no_area",
+    ]
+
+
+async def test_entity_service_call_warn_referenced(hass, caplog):
+    """Test we only warn for referenced entities in entity_service_call."""
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {
+            "area_id": "non-existent-area",
+            "entity_id": "non.existent",
+            "device_id": "non-existent-device",
+        },
+    )
+    await service.entity_service_call(hass, {}, "", call)
+    assert (
+        "Unable to find referenced areas non-existent-area, devices non-existent-device, entities non.existent"
+        in caplog.text
+    )
+
+
+async def test_async_extract_entities_warn_referenced(hass, caplog):
+    """Test we only warn for referenced entities in async_extract_entities."""
+    call = ha.ServiceCall(
+        "light",
+        "turn_on",
+        {
+            "area_id": "non-existent-area",
+            "entity_id": "non.existent",
+            "device_id": "non-existent-device",
+        },
+    )
+    extracted = await service.async_extract_entities(hass, {}, call)
+    assert len(extracted) == 0
+    assert (
+        "Unable to find referenced areas non-existent-area, devices non-existent-device, entities non.existent"
+        in caplog.text
+    )

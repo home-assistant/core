@@ -1,5 +1,4 @@
 """Support for ESPHome lights."""
-import logging
 from typing import List, Optional, Tuple
 
 from aioesphomeapi import LightInfo, LightState
@@ -28,9 +27,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
-
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 

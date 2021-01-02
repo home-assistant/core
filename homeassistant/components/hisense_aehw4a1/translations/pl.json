@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 Hisense AEH-W4A1.",
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja Hisense AEH-W4A1."
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "step": {
             "confirm": {
-                "description": "Chcesz skonfigurowa\u0107 AEH-W4A1?"
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
     }

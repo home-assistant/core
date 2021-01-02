@@ -85,6 +85,7 @@
                 "data": {
                     "api_host": "Invalidar la direcci\u00f3n URL del host de la API (opcional)",
                     "blink": "Parpadea el LED del panel cuando se env\u00eda un cambio de estado",
+                    "discovery": "Responde a las solicitudes de descubrimiento en tu red",
                     "override_api_host": "Reemplazar la URL predeterminada del panel host de la API de Home Assistant"
                 },
                 "description": "Seleccione el comportamiento deseado para su panel",

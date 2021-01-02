@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie."
+        },
+        "create_entry": {
+            "default": "Succesvol geverifieerd"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies de verificatiemethode"
+            }
+        }
+    }
+}

@@ -100,4 +100,4 @@ async def test_login_failed(hass):
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "login"}
+    assert result["errors"] == {"base": "invalid_auth"}

@@ -80,7 +80,9 @@ async def test_setup_recovers_when_setup_raises(hass):
     assert platform2_setup.called
 
 
-@patch("homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",)
+@patch(
+    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
+)
 @patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     """Test setup for discovery."""

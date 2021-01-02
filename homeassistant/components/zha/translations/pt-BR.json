@@ -29,6 +29,12 @@
         "action_type": {
             "squawk": "Squawk",
             "warn": "Aviso"
+        },
+        "trigger_subtype": {
+            "close": "Fechado"
+        },
+        "trigger_type": {
+            "device_offline": "Dispositivo offline"
         }
     }
 }

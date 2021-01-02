@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "no_devices_found": "Nenhum dispositivo encontrado na rede"
+        },
+        "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Dispositivo"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                },
+                "description": "Se voc\u00ea deixar o modelo vazio, ele ser\u00e1 detectado automaticamente."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modelo (Opcional)",
+                    "nightlight_switch": "Use o bot\u00e3o Nightlight",
+                    "save_on_change": "Salvar status ao alterar",
+                    "transition": "Tempo de transi\u00e7\u00e3o (ms)",
+                    "use_music_mode": "Ativar modo de m\u00fasica"
+                },
+                "description": "Se voc\u00ea deixar o modelo vazio, ele ser\u00e1 detectado automaticamente."
+            }
+        }
+    }
+}

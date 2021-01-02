@@ -231,6 +231,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
+        "currentFanSpeedSetting": "Auto Low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -238,6 +239,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
+        "currentFanSpeedSetting": "On High",
     }
 
 
@@ -288,6 +290,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
+        "currentFanSpeedSetting": "Auto Low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -295,6 +298,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
+        "currentFanSpeedSetting": "On High",
     }
     hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 

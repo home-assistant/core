@@ -24,6 +24,7 @@ from homeassistant.components.timer import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
+    _format_timedelta,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -61,7 +62,7 @@ def storage_setup(hass, hass_storage):
                         {
                             ATTR_ID: "from_storage",
                             ATTR_NAME: "timer from storage",
-                            ATTR_DURATION: 0,
+                            ATTR_DURATION: "0:00:00",
                         }
                     ]
                 },
@@ -544,7 +545,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert resp["success"]
 
     state = hass.states.get(timer_entity_id)
-    assert state.attributes[ATTR_DURATION] == str(cv.time_period(33))
+    assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(33))
 
 
 async def test_ws_create(hass, hass_ws_client, storage_setup):
@@ -574,7 +575,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     state = hass.states.get(timer_entity_id)
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == str(cv.time_period(42))
+    assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(42))
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
 
 

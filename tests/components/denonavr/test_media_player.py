@@ -36,7 +36,8 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 def client_fixture():
     """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR", autospec=True,
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR",
+        autospec=True,
     ) as mock_client_class, patch(
         "homeassistant.components.denonavr.receiver.denonavr.discover"
     ):
@@ -64,7 +65,9 @@ async def setup_denonavr(hass):
     }
 
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data,
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data=entry_data,
     )
 
     mock_entry.add_to_hass(hass)

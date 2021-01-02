@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Serveri port on juba kasutusel.",
+            "start_server_failed": "Serveri k\u00e4ivitamine nurjus."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": ""
+                },
+                "title": "WIFFI seadmete TCP serveri seadistamine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Ajal\u00f5pp (minutites)"
+                }
+            }
+        }
+    }
+}

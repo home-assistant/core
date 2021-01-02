@@ -3,10 +3,10 @@ from itertools import product
 
 from homeassistant.const import (
     DEGREE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    UNIT_PERCENTAGE,
     VOLT,
 )
 
@@ -160,7 +160,7 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     "PERCENT",
     "PPM",
     "VOLT",

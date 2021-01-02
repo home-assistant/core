@@ -1,5 +1,4 @@
 """Support for Aqualink temperature sensors."""
-import logging
 from typing import Optional
 
 from homeassistant.components.sensor import DOMAIN
@@ -9,8 +8,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

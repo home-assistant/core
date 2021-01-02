@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud sensors."""
-import logging
 from typing import Any, Dict
 
 from homematicip.aio.device import (
@@ -7,6 +6,7 @@ from homematicip.aio.device import (
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
+    AsyncHomeControlAccessPoint,
     AsyncLightSensor,
     AsyncMotionDetectorIndoor,
     AsyncMotionDetectorOutdoor,
@@ -30,18 +30,17 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
-from .device import ATTR_IS_GROUP, ATTR_MODEL_TYPE
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_ILLUMINATION = "current_illumination"
 ATTR_LOWEST_ILLUMINATION = "lowest_illumination"
@@ -64,8 +63,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = [HomematicipAccesspointStatus(hap)]
+    entities = []
     for device in hap.home.devices:
+        if isinstance(device, AsyncHomeControlAccessPoint):
+            entities.append(HomematicipAccesspointDutyCycle(hap, device))
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
             entities.append(HomematicipHeatingThermostat(hap, device))
             entities.append(HomematicipTemperatureSensor(hap, device))
@@ -120,61 +121,35 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipAccesspointStatus(HomematicipGenericDevice):
-    """Representation of an HomeMaticIP Cloud access point."""
+class HomematicipAccesspointDutyCycle(HomematicipGenericEntity):
+    """Representation of then HomeMaticIP access point."""
 
-    def __init__(self, hap: HomematicipHAP) -> None:
-        """Initialize access point device."""
-        super().__init__(hap, hap.home)
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device specific attributes."""
-        # Adds a sensor to the existing HAP device
-        return {
-            "identifiers": {
-                # Serial numbers of Homematic IP device
-                (HMIPC_DOMAIN, self._device.id)
-            }
-        }
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize access point status entity."""
+        super().__init__(hap, device, post="Duty Cycle")
 
     @property
     def icon(self) -> str:
-        """Return the icon of the access point device."""
+        """Return the icon of the access point entity."""
         return "mdi:access-point-network"
 
     @property
     def state(self) -> float:
         """Return the state of the access point."""
-        return self._home.dutyCycle
-
-    @property
-    def available(self) -> bool:
-        """Device available."""
-        return self._home.connected
+        return self._device.dutyCycleLevel
 
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return UNIT_PERCENTAGE
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes of the access point."""
-        state_attr = super().device_state_attributes
-
-        state_attr[ATTR_MODEL_TYPE] = "HmIP-HAP"
-        state_attr[ATTR_IS_GROUP] = False
-
-        return state_attr
+        return PERCENTAGE
 
 
-class HomematicipHeatingThermostat(HomematicipGenericDevice):
-    """Representation of a HomematicIP heating thermostat device."""
+class HomematicipHeatingThermostat(HomematicipGenericEntity):
+    """Representation of the HomematicIP heating thermostat."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize heating thermostat device."""
-        super().__init__(hap, device, "Heating")
+        super().__init__(hap, device, post="Heating")
 
     @property
     def icon(self) -> str:
@@ -195,15 +170,15 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
 
-class HomematicipHumiditySensor(HomematicipGenericDevice):
-    """Representation of a HomematicIP Cloud humidity device."""
+class HomematicipHumiditySensor(HomematicipGenericEntity):
+    """Representation of the HomematicIP humidity sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, "Humidity")
+        super().__init__(hap, device, post="Humidity")
 
     @property
     def device_class(self) -> str:
@@ -218,15 +193,15 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
 
-class HomematicipTemperatureSensor(HomematicipGenericDevice):
-    """Representation of a HomematicIP Cloud thermometer device."""
+class HomematicipTemperatureSensor(HomematicipGenericEntity):
+    """Representation of the HomematicIP thermometer."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
-        super().__init__(hap, device, "Temperature")
+        super().__init__(hap, device, post="Temperature")
 
     @property
     def device_class(self) -> str:
@@ -258,12 +233,12 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
         return state_attr
 
 
-class HomematicipIlluminanceSensor(HomematicipGenericDevice):
-    """Representation of a HomematicIP Illuminance device."""
+class HomematicipIlluminanceSensor(HomematicipGenericEntity):
+    """Representation of the HomematicIP Illuminance sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, "Illuminance")
+        super().__init__(hap, device, post="Illuminance")
 
     @property
     def device_class(self) -> str:
@@ -281,7 +256,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "lx"
+        return LIGHT_LUX
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -296,12 +271,12 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
         return state_attr
 
 
-class HomematicipPowerSensor(HomematicipGenericDevice):
-    """Representation of a HomematicIP power measuring device."""
+class HomematicipPowerSensor(HomematicipGenericEntity):
+    """Representation of the HomematicIP power measuring sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, "Power")
+        super().__init__(hap, device, post="Power")
 
     @property
     def device_class(self) -> str:
@@ -310,7 +285,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP power consumption value."""
+        """Return the power consumption value."""
         return self._device.currentPowerConsumption
 
     @property
@@ -319,16 +294,16 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
         return POWER_WATT
 
 
-class HomematicipWindspeedSensor(HomematicipGenericDevice):
-    """Representation of a HomematicIP wind speed sensor."""
+class HomematicipWindspeedSensor(HomematicipGenericEntity):
+    """Representation of the HomematicIP wind speed sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(hap, device, "Windspeed")
+        """Initialize the windspeed sensor."""
+        super().__init__(hap, device, post="Windspeed")
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP wind speed value."""
+        """Return the wind speed value."""
         return self._device.windSpeed
 
     @property
@@ -352,30 +327,30 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
         return state_attr
 
 
-class HomematicipTodayRainSensor(HomematicipGenericDevice):
-    """Representation of a HomematicIP rain counter of a day sensor."""
+class HomematicipTodayRainSensor(HomematicipGenericEntity):
+    """Representation of the HomematicIP rain counter of a day sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
-        super().__init__(hap, device, "Today Rain")
+        super().__init__(hap, device, post="Today Rain")
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP today's rain value."""
+        """Return the today's rain value."""
         return round(self._device.todayRainCounter, 2)
 
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "mm"
+        return LENGTH_MILLIMETERS
 
 
-class HomematicipPassageDetectorDeltaCounter(HomematicipGenericDevice):
-    """Representation of a HomematicIP passage detector delta counter."""
+class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity):
+    """Representation of the HomematicIP passage detector delta counter."""
 
     @property
     def state(self) -> int:
-        """Representation of the HomematicIP passage detector delta counter value."""
+        """Return the passage detector delta counter value."""
         return self._device.leftRightCounterDelta
 
     @property

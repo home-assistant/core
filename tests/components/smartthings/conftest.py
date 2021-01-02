@@ -47,6 +47,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
@@ -78,7 +79,8 @@ async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
     await async_process_ha_core_config(
-        hass, {"external_url": "https://test.local"},
+        hass,
+        {"external_url": "https://test.local"},
     )
     await async_setup_component(hass, "smartthings", {})
 

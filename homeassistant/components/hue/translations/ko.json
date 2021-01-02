@@ -58,7 +58,6 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_how_groups": "Hue \uadf8\ub8f9 \ud5c8\uc6a9",
                     "allow_hue_groups": "Hue \uadf8\ub8f9 \ud5c8\uc6a9",
                     "allow_unreachable": "\uc5f0\uacb0\ud560 \uc218 \uc5c6\ub294 \uc804\uad6c\uac00 \uc0c1\ud0dc\ub97c \uc62c\ubc14\ub974\uac8c \ubcf4\uace0\ud558\ub3c4\ub85d \ud5c8\uc6a9"
                 }

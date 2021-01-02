@@ -25,6 +25,7 @@
                 "data": {
                     "fallback": "Activer le mode restreint."
                 },
+                "description": "Le mode de repli passera au programme intelligent au prochain changement de programme apr\u00e8s avoir ajust\u00e9 manuellement une zone.",
                 "title": "Ajustez les options de Tado."
             }
         }

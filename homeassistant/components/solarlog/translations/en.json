@@ -5,7 +5,7 @@
         },
         "error": {
             "already_configured": "Device is already configured",
-            "cannot_connect": "Failed to connect, please verify host address"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {

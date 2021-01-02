@@ -4,9 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
@@ -14,7 +12,7 @@
                     "email": "Email",
                     "password": "Password"
                 },
-                "description": "[%key:common::config_flow::description%]",
+                "description": "Do you want to start set up?",
                 "title": "PoolSense"
             }
         }

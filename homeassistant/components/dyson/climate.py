@@ -2,6 +2,7 @@
 import logging
 
 from libpurecool.const import (
+    AutoMode,
     FanPower,
     FanSpeed,
     FanState,
@@ -97,7 +98,7 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
+        self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Call when new messages received from the climate."""
@@ -243,9 +244,7 @@ class DysonPureHotCoolEntity(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message
-        )
+        self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Call when new messages received from the climate device."""
@@ -335,7 +334,10 @@ class DysonPureHotCoolEntity(ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        if self._device.state.fan_state == FanState.FAN_OFF.value:
+        if (
+            self._device.state.auto_mode != AutoMode.AUTO_ON.value
+            and self._device.state.fan_state == FanState.FAN_OFF.value
+        ):
             return FAN_OFF
 
         return SPEED_MAP[self._device.state.speed]
@@ -370,7 +372,7 @@ class DysonPureHotCoolEntity(ClimateEntity):
         elif fan_mode == FAN_HIGH:
             self._device.set_fan_speed(FanSpeed.FAN_SPEED_10)
         elif fan_mode == FAN_AUTO:
-            self._device.set_fan_speed(FanSpeed.FAN_SPEED_AUTO)
+            self._device.enable_auto_mode()
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""

@@ -1,12 +1,8 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Verkeerde gegevens",
-            "conn_error": "Niet gelukt om te verbinden.",
+            "cannot_connect": "Kan geen verbinding maken",
             "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
-        },
-        "error": {
-            "auth_failed": "Verkeerde gegevens"
         },
         "flow_title": "Tuya-configuratie",
         "step": {
@@ -19,6 +15,13 @@
                 },
                 "description": "Voer uw Tuya-referentie in.",
                 "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configureer Tuya opties"
             }
         }
     }

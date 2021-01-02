@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u00c8 possibile configurare una sola connessione iAqualink."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "connection_failure": "Impossibile connettersi a iAqualink. Controllare il nome utente e la password."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {

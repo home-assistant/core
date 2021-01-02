@@ -64,9 +64,9 @@ async def async_setup_entry(hass, config_entry):
     """Set up a bridge from a config entry."""
 
     host = config_entry.data[CONF_HOST]
-    keyfile = config_entry.data[CONF_KEYFILE]
-    certfile = config_entry.data[CONF_CERTFILE]
-    ca_certs = config_entry.data[CONF_CA_CERTS]
+    keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
+    certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
+    ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
 
     bridge = Smartbridge.create_tls(
         hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -140,8 +140,7 @@ class LutronCasetaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {"device_id": self.device_id, "zone_id": self._device["zone"]}
-        return attr
+        return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 
     @property
     def should_poll(self):

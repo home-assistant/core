@@ -4,6 +4,13 @@ from copy import deepcopy
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_device import API_DISCOVERY_RESPONSE, NAME, setup_axis_integration
@@ -57,7 +64,8 @@ async def test_lights(hass):
     api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        device = await setup_axis_integration(hass)
+        config_entry = await setup_axis_integration(hass)
+        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     # Add light
     with patch(
@@ -72,8 +80,10 @@ async def test_lights(hass):
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
 
-    light_0 = hass.states.get(f"light.{NAME}_ir_light_0")
-    assert light_0.state == "on"
+    entity_id = f"{LIGHT_DOMAIN}.{NAME}_ir_light_0"
+
+    light_0 = hass.states.get(entity_id)
+    assert light_0.state == STATE_ON
     assert light_0.name == f"{NAME} IR Light 0"
 
     # Turn on, set brightness, light already on
@@ -87,11 +97,11 @@ async def test_lights(hass):
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            "turn_on",
-            {"entity_id": f"light.{NAME}_ir_light_0", ATTR_BRIGHTNESS: 50},
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 50},
             blocking=True,
         )
-        mock_activate.not_called()
+        mock_activate.assert_not_awaited()
         mock_set_intensity.assert_called_once_with("led0", 29)
 
     # Turn off
@@ -103,8 +113,8 @@ async def test_lights(hass):
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            "turn_off",
-            {"entity_id": f"light.{NAME}_ir_light_0"},
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_deactivate.assert_called_once()
@@ -113,8 +123,8 @@ async def test_lights(hass):
     device.api.event.process_event(EVENT_OFF)
     await hass.async_block_till_done()
 
-    light_0 = hass.states.get(f"light.{NAME}_ir_light_0")
-    assert light_0.state == "off"
+    light_0 = hass.states.get(entity_id)
+    assert light_0.state == STATE_OFF
 
     # Turn on, set brightness
     with patch(
@@ -127,8 +137,8 @@ async def test_lights(hass):
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            "turn_on",
-            {"entity_id": f"light.{NAME}_ir_light_0"},
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_activate.assert_called_once()
@@ -143,8 +153,8 @@ async def test_lights(hass):
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            "turn_off",
-            {"entity_id": f"light.{NAME}_ir_light_0"},
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_deactivate.assert_not_called()

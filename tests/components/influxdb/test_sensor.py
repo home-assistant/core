@@ -356,7 +356,12 @@ async def test_state_matches_first_query_result_for_multiple_return(
 @pytest.mark.parametrize(
     "mock_client, config_ext, queries, set_query_mock",
     [
-        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY, _set_query_mock_v1,),
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            BASE_V1_QUERY,
+            _set_query_mock_v1,
+        ),
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
     ],
     indirect=["mock_client"],
@@ -577,7 +582,12 @@ async def test_connection_error_at_startup(
     indirect=["mock_client"],
 )
 async def test_data_repository_not_found(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock,
+    hass,
+    caplog,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
 ):
     """Test sensor is not setup when bucket not available."""
     set_query_mock(mock_client)

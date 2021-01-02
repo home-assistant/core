@@ -56,18 +56,20 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
+                if (
+                    entry.data[CONF_HOST] == user_input[CONF_HOST]
+                    and entry.data[CONF_PORT] == user_input[CONF_PORT]
+                ):
                     return self.async_abort(reason="already_configured")
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
                     break
-
             try:
                 await get_api(self.hass, user_input)
 
             except AuthenticationError:
-                errors[CONF_USERNAME] = "wrong_credentials"
-                errors[CONF_PASSWORD] = "wrong_credentials"
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except (CannotConnect, UnknownError):
                 errors["base"] = "cannot_connect"
 
@@ -77,7 +79,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors,
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):

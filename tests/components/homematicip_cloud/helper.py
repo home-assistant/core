@@ -13,7 +13,7 @@ from homematicip.home import Home
 
 from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
 )
@@ -136,9 +136,9 @@ class HomeTemplate(Home):
     def __init__(self, connection=None, home_name="", test_devices=[], test_groups=[]):
         """Init template with connection."""
         super().__init__(connection=connection)
-        self.label = "Access Point"
         self.name = home_name
-        self.model_type = "HmIP-HAP"
+        self.label = "Home"
+        self.model_type = "HomematicIP Home"
         self.init_json_state = None
         self.test_devices = test_devices
         self.test_groups = test_groups
@@ -196,7 +196,7 @@ class HomeTemplate(Home):
         and sets required attributes.
         """
         mock_home = Mock(
-            spec=AsyncHome, wraps=self, label="Access Point", modelType="HmIP-HAP"
+            spec=AsyncHome, wraps=self, label="Home", modelType="HomematicIP Home"
         )
         mock_home.__dict__.update(self.__dict__)
 

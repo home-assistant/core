@@ -32,7 +32,9 @@ from homeassistant.const import (
     CONF_ID,
     CONF_INTERNAL_URL,
     CONF_LATITUDE,
+    CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
+    CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
     CONF_TEMPERATURE_UNIT,
@@ -221,6 +223,9 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
             ],
             _no_duplicate_auth_mfa_module,
         ),
+        # pylint: disable=no-value-for-parameter
+        vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
+        vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
     }
 )
 
@@ -496,6 +501,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_ELEVATION, "elevation"),
         (CONF_INTERNAL_URL, "internal_url"),
         (CONF_EXTERNAL_URL, "external_url"),
+        (CONF_MEDIA_DIRS, "media_dirs"),
+        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -503,8 +510,14 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
+    if CONF_MEDIA_DIRS not in config:
+        if is_docker_env():
+            hac.media_dirs = {"local": "/media"}
+        else:
+            hac.media_dirs = {"local": hass.config.path("media")}
+
     # Init whitelist external dir
-    hac.allowlist_external_dirs = {hass.config.path("www")}
+    hac.allowlist_external_dirs = {hass.config.path("www"), *hac.media_dirs.values()}
     if CONF_ALLOWLIST_EXTERNAL_DIRS in config:
         hac.allowlist_external_dirs.update(set(config[CONF_ALLOWLIST_EXTERNAL_DIRS]))
 
@@ -737,8 +750,14 @@ async def async_process_component_config(
     config_validator = None
     try:
         config_validator = integration.get_platform("config")
-    except ImportError:
-        pass
+    except ImportError as err:
+        # Filter out import error of the config platform.
+        # If the config platform contains bad imports, make sure
+        # that still fails.
+        if err.name != f"{integration.pkg_path}.config":
+            _LOGGER.error("Error importing config platform %s: %s", domain, err)
+            return None
+
     if config_validator is not None and hasattr(
         config_validator, "async_validate_config"
     ):
@@ -809,9 +828,7 @@ async def async_process_component_config(
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                    p_config
-                )
+                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,
@@ -885,7 +902,7 @@ def async_notify_setup_error(
         part = f"[{name}]({link})" if link else name
         message += f" - {part}\n"
 
-    message += "\nPlease check your config."
+    message += "\nPlease check your config and [logs](/config/logs)."
 
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"

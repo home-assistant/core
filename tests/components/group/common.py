@@ -31,18 +31,34 @@ def async_reload(hass):
 
 @bind_hass
 def set_group(
-    hass, object_id, name=None, entity_ids=None, icon=None, add=None,
+    hass,
+    object_id,
+    name=None,
+    entity_ids=None,
+    icon=None,
+    add=None,
 ):
     """Create/Update a group."""
     hass.add_job(
-        async_set_group, hass, object_id, name, entity_ids, icon, add,
+        async_set_group,
+        hass,
+        object_id,
+        name,
+        entity_ids,
+        icon,
+        add,
     )
 
 
 @callback
 @bind_hass
 def async_set_group(
-    hass, object_id, name=None, entity_ids=None, icon=None, add=None,
+    hass,
+    object_id,
+    name=None,
+    entity_ids=None,
+    icon=None,
+    add=None,
 ):
     """Create/Update a group."""
     data = {

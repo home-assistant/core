@@ -19,7 +19,7 @@ RETYPE = type(re.compile(""))
 def mock_stream(data):
     """Mock a stream with data."""
     protocol = mock.Mock(_reading_paused=False)
-    stream = StreamReader(protocol)
+    stream = StreamReader(protocol, limit=2 ** 16)
     stream.feed_data(data)
     stream.feed_eof()
     return stream
@@ -249,7 +249,7 @@ class AiohttpClientMockResponse:
         """Return mock response as a string."""
         return self.response.decode(encoding)
 
-    async def json(self, encoding="utf-8"):
+    async def json(self, encoding="utf-8", content_type=None):
         """Return mock response as a json."""
         return _json.loads(self.response.decode(encoding))
 

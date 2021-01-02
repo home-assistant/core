@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -77,7 +78,7 @@ async def async_get_conditions(
         if state is None:
             continue
 
-        supported_features = state.attributes["supported_features"]
+        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add conditions for each entity that belongs to this integration
         conditions += [

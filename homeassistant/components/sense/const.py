@@ -55,7 +55,7 @@ MDI_ICONS = {
     "papershredder": "shredder",
     "printer": "printer",
     "pump": "water-pump",
-    "settings": "settings",
+    "settings": "cog",
     "skillet": "pot",
     "smartcamera": "webcam",
     "socket": "power-plug",

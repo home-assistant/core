@@ -64,8 +64,8 @@ async def async_setup_entry(hass, entry):
 
     try:
         await tibber_connection.update_info()
-    except asyncio.TimeoutError:
-        raise ConfigEntryNotReady
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         _LOGGER.error("Error connecting to Tibber: %s ", err)
         return False

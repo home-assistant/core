@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "Il componente Home Connect non \u00e8 configurato. Si prega di seguire la documentazione."
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
         },
         "create_entry": {
-            "default": "Autenticazione riuscita con Home Connect."
+            "default": "Autenticazione riuscita"
         },
         "step": {
             "pick_implementation": {

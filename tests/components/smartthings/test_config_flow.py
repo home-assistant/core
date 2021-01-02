@@ -100,7 +100,10 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
     assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
     assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
-    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
+    entry = next(
+        (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+        None,
+    )
     assert entry.unique_id == smartapp.format_unique_id(
         app.app_id, location.location_id
     )
@@ -168,7 +171,10 @@ async def test_entry_created_from_update_event(
     assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
     assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
-    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
+    entry = next(
+        (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+        None,
+    )
     assert entry.unique_id == smartapp.format_unique_id(
         app.app_id, location.location_id
     )
@@ -236,7 +242,10 @@ async def test_entry_created_existing_app_new_oauth_client(
     assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
     assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
-    entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
+    entry = next(
+        (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+        None,
+    )
     assert entry.unique_id == smartapp.format_unique_id(
         app.app_id, location.location_id
     )
@@ -409,7 +418,8 @@ async def test_entry_created_with_cloudhook(
         assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
         assert result["title"] == location.name
         entry = next(
-            (entry for entry in hass.config_entries.async_entries(DOMAIN)), None,
+            (entry for entry in hass.config_entries.async_entries(DOMAIN)),
+            None,
         )
         assert entry.unique_id == smartapp.format_unique_id(
             app.app_id, location.location_id
@@ -420,7 +430,8 @@ async def test_invalid_webhook_aborts(hass):
     """Test flow aborts if webhook is invalid."""
     # Webhook confirmation shown
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.local:8123"},
+        hass,
+        {"external_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}

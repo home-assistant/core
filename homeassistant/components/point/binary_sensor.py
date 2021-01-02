@@ -1,7 +1,11 @@
 """Support for Minut Point binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DOMAIN,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -116,7 +120,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        if self.device_class == "connectivity":
+        if self.device_class == DEVICE_CLASS_CONNECTIVITY:
             # connectivity is the other way around.
             return not self._is_on
         return self._is_on

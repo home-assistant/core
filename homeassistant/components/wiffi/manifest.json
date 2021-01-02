@@ -3,8 +3,7 @@
   "name": "Wiffi",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wiffi",
-  "requirements": ["wiffi==1.0.0"],
-  "dependencies": [],
+  "requirements": ["wiffi==1.0.1"],
   "codeowners": [
     "@mampfes"
   ]

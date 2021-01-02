@@ -9,9 +9,6 @@
         },
         "step": {
             "authorize": {
-                "data": {
-                    "pin": "Pin-kod"
-                },
                 "title": "Auktorisera Sony Bravia TV"
             },
             "user": {

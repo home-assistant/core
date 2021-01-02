@@ -304,7 +304,9 @@ async def test_sensor_default_enabled_entities(
     hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test entities enabled by default."""
-    entity_registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry: EntityRegistry = (
+        await hass.helpers.entity_registry.async_get_registry()
+    )
 
     await component_factory.configure_component(profile_configs=(PERSON0,))
 
@@ -345,7 +347,9 @@ async def test_all_entities(
     hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test all entities."""
-    entity_registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry: EntityRegistry = (
+        await hass.helpers.entity_registry.async_get_registry()
+    )
 
     with patch(
         "homeassistant.components.withings.sensor.BaseWithingsSensor.entity_registry_enabled_default"

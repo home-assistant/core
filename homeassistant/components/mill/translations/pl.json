@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane."
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
-            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {

@@ -6,7 +6,6 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
@@ -98,14 +97,15 @@ async def test_one_lock_operation(hass):
     assert lock_operator_sensor
     assert (
         hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == STATE_UNAVAILABLE
+        == STATE_UNKNOWN
     )
 
 
 async def test_one_lock_unknown_state(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_lock_from_fixture(
-        hass, "get_lock.online.unknown_state.json",
+        hass,
+        "get_lock.online.unknown_state.json",
     )
     await _create_august_with_devices(hass, [lock_one])
 

@@ -1,5 +1,4 @@
 """Support for lights under the iGlo brand."""
-import logging
 import math
 
 from iglo import Lamp
@@ -20,8 +19,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "iGlo Light"
 DEFAULT_PORT = 8080

@@ -1,11 +1,7 @@
 """Support for controlling the PiFace Digital I/O module on a RPi."""
-import logging
-
 import pifacedigitalio as PFIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rpi_pfio"
 

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "flow_title": "Canary: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Anfrage-Timeout (Sekunden)"
+                }
+            }
+        }
+    }
+}

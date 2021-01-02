@@ -11,11 +11,13 @@
       "2fa": {
         "title": "Two-factor authentication",
         "data": { "2fa": "Two-factor code" },
-        "description": "Enter the pin sent to your email. If the email does not contain a pin, leave blank"
+        "description": "Enter the pin sent to your email"
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

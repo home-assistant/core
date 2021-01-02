@@ -69,8 +69,10 @@ class UPCDeviceScanner(DeviceScanner):
     async def async_get_device_name(self, device: str) -> Optional[str]:
         """Get the device name (the name of the wireless device not used)."""
         for connected_device in self.connect_box.devices:
-            if connected_device != device:
-                continue
-            return connected_device.hostname
+            if (
+                connected_device.mac == device
+                and connected_device.hostname.lower() != "unknown"
+            ):
+                return connected_device.hostname
 
         return None

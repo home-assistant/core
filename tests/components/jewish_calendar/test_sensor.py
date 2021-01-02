@@ -7,7 +7,12 @@ from homeassistant.components import jewish_calendar
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+from . import (
+    HDATE_DEFAULT_ALTITUDE,
+    alter_time,
+    make_jerusalem_test_params,
+    make_nyc_test_params,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -506,6 +511,8 @@ async def test_shabbat_times_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
     with alter_time(test_time):
         assert await async_setup_component(
             hass,
@@ -542,6 +549,26 @@ async def test_shabbat_times_sensor(
         assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
             result_value
         ), f"Value for {sensor_type}"
+
+        entity = registry.async_get(f"sensor.test_{sensor_type}")
+        target_sensor_type = sensor_type.replace("parshat_hashavua", "weekly_portion")
+        target_uid = "_".join(
+            map(
+                str,
+                [
+                    latitude,
+                    longitude,
+                    time_zone,
+                    HDATE_DEFAULT_ALTITUDE,
+                    diaspora,
+                    language,
+                    candle_lighting,
+                    havdalah,
+                    target_sensor_type,
+                ],
+            )
+        )
+        assert entity.unique_id == target_uid
 
 
 OMER_PARAMS = [

@@ -1,17 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
         "error": {
             "unknown_state": "Estado da impressora desconhecido, verifique a conectividade de URL e de rede"
         },
         "step": {
             "confirm": {
                 "data": {
-                    "name": "Nome"
+                    "name": "Nome",
+                    "url": "URL da interface Web"
                 }
             },
             "user": {
                 "data": {
-                    "name": "Nome"
+                    "name": "Nome",
+                    "url": "URL da interface Web"
                 }
             }
         }

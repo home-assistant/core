@@ -80,6 +80,39 @@ async def test_api_host_info(hassio_handler, aioclient_mock):
     assert data["operating_system"] == "Debian GNU/Linux 10 (buster)"
 
 
+async def test_api_supervisor_info(hassio_handler, aioclient_mock):
+    """Test setup with API Supervisor info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={
+            "result": "ok",
+            "data": {"supported": True, "version": "2020.11.1", "channel": "stable"},
+        },
+    )
+
+    data = await hassio_handler.get_supervisor_info()
+    assert aioclient_mock.call_count == 1
+    assert data["supported"]
+    assert data["version"] == "2020.11.1"
+    assert data["channel"] == "stable"
+
+
+async def test_api_os_info(hassio_handler, aioclient_mock):
+    """Test setup with API OS info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/os/info",
+        json={
+            "result": "ok",
+            "data": {"board": "odroid-n2", "version": "2020.11.1"},
+        },
+    )
+
+    data = await hassio_handler.get_os_info()
+    assert aioclient_mock.call_count == 1
+    assert data["board"] == "odroid-n2"
+    assert data["version"] == "2020.11.1"
+
+
 async def test_api_host_info_error(hassio_handler, aioclient_mock):
     """Test setup with API Home Assistant info error."""
     aioclient_mock.get(
@@ -88,6 +121,30 @@ async def test_api_host_info_error(hassio_handler, aioclient_mock):
 
     with pytest.raises(HassioAPIError):
         await hassio_handler.get_host_info()
+
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_core_info(hassio_handler, aioclient_mock):
+    """Test setup with API Home Assistant Core info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/core/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+
+    data = await hassio_handler.get_core_info()
+    assert aioclient_mock.call_count == 1
+    assert data["version_latest"] == "1.0.0"
+
+
+async def test_api_core_info_error(hassio_handler, aioclient_mock):
+    """Test setup with API Home Assistant Core info error."""
+    aioclient_mock.get(
+        "http://127.0.0.1/core/info", json={"result": "error", "message": None}
+    )
+
+    with pytest.raises(HassioAPIError):
+        await hassio_handler.get_core_info()
 
     assert aioclient_mock.call_count == 1
 

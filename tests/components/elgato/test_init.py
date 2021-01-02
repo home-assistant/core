@@ -14,7 +14,7 @@ async def test_config_entry_not_ready(
 ) -> None:
     """Test the Elgato Key Light configuration entry not ready."""
     aioclient_mock.get(
-        "http://example.local:9123/elgato/accessory-info", exc=aiohttp.ClientError
+        "http://1.2.3.4:9123/elgato/accessory-info", exc=aiohttp.ClientError
     )
 
     entry = await init_integration(hass, aioclient_mock)

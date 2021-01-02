@@ -40,7 +40,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
-        self._available = neato.logged_in if neato is not None else False
+        self._available = neato is not None
         self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
         self._state = None
         self._schedule_state = None

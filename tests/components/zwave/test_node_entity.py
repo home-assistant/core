@@ -1,8 +1,4 @@
 """Test Z-Wave node entity."""
-import unittest
-
-import pytest
-
 from homeassistant.components.zwave import const, node_entity
 from homeassistant.const import ATTR_ENTITY_ID
 
@@ -235,436 +231,492 @@ async def test_application_version(hass, mock_openzwave):
     )
 
 
-@pytest.mark.usefixtures("mock_openzwave")
-class TestZWaveNodeEntity(unittest.TestCase):
-    """Class to test ZWaveNodeEntity."""
+async def test_network_node_changed_from_value(hass, mock_openzwave):
+    """Test for network_node_changed."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    value = mock_zwave.MockValue(node=node)
+    with patch.object(entity, "maybe_schedule_update") as mock:
+        mock_zwave.value_changed(value)
+        mock.assert_called_once_with()
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.zwave_network = MagicMock()
-        self.node = mock_zwave.MockNode(
-            query_stage="Dynamic",
-            is_awake=True,
-            is_ready=False,
-            is_failed=False,
-            is_info_received=True,
-            max_baud_rate=40000,
-            is_zwave_plus=False,
-            capabilities=[],
-            neighbors=[],
-            location=None,
-        )
-        self.entity = node_entity.ZWaveNodeEntity(self.node, self.zwave_network)
 
-    def test_network_node_changed_from_value(self):
-        """Test for network_node_changed."""
-        value = mock_zwave.MockValue(node=self.node)
-        with patch.object(self.entity, "maybe_schedule_update") as mock:
-            mock_zwave.value_changed(value)
-            mock.assert_called_once_with()
+async def test_network_node_changed_from_node(hass, mock_openzwave):
+    """Test for network_node_changed."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    with patch.object(entity, "maybe_schedule_update") as mock:
+        mock_zwave.node_changed(node)
+        mock.assert_called_once_with()
 
-    def test_network_node_changed_from_node(self):
-        """Test for network_node_changed."""
-        with patch.object(self.entity, "maybe_schedule_update") as mock:
-            mock_zwave.node_changed(self.node)
-            mock.assert_called_once_with()
 
-    def test_network_node_changed_from_another_node(self):
-        """Test for network_node_changed."""
-        with patch.object(self.entity, "maybe_schedule_update") as mock:
-            node = mock_zwave.MockNode(node_id=1024)
-            mock_zwave.node_changed(node)
-            assert not mock.called
+async def test_network_node_changed_from_another_node(hass, mock_openzwave):
+    """Test for network_node_changed."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    with patch.object(entity, "maybe_schedule_update") as mock:
+        another_node = mock_zwave.MockNode(node_id=1024)
+        mock_zwave.node_changed(another_node)
+        assert not mock.called
 
-    def test_network_node_changed_from_notification(self):
-        """Test for network_node_changed."""
-        with patch.object(self.entity, "maybe_schedule_update") as mock:
-            mock_zwave.notification(node_id=self.node.node_id)
-            mock.assert_called_once_with()
 
-    def test_network_node_changed_from_another_notification(self):
-        """Test for network_node_changed."""
-        with patch.object(self.entity, "maybe_schedule_update") as mock:
-            mock_zwave.notification(node_id=1024)
-            assert not mock.called
+async def test_network_node_changed_from_notification(hass, mock_openzwave):
+    """Test for network_node_changed."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    with patch.object(entity, "maybe_schedule_update") as mock:
+        mock_zwave.notification(node_id=node.node_id)
+        mock.assert_called_once_with()
 
-    def test_node_changed(self):
-        """Test node_changed function."""
-        self.maxDiff = None
-        assert {
-            "node_id": self.node.node_id,
-            "node_name": "Mock Node",
-            "manufacturer_name": "Test Manufacturer",
-            "product_name": "Test Product",
-        } == self.entity.device_state_attributes
 
-        self.node.get_values.return_value = {1: mock_zwave.MockValue(data=1800)}
-        self.zwave_network.manager.getNodeStatistics.return_value = {
-            "receivedCnt": 4,
-            "ccData": [
-                {"receivedCnt": 0, "commandClassId": 134, "sentCnt": 0},
-                {"receivedCnt": 1, "commandClassId": 133, "sentCnt": 1},
-                {"receivedCnt": 1, "commandClassId": 115, "sentCnt": 1},
-                {"receivedCnt": 0, "commandClassId": 114, "sentCnt": 0},
-                {"receivedCnt": 0, "commandClassId": 112, "sentCnt": 0},
-                {"receivedCnt": 1, "commandClassId": 32, "sentCnt": 1},
-                {"receivedCnt": 0, "commandClassId": 0, "sentCnt": 0},
-            ],
-            "receivedUnsolicited": 0,
-            "sentTS": "2017-03-27 15:38:15:620 ",
-            "averageRequestRTT": 2462,
-            "lastResponseRTT": 3679,
-            "retries": 0,
-            "sentFailed": 1,
-            "sentCnt": 7,
-            "quality": 0,
-            "lastRequestRTT": 1591,
-            "lastReceivedMessage": [
-                0,
-                4,
-                0,
-                15,
-                3,
-                32,
-                3,
-                0,
-                221,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-            ],
-            "receivedDups": 1,
-            "averageResponseRTT": 2443,
-            "receivedTS": "2017-03-27 15:38:19:298 ",
-        }
-        self.entity.node_changed()
-        assert {
-            "node_id": self.node.node_id,
-            "node_name": "Mock Node",
-            "manufacturer_name": "Test Manufacturer",
-            "product_name": "Test Product",
-            "query_stage": "Dynamic",
-            "is_awake": True,
-            "is_ready": False,
-            "is_failed": False,
-            "is_info_received": True,
-            "max_baud_rate": 40000,
-            "is_zwave_plus": False,
-            "battery_level": 42,
-            "wake_up_interval": 1800,
-            "averageRequestRTT": 2462,
-            "averageResponseRTT": 2443,
-            "lastRequestRTT": 1591,
-            "lastResponseRTT": 3679,
-            "receivedCnt": 4,
-            "receivedDups": 1,
-            "receivedTS": "2017-03-27 15:38:19:298 ",
-            "receivedUnsolicited": 0,
-            "retries": 0,
-            "sentCnt": 7,
-            "sentFailed": 1,
-            "sentTS": "2017-03-27 15:38:15:620 ",
-        } == self.entity.device_state_attributes
+async def test_network_node_changed_from_another_notification(hass, mock_openzwave):
+    """Test for network_node_changed."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    with patch.object(entity, "maybe_schedule_update") as mock:
+        mock_zwave.notification(node_id=1024)
+        assert not mock.called
 
-        self.node.can_wake_up_value = False
-        self.entity.node_changed()
 
-        assert "wake_up_interval" not in self.entity.device_state_attributes
+async def test_node_changed(hass, mock_openzwave):
+    """Test node_changed function."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode(
+        query_stage="Dynamic",
+        is_awake=True,
+        is_ready=False,
+        is_failed=False,
+        is_info_received=True,
+        max_baud_rate=40000,
+        is_zwave_plus=False,
+        capabilities=[],
+        neighbors=[],
+        location=None,
+    )
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
 
-    def test_name(self):
-        """Test name property."""
-        assert self.entity.name == "Mock Node"
+    assert {
+        "node_id": node.node_id,
+        "node_name": "Mock Node",
+        "manufacturer_name": "Test Manufacturer",
+        "product_name": "Test Product",
+    } == entity.device_state_attributes
 
-    def test_state_before_update(self):
-        """Test state before update was called."""
-        assert self.entity.state is None
+    node.get_values.return_value = {1: mock_zwave.MockValue(data=1800)}
+    zwave_network.manager.getNodeStatistics.return_value = {
+        "receivedCnt": 4,
+        "ccData": [
+            {"receivedCnt": 0, "commandClassId": 134, "sentCnt": 0},
+            {"receivedCnt": 1, "commandClassId": 133, "sentCnt": 1},
+            {"receivedCnt": 1, "commandClassId": 115, "sentCnt": 1},
+            {"receivedCnt": 0, "commandClassId": 114, "sentCnt": 0},
+            {"receivedCnt": 0, "commandClassId": 112, "sentCnt": 0},
+            {"receivedCnt": 1, "commandClassId": 32, "sentCnt": 1},
+            {"receivedCnt": 0, "commandClassId": 0, "sentCnt": 0},
+        ],
+        "receivedUnsolicited": 0,
+        "sentTS": "2017-03-27 15:38:15:620 ",
+        "averageRequestRTT": 2462,
+        "lastResponseRTT": 3679,
+        "retries": 0,
+        "sentFailed": 1,
+        "sentCnt": 7,
+        "quality": 0,
+        "lastRequestRTT": 1591,
+        "lastReceivedMessage": [
+            0,
+            4,
+            0,
+            15,
+            3,
+            32,
+            3,
+            0,
+            221,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+        "receivedDups": 1,
+        "averageResponseRTT": 2443,
+        "receivedTS": "2017-03-27 15:38:19:298 ",
+    }
+    entity.node_changed()
+    assert {
+        "node_id": node.node_id,
+        "node_name": "Mock Node",
+        "manufacturer_name": "Test Manufacturer",
+        "product_name": "Test Product",
+        "query_stage": "Dynamic",
+        "is_awake": True,
+        "is_ready": False,
+        "is_failed": False,
+        "is_info_received": True,
+        "max_baud_rate": 40000,
+        "is_zwave_plus": False,
+        "battery_level": 42,
+        "wake_up_interval": 1800,
+        "averageRequestRTT": 2462,
+        "averageResponseRTT": 2443,
+        "lastRequestRTT": 1591,
+        "lastResponseRTT": 3679,
+        "receivedCnt": 4,
+        "receivedDups": 1,
+        "receivedTS": "2017-03-27 15:38:19:298 ",
+        "receivedUnsolicited": 0,
+        "retries": 0,
+        "sentCnt": 7,
+        "sentFailed": 1,
+        "sentTS": "2017-03-27 15:38:15:620 ",
+    } == entity.device_state_attributes
 
-    def test_state_not_ready(self):
-        """Test state property."""
-        self.node.is_ready = False
-        self.entity.node_changed()
-        assert self.entity.state == "initializing"
+    node.can_wake_up_value = False
+    entity.node_changed()
 
-        self.node.is_failed = True
-        self.node.query_stage = "Complete"
-        self.entity.node_changed()
-        assert self.entity.state == "dead"
+    assert "wake_up_interval" not in entity.device_state_attributes
 
-        self.node.is_failed = False
-        self.node.is_awake = False
-        self.entity.node_changed()
-        assert self.entity.state == "sleeping"
 
-    def test_state_ready(self):
-        """Test state property."""
-        self.node.query_stage = "Complete"
-        self.node.is_ready = True
-        self.entity.node_changed()
-        assert self.entity.state == "ready"
+async def test_name(hass, mock_openzwave):
+    """Test name property."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    assert entity.name == "Mock Node"
 
-        self.node.is_failed = True
-        self.entity.node_changed()
-        assert self.entity.state == "dead"
 
-        self.node.is_failed = False
-        self.node.is_awake = False
-        self.entity.node_changed()
-        assert self.entity.state == "sleeping"
+async def test_state_before_update(hass, mock_openzwave):
+    """Test state before update was called."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    assert entity.state is None
 
-    def test_not_polled(self):
-        """Test should_poll property."""
-        assert not self.entity.should_poll
 
-    def test_unique_id(self):
-        """Test unique_id."""
-        assert self.entity.unique_id == "node-567"
+async def test_state_not_ready(hass, mock_openzwave):
+    """Test state property."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode(
+        query_stage="Dynamic",
+        is_awake=True,
+        is_ready=False,
+        is_failed=False,
+        is_info_received=True,
+    )
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
 
-    def test_unique_id_missing_data(self):
-        """Test unique_id."""
-        self.node.manufacturer_name = None
-        self.node.name = None
-        entity = node_entity.ZWaveNodeEntity(self.node, self.zwave_network)
+    node.is_ready = False
+    entity.node_changed()
+    assert entity.state == "initializing"
 
-        assert entity.unique_id is None
+    node.is_failed = True
+    node.query_stage = "Complete"
+    entity.node_changed()
+    assert entity.state == "dead"
+
+    node.is_failed = False
+    node.is_awake = False
+    entity.node_changed()
+    assert entity.state == "sleeping"
+
+
+async def test_state_ready(hass, mock_openzwave):
+    """Test state property."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode(
+        query_stage="Dynamic",
+        is_awake=True,
+        is_ready=False,
+        is_failed=False,
+        is_info_received=True,
+    )
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+
+    node.query_stage = "Complete"
+    node.is_ready = True
+    entity.node_changed()
+    await hass.async_block_till_done()
+    assert entity.state == "ready"
+
+    node.is_failed = True
+    entity.node_changed()
+    assert entity.state == "dead"
+
+    node.is_failed = False
+    node.is_awake = False
+    entity.node_changed()
+    assert entity.state == "sleeping"
+
+
+async def test_not_polled(hass, mock_openzwave):
+    """Test should_poll property."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    assert not entity.should_poll
+
+
+async def test_unique_id(hass, mock_openzwave):
+    """Test unique_id."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+    assert entity.unique_id == "node-567"
+
+
+async def test_unique_id_missing_data(hass, mock_openzwave):
+    """Test unique_id."""
+    zwave_network = MagicMock()
+    node = mock_zwave.MockNode()
+    node.manufacturer_name = None
+    node.name = None
+    node.is_ready = False
+    entity = node_entity.ZWaveNodeEntity(node, zwave_network)
+
+    assert entity.unique_id is None
