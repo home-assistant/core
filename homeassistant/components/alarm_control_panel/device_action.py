@@ -32,7 +32,7 @@ from .const import (
     SUPPORT_ALARM_TRIGGER,
 )
 
-ACTION_TYPES = {"arm_away", "arm_home", "arm_night", "arm_vacation", "disarm", "trigger"}
+ACTION_TYPES = {"arm_away","arm_home","arm_night","arm_vacation","disarm","trigger"}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
