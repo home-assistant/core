@@ -14,13 +14,6 @@ from homeassistant.const import (
 
 DOMAIN = "kostal_plenticore"
 
-"""Scope of fetched data."""
-SCOPE_PROCESS_DATA = "process data"
-SCOPE_SETTING = "setting"
-
-"""Service name for writing setting values."""
-SERVICE_SET_VALUE = "write_setting_value"
-
 ATTR_VALUE = "value"
 ATTR_ENABLED_DEFAULT = "entity_registry_enabled_default"
 

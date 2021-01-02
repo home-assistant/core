@@ -1,6 +1,7 @@
 """Platform for Kostal Plenticore sensors."""
+from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
 import voluptuous as vol
 
@@ -13,18 +14,20 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ENABLED_DEFAULT,
     ATTR_VALUE,
     DOMAIN,
-    SCOPE_PROCESS_DATA,
-    SCOPE_SETTING,
     SENSOR_PROCESS_DATA,
     SENSOR_SETTINGS_DATA,
-    SERVICE_SET_VALUE,
+)
+from .helper import (
+    PlenticoreDataFormatter,
+    ProcessDataUpdateCoordinator,
+    SettingDataUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,148 +40,82 @@ SERVICE_SET_VALUE_SCHEMA = vol.Schema(
 )
 
 
-def format_round(state: str) -> Union[int, str]:
-    """Return the given state value as rounded integer."""
-    try:
-        return round(float(state))
-    except (TypeError, ValueError):
-        return state
-
-
-def format_energy(state: str) -> Union[float, str]:
-    """Return the given state value as energy value, scaled to kWh."""
-    try:
-        return round(float(state) / 1000, 1)
-    except (TypeError, ValueError):
-        return state
-
-
-def format_inverter_state(state: str) -> str:
-    """Return a readable string of the inverter state."""
-    try:
-        value = int(state)
-    except (TypeError, ValueError):
-        return state
-
-    if value == 0:
-        return "Off"
-    if value == 1:
-        return "Init"
-    if value == 2:
-        return "IsoMEas"
-    if value == 3:
-        return "GridCheck"
-    if value == 4:
-        return "StartUp"
-    if value == 6:
-        return "FeedIn"
-    if value == 7:
-        return "Throttled"
-    if value == 8:
-        return "ExtSwitchOff"
-    if value == 9:
-        return "Update"
-    if value == 10:
-        return "Standby"
-    if value == 11:
-        return "GridSync"
-    if value == 12:
-        return "GridPreCheck"
-    if value == 13:
-        return "GridSwitchOff"
-    if value == 14:
-        return "Overheating"
-    if value == 15:
-        return "Shutdown"
-    if value == 16:
-        return "ImproperDcVoltage"
-    if value == 17:
-        return "ESB"
-    return "Unknown"
-
-
-def format_em_manager_state(state: str) -> str:
-    """Return a readable state of the energy manager."""
-    try:
-        value = int(state)
-    except (TypeError, ValueError):
-        return state
-
-    if value == 0:
-        return "Idle"
-    if value == 1:
-        return "n/a"
-    if value == 2:
-        return "Emergency Battery Charge"
-    if value == 4:
-        return "n/a"
-    if value == 8:
-        return "Winter Mode Step 1"
-    if value == 16:
-        return "Winter Mode Step 2"
-
-    return "Unknown"
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Add kostal plenticore Sensors."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    plenticore = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
 
+    available_process_data = await plenticore.client.get_process_data()
+    process_data_update_coordinator = ProcessDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        "Process Data",
+        timedelta(seconds=10),
+        plenticore,
+    )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_PROCESS_DATA:
-        # get function for string
-        fmt = globals()[str(fmt)]
-
-        entities.append(
-            PlenticoreProcessDataSensor(
-                coordinator,
-                entry.entry_id,
-                entry.title,
-                module_id,
-                data_id,
-                name,
-                sensor_data,
-                fmt,
+        if (
+            module_id in available_process_data
+            and data_id in available_process_data[module_id]
+        ):
+            entities.append(
+                PlenticoreDataSensor(
+                    process_data_update_coordinator,
+                    entry.entry_id,
+                    entry.title,
+                    module_id,
+                    data_id,
+                    name,
+                    sensor_data,
+                    PlenticoreDataFormatter.get_method(fmt),
+                    plenticore.device_info,
+                )
             )
-        )
+        else:
+            _LOGGER.debug(
+                "Skipping non existing process data %s/%s.", module_id, data_id
+            )
 
+    available_settings_data = await plenticore.client.get_settings()
+    settings_data_update_coordinator = SettingDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        "Settings Data",
+        timedelta(seconds=300),
+        plenticore,
+    )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_SETTINGS_DATA:
-        # get function for string
-        fmt = globals()[str(fmt)]
-
-        entities.append(
-            PlenticoreSettingSensor(
-                coordinator,
-                entry.entry_id,
-                entry.title,
-                module_id,
-                data_id,
-                name,
-                sensor_data,
-                fmt,
+        if module_id in available_settings_data and data_id in map(
+            lambda x: x.id, available_settings_data[module_id]
+        ):
+            entities.append(
+                PlenticoreDataSensor(
+                    settings_data_update_coordinator,
+                    entry.entry_id,
+                    entry.title,
+                    module_id,
+                    data_id,
+                    name,
+                    sensor_data,
+                    PlenticoreDataFormatter.get_method(fmt),
+                    plenticore.device_info,
+                )
             )
-        )
+        else:
+            _LOGGER.debug(
+                "Skipping non existing setting data %s/%s.", module_id, data_id
+            )
 
     async_add_entities(entities)
-
-    # await coordinator.async_refresh()
-
-    platform = entity_platform.current_platform.get()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        SERVICE_SET_VALUE_SCHEMA,
-        "async_set_new_value",
-    )
 
     return True
 
 
-class PlenticoreProcessDataSensor(CoordinatorEntity):
-    """Representation of a Plenticore process data Sensor."""
+class PlenticoreDataSensor(CoordinatorEntity):
+    """Representation of a Plenticore data Sensor."""
 
     def __init__(
         self,
@@ -190,6 +127,7 @@ class PlenticoreProcessDataSensor(CoordinatorEntity):
         sensor_name: str,
         sensor_data: Dict[str, Any],
         formatter: Callable[[str], Any],
+        device_info: Dict[str, Any],
     ):
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -202,32 +140,22 @@ class PlenticoreProcessDataSensor(CoordinatorEntity):
         self._sensor_data = sensor_data
         self._formatter = formatter
 
-        self._available = True
+        self._device_info = device_info
 
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
-        self.coordinator.register_entity(self)
         await super().async_added_to_hass()
+        self.coordinator.start_fetch_data(self.module_id, self.data_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
+        self.coordinator.stop_fetch_data(self.module_id, self.data_id)
         await super().async_will_remove_from_hass()
-        self.coordinator.unregister_entity(self)
 
     @property
-    def available(self) -> bool:
-        """Return if this entity can be access in the current Plenticore firmware version."""
-        return self._available
-
-    @available.setter
-    def available(self, available) -> None:
-        """Set the availability of this entity."""
-        self._available = available
-
-    @property
-    def scope(self) -> str:
-        """Return the scope of this Sensor Entity."""
-        return SCOPE_PROCESS_DATA
+    def device_info(self) -> Dict[str, Any]:
+        """Return the device info."""
+        return self._device_info
 
     @property
     def unique_id(self) -> str:
@@ -267,28 +195,8 @@ class PlenticoreProcessDataSensor(CoordinatorEntity):
             return None
 
         try:
-            raw_value = self.coordinator.data[self.scope][self.module_id][self.data_id]
+            raw_value = self.coordinator.data[self.module_id][self.data_id]
         except KeyError:
             return STATE_UNAVAILABLE
 
         return self._formatter(raw_value) if self._formatter else raw_value
-
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
-        """Device info."""
-        return self.coordinator.device_info
-
-
-class PlenticoreSettingSensor(PlenticoreProcessDataSensor):
-    """Representation of a Plenticore setting value Sensor."""
-
-    @property
-    def scope(self) -> str:
-        """Return the scope of this Sensor Entity."""
-        return SCOPE_SETTING
-
-    async def async_set_new_value(self, value) -> None:
-        """Write the given value to the setting of this entity instance."""
-        await self.coordinator.async_write_setting(
-            self.module_id, self.data_id, str(value)
-        )

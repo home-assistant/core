@@ -1,9 +1,0 @@
-write_setting_value:
-  description: Writes a setting value to the inverter
-  fields:
-    entity_id:
-      description: A setting entity for which the value should be written to
-      example: sensor.plenticore_minsoc
-    value:
-      description: the value to write
-      example: "10"
