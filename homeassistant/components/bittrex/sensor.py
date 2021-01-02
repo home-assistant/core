@@ -15,7 +15,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     for market in coordinator.data:
-        entities.append(Ticker(coordinator, market["symbol"]))
+        entities.append(Ticker(coordinator, market))
 
     async_add_entities(entities, False)
 
@@ -26,12 +26,16 @@ class Ticker(CoordinatorEntity):
     def __init__(self, coordinator, symbol):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.symbol = symbol
-        self._currency = self.symbol.split("-")[0]
-        self._unit_of_measurement = self.symbol.split("-")[1]
+        self._symbol = symbol
+        self._currency = self._symbol.split("-")[0]
+        self._unit_of_measurement = self._symbol.split("-")[1]
 
-        self._name = f"Bittrex Ticker - {self.symbol}"
-        self._unique_id = f"bittrex_ticker_{self.symbol})"
+        self._lastTradeRate = self.coordinator.data[self._symbol]["lastTradeRate"]
+        self._bidRate = self.coordinator.data[self._symbol]["bidRate"]
+        self._askRate = self.coordinator.data[self._symbol]["askRate"]
+
+        self._name = f"Bittrex Ticker - {self._symbol}"
+        self._unique_id = f"bittrex_ticker_{self._symbol})"
 
     @property
     def name(self):
@@ -41,9 +45,7 @@ class Ticker(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return next(
-            item for item in self.coordinator.data if item["symbol"] == self.symbol
-        )["lastTradeRate"]
+        return self._lastTradeRate
 
     @property
     def unique_id(self):
@@ -64,18 +66,10 @@ class Ticker(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "symbol": next(
-                item for item in self.coordinator.data if item["symbol"] == self.symbol
-            )["symbol"],
-            "lastTradeRate": next(
-                item for item in self.coordinator.data if item["symbol"] == self.symbol
-            )["lastTradeRate"],
-            "bidRate": next(
-                item for item in self.coordinator.data if item["symbol"] == self.symbol
-            )["bidRate"],
-            "askRate": next(
-                item for item in self.coordinator.data if item["symbol"] == self.symbol
-            )["askRate"],
+            "symbol": self._symbol,
+            "lastTradeRate": self._lastTradeRate,
+            "bidRate": self._bidRate,
+            "askRate": self._askRate,
             "currency": self._currency,
             "unit_of_measurement": self._unit_of_measurement,
         }
