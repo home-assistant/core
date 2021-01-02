@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -12,8 +13,11 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DOMAIN
 
@@ -47,6 +51,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     api = hass.data[DOMAIN][entry.entry_id]
 
+    def get_all_pool_data(pool):
+        """Add pool details and last measures to pool data."""
+        pool["ICO"] = api.get_ICO_details(pool["id"])
+        pool["sensors"] = api.get_last_pool_measures(pool["id"])
+
+        return pool
+
     async def async_update_data():
         """Fetch data from API endpoint.
 
@@ -55,15 +66,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """
         try:
             pools = await hass.async_add_executor_job(api.get_pools)
-            for pool in pools:
-                pool["ICO"] = await hass.async_add_executor_job(
-                    api.get_ICO_details, pool["id"]
-                )
-                pool["devices"] = await hass.async_add_executor_job(
-                    api.get_last_pool_measures, pool["id"]
-                )
 
-            return pools
+            return await asyncio.gather(
+                *[
+                    hass.async_add_executor_job(get_all_pool_data, pool)
+                    for pool in pools
+                ]
+            )
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
@@ -83,57 +92,59 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for poolidx, pool in enumerate(coordinator.data):
-        for devidx, _ in enumerate(pool["devices"]):
-            entities.append(OndiloICO(coordinator, poolidx, devidx))
+        for sensor_idx, sensor in enumerate(pool["sensors"]):
+            if SENSOR_TYPES.get(sensor["data_type"], None) is not None:
+                entities.append(OndiloICO(coordinator, poolidx, sensor_idx))
 
     async_add_entities(entities)
 
 
-class OndiloICO(Entity):
+class OndiloICO(CoordinatorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, poolidx: int, devidx: int):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, poolidx: int, sensor_idx: int
+    ):
         """Initialize sensor entity with data from coordinator."""
-        self._coordinator = coordinator
-        self._devidx = devidx
-        self._poolidx = poolidx
-        self._unique_id = (
-            f"{self._pooldata()['ICO']['serial_number']}-{self._devdata()['data_type']}"
-        )
-        self._device_name = self._pooldata()["name"]
-        self._name = (
-            f"{self._device_name} {SENSOR_TYPES[self._devdata()['data_type']][0]}"
-        )
-        self._device_class = SENSOR_TYPES[self._devdata()["data_type"]][3]
-        self._icon = SENSOR_TYPES[self._devdata()["data_type"]][2]
-        self._unit = SENSOR_TYPES[self._devdata()["data_type"]][1]
+        super().__init__(coordinator)
+
+        self._poolid = self.coordinator.data[poolidx]["id"]
+
+        pooldata = self._pooldata()
+        self._data_type = pooldata["sensors"][sensor_idx]["data_type"]
+        self._unique_id = f"{pooldata['ICO']['serial_number']}-{self._data_type}"
+        self._device_name = pooldata["name"]
+        self._name = f"{self._device_name} {SENSOR_TYPES[self._data_type][0]}"
+        self._device_class = SENSOR_TYPES[self._data_type][3]
+        self._icon = SENSOR_TYPES[self._data_type][2]
+        self._unit = SENSOR_TYPES[self._data_type][1]
 
     def _pooldata(self):
         """Get pool data dict."""
-        return self._coordinator.data[self._poolidx]
+        return next(
+            (pool for pool in self.coordinator.data if pool["id"] == self._poolid),
+            None,
+        )
 
     def _devdata(self):
         """Get device data dict."""
-        return self._pooldata()["devices"][self._devidx]
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._coordinator.last_update_success
+        return next(
+            (
+                data_type
+                for data_type in self._pooldata()["sensors"]
+                if data_type["data_type"] == self._data_type
+            ),
+            None,
+        )
 
     @property
     def name(self):
-        """Name of the device."""
+        """Name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Last value of the device."""
+        """Last value of the sensor."""
         _LOGGER.debug(
             "Retrieving Ondilo sensor %s state value: %s",
             self._name,
@@ -153,7 +164,7 @@ class OndiloICO(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Name of the device."""
+        """Return the Unit of the sensor's measurement."""
         return self._unit
 
     @property
@@ -164,23 +175,11 @@ class OndiloICO(Entity):
     @property
     def device_info(self):
         """Return the device info for the sensor."""
+        pooldata = self._pooldata()
         return {
-            "identifiers": {(DOMAIN, self._pooldata()["ICO"]["serial_number"])},
+            "identifiers": {(DOMAIN, pooldata["ICO"]["serial_number"])},
             "name": self._device_name,
             "manufacturer": "Ondilo",
             "model": "ICO",
-            "sw_version": self._pooldata()["ICO"]["sw_version"],
+            "sw_version": pooldata["ICO"]["sw_version"],
         }
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
