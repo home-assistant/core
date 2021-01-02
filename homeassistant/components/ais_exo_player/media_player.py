@@ -1,5 +1,5 @@
 """
-Support to interact with a ExoPlayer on Android via HTTO and MQTT.
+Support to interact with a ExoPlayer on Android via HTTP and MQTT.
 
 """
 import asyncio
