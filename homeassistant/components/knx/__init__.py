@@ -326,8 +326,8 @@ class KNXModule:
         data = None
 
         # Not all telegrams have serializable data.
-        if isinstance(telegram, (GroupValueWrite, GroupValueResponse)):
-            data = telegram.dpt.value
+        if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
+            data = telegram.payload.value.value
 
         self.hass.bus.async_fire(
             "knx_event",
@@ -359,7 +359,7 @@ class KNXModule:
 
         telegram = Telegram(
             destination_address=GroupAddress(attr_address),
-            payload=calculate_payload(attr_payload),
+            payload=GroupValueWrite(calculate_payload(attr_payload)),
         )
         await self.xknx.telegrams.put(telegram)
 
