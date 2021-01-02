@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from surepy import SureLockStateID, SureProductID
+from surepy import SureLockStateID, SurepyProduct
 
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -40,13 +40,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sure_type = entity[CONF_TYPE]
 
         if sure_type in [
-            SureProductID.CAT_FLAP,
-            SureProductID.PET_FLAP,
-            SureProductID.FEEDER,
+            SurepyProduct.CAT_FLAP,
+            SurepyProduct.PET_FLAP,
+            SurepyProduct.FEEDER,
         ]:
             entities.append(SureBattery(entity[CONF_ID], sure_type, spc))
 
-        if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
+        if sure_type in [SurepyProduct.CAT_FLAP, SurepyProduct.PET_FLAP]:
             entities.append(Flap(entity[CONF_ID], sure_type, spc))
 
     async_add_entities(entities, True)
@@ -55,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SurePetcareSensor(Entity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
+    def __init__(self, _id: int, sure_type: SurepyProduct, spc: SurePetcareAPI):
         """Initialize a Sure Petcare sensor."""
 
         self._id = _id
