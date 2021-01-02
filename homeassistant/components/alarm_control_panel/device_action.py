@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_CODE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -32,7 +31,14 @@ from .const import (
     SUPPORT_ALARM_TRIGGER,
 )
 
-ACTION_TYPES = {"arm_away", "arm_home", "arm_night", "arm_vacation", "disarm", "trigger"}
+ACTION_TYPES = {
+    "arm_away",
+    "arm_home",
+    "arm_night",
+    "arm_vacation",
+    "disarm",
+    "trigger",
+}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -59,7 +65,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
         if state is None:
             continue
 
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = state.attributes["supported_features"]
 
         # Add actions for each entity that belongs to this integration
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
