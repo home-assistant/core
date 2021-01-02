@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from .const import HOST, NAME, PORT
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -57,16 +57,6 @@ def mock_controller():
         yield
 
 
-@pytest.fixture(name="test_api")
-def mock_failed_controller():
-    """Mock a successful Solaredge API."""
-    api = Mock()
-    api.get_details.return_value = {"details": {"status": "active"}}
-    # api.get_details.side_effect=asyncio.TimeoutError()
-    with patch("iammeter.real_time_api", return_value=api):
-        yield api
-
-
 async def test_user(hass, test_connect):
     """Test we can start a config flow."""
 
@@ -96,8 +86,8 @@ async def test_connect_exception(hass):
             context={"source": SOURCE_USER},
             data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_NAME: "cannot_connect"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_NAME: "cannot_connect"}
 
     with patch("iammeter.real_time_api", return_value=True):
         result = await hass.config_entries.flow.async_init(

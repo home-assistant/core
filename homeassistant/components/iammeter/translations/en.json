@@ -5,7 +5,6 @@
             "user": {
                 "title": "Define your IamMeter connection",
                 "data": {
-                    "name": "The name of this installation",
                     "host": "The IP of your device",
                     "port": "Port"
                 }

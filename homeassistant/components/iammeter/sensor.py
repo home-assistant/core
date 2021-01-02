@@ -9,7 +9,7 @@ from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import debounce
@@ -20,6 +20,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +38,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_TIMEOUT = 8
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the yaml config to a config flow."""
+    data = {
+        CONF_NAME: config[CONF_NAME],
+        CONF_HOST: config[CONF_HOST],
+        CONF_PORT: config[CONF_PORT],
+    }
+    # Create a config entry with the config data
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        )
+    )
+    return True
 
 
 async def async_setup_entry(
@@ -78,7 +96,6 @@ async def async_setup_entry(
         uid = f"{serial_number}-{row}-{idx}"
         entities.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
     async_add_entities(entities)
-    return True
 
 
 class IamMeter(CoordinatorEntity):

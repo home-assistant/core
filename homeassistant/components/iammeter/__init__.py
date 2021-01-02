@@ -1,19 +1,16 @@
 """Support for IamMeter Devices."""
+import asyncio
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
-
-from .const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Component setup, do nothing."""
-    config = config.get(DOMAIN)
-    if config is None:
-        hass.data[DOMAIN] = {}
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a config entry for iammeter."""
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
@@ -21,6 +18,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass, _):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    return True
+    unload_ok = all(
+        await asyncio.gather(
+            *[hass.config_entries.async_forward_entry_unload(entry, "sensor")]
+        )
+    )
+    return unload_ok

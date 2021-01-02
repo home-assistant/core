@@ -19,7 +19,6 @@ async def test_async_setup_entry(hass):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ENTRY_STATE_LOADED
-    assert hass.data[DOMAIN] == {}
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

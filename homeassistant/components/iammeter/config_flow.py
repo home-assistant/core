@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -45,15 +44,13 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def _test_connection(self, host, port):
-        errors = {}
-        try:
-            with async_timeout.timeout(PLATFORM_TIMEOUT):
+        with async_timeout.timeout(PLATFORM_TIMEOUT):
+            try:
                 await iammeter.real_time_api(host, port)
                 return True
-        except (IamMeterError, asyncio.TimeoutError) as err:
-            _LOGGER.error("Device is not ready!")
-            errors[CONF_NAME] = "cannot_connect"
-            raise PlatformNotReady from err
+            except (IamMeterError, asyncio.TimeoutError) as err:
+                _LOGGER.error("Device is not ready!")
+                raise IamMeterError from err
         return False
 
     async def async_step_user(self, user_input=None):
@@ -73,14 +70,19 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._host_in_configuration_exists(name):
                 errors[CONF_NAME] = "already_configured"
             if not errors:
+                connect_ok = False
                 try:
-                    await self._test_connection(host, port)
+                    connect_ok = await self._test_connection(host, port)
+                except (IamMeterError, asyncio.TimeoutError):
+                    _LOGGER.error("IamMeterError!")
+                if not connect_ok:
+                    errors[CONF_NAME] = "cannot_connect"
+                else:
                     return self.async_create_entry(
                         title=name,
                         data={CONF_NAME: name, CONF_HOST: host, CONF_PORT: port},
                     )
-                except PlatformNotReady:
-                    errors[CONF_NAME] = "cannot_connect"
+
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
