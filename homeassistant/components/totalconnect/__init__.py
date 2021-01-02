@@ -4,7 +4,7 @@ import logging
 
 from total_connect_client import TotalConnectClient
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -17,34 +17,13 @@ PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up by configuration file."""
-    if DOMAIN not in config:
-        return True
-
-    config_data = {}
-    config_data[CONF_USERNAME] = config[DOMAIN].get(CONF_USERNAME)
-    config_data[CONF_PASSWORD] = config[DOMAIN].get(CONF_PASSWORD)
-
-    if CONF_USERCODES in config[DOMAIN]:
-        config_data[CONF_USERCODES] = dict(config[DOMAIN][CONF_USERCODES])
-    else:
-        config_data[CONF_USERCODES] = {}
-        _LOGGER.error("TotalConnect configuration is missing usercodes")
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config_data,
-        )
-    )
+    hass.data.setdefault(DOMAIN, {})
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up upon config entry in user interface."""
-    hass.data.setdefault(DOMAIN, {})
-
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
