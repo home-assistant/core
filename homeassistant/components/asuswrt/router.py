@@ -202,7 +202,7 @@ class AsusWrtRouter:
                     entry.unique_id, entry.original_name
                 )
 
-        # Init Sensors
+        # Init sensors
         self._sensors = {
             SENSOR_CONNECTED_DEVICE: AsusWrtSensorData(AsusWrtSensorType.TypeCount),
             SENSOR_RX_BYTES: AsusWrtSensorData(AsusWrtSensorType.TypeBytes),
