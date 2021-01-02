@@ -31,7 +31,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater"]
+TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater", "weather"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -144,6 +144,7 @@ class TadoConnector:
         self._fallback = fallback
 
         self.home_id = None
+        self.home_name = None
         self.tado = None
         self.zones = None
         self.devices = None
@@ -165,6 +166,7 @@ class TadoConnector:
         self.zones = self.tado.getZones()
         self.devices = self.tado.getDevices()
         self.home_id = self.tado.getMe()["homes"][0]["id"]
+        self.home_name = self.tado.getMe()["homes"][0]["name"]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -173,6 +175,11 @@ class TadoConnector:
             self.update_sensor("device", device["shortSerialNo"])
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
+        self.weather = self.tado.getWeather()
+        dispatcher_send(
+            self.hass,
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
+        )
 
     def update_sensor(self, sensor_type, sensor):
         """Update the internal data from Tado."""
