@@ -1,5 +1,6 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 import asyncio
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from kostal.plenticore import PlenticoreAuthenticationException
 
@@ -7,7 +8,6 @@ from homeassistant import config_entries, setup
 from homeassistant.components.kostal_plenticore import config_flow
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 
-from tests.async_mock import ANY, AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 
