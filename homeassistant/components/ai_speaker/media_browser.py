@@ -157,7 +157,7 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
         return root
-    elif media_content_id.count("/") == 1:
+    if media_content_id.count("/") == 1:
         # get books for author
         ais_books = []
         for item in all_books:
@@ -205,9 +205,9 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
                 ais_book_chapters = []
                 for item in data["media"]:
                     if item["type"] == "ogg":
-                        try:
+                        if "cover" in data:
                             thumbnail = data["cover"]
-                        except Exception:
+                        else:
                             thumbnail = data["simple_cover"]
                         ais_book_chapters.append(
                             BrowseMedia(
@@ -232,12 +232,9 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
                 )
                 return root
 
-        except Exception as e:
-            _LOGGER.error("Can't load chapters: " + str(e))
-            hass.services.call(
-                "ais_ai_service", "say_it", {"text": "Nie można pobrać rozdziałów"}
-            )
-            raise BrowseError("Can't load chapters: " + str(e))
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Can't load chapters: %s", error)
+            raise BrowseError("Can't load chapters: " + str(error))
 
 
 async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
@@ -346,9 +343,9 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                     children=ais_podcast_episodes,
                 )
                 return root
-        except Exception as e:
-            _LOGGER.warning("Timeout when reading RSS " + str(e))
-            raise BrowseError("Timeout when reading RSS %s", lookup_url)
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Error when reading RSS: %s" + error)
+            raise BrowseError("Error when reading RSS %s", lookup_url)
 
 
 def ais_radio_library(hass, media_content_id) -> BrowseMedia:
@@ -482,9 +479,9 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
                 )
                 return root
 
-        except Exception as e:
-            _LOGGER.error("Can't connect tune in api: " + str(e))
-            raise BrowseError("Can't connect tune in api: " + str(e))
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Can't connect tune in api: %s", error)
+            raise BrowseError("Can't connect tune in api: %s", error)
     elif media_content_id.startswith("ais_tunein/2/"):
         try:
             #  7 sec should be enough
@@ -567,6 +564,6 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
                 )
                 return root
 
-        except Exception as e:
-            _LOGGER.error("Can't connect tune in api: " + str(e))
-            raise BrowseError("Can't connect tune in api: " + str(e))
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Can't connect tune in api: %s", error)
+            raise BrowseError("Can't connect tune in api: %s", error)

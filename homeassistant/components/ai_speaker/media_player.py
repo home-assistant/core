@@ -73,19 +73,15 @@ class AisPlayerDevice(MediaPlayerEntity):
 
     def turn_off(self):
         """Turn off the player."""
-        pass
 
     def clear_playlist(self):
         """Clear the media player playlist."""
-        pass
 
     def set_repeat(self, repeat):
         """Set the repeat for the AIS player."""
-        pass
 
     def turn_on(self):
         """Turn on the player."""
-        pass
 
     # pylint: disable=no-member
     def __init__(self, config_entry_data):
@@ -103,7 +99,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self._media_status_received_time = None
         self._media_position = 0
         self._duration = 0
-        self._media_content_id = None
+        self._media_id = None
         self._volume_level = 0.5
         self._shuffle = False
         self._assistant_audio = False
@@ -143,7 +139,6 @@ class AisPlayerDevice(MediaPlayerEntity):
     def select_source(self, source):
         """Choose a different available playlist and play it."""
         # TODO
-        pass
 
     @property
     def volume_level(self):
@@ -205,8 +200,11 @@ class AisPlayerDevice(MediaPlayerEntity):
 
     def mute_volume(self, mute):
         """Service to send the exo the command for mute."""
-        pass
-        # TODO
+        self.hass.services.call(
+            DOMAIN,
+            "publish_command",
+            {"key": "setVolume", "val": 0, "ais_url": self._ais_url},
+        )
 
     @property
     def sound_mode(self):
@@ -252,15 +250,14 @@ class AisPlayerDevice(MediaPlayerEntity):
         """Return the media state."""
         if self._playing is False:
             return STATE_PAUSED
-        else:
-            if self._status == 1:
-                return STATE_IDLE
-            if self._status == 2:
-                return STATE_PAUSED
-            if self._status == 3:
-                return STATE_PLAYING
-            if self._status == 4:
-                return STATE_PAUSED
+        elif self._status == 1:
+            return STATE_IDLE
+        elif self._status == 2:
+            return STATE_PAUSED
+        elif self._status == 3:
+            return STATE_PLAYING
+        elif self._status == 4:
+            return STATE_PAUSED
 
         return STATE_OFF
 
@@ -292,7 +289,7 @@ class AisPlayerDevice(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Return the media content id."""
-        return self._media_content_id
+        return self._media_id
 
     @property
     def media_stream_image(self):
@@ -360,41 +357,39 @@ class AisPlayerDevice(MediaPlayerEntity):
             "ais_cloud", "play_prev", {"media_source": self._media_source}
         )
 
-    def play_media(self, media_type, media_content_id, **kwargs):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a media."""
         import requests
 
-        if media_content_id.startswith("ais_tunein"):
-            url_to_call = media_content_id.split("/", 3)[3]
+        if media_id.startswith("ais_tunein"):
+            url_to_call = media_id.split("/", 3)[3]
             try:
                 response_text = requests.get(url_to_call, timeout=2).text
                 response_text = response_text.split("\n")[0]
                 if response_text.endswith(".pls"):
                     response_text = requests.get(response_text, timeout=2).text
-                    media_content_id = response_text.split("\n")[1].replace(
-                        "File1=", ""
-                    )
+                    media_id = response_text.split("\n")[1].replace("File1=", "")
                 elif response_text.startswith("mms:"):
                     response_text = requests.get(
                         response_text.replace("mms:", "http:"), timeout=2
                     ).text
-                    media_content_id = response_text.split("\n")[1].replace("Ref1=", "")
+                    media_id = response_text.split("\n")[1].replace("Ref1=", "")
                 else:
-                    media_content_id = response_text
-            except Exception as e:
-                _LOGGER.e("AIS play_media error: " + str(e))
+                    media_id = response_text
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.e("AIS play_media error: %s", error)
                 pass
 
-        self._media_content_id = media_content_id
+        self._media_id = media_id
         self._media_position = 0
         self._media_status_received_time = dt_util.utcnow()
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "playAudio", "val": media_content_id, "ais_url": self._ais_url},
+            {"key": "playAudio", "val": media_id, "ais_url": self._ais_url},
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
-        """Implement the websocket media browsing helper."""
+        """Implement the media browsing helper."""
         result = await browse_media(self.hass, media_content_type, media_content_id)
         return result

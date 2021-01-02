@@ -57,8 +57,8 @@ class AisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="AI-Speaker " + json_info["Product"], data=user_input
                 )
-            except Exception as e:
-                _LOGGER.error("AI-Speaker connection error: " + str(e))
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.error("AI-Speaker connection error: %s", error)
                 errors = {CONF_HOST: "discovery_error"}
                 return self.async_show_form(
                     step_id="settings",

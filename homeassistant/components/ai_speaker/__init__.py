@@ -26,8 +26,8 @@ async def async_setup_entry(hass, config_entry):
         ais_ws_url = AIS_WS_COMMAND_URL.format(ais_url=service.data["ais_url"])
         try:
             await web_session.post(ais_ws_url, json=requests_json, timeout=3)
-        except Exception as e:
-            _LOGGER.error("Publish command to AI-Speaker error: " + str(e))
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Publish command to AI-Speaker error: %s", error)
 
     hass.services.async_register(DOMAIN, "publish_command", async_command)
 
