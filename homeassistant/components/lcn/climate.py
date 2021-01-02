@@ -30,12 +30,11 @@ PARALLEL_UPDATES = 0
 
 def create_lcn_climate_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
-    host_id = config_entry.entry_id
     device_connection = get_device_connection(
         hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
-    return LcnClimate(entity_config, host_id, device_connection)
+    return LcnClimate(entity_config, config_entry.entry_id, device_connection)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -54,11 +53,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    def __init__(
-        self, config, host_id, device_connection,
-    ):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize of a LCN climate device."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.variable = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
         self.setpoint = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SETPOINT]]

@@ -79,16 +79,16 @@ def get_device_connection(hass, address, config_entry):
 def get_resource(domain_name, domain_data):
     """Return the resource for the specified domain_data."""
     if domain_name in ["switch", "light"]:
-        return f'{domain_data["output"]}'
+        return domain_data["output"]
     if domain_name in ["binary_sensor", "sensor"]:
-        return f'{domain_data["source"]}'
+        return domain_data["source"]
     if domain_name == "cover":
-        return f'{domain_data["motor"]}'
+        return domain_data["motor"]
     if domain_name == "climate":
         return f'{domain_data["source"]}.{domain_data["setpoint"]}'
     if domain_name == "scene":
         return f'{domain_data["register"]}.{domain_data["scene"]}'
-    raise ValueError("Unknown domain.")
+    raise ValueError("Unknown domain")
 
 
 def generate_unique_id(address):

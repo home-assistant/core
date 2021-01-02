@@ -20,12 +20,11 @@ PARALLEL_UPDATES = 0
 
 def create_lcn_scene_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
-    host_id = config_entry.entry_id
     device_connection = get_device_connection(
         hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
-    entity = LcnScene(entity_config, host_id, device_connection)
+    entity = LcnScene(entity_config, config_entry.entry_id, device_connection)
     return entity
 
 
@@ -43,9 +42,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LcnScene(LcnEntity, Scene):
     """Representation of a LCN scene."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN scene."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.register_id = config[CONF_DOMAIN_DATA][CONF_REGISTER]
         self.scene_id = config[CONF_DOMAIN_DATA][CONF_SCENE]

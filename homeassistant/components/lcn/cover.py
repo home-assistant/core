@@ -14,15 +14,14 @@ PARALLEL_UPDATES = 0
 
 def create_lcn_cover_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
-    host_id = config_entry.entry_id
     device_connection = get_device_connection(
         hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
     if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
-        return LcnOutputsCover(entity_config, host_id, device_connection)
+        return LcnOutputsCover(entity_config, config_entry.entry_id, device_connection)
     # in RELAYS
-    return LcnRelayCover(entity_config, host_id, device_connection)
+    return LcnRelayCover(entity_config, config_entry.entry_id, device_connection)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -39,9 +38,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LcnOutputsCover(LcnEntity, CoverEntity):
     """Representation of a LCN cover connected to output ports."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN cover."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.output_ids = [
             pypck.lcn_defs.OutputPort["OUTPUTUP"].value,
@@ -160,9 +159,9 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
 class LcnRelayCover(LcnEntity, CoverEntity):
     """Representation of a LCN cover connected to relays."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN cover."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.motor = pypck.lcn_defs.MotorPort[config[CONF_DOMAIN_DATA][CONF_MOTOR]]
         self.motor_port_onoff = self.motor.value * 2

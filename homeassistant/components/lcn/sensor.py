@@ -25,7 +25,6 @@ from .helpers import get_device_connection
 
 def create_lcn_sensor_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
-    host_id = config_entry.entry_id
     device_connection = get_device_connection(
         hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
@@ -34,9 +33,11 @@ def create_lcn_sensor_entity(hass, entity_config, config_entry):
         entity_config[CONF_DOMAIN_DATA][CONF_SOURCE]
         in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS
     ):
-        return LcnVariableSensor(entity_config, host_id, device_connection)
+        return LcnVariableSensor(
+            entity_config, config_entry.entry_id, device_connection
+        )
     # in LED_PORTS + LOGICOP_PORTS
-    return LcnLedLogicSensor(entity_config, host_id, device_connection)
+    return LcnLedLogicSensor(entity_config, config_entry.entry_id, device_connection)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -53,9 +54,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LcnVariableSensor(LcnEntity):
     """Representation of a LCN sensor for variables."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN sensor."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.variable = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
         self.unit = pypck.lcn_defs.VarUnit.parse(
@@ -101,9 +102,9 @@ class LcnVariableSensor(LcnEntity):
 class LcnLedLogicSensor(LcnEntity):
     """Representation of a LCN sensor for leds and logicops."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN sensor."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         if config[CONF_DOMAIN_DATA][CONF_SOURCE] in LED_PORTS:
             self.source = pypck.lcn_defs.LedPort[config[CONF_DOMAIN_DATA][CONF_SOURCE]]

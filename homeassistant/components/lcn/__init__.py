@@ -39,82 +39,6 @@ PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "s
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up a connection to PCHK host from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
-    settings = {
-        "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
-        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
-    }
-
-    # connect to PCHK
-    if config_entry.entry_id not in hass.data[DOMAIN]:
-        lcn_connection = pypck.connection.PchkConnectionManager(
-            config_entry.data[CONF_IP_ADDRESS],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
-            settings=settings,
-            connection_id=config_entry.title,
-        )
-        try:
-            # establish connection to PCHK server
-            await lcn_connection.async_connect(timeout=15)
-        except pypck.connection.PchkAuthenticationError:
-            _LOGGER.warning('Authentication on PCHK "%s" failed.', config_entry.title)
-            return False
-        except pypck.connection.PchkLicenseError:
-            _LOGGER.warning(
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required.",
-                config_entry.title,
-            )
-            return False
-        except TimeoutError:
-            _LOGGER.warning('Connection to PCHK "%s" failed.', config_entry.title)
-            return False
-
-        _LOGGER.info('LCN connected to "%s"', config_entry.title)
-        hass.data[DOMAIN][config_entry.entry_id] = {
-            CONNECTION: lcn_connection,
-        }
-        config_entry.add_update_listener(async_entry_updated)
-
-        # remove orphans from entity registry which are in ConfigEntry but were removed
-        # from configuration.yaml
-        if config_entry.source == config_entries.SOURCE_IMPORT:
-            entity_registry = await er.async_get_registry(hass)
-            entity_registry.async_clear_config_entry(config_entry.entry_id)
-
-        # forward config_entry to components
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, component)
-            )
-
-    return True
-
-
-async def async_unload_entry(hass, config_entry):
-    """Close connection to PCHK host represented by config_entry."""
-    # forward unloading to platforms
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
-    if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
-        host = hass.data[DOMAIN].pop(config_entry.entry_id)
-        await host[CONNECTION].async_close()
-
-    return unload_ok
-
-
 async def async_setup(hass, config):
     """Set up the LCN component."""
     # register service calls
@@ -155,20 +79,88 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_entry_updated(hass, config_entry):
-    """Update listener to change connection name."""
-    hass.data[DOMAIN][config_entry.entry_id][
-        CONNECTION
-    ].connection_id = config_entry.title
+async def async_setup_entry(hass, config_entry):
+    """Set up a connection to PCHK host from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    settings = {
+        "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
+        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
+    }
+
+    # connect to PCHK
+    if config_entry.entry_id not in hass.data[DOMAIN]:
+        lcn_connection = pypck.connection.PchkConnectionManager(
+            config_entry.data[CONF_IP_ADDRESS],
+            config_entry.data[CONF_PORT],
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            settings=settings,
+            connection_id=config_entry.entry_id,
+        )
+        try:
+            # establish connection to PCHK server
+            await lcn_connection.async_connect(timeout=15)
+        except pypck.connection.PchkAuthenticationError:
+            _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
+            return False
+        except pypck.connection.PchkLicenseError:
+            _LOGGER.warning(
+                'Maximum number of connections on PCHK "%s" was '
+                "reached. An additional license key is required",
+                config_entry.title,
+            )
+            return False
+        except TimeoutError:
+            _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
+            return False
+
+        _LOGGER.debug('LCN connected to "%s"', config_entry.title)
+        hass.data[DOMAIN][config_entry.entry_id] = {
+            CONNECTION: lcn_connection,
+        }
+
+        # remove orphans from entity registry which are in ConfigEntry but were removed
+        # from configuration.yaml
+        if config_entry.source == config_entries.SOURCE_IMPORT:
+            entity_registry = await er.async_get_registry(hass)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
+
+        # forward config_entry to components
+        for component in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+            )
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Close connection to PCHK host represented by config_entry."""
+    # forward unloading to platforms
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+
+    if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
+        host = hass.data[DOMAIN].pop(config_entry.entry_id)
+        await host[CONNECTION].async_close()
+
+    return unload_ok
 
 
 class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN device."""
         self.config = config
-        self.host_id = host_id
+        self.entry_id = entry_id
         self.device_connection = device_connection
         self._unregister_for_inputs = None
         self._name = config[CONF_NAME]
@@ -183,7 +175,7 @@ class LcnEntity(Entity):
                 self.device_connection.is_group,
             )
         )
-        return f"{self.host_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
+        return f"{self.entry_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
 
     @property
     def should_poll(self):

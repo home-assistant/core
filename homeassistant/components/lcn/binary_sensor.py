@@ -14,17 +14,18 @@ from .helpers import get_device_connection
 
 def create_lcn_binary_sensor_entity(hass, entity_config, config_entry):
     """Set up an entity for this domain."""
-    host_id = config_entry.entry_id
     device_connection = get_device_connection(
         hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
     if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in SETPOINTS:
-        return LcnRegulatorLockSensor(entity_config, host_id, device_connection)
+        return LcnRegulatorLockSensor(
+            entity_config, config_entry.entry_id, device_connection
+        )
     if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in BINSENSOR_PORTS:
-        return LcnBinarySensor(entity_config, host_id, device_connection)
+        return LcnBinarySensor(entity_config, config_entry.entry_id, device_connection)
     # in KEY
-    return LcnLockKeysSensor(entity_config, host_id, device_connection)
+    return LcnLockKeysSensor(entity_config, config_entry.entry_id, device_connection)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -43,9 +44,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN binary sensor for regulator locks."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN binary sensor."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.setpoint_variable = pypck.lcn_defs.Var[
             config[CONF_DOMAIN_DATA][CONF_SOURCE]
@@ -89,9 +90,9 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
 class LcnBinarySensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN binary sensor for binary sensor ports."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN binary sensor."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.bin_sensor_port = pypck.lcn_defs.BinSensorPort[
             config[CONF_DOMAIN_DATA][CONF_SOURCE]
@@ -132,9 +133,9 @@ class LcnBinarySensor(LcnEntity, BinarySensorEntity):
 class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN sensor for key locks."""
 
-    def __init__(self, config, host_id, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN sensor."""
-        super().__init__(config, host_id, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
         self.source = pypck.lcn_defs.Key[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
         self._value = None
