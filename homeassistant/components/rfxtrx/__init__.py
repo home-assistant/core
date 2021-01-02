@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE,
@@ -312,16 +313,8 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
             identifiers={(DOMAIN, *device_id)},
             connections=set(),
         )
-
-        if device_entry is None:
-            device_entry = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, *device_id)},
-                name=f"{event.device.type_string} {event.device.id_string}",
-                model=event.device.type_string,
-            )
-
-        event_data["device_id"] = device_entry.id
+        if device_entry:
+            event_data[ATTR_DEVICE_ID] = device_entry.id
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
