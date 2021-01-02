@@ -160,8 +160,8 @@ class SurePetcareAPI:
         """Refresh Sure Petcare data."""
 
         # Fetch all data from SurePet API, refreshing the surepy cache
-        # TODO: get surepy upstream to add a method to clear the cache explicitly pylint: disable=W0511
-        await self.surepy._get_resource(  # pylint: disable=W0212
+        # TODO: get surepy upstream to add a method to clear the cache explicitly pylint: disable=fixme
+        await self.surepy._get_resource(  # pylint: disable=protected-access
             resource=MESTART_RESOURCE
         )
         for thing in self.ids:
