@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    ATTR_TITLE,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -17,10 +16,15 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
-
+ATTR_EMBED = "embed"
+ATTR_EMBED_AUTHOR = "author"
+ATTR_EMBED_FIELDS = "fields"
+ATTR_EMBED_FOOTER = "footer"
+# ATTR_EMBED_IMAGE = "image"
+ATTR_EMBED_THUMBNAIL = "thumbnail"
 ATTR_IMAGES = "images"
-ATTR_EMBEDS = "embeds"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 
 def get_service(hass, config, discovery_info=None):
@@ -49,12 +53,19 @@ class DiscordNotificationService(BaseNotificationService):
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client()
         images = None
-        embeds = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
+
         data = kwargs.get(ATTR_DATA) or {}
+
+        if ATTR_EMBED in data:
+            embedding = data.get(ATTR_EMBED) or {}
+
+        # fields = data.get(ATTR_EMBED_FIELDS) or {}
+        # field = ','.join('='.join((key,val)) for (key,val) in fields.items())
+        # field = 'name="name",value="value"'
 
         if ATTR_IMAGES in data:
             images = []
@@ -89,9 +100,19 @@ class DiscordNotificationService(BaseNotificationService):
                         files = []
                         for image in images:
                             files.append(discord.File(image))
-                    if ATTR_EMBEDS in data:
-                        embeds = data[ATTR_EMBEDS]
-                    await channel.send(message, embeds, files=files)
+                    if ATTR_EMBED in data:
+                        embed = discord.Embed(**embedding)
+                        if ATTR_EMBED_FIELDS in embedding:
+                            embed.add_field(**embedding[ATTR_EMBED_FIELDS])
+                        if ATTR_EMBED_FOOTER in embedding:
+                            embed.set_footer(**embedding[ATTR_EMBED_FOOTER])
+                        if ATTR_EMBED_AUTHOR in embedding:
+                            embed.set_author(**embedding[ATTR_EMBED_AUTHOR])
+                        if ATTR_EMBED_THUMBNAIL in embedding:
+                            embed.set_thumbnail(**embedding[ATTR_EMBED_THUMBNAIL])
+                        await channel.send(message, files=files, embed=embed)
+                    else:
+                        await channel.send(message, files=files)
             except (discord.errors.HTTPException, discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
             await discord_bot.logout()
