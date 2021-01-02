@@ -134,9 +134,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             CONST_VENETIAN_BLIND_MODE_EU,
         ):
             supported_features |= (
-                SUPPORT_OPEN_TILT
-                | SUPPORT_CLOSE_TILT
-                | SUPPORT_STOP_TILT
+                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
             )
 
         return supported_features
