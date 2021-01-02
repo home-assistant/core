@@ -9,30 +9,45 @@ from google_nest_sdm.event import EventMessage
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.const import SDM_SCOPES
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+PROJECT_ID = "some-project-id"
+CLIENT_ID = "some-client-id"
+CLIENT_SECRET = "some-client-secret"
+
 CONFIG = {
     "nest": {
-        "client_id": "some-client-id",
-        "client_secret": "some-client-secret",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
         # Required fields for using SDM API
-        "project_id": "some-project-id",
+        "project_id": PROJECT_ID,
         "subscriber_id": "projects/example/subscriptions/subscriber-id-9876",
     },
 }
 
-CONFIG_ENTRY_DATA = {
-    "sdm": {},  # Indicates new SDM API, not legacy API
-    "auth_implementation": "local",
-    "token": {
-        "expires_at": time.time() + 86400,
-        "access_token": {
-            "token": "some-token",
+FAKE_TOKEN = "some-token"
+FAKE_REFRESH_TOKEN = "some-refresh-token"
+
+
+def create_config_entry(hass, token_expiration_time=None):
+    """Create a ConfigEntry and add it to Home Assistant."""
+    if token_expiration_time is None:
+        token_expiration_time = time.time() + 86400
+    config_entry_data = {
+        "sdm": {},  # Indicates new SDM API, not legacy API
+        "auth_implementation": "nest",
+        "token": {
+            "access_token": FAKE_TOKEN,
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "scope": " ".join(SDM_SCOPES),
+            "token_type": "Bearer",
+            "expires_at": token_expiration_time,
         },
-    },
-}
+    }
+    MockConfigEntry(domain=DOMAIN, data=config_entry_data).add_to_hass(hass)
 
 
 class FakeDeviceManager(DeviceManager):
@@ -86,7 +101,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
 async def async_setup_sdm_platform(hass, platform, devices={}, structures={}):
     """Set up the platform and prerequisites."""
-    MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA).add_to_hass(hass)
+    create_config_entry(hass)
     device_manager = FakeDeviceManager(devices=devices, structures=structures)
     subscriber = FakeSubscriber(device_manager)
     with patch(

@@ -30,14 +30,7 @@ from homeassistant.helpers import (
 )
 
 from . import api, config_flow
-from .const import (
-    API_URL,
-    DATA_SDM,
-    DATA_SUBSCRIBER,
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
@@ -161,7 +154,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         session,
-        API_URL,
+        config[CONF_CLIENT_ID],
+        config[CONF_CLIENT_SECRET],
     )
     subscriber = GoogleNestSubscriber(
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
