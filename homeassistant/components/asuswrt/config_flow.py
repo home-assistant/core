@@ -6,12 +6,6 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker.const import (
-    CONF_CONSIDER_HOME,
-    CONF_TRACK_NEW,
-    DEFAULT_CONSIDER_HOME,
-    DEFAULT_TRACK_NEW,
-)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
@@ -29,11 +23,9 @@ from .const import (
     CONF_INTERFACE,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
-    CONF_TRACK_UNKNOWN,
     DEFAULT_DNSMASQ,
     DEFAULT_INTERFACE,
     DEFAULT_SSH_PORT,
-    DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     MODE_AP,
     MODE_ROUTER,
@@ -199,24 +191,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_CONSIDER_HOME,
-                    default=self.config_entry.options.get(
-                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
-                vol.Optional(
-                    CONF_TRACK_NEW,
-                    default=self.config_entry.options.get(
-                        CONF_TRACK_NEW, DEFAULT_TRACK_NEW
-                    ),
-                ): bool,
-                vol.Optional(
-                    CONF_TRACK_UNKNOWN,
-                    default=self.config_entry.options.get(
-                        CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN
-                    ),
-                ): bool,
                 vol.Required(
                     CONF_INTERFACE,
                     default=self.config_entry.options.get(
