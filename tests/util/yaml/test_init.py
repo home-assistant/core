@@ -322,7 +322,7 @@ class TestScraps(unittest.TestCase):
         yaml.clear_config_cache()
         FILES.clear()
 
-    def test_scraps_from_yaml(self):
+    def test_scraps_load(self):
         """Test loading basic scraps."""
         try:
             yaml = load_yaml(self._config_path, self._config_yaml)
