@@ -133,6 +133,8 @@ class OptionsFlow(config_entries.OptionsFlow):
                 config_data = copy.deepcopy(dict(self._config_entry.data))
                 del config_data[CONF_DEVICES][device_id]
 
+                self.hass.config_entries.async_update_entry(self._config_entry, data={})
+
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=config_data
                 )
@@ -161,6 +163,8 @@ class OptionsFlow(config_entries.OptionsFlow):
                 }
                 config_data = copy.deepcopy(dict(self._config_entry.data))
                 config_data[CONF_DEVICES][device_id] = device_data
+
+                self.hass.config_entries.async_update_entry(self._config_entry, data={})
 
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=config_data

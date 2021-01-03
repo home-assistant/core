@@ -22,7 +22,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 PLATFORMS = ["light"]
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

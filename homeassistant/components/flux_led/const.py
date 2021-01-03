@@ -2,9 +2,6 @@
 
 DOMAIN = "flux_led"
 
-BULB_COORDINATOR = "bulb_coordinator"
-COORDINATOR = "coordinator"
-
 API = "flux_api"
 
 ATTR_IDENTIFIERS = "identifiers"
