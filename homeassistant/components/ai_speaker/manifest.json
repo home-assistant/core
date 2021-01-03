@@ -4,6 +4,6 @@
   "documentation": "https://ai-speaker.com",
   "dependencies": [],
   "codeowners": ["@asystentaka-jolka"],
-  "requirements": ["feedparser==6.0.2"],
+  "requirements": ["feedparser==6.0.2", "aisapi==0.0.3"],
   "config_flow": true
 }

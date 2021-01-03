@@ -2,6 +2,7 @@
 import logging
 from typing import Optional
 
+from aisapi.ws import AisWebService
 import requests
 
 from homeassistant.components.media_player import (
@@ -27,8 +28,8 @@ from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYI
 from homeassistant.helpers import aiohttp_client
 import homeassistant.util.dt as dt_util
 
-from .const import AIS_WS_AUDIOBOOKS_URL, DOMAIN
-from .media_browser import browse_media
+from .const import DOMAIN
+from .media_browser import async_browse_media
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +75,9 @@ class AisPlayerDevice(MediaPlayerEntity):
 
     def __init__(self, config_entry_data, hass):
         """Initialize the Ais Player device."""
-        self._ais_id = config_entry_data.get("ais_id")
         self._ais_info = config_entry_data.get("ais_info")
-        self._ais_url = config_entry_data.get("ais_url")
+        self._ais_id = self._ais_info.get("ais_id")
+        self._ais_ws_url = self._ais_info.get("ais_url")
         self._status = None
         self._playing = False
         self._stream_image = None
@@ -90,10 +91,8 @@ class AisPlayerDevice(MediaPlayerEntity):
         self._media_id = None
         self._volume_level = 0.5
         self._shuffle = False
-        self._assistant_audio = False
-        self._is_master = False
         self._web_session = aiohttp_client.async_get_clientsession(hass)
-        self._audiobooks_lib = None
+        self._ais_gate = AisWebService(hass.loop, self._web_session, self._ais_ws_url)
 
     @property
     def device_info(self):
@@ -114,15 +113,28 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "setVolume", "val": vol, "ais_url": self._ais_url},
+            {"key": "setVolume", "val": vol, "ais_url": self._ais_ws_url},
         )
 
     def select_sound_mode(self, sound_mode):
         """Set the sound mode."""
         self._sound_mode = sound_mode
 
-    def _fetch_status(self):
+    async def async_fetch_status(self):
         """Fetch status from AIS."""
+        audio_status = await self._ais_gate.get_audio_status()
+        if audio_status is not None:
+            self._volume_level = audio_status.get("currentVolume", 100) / 100
+            self._status = audio_status.get("currentStatus", 0)
+            self._playing = audio_status.get("playing", False)
+            self._media_position = audio_status.get("currentPosition", 0)
+            self._duration = audio_status.get("duration", 0)
+            self._stream_image = audio_status.get("media_stream_image", None)
+            self._media_title = audio_status.get("currentMedia", "AI-Speaker")
+            self._media_source = audio_status.get("media_source", self._media_source)
+            self._album_name = audio_status.get("media_album_name", "AI-Speaker")
+        else:
+            _LOGGER.error("Fetch status from AIS")
 
     def select_source(self, source):
         """Choose a different available playlist and play it."""
@@ -135,7 +147,7 @@ class AisPlayerDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        return float(self._duration) // 1000
+        return float(self._duration) / 1000
 
     @property
     def shuffle(self):
@@ -148,7 +160,11 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "setPlayerShuffle", "val": self._shuffle, "ais_url": self._ais_url},
+            {
+                "key": "setPlayerShuffle",
+                "val": self._shuffle,
+                "ais_url": self._ais_ws_url,
+            },
         )
 
     def media_seek(self, position):
@@ -164,7 +180,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "seekTo", "val": val, "ais_url": self._ais_url},
+            {"key": "seekTo", "val": val, "ais_url": self._ais_ws_url},
         )
 
     def volume_up(self):
@@ -173,7 +189,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "upVolume", "val": True, "ais_url": self._ais_url},
+            {"key": "upVolume", "val": True, "ais_url": self._ais_ws_url},
         )
 
     def volume_down(self):
@@ -182,7 +198,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "downVolume", "val": True, "ais_url": self._ais_url},
+            {"key": "downVolume", "val": True, "ais_url": self._ais_ws_url},
         )
 
     def mute_volume(self, mute):
@@ -190,7 +206,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "setVolume", "val": 0, "ais_url": self._ais_url},
+            {"key": "setVolume", "val": 0, "ais_url": self._ais_ws_url},
         )
 
     @property
@@ -218,9 +234,9 @@ class AisPlayerDevice(MediaPlayerEntity):
         """Return true if AIS Player is available and connected."""
         return True
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and update the state."""
-        self._fetch_status()
+        await self.async_fetch_status()
 
     @property
     def name(self):
@@ -309,7 +325,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "pauseAudio", "val": False, "ais_url": self._ais_url},
+            {"key": "pauseAudio", "val": False, "ais_url": self._ais_ws_url},
         )
         self._playing = True
         self._status = 3
@@ -319,7 +335,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "pauseAudio", "val": True, "ais_url": self._ais_url},
+            {"key": "pauseAudio", "val": True, "ais_url": self._ais_ws_url},
         )
         self._playing = False
 
@@ -328,7 +344,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "pauseAudio", "val": True, "ais_url": self._ais_url},
+            {"key": "pauseAudio", "val": True, "ais_url": self._ais_ws_url},
         )
         self._playing = False
 
@@ -370,23 +386,14 @@ class AisPlayerDevice(MediaPlayerEntity):
         self.hass.services.call(
             DOMAIN,
             "publish_command",
-            {"key": "playAudio", "val": media_id, "ais_url": self._ais_url},
+            {"key": "playAudio", "val": media_id, "ais_url": self._ais_ws_url},
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the media browsing helper."""
-        if (
-            media_content_id is not None
-            and media_content_id.startswith("ais_audio_books")
-            and self._audiobooks_lib is None
-        ):
-            ws_resp = await self._web_session.get(AIS_WS_AUDIOBOOKS_URL, timeout=30)
-            self._audiobooks_lib = await ws_resp.json()
-        result = await browse_media(
+        result = await async_browse_media(
             media_content_type,
             media_content_id,
-            self._ais_id,
-            self._web_session,
-            self._audiobooks_lib,
+            self._ais_gate,
         )
         return result

@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from aisapi.ws import AisWebService
+
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 
@@ -27,10 +29,11 @@ class AisSensor(Entity):
 
     def __init__(self, hass, config_entry_data):
         """Sensor initialization."""
-        self._ais_id = config_entry_data.get("ais_id")
-        self._ais_ws_url = config_entry_data["ais_url"]
         self._ais_info = config_entry_data.get("ais_info")
+        self._ais_id = self._ais_info.get("ais_id")
+        self._ais_url = self._ais_info.get("ais_url")
         self._web_session = aiohttp_client.async_get_clientsession(hass)
+        self._ais_gate = AisWebService(hass.loop, self._web_session, self._ais_url)
 
     @property
     def device_info(self):
@@ -69,16 +72,6 @@ class AisSensor(Entity):
         """Return the icon to use in the frontend."""
         return "mdi:speaker"
 
-    async def async_ask_ais_status(self):
-        """Update the sensor attributes task."""
-        ws_resp = await self._web_session.get(self._ais_ws_url, timeout=5)
-        json_info = await ws_resp.json()
-        return json_info
-
     async def async_update(self):
         """Update the sensor."""
-        try:
-            ais_info = await self.async_ask_ais_status()
-            self._ais_info = ais_info
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.exception("Ask AI-Speaker status, unexpected exception: %s", error)
+        self._ais_info = await self._ais_gate.get_gate_info()

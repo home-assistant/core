@@ -15,8 +15,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 
-from .const import AIS_WS_AUDIO_NAME_URL, AIS_WS_AUDIO_TYPE_URL, AIS_WS_TUNE_IN_URL
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -28,30 +26,27 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-async def browse_media(
+async def async_browse_media(
     media_content_type=None,
     media_content_id=None,
-    gate_id=None,
-    web_session=None,
-    audiobooks_lib=None,
+    ais_gate=None,
 ):
     """Implement the media browsing helper."""
+
     if media_content_id in [None, "library"]:
         return await async_ais_media_library()
 
     if media_content_id.startswith("ais_radio"):
-        return await async_ais_radio_library(media_content_id, gate_id, web_session)
+        return await async_ais_radio_library(media_content_id, ais_gate)
 
     if media_content_id.startswith("ais_tunein"):
-        return await async_ais_tunein_library(media_content_id, web_session)
+        return await async_ais_tunein_library(media_content_id, ais_gate)
 
     if media_content_id.startswith("ais_podcast"):
-        return await async_ais_podcast_library(media_content_id, gate_id, web_session)
+        return await async_ais_podcast_library(media_content_id, ais_gate)
 
     if media_content_id.startswith("ais_audio_books"):
-        return await async_ais_audio_books_library(
-            media_content_id, web_session, audiobooks_lib
-        )
+        return await async_ais_audio_books_library(media_content_id, ais_gate)
 
     raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
 
@@ -111,12 +106,10 @@ async def async_ais_media_library() -> BrowseMedia:
     return ais_library_info
 
 
-async def async_ais_audio_books_library(
-    media_content_id, web_session, audiobooks_lib
-) -> BrowseMedia:
+async def async_ais_audio_books_library(media_content_id, ais_gate) -> BrowseMedia:
     """Create response payload to describe contents of a books library."""
     # get all books
-    all_books = audiobooks_lib
+    all_books = await ais_gate.get_audio_type(media_content_id)
     if media_content_id == "ais_audio_books":
         # get authors
         authors = []
@@ -184,10 +177,8 @@ async def async_ais_audio_books_library(
         )
     else:
         # get book chapters
-        lookup_url = media_content_id.split("/", 3)[3]
         try:
-            ws_resp = await web_session.get(lookup_url + "?format=json", timeout=7)
-            data = await ws_resp.json()
+            data = await ais_gate.get_audio_name(media_content_id)
             ais_book_chapters = []
             for item in data["media"]:
                 if item["type"] == "ogg":
@@ -222,16 +213,11 @@ async def async_ais_audio_books_library(
     return root
 
 
-async def async_ais_podcast_library(
-    media_content_id, gate_id, web_session
-) -> BrowseMedia:
+async def async_ais_podcast_library(media_content_id, ais_gate) -> BrowseMedia:
     """Create response payload to describe contents of a podcast library."""
-    headers = {"Authorization": gate_id}
     if media_content_id == "ais_podcast":
         # get podcast types
-        rest_url = AIS_WS_AUDIO_TYPE_URL.format(audio_nature="Podcast")
-        ws_resp = await web_session.get(rest_url, headers=headers, timeout=5)
-        json_ws_resp = await ws_resp.json()
+        json_ws_resp = await ais_gate.get_audio_type(media_content_id)
         ais_podcast_types = []
         for item in json_ws_resp["data"]:
             ais_podcast_types.append(
@@ -256,12 +242,7 @@ async def async_ais_podcast_library(
         )
     elif media_content_id.count("/") == 1:
         # get podcasts for types
-        rest_url = AIS_WS_AUDIO_NAME_URL.format(
-            audio_nature="Podcast",
-            audio_type=media_content_id.replace("ais_podcast/", ""),
-        )
-        ws_resp = await web_session.get(rest_url, timeout=5)
-        json_ws_resp = await ws_resp.json()
+        json_ws_resp = await ais_gate.get_audio_name(media_content_id)
         ais_radio_stations = []
         for item in json_ws_resp["data"]:
             ais_radio_stations.append(
@@ -291,10 +272,8 @@ async def async_ais_podcast_library(
         )
     else:
         # get podcast tracks
-        try:
-            lookup_url = media_content_id.split("/", 3)[3]
-            ws_resp = await web_session.get(lookup_url, timeout=7)
-            response_text = await ws_resp.text()
+        response_text = await ais_gate.get_podcast_tracks(media_content_id)
+        if response_text is not None:
             podcasts = feedparser.parse(response_text)
             ais_podcast_episodes = []
             for entry in podcasts.entries:
@@ -323,21 +302,16 @@ async def async_ais_podcast_library(
                 thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
                 children=ais_podcast_episodes,
             )
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.error("Error when reading RSS: %s", error)
-            raise BrowseError("Error when reading RSS") from error
+        else:
+            _LOGGER.error("Error when reading RSS: %s", media_content_id)
+            raise BrowseError("Error when reading RSS")
     return root
 
 
-async def async_ais_radio_library(
-    media_content_id, gate_id, web_session
-) -> BrowseMedia:
+async def async_ais_radio_library(media_content_id, ais_gate) -> BrowseMedia:
     """Create response payload to describe contents of a radio library."""
-    headers = {"Authorization": gate_id}
     if media_content_id == "ais_radio":
-        rest_url = AIS_WS_AUDIO_TYPE_URL.format(audio_nature="Radio")
-        ws_resp = await web_session.get(rest_url, headers=headers, timeout=5)
-        json_ws_resp = await ws_resp.json()
+        json_ws_resp = await ais_gate.get_audio_type(media_content_id)
         ais_radio_types = []
         for item in json_ws_resp["data"]:
             ais_radio_types.append(
@@ -362,11 +336,7 @@ async def async_ais_radio_library(
         )
     else:
         # get radio station for type
-        rest_url = AIS_WS_AUDIO_NAME_URL.format(
-            audio_nature="Radio", audio_type=media_content_id.replace("ais_radio/", "")
-        )
-        ws_resp = await web_session.get(rest_url, timeout=5)
-        json_ws_resp = await ws_resp.json()
+        json_ws_resp = await ais_gate.get_audio_name(media_content_id)
         ais_radio_stations = []
         for item in json_ws_resp["data"]:
             ais_radio_stations.append(
@@ -393,35 +363,11 @@ async def async_ais_radio_library(
     return root
 
 
-async def async_get_media_content_id_form_ais(media_content_id, web_session):
-    """Get media content from ais."""
-    response_text = ""
-    if media_content_id.startswith("ais_tunein"):
-        rest_url = media_content_id.split("/", 3)[3]
-        ws_resp = await web_session.get(rest_url, timeout=7)
-        response_text = await ws_resp.text()
-        response_text = response_text.split("\n")[0]
-        if response_text.endswith(".pls"):
-            ws_resp = await web_session.get(response_text, timeout=7)
-            response_text = await ws_resp.text()
-            response_text = response_text.split("\n")[1].replace("File1=", "")
-        if response_text.startswith("mms:"):
-            ws_resp = await web_session.get(
-                response_text.replace("mms:", "http:"), timeout=7
-            )
-            response_text = await ws_resp.text()
-            response_text = response_text.split("\n")[1].replace("Ref1=", "")
-    elif media_content_id.startswith("ais_spotify"):
-        response_text = media_content_id.replace("ais_spotify/", "")
-    return response_text
-
-
-async def async_ais_tunein_library(media_content_id, web_session) -> BrowseMedia:
+async def async_ais_tunein_library(media_content_id, ais_gate) -> BrowseMedia:
     """Create response payload to describe contents of a tunein library."""
     if media_content_id == "ais_tunein":
-        try:
-            ws_resp = await web_session.get(AIS_WS_TUNE_IN_URL, timeout=7)
-            response_text = await ws_resp.text()
+        response_text = await ais_gate.get_audio_type(media_content_id)
+        if response_text is not None:
             root = XmlETree.fromstring(response_text)  # nosec
             tune_types = []
             for tune_item in root.findall("body/outline"):
@@ -450,16 +396,13 @@ async def async_ais_tunein_library(media_content_id, web_session) -> BrowseMedia
                 can_play=False,
                 children=tune_types,
             )
-            return root
 
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.error("Can't connect tune in api: %s", error)
-            raise BrowseError("Can't connect tune in api") from error
-    elif media_content_id.startswith("ais_tunein/2/"):
-        try:
-            url_to_call = media_content_id.split("/", 3)[3]
-            ws_resp = await web_session.get(url_to_call, timeout=7)
-            response_text = await ws_resp.text()
+        else:
+            _LOGGER.error("Can't connect tune in api")
+            raise BrowseError("Can't connect tune in api")
+    elif media_content_id.startswith("ais_tunein"):
+        response_text = await ais_gate.get_audio_name(media_content_id)
+        if response_text is not None:
             root = XmlETree.fromstring(response_text)  # nosec
             tune_items = []
             for tune_item in root.findall("body/outline"):
@@ -532,8 +475,9 @@ async def async_ais_tunein_library(media_content_id, web_session) -> BrowseMedia
                 can_play=False,
                 children=tune_items,
             )
-            return root
 
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.error("Can't connect tune in api: %s", error)
-            raise BrowseError("Can't connect tune in api") from error
+        else:
+            _LOGGER.error("Can't connect tune in api")
+            raise BrowseError("Can't connect tune in api")
+
+        return root
