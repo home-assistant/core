@@ -321,8 +321,8 @@ def _apply_update(engine, new_version, old_version):
         # Now done in step 11
         pass
     elif new_version == 11:
-        _update_states_table_with_foreign_key_options(engine)
         _create_index(engine, "states", "ix_states_old_state_id")
+        _update_states_table_with_foreign_key_options(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
