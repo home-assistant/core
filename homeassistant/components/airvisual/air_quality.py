@@ -2,6 +2,7 @@
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import callback
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import AirVisualEntity
 from .const import (
@@ -12,6 +13,7 @@ from .const import (
 )
 
 ATTR_HUMIDITY = "humidity"
+ATTR_LAST_MEASUREMENT_TIMESTAMP = "last measurement timestamp"
 ATTR_SENSOR_LIFE = "{0}_sensor_life"
 ATTR_VOC = "voc"
 
@@ -99,6 +101,9 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         """Update the entity from the latest data."""
         self._attrs.update(
             {
+                ATTR_LAST_MEASUREMENT_TIMESTAMP: utc_from_timestamp(
+                    self.coordinator.data["last_measurement_timestamp"]
+                ),
                 ATTR_VOC: self.coordinator.data["measurements"].get("voc"),
                 **{
                     ATTR_SENSOR_LIFE.format(pollutant): lifespan
