@@ -7,7 +7,6 @@ import re
 import sys
 from typing import Any, Dict, Iterator, List, TextIO, TypeVar, Union, cast, overload
 
-from voluptuous.validators import Boolean
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
@@ -257,7 +256,7 @@ def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
     raise HomeAssistantError(node.value)
 
 
-def _has_scraps(parsed: Any) -> Boolean:
+def _has_scraps(parsed: Any) -> bool:
     """See if YAML has any scraps to be resolved."""
     if isinstance(parsed, dict):
         for value in parsed.values():
