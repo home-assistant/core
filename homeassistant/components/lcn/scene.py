@@ -24,8 +24,7 @@ def create_lcn_scene_entity(hass, entity_config, config_entry):
         hass, tuple(entity_config[CONF_ADDRESS]), config_entry
     )
 
-    entity = LcnScene(entity_config, config_entry.entry_id, device_connection)
-    return entity
+    return LcnScene(entity_config, config_entry.entry_id, device_connection)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

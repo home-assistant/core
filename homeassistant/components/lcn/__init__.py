@@ -128,7 +128,7 @@ async def async_unload_entry(hass, config_entry):
 
     # unregister service calls
     if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
-        for service_name, service in SERVICES:
+        for service_name, _ in SERVICES:
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok

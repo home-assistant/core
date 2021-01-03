@@ -1,5 +1,4 @@
 """Helpers for LCN component."""
-import logging
 import re
 
 import pypck
@@ -39,8 +38,6 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
     "^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)\\.(?P<type>m|g)?(?P<id>\\d+)$"
@@ -58,22 +55,11 @@ DOMAIN_LOOKUP = {
 }
 
 
-def get_device_config(address, config_entry):
-    """Return the device configuration for given unique_device_id from ConfigEntry."""
-    for device_config in config_entry.data[CONF_DEVICES]:
-        if tuple(device_config[CONF_ADDRESS]) == address:
-            return device_config
-    return None
-
-
 def get_device_connection(hass, address, config_entry):
     """Return a lcn device_connection."""
-    device_config = get_device_config(address, config_entry)
-    if device_config:
-        host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
-        addr = pypck.lcn_addr.LcnAddr(*address)
-        return host_connection.get_address_conn(addr)
-    return None
+    host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    addr = pypck.lcn_addr.LcnAddr(*address)
+    return host_connection.get_address_conn(addr)
 
 
 def get_resource(domain_name, domain_data):
