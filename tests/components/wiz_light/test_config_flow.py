@@ -100,6 +100,25 @@ async def test_form_bulb_offline(hass):
     assert result2["errors"] == {"base": "no_wiz_light"}
 
 
+async def test_form_bulb_exception(hass):
+    """Test we handle a WiZ unknown light error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.wiz_light.wizlight.getBulbConfig",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_updates_unique_id(hass):
     """Test a duplicate id aborts and updates existing entry."""
     entry = MockConfigEntry(
