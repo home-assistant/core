@@ -1,4 +1,4 @@
-"""Support to interface with the Plex API."""
+"""Support to interface with the AIS API."""
 import logging
 import xml.etree.ElementTree as XmlETree
 

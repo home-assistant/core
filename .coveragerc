@@ -34,6 +34,11 @@ omit =
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
+    homeassistant/components/ai_speaker/__init__.py
+    homeassistant/components/ai_speaker/const.py
+    homeassistant/components/ai_speaker/media_browser.py
+    homeassistant/components/ai_speaker/media_player.py
+    homeassistant/components/ai_speaker/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
