@@ -21,9 +21,9 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .connection_state import ConnectionStateMixin
 from .const import (
     ACTIVITY_POWER_OFF,
     ATTR_ACTIVITY_LIST,
@@ -52,8 +52,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
-
-TIME_MARK_DISCONNECTED = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -135,11 +133,12 @@ async def async_setup_entry(
     )
 
 
-class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
+class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
 
     def __init__(self, data, activity, delay_secs, out_path):
         """Initialize HarmonyRemote class."""
+        super().__init__()
         self._data = data
         self._name = data.name
         self._state = None
@@ -148,11 +147,9 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._activity_starting = None
         self._is_initial_update = True
         self.delay_secs = delay_secs
-        self._available = False
         self._unique_id = data.unique_id
         self._last_activity = None
         self._config_path = out_path
-        self._unsub_mark_disconnected = None
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -183,7 +180,8 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         _LOGGER.debug("%s: Harmony Hub added", self._name)
-        # Register the callbacks
+
+        self.async_on_remove(self._clear_disconnection_delay)
         self._setup_callbacks()
 
         self.async_on_remove(
@@ -210,11 +208,6 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             return
 
         self._last_activity = last_state.attributes[ATTR_LAST_ACTIVITY]
-
-    async def async_will_remove_from_hass(self):
-        """Shutdown the entity."""
-        if self._unsub_mark_disconnected:
-            self._unsub_mark_disconnected()
 
     @property
     def device_info(self):
@@ -255,7 +248,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
     @property
     def available(self):
         """Return True if connected to Hub, otherwise False."""
-        return self._available
+        return self._data.available
 
     def new_activity(self, activity_info: tuple) -> None:
         """Call for updating the current activity."""
@@ -272,7 +265,6 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             # when turning on
             self._last_activity = activity_name
         self._state = bool(activity_id != -1)
-        self._available = True
         self.async_write_ha_state()
 
     async def new_config(self, _=None):
@@ -280,26 +272,6 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         _LOGGER.debug("%s: configuration has been updated", self._name)
         self.new_activity(self._data.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
-
-    async def got_connected(self, _=None):
-        """Notification that we're connected to the HUB."""
-        _LOGGER.debug("%s: connected to the HUB", self._name)
-        if not self._available:
-            # We were disconnected before.
-            await self.new_config()
-
-            if self._unsub_mark_disconnected:
-                self._unsub_mark_disconnected()
-
-    async def got_disconnected(self, _=None):
-        """Notification that we're disconnected from the HUB."""
-        _LOGGER.debug("%s: disconnected from the HUB", self._name)
-        self._available = False
-        # We're going to wait for 10 seconds before announcing we're
-        # unavailable, this to allow a reconnection to happen.
-        self._unsub_mark_disconnected = async_call_later(
-            self.hass, TIME_MARK_DISCONNECTED, self._mark_disconnected_if_unavailable
-        )
 
     async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
@@ -371,9 +343,3 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
                 self._config_path,
                 exc,
             )
-
-    def _mark_disconnected_if_unavailable(self, _):
-        self._unsub_mark_disconnected = None
-        if not self._available:
-            # Still disconnected. Let the state engine know.
-            self.async_write_ha_state()
