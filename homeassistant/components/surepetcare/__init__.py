@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 from surepy import (
     MESTART_RESOURCE,
+    SureLockStateID,
     SurePetcare,
     SurePetcareAuthenticationError,
     SurePetcareError,
@@ -24,6 +25,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    ATTR_FLAP_ID,
+    ATTR_LOCK_STATE,
     CONF_FEEDERS,
     CONF_FLAPS,
     CONF_PARENT,
@@ -32,6 +35,7 @@ from .const import (
     DATA_SURE_PETCARE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    SERVICE_SET_LOCK_STATE,
     SPC,
     SURE_API_TIMEOUT,
     TOPIC_UPDATE,
@@ -143,6 +147,38 @@ async def async_setup(hass, config) -> bool:
         hass.helpers.discovery.async_load_platform("sensor", DOMAIN, {}, config)
     )
 
+    async def handle_set_lock_state(call):
+        """Call when setting the lock state."""
+        await spc.set_lock_state(call.data[ATTR_FLAP_ID], call.data[ATTR_LOCK_STATE])
+        await spc.async_update()
+
+    lock_state_service_schema = vol.Schema(
+        {
+            vol.Required(ATTR_FLAP_ID): vol.All(
+                cv.positive_int, vol.In(conf[CONF_FLAPS])
+            ),
+            vol.Required(ATTR_LOCK_STATE): vol.All(
+                cv.string,
+                vol.Lower,
+                vol.In(
+                    [
+                        SureLockStateID.UNLOCKED.name.lower(),
+                        SureLockStateID.LOCKED_IN.name.lower(),
+                        SureLockStateID.LOCKED_OUT.name.lower(),
+                        SureLockStateID.LOCKED_ALL.name.lower(),
+                    ]
+                ),
+            ),
+        }
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_LOCK_STATE,
+        handle_set_lock_state,
+        schema=lock_state_service_schema,
+    )
+
     return True
 
 
@@ -185,3 +221,14 @@ class SurePetcareAPI:
                 _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)
 
         async_dispatcher_send(self.hass, TOPIC_UPDATE)
+
+    async def set_lock_state(self, flap_id: int, state: str) -> None:
+        """Update the lock state of a flap."""
+        if state == SureLockStateID.UNLOCKED.name.lower():
+            await self.surepy.unlock(flap_id)
+        elif state == SureLockStateID.LOCKED_IN.name.lower():
+            await self.surepy.lock_in(flap_id)
+        elif state == SureLockStateID.LOCKED_OUT.name.lower():
+            await self.surepy.lock_out(flap_id)
+        elif state == SureLockStateID.LOCKED_ALL.name.lower():
+            await self.surepy.lock(flap_id)
