@@ -89,7 +89,7 @@ def normalize_event(event):
     return normalized_event
 
 
-def calculate_offset(event, offset):
+def calculate_offset(event, offset, default_offset=None):
     """Calculate event offset.
 
     Return the updated event with the offset_time included.
@@ -110,6 +110,8 @@ def calculate_offset(event, offset):
         offset_time = time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
         event["summary"] = summary
+    elif default_offset:
+        offset_time = default_offset
     else:
         offset_time = dt.dt.timedelta()  # default it
 
