@@ -1,12 +1,11 @@
 """Fixtures for harmony tests."""
 import logging
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType
 import pytest
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
-
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
+from .connection_state import ConnectionStateMixin
 from .const import DOMAIN
 from .data import HarmonyData
 from .subscriber import HarmonyCallback
@@ -25,11 +26,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(switches, True)
 
 
-class HarmonyActivitySwitch(SwitchEntity):
+class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     """Switch representation of a Harmony activity."""
 
     def __init__(self, name: str, activity: str, data: HarmonyData):
         """Initialize HarmonyActivitySwitch class."""
+        super().__init__()
         self._name = name
         self._activity = activity
         self._data = data
@@ -72,20 +74,14 @@ class HarmonyActivitySwitch(SwitchEntity):
         """Call when entity is added to hass."""
 
         callbacks = {
-            "connected": self._connected,
-            "disconnected": self._disconnected,
+            "connected": self.got_connected,
+            "disconnected": self.got_disconnected,
             "activity_starting": self._activity_update,
             "activity_started": self._activity_update,
             "config_updated": None,
         }
 
         self.async_on_remove(self._data.async_subscribe(HarmonyCallback(**callbacks)))
-
-    def _connected(self):
-        self.async_write_ha_state()
-
-    def _disconnected(self):
-        self.async_write_ha_state()
 
     def _activity_update(self, activity_info: tuple):
         self.async_write_ha_state()

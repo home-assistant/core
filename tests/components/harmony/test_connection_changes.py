@@ -37,15 +37,17 @@ async def test_connection_state_changes(mock_hc, hass, mock_write_config):
     data._disconnected()
     await hass.async_block_till_done()
 
-    # Remote does not immediately show as unavailable
+    # Entities do not immediately show as unavailable
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_UNAVAILABLE)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_UNAVAILABLE)
+    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
+    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
     future_time = utcnow() + timedelta(seconds=10)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
     assert hass.states.is_state(ENTITY_REMOTE, STATE_UNAVAILABLE)
+    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_UNAVAILABLE)
+    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_UNAVAILABLE)
 
     data._connected()
     await hass.async_block_till_done()
@@ -61,3 +63,5 @@ async def test_connection_state_changes(mock_hc, hass, mock_write_config):
 
     await hass.async_block_till_done()
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
+    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
+    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
