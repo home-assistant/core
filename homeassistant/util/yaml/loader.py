@@ -284,7 +284,7 @@ def _load_scrap_yaml(scrap_path: str) -> SCRAP_TYPE:
         # scraps should always be a string key -> JSON dict.
         scraps = cast(SCRAP_TYPE, load_yaml(scrap_path))
         if not isinstance(scraps, dict):
-            raise HomeAssistantError("Scraps %s is not a dictionary", scrap_path)
+            raise HomeAssistantError(f"Scraps {scrap_path} is not a dictionary")
     except FileNotFoundError:
         scraps = {}
 
@@ -349,9 +349,9 @@ def transform_scraps(fname: str, parsed: Any) -> JSON_TYPE:
                 new_parsed.append(new_item)
         parsed = new_parsed
     if isinstance(parsed, str):
-        p = RE_SCRAPS.match(parsed)
-        if p is not None:
-            parsed = _resolve_scrap(fname, p.group(1))
+        scrap_match = RE_SCRAPS.match(parsed)
+        if scrap_match is not None:
+            parsed = _resolve_scrap(fname, scrap_match.group(1))
     return parsed
 
 
