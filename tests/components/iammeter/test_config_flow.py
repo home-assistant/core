@@ -1,4 +1,5 @@
 """Test the IamMeter config flow."""
+from unittest.mock import patch
 from iammeter.power_meter import IamMeterError
 import pytest
 
@@ -9,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from .const import HOST, NAME, PORT
 from tests.common import MockConfigEntry
-from unittest.mock import patch
+
 
 
 async def test_form(hass):
