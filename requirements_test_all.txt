@@ -298,6 +298,7 @@ ephem==3.7.7.0
 # homeassistant.components.epson
 epson-projector==0.2.3
 
+# homeassistant.components.ai_speaker
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
