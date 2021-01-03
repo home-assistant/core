@@ -34,6 +34,11 @@ class LiteJetScene(Scene):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this scene."""
+        return str(self._index)
+
+    @property
     def device_state_attributes(self):
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}

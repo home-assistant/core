@@ -55,6 +55,11 @@ class LiteJetLight(LightEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this light."""
+        return str(self._index)
+
+    @property
     def brightness(self):
         """Return the light's brightness."""
         return self._brightness

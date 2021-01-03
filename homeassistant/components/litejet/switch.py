@@ -51,6 +51,11 @@ class LiteJetSwitch(SwitchEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this switch."""
+        return str(self._index)
+
+    @property
     def is_on(self):
         """Return if the switch is pressed."""
         return self._state
