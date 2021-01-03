@@ -1103,6 +1103,90 @@ async def test_options_add_and_configure_device(hass):
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
 
 
+async def test_options_configure_rfy_cover_device(hass):
+    """Test we can configure the venetion blind mode of an Rfy cover."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "automatic_add": True,
+            "event_code": "071a000001020301",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "fire_event": False,
+            "venetian_blind_mode": "EU",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+
+    device_registry = await async_get_device_registry(hass)
+    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].id
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "automatic_add": False,
+            "device": device_entries[0].id,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "fire_event": False,
+            "venetian_blind_mode": "EU",
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+
+
 def test_get_serial_by_id_no_dir():
     """Test serial by id conversion if there's no /dev/serial/by-id."""
     p1 = patch("os.path.isdir", MagicMock(return_value=False))
