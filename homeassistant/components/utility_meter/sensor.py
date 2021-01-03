@@ -215,8 +215,6 @@ class UtilityMeterSensor(RestoreEntity):
             return
         if self._period == YEARLY and now != date(now.year, 1, 1) + self._period_offset:
             return
-        if self._period == NONE:
-            return
         await self.async_reset_meter(self._tariff_entity)
 
     async def async_reset_meter(self, entity_id):
