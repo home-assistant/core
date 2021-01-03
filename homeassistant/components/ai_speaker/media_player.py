@@ -50,9 +50,7 @@ SUPPORT_AIS = (
 )
 
 
-async def async_setup_entry(
-    hass, config_entry, async_add_entities, discovery_info=None
-):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the AIS Player."""
 
     ais_player = AisPlayerDevice(config_entry.data, hass)
@@ -74,7 +72,6 @@ class AisPlayerDevice(MediaPlayerEntity):
     def turn_on(self):
         """Turn on the player."""
 
-    # pylint: disable=no-member
     def __init__(self, config_entry_data, hass):
         """Initialize the Ais Player device."""
         self._ais_id = config_entry_data.get("ais_id")
@@ -386,7 +383,6 @@ class AisPlayerDevice(MediaPlayerEntity):
             ws_resp = await self._web_session.get(AIS_WS_AUDIOBOOKS_URL, timeout=30)
             self._audiobooks_lib = await ws_resp.json()
         result = await browse_media(
-            self.hass,
             media_content_type,
             media_content_id,
             self._ais_id,

@@ -29,7 +29,6 @@ class UnknownMediaType(BrowseError):
 
 
 async def browse_media(
-    hass,
     media_content_type=None,
     media_content_id=None,
     gate_id=None,
@@ -54,11 +53,7 @@ async def browse_media(
             media_content_id, web_session, audiobooks_lib
         )
 
-    response = None
-
-    if response is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
-    return response
+    raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
 
 
 async def async_ais_media_library() -> BrowseMedia:
@@ -190,7 +185,6 @@ async def async_ais_audio_books_library(
     else:
         # get book chapters
         lookup_url = media_content_id.split("/", 3)[3]
-        #  5 sec should be enough
         try:
             ws_resp = await web_session.get(lookup_url + "?format=json", timeout=7)
             data = await ws_resp.json()
@@ -299,7 +293,6 @@ async def async_ais_podcast_library(
         # get podcast tracks
         try:
             lookup_url = media_content_id.split("/", 3)[3]
-            #  7 sec should be enough
             ws_resp = await web_session.get(lookup_url, timeout=7)
             response_text = await ws_resp.text()
             podcasts = feedparser.parse(response_text)
