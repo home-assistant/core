@@ -50,7 +50,7 @@ def add_entities(router, async_add_entities, tracked):
         tracked.add(mac)
 
     if new_tracked:
-        async_add_entities(new_tracked, True)
+        async_add_entities(new_tracked)
 
 
 class AsusWrtDevice(ScannerEntity):
@@ -69,10 +69,11 @@ class AsusWrtDevice(ScannerEntity):
     def async_update_state(self) -> None:
         """Update the AsusWrt device."""
         device = self._router.devices[self._mac]
-        self._name = device.name or DEFAULT_DEVICE_NAME
         self._active = device.is_connected
         last_activity = (
-            device.last_activity.isoformat() if device.last_activity else None
+            device.last_activity.isoformat(timespec="seconds")
+            if device.last_activity
+            else "-"
         )
 
         self._attrs = {

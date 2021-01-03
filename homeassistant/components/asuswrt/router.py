@@ -92,11 +92,7 @@ class AsusWrtDevInfo:
     @property
     def last_activity(self):
         """Return device last activity."""
-        if not self._last_activity:
-            return None
-        full_date = self._last_activity
-        round_date = full_date - timedelta(microseconds=full_date.microsecond)
-        return dt_util.as_local(round_date)
+        return self._last_activity
 
 
 class AsusWrtRouter:
@@ -138,12 +134,12 @@ class AsusWrtRouter:
 
         # Load tracked entities from registry
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        track_entities = (
+        track_entries = (
             self.hass.helpers.entity_registry.async_entries_for_config_entry(
                 entity_registry, self._entry.entry_id
             )
         )
-        for entry in track_entities:
+        for entry in track_entries:
             if entry.domain == TRACKER_DOMAIN:
                 self._devices[entry.unique_id] = AsusWrtDevInfo(
                     entry.unique_id, entry.original_name
@@ -163,20 +159,22 @@ class AsusWrtRouter:
     async def update_devices(self) -> None:
         """Update AsusWrt devices tracker."""
         new_device = False
-        _LOGGER.debug("Checking Devices")
+        _LOGGER.debug("Checking devices for ASUS router %s", self._host)
         try:
             wrt_devices = await self._api.async_get_connected_devices()
-            if self._connect_error:
-                self._connect_error = False
-                _LOGGER.info("Reconnected to ASUS router")
-
         except OSError as exc:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.error(
-                    "Error connecting to ASUS router for device update: %s", exc
+                    "Error connecting to ASUS router %s for device update: %s",
+                    self._host,
+                    exc,
                 )
             return
+
+        if self._connect_error:
+            self._connect_error = False
+            _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
         for device_mac in self._devices:
             dev_info = wrt_devices.get(device_mac)
@@ -185,7 +183,7 @@ class AsusWrtRouter:
             )
 
         for device_mac, dev_info in wrt_devices.items():
-            if self._devices.get(device_mac):
+            if device_mac in self._devices:
                 continue
             new_device = True
             device = AsusWrtDevInfo(device_mac)
@@ -210,8 +208,6 @@ class AsusWrtRouter:
     @callback
     def async_on_close(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when router is closed."""
-        if self._on_close is None:
-            self._on_close = []
         self._on_close.append(func)
 
     def update_options(self, new_options: Dict) -> bool:
