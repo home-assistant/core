@@ -99,7 +99,7 @@ ZEROCONF = {
     "_http._tcp.local.": [
         {
             "domain": "bosch_shc",
-            "name": "Bosch SHC*"
+            "name": "bosch shc*"
         },
         {
             "domain": "nam",

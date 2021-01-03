@@ -88,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     session: SHCSession = hass.data[DOMAIN][entry.entry_id]
+
     if session.reset_connection_listener is not None:
         session.reset_connection_listener()
         session.reset_connection_listener = None

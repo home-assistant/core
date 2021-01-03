@@ -24,8 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(
             ShutterContactSensor(
                 device=binarysensor,
-                room_name=session.room(binarysensor.room_id).name,
-                shc_uid=session.information.name,
+                parent_id=session.information.name,
+                entry_id=config_entry.entry_id,
             )
         )
 
