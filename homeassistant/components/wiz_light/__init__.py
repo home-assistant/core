@@ -4,7 +4,7 @@ import logging
 from pywizlight import wizlight
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -22,7 +22,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the wiz_light integration from a config entry."""
-    ip_address = entry.data.get(CONF_IP_ADDRESS)
+    ip_address = entry.data.get(CONF_HOST)
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     bulb = wizlight(ip_address)
     hass.data[DOMAIN][entry.unique_id] = bulb

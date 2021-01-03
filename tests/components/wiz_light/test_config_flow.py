@@ -5,7 +5,7 @@ from homeassistant.components.wiz_light.config_flow import (
     WizLightTimeOutError,
 )
 from homeassistant.components.wiz_light.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -24,7 +24,7 @@ FAKE_BULB_CONFIG = '{"method":"getSystemConfig","env":"pro","result":\
 TEST_SYSTEM_INFO = {"id": "ABCABCABCABC", "name": "Test Bulb"}
 
 
-TEST_CONNECTION = {CONF_IP_ADDRESS: "1.1.1.1", CONF_NAME: "Test Bulb"}
+TEST_CONNECTION = {CONF_HOST: "1.1.1.1", CONF_NAME: "Test Bulb"}
 
 
 async def test_form(hass):
@@ -106,7 +106,7 @@ async def test_form_updates_unique_id(hass):
         domain=DOMAIN,
         unique_id=TEST_SYSTEM_INFO["id"],
         data={
-            CONF_IP_ADDRESS: "dummy",
+            CONF_HOST: "dummy",
             CONF_NAME: TEST_SYSTEM_INFO["name"],
             "id": TEST_SYSTEM_INFO["id"],
         },

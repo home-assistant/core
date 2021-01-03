@@ -1,0 +1,3 @@
+update:
+  # Description of the service
+  description: Update the state of the WiZ Bulb

@@ -21,6 +21,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import slugify
 import homeassistant.util.color as color_utils
 
 from .const import DOMAIN
@@ -46,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         bulb = wizlight(ip_address)
         # Add devices
-        async_add_entities([WizBulb(bulb, config[CONF_NAME])])
+        async_add_entities([WizBulb(bulb, config[CONF_NAME])], update_before_add=True)
     except WizLightConnectionError:
         _LOGGER.error("Can't add bulb with ip %s.", ip_address)
 
@@ -55,8 +56,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
     bulb = hass.data[DOMAIN][entry.unique_id]
+    wizbulb = WizBulb(bulb, entry.data.get(CONF_NAME))
     # Add devices with defined name
-    async_add_entities([WizBulb(bulb, entry.data.get(CONF_NAME))])
+    async_add_entities([wizbulb], update_before_add=True)
+
+    # Register services
+    async def async_update(call=None):
+        """Trigger update."""
+        _LOGGER.debug(
+            "[wizlight %s] update requested",
+            entry.data.get(CONF_HOST),
+        )
+        await wizbulb.async_update()
+        await wizbulb.async_update_ha_state()
+
+    service_name = slugify(f"{entry.data.get(CONF_NAME)} update")
+    hass.services.async_register(DOMAIN, service_name, async_update)
 
 
 class WizBulb(LightEntity):
