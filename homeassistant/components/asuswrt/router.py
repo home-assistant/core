@@ -102,7 +102,6 @@ class AsusWrtRouter:
         """Initialize a AsusWrt router."""
         self.hass = hass
         self._entry = entry
-        self._unique_id = entry.unique_id or DOMAIN
 
         self._api: AsusWrt = None
         self._protocol = entry.data[CONF_PROTOCOL]
@@ -226,17 +225,12 @@ class AsusWrtRouter:
     @property
     def signal_device_new(self) -> str:
         """Event specific per AsusWrt entry to signal new device."""
-        return f"{DOMAIN}-{self._unique_id}-device-new"
+        return f"{DOMAIN}-device-new"
 
     @property
     def signal_device_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in devices."""
-        return f"{DOMAIN}-{self._unique_id}-device-update"
-
-    @property
-    def unique_id(self) -> str:
-        """Return router unique ID."""
-        return self._unique_id
+        return f"{DOMAIN}-device-update"
 
     @property
     def host(self) -> str:
