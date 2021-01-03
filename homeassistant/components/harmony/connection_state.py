@@ -13,6 +13,7 @@ class ConnectionStateMixin:
 
     def __init__(self):
         """Initialize this mixin instance."""
+        super().__init__()
         self._unsub_mark_disconnected = None
 
     async def got_connected(self, _=None):
