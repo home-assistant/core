@@ -8,9 +8,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from .const import HOST, NAME, PORT
-
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
+from unittest.mock import patch
 
 
 async def test_form(hass):
