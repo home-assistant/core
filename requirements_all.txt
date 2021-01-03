@@ -583,9 +583,11 @@ evohome-async==0.3.5.post1
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
-# homeassistant.components.ai_speaker
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
+
+# homeassistant.components.ai_speaker
+feedparser==6.0.2
 
 # homeassistant.components.fibaro
 fiblary3==0.1.7
