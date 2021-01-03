@@ -393,3 +393,20 @@ class Pck(LcnServiceCall):
         pck = service.data[CONF_PCK]
         device_connection = self.get_device_connection(service)
         await device_connection.pck(pck)
+
+
+SERVICES = (
+    ("output_abs", OutputAbs),
+    ("output_rel", OutputRel),
+    ("output_toggle", OutputToggle),
+    ("relays", Relays),
+    ("var_abs", VarAbs),
+    ("var_reset", VarReset),
+    ("var_rel", VarRel),
+    ("lock_regulator", LockRegulator),
+    ("led", Led),
+    ("send_keys", SendKeys),
+    ("lock_keys", LockKeys),
+    ("dyn_text", DynText),
+    ("pck", Pck),
+)

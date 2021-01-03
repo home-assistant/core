@@ -16,23 +16,10 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
+from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN
+from .helpers import generate_unique_id, import_lcn_config
 from .schemas import CONFIG_SCHEMA  # noqa: F401
-from .services import (
-    DynText,
-    Led,
-    LockKeys,
-    LockRegulator,
-    OutputAbs,
-    OutputRel,
-    OutputToggle,
-    Pck,
-    Relays,
-    SendKeys,
-    VarAbs,
-    VarRel,
-    VarReset,
-)
+from .services import SERVICES
 
 PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
 
@@ -41,26 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the LCN component."""
-    # register service calls
-    for service_name, service in (
-        ("output_abs", OutputAbs),
-        ("output_rel", OutputRel),
-        ("output_toggle", OutputToggle),
-        ("relays", Relays),
-        ("var_abs", VarAbs),
-        ("var_reset", VarReset),
-        ("var_rel", VarRel),
-        ("lock_regulator", LockRegulator),
-        ("led", Led),
-        ("send_keys", SendKeys),
-        ("lock_keys", LockKeys),
-        ("dyn_text", DynText),
-        ("pck", Pck),
-    ):
-        hass.services.async_register(
-            DOMAIN, service_name, service(hass).async_call_service, service.schema
-        )
-
     if DOMAIN not in config:
         return True
 
@@ -82,6 +49,8 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    if config_entry.entry_id in hass.data[DOMAIN]:
+        return False
 
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
@@ -89,47 +58,53 @@ async def async_setup_entry(hass, config_entry):
     }
 
     # connect to PCHK
-    if config_entry.entry_id not in hass.data[DOMAIN]:
-        lcn_connection = pypck.connection.PchkConnectionManager(
-            config_entry.data[CONF_IP_ADDRESS],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
-            settings=settings,
-            connection_id=config_entry.entry_id,
+    lcn_connection = pypck.connection.PchkConnectionManager(
+        config_entry.data[CONF_IP_ADDRESS],
+        config_entry.data[CONF_PORT],
+        config_entry.data[CONF_USERNAME],
+        config_entry.data[CONF_PASSWORD],
+        settings=settings,
+        connection_id=config_entry.entry_id,
+    )
+    try:
+        # establish connection to PCHK server
+        await lcn_connection.async_connect(timeout=15)
+    except pypck.connection.PchkAuthenticationError:
+        _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
+        return False
+    except pypck.connection.PchkLicenseError:
+        _LOGGER.warning(
+            'Maximum number of connections on PCHK "%s" was '
+            "reached. An additional license key is required",
+            config_entry.title,
         )
-        try:
-            # establish connection to PCHK server
-            await lcn_connection.async_connect(timeout=15)
-        except pypck.connection.PchkAuthenticationError:
-            _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
-            return False
-        except pypck.connection.PchkLicenseError:
-            _LOGGER.warning(
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required",
-                config_entry.title,
-            )
-            return False
-        except TimeoutError:
-            _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
-            return False
+        return False
+    except TimeoutError:
+        _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
+        return False
 
-        _LOGGER.debug('LCN connected to "%s"', config_entry.title)
-        hass.data[DOMAIN][config_entry.entry_id] = {
-            CONNECTION: lcn_connection,
-        }
+    _LOGGER.debug('LCN connected to "%s"', config_entry.title)
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        CONNECTION: lcn_connection,
+    }
 
-        # remove orphans from entity registry which are in ConfigEntry but were removed
-        # from configuration.yaml
-        if config_entry.source == config_entries.SOURCE_IMPORT:
-            entity_registry = await er.async_get_registry(hass)
-            entity_registry.async_clear_config_entry(config_entry.entry_id)
+    # remove orphans from entity registry which are in ConfigEntry but were removed
+    # from configuration.yaml
+    if config_entry.source == config_entries.SOURCE_IMPORT:
+        entity_registry = await er.async_get_registry(hass)
+        entity_registry.async_clear_config_entry(config_entry.entry_id)
 
-        # forward config_entry to components
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, component)
+    # forward config_entry to components
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
+
+    # register service calls
+    for service_name, service in SERVICES:
+        if not hass.services.has_service(DOMAIN, service_name):
+            hass.services.async_register(
+                DOMAIN, service_name, service(hass).async_call_service, service.schema
             )
 
     return True
@@ -150,6 +125,11 @@ async def async_unload_entry(hass, config_entry):
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
         host = hass.data[DOMAIN].pop(config_entry.entry_id)
         await host[CONNECTION].async_close()
+
+    # unregister service calls
+    if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
+        for service_name, service in SERVICES:
+            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
 
