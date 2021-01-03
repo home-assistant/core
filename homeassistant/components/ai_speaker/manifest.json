@@ -4,6 +4,6 @@
   "documentation": "https://ai-speaker.com",
   "dependencies": [],
   "codeowners": ["@asystentaka-jolka"],
-  "requirements": [],
+  "requirements": ["feedparser-homeassistant==5.2.2.dev1"],
   "config_flow": true
 }

@@ -20,6 +20,7 @@ class AisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+    DOMAIN = DOMAIN
 
     async def async_step_user(self, user_input=None):
         """Commissioning the configuration by the user."""

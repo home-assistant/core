@@ -71,14 +71,14 @@ class AisSensor(Entity):
 
     async def async_ask_ais_status(self):
         """Update the sensor attributes task."""
-
-        try:
-            ws_resp = await self._web_session.get(self._ais_ws_url, timeout=5)
-            json_info = await ws_resp.json()
-            return json_info
-        except Exception as error:  # pylint: disable=broad-except
-            _LOGGER.exception("Ask AI-Speaker status, unexpected exception: %s", error)
+        ws_resp = await self._web_session.get(self._ais_ws_url, timeout=5)
+        json_info = await ws_resp.json()
+        return json_info
 
     async def async_update(self):
         """Update the sensor."""
-        self._ais_info = await self.async_ask_ais_status()
+        try:
+            ais_info = await self.async_ask_ais_status()
+            self._ais_info = ais_info
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.exception("Ask AI-Speaker status, unexpected exception: %s", error)

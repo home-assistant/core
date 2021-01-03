@@ -17,7 +17,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the integration based on a configuration entry."""
 
-    _LOGGER.debug("async_setup_entry " + str(config_entry))
+    _LOGGER.debug("async_setup_entry %s", config_entry)
     web_session = aiohttp_client.async_get_clientsession(hass)
 
     async def async_command(service):

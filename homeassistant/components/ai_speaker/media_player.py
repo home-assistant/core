@@ -2,6 +2,8 @@
 import logging
 from typing import Optional
 
+import requests
+
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -22,9 +24,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.helpers import aiohttp_client
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import AIS_WS_AUDIOBOOKS_URL, DOMAIN
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,24 +50,12 @@ SUPPORT_AIS = (
 )
 
 
-def _update_state(hass):
-    # to keep groups in sync with player
-    state = hass.states.get("media_player.wbudowany_glosnik").state
-    attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
-    new_attr = {}
-    list_idx = -1
-    for itm in attributes:
-        list_idx = list_idx + 1
-        new_attr[list_idx] = attributes[itm]
-    hass.states.async_set("media_player.wbudowany_glosnik", state, new_attr)
-
-
 async def async_setup_entry(
     hass, config_entry, async_add_entities, discovery_info=None
 ):
     """Set up the AIS Player."""
 
-    ais_player = AisPlayerDevice(config_entry.data)
+    ais_player = AisPlayerDevice(config_entry.data, hass)
     async_add_entities([ais_player], True)
 
 
@@ -84,7 +75,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         """Turn on the player."""
 
     # pylint: disable=no-member
-    def __init__(self, config_entry_data):
+    def __init__(self, config_entry_data, hass):
         """Initialize the Ais Player device."""
         self._ais_id = config_entry_data.get("ais_id")
         self._ais_info = config_entry_data.get("ais_info")
@@ -104,6 +95,8 @@ class AisPlayerDevice(MediaPlayerEntity):
         self._shuffle = False
         self._assistant_audio = False
         self._is_master = False
+        self._web_session = aiohttp_client.async_get_clientsession(hass)
+        self._audiobooks_lib = None
 
     @property
     def device_info(self):
@@ -130,15 +123,12 @@ class AisPlayerDevice(MediaPlayerEntity):
     def select_sound_mode(self, sound_mode):
         """Set the sound mode."""
         self._sound_mode = sound_mode
-        # TODO
 
     def _fetch_status(self):
         """Fetch status from AIS."""
-        # TODO
 
     def select_source(self, source):
         """Choose a different available playlist and play it."""
-        # TODO
 
     @property
     def volume_level(self):
@@ -250,13 +240,13 @@ class AisPlayerDevice(MediaPlayerEntity):
         """Return the media state."""
         if self._playing is False:
             return STATE_PAUSED
-        elif self._status == 1:
+        if self._status == 1:
             return STATE_IDLE
-        elif self._status == 2:
+        if self._status == 2:
             return STATE_PAUSED
-        elif self._status == 3:
+        if self._status == 3:
             return STATE_PLAYING
-        elif self._status == 4:
+        if self._status == 4:
             return STATE_PAUSED
 
         return STATE_OFF
@@ -359,8 +349,6 @@ class AisPlayerDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a media."""
-        import requests
-
         if media_id.startswith("ais_tunein"):
             url_to_call = media_id.split("/", 3)[3]
             try:
@@ -378,7 +366,6 @@ class AisPlayerDevice(MediaPlayerEntity):
                     media_id = response_text
             except Exception as error:  # pylint: disable=broad-except
                 _LOGGER.e("AIS play_media error: %s", error)
-                pass
 
         self._media_id = media_id
         self._media_position = 0
@@ -391,5 +378,19 @@ class AisPlayerDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the media browsing helper."""
-        result = await browse_media(self.hass, media_content_type, media_content_id)
+        if (
+            media_content_id is not None
+            and media_content_id.startswith("ais_audio_books")
+            and self._audiobooks_lib is None
+        ):
+            ws_resp = await self._web_session.get(AIS_WS_AUDIOBOOKS_URL, timeout=30)
+            self._audiobooks_lib = await ws_resp.json()
+        result = await browse_media(
+            self.hass,
+            media_content_type,
+            media_content_id,
+            self._ais_id,
+            self._web_session,
+            self._audiobooks_lib,
+        )
         return result
