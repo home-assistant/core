@@ -60,6 +60,7 @@ FLOWS = [
     "enocean",
     "epson",
     "esphome",
+    "ezviz_cloud",
     "fireservicerota",
     "flick_electric",
     "flo",
