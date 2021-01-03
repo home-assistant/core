@@ -70,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         await wizbulb.async_update()
         await wizbulb.async_update_ha_state()
 
-    service_name = slugify(f"{entry.data.get(CONF_NAME)} update")
+    service_name = slugify(f"{entry.data.get(CONF_NAME)} updateService")
     hass.services.async_register(DOMAIN, service_name, async_update)
 
 
@@ -201,21 +201,23 @@ class WizBulb(LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        # Special filament bulb type
-        if self._bulbtype == "ESP56_SHTW3_01":
-            return [self._scenes[key] for key in [8, 9, 14, 15, 17, 28, 29, 31]]
-        # Filament bulb without white color led
-        if self._bulbtype == "ESP06_SHDW9_01":
-            return [self._scenes[key] for key in [8, 9, 13, 28, 30, 29, 31]]
-        # Filament bulb ST64
-        if self._bulbtype == "ESP06_SHDW1_01":
-            return [self._scenes[key] for key in [8, 9, 13, 28, 29, 31]]
-        if self._bulbtype == "ESP15_SHTW1_01I":
-            return [
-                self._scenes[key]
-                for key in [5, 8, 9, 10, 11, 12, 13, 14, 15, 17, 28, 30, 29, 31]
-            ]
-        return self._scenes
+        if self._bulbtype:
+            # Special filament bulb type
+            if self._bulbtype.name == "ESP56_SHTW3_01":
+                return [self._scenes[key] for key in [8, 9, 14, 15, 17, 28, 29, 31]]
+            # Filament bulb without white color led
+            if self._bulbtype.name == "ESP06_SHDW9_01":
+                return [self._scenes[key] for key in [8, 9, 13, 28, 30, 29, 31]]
+            # Filament bulb ST64
+            if self._bulbtype.name == "ESP06_SHDW1_01":
+                return [self._scenes[key] for key in [8, 9, 13, 28, 29, 31]]
+            if self._bulbtype.name == "ESP15_SHTW1_01I":
+                return [
+                    self._scenes[key]
+                    for key in [5, 8, 9, 10, 11, 12, 13, 14, 15, 17, 28, 30, 29, 31]
+                ]
+            return self._scenes
+        return []
 
     @property
     def available(self):
@@ -225,15 +227,32 @@ class WizBulb(LightEntity):
     async def async_update(self):
         """Fetch new state data for this light."""
         await self.update_state()
+        await self.get_bulb_type()
+        await self.get_mac()
 
         if self._state is not None and self._state is not False:
-            await self.get_bulb_type()
-            await self.get_mac()
             self.update_brightness()
             self.update_temperature()
             self.update_color()
             self.update_effect()
             self.update_scene_list()
+
+    @property
+    def device_info(self):
+        """Get device specific attributes."""
+        _LOGGER.debug(
+            "[wizlight %s] Call device info: MAC: %s - Name: %s - Type: %s",
+            self._light.ip,
+            self._mac,
+            self._name,
+            self._bulbtype.name,
+        )
+        return {
+            "identifiers": {(DOMAIN, self._mac)},
+            "name": self._name,
+            "manufacturer": "WiZ Light Platform",
+            "model": self._bulbtype.name,
+        }
 
     async def update_state_available(self):
         """Update the state if bulb is available."""
@@ -250,6 +269,9 @@ class WizBulb(LightEntity):
         try:
             await self._light.updateState()
             if self._light.state is None:
+                _LOGGER.debug(
+                    "[wizlight %s] state unavailable: %s", self._light.ip, self._state
+                )
                 await self.update_state_unavailable()
             else:
                 await self.update_state_available()
@@ -323,7 +345,11 @@ class WizBulb(LightEntity):
         """Get the bulb type."""
         if self._bulbtype is None:
             self._bulbtype = await self._light.get_bulbtype()
-            _LOGGER.info("Initiate the WiZ bulb as %s", self._bulbtype.name)
+            _LOGGER.info(
+                "[wizlight %s] Initiate the WiZ bulb as %s",
+                self._light.ip,
+                self._bulbtype.name,
+            )
 
     def update_scene_list(self):
         """Update the scene list."""

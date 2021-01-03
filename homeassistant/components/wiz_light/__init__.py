@@ -1,7 +1,9 @@
 """WiZ Light integration."""
+from homeassistant.components.wiz_light.light import WizBulb
 import logging
 
 from pywizlight import wizlight
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -12,6 +14,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light"]
+SCAN_INTERVAL = timedelta(seconds=5)
+DATA_SCAN_INTERVAL = "scan_interval"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
