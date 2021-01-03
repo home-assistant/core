@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE
+from . import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
 
 from tests.async_mock import patch
 
@@ -43,14 +43,14 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_IP_ADDRESS: IP,
             },
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == info["title"]
     assert result2["data"] == {
-        CONF_IP_ADDRESS: "1.1.1.1",
+        CONF_IP_ADDRESS: IP,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -69,7 +69,7 @@ async def test_form_cannot_connect(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_IP_ADDRESS: IP,
             },
         )
 
@@ -120,5 +120,5 @@ async def test_step_zeroconf_confirm(hass):
     result = await flow.async_step_zeroconf_confirm(user_input={})
     assert result["title"] == "test"
     assert result["data"] == {
-        CONF_IP_ADDRESS: "1.1.1.1",
+        CONF_IP_ADDRESS: IP,
     }

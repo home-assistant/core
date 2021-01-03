@@ -6,8 +6,10 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+IP = "1.1.1.1"
+
 DISCOVERY_INFO = {
-    "host": "1.1.1.1",
+    "host": IP,
     "port": 14791,
     "hostname": "test.local.",
     "type": "_dvl-deviceapi._tcp.local.",
@@ -22,16 +24,31 @@ DISCOVERY_INFO = {
         "FirmwareVersion": "5.6.1",
         "FirmwareDate": "2020-10-23",
         "PS": "",
+        "PlcMacAddress": "AABBCCDDEEFF",
     },
 }
 
 DISCOVERY_INFO_WRONG_DEVICE = {"properties": {"MT": "2600"}}
 
+PLCNET = {
+    "network": {
+        "data_rates": [
+            {
+                "mac_address_from": "AABBCCDDEEFF",
+                "mac_address_to": "112233445566",
+                "rx_rate": 0.0,
+                "tx_rate": 0.0,
+            },
+        ],
+        "devices": [],
+    }
+}
+
 
 def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Configure the integration."""
     config = {
-        CONF_IP_ADDRESS: "1.1.1.1",
+        CONF_IP_ADDRESS: IP,
     }
     entry = MockConfigEntry(domain=DOMAIN, data=config)
     entry.add_to_hass(hass)
