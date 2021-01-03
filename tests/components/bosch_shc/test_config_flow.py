@@ -1,5 +1,5 @@
 """Test the Bosch SHC config flow."""
-from unittest.mock import PropertyMock
+from unittest.mock import PropertyMock, patch
 
 from boschshcpy.exceptions import (
     SHCAuthenticationError,
@@ -11,7 +11,6 @@ from boschshcpy.information import SHCInformation
 from homeassistant import config_entries, setup
 from homeassistant.components.bosch_shc.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_SETTINGS = {
