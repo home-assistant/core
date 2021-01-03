@@ -154,6 +154,14 @@ root.Brand.ProdVariant=
 root.Brand.WebURL=http://www.axis.com
 """
 
+IMAGE_RESPONSE = """root.Image.I0.Enabled=yes
+root.Image.I0.Name=View Area 1
+root.Image.I0.Source=0
+root.Image.I1.Enabled=no
+root.Image.I1.Name=View Area 2
+root.Image.I1.Source=0
+"""
+
 PORTS_RESPONSE = """root.Input.NbrOfInputs=1
 root.IOPort.I0.Configurable=no
 root.IOPort.I0.Direction=input
@@ -188,6 +196,8 @@ root.StreamProfile.S1.Name=profile_2
 root.StreamProfile.S1.Parameters=videocodec=h265
 """
 
+VIEW_AREAS_RESPONSE = {"apiVersion": "1.0", "method": "list", "data": {"viewAreas": []}}
+
 
 def mock_default_vapix_requests(respx: respx, host: str = DEFAULT_HOST) -> None:
     """Mock default Vapix requests responses."""
@@ -209,10 +219,19 @@ def mock_default_vapix_requests(respx: respx, host: str = DEFAULT_HOST) -> None:
     respx.post(f"http://{host}:80/axis-cgi/streamprofile.cgi").respond(
         json=STREAM_PROFILES_RESPONSE,
     )
+    respx.post(f"http://{host}:80/axis-cgi/viewarea/info.cgi").respond(
+        json=VIEW_AREAS_RESPONSE
+    )
     respx.get(
         f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Brand"
     ).respond(
         text=BRAND_RESPONSE,
+        headers={"Content-Type": "text/plain"},
+    )
+    respx.get(
+        f"http://{host}:80/axis-cgi/param.cgi?action=list&group=root.Image"
+    ).respond(
+        text=IMAGE_RESPONSE,
         headers={"Content-Type": "text/plain"},
     )
     respx.get(
