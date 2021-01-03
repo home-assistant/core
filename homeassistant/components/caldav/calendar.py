@@ -33,6 +33,7 @@ CONF_CUSTOM_CALENDARS = "custom_calendars"
 CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
 CONF_DAYS = "days"
+CONF_DEFAULTOFFSET = "default_offset"
 
 OFFSET = "!!"
 
@@ -51,6 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                         vol.Required(CONF_CALENDAR): cv.string,
                         vol.Required(CONF_NAME): cv.string,
                         vol.Required(CONF_SEARCH): cv.string,
+                        vol.Optional(CONF_DEFAULTOFFSET, default="00:00"): cv.time_period_str,
                     }
                 )
             ],
@@ -87,15 +89,18 @@ def setup_platform(hass, config, add_entities, disc_info=None):
         # Create additional calendars based on custom filtering rules
         for cust_calendar in config[CONF_CUSTOM_CALENDARS]:
             # Check that the base calendar matches
+            _LOGGER.debug("Calendar '%s'", calendar.name)
             if cust_calendar[CONF_CALENDAR] != calendar.name:
                 continue
 
             name = cust_calendar[CONF_NAME]
             device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            default_offset = cust_calendar[CONF_DEFAULTOFFSET]
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
+                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH],
+                    default_offset
                 )
             )
 
@@ -114,13 +119,15 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 class WebDavCalendarEventDevice(CalendarEventDevice):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
+    def __init__(self, name, calendar, entity_id, days, all_day=False, search=None,
+            default_offset=None):
         """Create the WebDav Calendar Event Device."""
         self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
         self._event = None
         self._name = name
         self._offset_reached = False
+        self._default_offset = default_offset
 
     @property
     def device_state_attributes(self):
@@ -148,7 +155,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         if event is None:
             self._event = event
             return
-        event = calculate_offset(event, OFFSET)
+        event = calculate_offset(event, OFFSET, self._default_offset)
         self._offset_reached = is_offset_reached(event)
         self._event = event
 
