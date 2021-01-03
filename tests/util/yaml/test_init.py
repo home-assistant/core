@@ -3,7 +3,7 @@ import io
 import logging
 import os
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -355,15 +355,13 @@ class TestScraps(unittest.TestCase):
             load_yaml(self._config_path, self._config_yaml)
         assert "loop detected" in str(exc.value)
 
-    def test_scraps_from_parent_folder(self):
+    @patch("homeassistant.util.yaml.loader.os.path.exists")
+    def test_scraps_from_parent_folder(self, mock_exists):
         """Test scraps loading from parent folder."""
-        with patch(
-            "homeassistant.util.yaml.loader.os.path.exists",
-            Mock(return_value=True),
-        ):
-            yaml = load_yaml(
-                os.path.join(self._sub_folder_path, "sub.yaml"), self._config_yaml
-            )
+        mock_exists.return_value = True
+        yaml = load_yaml(
+            os.path.join(self._sub_folder_path, "sub.yaml"), self._config_yaml
+        )
 
         assert yaml["config1"] == "str1"
 
