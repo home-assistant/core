@@ -11,8 +11,8 @@ POLLING_TIMEOUT_MULTIPLIER = 1.2
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL = 60
 
-# Timeout used for initial entry setup in "async_setup_entry".
-SETUP_ENTRY_TIMEOUT_SEC = 10
+# Timeout used for aioshelly calls
+AIOSHELLY_DEVICE_TIMEOUT_SEC = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER = 1.2
