@@ -1,13 +1,12 @@
 """Test the HarmonySubscriberMixin class."""
 
 import asyncio
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.harmony.subscriber import (
     HarmonyCallback,
     HarmonySubscriberMixin,
 )
-
-from unittest.mock import AsyncMock, MagicMock
 
 _NO_PARAM_CALLBACKS = {
     "connected": "_connected",
