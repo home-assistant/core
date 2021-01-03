@@ -35,7 +35,7 @@ async def test_form(hass):
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
-    # Patch booth funcitons from __init__ with true.
+    # Patch booth functions from __init__ with true.
     with patch(
         "homeassistant.components.wiz_light.wizlight.getBulbConfig",
         return_value=FAKE_BULB_CONFIG,
