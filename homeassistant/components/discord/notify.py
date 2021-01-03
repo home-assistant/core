@@ -49,7 +49,6 @@ class DiscordNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
-
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client()
         images = None
@@ -61,11 +60,10 @@ class DiscordNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA) or {}
 
         if ATTR_EMBED in data:
-            embedding = data.get(ATTR_EMBED) or {}
+            embedding = data.get(ATTR_EMBED)
 
-        # fields = data.get(ATTR_EMBED_FIELDS) or {}
-        # field = ','.join('='.join((key,val)) for (key,val) in fields.items())
-        # field = 'name="name",value="value"'
+        if ATTR_EMBED_FIELDS in data:
+            fields = data[ATTR_EMBED_FIELDS]
 
         if ATTR_IMAGES in data:
             images = []
@@ -102,8 +100,9 @@ class DiscordNotificationService(BaseNotificationService):
                             files.append(discord.File(image))
                     if ATTR_EMBED in data:
                         embed = discord.Embed(**embedding)
-                        if ATTR_EMBED_FIELDS in embedding:
-                            embed.add_field(**embedding[ATTR_EMBED_FIELDS])
+                        if ATTR_EMBED_FIELDS in data:
+                            for field in range(len(fields)):
+                                embed.add_field(**fields[field])
                         if ATTR_EMBED_FOOTER in embedding:
                             embed.set_footer(**embedding[ATTR_EMBED_FOOTER])
                         if ATTR_EMBED_AUTHOR in embedding:
