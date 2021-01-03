@@ -70,17 +70,15 @@ class AsusWrtDevice(ScannerEntity):
         """Update the AsusWrt device."""
         device = self._router.devices[self._mac]
         self._active = device.is_connected
-        last_activity = (
-            device.last_activity.isoformat(timespec="seconds")
-            if device.last_activity
-            else "-"
-        )
 
         self._attrs = {
             "mac": device.mac,
             "ip_address": device.ip_address,
-            "last_time_reachable": last_activity,
         }
+        if device.last_activity:
+            self._attrs["last_time_reachable"] = device.last_activity.isoformat(
+                timespec="seconds"
+            )
 
     @property
     def unique_id(self) -> str:
