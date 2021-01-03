@@ -51,13 +51,6 @@ class AisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ais_id = json_info["gate_id"]
                 else:
                     ais_id = json_info["ais_gate_client_id"]
-                # Complete and save configuration
-                user_input["ais_id"] = ais_id
-                user_input["ais_url"] = url
-                user_input["ais_info"] = json_info
-                return self.async_create_entry(
-                    title="AI-Speaker " + json_info["Product"], data=user_input
-                )
             except Exception as error:  # pylint: disable=broad-except
                 _LOGGER.error("AI-Speaker connection error: %s", error)
                 errors = {CONF_HOST: "discovery_error"}
@@ -66,4 +59,16 @@ class AisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=vol.Schema(AIS_CONFIG),
                     errors=errors,
                 )
+            # check if id exists
+            await self.async_set_unique_id(ais_id)
+            self._abort_if_unique_id_configured()
+
+            # Complete and save configuration
+            user_input["ais_id"] = ais_id
+            user_input["ais_url"] = url
+            user_input["ais_info"] = json_info
+            return self.async_create_entry(
+                title="AI-Speaker " + json_info["Product"], data=user_input
+            )
+
         return self.async_show_form(step_id="settings")

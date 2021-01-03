@@ -1,5 +1,8 @@
 {   "title": "AI-Speaker",
     "config": {
+        "abort": {
+            "already_configured": "This AI Speaker device is already set up."
+        },
         "step": {
           "confirm": {
               "title": "AI-Speaker",

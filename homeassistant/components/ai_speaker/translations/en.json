@@ -1,5 +1,8 @@
 {   "title": "AI-Speaker",
     "config": {
+        "abort": {
+            "already_configured": "This AI Speaker device is already set up."
+        },
         "step": {
           "confirm": {
               "title": "AI-Speaker",
@@ -12,9 +15,6 @@
                     "host": "AI-Speaker Host Address (required)"
                 }
             }
-        },
-        "error": {
-          "discovery_error": "Failed to discover a AI-Speaker, check the settings and try again"
         }
     }
 }

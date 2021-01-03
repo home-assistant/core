@@ -1,15 +1,18 @@
 {   "title": "AI-Speaker",
     "config": {
+        "abort": {
+            "already_configured": "To urządzenie AI Speaker jest już skonfigurowane."
+        },
         "step": {
           "confirm": {
               "title": "AI-Speaker",
-              "description": "![logo](https://ai-speaker.com/images/brands/logo_ais_im_listening.png)\n\nIntegration with AI-Speaker allows you to connect the AI-Speaker to the Home Assistant.\nDo you want to set up integration with AI-Speaker?"
+              "description": "![logo](https://ai-speaker.com/images/brands/logo_ais_im_listening.png)\n\nIntegracja z AI-Speaker umożliwia podłączenie AI-Speaker do Home Assistant.\nCzy chcesz skonfigurować integrację z AI-Speaker?"
             },
             "settings": {
-                "title": "AI-Speaker - connection settings",
-                "description": "We add connection with AI-Speaker in your local network.\n\n ![logo](https://ai-speaker.com/images/brands/logo_ais_im_listening.png)\n\nTo connect to the speaker, you need to enter its IP address in your local network where Home Assistant works,  [Details in the documentation ](https://www.ai-speaker.com)\n\n Fill in the form below and click **SUBMIT** button.",
+                "title": "AI-Speaker - ustawienia połączenia",
+                "description": "Dodajemy połączenie z AI-Speaker w Twojej sieci lokalnej.\n\n ![logo](https://ai-speaker.com/images/brands/logo_ais_im_listening.png)\n\nAby połączyć się z głośnikiem, musisz podać jego adres IP w sieci lokalnej, w której działa Home Assistant, [Szczegóły w dokumentacji](https://www.ai-speaker.com)\n\n Wypełnij poniższy formularz i kliknij przycisk **ZATWIERDŹ**.",
                 "data": {
-                    "host": "AI-Speaker Host Address (required)"
+                    "host": "Adres hosta AI-Speaker (wymagany)"
                 }
             }
         }
