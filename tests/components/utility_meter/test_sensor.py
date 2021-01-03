@@ -32,7 +32,7 @@ def alter_time(retval):
     with patch1, patch2:
         yield
 
-        
+
 async def test_state(hass):
     """Test utility sensor state."""
     config = {
