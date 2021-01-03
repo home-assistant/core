@@ -63,9 +63,9 @@ class Ticker(CoordinatorEntity):
         """Return additional sensor state attributes."""
         return {
             "symbol": self._symbol,
-            "lastTradeRate": self.coordinator.data[self._symbol]["lastTradeRate"],
-            "bidRate": self.coordinator.data[self._symbol]["bidRate"],
-            "askRate": self.coordinator.data[self._symbol]["askRate"],
+            "last_trade_rate": self.coordinator.data[self._symbol]["lastTradeRate"],
+            "bid_rate": self.coordinator.data[self._symbol]["bidRate"],
+            "ask_rate": self.coordinator.data[self._symbol]["askRate"],
             "currency": self._currency,
             "unit_of_measurement": self._unit_of_measurement,
         }

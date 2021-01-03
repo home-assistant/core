@@ -8,36 +8,16 @@ from aiobittrexapi.errors import (
     BittrexInvalidAuthentication,
     BittrexResponseError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_API_KEY),
-            cv.deprecated(CONF_API_SECRET),
-            cv.deprecated(CONF_MARKETS),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_API_KEY): cv.string,
-                    vol.Optional(CONF_API_SECRET): cv.string,
-                    vol.Optional(CONF_MARKETS): cv.string,
-                }
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
@@ -74,7 +54,6 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the data object."""
         self.bittrex = Bittrex(api_key, api_secret)
         self.symbols = symbols
-        self.hass = hass
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 

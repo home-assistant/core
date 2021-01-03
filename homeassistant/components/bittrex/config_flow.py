@@ -10,7 +10,6 @@ from aiobittrexapi.errors import (
 )
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -86,7 +85,6 @@ class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         assert self.hass
-        persistent_notification.async_dismiss(self.hass, "bittrex_setup")
 
         errors = {}
 
