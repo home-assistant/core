@@ -13,7 +13,7 @@ from .const import (
 )
 
 ATTR_HUMIDITY = "humidity"
-ATTR_LAST_MEASUREMENT_TIMESTAMP = "last measurement timestamp"
+ATTR_LAST_MEASUREMENT_TIMESTAMP = "last_measurement_timestamp"
 ATTR_SENSOR_LIFE = "{0}_sensor_life"
 ATTR_VOC = "voc"
 
