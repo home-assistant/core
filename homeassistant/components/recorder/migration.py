@@ -212,7 +212,9 @@ def _update_states_table_with_foreign_key_options(engine):
     alters = []
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
         _LOGGER.critical("Upgrade: %s", foreign_key)
-        if foreign_key["name"] and not foreign_key["options"]:
+        if foreign_key["name"] and (
+            not foreign_key["options"] or foreign_key["options"].get("ondelete") is None
+        ):
             alters.append(
                 {
                     "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
