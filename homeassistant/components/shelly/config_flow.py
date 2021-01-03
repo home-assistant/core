@@ -18,7 +18,8 @@ from homeassistant.const import (
 from homeassistant.helpers import aiohttp_client
 
 from . import get_coap_context
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN  # pylint:disable=unused-import
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
