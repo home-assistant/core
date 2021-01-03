@@ -25,10 +25,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    ATTR_FLAP_ID,
+    ATTR_LOCK_STATE,
     CONF_FEEDERS,
-    CONF_FLAP_ID,
     CONF_FLAPS,
-    CONF_LOCK_STATE,
     CONF_PARENT,
     CONF_PETS,
     CONF_PRODUCT_ID,
@@ -64,13 +64,6 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-LOCK_STATE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_FLAP_ID): cv.positive_int,
-        vol.Required(CONF_LOCK_STATE): cv.string,
-    }
 )
 
 
@@ -156,14 +149,34 @@ async def async_setup(hass, config) -> bool:
 
     async def handle_set_lock_state(call):
         """Call when setting the lock state."""
-        await spc.set_lock_state(call.data[CONF_FLAP_ID], call.data[CONF_LOCK_STATE])
+        await spc.set_lock_state(call.data[ATTR_FLAP_ID], call.data[ATTR_LOCK_STATE])
         await spc.async_update()
+
+    lock_state_service_schema = vol.Schema(
+        {
+            vol.Required(ATTR_FLAP_ID): vol.All(
+                cv.positive_int, vol.In(conf[CONF_FLAPS])
+            ),
+            vol.Required(ATTR_LOCK_STATE): vol.All(
+                cv.string,
+                vol.Lower,
+                vol.In(
+                    [
+                        SureLockStateID.UNLOCKED.name.lower(),
+                        SureLockStateID.LOCKED_IN.name.lower(),
+                        SureLockStateID.LOCKED_OUT.name.lower(),
+                        SureLockStateID.LOCKED_ALL.name.lower(),
+                    ]
+                ),
+            ),
+        }
+    )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_LOCK_STATE,
         handle_set_lock_state,
-        schema=LOCK_STATE_SERVICE_SCHEMA,
+        schema=lock_state_service_schema,
     )
 
     return True
@@ -211,13 +224,11 @@ class SurePetcareAPI:
 
     async def set_lock_state(self, flap_id: int, state: str) -> None:
         """Update the lock state of a flap."""
-        if state.lower() == SureLockStateID.UNLOCKED.name.lower():
+        if state == SureLockStateID.UNLOCKED.name.lower():
             await self.surepy.unlock(flap_id)
-        elif state.lower() == SureLockStateID.LOCKED_IN.name.lower():
+        elif state == SureLockStateID.LOCKED_IN.name.lower():
             await self.surepy.lock_in(flap_id)
-        elif state.lower() == SureLockStateID.LOCKED_OUT.name.lower():
+        elif state == SureLockStateID.LOCKED_OUT.name.lower():
             await self.surepy.lock_out(flap_id)
-        elif state.lower() == SureLockStateID.LOCKED_ALL.name.lower():
+        elif state == SureLockStateID.LOCKED_ALL.name.lower():
             await self.surepy.lock(flap_id)
-        else:
-            _LOGGER.error("Unknown lock state: %s", state)

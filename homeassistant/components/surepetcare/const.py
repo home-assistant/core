@@ -34,5 +34,5 @@ SURE_BATT_VOLTAGE_DIFF = SURE_BATT_VOLTAGE_FULL - SURE_BATT_VOLTAGE_LOW
 
 # lock state service
 SERVICE_SET_LOCK_STATE = "set_lock_state"
-CONF_FLAP_ID = "flap_id"
-CONF_LOCK_STATE = "lock_state"
+ATTR_FLAP_ID = "flap_id"
+ATTR_LOCK_STATE = "lock_state"
