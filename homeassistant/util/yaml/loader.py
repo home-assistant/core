@@ -29,10 +29,11 @@ except ImportError:
 # mypy: allow-untyped-calls, no-warn-return-any
 
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
+SCRAP_TYPE = Dict[str, JSON_TYPE]  # pylint: disable=invalid-name
 DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger(__name__)
-__SCRAP_CACHE: Dict[str, JSON_TYPE] = {}
+__SCRAP_CACHE: SCRAP_TYPE = {}
 __SECRET_CACHE: Dict[str, JSON_TYPE] = {}
 
 CREDSTASH_WARN = False
@@ -272,17 +273,17 @@ def _has_scraps(parsed: Any) -> Boolean:
     return False
 
 
-def _load_scrap_yaml(scrap_path: str) -> Dict[str, JSON_TYPE]:
+def _load_scrap_yaml(scrap_path: str) -> SCRAP_TYPE:
     """Load the scraps yaml from path."""
     scrap_path = os.path.join(scrap_path, SCRAP_YAML)
     if scrap_path in __SCRAP_CACHE:
         # scraps should always be a string key -> JSON dict.
-        return cast(Dict[str, JSON_TYPE], __SCRAP_CACHE[scrap_path])
+        return cast(SCRAP_TYPE, __SCRAP_CACHE[scrap_path])
 
     _LOGGER.debug("Loading %s", scrap_path)
     try:
         # scraps should always be a string key -> JSON dict.
-        scraps = cast(Dict[str, JSON_TYPE], load_yaml(scrap_path))
+        scraps = cast(SCRAP_TYPE, load_yaml(scrap_path))
         if not isinstance(scraps, dict):
             raise HomeAssistantError("Scraps %s is not a dictionary", scrap_path)
     except FileNotFoundError:
@@ -297,7 +298,7 @@ def _load_scrap_yaml(scrap_path: str) -> Dict[str, JSON_TYPE]:
     for i in range(5):
         scraps = cast(
             # scraps should always be a string key -> JSON dict.
-            Dict[str, JSON_TYPE],
+            SCRAP_TYPE,
             transform_scraps(os.path.dirname(scrap_path), scraps),
         )
         __SCRAP_CACHE[scrap_path] = scraps
