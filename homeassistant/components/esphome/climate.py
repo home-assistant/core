@@ -179,7 +179,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             presets.append(PRESET_AWAY)
         if self._static_info.supports_boost:
             presets.append(PRESET_BOOST)
-        if self._static_info.supports_night:
+        if self._static_info.supports_sleep_:
             presets.append(PRESET_SLEEP)
         if self._static_info.supports_eco:
             presets.append(PRESET_ECO)
@@ -219,7 +219,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             features |= SUPPORT_TARGET_TEMPERATURE
         if (
             self._static_info.supports_away
-            or self._static_info.supports_night
+            or self._static_info.supports_sleep_
             or self._static_info.supports_boost
             or self._static_info.supports_eco
         ):
@@ -258,7 +258,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             return PRESET_AWAY
         if self._state.boost:
             return PRESET_BOOST
-        if self._state.night:
+        if self._state.sleep_:
             return PRESET_SLEEP
         if self._state.eco:
             return PRESET_ECO
@@ -317,9 +317,9 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
                 await self._client.climate_command(
                     key=self._static_info.key, boost=False
                 )
-            if self._static_info.supports_night:
+            if self._static_info.supports_sleep_:
                 await self._client.climate_command(
-                    key=self._static_info.key, night=False
+                    key=self._static_info.key, sleep_=False
                 )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
@@ -332,9 +332,9 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
                 await self._client.climate_command(
                     key=self._static_info.key, boost=False
                 )
-            if self._static_info.supports_night:
+            if self._static_info.supports_sleep_:
                 await self._client.climate_command(
-                    key=self._static_info.key, night=False
+                    key=self._static_info.key, sleep_=False
                 )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
@@ -347,9 +347,9 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
                 await self._client.climate_command(
                     key=self._static_info.key, boost=True
                 )
-            if self._static_info.supports_night:
+            if self._static_info.supports_sleep_:
                 await self._client.climate_command(
-                    key=self._static_info.key, night=False
+                    key=self._static_info.key, sleep_=False
                 )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
@@ -362,9 +362,9 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
                 await self._client.climate_command(
                     key=self._static_info.key, boost=False
                 )
-            if self._static_info.supports_night:
+            if self._static_info.supports_sleep_:
                 await self._client.climate_command(
-                    key=self._static_info.key, night=True
+                    key=self._static_info.key, sleep_=True
                 )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=False)
@@ -377,9 +377,9 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
                 await self._client.climate_command(
                     key=self._static_info.key, boost=False
                 )
-            if self._static_info.supports_night:
+            if self._static_info.supports_sleep_:
                 await self._client.climate_command(
-                    key=self._static_info.key, night=False
+                    key=self._static_info.key, sleep_=False
                 )
             if self._static_info.supports_eco:
                 await self._client.climate_command(key=self._static_info.key, eco=True)
