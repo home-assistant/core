@@ -261,7 +261,8 @@ class UtilityMeterSensor(RestoreEntity):
                 minute=self._period_offset.seconds % 3600 // 60,
                 second=self._period_offset.seconds % 3600 % 60,
             )
-
+        elif self._period == NONE:
+            pass
         async_dispatcher_connect(self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
         state = await self.async_get_last_state()
