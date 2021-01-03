@@ -1,4 +1,6 @@
 """Test the zerproc lights."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 import pyzerproc
 
@@ -24,7 +26,6 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

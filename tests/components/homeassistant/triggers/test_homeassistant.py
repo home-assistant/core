@@ -1,9 +1,10 @@
 """The tests for the Event automation."""
+from unittest.mock import AsyncMock, patch
+
 import homeassistant.components.automation as automation
 from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import async_mock_service
 
 

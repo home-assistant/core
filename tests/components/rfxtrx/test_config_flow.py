@@ -1,5 +1,6 @@
 """Test the Tado config flow."""
 import os
+from unittest.mock import MagicMock, patch, sentinel
 
 import serial.tools.list_ports
 
@@ -13,7 +14,6 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from tests.async_mock import MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 

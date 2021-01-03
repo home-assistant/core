@@ -2,6 +2,7 @@
 
 from functools import partial
 import re
+from unittest.mock import AsyncMock, Mock, patch
 
 import jsonpickle
 from plugwise.exceptions import (
@@ -12,7 +13,6 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 

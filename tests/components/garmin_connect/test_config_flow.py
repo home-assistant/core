@@ -1,4 +1,6 @@
 """Test the Garmin Connect config flow."""
+from unittest.mock import patch
+
 from garminconnect import (
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -10,7 +12,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_CONF = {

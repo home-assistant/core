@@ -1,9 +1,9 @@
 """Test Alexa entity representation."""
+from unittest.mock import patch
+
 from homeassistant.components.alexa import smart_home
 
 from . import DEFAULT_CONFIG, get_new_request
-
-from tests.async_mock import patch
 
 
 async def test_unsupported_domain(hass):

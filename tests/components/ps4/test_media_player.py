@@ -1,4 +1,6 @@
 """Tests for the PS4 media player platform."""
+from unittest.mock import MagicMock, patch
+
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
@@ -36,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"

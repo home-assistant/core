@@ -1,4 +1,6 @@
 """Tests for the WLED config flow."""
+from unittest.mock import MagicMock, patch
+
 import aiohttp
 from wled import WLEDConnectionError
 
@@ -10,7 +12,6 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
-from tests.async_mock import MagicMock, patch
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 

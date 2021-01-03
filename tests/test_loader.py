@@ -1,11 +1,12 @@
 """Test to verify that we can load components."""
+from unittest.mock import ANY, patch
+
 import pytest
 
 from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 
-from tests.async_mock import ANY, patch
 from tests.common import MockModule, async_mock_service, mock_integration
 
 
@@ -97,7 +98,7 @@ async def test_helpers_wrapper(hass):
 
 
 async def test_custom_component_name(hass):
-    """Test the name attribte of custom components."""
+    """Test the name attribute of custom components."""
     integration = await loader.async_get_integration(hass, "test_standalone")
     int_comp = integration.get_component()
     assert int_comp.__name__ == "custom_components.test_standalone"
