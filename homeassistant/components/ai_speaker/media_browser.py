@@ -109,10 +109,10 @@ async def async_ais_media_library() -> BrowseMedia:
 async def async_ais_audio_books_library(media_content_id, ais_gate) -> BrowseMedia:
     """Create response payload to describe contents of a books library."""
     # get all books
-    all_books = await ais_gate.get_audio_type(media_content_id)
     if media_content_id == "ais_audio_books":
         # get authors
         authors = []
+        all_books = await ais_gate.get_audio_type(media_content_id)
         for item in all_books:
             if item["author"] not in authors:
                 authors.append(item["author"])
@@ -143,6 +143,7 @@ async def async_ais_audio_books_library(media_content_id, ais_gate) -> BrowseMed
     elif media_content_id.count("/") == 1:
         # get books for author
         ais_books = []
+        all_books = await ais_gate.get_audio_type("ais_audio_books")
         for item in all_books:
             if item["author"] == media_content_id.replace("ais_audio_books/", ""):
                 if "cover_thumb" in item:
@@ -367,117 +368,112 @@ async def async_ais_tunein_library(media_content_id, ais_gate) -> BrowseMedia:
     """Create response payload to describe contents of a tunein library."""
     if media_content_id == "ais_tunein":
         response_text = await ais_gate.get_audio_type(media_content_id)
-        if response_text is not None:
-            root = XmlETree.fromstring(response_text)  # nosec
-            tune_types = []
-            for tune_item in root.findall("body/outline"):
-                tune_types.append(
+        if response_text is None:
+            _LOGGER.error("Can't connect tune in api")
+            raise BrowseError("Can't connect tune in api")
+        root = XmlETree.fromstring(response_text)  # nosec
+        tune_types = []
+        for tune_item in root.findall("body/outline"):
+            tune_types.append(
+                BrowseMedia(
+                    title=tune_item.get("text"),
+                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_content_id=media_content_id
+                    + "/2/"
+                    + tune_item.get("text")
+                    + "/"
+                    + tune_item.get("URL"),
+                    media_content_type=MEDIA_TYPE_APP,
+                    can_play=False,
+                    can_expand=True,
+                    thumbnail="",
+                )
+            )
+
+        return BrowseMedia(
+            title="TuneIn",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id=media_content_id,
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            children=tune_types,
+        )
+
+    if media_content_id.startswith("ais_tunein"):
+        response_text = await ais_gate.get_audio_name(media_content_id)
+        if response_text is None:
+            _LOGGER.error("Can't connect tune in api")
+            raise BrowseError("Can't connect tune in api")
+
+        root = XmlETree.fromstring(response_text)  # nosec
+        tune_items = []
+        for tune_item in root.findall("body/outline"):
+            if tune_item.get("type") == "audio":
+                tune_items.append(
                     BrowseMedia(
                         title=tune_item.get("text"),
                         media_class=MEDIA_CLASS_DIRECTORY,
-                        media_content_id=media_content_id
-                        + "/2/"
+                        media_content_id="ais_tunein/2/"
+                        + tune_item.get("text")
+                        + "/"
+                        + tune_item.get("URL"),
+                        media_content_type=MEDIA_TYPE_APP,
+                        can_play=True,
+                        can_expand=False,
+                        thumbnail=tune_item.get("image"),
+                    )
+                )
+            elif tune_item.get("type") == "link":
+                tune_items.append(
+                    BrowseMedia(
+                        title=tune_item.get("text"),
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_id="ais_tunein/2/"
                         + tune_item.get("text")
                         + "/"
                         + tune_item.get("URL"),
                         media_content_type=MEDIA_TYPE_APP,
                         can_play=False,
                         can_expand=True,
-                        thumbnail="",
                     )
                 )
-
-            root = BrowseMedia(
-                title="TuneIn",
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id=media_content_id,
-                media_content_type=MEDIA_TYPE_APP,
-                can_expand=True,
-                can_play=False,
-                children=tune_types,
-            )
-
-        else:
-            _LOGGER.error("Can't connect tune in api")
-            raise BrowseError("Can't connect tune in api")
-    elif media_content_id.startswith("ais_tunein"):
-        response_text = await ais_gate.get_audio_name(media_content_id)
-        if response_text is not None:
-            root = XmlETree.fromstring(response_text)  # nosec
-            tune_items = []
-            for tune_item in root.findall("body/outline"):
-                if tune_item.get("type") == "audio":
-                    tune_items.append(
-                        BrowseMedia(
-                            title=tune_item.get("text"),
-                            media_class=MEDIA_CLASS_DIRECTORY,
-                            media_content_id="ais_tunein/2/"
-                            + tune_item.get("text")
-                            + "/"
-                            + tune_item.get("URL"),
-                            media_content_type=MEDIA_TYPE_APP,
-                            can_play=True,
-                            can_expand=False,
-                            thumbnail=tune_item.get("image"),
-                        )
+        for tune_item in root.findall("body/outline/outline"):
+            if tune_item.get("type") == "audio":
+                tune_items.append(
+                    BrowseMedia(
+                        title=tune_item.get("text"),
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_id="ais_tunein/2/"
+                        + tune_item.get("text")
+                        + "/"
+                        + tune_item.get("URL"),
+                        media_content_type=MEDIA_TYPE_APP,
+                        can_play=True,
+                        can_expand=False,
+                        thumbnail=tune_item.get("image"),
                     )
-                elif tune_item.get("type") == "link":
-                    tune_items.append(
-                        BrowseMedia(
-                            title=tune_item.get("text"),
-                            media_class=MEDIA_CLASS_DIRECTORY,
-                            media_content_id="ais_tunein/2/"
-                            + tune_item.get("text")
-                            + "/"
-                            + tune_item.get("URL"),
-                            media_content_type=MEDIA_TYPE_APP,
-                            can_play=False,
-                            can_expand=True,
-                        )
+                )
+            elif tune_item.get("type") == "link":
+                tune_items.append(
+                    BrowseMedia(
+                        title=tune_item.get("text"),
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_id="ais_tunein/2/"
+                        + tune_item.get("text")
+                        + "/"
+                        + tune_item.get("URL"),
+                        media_content_type=MEDIA_TYPE_APP,
+                        can_play=False,
+                        can_expand=True,
                     )
-            for tune_item in root.findall("body/outline/outline"):
-                if tune_item.get("type") == "audio":
-                    tune_items.append(
-                        BrowseMedia(
-                            title=tune_item.get("text"),
-                            media_class=MEDIA_CLASS_DIRECTORY,
-                            media_content_id="ais_tunein/2/"
-                            + tune_item.get("text")
-                            + "/"
-                            + tune_item.get("URL"),
-                            media_content_type=MEDIA_TYPE_APP,
-                            can_play=True,
-                            can_expand=False,
-                            thumbnail=tune_item.get("image"),
-                        )
-                    )
-                elif tune_item.get("type") == "link":
-                    tune_items.append(
-                        BrowseMedia(
-                            title=tune_item.get("text"),
-                            media_class=MEDIA_CLASS_DIRECTORY,
-                            media_content_id="ais_tunein/2/"
-                            + tune_item.get("text")
-                            + "/"
-                            + tune_item.get("URL"),
-                            media_content_type=MEDIA_TYPE_APP,
-                            can_play=False,
-                            can_expand=True,
-                        )
-                    )
-
-            root = BrowseMedia(
-                title=media_content_id.split("/", 3)[2],
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id=media_content_id,
-                media_content_type=MEDIA_TYPE_APP,
-                can_expand=True,
-                can_play=False,
-                children=tune_items,
-            )
-
-        else:
-            _LOGGER.error("Can't connect tune in api")
-            raise BrowseError("Can't connect tune in api")
-
-        return root
+                )
+        return BrowseMedia(
+            title=media_content_id.split("/", 3)[2],
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id=media_content_id,
+            media_content_type=MEDIA_TYPE_APP,
+            can_expand=True,
+            can_play=False,
+            children=tune_items,
+        )
