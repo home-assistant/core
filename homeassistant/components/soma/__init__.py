@@ -1,4 +1,5 @@
 """Support for Soma Smartshades."""
+import asyncio
 import logging
 
 from api.soma_api import SomaApi
@@ -63,7 +64,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    return True
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in SOMA_COMPONENTS
+            ]
+        )
+    )
+
+    return unload_ok
 
 
 class SomaEntity(Entity):
