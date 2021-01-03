@@ -1,5 +1,6 @@
 """The tests for the Sun component."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from pytest import mark
 
@@ -8,8 +9,6 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 
 async def test_setting_rising(hass, legacy_patchable_time):

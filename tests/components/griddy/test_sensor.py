@@ -1,13 +1,13 @@
 """The sensor tests for the griddy platform."""
 import json
 import os
+from unittest.mock import patch
 
 from griddypower.async_api import GriddyPriceData
 
 from homeassistant.components.griddy import CONF_LOADZONE, DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import load_fixture
 
 

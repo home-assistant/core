@@ -1,10 +1,10 @@
 """Test Automation config panel."""
 import json
+from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 
-from tests.async_mock import patch
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 

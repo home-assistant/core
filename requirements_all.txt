@@ -886,7 +886,7 @@ linode-api==4.1.9b1
 lmnotify==0.0.4
 
 # homeassistant.components.google_maps
-locationsharinglib==4.1.0
+locationsharinglib==4.1.5
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.2
@@ -1166,9 +1166,6 @@ proxmoxer==1.1.1
 
 # homeassistant.components.systemmonitor
 psutil==5.8.0
-
-# homeassistant.components.ptvsd
-ptvsd==4.3.2
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.9
@@ -2127,7 +2124,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.2.6
+surepy==0.4.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3

@@ -4,6 +4,7 @@ from copy import copy
 from datetime import timedelta
 import json
 import unittest
+from unittest.mock import patch, sentinel
 
 from homeassistant.components import history, recorder
 from homeassistant.components.recorder.models import process_timestamp
@@ -12,7 +13,6 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch, sentinel
 from tests.common import (
     get_test_home_assistant,
     init_recorder_component,

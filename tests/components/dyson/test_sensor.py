@@ -1,6 +1,7 @@
 """Test the Dyson sensor(s) component."""
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
@@ -20,7 +21,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 

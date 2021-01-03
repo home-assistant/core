@@ -1,4 +1,6 @@
 """Tests for the Withings component."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 import voluptuous as vol
 from withings_api.common import UnauthorizedException
@@ -25,7 +27,6 @@ from .common import (
     new_profile_config,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 

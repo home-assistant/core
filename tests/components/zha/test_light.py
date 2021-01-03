@@ -1,5 +1,6 @@
 """Test zha light."""
 from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, call, patch, sentinel
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -23,7 +24,6 @@ from .common import (
     send_attributes_report,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, call, patch, sentinel
 from tests.common import async_fire_time_changed
 
 ON = 1

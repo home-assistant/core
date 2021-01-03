@@ -1,4 +1,6 @@
 """Tests for the Risco event sensors."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components.risco import (
     LAST_EVENT_TIMESTAMP_KEY,
     CannotConnectError,
@@ -9,7 +11,6 @@ from homeassistant.components.risco.const import DOMAIN, EVENTS_COORDINATOR
 from .util import TEST_CONFIG, setup_risco
 from .util import two_zone_alarm  # noqa: F401
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 ENTITY_IDS = {

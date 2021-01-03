@@ -1,4 +1,6 @@
 """Test network helper."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant.components import cloud
@@ -15,7 +17,6 @@ from homeassistant.helpers.network import (
     is_internal_request,
 )
 
-from tests.async_mock import Mock, patch
 from tests.common import mock_component
 
 

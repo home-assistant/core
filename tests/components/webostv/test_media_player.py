@@ -26,9 +26,9 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 if sys.version_info >= (3, 8, 0):
-    from tests.async_mock import patch
+    from unittest.mock import patch
 else:
-    from tests.async_mock import patch
+    from unittest.mock import patch
 
 
 NAME = "fake"

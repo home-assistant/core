@@ -1,5 +1,7 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from unittest.mock import AsyncMock, patch
+
 from arcam.fmj.client import ConnectionFailed
 import pytest
 
@@ -19,7 +21,6 @@ from .conftest import (
     MOCK_UUID,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 MOCK_UPNP_DEVICE = f"""

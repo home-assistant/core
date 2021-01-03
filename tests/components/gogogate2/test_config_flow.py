@@ -1,4 +1,6 @@
 """Tests for the GogoGate2 component."""
+from unittest.mock import MagicMock, patch
+
 from gogogate2_api import GogoGate2Api
 from gogogate2_api.common import ApiError
 from gogogate2_api.const import GogoGate2ApiErrorCode
@@ -19,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"

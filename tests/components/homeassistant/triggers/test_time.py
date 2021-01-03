@@ -1,5 +1,6 @@
 """The tests for the time automation."""
 from datetime import timedelta
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,7 +11,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,

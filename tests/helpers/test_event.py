@@ -1,7 +1,8 @@
 """Test event helpers."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from astral import Astral
 import jinja2
@@ -39,7 +40,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
@@ -3181,7 +3181,7 @@ async def test_track_point_in_utc_time_cancel(hass):
     await asyncio.sleep(0.2)
 
     assert len(times) == 1
-    assert times[0].tzinfo == timezone.utc
+    assert times[0].tzinfo == dt_util.UTC
 
 
 async def test_async_track_point_in_time_cancel(hass):

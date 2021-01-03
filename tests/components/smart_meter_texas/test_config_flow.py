@@ -1,5 +1,6 @@
 """Test the Smart Meter Texas config flow."""
 import asyncio
+from unittest.mock import patch
 
 from aiohttp import ClientError
 import pytest
@@ -12,7 +13,6 @@ from homeassistant import config_entries, setup
 from homeassistant.components.smart_meter_texas.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_LOGIN = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}

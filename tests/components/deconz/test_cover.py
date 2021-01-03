@@ -1,6 +1,7 @@
 """deCONZ cover platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
@@ -22,8 +23,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import patch
 
 COVERS = {
     "1": {

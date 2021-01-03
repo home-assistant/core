@@ -1,6 +1,7 @@
 """The tests for the InfluxDB component."""
 from dataclasses import dataclass
 import datetime
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -15,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, Mock, call, patch
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
