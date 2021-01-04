@@ -1,6 +1,4 @@
 """Tests for various Plex services."""
-from unittest.mock import patch
-
 from homeassistant.components.plex.const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
