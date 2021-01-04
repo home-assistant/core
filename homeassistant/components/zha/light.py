@@ -1,6 +1,7 @@
 """Lights on Zigbee Home Automation networks."""
 from collections import Counter
 from datetime import timedelta
+import enum
 import functools
 import itertools
 import logging
@@ -86,6 +87,14 @@ SUPPORT_GROUP_LIGHT = (
     | SUPPORT_TRANSITION
     | SUPPORT_WHITE_VALUE
 )
+
+
+class LightColorMode(enum.IntEnum):
+    """ZCL light color mode enum."""
+
+    HS_COLOR = 0x00
+    XY_COLOR = 0x01
+    COLOR_TEMP = 0x02
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -442,6 +451,7 @@ class Light(BaseLight, ZhaEntity):
                 self._brightness = level
         if self._color_channel:
             attributes = [
+                "color_mode",
                 "color_temperature",
                 "current_x",
                 "current_y",
@@ -452,16 +462,21 @@ class Light(BaseLight, ZhaEntity):
                 attributes, from_cache=False
             )
 
-            color_temp = results.get("color_temperature")
-            if color_temp is not None:
-                self._color_temp = color_temp
-
-            color_x = results.get("current_x")
-            color_y = results.get("current_y")
-            if color_x is not None and color_y is not None:
-                self._hs_color = color_util.color_xy_to_hs(
-                    float(color_x / 65535), float(color_y / 65535)
-                )
+            color_mode = results.get("color_mode")
+            if color_mode is not None:
+                if color_mode == LightColorMode.COLOR_TEMP:
+                    color_temp = results.get("color_temperature")
+                    if color_temp is not None and color_mode:
+                        self._color_temp = color_temp
+                        self._hs_color = None
+                else:
+                    color_x = results.get("current_x")
+                    color_y = results.get("current_y")
+                    if color_x is not None and color_y is not None:
+                        self._hs_color = color_util.color_xy_to_hs(
+                            float(color_x / 65535), float(color_y / 65535)
+                        )
+                        self._color_temp = None
 
             color_loop_active = results.get("color_loop_active")
             if color_loop_active is not None:
