@@ -1,4 +1,6 @@
 """Tests for 1-Wire devices connected on SysBus."""
+from unittest.mock import patch
+
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import pytest
 
@@ -7,7 +9,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 MOCK_CONFIG = {

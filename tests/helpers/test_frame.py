@@ -1,9 +1,9 @@
 """Test the frame helper."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant.helpers import frame
-
-from tests.async_mock import Mock, patch
 
 
 async def test_extract_frame_integration(caplog):

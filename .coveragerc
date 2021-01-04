@@ -29,6 +29,8 @@ omit =
     homeassistant/components/agent_dvr/camera.py
     homeassistant/components/agent_dvr/const.py
     homeassistant/components/agent_dvr/helpers.py
+    homeassistant/components/airnow/__init__.py
+    homeassistant/components/airnow/sensor.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
@@ -100,7 +102,12 @@ omit =
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmp280/sensor.py
-    homeassistant/components/bmw_connected_drive/*
+    homeassistant/components/bmw_connected_drive/__init__.py
+    homeassistant/components/bmw_connected_drive/binary_sensor.py
+    homeassistant/components/bmw_connected_drive/device_tracker.py
+    homeassistant/components/bmw_connected_drive/lock.py
+    homeassistant/components/bmw_connected_drive/notify.py
+    homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
@@ -573,13 +580,7 @@ omit =
     homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
-    homeassistant/components/nest/__init__.py
-    homeassistant/components/nest/api.py
-    homeassistant/components/nest/binary_sensor.py
-    homeassistant/components/nest/camera.py
-    homeassistant/components/nest/climate.py
     homeassistant/components/nest/legacy/*
-    homeassistant/components/nest/sensor.py
     homeassistant/components/netatmo/__init__.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
@@ -624,6 +625,11 @@ omit =
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
     homeassistant/components/omnilogic/sensor.py
+    homeassistant/components/ondilo_ico/__init__.py
+    homeassistant/components/ondilo_ico/api.py
+    homeassistant/components/ondilo_ico/const.py
+    homeassistant/components/ondilo_ico/oauth_impl.py
+    homeassistant/components/ondilo_ico/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/base.py
@@ -701,7 +707,6 @@ omit =
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
-    homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
@@ -828,8 +833,9 @@ omit =
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/*
     homeassistant/components/solax/sensor.py
-    homeassistant/components/soma/cover.py
     homeassistant/components/soma/__init__.py
+    homeassistant/components/soma/cover.py
+    homeassistant/components/soma/sensor.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonos/*

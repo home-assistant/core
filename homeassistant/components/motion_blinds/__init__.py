@@ -25,7 +25,7 @@ from .gateway import ConnectMotionGateway
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict):
+def setup(hass: core.HomeAssistant, config: dict):
     """Set up the Motion Blinds component."""
     return True
 

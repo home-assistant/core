@@ -247,7 +247,7 @@ class MockPlexServer:
         """Mock the playlist lookup method."""
         return MockPlexMediaItem(playlist, mediatype="playlist")
 
-    @lru_cache()
+    @lru_cache
     def playlists(self):
         """Mock the playlists lookup method with a lazy init."""
         return [

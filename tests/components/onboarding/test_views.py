@@ -1,6 +1,7 @@
 """Test the onboarding views."""
 import asyncio
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_storage
 
-from tests.async_mock import patch
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, register_auth_provider
 from tests.components.met.conftest import mock_weather  # noqa: F401
 

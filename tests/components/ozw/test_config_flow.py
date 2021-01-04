@@ -1,4 +1,6 @@
 """Test the Z-Wave over MQTT config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, setup
@@ -6,7 +8,6 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw.config_flow import TITLE
 from homeassistant.components.ozw.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {

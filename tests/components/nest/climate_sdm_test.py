@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -699,6 +700,7 @@ async def test_thermostat_fan_off(hass):
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_FAN_ONLY,
         HVAC_MODE_OFF,
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
@@ -730,13 +732,49 @@ async def test_thermostat_fan_on(hass):
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
-    assert thermostat.state == HVAC_MODE_OFF
+    assert thermostat.state == HVAC_MODE_FAN_ONLY
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_FAN_ONLY,
+        HVAC_MODE_OFF,
+    }
+    assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
+    assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+
+
+async def test_thermostat_cool_with_fan(hass):
+    """Test a thermostat cooling while the fan is on."""
+    await setup_climate(
+        hass,
+        {
+            "sdm.devices.traits.Fan": {
+                "timerMode": "ON",
+                "timerTimeout": "2019-05-10T03:22:54Z",
+            },
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "OFF",
+            },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "COOL",
+            },
+        },
+    )
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_COOL
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_FAN_ONLY,
         HVAC_MODE_OFF,
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
@@ -766,7 +804,7 @@ async def test_thermostat_set_fan(hass, auth):
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
-    assert thermostat.state == HVAC_MODE_OFF
+    assert thermostat.state == HVAC_MODE_FAN_ONLY
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
@@ -845,13 +883,14 @@ async def test_thermostat_invalid_fan_mode(hass):
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
-    assert thermostat.state == HVAC_MODE_OFF
+    assert thermostat.state == HVAC_MODE_FAN_ONLY
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_FAN_ONLY,
         HVAC_MODE_OFF,
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
@@ -860,6 +899,54 @@ async def test_thermostat_invalid_fan_mode(hass):
     with pytest.raises(ValueError):
         await common.async_set_fan_mode(hass, FAN_LOW)
         await hass.async_block_till_done()
+
+
+async def test_thermostat_set_hvac_fan_only(hass, auth):
+    """Test a thermostat enabling the fan via hvac_mode."""
+    await setup_climate(
+        hass,
+        {
+            "sdm.devices.traits.Fan": {
+                "timerMode": "OFF",
+                "timerTimeout": "2019-05-10T03:22:54Z",
+            },
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "OFF",
+            },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "OFF",
+            },
+        },
+        auth=auth,
+    )
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_OFF
+    assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
+    assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+
+    await common.async_set_hvac_mode(hass, HVAC_MODE_FAN_ONLY)
+    await hass.async_block_till_done()
+
+    assert len(auth.captured_requests) == 2
+
+    (method, url, json) = auth.captured_requests.pop(0)
+    assert method == "post"
+    assert url == "some-device-id:executeCommand"
+    assert json == {
+        "command": "sdm.devices.commands.Fan.SetTimer",
+        "params": {"timerMode": "ON"},
+    }
+    (method, url, json) = auth.captured_requests.pop(0)
+    assert method == "post"
+    assert url == "some-device-id:executeCommand"
+    assert json == {
+        "command": "sdm.devices.commands.ThermostatMode.SetMode",
+        "params": {"mode": "OFF"},
+    }
 
 
 async def test_thermostat_target_temp(hass, auth):

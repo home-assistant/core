@@ -1,4 +1,6 @@
 """Test the Lutron Caseta config flow."""
+from unittest.mock import AsyncMock, patch
+
 from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant import config_entries, data_entry_flow
@@ -13,7 +15,6 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 

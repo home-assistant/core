@@ -1,5 +1,6 @@
 """Test the init file for the Insteon component."""
 import asyncio
+from unittest.mock import patch
 
 from pyinsteon.address import Address
 
@@ -40,7 +41,6 @@ from .const import (
 )
 from .mock_devices import MockDevices
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

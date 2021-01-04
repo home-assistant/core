@@ -1,10 +1,10 @@
 """Test the songpal integration."""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from songpal import SongpalException
 
 from homeassistant.components.songpal.const import CONF_ENDPOINT
 from homeassistant.const import CONF_NAME
-
-from tests.async_mock import AsyncMock, MagicMock, patch
 
 FRIENDLY_NAME = "name"
 ENTITY_ID = f"media_player.{FRIENDLY_NAME}"

@@ -1,5 +1,7 @@
 """Tests for the AdGuard Home config flow."""
 
+from unittest.mock import patch
+
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
@@ -15,7 +17,6 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {

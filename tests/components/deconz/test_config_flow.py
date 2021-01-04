@@ -1,6 +1,7 @@
 """Tests for deCONZ config flow."""
 
 import asyncio
+from unittest.mock import patch
 
 import pydeconz
 
@@ -30,8 +31,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
-
-from tests.async_mock import patch
 
 BAD_BRIDGEID = "0000000000000000"
 

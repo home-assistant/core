@@ -203,11 +203,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
-        super().__init__(zone_name, tado.device_id, zone_id)
+        super().__init__(zone_name, tado.home_id, zone_id)
 
         self.zone_id = zone_id
         self.zone_type = zone_type
-        self._unique_id = f"{zone_type} {zone_id} {tado.device_id}"
+        self._unique_id = f"{zone_type} {zone_id} {tado.home_id}"
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._supported_hvac_modes = supported_hvac_modes
@@ -245,7 +245,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.device_id, "zone", self.zone_id
+                    self._tado.home_id, "zone", self.zone_id
                 ),
                 self._async_update_callback,
             )
