@@ -17,6 +17,7 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 IMPORT_DATA = {
+    CONF_HOST: "pchk",
     CONF_IP_ADDRESS: "127.0.0.1",
     CONF_PORT: 4114,
     CONF_USERNAME: "lcn",
@@ -33,7 +34,6 @@ async def test_step_import(hass):
         "homeassistant.components.lcn.async_setup", return_value=True
     ), patch("homeassistant.components.lcn.async_setup_entry", return_value=True):
         data = IMPORT_DATA.copy()
-        data.update({CONF_HOST: "pchk"})
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
         )
@@ -53,7 +53,6 @@ async def test_step_import_existing_host(hass):
         return_value=mock_entry,
     ):
         data = IMPORT_DATA.copy()
-        data.update({CONF_HOST: "pchk"})
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
         )

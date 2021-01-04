@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BRIGHTNESS,
+    CONF_HOST,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     TIME_SECONDS,
@@ -61,7 +62,7 @@ class LcnServiceCall:
         address, host_name = service.data[CONF_ADDRESS]
 
         for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.title == host_name:
+            if config_entry.data[CONF_HOST] == host_name:
                 device_connection = get_device_connection(
                     self.hass, address, config_entry
                 )

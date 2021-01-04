@@ -66,7 +66,7 @@ class LcnFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, data):
         """Import existing configuration from LCN."""
-        host_name = data.pop(CONF_HOST)
+        host_name = data[CONF_HOST]
         # validate the imported connection parameters
         try:
             await validate_connection(host_name, data)
