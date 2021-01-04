@@ -93,7 +93,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for poolidx, pool in enumerate(coordinator.data):
         for sensor_idx, sensor in enumerate(pool["sensors"]):
-            if SENSOR_TYPES.get(sensor["data_type"], None) is not None:
+            if sensor["data_type"] in SENSOR_TYPES:
                 entities.append(OndiloICO(coordinator, poolidx, sensor_idx))
 
     async_add_entities(entities)
