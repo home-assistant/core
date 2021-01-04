@@ -37,12 +37,11 @@ async def system_health_info(hass):
             else:
                 health_info[key] = dashboard[key]
 
-    health_info[CONF_MODE] = (
-        MODE_STORAGE
-        if MODE_STORAGE in modes
-        else MODE_YAML
-        if MODE_YAML in modes
-        else MODE_AUTO
-    )
+    if MODE_STORAGE in modes:
+        health_info[CONF_MODE] = MODE_STORAGE
+    elif MODE_YAML in modes:
+        health_info[CONF_MODE] = MODE_YAML
+    else:
+        health_info[CONF_MODE] = MODE_AUTO
 
     return health_info
