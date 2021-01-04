@@ -14,13 +14,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for AI-Speaker status sensor."""
     _LOGGER.debug("AI-Speaker sensor, async_setup_entry")
     ais_gate_instance = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([AisSensor(hass, ais_gate_instance)], True)
+    async_add_entities([AisSensor(ais_gate_instance)], True)
 
 
 class AisSensor(Entity):
     """AiSpeakerSensor representation."""
 
-    def __init__(self, hass, ais_gate_instance):
+    def __init__(self, ais_gate_instance):
         """Sensor initialization."""
         self._ais_gate = ais_gate_instance
         self._ais_info = None
@@ -51,7 +51,7 @@ class AisSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "AI-Speaker " + self._ais_info["Product"] + " status"
+        return f"AI-Speaker {self._ais_product} status"
 
     @property
     def state(self):
@@ -59,7 +59,12 @@ class AisSensor(Entity):
         return self._ais_api_level
 
     @property
-    def state_attributes(self):
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return "api level"
+
+    @property
+    def device_state_attributes(self):
         """Return the attributes of the sensor."""
         return self._ais_info
 
