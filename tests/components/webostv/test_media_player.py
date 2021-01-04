@@ -1,5 +1,6 @@
 """The tests for the LG webOS media player platform."""
-import sys
+
+from unittest.mock import patch
 
 import pytest
 
@@ -24,12 +25,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
 )
 from homeassistant.setup import async_setup_component
-
-if sys.version_info >= (3, 8, 0):
-    from unittest.mock import patch
-else:
-    from unittest.mock import patch
-
 
 NAME = "fake"
 ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
