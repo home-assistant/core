@@ -31,6 +31,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_VICARE_MODE = "set_vicare_mode"
+SERVICE_SET_VICARE_MODE_ATTR_MODE = "vicare_mode"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_HEATING = "heating"
@@ -96,7 +97,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             ViCareClimate(
-                f"{hass.data[VICARE_DOMAIN][VICARE_NAME]}  Heating",
+                f"{hass.data[VICARE_DOMAIN][VICARE_NAME]} Heating",
                 vicare_api,
                 heating_type,
             )
@@ -108,7 +109,9 @@ async def async_setup_platform(
     platform.async_register_entity_service(
         SERVICE_SET_VICARE_MODE,
         {
-            vol.Required("vicare_mode"): vol.In(VICARE_TO_HA_HVAC_HEATING),
+            vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): vol.In(
+                VICARE_TO_HA_HVAC_HEATING
+            ),
         },
         "set_vicare_mode",
     )
@@ -212,7 +215,7 @@ class ViCareClimate(ClimateEntity):
         vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
         if vicare_mode is None:
             raise ValueError(
-                "Cannot set invalid vicare mode: %s / %s", hvac_mode, vicare_mode
+                f"Cannot set invalid vicare mode: {hvac_mode} / {vicare_mode}"
             )
 
         _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
@@ -245,13 +248,11 @@ class ViCareClimate(ClimateEntity):
         """Return the precision of the system."""
         return PRECISION_WHOLE
 
-    async def async_set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            await self.hass.async_add_executor_job(
-                self._async_set_program_temperature, self._current_program, temp
-            )
+            self._api.setProgramTemperature(self._current_program, temp)
             self._target_temperature = temp
 
     @property
@@ -283,10 +284,11 @@ class ViCareClimate(ClimateEntity):
         """Show Device Attributes."""
         return self._attributes
 
-    async def set_vicare_mode(self, mode):
+    def set_vicare_mode(self, **kwargs):
+        """Service function to set vicare modes directly."""
+        mode = kwargs.get(SERVICE_SET_VICARE_MODE_ATTR_MODE)
         """Set a new hvac mode on the ViCare API."""
         if mode not in VICARE_TO_HA_HVAC_HEATING:
-            raise ValueError("Cannot set invalid vicare mode: %s", mode)
+            raise ValueError(f"Cannot set invalid vicare mode: {mode}")
 
-        _LOGGER.debug("Setting hvac mode to %s", mode)
-        await self.hass.async_add_executor_job(self._async_set_mode, mode)
+        self._api.setMode(mode)

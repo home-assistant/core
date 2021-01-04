@@ -4,6 +4,6 @@ set_vicare_mode:
     entity_id:
       description: Name(s) of vicare climate entities.
       example: "climate.vicare_heating"
-    command:
-      description: ViCare mode. One of "dhw", "dhwAndHeating", "dhwAndHeatingCooling", "forcedReduced", "forcedNormal" or "standby"
+    vicare_mode:
+      description: ViCare mode. One of "dhw", "dhwAndHeating", "heating", "dhwAndHeatingCooling", "forcedReduced", "forcedNormal" or "standby"
       example: "dhw"
