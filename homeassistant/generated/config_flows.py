@@ -140,6 +140,7 @@ FLOWS = [
     "nws",
     "nzbget",
     "omnilogic",
+    "ondilo_ico",
     "onewire",
     "onvif",
     "opentherm_gw",

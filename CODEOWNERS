@@ -319,6 +319,7 @@ homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu
 homeassistant/components/onboarding/* @home-assistant/core
+homeassistant/components/ondilo_ico/* @JeromeHXP
 homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
 homeassistant/components/openerz/* @misialq

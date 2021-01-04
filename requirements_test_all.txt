@@ -513,6 +513,9 @@ objgraph==3.4.1
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
 
+# homeassistant.components.ondilo_ico
+ondilo==0.2.0
+
 # homeassistant.components.onvif
 onvif-zeep-async==1.0.0
 
