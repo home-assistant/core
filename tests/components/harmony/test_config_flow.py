@@ -1,5 +1,5 @@
 """Test the Logitech Harmony Hub config flow."""
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.harmony.config_flow import CannotConnect
@@ -15,23 +15,6 @@ def _get_mock_harmonyapi(connect=None, close=None):
     type(harmonyapi_mock).close = AsyncMock(return_value=close)
 
     return harmonyapi_mock
-
-
-def _get_mock_harmonyclient():
-    harmonyclient_mock = MagicMock()
-    type(harmonyclient_mock).connect = AsyncMock()
-    type(harmonyclient_mock).close = AsyncMock()
-    type(harmonyclient_mock).get_activity_name = MagicMock(return_value="Watch TV")
-    type(harmonyclient_mock.hub_config).activities = PropertyMock(
-        return_value=[{"name": "Watch TV", "id": 123}]
-    )
-    type(harmonyclient_mock.hub_config).devices = PropertyMock(
-        return_value=[{"name": "My TV", "id": 1234}]
-    )
-    type(harmonyclient_mock.hub_config).info = PropertyMock(return_value={})
-    type(harmonyclient_mock.hub_config).hub_state = PropertyMock(return_value={})
-
-    return harmonyclient_mock
 
 
 async def test_user_form(hass):
@@ -213,9 +196,8 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, mock_hc):
     """Test config flow options."""
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="abcde12345",
@@ -223,19 +205,13 @@ async def test_options_flow(hass):
         options={"activity": "Watch TV", "delay_secs": 0.5},
     )
 
-    harmony_client = _get_mock_harmonyclient()
-
-    with patch(
-        "aioharmony.harmonyapi.HarmonyClient",
-        return_value=harmony_client,
-    ), patch("homeassistant.components.harmony.remote.HarmonyRemote.write_config_file"):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"

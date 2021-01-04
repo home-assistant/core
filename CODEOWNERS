@@ -180,7 +180,7 @@ homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/guardian/* @bachya
-homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco
+homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
 homeassistant/components/hassio/* @home-assistant/supervisor
 homeassistant/components/hdmi_cec/* @newAM
 homeassistant/components/heatmiser/* @andylockran

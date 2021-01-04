@@ -1,11 +1,7 @@
 """The Logitech Harmony Hub integration."""
 import asyncio
 
-from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
-    ATTR_DELAY_SECS,
-    DEFAULT_DELAY_SECS,
-)
+from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
-from .remote import HarmonyRemote
+from .data import HarmonyData
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -33,22 +29,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     address = entry.data[CONF_HOST]
     name = entry.data[CONF_NAME]
-    activity = entry.options.get(ATTR_ACTIVITY)
-    delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-
-    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
+    data = HarmonyData(hass, address, name, entry.unique_id)
     try:
-        device = HarmonyRemote(
-            name, entry.unique_id, address, activity, harmony_conf_file, delay_secs
-        )
-        connected_ok = await device.connect()
+        connected_ok = await data.connect()
     except (asyncio.TimeoutError, ValueError, AttributeError) as err:
         raise ConfigEntryNotReady from err
 
     if not connected_ok:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = device
+    hass.data[DOMAIN][entry.entry_id] = data
 
     entry.add_update_listener(_update_listener)
 
@@ -92,8 +82,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Shutdown a harmony remote for removal
-    device = hass.data[DOMAIN][entry.entry_id]
-    await device.shutdown()
+    data = hass.data[DOMAIN][entry.entry_id]
+    await data.shutdown()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
