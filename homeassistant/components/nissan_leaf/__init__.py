@@ -374,16 +374,15 @@ class LeafDataStore:
                     )
                     if start_date != self._extract_start_date(server_info):
                         return server_info
-                    else:
-                        # get_status_from_update returned {"resultFlag": "1"}
-                        # but the data didn't change, make a fresh request.
-                        await asyncio.sleep(1)  # Critical sleep
-                        request = await self.hass.async_add_executor_job(
-                            self.leaf.request_update
-                        )
-                        if not request:
-                            _LOGGER.error("Battery update request failed")
-                            return None
+                    # get_status_from_update returned {"resultFlag": "1"}
+                    # but the data didn't change, make a fresh request.
+                    await asyncio.sleep(1)  # Critical sleep
+                    request = await self.hass.async_add_executor_job(
+                        self.leaf.request_update
+                    )
+                    if not request:
+                        _LOGGER.error("Battery update request failed")
+                        return None
 
             _LOGGER.debug(
                 "%s attempts exceeded return latest data from server",
