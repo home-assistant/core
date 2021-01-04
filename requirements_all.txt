@@ -1810,7 +1810,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.8.1
+python-tado==0.10.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1

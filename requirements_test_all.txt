@@ -897,7 +897,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.8.1
+python-tado==0.10.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0

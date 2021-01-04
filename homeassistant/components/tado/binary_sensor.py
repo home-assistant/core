@@ -157,10 +157,10 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     @callback
     def _async_update_device_data(self):
         """Handle update callbacks."""
-        for device in self._tado.devices:
-            if device["serialNo"] == self.device_id:
-                self._device_info = device
-                break
+        try:
+            self._device_info = self._tado.data["device"][self.device_id]
+        except KeyError:
+            return
 
         if self.device_variable == "battery state":
             self._state = self._device_info["batteryState"] == "LOW"
