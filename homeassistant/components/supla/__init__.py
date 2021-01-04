@@ -28,6 +28,7 @@ SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
     "CONTROLLINGTHEGATE": "cover",
     "LIGHTSWITCH": "switch",
+    "POWERSWITCH": "switch",
 }
 SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_SERVERS = "supla_servers"
