@@ -389,11 +389,10 @@ class DeviceRegistry:
             ("sw_version", sw_version),
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
+            ("disabled_by", disabled_by),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
-        if disabled_by is not UNDEFINED and disabled_by != getattr(old, "disabled_by"):
-            changes["disabled_by"] = disabled_by
 
         if area_id is not UNDEFINED and area_id != old.area_id:
             changes["area_id"] = area_id
