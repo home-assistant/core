@@ -26,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-
 NAME = "fake"
 ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
 

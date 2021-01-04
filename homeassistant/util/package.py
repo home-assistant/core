@@ -1,11 +1,8 @@
 """Helpers to install PyPi packages."""
 import asyncio
+from importlib.metadata import PackageNotFoundError, version
 import logging
 import os
-from importlib.metadata import (
-    PackageNotFoundError,
-    version,
-)
 from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
