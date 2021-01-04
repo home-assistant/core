@@ -172,22 +172,15 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
     for id in ENTITY_IDS.values():
         assert not registry.async_is_registered(id)
 
-    await setup_risco(hass)
-    await hass.async_block_till_done()
-    for id in ENTITY_IDS.values():
-        assert registry.async_is_registered(id)
-
     with patch(
-        "homeassistant.components.risco.RiscoAPI.get_events",
-        return_value=TEST_EVENTS,
-    ), patch(
         "homeassistant.components.risco.RiscoAPI.site_uuid",
         new_callable=PropertyMock(return_value=TEST_SITE_UUID),
     ), patch(
         "homeassistant.components.risco.Store.async_save",
     ) as save_mock:
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=65))
-        await hass.async_block_till_done()
+        await setup_risco(hass, TEST_EVENTS)
+        for id in ENTITY_IDS.values():
+            assert registry.async_is_registered(id)
 
         save_mock.assert_awaited_once_with(
             {LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time}
