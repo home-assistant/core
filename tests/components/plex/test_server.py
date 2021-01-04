@@ -28,7 +28,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update, wait_for_debouncer
-from .payloads import EMPTY_PAYLOAD, PLAYQUEUE_CREATED, generate_session
+from .payloads import EMPTY_PAYLOAD, NEW_USER_SESSION, PLAYQUEUE_CREATED
 
 
 async def test_new_users_available(hass, entry, setup_plex_server):
@@ -63,7 +63,7 @@ async def test_new_ignored_users_available(
 
     requests_mock.get(
         f"{mock_plex_server.url_in_use}/status/sessions",
-        text=generate_session(user_id="1001"),
+        text=NEW_USER_SESSION,
     )
     trigger_plex_update(mock_websocket)
     await wait_for_debouncer(hass)

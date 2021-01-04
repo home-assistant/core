@@ -14,6 +14,7 @@ from .payloads import (
     CHILDREN_30,
     CHILDREN_200,
     CHILDREN_300,
+    DEFAULT_SESSION,
     EMPTY_LIBRARY,
     EMPTY_PAYLOAD,
     GRANDCHILDREN_300,
@@ -27,17 +28,18 @@ from .payloads import (
     MEDIA_30,
     MEDIA_100,
     MEDIA_200,
+    PHOTO_SESSION,
     PLAYLIST_500,
     PLAYLISTS_PAYLOAD,
     PLEX_SERVER_PAYLOAD,
     PLEXTV_ACCOUNT_PAYLOAD,
     PLEXTV_RESOURCES,
+    PLEXWEB_SESSION,
     PMS_ACCOUNT_PAYLOAD,
     PMS_CLIENTS,
     PMS_LIBRARY_PAYLOAD,
     PMS_LIBRARY_SECTIONS_PAYLOAD,
     SECURITY_TOKEN,
-    generate_session,
 )
 
 from tests.common import MockConfigEntry
@@ -117,11 +119,17 @@ def setup_plex_server(hass, entry, mock_websocket, mock_plex_calls, requests_moc
         config_entry = kwargs.get("config_entry", entry)
         disable_clients = kwargs.pop("disable_clients", False)
         disable_gdm = kwargs.pop("disable_gdm", True)
-        client_type = kwargs.pop("client_type", "native")
-        session_type = kwargs.pop("session_type", "movie")
+        client_type = kwargs.pop("client_type", None)
+        session_type = kwargs.pop("session_type", None)
+
+        if client_type == "plexweb":
+            session = PLEXWEB_SESSION
+        elif session_type == "photo":
+            session = PHOTO_SESSION
+        else:
+            session = DEFAULT_SESSION
 
         url = plex_server_url(entry)
-        session = generate_session(session_type, client_type)
         requests_mock.get(f"{url}/status/sessions", text=session)
 
         if disable_clients:
