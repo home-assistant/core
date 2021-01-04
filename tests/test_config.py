@@ -4,6 +4,7 @@ from collections import OrderedDict
 import copy
 import os
 from unittest import mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -34,7 +35,6 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()

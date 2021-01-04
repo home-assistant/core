@@ -1,11 +1,12 @@
 """Test integration initialization."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
 
 from .common import setup_ozw
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

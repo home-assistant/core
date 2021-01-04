@@ -1,4 +1,6 @@
 """Test the Kodi config flow."""
+from unittest.mock import AsyncMock, PropertyMock, patch
+
 import pytest
 
 from homeassistant import config_entries
@@ -21,7 +23,6 @@ from .util import (
     get_kodi_connection,
 )
 
-from tests.async_mock import AsyncMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 

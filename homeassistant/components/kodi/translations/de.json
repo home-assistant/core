@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "Kodi: {name}",
         "step": {

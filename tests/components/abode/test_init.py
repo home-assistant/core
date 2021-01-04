@@ -1,4 +1,6 @@
 """Tests for the Abode module."""
+from unittest.mock import patch
+
 from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant.components.abode import (
@@ -11,8 +13,6 @@ from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import CONF_USERNAME, HTTP_BAD_REQUEST
 
 from .common import setup_platform
-
-from tests.async_mock import patch
 
 
 async def test_change_settings(hass):

@@ -5,6 +5,7 @@ from typing import List, Optional
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.core import callback
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
@@ -36,7 +37,6 @@ from .const import (
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-_UNDEF = object()
 
 
 class CloudPreferences:
@@ -74,18 +74,18 @@ class CloudPreferences:
     async def async_update(
         self,
         *,
-        google_enabled=_UNDEF,
-        alexa_enabled=_UNDEF,
-        remote_enabled=_UNDEF,
-        google_secure_devices_pin=_UNDEF,
-        cloudhooks=_UNDEF,
-        cloud_user=_UNDEF,
-        google_entity_configs=_UNDEF,
-        alexa_entity_configs=_UNDEF,
-        alexa_report_state=_UNDEF,
-        google_report_state=_UNDEF,
-        alexa_default_expose=_UNDEF,
-        google_default_expose=_UNDEF,
+        google_enabled=UNDEFINED,
+        alexa_enabled=UNDEFINED,
+        remote_enabled=UNDEFINED,
+        google_secure_devices_pin=UNDEFINED,
+        cloudhooks=UNDEFINED,
+        cloud_user=UNDEFINED,
+        google_entity_configs=UNDEFINED,
+        alexa_entity_configs=UNDEFINED,
+        alexa_report_state=UNDEFINED,
+        google_report_state=UNDEFINED,
+        alexa_default_expose=UNDEFINED,
+        google_default_expose=UNDEFINED,
     ):
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -104,7 +104,7 @@ class CloudPreferences:
             (PREF_ALEXA_DEFAULT_EXPOSE, alexa_default_expose),
             (PREF_GOOGLE_DEFAULT_EXPOSE, google_default_expose),
         ):
-            if value is not _UNDEF:
+            if value is not UNDEFINED:
                 prefs[key] = value
 
         if remote_enabled is True and self._has_local_trusted_network:
@@ -121,10 +121,10 @@ class CloudPreferences:
         self,
         *,
         entity_id,
-        override_name=_UNDEF,
-        disable_2fa=_UNDEF,
-        aliases=_UNDEF,
-        should_expose=_UNDEF,
+        override_name=UNDEFINED,
+        disable_2fa=UNDEFINED,
+        aliases=UNDEFINED,
+        should_expose=UNDEFINED,
     ):
         """Update config for a Google entity."""
         entities = self.google_entity_configs
@@ -137,7 +137,7 @@ class CloudPreferences:
             (PREF_ALIASES, aliases),
             (PREF_SHOULD_EXPOSE, should_expose),
         ):
-            if value is not _UNDEF:
+            if value is not UNDEFINED:
                 changes[key] = value
 
         if not changes:
@@ -149,7 +149,7 @@ class CloudPreferences:
         await self.async_update(google_entity_configs=updated_entities)
 
     async def async_update_alexa_entity_config(
-        self, *, entity_id, should_expose=_UNDEF
+        self, *, entity_id, should_expose=UNDEFINED
     ):
         """Update config for an Alexa entity."""
         entities = self.alexa_entity_configs
@@ -157,7 +157,7 @@ class CloudPreferences:
 
         changes = {}
         for key, value in ((PREF_SHOULD_EXPOSE, should_expose),):
-            if value is not _UNDEF:
+            if value is not UNDEFINED:
                 changes[key] = value
 
         if not changes:

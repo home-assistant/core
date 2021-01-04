@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/shelly",
   "requirements": ["aioshelly==0.5.1"],
   "zeroconf": [{ "type": "_http._tcp.local.", "name": "shelly*" }],
-  "codeowners": ["@balloob", "@bieniu", "@thecode"]
+  "codeowners": ["@balloob", "@bieniu", "@thecode", "@chemelli74"]
 }

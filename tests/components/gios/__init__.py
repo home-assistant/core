@@ -1,9 +1,9 @@
 """Tests for GIOS."""
 import json
+from unittest.mock import patch
 
 from homeassistant.components.gios.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 STATIONS = [

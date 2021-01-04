@@ -1,6 +1,7 @@
 """The tests for the MQTT scene platform."""
 import copy
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -20,8 +21,6 @@ from .test_common import (
     help_test_discovery_update_unchanged,
     help_test_unique_id,
 )
-
-from tests.async_mock import patch
 
 DEFAULT_CONFIG = {
     scene.DOMAIN: {

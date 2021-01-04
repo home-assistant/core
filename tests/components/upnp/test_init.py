@@ -1,5 +1,7 @@
 """Test UPnP/IGD setup process."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components import upnp
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
@@ -19,7 +21,6 @@ from homeassistant.setup import async_setup_component
 
 from .mock_device import MockDevice
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 

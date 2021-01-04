@@ -1,5 +1,5 @@
 """Test Yeelight."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from yeelight import BulbType
 
@@ -32,7 +32,6 @@ from . import (
     _patch_discovery,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

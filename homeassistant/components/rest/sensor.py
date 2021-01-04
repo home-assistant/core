@@ -227,6 +227,7 @@ class RestSensor(Entity):
             if content_type and (
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
+                or content_type.startswith("application/xhtml+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))

@@ -36,10 +36,9 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DATA_SUBSCRIBER, DOMAIN, SIGNAL_NEST_UPDATE
+from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
@@ -126,16 +125,9 @@ class ThermostatEntity(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-        # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
-        # here to re-fresh the signals from _device.  Unregister this callback
-        # when the entity is removed.
         self._supported_features = self._get_supported_features()
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_NEST_UPDATE,
-                self.async_write_ha_state,
-            )
+            self._device.add_update_listener(self.async_write_ha_state)
         )
 
     @property
@@ -318,6 +310,6 @@ class ThermostatEntity(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
-            raise ValueError(f"Unsupported fan__mode '{fan_mode}'")
+            raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
         trait = self._device.traits[FanTrait.NAME]
         await trait.set_timer(FAN_INV_MODE_MAP[fan_mode])
