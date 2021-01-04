@@ -64,8 +64,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "cannot_connect"
-        except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception %s", e)
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception %s", error)
             errors["base"] = "unknown"
         else:
             # check if this ais id is already configured
