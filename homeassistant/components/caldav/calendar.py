@@ -52,7 +52,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                         vol.Required(CONF_CALENDAR): cv.string,
                         vol.Required(CONF_NAME): cv.string,
                         vol.Required(CONF_SEARCH): cv.string,
-                        vol.Optional(CONF_DEFAULTOFFSET, default="00:00"): cv.time_period_str,
+                        vol.Optional(
+                            CONF_DEFAULTOFFSET, default="00:00"
+                        ): cv.time_period_str,
                     }
                 )
             ],
@@ -99,8 +101,13 @@ def setup_platform(hass, config, add_entities, disc_info=None):
             default_offset = cust_calendar[CONF_DEFAULTOFFSET]
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH],
-                    default_offset
+                    name,
+                    calendar,
+                    entity_id,
+                    days,
+                    True,
+                    cust_calendar[CONF_SEARCH],
+                    default_offset,
                 )
             )
 
@@ -119,8 +126,16 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 class WebDavCalendarEventDevice(CalendarEventDevice):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, name, calendar, entity_id, days, all_day=False, search=None,
-            default_offset=None):
+    def __init__(
+        self,
+        name,
+        calendar,
+        entity_id,
+        days,
+        all_day=False,
+        search=None,
+        default_offset=None,
+    ):
         """Create the WebDav Calendar Event Device."""
         self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
