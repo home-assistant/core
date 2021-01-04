@@ -32,9 +32,12 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Seconds to wait before considering a device away",
                     "dnsmasq": "The location in the router of the dnsmasq.leases files",
                     "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
-                    "require_ip": "Devices must have IP (for access point mode)"
+                    "require_ip": "Devices must have IP (for access point mode)",
+                    "track_new_devices": "Track new detected devices",
+                    "track_unknown": "Track unknown / unamed devices"
                 },
                 "title": "AsusWRT Options"
             }
