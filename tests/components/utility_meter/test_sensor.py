@@ -203,10 +203,14 @@ async def test_non_net_consumption(hass):
 
 def gen_config(cycle, offset=None):
     """Generate configuration."""
-    config = {
-        "utility_meter": {"energy_bill": {"source": "sensor.energy", "cycle": cycle}}
-    }
-
+    if cycle == ("manual"):
+        config = {"utility_meter": {"energy_bill": {"source": "sensor.energy"}}}
+    else:
+        config = {
+            "utility_meter": {
+                "energy_bill": {"source": "sensor.energy", "cycle": cycle}
+            }
+        }
     if offset:
         config["utility_meter"]["energy_bill"]["offset"] = {
             "days": offset.days,
@@ -375,6 +379,16 @@ async def test_no_reset_yearly_offset(hass, legacy_patchable_time):
     await _test_self_reset(
         hass,
         gen_config("yearly", timedelta(31)),
+        "2018-01-30T23:59:00.000000+00:00",
+        expect_reset=False,
+    )
+
+
+async def test_no_reset_none(hass, legacy_patchable_time):
+    """Test no reset of meter."""
+    await _test_self_reset(
+        hass,
+        gen_config("manual"),
         "2018-01-30T23:59:00.000000+00:00",
         expect_reset=False,
     )

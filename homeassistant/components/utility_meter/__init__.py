@@ -25,6 +25,7 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
+    MANUAL,
     SERVICE_RESET,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
@@ -38,13 +39,14 @@ TARIFF_ICON = "mdi:clock-outline"
 ATTR_TARIFFS = "tariffs"
 
 DEFAULT_OFFSET = timedelta(hours=0)
+DEFAULT_METER_TYPE = MANUAL
 
 
 METER_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
+        vol.Optional(CONF_METER_TYPE, default=DEFAULT_METER_TYPE): vol.In(METER_TYPES),
         vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
