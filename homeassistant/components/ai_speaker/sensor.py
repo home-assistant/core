@@ -23,13 +23,14 @@ class AisSensor(Entity):
     def __init__(self, ais_gate_instance):
         """Sensor initialization."""
         self._ais_gate = ais_gate_instance
-        self._ais_info = None
         self._ais_id = None
         self._ais_product = None
         self._ais_manufacturer = None
         self._ais_model = None
         self._ais_os_version = None
         self._ais_api_level = None
+        self._ais_ip_address = None
+        self._ais_hostname = None
 
     @property
     def device_info(self):
@@ -65,8 +66,16 @@ class AisSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the attributes of the sensor."""
-        return self._ais_info
+        """Return the attributes of the device."""
+        return {
+            "ais_id": self._ais_id,
+            "ais_product": self._ais_product,
+            "ais_manufacturer": self._ais_manufacturer,
+            "ais_model": self._ais_model,
+            "ais_os_version": self._ais_os_version,
+            "ais_ip_address": self._ais_ip_address,
+            "ai_hostname": self._ais_hostname,
+        }
 
     @property
     def icon(self):
@@ -75,10 +84,12 @@ class AisSensor(Entity):
 
     async def async_update(self):
         """Update the sensor."""
-        self._ais_info = await self._ais_gate.get_gate_info()
-        self._ais_id = self._ais_info["ais_id"]
-        self._ais_product = self._ais_info["Product"]
-        self._ais_manufacturer = self._ais_info["Manufacturer"]
-        self._ais_model = self._ais_info["Model"]
-        self._ais_os_version = self._ais_info["OsVersion"]
-        self._ais_api_level = self._ais_info["ApiLevel"]
+        ais_info = await self._ais_gate.get_gate_info()
+        self._ais_id = ais_info["ais_id"]
+        self._ais_product = ais_info["Product"]
+        self._ais_manufacturer = ais_info["Manufacturer"]
+        self._ais_model = ais_info["Model"]
+        self._ais_os_version = ais_info["OsVersion"]
+        self._ais_api_level = ais_info["ApiLevel"]
+        self._ais_ip_address = ais_info["IPAddressIPv4"]
+        self._ais_hostname = ais_info["Hostname"]
