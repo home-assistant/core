@@ -83,7 +83,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         )
         if hasattr(block, "brightness") or hasattr(block, "gain"):
             self._supported_features |= SUPPORT_BRIGHTNESS
-        if hasattr(block, "colorTemp") and not self._color_mode:
+        if hasattr(block, "colorTemp"):
             self._supported_features |= SUPPORT_COLOR_TEMP
         if hasattr(block, "white") and self._color_mode:
             self._supported_features |= SUPPORT_WHITE_VALUE
@@ -176,10 +176,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
                 params["brightness"] = tmp_brightness
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            if color_temp > KELVIN_MAX_VALUE:
-                color_temp = KELVIN_MAX_VALUE
-            elif color_temp < min_kelvin(self.wrapper.model):
-                color_temp = min_kelvin(self.wrapper.model)
+            color_temp = min(
+                KELVIN_MAX_VALUE, max(min_kelvin(self.wrapper.model), color_temp)
+            )
             params["temp"] = int(color_temp)
         elif ATTR_HS_COLOR in kwargs:
             red, green, blue = color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
