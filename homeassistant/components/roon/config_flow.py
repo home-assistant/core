@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema({"host": str})
 TIMEOUT = 120
 
 
-class RoonHub:
+class RoonHub:  # pragma: no cover
     """Interact with roon during config flow."""
 
     def __init__(self, hass):
