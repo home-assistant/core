@@ -209,12 +209,14 @@ class EntityPlatform:
             hass.config.components.add(full_name)
             self._setup_complete = True
             return True
-        except PlatformNotReady:
+        except PlatformNotReady as e:
             tries += 1
             wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
+            cause = e.__cause__ or e.__context__
             logger.warning(
-                "Platform %s not ready yet. Retrying in %d seconds.",
+                "Platform %s not ready yet (cause: %s). Retrying in %d seconds.",
                 self.platform_name,
+                cause,
                 wait_time,
             )
 
