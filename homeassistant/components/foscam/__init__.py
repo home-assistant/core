@@ -1,14 +1,21 @@
 """The foscam component."""
 import asyncio
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN, SERVICE_PTZ
+
 PLATFORMS = ["camera"]
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the foscam component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -18,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    hass.data[DOMAIN][entry.unique_id] = entry.data
 
     return True
 
@@ -32,5 +41,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.unique_id)
+
+        if not hass.data[DOMAIN]:
+            hass.services.async_remove(domain=DOMAIN, service=SERVICE_PTZ)
 
     return unload_ok

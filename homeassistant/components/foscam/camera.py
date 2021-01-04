@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import CONF_STREAM, DOMAIN, LOGGER
+from .const import CONF_STREAM, DOMAIN, LOGGER, SERVICE_PTZ
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated("ip"),
@@ -60,7 +60,6 @@ MOVEMENT_ATTRS = {
 
 DEFAULT_TRAVELTIME = 0.125
 
-SERVICE_PTZ = "ptz"
 ATTR_MOVEMENT = "movement"
 ATTR_TRAVELTIME = "travel_time"
 
