@@ -43,28 +43,28 @@ ATTR_CHANNEL = "channel"
 ATTR_DEVICE = "device"
 CONF_SUBTYPE = "subtype"
 
-BASIC_TRIGGER_TYPES = {
-    "single_click",
-    "long_click",
+BASIC_INPUTS_EVENTS_TYPES = {
+    "single",
+    "long",
 }
 
-SHBTN_1_TRIGGER_TYPES = {
-    "single_click",
-    "double_click",
-    "triple_click",
-    "long_click",
+SHBTN_1_INPUTS_EVENTS_TYPES = {
+    "single",
+    "double",
+    "triple",
+    "long",
 }
 
-SUPPORTED_TRIGGER_TYPES = SHIX3_1_TRIGGER_TYPES = {
-    "single_click",
-    "double_click",
-    "triple_click",
-    "long_click",
-    "single_long_click",
-    "long_single_click",
+SUPPORTED_INPUTS_EVENTS_TYPES = SHIX3_1_INPUTS_EVENTS_TYPES = {
+    "single",
+    "double",
+    "triple",
+    "long",
+    "single_long",
+    "long_single",
 }
 
-TRIGGER_SUBTYPES = {
+INPUTS_EVENTS_SUBTYPES = {
     "button": 1,
     "button1": 1,
     "button2": 2,

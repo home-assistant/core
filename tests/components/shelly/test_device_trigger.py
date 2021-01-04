@@ -33,14 +33,14 @@ async def test_get_triggers(hass, coap_wrapper):
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: coap_wrapper.device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "single_click",
+            CONF_TYPE: "single",
             CONF_SUBTYPE: "button1",
         },
         {
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: coap_wrapper.device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "long_click",
+            CONF_TYPE: "long",
             CONF_SUBTYPE: "button1",
         },
     ]
@@ -81,7 +81,7 @@ async def test_if_fires_on_click_event(hass, calls, coap_wrapper):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: coap_wrapper.device_id,
-                        CONF_TYPE: "single_click",
+                        CONF_TYPE: "single",
                         CONF_SUBTYPE: "button1",
                     },
                     "action": {
@@ -120,7 +120,7 @@ async def test_validate_trigger_config_no_device(hass, calls, coap_wrapper):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: "no_device",
-                        CONF_TYPE: "single_click",
+                        CONF_TYPE: "single",
                         CONF_SUBTYPE: "button1",
                     },
                     "action": {
@@ -154,7 +154,7 @@ async def test_validate_trigger_invalid_triggers(hass, coap_wrapper):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: coap_wrapper.device_id,
-                        CONF_TYPE: "single_click",
+                        CONF_TYPE: "single",
                         CONF_SUBTYPE: "button3",
                     },
                     "action": {

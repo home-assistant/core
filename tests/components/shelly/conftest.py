@@ -1,7 +1,8 @@
 """Test configuration for Shelly."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
+
 from homeassistant.components.shelly import ShellyDeviceWrapper
 from homeassistant.components.shelly.const import (
     COAP,
@@ -12,7 +13,6 @@ from homeassistant.components.shelly.const import (
 from homeassistant.core import callback as ha_callback
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, async_mock_service, mock_device_registry
 
 MOCK_SETTINGS = {

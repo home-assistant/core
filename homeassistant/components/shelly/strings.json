@@ -36,12 +36,12 @@
           "button3": "Third button"
       },
       "trigger_type": {
-          "single_click": "{subtype} single clicked",
-          "double_click": "{subtype} double clicked",
-          "triple_click": "{subtype} triple clicked",
-          "long_click": " {subtype} long clicked",
-          "single_long_click": "{subtype} single clicked and then long clicked",
-          "long_single_click": "{subtype} long clicked and then single clicked"
+          "single": "{subtype} single clicked",
+          "double": "{subtype} double clicked",
+          "triple": "{subtype} triple clicked",
+          "long": " {subtype} long clicked",
+          "single_long": "{subtype} single clicked and then long clicked",
+          "long_single": "{subtype} long clicked and then single clicked"
       }
   }
 }

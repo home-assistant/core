@@ -26,15 +26,15 @@ from .const import (
     CONF_SUBTYPE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
-    SUPPORTED_TRIGGER_TYPES,
-    TRIGGER_SUBTYPES,
+    INPUTS_EVENTS_SUBTYPES,
+    SUPPORTED_INPUTS_EVENTS_TYPES,
 )
 from .utils import get_device_wrapper, get_input_triggers
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(SUPPORTED_TRIGGER_TYPES),
-        vol.Required(CONF_SUBTYPE): vol.In(TRIGGER_SUBTYPES.keys()),
+        vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
+        vol.Required(CONF_SUBTYPE): vol.In(INPUTS_EVENTS_SUBTYPES),
     }
 )
 
@@ -99,8 +99,8 @@ async def async_attach_trigger(
             event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,
             event_trigger.CONF_EVENT_DATA: {
                 ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
-                ATTR_CHANNEL: TRIGGER_SUBTYPES[config[CONF_SUBTYPE]],
-                ATTR_CLICK_TYPE: config[CONF_TYPE].split("_")[0],
+                ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
+                ATTR_CLICK_TYPE: config[CONF_TYPE],
             },
         }
     )

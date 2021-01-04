@@ -11,12 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import parse_datetime, utcnow
 
 from .const import (
-    BASIC_TRIGGER_TYPES,
+    BASIC_INPUTS_EVENTS_TYPES,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
-    SHBTN_1_TRIGGER_TYPES,
-    SHIX3_1_TRIGGER_TYPES,
+    SHBTN_1_INPUTS_EVENTS_TYPES,
+    SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,11 +158,11 @@ def get_input_triggers(
         subtype = f"button{int(block.channel)+1}"
 
     if device.settings["device"]["type"] == "SHBTN-1":
-        trigger_types = SHBTN_1_TRIGGER_TYPES
+        trigger_types = SHBTN_1_INPUTS_EVENTS_TYPES
     elif device.settings["device"]["type"] == "SHIX3-1":
-        trigger_types = SHIX3_1_TRIGGER_TYPES
+        trigger_types = SHIX3_1_INPUTS_EVENTS_TYPES
     else:
-        trigger_types = BASIC_TRIGGER_TYPES
+        trigger_types = BASIC_INPUTS_EVENTS_TYPES
 
     for trigger_type in trigger_types:
         triggers.append((trigger_type, subtype))
