@@ -3,7 +3,6 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
-import sys
 from typing import Any, Dict, Optional
 
 from homeassistant import bootstrap
@@ -41,14 +40,7 @@ class RuntimeConfig:
     open_ui: bool = False
 
 
-# In Python 3.8+ proactor policy is the default on Windows
-if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
-    PolicyBase = asyncio.WindowsProactorEventLoopPolicy
-else:
-    PolicyBase = asyncio.DefaultEventLoopPolicy
-
-
-class HassEventLoopPolicy(PolicyBase):  # type: ignore
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:

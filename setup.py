@@ -40,7 +40,6 @@ REQUIRES = [
     "certifi>=2020.12.5",
     "ciso8601==2.1.3",
     "httpx==0.16.1",
-    "importlib-metadata==1.6.0;python_version<'3.8'",
     "jinja2>=2.11.2",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
