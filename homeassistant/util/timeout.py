@@ -54,9 +54,9 @@ class _GlobalFreezeContext:
         exc_type: Type[BaseException],
         exc_val: BaseException,
         exc_tb: TracebackType,
-    ) -> Optional[bool]:
+    ) -> Optional[bool]:  # pylint: disable=useless-return
         self._loop.call_soon_threadsafe(self._exit)
-        return None  # pylint: disable=useless-return
+        return None
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -122,9 +122,9 @@ class _ZoneFreezeContext:
         exc_type: Type[BaseException],
         exc_val: BaseException,
         exc_tb: TracebackType,
-    ) -> Optional[bool]:
+    ) -> Optional[bool]:  # pylint: disable=useless-return
         self._loop.call_soon_threadsafe(self._exit)
-        return None  # pylint: disable=useless-return
+        return None
 
     def _enter(self) -> None:
         """Run freeze."""
