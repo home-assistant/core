@@ -39,7 +39,7 @@ class TadoWeatherEntity(TadoHomeEntity, WeatherEntity):
     def __init__(self, tado, is_metric):
         """Initialize."""
         self._tado = tado
-        self._data = tado.weather
+        self._data = self._tado.data["weather"]
         super().__init__(tado)
 
         self._is_metric = is_metric
@@ -107,4 +107,4 @@ class TadoWeatherEntity(TadoHomeEntity, WeatherEntity):
     @callback
     def _async_update_weather_data(self):
         """Handle update callbacks."""
-        self._data = self._tado.weather
+        self._data = self._tado.data["weather"]

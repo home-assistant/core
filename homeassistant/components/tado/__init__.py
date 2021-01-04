@@ -150,6 +150,7 @@ class TadoConnector:
         self.devices = None
         self.data = {
             "device": {},
+            "weather": {},
             "zone": {},
         }
 
@@ -165,8 +166,9 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.getZones()
         self.devices = self.tado.getDevices()
-        self.home_id = self.tado.getMe()["homes"][0]["id"]
-        self.home_name = self.tado.getMe()["homes"][0]["name"]
+        tado_home = self.tado.getMe()["homes"][0]
+        self.home_id = tado_home["id"]
+        self.home_name = tado_home["name"]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -175,7 +177,7 @@ class TadoConnector:
             self.update_sensor("device", device["shortSerialNo"])
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
-        self.weather = self.tado.getWeather()
+        self.data["weather"] = self.tado.getWeather()
         dispatcher_send(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
