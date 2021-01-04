@@ -57,7 +57,7 @@ class RoonHub:
             auth_api = [api for api in apis if api.token is not None]
 
             secs += AUTHENTICATE_TIMEOUT
-            if len(auth_api) > 0:
+            if auth_api:
                 core_id = auth_api[0].core_id
                 token = auth_api[0].token
                 break
@@ -108,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._servers = await discover(self.hass)
 
         # We discovered one or more  roon - so skip to authentication
-        if len(self._servers) > 0:
+        if self._servers:
             return await self.async_step_link()
 
         if user_input is not None:

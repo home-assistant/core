@@ -36,7 +36,7 @@ class RoonServer:
         host = self.config_entry.data[CONF_HOST]
         token = self.config_entry.data[CONF_API_KEY]
         # Default to None for compatibility with older configs
-        core_id = self.config_entry.data.get(CONF_ROON_ID, None)
+        core_id = self.config_entry.data.get(CONF_ROON_ID)
         _LOGGER.debug("async_setup: host=%s core_id=%s token=%s", host, core_id, token)
 
         self.roonapi = RoonApi(
