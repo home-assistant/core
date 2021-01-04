@@ -1033,6 +1033,9 @@ oemthermostat==1.1.1
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
 
+# homeassistant.components.ondilo_ico
+ondilo==0.2.0
+
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7
 
