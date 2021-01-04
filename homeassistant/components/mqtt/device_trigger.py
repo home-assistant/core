@@ -11,7 +11,10 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
@@ -28,7 +31,7 @@ from . import (
     trigger as mqtt_trigger,
 )
 from .. import mqtt
-from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,6 +209,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
             await _update_device(hass, config_entry, config)
             device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
             await device_trigger.update_trigger(config, discovery_hash, remove_signal)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
     remove_signal = async_dispatcher_connect(
         hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_update
@@ -220,6 +224,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
     )
 
     if device is None:
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
         return
 
     if DEVICE_TRIGGERS not in hass.data:
@@ -243,6 +248,8 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
     debug_info.add_trigger_discovery_data(
         hass, discovery_hash, discovery_data, device.id
     )
+
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
 
 async def async_device_removed(hass: HomeAssistant, device_id: str):

@@ -4,11 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from . import ATTR_DISCOVERY_HASH, device_trigger
 from .. import mqtt
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +45,11 @@ async def async_setup_entry(hass, config_entry):
                     hass, config, config_entry, discovery_data
                 )
         except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
             raise
 
     async_dispatcher_connect(

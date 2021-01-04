@@ -35,7 +35,11 @@ from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
@@ -78,6 +82,7 @@ from .const import (
 from .debug_info import log_messages
 from .discovery import (
     LAST_DISCOVERY,
+    MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_UPDATED,
     clear_discovery_hash,
     set_discovery_hash,
@@ -1315,6 +1320,9 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
+            async_dispatcher_send(
+                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -1327,17 +1335,26 @@ class MqttDiscoveryUpdate(Entity):
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
+            async_dispatcher_send(
+                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass:
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
-            publish(
-                self.hass,
-                discovery_topic,
-                "",
-                retain=True,
+            publish(self.hass, discovery_topic, "", retain=True)
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        if self._discovery_data:
+            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(self.hass, discovery_hash)
+            async_dispatcher_send(
+                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""

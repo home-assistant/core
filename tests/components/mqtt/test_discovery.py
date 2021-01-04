@@ -12,7 +12,8 @@ from homeassistant.components.mqtt.abbreviations import (
     DEVICE_ABBREVIATIONS,
 )
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+import homeassistant.core as ha
 
 from tests.common import (
     async_fire_mqtt_message,
@@ -250,6 +251,121 @@ async def test_rediscover(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
     assert state is not None
+
+
+async def test_rapid_rediscover(hass, mqtt_mock, caplog):
+    """Test immediate rediscover of removed component."""
+
+    events = []
+
+    @ha.callback
+    def callback(event):
+        """Verify event got called."""
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert len(events) == 1
+
+    # Removal immediately followed by rediscover
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic" }',
+    )
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Milk", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.milk")
+    assert state is not None
+
+    assert len(events) == 5
+    # Remove the entity
+    assert events[1].data["entity_id"] == "binary_sensor.beer"
+    assert events[1].data["new_state"] is None
+    # Add the entity
+    assert events[2].data["entity_id"] == "binary_sensor.beer"
+    assert events[2].data["old_state"] is None
+    # Remove the entity
+    assert events[3].data["entity_id"] == "binary_sensor.beer"
+    assert events[3].data["new_state"] is None
+    # Add the entity
+    assert events[4].data["entity_id"] == "binary_sensor.milk"
+    assert events[4].data["old_state"] is None
+
+
+async def test_rapid_rediscover_unique(hass, mqtt_mock, caplog):
+    """Test immediate rediscover of removed component."""
+
+    events = []
+
+    @ha.callback
+    def callback(event):
+        """Verify event got called."""
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla2/config",
+        '{ "name": "Ale", "state_topic": "test-topic", "unique_id": "very_unique" }',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.ale")
+    assert state is not None
+    assert len(events) == 1
+
+    # Duplicate unique_id, immediately followed by correct unique_id
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "very_unique" }',
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
+    )
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Milk", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 2
+    state = hass.states.get("binary_sensor.ale")
+    assert state is not None
+    state = hass.states.get("binary_sensor.milk")
+    assert state is not None
+
+    assert len(events) == 4
+    # Add the entity
+    assert events[1].data["entity_id"] == "binary_sensor.beer"
+    assert events[1].data["old_state"] is None
+    # Remove the entity
+    assert events[2].data["entity_id"] == "binary_sensor.beer"
+    assert events[2].data["new_state"] is None
+    # Add the entity
+    assert events[3].data["entity_id"] == "binary_sensor.milk"
+    assert events[3].data["old_state"] is None
 
 
 async def test_duplicate_removal(hass, mqtt_mock, caplog):
