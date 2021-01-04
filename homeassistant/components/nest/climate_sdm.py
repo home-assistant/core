@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -188,11 +189,14 @@ class ThermostatEntity(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current operation (e.g. heat, cool, idle)."""
+        hvac_mode = HVAC_MODE_OFF
         if ThermostatModeTrait.NAME in self._device.traits:
             trait = self._device.traits[ThermostatModeTrait.NAME]
             if trait.mode in THERMOSTAT_MODE_MAP:
-                return THERMOSTAT_MODE_MAP[trait.mode]
-        return HVAC_MODE_OFF
+                hvac_mode = THERMOSTAT_MODE_MAP[trait.mode]
+        if hvac_mode == HVAC_MODE_OFF and self.fan_mode == FAN_ON:
+            hvac_mode = HVAC_MODE_FAN_ONLY
+        return hvac_mode
 
     @property
     def hvac_modes(self):
@@ -201,6 +205,8 @@ class ThermostatEntity(ClimateEntity):
         for mode in self._get_device_hvac_modes:
             if mode in THERMOSTAT_MODE_MAP:
                 supported_modes.append(THERMOSTAT_MODE_MAP[mode])
+        if self.supported_features & SUPPORT_FAN_MODE:
+            supported_modes.append(HVAC_MODE_FAN_ONLY)
         return supported_modes
 
     @property
@@ -280,6 +286,10 @@ class ThermostatEntity(ClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Unsupported hvac_mode '{hvac_mode}'")
+        if hvac_mode == HVAC_MODE_FAN_ONLY:
+            # Turn the fan on but also turn off the hvac if it is on
+            await self.async_set_fan_mode(FAN_ON)
+            hvac_mode = HVAC_MODE_OFF
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
         await trait.set_mode(api_mode)
