@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import DOMAIN
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.components.asuswrt.sensor import _SensorTypes
+from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
