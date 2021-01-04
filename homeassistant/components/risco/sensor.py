@@ -73,7 +73,6 @@ class RiscoSensor(CoordinatorEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self._refresh_from_coordinator)
         )
-        await self.coordinator.async_request_refresh()
 
     def _refresh_from_coordinator(self):
         events = self.coordinator.data
