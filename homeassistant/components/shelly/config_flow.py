@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import aiohttp_client
 
 from . import get_coap_context
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     )
     coap_context = await get_coap_context(hass)
 
-    async with async_timeout.timeout(5):
+    async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
         device = await aioshelly.Device.create(
             aiohttp_client.async_get_clientsession(hass),
             coap_context,
@@ -187,7 +188,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_info(self, host):
         """Get info from shelly device."""
-        async with async_timeout.timeout(5):
+        async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             return await aioshelly.get_info(
                 aiohttp_client.async_get_clientsession(self.hass),
                 host,
