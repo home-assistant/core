@@ -4,7 +4,7 @@ from datetime import timedelta
 from aioasuswrt.asuswrt import Device
 import pytest
 
-from homeassistant.components import sensor
+from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import DOMAIN
 from homeassistant.components.asuswrt.sensor import _SensorTypes
 from homeassistant.const import (
@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
+    STATE_HOME,
 )
 from homeassistant.util.dt import utcnow
 
@@ -114,6 +115,9 @@ async def test_sensors(hass, connect):
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
+    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
+    assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
+    assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_HOME
     assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_connected_devices").state == "3"
     assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download_speed").state == "160.0"
     assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download").state == "60.0"

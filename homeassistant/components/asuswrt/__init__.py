@@ -126,23 +126,25 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     router = AsusWrtRouter(hass, entry)
     await router.setup()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][DATA_ASUSWRT] = router
+    router.async_on_close(entry.add_update_listener(update_listener))
 
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    hass.data[DOMAIN]["update_listener"] = entry.add_update_listener(update_listener)
-
     async def async_close_connection(event):
         """Close AsusWrt connection on HA Stop."""
         await router.close()
 
-    hass.data[DOMAIN]["stop_listener"] = hass.bus.async_listen_once(
+    stop_listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, async_close_connection
     )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_ASUSWRT: router,
+        "stop_listener": stop_listener,
+    }
 
     return True
 
@@ -158,20 +160,18 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        options_listener = hass.data[DOMAIN].pop("update_listener")
-        options_listener()
-        stop_listener = hass.data[DOMAIN].pop("stop_listener")
-        stop_listener()
-
-        router = hass.data[DOMAIN].pop(DATA_ASUSWRT)
+        hass.data[DOMAIN][entry.entry_id]["stop_listener"]()
+        router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
         await router.close()
+
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
 async def update_listener(hass: HomeAssistantType, entry: ConfigEntry):
     """Update when config_entry options update."""
-    router = hass.data[DOMAIN][DATA_ASUSWRT]
+    router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
 
     if router.update_options(entry.options):
         await hass.config_entries.async_reload(entry.entry_id)
