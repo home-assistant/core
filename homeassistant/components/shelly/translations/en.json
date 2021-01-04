@@ -27,5 +27,21 @@
                 "description": "Before set up, battery-powered devices must be woken up by pressing the button on the device."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Button",
+			"button1": "First button",
+            "button2": "Second button",
+            "button3": "Third button"
+        },
+		"trigger_type": {
+			"single": "{subtype} single clicked",
+			"double": "{subtype} double clicked",
+			"triple": "{subtype} triple clicked",
+			"long":" {subtype} long clicked",
+			"single_long": "{subtype} single clicked and then long clicked",
+			"long_single": "{subtype} long clicked and then single clicked"
+        }
     }
 }
