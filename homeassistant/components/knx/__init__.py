@@ -132,14 +132,23 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_KNX_SEND_SCHEMA = vol.Schema(
-    {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
-        vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
-            cv.positive_int, [cv.positive_int]
-        ),
-        vol.Optional(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
-    }
+SERVICE_KNX_SEND_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
+            vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
+        }
+    ),
+    vol.Schema(
+        # without type given payload is treated as raw bytes
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
+                cv.positive_int, [cv.positive_int]
+            ),
+        }
+    ),
 )
 
 
