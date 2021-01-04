@@ -372,7 +372,10 @@ class LeafDataStore:
                     server_info = await self.hass.async_add_executor_job(
                         self.leaf.get_latest_battery_status
                     )
-                    if start_date != self._extract_start_date(server_info):
+                    if (
+                        start_date is not None
+                        and start_date != self._extract_start_date(server_info)
+                    ):
                         return server_info
                     # get_status_from_update returned {"resultFlag": "1"}
                     # but the data didn't change, make a fresh request.
