@@ -9,11 +9,22 @@ from aiobittrexapi.errors import (
 )
 
 from homeassistant import data_entry_flow, setup
-from homeassistant.components.bittrex.const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
+from homeassistant.components.bittrex.const import (
+    CONF_API_SECRET,
+    CONF_BALANCES,
+    CONF_MARKETS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 
-from . import INTEGRATION_TITLE, USER_INPUT, USER_INPUT_MARKETS
+from . import (
+    INTEGRATION_TITLE,
+    INTEGRATION_TITLE_MARKETS_ONLY,
+    USER_INPUT,
+    USER_INPUT_BALANCES,
+    USER_INPUT_MARKETS,
+)
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -45,6 +56,9 @@ async def test_user_form(hass):
         "homeassistant.components.bittrex.Bittrex.get_account",
         return_value=json.loads(load_fixture("bittrex/account_data.json")),
     ), patch(
+        "homeassistant.components.bittrex.Bittrex.get_balances",
+        return_value=json.loads(load_fixture("bittrex/balances_data.json")),
+    ), patch(
         "homeassistant.components.bittrex.async_setup_entry", return_value=True
     ):
         await setup.async_setup_component(hass, "persistent_notification", {})
@@ -53,15 +67,17 @@ async def test_user_form(hass):
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}
         )
 
+        # User form
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {}
         assert result["step_id"] == SOURCE_USER
+        assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
+        # Markets form
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "markets"
         assert result["errors"] == {}
@@ -71,8 +87,80 @@ async def test_user_form(hass):
         )
         await hass.async_block_till_done()
 
+        # Balances form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "balances"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT_BALANCES
+        )
+        await hass.async_block_till_done()
+
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == INTEGRATION_TITLE
+
+        assert result["data"]
+        assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
+        assert result["data"][CONF_API_SECRET] == USER_INPUT[CONF_API_SECRET]
+        assert result["data"][CONF_MARKETS] == USER_INPUT_MARKETS[CONF_MARKETS]
+        assert result["data"][CONF_BALANCES] == USER_INPUT_BALANCES[CONF_BALANCES]
+
+        assert result["result"]
+
+
+async def test_user_form_without_balances(hass):
+    """Test we get the user initiated form."""
+    with patch(
+        "homeassistant.components.bittrex.Bittrex.get_markets",
+        return_value=json.loads(load_fixture("bittrex/markets_data.json")),
+    ), patch(
+        "homeassistant.components.bittrex.Bittrex.get_account",
+        return_value=json.loads(load_fixture("bittrex/account_data.json")),
+    ), patch(
+        "homeassistant.components.bittrex.Bittrex.get_balances",
+        return_value={},
+    ), patch(
+        "homeassistant.components.bittrex.async_setup_entry", return_value=True
+    ):
+        await setup.async_setup_component(hass, "persistent_notification", {})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        )
+
+        # User form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == SOURCE_USER
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+        # Markets form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "markets"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT_MARKETS
+        )
+        await hass.async_block_till_done()
+
+        # Balances form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "balances"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == INTEGRATION_TITLE_MARKETS_ONLY
 
         assert result["data"]
         assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]

@@ -1,6 +1,6 @@
 """Gather the market details from Bittrex."""
 import logging
-from typing import Dict
+from typing import Dict, List, Optional
 
 from aiobittrexapi import Bittrex
 from aiobittrexapi.errors import (
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
+from .const import CONF_API_SECRET, CONF_BALANCES, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_secret = entry.data[CONF_API_SECRET]
     symbols = entry.data[CONF_MARKETS]
 
-    coordinator = BittrexDataUpdateCoordinator(hass, api_key, api_secret, symbols)
+    if CONF_BALANCES in entry.data:
+        balances = entry.data[CONF_BALANCES]
+        coordinator = BittrexDataUpdateCoordinator(
+            hass, api_key, api_secret, symbols, balances
+        )
+    else:
+        coordinator = BittrexDataUpdateCoordinator(hass, api_key, api_secret, symbols)
+
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -50,17 +57,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Bittrex."""
 
-    def __init__(self, hass, api_key, api_secret, symbols):
+    def __init__(
+        self, hass, api_key, api_secret, symbols, balances: Optional[List] = None
+    ):
         """Initialize the data object."""
         self.bittrex = Bittrex(api_key, api_secret)
         self.symbols = symbols
+        self.balances = balances or None
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self):
         """Fetch Bittrex data."""
         try:
-            return await self.bittrex.get_tickers(symbol=self.symbols)
+            tickers = await self.bittrex.get_tickers(symbol=self.symbols)
+            if self.balances:
+                balances = await self.bittrex.get_balances(symbol=self.balances)
+                return {"tickers": tickers, "balances": balances}
+            else:
+                return {"tickers": tickers}
         except BittrexInvalidAuthentication as error:
             _LOGGER.error("Bittrex authentication error: %s", error)
             raise ConfigEntryNotReady from error

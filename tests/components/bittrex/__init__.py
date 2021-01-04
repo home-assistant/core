@@ -1,5 +1,9 @@
 """Tests for Bittrex integration."""
-from homeassistant.components.bittrex.const import CONF_API_SECRET, CONF_MARKETS
+from homeassistant.components.bittrex.const import (
+    CONF_API_SECRET,
+    CONF_BALANCES,
+    CONF_MARKETS,
+)
 from homeassistant.const import CONF_API_KEY
 
 USER_INPUT = {
@@ -9,4 +13,7 @@ USER_INPUT = {
 
 USER_INPUT_MARKETS = {CONF_MARKETS: ["DGB-USDT", "BTC-USDT"]}
 
-INTEGRATION_TITLE = "DGB-USDT, BTC-USDT"
+USER_INPUT_BALANCES = {CONF_BALANCES: ["USDT", "DGB"]}
+
+INTEGRATION_TITLE = "Markets: DGB-USDT, BTC-USDT - Balances: USDT, DGB"
+INTEGRATION_TITLE_MARKETS_ONLY = "Markets: DGB-USDT, BTC-USDT"

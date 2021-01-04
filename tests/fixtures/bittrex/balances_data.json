@@ -1,0 +1,14 @@
+{
+    "DGB": {
+        "currencySymbol": "DGB",
+        "total": 123,
+        "available": 123,
+        "updatedAt": "2021-01-01T01:23:45.59Z"
+    },
+    "USDT": {
+        "currencySymbol": "USDT",
+        "total": 456,
+        "available": 456,
+        "updatedAt": "2021-01-01T01:23:45.59Z"
+    }
+}

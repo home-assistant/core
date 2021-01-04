@@ -84,7 +84,7 @@ aioasuswrt==1.3.4
 aioazuredevops==1.3.5
 
 # homeassistant.components.bittrex
-aiobittrexapi==1.3.0
+aiobittrexapi==1.4.0
 
 # homeassistant.components.aws
 aiobotocore==1.2.2

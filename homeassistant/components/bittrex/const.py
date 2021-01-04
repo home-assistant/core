@@ -5,6 +5,8 @@ DOMAIN = "bittrex"
 
 # Config
 CONF_MARKETS = "markets"
+CONF_BALANCES = "balances"
+CONF_TICKERS = "tickers"
 CONF_API_SECRET = "api_secret"
 
 # Currency
