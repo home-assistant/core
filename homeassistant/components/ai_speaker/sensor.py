@@ -17,11 +17,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([AisSensor(hass, ais_gate_instance)], True)
 
 
-async def async_unload_entry(hass, entry):
-    """Clean up when integrations are removed - add code if you need to do more."""
-    _LOGGER.debug("AI-Speaker sensor, async_unload_entry")
-
-
 class AisSensor(Entity):
     """AiSpeakerSensor representation."""
 
