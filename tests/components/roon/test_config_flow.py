@@ -13,11 +13,11 @@ class RoonHubMock:
         self._token = token
         self._servers = servers
 
-    def discover(self):
+    async def discover(self):
         """Return discovered roon servers."""
         return self._servers
 
-    async def authenticate(self, hass, host, servers):
+    async def authenticate(self, host, servers):
         """Authenticate against roon."""
         return (self._token, "core_id")
 

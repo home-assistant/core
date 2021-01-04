@@ -22,6 +22,7 @@ class RoonServer:
         self.config_entry = config_entry
         self.hass = hass
         self.roonapi = None
+        self.roon_id = None
         self.all_player_ids = set()
         self.all_playlists = []
         self.offline_devices = set()

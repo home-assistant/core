@@ -26,15 +26,19 @@ TIMEOUT = 120
 class RoonHub:
     """Interact with roon during config flow."""
 
-    def discover(self):
+    def __init__(self, hass):
+        """Initialise the RoonHub."""
+        self._hass = hass
+
+    async def discover(self):
         """Try and discover roon servers."""
         discovery = RoonDiscovery(None)
-        servers = discovery.all()
+        servers = await self._hass.async_add_executor_job(discovery.all)
         _LOGGER.debug("Servers = %s", servers)
-        discovery.stop()
+        await self._hass.async_add_executor_job(discovery.stop)
         return servers
 
-    async def authenticate(self, hass, host, servers):
+    async def authenticate(self, host, servers):
         """Authenticate with one or more roon servers."""
         token = None
         core_id = None
@@ -61,16 +65,16 @@ class RoonHub:
             await asyncio.sleep(AUTHENTICATE_TIMEOUT)
 
         for api in apis:
-            api.stop()
+            await self._hass.async_add_executor_job(api.stop)
 
         return (token, core_id)
 
 
-async def discover():
+async def discover(hass):
     """Connect and authenticate home assistant."""
 
-    hub = RoonHub()
-    servers = hub.discover()
+    hub = RoonHub(hass)
+    servers = await hub.discover()
 
     return servers
 
@@ -78,8 +82,8 @@ async def discover():
 async def authenticate(hass: core.HomeAssistant, host, servers):
     """Connect and authenticate home assistant."""
 
-    hub = RoonHub()
-    (token, core_id) = await hub.authenticate(hass, host, servers)
+    hub = RoonHub(hass)
+    (token, core_id) = await hub.authenticate(host, servers)
     if token is None:
         raise InvalidAuth
 
@@ -101,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle getting host details from the user."""
 
         errors = {}
-        self._servers = await discover()
+        self._servers = await discover(self.hass)
 
         # We discovered one or more  roon - so skip to authentication
         if len(self._servers) > 0:
