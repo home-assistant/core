@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.ai_speaker.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.ai_speaker.config_flow import InvalidAuth
 from homeassistant.components.ai_speaker.const import DOMAIN
 
 
@@ -42,7 +42,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -60,8 +60,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"}
