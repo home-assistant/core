@@ -1,38 +1,21 @@
 """Test the AI Speaker config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.ai_speaker.config_flow import InvalidAuth
 from homeassistant.components.ai_speaker.const import DOMAIN
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+async def test_step_user(hass):
+    """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": "user"},
     )
+
+    assert result["step_id"] == "user"
     assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.ai_speaker.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.ai_speaker.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"}
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {"host": "1.1.1.1"}
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["errors"] is None
 
 
 async def test_form_invalid_auth(hass):
@@ -50,7 +33,7 @@ async def test_form_invalid_auth(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_cannot_connect(hass):
