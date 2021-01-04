@@ -1,9 +1,8 @@
 {
-  "domain": "ai_speaker",
-  "name": "AI-Speaker integration",
-  "documentation": "https://ai-speaker.com",
-  "dependencies": [],
-  "codeowners": ["@asystentaka-jolka"],
-  "requirements": ["feedparser==6.0.2", "aisapi==0.0.3"],
-  "config_flow": true
+    "domain": "ai_speaker",
+    "name": "AI Speaker",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/ai_speaker",
+    "requirements": ["aisapi==0.0.3"],
+    "codeowners": ["@asystentka-jolka"]
 }

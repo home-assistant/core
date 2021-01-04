@@ -1,65 +1,87 @@
-"""Config flow to configure AI-Speaker."""
+"""Config flow for AI Speaker integration."""
 import logging
 
 from aisapi.ws import AisWebService
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant import config_entries, core, exceptions
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-AIS_CONFIG = {
-    vol.Required(CONF_HOST): str,
-}
+
+STEP_USER_DATA_SCHEMA = vol.Schema({"host": str})
 
 
-class AisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a AI-Speaker config flow."""
+class AisDevice:
+    """Ais device class."""
+
+    def __init__(self, hass, host):
+        """Initialize."""
+        self.hass = hass
+        self.host = host
+        self.web_session = aiohttp_client.async_get_clientsession(self.hass)
+
+    async def get_gate_info(self):
+        """Return the ais gate info."""
+        ais_ws = AisWebService(self.hass.loop, self.web_session, self.host)
+        return await ais_ws.get_gate_info()
+
+
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect.
+
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    ais_gate = AisDevice(hass, data["host"])
+
+    ais_gate_info = await ais_gate.get_gate_info()
+    if ais_gate_info is None:
+        raise InvalidAuth
+
+    product = ais_gate_info["Product"]
+    ais_id = ais_gate_info["ais_id"]
+    return {"title": f"AI-Speaker {product}.", "ais_id": ais_id}
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for AI Speaker."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-    DOMAIN = DOMAIN
 
     async def async_step_user(self, user_input=None):
-        """Commissioning the configuration by the user."""
-        return self.async_show_form(step_id="confirm")
-
-    async def async_step_confirm(self, user_input=None):
-        """User confirmation step."""
-        if user_input is not None:
+        """Handle the initial step."""
+        if user_input is None:
             return self.async_show_form(
-                step_id="settings", data_schema=vol.Schema(AIS_CONFIG)
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        return self.async_show_form(step_id="confirm")
+        errors = {}
 
-    async def async_step_settings(self, user_input=None):
-        """Step of the connection settings."""
-        if user_input is not None:
-            web_session = aiohttp_client.async_get_clientsession(self.hass)
-            ais_host = user_input["host"]
-            ais_gate = AisWebService(self.hass.loop, web_session, ais_host)
-            ais_gate_info = await ais_gate.get_gate_info()
-            ais_id = ais_gate_info.get("ais_id")
-            if ais_id is None:
-                errors = {CONF_HOST: "discovery_error"}
-                return self.async_show_form(
-                    step_id="settings",
-                    data_schema=vol.Schema(AIS_CONFIG),
-                    errors=errors,
-                )
-
+        try:
+            info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception %s", e)
+            errors["base"] = "unknown"
+        else:
             # check if this ais id is already configured
-            await self.async_set_unique_id(ais_id)
+            await self.async_set_unique_id(info["ais_id"])
             self._abort_if_unique_id_configured()
 
-            # Complete and save configuration
-            user_input["ais_info"] = ais_gate_info
-            return self.async_create_entry(
-                title="AI-Speaker " + ais_gate_info.get("Product"), data=user_input
-            )
+            return self.async_create_entry(title=info["title"], data=user_input)
 
-        return self.async_show_form(step_id="settings")
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

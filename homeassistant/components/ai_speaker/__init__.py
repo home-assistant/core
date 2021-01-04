@@ -1,46 +1,51 @@
-"""Support for AI-Speaker."""
-import logging
+"""The AI Speaker integration."""
+import asyncio
 
 from aisapi.ws import AisWebService
+import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor", "media_player"]
-_LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up the initial domain configuration."""
-
-    async def async_command(service):
-        """Publish command to AI-Speaker WS."""
-        web_session = aiohttp_client.async_get_clientsession(hass)
-        ais_url = service.data["ais_url"]
-        ais_gate = AisWebService(hass.loop, web_session, ais_url)
-        await ais_gate.command(service.data["key"], service.data["val"])
-
-    hass.services.async_register(DOMAIN, "publish_command", async_command)
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the AI Speaker integration."""
+    hass.data[DOMAIN] = {}
     return True
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up the integration based on a configuration entry."""
-    _LOGGER.debug("async_setup_entry %s", config_entry)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up AI Speaker from a config entry."""
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    ais = AisWebService(hass.loop, web_session, entry.data["host"])
+    hass.data[DOMAIN][entry.entry_id] = ais
 
     for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
     return True
 
 
-async def async_unload_entry(hass, config_entry):
-    """Unload a config entry - delete configuration entities."""
-    _LOGGER.debug("async_unload_entry remove entities")
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
         )
-    return True
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok

@@ -1,5 +1,3 @@
-"""Constants for AI-Speaker component."""
-import logging
+"""Constants for the AI Speaker integration."""
 
 DOMAIN = "ai_speaker"
-_LOGGER = logging.getLogger(".")
