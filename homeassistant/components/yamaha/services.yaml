@@ -19,6 +19,15 @@ enable_output:
       required: true
       selector:
         boolean:
+menu_cursor:
+  description: Control the cursor in a menu
+  fields:
+    entity_id:
+      description: Name(s) of the entities to send menu cursor commands.
+      example: media_player.yamaha
+    cursor:
+      description: Name of the cursor key to press ('up', 'down', 'left', 'right', 'select', 'return')
+      example: down
 select_scene:
   name: Select scene
   description: "Select a scene on the receiver"
