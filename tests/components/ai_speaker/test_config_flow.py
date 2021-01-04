@@ -16,7 +16,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
         return_value=True,
     ), patch(
         "homeassistant.components.ai_speaker.async_setup", return_value=True
