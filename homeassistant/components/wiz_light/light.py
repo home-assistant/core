@@ -1,8 +1,13 @@
 """WiZ Light integration."""
+from datetime import timedelta
 import logging
 
 from pywizlight import SCENES, PilotBuilder, wizlight
-from pywizlight.exceptions import WizLightConnectionError, WizLightNotKnownBulb
+from pywizlight.exceptions import (
+    WizLightConnectionError,
+    WizLightNotKnownBulb,
+    WizLightTimeOutError,
+)
 import voluptuous as vol
 
 # Import the device class from the component
@@ -37,6 +42,9 @@ SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
 )
+
+# set poll interval to 15 sec because of changes from external to the bulb
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -77,7 +85,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class WizBulb(LightEntity):
     """Representation of WiZ Light bulb."""
 
-    def __init__(self, light, name):
+    def __init__(self, light: wizlight, name):
         """Initialize an WiZLight."""
         self._light = light
         self._state = None
@@ -86,7 +94,7 @@ class WizBulb(LightEntity):
         self._rgb_color = None
         self._temperature = None
         self._hscolor = None
-        self._available = True
+        self._available = None
         self._effect = None
         self._scenes = []
         self._bulbtype = None
@@ -275,9 +283,8 @@ class WizBulb(LightEntity):
                 await self.update_state_unavailable()
             else:
                 await self.update_state_available()
-        # pylint: disable=broad-except
-        except Exception as ex:
-            _LOGGER.error(ex)
+        except WizLightTimeOutError as ex:
+            _LOGGER.debug(ex)
             await self.update_state_unavailable()
         _LOGGER.debug("[wizlight %s] updated state: %s", self._light.ip, self._state)
 
@@ -344,12 +351,17 @@ class WizBulb(LightEntity):
     async def get_bulb_type(self):
         """Get the bulb type."""
         if self._bulbtype is None:
-            self._bulbtype = await self._light.get_bulbtype()
-            _LOGGER.info(
-                "[wizlight %s] Initiate the WiZ bulb as %s",
-                self._light.ip,
-                self._bulbtype.name,
-            )
+            try:
+                self._bulbtype = await self._light.get_bulbtype()
+                _LOGGER.info(
+                    "[wizlight %s] Initiate the WiZ bulb as %s",
+                    self._light.ip,
+                    self._bulbtype.name,
+                )
+            except WizLightTimeOutError:
+                _LOGGER.debug(
+                    "[wizlight %s] Bulbtype update failed - Timout", self._light.ip
+                )
 
     def update_scene_list(self):
         """Update the scene list."""
@@ -359,7 +371,10 @@ class WizBulb(LightEntity):
 
     async def get_mac(self):
         """Get the mac from the bulb."""
-        self._mac = await self._light.getMac()
+        try:
+            self._mac = await self._light.getMac()
+        except WizLightTimeOutError:
+            _LOGGER.debug("[wizlight %s] Mac update failed - Timout", self._light.ip)
 
     def featuremap(self):
         """Map the features from WizLight Class."""

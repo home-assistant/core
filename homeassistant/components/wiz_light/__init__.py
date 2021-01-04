@@ -1,10 +1,9 @@
 """WiZ Light integration."""
-from homeassistant.components.wiz_light.light import WizBulb
 import logging
 
 from pywizlight import wizlight
-from datetime import timedelta
 
+from homeassistant.components.wiz_light.light import WizBulb
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -14,8 +13,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light"]
-SCAN_INTERVAL = timedelta(seconds=5)
-DATA_SCAN_INTERVAL = "scan_interval"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -40,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    # unload srp client
+    # unload wiz_light bulb
     hass.data[DOMAIN][entry.unique_id] = None
     # Remove config entry
     await hass.config_entries.async_forward_entry_unload(entry, "light")
