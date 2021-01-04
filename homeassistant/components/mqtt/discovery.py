@@ -1,5 +1,6 @@
 """Support for MQTT discovery."""
 import asyncio
+from collections import deque
 import functools
 import json
 import logging
@@ -7,7 +8,10 @@ import re
 import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_mqtt
 
@@ -46,6 +50,7 @@ SUPPORTED_COMPONENTS = [
 ]
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
+PENDING_DISCOVERED = "mqtt_pending_components"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
@@ -53,6 +58,7 @@ DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
+MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 LAST_DISCOVERY = "mqtt_last_discovery"
 
 TOPIC_BASE = "~"
@@ -78,7 +84,7 @@ async def async_start(
     """Start MQTT Discovery."""
     mqtt_integrations = {}
 
-    async def async_entity_message_received(msg):
+    async def async_discovery_message_received(msg):
         """Process the received message."""
         hass.data[LAST_DISCOVERY] = time.time()
         payload = msg.payload
@@ -141,8 +147,46 @@ async def async_start(
 
             payload[CONF_PLATFORM] = "mqtt"
 
-        if ALREADY_DISCOVERED not in hass.data:
-            hass.data[ALREADY_DISCOVERED] = {}
+        if discovery_hash in hass.data[PENDING_DISCOVERED]:
+            pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
+            pending.appendleft(payload)
+            _LOGGER.info(
+                "Component has already been discovered: %s %s, queuing update",
+                component,
+                discovery_id,
+            )
+            return
+
+        await async_process_discovery_payload(component, discovery_id, payload)
+
+    async def async_process_discovery_payload(component, discovery_id, payload):
+
+        _LOGGER.debug("Process discovery payload %s", payload)
+        discovery_hash = (component, discovery_id)
+        if discovery_hash in hass.data[ALREADY_DISCOVERED] or payload:
+
+            async def discovery_done(_):
+                pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
+                _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
+                if not pending:
+                    hass.data[PENDING_DISCOVERED][discovery_hash]["unsub"]()
+                    hass.data[PENDING_DISCOVERED].pop(discovery_hash)
+                else:
+                    payload = pending.pop()
+                    await async_process_discovery_payload(
+                        component, discovery_id, payload
+                    )
+
+            if discovery_hash not in hass.data[PENDING_DISCOVERED]:
+                hass.data[PENDING_DISCOVERED][discovery_hash] = {
+                    "unsub": async_dispatcher_connect(
+                        hass,
+                        MQTT_DISCOVERY_DONE.format(discovery_hash),
+                        discovery_done,
+                    ),
+                    "pending": deque([]),
+                }
+
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
             # Dispatch update
             _LOGGER.info(
@@ -182,13 +226,21 @@ async def async_start(
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
             )
+        else:
+            # Unhandled discovery message
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
+    hass.data[ALREADY_DISCOVERED] = {}
+    hass.data[PENDING_DISCOVERED] = {}
+
     hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
-        hass, f"{discovery_topic}/#", async_entity_message_received, 0
+        hass, f"{discovery_topic}/#", async_discovery_message_received, 0
     )
     hass.data[LAST_DISCOVERY] = time.time()
     mqtt_integrations = await async_get_mqtt(hass)

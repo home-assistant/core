@@ -478,7 +478,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.9
+denonavr==0.9.10
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -1030,6 +1030,9 @@ oemthermostat==1.1.1
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
 
+# homeassistant.components.ondilo_ico
+ondilo==0.2.0
+
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7
 
@@ -1566,7 +1569,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.2.3
+pyobihai==1.3.1
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -1804,7 +1807,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.8.1
+python-tado==0.10.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -1949,7 +1952,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.28
+roonapi==0.0.30
 
 # homeassistant.components.rova
 rova==0.1.0
@@ -2302,7 +2305,7 @@ xboxapi==2.0.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.15.6
+xknx==0.16.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2333,7 +2336,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.7
+zeroconf==0.28.8
 
 # homeassistant.components.zha
 zha-quirks==0.0.51

@@ -24,6 +24,8 @@ from homeassistant.helpers import (
 )
 
 from .const import (
+    AIOSHELLY_DEVICE_TIMEOUT_SEC,
+    BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -31,7 +33,6 @@ from .const import (
     POLLING_TIMEOUT_MULTIPLIER,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
-    SETUP_ENTRY_TIMEOUT_SEC,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
@@ -78,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coap_context = await get_coap_context(hass)
 
     try:
-        async with async_timeout.timeout(SETUP_ENTRY_TIMEOUT_SEC):
+        async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
                 coap_context,
@@ -241,19 +242,28 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
 
     def __init__(self, hass, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
+        if (
+            device.settings["device"]["type"]
+            in BATTERY_DEVICES_WITH_PERMANENT_CONNECTION
+        ):
+            update_interval = (
+                SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+            )
+        else:
+            update_interval = REST_SENSORS_UPDATE_INTERVAL
 
         super().__init__(
             hass,
             _LOGGER,
             name=get_device_name(device),
-            update_interval=timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
 
     async def _async_update_data(self):
         """Fetch data."""
         try:
-            async with async_timeout.timeout(5):
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 _LOGGER.debug("REST update for %s", self.name)
                 return await self.device.update_status()
         except OSError as err:

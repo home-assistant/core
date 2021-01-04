@@ -257,7 +257,7 @@ debugpy==1.2.1
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.9
+denonavr==0.9.10
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.16.0
@@ -512,6 +512,9 @@ objgraph==3.4.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
+
+# homeassistant.components.ondilo_ico
+ondilo==0.2.0
 
 # homeassistant.components.onvif
 onvif-zeep-async==1.0.0
@@ -894,7 +897,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.8.1
+python-tado==0.10.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
@@ -960,7 +963,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.28
+roonapi==0.0.30
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
@@ -1141,7 +1144,7 @@ yeelight==0.5.4
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.7
+zeroconf==0.28.8
 
 # homeassistant.components.zha
 zha-quirks==0.0.51
