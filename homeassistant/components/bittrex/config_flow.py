@@ -55,8 +55,8 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    marketsList = []
-    balancesList = []
+    markets_list = []
+    balances_list = []
 
     api_key = data[CONF_API_KEY]
     api_secret = data[CONF_API_SECRET]
@@ -67,11 +67,11 @@ async def validate_input(hass: HomeAssistant, data: Dict):
 
         markets = await bittrex.get_markets()
         for market in markets:
-            marketsList.append(market["symbol"])
+            markets_list.append(market["symbol"])
 
         balances = await bittrex.get_balances()
         for balance in balances:
-            balancesList.append(balance)
+            balances_list.append(balance)
     except BittrexInvalidAuthentication as error:
         raise InvalidAuth from error
     except BittrexApiError as error:
@@ -81,7 +81,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     finally:
         await bittrex.close()
 
-    return {"markets": marketsList, "balances": balancesList}
+    return {"markets": markets_list, "balances": balances_list}
 
 
 class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):

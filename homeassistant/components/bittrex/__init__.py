@@ -73,9 +73,10 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
             tickers = await self.bittrex.get_tickers(symbol=self.symbols)
             if self.balances:
                 balances = await self.bittrex.get_balances(symbol=self.balances)
-                return {"tickers": tickers, "balances": balances}
+                result_dict = {"tickers": tickers, "balances": balances}
             else:
-                return {"tickers": tickers}
+                result_dict = {"tickers": tickers}
+            return result_dict
         except BittrexInvalidAuthentication as error:
             _LOGGER.error("Bittrex authentication error: %s", error)
             raise ConfigEntryNotReady from error
