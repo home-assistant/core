@@ -340,6 +340,11 @@ class LeafDataStore:
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
+            start_server_info = await self.hass.async_add_executor_job(
+                self.leaf.get_latest_battery_status
+            )
+            start_date = self._extract_start_date(start_server_info)
+            await asyncio.sleep(1)  # Critical sleep
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
             if not request:
                 _LOGGER.error("Battery update request failed")
@@ -367,7 +372,18 @@ class LeafDataStore:
                     server_info = await self.hass.async_add_executor_job(
                         self.leaf.get_latest_battery_status
                     )
-                    return server_info
+                    if start_date != self._extract_start_date(server_info):
+                        return server_info
+                    else:
+                        # get_status_from_update returned {"resultFlag": "1"}
+                        # but the data didn't change, make a fresh request.
+                        await asyncio.sleep(1)  # Critical sleep
+                        request = await self.hass.async_add_executor_job(
+                            self.leaf.request_update
+                        )
+                        if not request:
+                            _LOGGER.error("Battery update request failed")
+                            return None
 
             _LOGGER.debug(
                 "%s attempts exceeded return latest data from server",
