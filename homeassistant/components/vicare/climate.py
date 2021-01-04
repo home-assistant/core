@@ -270,9 +270,7 @@ class ViCareClimate(ClimateEntity):
         vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
         if vicare_program is None:
             raise ValueError(
-                "Cannot set invalid vicare program: %s / %s",
-                preset_mode,
-                vicare_program,
+                f"Cannot set invalid vicare program: {preset_mode}/{vicare_program}"
             )
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
@@ -287,7 +285,6 @@ class ViCareClimate(ClimateEntity):
     def set_vicare_mode(self, **kwargs):
         """Service function to set vicare modes directly."""
         mode = kwargs.get(SERVICE_SET_VICARE_MODE_ATTR_MODE)
-        """Set a new hvac mode on the ViCare API."""
         if mode not in VICARE_TO_HA_HVAC_HEATING:
             raise ValueError(f"Cannot set invalid vicare mode: {mode}")
 
