@@ -42,7 +42,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     product = ais_gate_info["Product"]
     ais_id = ais_gate_info["ais_id"]
-    return {"title": f"AI-Speaker {product}.", "ais_id": ais_id}
+    return {"title": f"AI-Speaker {product}", "ais_id": ais_id}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
