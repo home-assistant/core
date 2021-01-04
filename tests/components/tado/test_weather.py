@@ -14,6 +14,6 @@ async def test_weather(hass):
 
     state = hass.states.get("weather.home_name")
     assert state
-    assert state.state == "foggy"
-    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 7.46
+    assert state.state == "fog"
+    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 7.5
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
