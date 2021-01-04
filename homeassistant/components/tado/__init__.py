@@ -173,6 +173,7 @@ class TadoConnector:
         self.zones = None
         self.devices = None
         self.data = {
+            "device": {},
             "zone": {},
         }
 
@@ -193,15 +194,18 @@ class TadoConnector:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
+        for device in self.devices:
+            self.update_sensor("device", device["shortSerialNo"])
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
-        self.devices = self.tado.getDevices()
 
     def update_sensor(self, sensor_type, sensor):
         """Update the internal data from Tado."""
         _LOGGER.debug("Updating %s %s", sensor_type, sensor)
         try:
-            if sensor_type == "zone":
+            if sensor_type == "device":
+                data = self.tado.getDeviceInfo(sensor)
+            elif sensor_type == "zone":
                 data = self.tado.getZoneState(sensor)
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
