@@ -113,13 +113,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._host = user_input["host"]
-            existing = {
-                entry.data[CONF_HOST] for entry in self._async_current_entries()
-            }
-            if self._host in existing:
-                errors["base"] = "duplicate_entry"
-                return self.async_show_form(step_id="user", errors=errors)
-
             return await self.async_step_link()
 
         return self.async_show_form(
