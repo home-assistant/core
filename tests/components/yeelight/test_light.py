@@ -45,10 +45,12 @@ from homeassistant.components.yeelight import (
     DEFAULT_SAVE_ON_CHANGE,
     DEFAULT_TRANSITION,
     DOMAIN,
+    PROPERTY_COLOR_MODE,
+    PROPERTY_FLOWING,
     YEELIGHT_HSV_TRANSACTION,
     YEELIGHT_RGB_TRANSITION,
     YEELIGHT_SLEEP_TRANSACTION,
-    YEELIGHT_TEMPERATURE_TRANSACTION, PROPERTY_FLOWING, PROPERTY_COLOR_MODE,
+    YEELIGHT_TEMPERATURE_TRANSACTION,
 )
 from homeassistant.components.yeelight.light import (
     ATTR_MINUTES,
@@ -399,6 +401,7 @@ async def test_device_types(hass: HomeAssistant):
         nightlight_properties["friendly_name"] = f"{name} nightlight"
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
+        target_properties[PROPERTY_COLOR_MODE] = "HSV"
         nightlight_properties["night_light"] = True
         nightlight_properties["music_mode"] = False
         assert dict(state.attributes) == nightlight_properties
