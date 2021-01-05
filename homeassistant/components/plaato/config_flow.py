@@ -5,7 +5,7 @@ from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -14,7 +14,6 @@ from .const import (
     CONF_CLOUDHOOK,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
-    CONF_UPDATE_INTERVAL,
     CONF_USE_WEBHOOK,
     DOCS_URL,
     PLACEHOLDER_DEVICE_NAME,
@@ -200,8 +199,8 @@ class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_UPDATE_INTERVAL,
-                        default=self._config_entry.options.get(CONF_UPDATE_INTERVAL, 5),
+                        CONF_SCAN_INTERVAL,
+                        default=self._config_entry.options.get(CONF_SCAN_INTERVAL, 5),
                     ): cv.positive_int
                 }
             ),

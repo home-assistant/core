@@ -31,7 +31,7 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]",
-      "already_configured": "Already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "create_entry": {
       "default": "Your Plaato {device_type} with name **{device_name}** was successfully setup!"
