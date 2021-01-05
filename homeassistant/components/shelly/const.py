@@ -35,3 +35,38 @@ INPUTS_EVENTS_DICT = {
 
 # List of battery devices that maintain a permanent WiFi connection
 BATTERY_DEVICES_WITH_PERMANENT_CONNECTION = ["SHMOS-01"]
+
+EVENT_SHELLY_CLICK = "shelly.click"
+
+ATTR_CLICK_TYPE = "click_type"
+ATTR_CHANNEL = "channel"
+ATTR_DEVICE = "device"
+CONF_SUBTYPE = "subtype"
+
+BASIC_INPUTS_EVENTS_TYPES = {
+    "single",
+    "long",
+}
+
+SHBTN_1_INPUTS_EVENTS_TYPES = {
+    "single",
+    "double",
+    "triple",
+    "long",
+}
+
+SUPPORTED_INPUTS_EVENTS_TYPES = SHIX3_1_INPUTS_EVENTS_TYPES = {
+    "single",
+    "double",
+    "triple",
+    "long",
+    "single_long",
+    "long_single",
+}
+
+INPUTS_EVENTS_SUBTYPES = {
+    "button": 1,
+    "button1": 1,
+    "button2": 2,
+    "button3": 3,
+}
