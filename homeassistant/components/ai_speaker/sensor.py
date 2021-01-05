@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.const import DATA_RATE_KILOBITS_PER_SECOND
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -31,6 +32,7 @@ class AisSensor(Entity):
         self._ais_api_level = None
         self._ais_ip_address = None
         self._ais_hostname = None
+        self._ais_gate_network_speed = None
 
     @property
     def device_info(self):
@@ -57,18 +59,19 @@ class AisSensor(Entity):
     @property
     def state(self):
         """Return the status of the sensor."""
-        return self._ais_api_level
+        return self._ais_gate_network_speed
 
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
-        return "api level"
+        return DATA_RATE_KILOBITS_PER_SECOND
 
     @property
     def device_state_attributes(self):
         """Return the attributes of the device."""
         return {
             "ais_id": self._ais_id,
+            "ais_api_level": self._ais_api_level,
             "ais_ip_address": self._ais_ip_address,
             "ais_hostname": self._ais_hostname,
         }
@@ -89,3 +92,5 @@ class AisSensor(Entity):
         self._ais_api_level = ais_info["ApiLevel"]
         self._ais_ip_address = ais_info["IPAddressIPv4"]
         self._ais_hostname = ais_info["Hostname"]
+        self._ais_hostname = ais_info["Hostname"]
+        self._ais_gate_network_speed = ais_info["NetworkSpeed"]
