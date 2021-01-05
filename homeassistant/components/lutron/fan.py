@@ -1,6 +1,6 @@
 """Support for Lutron fans."""
-from typing import Optional
 from bisect import bisect_left
+from typing import Optional
 
 from homeassistant.components.fan import (
     SPEED_HIGH,
