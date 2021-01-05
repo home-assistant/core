@@ -35,7 +35,6 @@ from .const import (
     DAILY,
     DATA_UTILITY,
     HOURLY,
-    MANUAL,
     MONTHLY,
     QUARTER_HOURLY,
     QUARTERLY,
