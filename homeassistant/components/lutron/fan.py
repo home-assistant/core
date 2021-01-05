@@ -1,5 +1,6 @@
 """Support for Lutron fans."""
 from typing import Optional
+from bisect import bisect_left
 
 from homeassistant.components.fan import (
     SPEED_HIGH,
@@ -17,6 +18,7 @@ FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH = 0, 25, 50, 100
 
 VALUE_TO_SPEED = {
     None: SPEED_OFF,
+    FAN_OFF: SPEED_OFF,
     FAN_LOW: SPEED_LOW,
     FAN_MEDIUM: SPEED_MEDIUM,
     FAN_HIGH: SPEED_HIGH,
@@ -29,7 +31,7 @@ SPEED_TO_VALUE = {
     SPEED_HIGH: FAN_HIGH,
 }
 
-FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = list(SPEED_TO_VALUE.keys())
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
@@ -45,13 +47,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
 
 
 def to_lutron_speed(speed: str) -> int:
-    """Convert the given Home Assistant fan speed (off, low, medium, high) to Lutron (0.0-100.0)."""
+    """Convert the given Home Assistant fan speed (off, low, medium, high) to Lutron (0-100)."""
     return SPEED_TO_VALUE[speed]
 
 
-def to_hass_speed(speed: int) -> str:
+def to_hass_speed(speed: float) -> str:
     """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
-    return VALUE_TO_SPEED[int(speed)]
+    discrete_speeds=list(VALUE_TO_SPEED.keys())
+    discrete_speeds.remove(None)
+    idx=bisect_left(discrete_speeds, speed)
+
+    return VALUE_TO_SPEED[discrete_speeds[idx]]
 
 
 class LutronFan(LutronDevice, FanEntity):
@@ -94,12 +100,11 @@ class LutronFan(LutronDevice, FanEntity):
         """Turn the fan on."""
         if speed is not None:
             new_speed = speed
-        elif self._prev_speed == 0:
+        elif not self._prev_speed:
             new_speed = SPEED_MEDIUM
         else:
             new_speed = self._prev_speed
 
-        self._prev_speed = new_speed
         self.set_speed(new_speed)
 
     def turn_off(self, **kwargs) -> None:
@@ -108,4 +113,6 @@ class LutronFan(LutronDevice, FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
+        if speed is not SPEED_OFF:
+            self._prev_speed = speed
         self._lutron_device.level = to_lutron_speed(speed)
