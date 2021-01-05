@@ -195,6 +195,14 @@ def setup(hass, config):
     return True
 
 
+def _extract_start_date(battery_info):
+    """Extract the server date from the battery response."""
+    try:
+        return battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+    except KeyError:
+        return None
+
+
 class LeafDataStore:
     """Nissan Leaf Data Store."""
 
@@ -326,14 +334,6 @@ class LeafDataStore:
         self.request_in_progress = False
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
-    @staticmethod
-    def _extract_start_date(battery_info):
-        """Extract the server date from the battery response."""
-        try:
-            return battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
-        except KeyError:
-            return None
-
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
 
@@ -343,7 +343,7 @@ class LeafDataStore:
             start_server_info = await self.hass.async_add_executor_job(
                 self.leaf.get_latest_battery_status
             )
-            start_date = self._extract_start_date(start_server_info)
+            start_date = _extract_start_date(start_server_info)
             await asyncio.sleep(1)  # Critical sleep
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
             if not request:
@@ -372,10 +372,7 @@ class LeafDataStore:
                     server_info = await self.hass.async_add_executor_job(
                         self.leaf.get_latest_battery_status
                     )
-                    if (
-                        start_date is not None
-                        and start_date != self._extract_start_date(server_info)
-                    ):
+                    if start_date and start_date != _extract_start_date(server_info):
                         return server_info
                     # get_status_from_update returned {"resultFlag": "1"}
                     # but the data didn't change, make a fresh request.
