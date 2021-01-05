@@ -11,5 +11,6 @@
   "codeowners": [
       "@awarecan",
       "@allenporter"
-  ]
+  ],
+  "quality_scale": "platinum"
 }
