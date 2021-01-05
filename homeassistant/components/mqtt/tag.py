@@ -14,13 +14,10 @@ from homeassistant.helpers.dispatcher import (
 from . import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_TOPIC,
-    CONF_CONNECTIONS,
     CONF_DEVICE,
-    CONF_IDENTIFIERS,
     CONF_QOS,
     CONF_TOPIC,
     DOMAIN,
-    cleanup_device_registry,
     subscription,
 )
 from .. import mqtt
@@ -29,6 +26,14 @@ from .discovery import (
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
     clear_discovery_hash,
+)
+from .mixins import (
+    CONF_CONNECTIONS,
+    CONF_IDENTIFIERS,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    cleanup_device_registry,
+    device_info_from_config,
+    validate_device_has_at_least_one_identifier,
 )
 from .util import valid_subscribe_topic
 
@@ -39,12 +44,12 @@ TAGS = "mqtt_tags"
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_PLATFORM): "mqtt",
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-    mqtt.validate_device_has_at_least_one_identifier,
+    validate_device_has_at_least_one_identifier,
 )
 
 
@@ -236,7 +241,7 @@ async def _update_device(hass, config_entry, config):
     """Update device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
-    device_info = mqtt.device_info_from_config(config[CONF_DEVICE])
+    device_info = device_info_from_config(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
         device_info["config_entry_id"] = config_entry_id
