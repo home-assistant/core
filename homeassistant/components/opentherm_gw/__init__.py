@@ -435,7 +435,7 @@ class OpenThermGatewayDevice:
             name=self.name,
             manufacturer="Schelte Bron",
             model="OpenTherm Gateway",
-            sw_version=self.gw_version,
+            sw_version=self.gw_version or None,
         )
         if gw_dev.sw_version != self.gw_version:
             dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
