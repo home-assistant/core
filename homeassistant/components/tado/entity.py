@@ -45,7 +45,7 @@ class TadoHomeEntity(Entity):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": {(DOMAIN, f"{self.home_id}")},
+            "identifiers": {(DOMAIN, self.home_id)},
             "name": self.home_name,
             "manufacturer": DEFAULT_NAME,
             "model": TADO_HOME,
