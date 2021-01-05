@@ -48,14 +48,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Ondilo ICO sensors."""
 
-    api = hass.data[DOMAIN][entry.entry_id]
+    def get_all_pools_data():
+        """Fetch pools and add pool details and last measures to pool data."""
+        api = hass.data[DOMAIN][entry.entry_id]
 
-    def get_all_pool_data(pool):
-        """Add pool details and last measures to pool data."""
-        pool["ICO"] = api.get_ICO_details(pool["id"])
-        pool["sensors"] = api.get_last_pool_measures(pool["id"])
+        pools = api.get_pools()
+        for pool in pools:
+            _LOGGER.debug(
+                "Retrieving data for pool/spa: %s, id: %d", pool["name"], pool["id"]
+            )
+            pool["ICO"] = api.get_ICO_details(pool["id"])
+            pool["sensors"] = api.get_last_pool_measures(pool["id"])
+            _LOGGER.debug("Retrieved the following sensors data: %s", pool["sensors"])
 
-        return pool
+        return pools
 
     async def async_update_data():
         """Fetch data from API endpoint.
@@ -64,17 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         so entities can quickly look up their data.
         """
         try:
-            pools = await hass.async_add_executor_job(api.get_pools)
-            for pool in pools:
-                _LOGGER.debug(
-                    "Retrieving data for pool/spa: %s, id: %d", pool["name"], pool["id"]
-                )
-                pool = await hass.async_add_executor_job(get_all_pool_data, pool)
-                _LOGGER.debug(
-                    "Retrieved the following sensors data: %s", pool["sensors"]
-                )
-
-            return pools
+            return await hass.async_add_executor_job(get_all_pools_data)
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
