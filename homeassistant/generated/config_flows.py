@@ -23,6 +23,7 @@ FLOWS = [
     "atag",
     "august",
     "aurora",
+    "avreceiver",
     "avri",
     "awair",
     "axis",

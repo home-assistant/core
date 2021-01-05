@@ -12,6 +12,56 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "avreceiver": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Marantz"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "Marantz"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "Marantz"
+        }
+    ],
     "control4": [
         {
             "st": "c4:director"
