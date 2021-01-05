@@ -79,13 +79,15 @@ class CloudClient(Interface):
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
 
-    @property
-    def alexa_config(self) -> alexa_config.AlexaConfig:
+    async def get_alexa_config(self) -> alexa_config.AlexaConfig:
         """Return Alexa config."""
         if self._alexa_config is None:
             assert self.cloud is not None
+
+            cloud_user = await self._prefs.get_cloud_user()
+
             self._alexa_config = alexa_config.AlexaConfig(
-                self._hass, self.alexa_user_config, self._prefs, self.cloud
+                self._hass, self.alexa_user_config, cloud_user, self._prefs, self.cloud
             )
 
         return self._alexa_config
@@ -110,8 +112,9 @@ class CloudClient(Interface):
 
         async def enable_alexa(_):
             """Enable Alexa."""
+            aconf = await self.get_alexa_config()
             try:
-                await self.alexa_config.async_enable_proactive_mode()
+                await aconf.async_enable_proactive_mode()
             except aiohttp.ClientError as err:  # If no internet available yet
                 if self._hass.is_running:
                     logging.getLogger(__package__).warning(
@@ -133,7 +136,7 @@ class CloudClient(Interface):
 
         tasks = []
 
-        if self.alexa_config.enabled and self.alexa_config.should_report_state:
+        if self._prefs.alexa_enabled and self._prefs.alexa_report_state:
             tasks.append(enable_alexa)
 
         if self._prefs.google_enabled:
@@ -164,9 +167,10 @@ class CloudClient(Interface):
     async def async_alexa_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
+        aconfig = await self.get_alexa_config()
         return await alexa_sh.async_handle_message(
             self._hass,
-            self.alexa_config,
+            aconfig,
             payload,
             context=Context(user_id=cloud_user),
             enabled=self._prefs.alexa_enabled,
