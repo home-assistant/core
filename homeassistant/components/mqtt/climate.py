@@ -55,7 +55,6 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
-    ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_RETAIN,
     DOMAIN,
@@ -64,6 +63,7 @@ from . import (
     subscription,
 )
 from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 from .mixins import (

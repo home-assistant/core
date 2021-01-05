@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import (
@@ -11,16 +11,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import (
-    ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
-    CONF_DEVICE,
-    CONF_QOS,
-    CONF_TOPIC,
-    DOMAIN,
-    subscription,
-)
+from . import CONF_QOS, CONF_TOPIC, DOMAIN, subscription
 from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,

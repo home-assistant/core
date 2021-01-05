@@ -7,7 +7,13 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -17,17 +23,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
-    ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
-    CONF_DEVICE,
-    CONF_PAYLOAD,
-    CONF_QOS,
-    DOMAIN,
-    debug_info,
-    trigger as mqtt_trigger,
-)
+from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
 from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .mixins import (
     CONF_CONNECTIONS,
