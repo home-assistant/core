@@ -69,12 +69,8 @@ class AisSensor(Entity):
         """Return the attributes of the device."""
         return {
             "ais_id": self._ais_id,
-            "ais_product": self._ais_product,
-            "ais_manufacturer": self._ais_manufacturer,
-            "ais_model": self._ais_model,
-            "ais_os_version": self._ais_os_version,
             "ais_ip_address": self._ais_ip_address,
-            "ai_hostname": self._ais_hostname,
+            "ais_hostname": self._ais_hostname,
         }
 
     @property
