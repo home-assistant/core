@@ -1,4 +1,6 @@
 """Support for Spider thermostats."""
+import logging
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
@@ -10,6 +12,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 HA_STATE_TO_SPIDER = {
     HVAC_MODE_COOL: "Cool",
@@ -40,7 +44,12 @@ class SpiderThermostat(ClimateEntity):
         self.api = api
         self.thermostat = thermostat
         self.support_fan = thermostat.fan_speed_values
-        self.support_hvac = thermostat.operation_values
+        self.support_hvac = []
+        for operation_value in thermostat.operation_values:
+            if operation_value in SPIDER_STATE_TO_HA:
+                self.support_hvac.append(SPIDER_STATE_TO_HA.get(operation_value))
+            else:
+                _LOGGER.warning("Invalid operation value: %s", operation_value)
 
     @property
     def device_info(self):
@@ -107,12 +116,7 @@ class SpiderThermostat(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        hvac_mode_list = []
-        for operation_value in self.support_hvac:
-            hvac_mode_list.append(
-                SPIDER_STATE_TO_HA.get(operation_value, "Invalid operation value")
-            )
-        return hvac_mode_list
+        return self.support_hvac
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
