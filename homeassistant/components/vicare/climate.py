@@ -282,10 +282,9 @@ class ViCareClimate(ClimateEntity):
         """Show Device Attributes."""
         return self._attributes
 
-    def set_vicare_mode(self, **kwargs):
+    def set_vicare_mode(self, vicare_mode):
         """Service function to set vicare modes directly."""
-        mode = kwargs.get(SERVICE_SET_VICARE_MODE_ATTR_MODE)
-        if mode not in VICARE_TO_HA_HVAC_HEATING:
-            raise ValueError(f"Cannot set invalid vicare mode: {mode}")
+        if vicare_mode not in VICARE_TO_HA_HVAC_HEATING:
+            raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}")
 
-        self._api.setMode(mode)
+        self._api.setMode(vicare_mode)
