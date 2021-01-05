@@ -3,23 +3,13 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, Optional
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ENABLED_DEFAULT,
-    ATTR_VALUE,
     DOMAIN,
     SENSOR_PROCESS_DATA,
     SENSOR_SETTINGS_DATA,
@@ -31,13 +21,6 @@ from .helper import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_SET_VALUE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VALUE): vol.Coerce(str),
-    }
-)
 
 
 async def async_setup_entry(
@@ -58,26 +41,27 @@ async def async_setup_entry(
     )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_PROCESS_DATA:
         if (
-            module_id in available_process_data
-            and data_id in available_process_data[module_id]
+            module_id not in available_process_data
+            or data_id not in available_process_data[module_id]
         ):
-            entities.append(
-                PlenticoreDataSensor(
-                    process_data_update_coordinator,
-                    entry.entry_id,
-                    entry.title,
-                    module_id,
-                    data_id,
-                    name,
-                    sensor_data,
-                    PlenticoreDataFormatter.get_method(fmt),
-                    plenticore.device_info,
-                )
-            )
-        else:
             _LOGGER.debug(
-                "Skipping non existing process data %s/%s.", module_id, data_id
+                "Skipping non existing process data %s/%s", module_id, data_id
             )
+            continue
+
+        entities.append(
+            PlenticoreDataSensor(
+                process_data_update_coordinator,
+                entry.entry_id,
+                entry.title,
+                module_id,
+                data_id,
+                name,
+                sensor_data,
+                PlenticoreDataFormatter.get_method(fmt),
+                plenticore.device_info,
+            )
+        )
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
@@ -88,30 +72,29 @@ async def async_setup_entry(
         plenticore,
     )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_SETTINGS_DATA:
-        if module_id in available_settings_data and data_id in map(
-            lambda x: x.id, available_settings_data[module_id]
+        if module_id not in available_settings_data or data_id not in (
+            setting.id for setting in available_settings_data[module_id]
         ):
-            entities.append(
-                PlenticoreDataSensor(
-                    settings_data_update_coordinator,
-                    entry.entry_id,
-                    entry.title,
-                    module_id,
-                    data_id,
-                    name,
-                    sensor_data,
-                    PlenticoreDataFormatter.get_method(fmt),
-                    plenticore.device_info,
-                )
-            )
-        else:
             _LOGGER.debug(
-                "Skipping non existing setting data %s/%s.", module_id, data_id
+                "Skipping non existing setting data %s/%s", module_id, data_id
             )
+            continue
+
+        entities.append(
+            PlenticoreDataSensor(
+                settings_data_update_coordinator,
+                entry.entry_id,
+                entry.title,
+                module_id,
+                data_id,
+                name,
+                sensor_data,
+                PlenticoreDataFormatter.get_method(fmt),
+                plenticore.device_info,
+            )
+        )
 
     async_add_entities(entities)
-
-    return True
 
 
 class PlenticoreDataSensor(CoordinatorEntity):
@@ -142,6 +125,16 @@ class PlenticoreDataSensor(CoordinatorEntity):
 
         self._device_info = device_info
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.module_id in self.coordinator.data
+            and self.data_id in self.coordinator.data[self.module_id]
+        )
+
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
@@ -170,17 +163,17 @@ class PlenticoreDataSensor(CoordinatorEntity):
     @property
     def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of this Sensor Entity or None."""
-        return self._sensor_data.get(ATTR_UNIT_OF_MEASUREMENT, None)
+        return self._sensor_data.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @property
     def icon(self) -> Optional[str]:
         """Return the icon name of this Sensor Entity or None."""
-        return self._sensor_data.get(ATTR_ICON, None)
+        return self._sensor_data.get(ATTR_ICON)
 
     @property
     def device_class(self) -> Optional[str]:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._sensor_data.get(ATTR_DEVICE_CLASS, None)
+        return self._sensor_data.get(ATTR_DEVICE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -194,9 +187,6 @@ class PlenticoreDataSensor(CoordinatorEntity):
             # None is translated to STATE_UNKNOWN
             return None
 
-        try:
-            raw_value = self.coordinator.data[self.module_id][self.data_id]
-        except KeyError:
-            return STATE_UNAVAILABLE
+        raw_value = self.coordinator.data[self.module_id][self.data_id]
 
         return self._formatter(raw_value) if self._formatter else raw_value

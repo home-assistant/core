@@ -53,9 +53,8 @@ async def test_form(hass):
         mock_api_ctx.login.assert_called_once_with("test-password")
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Plenticore"
+    assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
-        "name": "Plenticore",
         "host": "1.1.1.1",
         "password": "test-password",
     }
@@ -132,21 +131,23 @@ async def test_form_unexpected_error(hass):
 
 async def test_already_configured(hass):
     """Test we handle already configured error."""
+    MockConfigEntry(
+        domain="kostal_plenticore",
+        data={"host": "1.1.1.1", "password": "foobar"},
+        unique_id="112233445566",
+    ).add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.configured_instances",
-        return_value={"1.1.1.1"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "password": "test-password",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "password": "test-password",
+        },
+    )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
@@ -156,7 +157,7 @@ def test_configured_instances(hass):
     """Test configured_instances returns all configured hosts."""
     MockConfigEntry(
         domain="kostal_plenticore",
-        data={"host": "2.2.2.2", "password": "foobar", "name": "xyz"},
+        data={"host": "2.2.2.2", "password": "foobar"},
         unique_id="112233445566",
     ).add_to_hass(hass)
 

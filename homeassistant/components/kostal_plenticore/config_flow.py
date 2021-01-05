@@ -7,7 +7,7 @@ from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationExcep
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_BASE, CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Plenticore"): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PASSWORD): str,
     }
@@ -32,7 +31,7 @@ def configured_instances(hass):
     }
 
 
-async def test_connection(hass: HomeAssistant, data) -> None:
+async def test_connection(hass: HomeAssistant, data) -> str:
     """Test the connection to the inverter.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -41,6 +40,9 @@ async def test_connection(hass: HomeAssistant, data) -> None:
     session = async_get_clientsession(hass)
     async with PlenticoreApiClient(session, data["host"]) as client:
         await client.login(data["password"])
+        values = await client.get_setting_values("scb:network", "Hostname")
+
+    return values["scb:network"]["Hostname"]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,33 +51,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
-        """Initialize a new ConfigFlow instance."""
-        self._errors = {}
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        self._errors = {}
+        errors = {}
+        hostname = None
 
         if user_input is not None:
-            if user_input[CONF_HOST] not in configured_instances(self.hass):
-                try:
-                    await test_connection(self.hass, user_input)
-
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
-                except PlenticoreAuthenticationException as ex:
-                    self._errors[CONF_PASSWORD] = "invalid_auth"
-                    _LOGGER.exception("Error response: %s", ex.msg)
-                except (ClientError, asyncio.TimeoutError):
-                    self._errors[CONF_HOST] = "cannot_connect"
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
-                    self._errors[CONF_BASE] = "unknown"
-            else:
+            if user_input[CONF_HOST] in configured_instances(self.hass):
                 return self.async_abort(reason="already_configured")
+            try:
+                hostname = await test_connection(self.hass, user_input)
+            except PlenticoreAuthenticationException as ex:
+                errors[CONF_PASSWORD] = "invalid_auth"
+                _LOGGER.error("Error response: %s", ex)
+            except (ClientError, asyncio.TimeoutError):
+                errors[CONF_HOST] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors[CONF_BASE] = "unknown"
+
+            if not errors:
+                return self.async_create_entry(title=hostname, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=self._errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

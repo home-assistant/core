@@ -14,18 +14,16 @@ from homeassistant.const import (
 
 DOMAIN = "kostal_plenticore"
 
-ATTR_VALUE = "value"
 ATTR_ENABLED_DEFAULT = "entity_registry_enabled_default"
 
-"""Defines all entities for process data.
-
-Each entry is defined with a tuple of these values:
- - module id (str)
- - process data id (str)
- - entity name suffix (str)
- - sensor properties (dict)
- - value formatter (str)
-"""
+# Defines all entities for process data.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - sensor properties (dict)
+#  - value formatter (str)
 SENSOR_PROCESS_DATA = [
     (
         "devices:local",
@@ -490,15 +488,14 @@ SENSOR_PROCESS_DATA = [
     ),
 ]
 
-"""Defines all entities for settings.
-
-Each entry is defined with a tuple of these values:
- - module id (str)
- - process data id (str)
- - entity name suffix (str)
- - sensor properties (dict)
- - value formatter (str)
-"""
+# Defines all entities for settings.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - sensor properties (dict)
+#  - value formatter (str)
 SENSOR_SETTINGS_DATA = [
     (
         "devices:local",

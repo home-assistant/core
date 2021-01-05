@@ -1,15 +1,15 @@
 """Code to handle the Plenticore API."""
 import asyncio
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Dict, Union
 
 from aiohttp.client_exceptions import ClientError
 from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
@@ -30,6 +30,7 @@ class Plenticore:
 
         self._client = None
         self._login = False
+        self._shutdown_remove_listener = None
 
         self.device_info = {}
 
@@ -51,18 +52,19 @@ class Plenticore:
         try:
             await self._client.login(self.config_entry.data[CONF_PASSWORD])
             self._login = True
-            _LOGGER.info("Log-in successfully to %s.", self.host)
+            _LOGGER.debug("Log-in successfully to %s", self.host)
         except PlenticoreAuthenticationException as err:
             _LOGGER.error(
-                "Authentication exception connecting to %s: %s", self.host, err.msg
+                "Authentication exception connecting to %s: %s", self.host, err
             )
+            return False
+        except (ClientError, asyncio.TimeoutError) as err:
+            _LOGGER.error("Error connecting to %s", self.host)
             raise ConfigEntryNotReady from err
-        except (ClientError, asyncio.TimeoutError):
-            _LOGGER.exception("Error connecting to %s", self.host)
-            return False
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error connecting to %s", self.host)
-            return False
+
+        self._shutdown_remove_listener = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_shutdown
+        )
 
         # get some device meta data
         settings = await self._client.get_setting_values(
@@ -79,13 +81,13 @@ class Plenticore:
         )
 
         device_local = settings["devices:local"]
+        prod1 = device_local["Branding:ProductName1"]
+        prod2 = device_local["Branding:ProductName2"]
 
         self.device_info = {
             "identifiers": {(DOMAIN, device_local["Properties:SerialNo"])},
             "manufacturer": "Kostal",
-            "model": device_local["Branding:ProductName1"]
-            + " "
-            + device_local["Branding:ProductName2"],
+            "model": f"{prod1} {prod2}",
             "name": settings["scb:network"]["Hostname"],
             "sw_version": f'IOC: {device_local["Properties:VersionIOC"]}'
             + f' MC: {device_local["Properties:VersionMC"]}',
@@ -93,13 +95,23 @@ class Plenticore:
 
         return True
 
-    async def logout(self) -> None:
-        """Log the current logged in user out from the API."""
+    @callback
+    async def _async_shutdown(self, event):
+        """Call from Homeassistant shutdown event."""
+        # unset remove listener otherwise calling it would raise an exception
+        self._shutdown_remove_listener = None
+        await self.async_unload()
+
+    async def async_unload(self) -> None:
+        """Unload the Plenticore API client."""
+        if self._shutdown_remove_listener:
+            self._shutdown_remove_listener()
+
         if self._login:
             self._login = False
             await self._client.logout()
             self._client = None
-            _LOGGER.info("Logged out from %s.", self.host)
+            _LOGGER.debug("Logged out from %s", self.host)
 
 
 class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
@@ -138,8 +150,8 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
 
         # Force an update of all data. Multiple refresh calls
         # are ignored by the debouncer.
-        def force_refresh(job: HassJob) -> None:
-            self.hass.async_run_job(self.async_request_refresh)
+        async def force_refresh(event_time: datetime) -> None:
+            await self.async_request_refresh()
 
         async_call_later(self.hass, 2, force_refresh)
 
@@ -157,14 +169,18 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     async def _fetch_data(self) -> Dict[str, Dict[str, str]]:
         client = self._plenticore.client
 
-        if len(self._fetch) == 0 or client is None:
+        if not self._fetch or client is None:
             return {}
 
         _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
 
         fetched_data = await client.get_process_data_values(self._fetch)
         self._data = {
-            m: {pd.id: pd.value for pd in fetched_data[m]} for m in fetched_data
+            module_id: {
+                process_data.id: process_data.value
+                for process_data in fetched_data[module_id]
+            }
+            for module_id in fetched_data
         }
 
         return self._data
@@ -188,6 +204,35 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 
 class PlenticoreDataFormatter:
     """Provides method to format values of process or settings data."""
+
+    INVERTER_STATES = {
+        0: "Off",
+        1: "Init",
+        2: "IsoMEas",
+        3: "GridCheck",
+        4: "StartUp",
+        6: "FeedIn",
+        7: "Throttled",
+        8: "ExtSwitchOff",
+        9: "Update",
+        10: "Standby",
+        11: "GridSync",
+        12: "GridPreCheck",
+        13: "GridSwitchOff",
+        14: "Overheating",
+        15: "Shutdown",
+        16: "ImproperDcVoltage",
+        17: "ESB",
+    }
+
+    EM_STATES = {
+        0: "Idle",
+        1: "n/a",
+        2: "Emergency Battery Charge",
+        4: "n/a",
+        8: "Winter Mode Step 1",
+        16: "Winter Mode Step 2",
+    }
 
     @classmethod
     def get_method(cls, name: str) -> callable:
@@ -218,41 +263,7 @@ class PlenticoreDataFormatter:
         except (TypeError, ValueError):
             return state
 
-        if value == 0:
-            return "Off"
-        if value == 1:
-            return "Init"
-        if value == 2:
-            return "IsoMEas"
-        if value == 3:
-            return "GridCheck"
-        if value == 4:
-            return "StartUp"
-        if value == 6:
-            return "FeedIn"
-        if value == 7:
-            return "Throttled"
-        if value == 8:
-            return "ExtSwitchOff"
-        if value == 9:
-            return "Update"
-        if value == 10:
-            return "Standby"
-        if value == 11:
-            return "GridSync"
-        if value == 12:
-            return "GridPreCheck"
-        if value == 13:
-            return "GridSwitchOff"
-        if value == 14:
-            return "Overheating"
-        if value == 15:
-            return "Shutdown"
-        if value == 16:
-            return "ImproperDcVoltage"
-        if value == 17:
-            return "ESB"
-        return "Unknown"
+        return PlenticoreDataFormatter.INVERTER_STATES.get(value, "Unknown")
 
     @staticmethod
     def format_em_manager_state(state: str) -> str:
@@ -262,17 +273,4 @@ class PlenticoreDataFormatter:
         except (TypeError, ValueError):
             return state
 
-        if value == 0:
-            return "Idle"
-        if value == 1:
-            return "n/a"
-        if value == 2:
-            return "Emergency Battery Charge"
-        if value == 4:
-            return "n/a"
-        if value == 8:
-            return "Winter Mode Step 1"
-        if value == 16:
-            return "Winter Mode Step 2"
-
-        return "Unknown"
+        return PlenticoreDataFormatter.EM_STATES.get(value, "Unknown")

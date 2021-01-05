@@ -3,18 +3,14 @@ import asyncio
 import logging
 
 from kostal.plenticore import PlenticoreApiException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .helper import Plenticore
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["sensor"]
 
@@ -32,12 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not await plenticore.async_setup():
         return False
-
-    @callback
-    def shutdown(event):
-        hass.async_create_task(plenticore.logout())
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     hass.data[DOMAIN][entry.entry_id] = plenticore
 
@@ -63,8 +53,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # remove API object
         plenticore = hass.data[DOMAIN].pop(entry.entry_id)
         try:
-            await plenticore.logout()
-        except PlenticoreApiException:
-            _LOGGER.exception("Error logging out from inverter.")
+            await plenticore.async_unload()
+        except PlenticoreApiException as err:
+            _LOGGER.error("Error logging out from inverter: %s", err)
 
     return unload_ok
