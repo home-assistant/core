@@ -38,9 +38,9 @@ class TadoWeatherEntity(TadoHomeEntity, WeatherEntity):
 
     def __init__(self, tado, is_metric):
         """Initialize."""
+        super().__init__(tado)
         self._tado = tado
         self._data = self._tado.data["weather"]
-        super().__init__(tado)
 
         self._is_metric = is_metric
         self._name = tado.home_name
