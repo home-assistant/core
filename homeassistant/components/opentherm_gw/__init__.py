@@ -424,7 +424,7 @@ class OpenThermGatewayDevice:
         """Connect to serial device and subscribe report handler."""
         self.status = await self.gateway.connect(self.hass.loop, self.device_path)
         version_string = self.status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
-        self.gw_version = version_string[18:] if version_string else ""
+        self.gw_version = version_string[18:] if version_string else None
         _LOGGER.debug(
             "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
         )
@@ -435,7 +435,7 @@ class OpenThermGatewayDevice:
             name=self.name,
             manufacturer="Schelte Bron",
             model="OpenTherm Gateway",
-            sw_version=self.gw_version or None,
+            sw_version=self.gw_version,
         )
         if gw_dev.sw_version != self.gw_version:
             dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
