@@ -167,10 +167,10 @@ class CloudClient(Interface):
     async def async_alexa_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
-        alexa_config = await self.get_alexa_config()
+        aconfig = await self.get_alexa_config()
         return await alexa_sh.async_handle_message(
             self._hass,
-            alexa_config,
+            aconfig,
             payload,
             context=Context(user_id=cloud_user),
             enabled=self._prefs.alexa_enabled,
