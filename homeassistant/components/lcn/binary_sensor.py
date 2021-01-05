@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 
 from . import LcnEntity
-from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, CONF_UNIQUE_DEVICE_ID, SETPOINTS
+from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, SETPOINTS
 from .helpers import get_device_connection
 
 

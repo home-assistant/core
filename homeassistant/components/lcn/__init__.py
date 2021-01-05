@@ -165,7 +165,7 @@ class LcnEntity(Entity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         if not self.device_connection.is_group:
-            self.unregister_for_inputs = self.device_connection.register_for_inputs(
+            self._unregister_for_inputs = self.device_connection.register_for_inputs(
                 self.input_received
             )
 
