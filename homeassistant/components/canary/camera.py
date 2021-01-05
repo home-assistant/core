@@ -128,7 +128,7 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
         live_stream_url = await self.hass.async_add_executor_job(
-            self._live_stream_session.live_stream_url
+            getattr, self._live_stream_session, "live_stream_url"
         )
 
         ffmpeg = ImageFrame(self._ffmpeg.binary)
