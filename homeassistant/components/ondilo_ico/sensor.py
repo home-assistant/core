@@ -1,5 +1,4 @@
 """Platform for sensor integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -25,17 +24,17 @@ SENSOR_TYPES = {
     "temperature": [
         "Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
     "orp": ["Oxydo Reduction Potential", "mV", "mdi:pool", None],
     "ph": ["pH", "", "mdi:pool", None],
     "tds": ["TDS", CONCENTRATION_PARTS_PER_MILLION, "mdi:pool", None],
-    "battery": ["Battery", PERCENTAGE, "mdi:battery", DEVICE_CLASS_BATTERY],
+    "battery": ["Battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "rssi": [
         "RSSI",
         PERCENTAGE,
-        "mdi:wifi-strength-2",
+        None,
         DEVICE_CLASS_SIGNAL_STRENGTH,
     ],
     "salt": ["Salt", "mg/L", "mdi:pool", None],
@@ -66,13 +65,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """
         try:
             pools = await hass.async_add_executor_job(api.get_pools)
+            for pool in pools:
+                _LOGGER.debug(
+                    "Retrieving data for pool/spa: %s, id: %d", pool["name"], pool["id"]
+                )
+                pool = await hass.async_add_executor_job(get_all_pool_data, pool)
+                _LOGGER.debug(
+                    "Retrieved the following sensors data: %s", pool["sensors"]
+                )
 
-            return await asyncio.gather(
-                *[
-                    hass.async_add_executor_job(get_all_pool_data, pool)
-                    for pool in pools
-                ]
-            )
+            return pools
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
@@ -145,11 +147,6 @@ class OndiloICO(CoordinatorEntity):
     @property
     def state(self):
         """Last value of the sensor."""
-        _LOGGER.debug(
-            "Retrieving Ondilo sensor %s state value: %s",
-            self._name,
-            self._devdata()["value"],
-        )
         return self._devdata()["value"]
 
     @property
