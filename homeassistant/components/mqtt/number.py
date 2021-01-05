@@ -88,7 +88,7 @@ class MqttNumber(
     MqttEntityDeviceInfo,
     NumberEntity,
 ):
-    """representation of a MQTT number."""
+    """representation of an MQTT number."""
 
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
@@ -183,10 +183,15 @@ class MqttNumber(
 
     @property
     def name(self):
-        """Return the name of this camera."""
+        """Return the name of this number."""
         return self._config[CONF_NAME]
 
     @property
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
