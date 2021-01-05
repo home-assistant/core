@@ -53,9 +53,9 @@ def to_lutron_speed(speed: str) -> int:
 
 def to_hass_speed(speed: float) -> str:
     """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
-    discrete_speeds=list(VALUE_TO_SPEED.keys())
+    discrete_speeds = list(VALUE_TO_SPEED.keys())
     discrete_speeds.remove(None)
-    idx=bisect_left(discrete_speeds, speed)
+    idx = bisect_left(discrete_speeds, speed)
 
     return VALUE_TO_SPEED[discrete_speeds[idx]]
 
