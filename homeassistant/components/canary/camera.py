@@ -127,11 +127,14 @@ class CanaryCamera(CoordinatorEntity, Camera):
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
+        live_stream_url = await self.hass.async_add_executor_job(
+            getattr, self._live_stream_session, "live_stream_url"
+        )
 
         ffmpeg = ImageFrame(self._ffmpeg.binary)
         image = await asyncio.shield(
             ffmpeg.get_image(
-                self._live_stream_session.live_stream_url,
+                live_stream_url,
                 output_format=IMAGE_JPEG,
                 extra_cmd=self._ffmpeg_arguments,
             )
