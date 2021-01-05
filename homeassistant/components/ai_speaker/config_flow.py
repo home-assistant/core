@@ -63,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except InvalidAuth:
-            errors["base"] = "cannot_connect"
+            errors["base"] = "invalid_auth"
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception %s", error)
             errors["base"] = "unknown"
