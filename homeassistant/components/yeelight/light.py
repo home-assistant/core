@@ -61,8 +61,10 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
+    PROPERTY_COLOR_MODE,
+    PROPERTY_FLOWING,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
-    YeelightEntity, PROPERTY_FLOWING, PROPERTY_COLOR_MODE,
+    YeelightEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)

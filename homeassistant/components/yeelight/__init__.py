@@ -67,11 +67,7 @@ NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 PROPERTY_COLOR_MODE = "color_mode"
 PROPERTY_FLOWING = "flowing"
 
-COLOR_MODE_MAPPING = {
-    1: "Color",
-    2: "Color Temperature",
-    3: 'HSV'
-}
+COLOR_MODE_MAPPING = {1: "Color", 2: "Color Temperature", 3: "HSV"}
 
 SCAN_INTERVAL = timedelta(seconds=30)
 DISCOVERY_INTERVAL = timedelta(seconds=60)
