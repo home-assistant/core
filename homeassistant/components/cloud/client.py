@@ -112,9 +112,9 @@ class CloudClient(Interface):
 
         async def enable_alexa(_):
             """Enable Alexa."""
-            alexa_config = await self.get_alexa_config()
+            aconf = await self.get_alexa_config()
             try:
-                await alexa_config.async_enable_proactive_mode()
+                await aconf.async_enable_proactive_mode()
             except aiohttp.ClientError as err:  # If no internet available yet
                 if self._hass.is_running:
                     logging.getLogger(__package__).warning(
