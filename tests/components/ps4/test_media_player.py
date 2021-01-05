@@ -288,11 +288,11 @@ async def test_media_attributes_are_loaded(hass, patch_load_json):
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
 
 
-async def test_device_info_is_set_from_status_correctly(hass):
+async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     """Test that device info is set correctly from status update."""
     mock_d_registry = mock_device_registry(hass)
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_STANDBY):
-        mock_entity_id = await setup_mock_component(hass)
+    patch_get_status.return_value = MOCK_STATUS_STANDBY
+    mock_entity_id = await setup_mock_component(hass)
 
     await hass.async_block_till_done()
 
@@ -305,7 +305,7 @@ async def test_device_info_is_set_from_status_correctly(hass):
 
     mock_d_entries = mock_d_registry.devices
     mock_entry = mock_d_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_HOST_ID)}, connections={()}
+        identifiers={(DOMAIN, MOCK_HOST_ID)}, connections=set()
     )
     assert mock_state == STATE_STANDBY
 
