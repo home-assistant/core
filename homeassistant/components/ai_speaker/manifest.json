@@ -3,6 +3,6 @@
     "name": "AI Speaker",
     "config_flow": true,
     "documentation": "https://www.home-assistant.io/integrations/ai_speaker",
-    "requirements": ["aisapi==0.0.3"],
+    "requirements": ["aisapi==0.0.4"],
     "codeowners": ["@asystentka-jolka"]
 }
