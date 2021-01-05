@@ -48,9 +48,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Ondilo ICO sensors."""
 
-    def get_all_pools_data():
+    api = hass.data[DOMAIN][entry.entry_id]
+
+    def get_all_pools_data(api):
         """Fetch pools and add pool details and last measures to pool data."""
-        api = hass.data[DOMAIN][entry.entry_id]
 
         pools = api.get_pools()
         for pool in pools:
@@ -70,7 +71,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         so entities can quickly look up their data.
         """
         try:
-            return await hass.async_add_executor_job(get_all_pools_data)
+            return await hass.async_add_executor_job(get_all_pools_data, api)
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
