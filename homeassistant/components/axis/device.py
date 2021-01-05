@@ -178,7 +178,7 @@ class AxisNetworkDevice:
         self.disconnect_from_stream()
 
         event = mqtt_json_to_event(message.payload)
-        self.api.event.process_event(event)
+        self.api.event.update([event])
 
     # Setup and teardown methods
 
