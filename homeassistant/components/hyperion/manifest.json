@@ -6,8 +6,9 @@
   "documentation": "https://www.home-assistant.io/integrations/hyperion",
   "domain": "hyperion",
   "name": "Hyperion",
+  "quality_scale": "platinum",
   "requirements": [
-    "hyperion-py==0.6.0"
+    "hyperion-py==0.6.1"
   ],
   "ssdp": [
     {

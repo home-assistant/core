@@ -13,12 +13,11 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_SUBSCRIBER, DOMAIN, SIGNAL_NEST_UPDATE
+from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,9 +94,10 @@ class NestCamera(Camera):
     @property
     def supported_features(self):
         """Flag supported features."""
+        supported_features = 0
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            return SUPPORT_STREAM
-        return 0
+            supported_features |= SUPPORT_STREAM
+        return supported_features
 
     async def stream_source(self):
         """Return the source of the stream."""
@@ -131,7 +131,6 @@ class NestCamera(Camera):
         if not self._stream:
             return
         _LOGGER.debug("Extending stream url")
-        self._stream_refresh_unsub = None
         try:
             self._stream = await self._stream.extend_rtsp_stream()
         except GoogleNestException as err:
@@ -151,13 +150,8 @@ class NestCamera(Camera):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-        # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
-        # here to re-fresh the signals from _device.  Unregister this callback
-        # when the entity is removed.
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_NEST_UPDATE, self.async_write_ha_state
-            )
+            self._device.add_update_listener(self.async_write_ha_state)
         )
 
     async def async_camera_image(self):

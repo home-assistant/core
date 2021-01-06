@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
 import homeassistant.util.package as pkg_util
 
@@ -17,7 +18,6 @@ DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
-_UNDEF = object()
 
 
 class RequirementsNotFound(HomeAssistantError):
@@ -53,19 +53,21 @@ async def async_get_integration_with_requirements(
     if cache is None:
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
 
-    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
+    int_or_evt: Union[Integration, asyncio.Event, None, UndefinedType] = cache.get(
+        domain, UNDEFINED
+    )
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
-        int_or_evt = cache.get(domain, _UNDEF)
+        int_or_evt = cache.get(domain, UNDEFINED)
 
-        # When we have waited and it's _UNDEF, it doesn't exist
+        # When we have waited and it's UNDEFINED, it doesn't exist
         # We don't cache that it doesn't exist, or else people can't fix it
         # and then restart, because their config will never be valid.
-        if int_or_evt is _UNDEF:
+        if int_or_evt is UNDEFINED:
             raise IntegrationNotFound(domain)
 
-    if int_or_evt is not _UNDEF:
+    if int_or_evt is not UNDEFINED:
         return cast(Integration, int_or_evt)
 
     event = cache[domain] = asyncio.Event()
