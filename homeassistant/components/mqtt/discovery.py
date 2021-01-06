@@ -42,6 +42,7 @@ SUPPORTED_COMPONENTS = [
     "fan",
     "light",
     "lock",
+    "number",
     "scene",
     "sensor",
     "switch",
