@@ -69,8 +69,8 @@ async def test_run_number_setup(hass, mqtt_mock):
     assert state.state == "20.5"
 
 
-async def test_run_number_service(hass, mqtt_mock):
-    """Test that set_value service works."""
+async def test_run_number_service_optimistic(hass, mqtt_mock):
+    """Test that set_value service works in optimistic mode."""
     topic = "test/number"
     await async_setup_component(
         hass,
@@ -79,6 +79,7 @@ async def test_run_number_service(hass, mqtt_mock):
     )
     await hass.async_block_till_done()
 
+    # Integer
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -90,6 +91,32 @@ async def test_run_number_service(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "30"
+
+    # Float with no decimal -> integer
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.0},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(topic, "42", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("number.test_number")
+    assert state.state == "42"
+
+    # Float with decimal -> float
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.1},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(topic, "42.1", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("number.test_number")
+    assert state.state == "42.1"
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
