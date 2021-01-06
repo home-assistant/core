@@ -1,7 +1,7 @@
 """Transmission service platform tests."""
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from unittest.mock import patch
 
-from tests.common import patch
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 
 async def test_switches(hass, torrent_info):
