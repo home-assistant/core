@@ -401,7 +401,7 @@ async def test_device_types(hass: HomeAssistant):
         nightlight_properties["friendly_name"] = f"{name} nightlight"
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
-        target_properties[PROPERTY_COLOR_MODE] = "HSV"
+        nightlight_properties[PROPERTY_COLOR_MODE] = "HSV"
         nightlight_properties["night_light"] = True
         nightlight_properties["music_mode"] = False
         assert dict(state.attributes) == nightlight_properties
