@@ -63,9 +63,8 @@ class LcnClimate(LcnEntity, ClimateEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.variable)
-            await self.device_connection.activate_status_request_handler(self.setpoint)
+        await self.device_connection.activate_status_request_handler(self.variable)
+        await self.device_connection.activate_status_request_handler(self.setpoint)
 
     @property
     def supported_features(self):
