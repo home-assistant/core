@@ -39,11 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             data=conf,
         )
         return False
-    else:
-        temp_codes = conf[CONF_USERCODES]
-        usercodes = {}
-        for code in temp_codes:
-            usercodes[int(code)] = temp_codes[code]
+
+    temp_codes = conf[CONF_USERCODES]
+    usercodes = {}
+    for code in temp_codes:
+        usercodes[int(code)] = temp_codes[code]
 
     client = await hass.async_add_executor_job(
         TotalConnectClient.TotalConnectClient, username, password, usercodes
