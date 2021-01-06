@@ -66,6 +66,7 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("wemo", "config_flow.py"),
     ("wiffi", "config_flow.py"),
     ("wink", "scene.py"),
+    ("zwave_js", "config_flow.py"),
 }
 
 
