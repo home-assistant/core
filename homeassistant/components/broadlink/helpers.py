@@ -73,13 +73,10 @@ def get_broadcast_addrs(nics):
     ]
 
 
-def is_broadcast_addr(address):
+def is_broadcast_addr(ip_addr):
     """Return True if the address is a valid IPv4 broadcast address."""
     try:
-        ip_addr = IPv4Address(address)
+        ip_addr = IPv4Address(ip_addr)
     except ValueError:
         return False
-
-    if ip_addr.packed[3] == 255:
-        return True
-    return False
+    return ip_addr.packed[3] == 255
