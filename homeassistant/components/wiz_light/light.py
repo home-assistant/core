@@ -72,8 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async def async_update(call=None):
         """Trigger update."""
         _LOGGER.debug(
-            "[wizlight %s] update requested",
-            entry.data.get(CONF_HOST),
+            "[wizlight %s] update requested", entry.data.get(CONF_HOST),
         )
         await wizbulb.async_update()
         await wizbulb.async_update_ha_state()
@@ -360,7 +359,7 @@ class WizBulb(LightEntity):
                 )
             except WizLightTimeOutError:
                 _LOGGER.debug(
-                    "[wizlight %s] Bulbtype update failed - Timout", self._light.ip
+                    "[wizlight %s] Bulbtype update failed - Timeout", self._light.ip
                 )
 
     def update_scene_list(self):
@@ -374,7 +373,7 @@ class WizBulb(LightEntity):
         try:
             self._mac = await self._light.getMac()
         except WizLightTimeOutError:
-            _LOGGER.debug("[wizlight %s] Mac update failed - Timout", self._light.ip)
+            _LOGGER.debug("[wizlight %s] Mac update failed - Timeout", self._light.ip)
 
     def featuremap(self):
         """Map the features from WizLight Class."""

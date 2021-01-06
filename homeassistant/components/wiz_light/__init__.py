@@ -3,7 +3,6 @@ import logging
 
 from pywizlight import wizlight
 
-from homeassistant.components.wiz_light.light import WizBulb
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
