@@ -42,6 +42,10 @@ class Ticker(CoordinatorEntity):
         self._name = f"Bittrex Ticker - {self._symbol}"
         self._unique_id = f"bittrex_ticker_{self._symbol})"
 
+    def _get_data_property(self, property_name):
+        """Return the property from self.coordinator.data."""
+        return self.coordinator.data[CONF_TICKERS][self._symbol][property_name]
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -50,7 +54,7 @@ class Ticker(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[CONF_TICKERS][self._symbol]["lastTradeRate"]
+        return self._get_data_property("lastTradeRate")
 
     @property
     def unique_id(self):
@@ -72,11 +76,9 @@ class Ticker(CoordinatorEntity):
         """Return additional sensor state attributes."""
         return {
             "symbol": self._symbol,
-            "last_trade_rate": self.coordinator.data[CONF_TICKERS][self._symbol][
-                "lastTradeRate"
-            ],
-            "bid_rate": self.coordinator.data[CONF_TICKERS][self._symbol]["bidRate"],
-            "ask_rate": self.coordinator.data[CONF_TICKERS][self._symbol]["askRate"],
+            "last_trade_rate": self._get_data_property("lastTradeRate"),
+            "bid_rate": self._get_data_property("bidRate"),
+            "ask_rate": self._get_data_property("askRate"),
             "currency": self._currency,
             "unit_of_measurement": self._unit_of_measurement,
         }
@@ -93,6 +95,10 @@ class Balance(CoordinatorEntity):
         self._name = f"Bittrex Balance - {self._balance}"
         self._unique_id = f"bittrex_balance_{self._balance})"
 
+    def _get_data_property(self, property_name):
+        """Return the property from self.coordinator.data."""
+        return self.coordinator.data[CONF_BALANCES][self._balance][property_name]
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -101,7 +107,7 @@ class Balance(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[CONF_BALANCES][self._balance]["total"]
+        return self._get_data_property("total")
 
     @property
     def unique_id(self):
@@ -111,13 +117,13 @@ class Balance(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self.coordinator.data[CONF_BALANCES][self._balance]["currencySymbol"]
+        return self._get_data_property("currencySymbol")
 
     @property
     def icon(self):
         """Icon to use in the frontend."""
         return CURRENCY_ICONS.get(
-            self.coordinator.data[CONF_BALANCES][self._balance]["currencySymbol"],
+            self._get_data_property("currencySymbol"),
             DEFAULT_COIN_ICON,
         )
 
@@ -125,16 +131,8 @@ class Balance(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "currency_symbol": self.coordinator.data[CONF_BALANCES][self._balance][
-                "currencySymbol"
-            ],
-            "available": self.coordinator.data[CONF_BALANCES][self._balance][
-                "available"
-            ],
-            "updated_at": self.coordinator.data[CONF_BALANCES][self._balance][
-                "updatedAt"
-            ],
-            "unit_of_measurement": self.coordinator.data[CONF_BALANCES][self._balance][
-                "currencySymbol"
-            ],
+            "currency_symbol": self._get_data_property("currencySymbol"),
+            "available": self._get_data_property("available"),
+            "updated_at": self._get_data_property("updatedAt"),
+            "unit_of_measurement": self._get_data_property("currencySymbol"),
         }

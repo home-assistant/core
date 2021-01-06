@@ -18,7 +18,7 @@
             },
             "balances": {
                 "title": "Select the cryptocurrency balances",
-                "description": "Select the balances that you would like to track.",
+                "description": "Optional: select the balances that you would like to track.",
                 "data": {
                     "balances": "balances"
                 }

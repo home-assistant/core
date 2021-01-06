@@ -16,13 +16,15 @@
                 "data": {
                     "markets": "Markets"
                 },
-                "title": "Select the cryptocurrency markets"
+                "title": "Select the cryptocurrency markets",
+                "description": "Select the markets that you would like to track."
             },
             "balances": {
                 "data": {
                     "balances": "Balances"
                 },
-                "title": "Select the cryptocurrency balances"
+                "title": "Select the cryptocurrency balances",
+                "description": "Optional: select the balances that you would like to track."
             },
             "user": {
                 "data": {
