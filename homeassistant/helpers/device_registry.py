@@ -276,7 +276,7 @@ class DeviceRegistry:
             name = default_name
 
         if via_device is not None:
-            via = self.async_get_device({via_device}, set())
+            via = self.async_get_device({via_device})
             via_device_id: Union[str, UndefinedType] = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED

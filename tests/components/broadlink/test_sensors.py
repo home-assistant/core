@@ -25,9 +25,7 @@ async def test_a1_sensor_setup(hass):
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors_raw.call_count == 1
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 5
@@ -62,9 +60,7 @@ async def test_a1_sensor_update(hass):
 
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 5
@@ -106,9 +102,7 @@ async def test_rm_pro_sensor_setup(hass):
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count == 1
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 1
@@ -131,9 +125,7 @@ async def test_rm_pro_sensor_update(hass):
 
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 1
@@ -163,9 +155,7 @@ async def test_rm_mini3_no_sensor(hass):
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count <= 1
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 0
@@ -183,9 +173,7 @@ async def test_rm4_pro_hts2_sensor_setup(hass):
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count == 1
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 2
@@ -211,9 +199,7 @@ async def test_rm4_pro_hts2_sensor_update(hass):
 
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 2
@@ -246,9 +232,7 @@ async def test_rm4_pro_no_sensor(hass):
     mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count <= 1
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, mock_entry.unique_id)}, set()
-    )
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 0

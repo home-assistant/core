@@ -348,7 +348,7 @@ async def async_handle_remove_node(hass: HomeAssistant, node: OZWNode):
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
     dev_id = create_device_id(node)
-    device = dev_registry.async_get_device({(DOMAIN, dev_id)}, set())
+    device = dev_registry.async_get_device({(DOMAIN, dev_id)})
     if not device:
         return
     devices_to_remove = [device.id]
@@ -372,7 +372,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
     dev_id = create_device_id(node)
-    device = dev_registry.async_get_device({(DOMAIN, dev_id)}, set())
+    device = dev_registry.async_get_device({(DOMAIN, dev_id)})
     if not device:
         return
     # update device in device registry with (updated) info
