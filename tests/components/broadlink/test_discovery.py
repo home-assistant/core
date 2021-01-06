@@ -1,6 +1,7 @@
 """Tests for device discovery."""
 from datetime import timedelta
 import socket
+from unittest.mock import patch
 
 import pytest
 
@@ -8,7 +9,6 @@ from homeassistant.util import dt
 
 from . import get_device
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
