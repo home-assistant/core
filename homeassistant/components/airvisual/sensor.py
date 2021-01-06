@@ -111,6 +111,42 @@ def async_get_pollutant_unit(symbol):
     return None
 
 
+@callback
+def async_get_pollutant_label(symbol):
+    """Get a pollutant's label based on its symbol."""
+    if symbol == "co":
+        return "Carbon Monoxide"
+    if symbol == "n2":
+        return "Nitrogen Dioxide"
+    if symbol == "o3":
+        return "Ozone"
+    if symbol == "p1":
+        return "PM10"
+    if symbol == "p2":
+        return "PM2.5"
+    if symbol == "s2":
+        return "Sulfur Dioxide"
+    return symbol
+
+
+@callback
+def async_get_pollutant_unit(symbol):
+    """Get a pollutant's unit based on its symbol."""
+    if symbol == "co":
+        return CONCENTRATION_PARTS_PER_MILLION
+    if symbol == "n2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "o3":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "p1":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "p2":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "s2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    return None
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
