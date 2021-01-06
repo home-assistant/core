@@ -237,7 +237,7 @@ class DeviceRegistry:
         default_name: Union[str, None, UndefinedType] = UNDEFINED,
         sw_version: Union[str, None, UndefinedType] = UNDEFINED,
         entry_type: Union[str, None, UndefinedType] = UNDEFINED,
-        via_device: Optional[str] = None,
+        via_device: Optional[Tuple[str, str]] = None,
         # To disable a device if it gets created
         disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
     ) -> Optional[DeviceEntry]:
