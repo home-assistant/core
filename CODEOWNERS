@@ -54,7 +54,6 @@ homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
-homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @ahayworth @danielsjf
 homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
@@ -323,6 +322,7 @@ homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
 homeassistant/components/openerz/* @misialq
 homeassistant/components/opengarage/* @danielhiversen
+homeassistant/components/openhome/* @bazwilliams
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff @freekode @nzapponi
@@ -355,6 +355,7 @@ homeassistant/components/ptvsd/* @swamp-ig
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/pvpc_hourly_pricing/* @azogue
+homeassistant/components/qbittorrent/* @geoffreylagaisse
 homeassistant/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
@@ -453,6 +454,7 @@ homeassistant/components/tado/* @michaelarnauts @bdraco
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
+homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
@@ -491,6 +493,7 @@ homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/vera/* @vangorra
+homeassistant/components/verisure/* @frenck
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff @ludeeus
 homeassistant/components/vesync/* @markperdue @webdjoe @thegardenmonkey

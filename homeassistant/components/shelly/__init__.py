@@ -24,6 +24,7 @@ from homeassistant.helpers import (
 )
 
 from .const import (
+    BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -143,6 +144,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self._last_input_events_count = dict()
 
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+
     @callback
     def _async_input_events_handler(self):
         """Handle device input events."""
@@ -184,6 +187,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data."""
+
         _LOGGER.debug("Polling Shelly Device - %s", self.name)
         try:
             async with async_timeout.timeout(
@@ -206,6 +210,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def async_setup(self):
         """Set up the wrapper."""
+
         dev_reg = await device_registry.async_get_registry(self.hass)
         model_type = self.device.settings["device"]["type"]
         entry = dev_reg.async_get_or_create(
@@ -225,18 +230,33 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.device.shutdown()
         self._async_remove_input_events_handler()
 
+    @callback
+    def _handle_ha_stop(self, _):
+        """Handle Home Assistant stopping."""
+        _LOGGER.debug("Stopping ShellyDeviceWrapper for %s", self.name)
+        self.shutdown()
+
 
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
 
     def __init__(self, hass, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
+        if (
+            device.settings["device"]["type"]
+            in BATTERY_DEVICES_WITH_PERMANENT_CONNECTION
+        ):
+            update_interval = (
+                SLEEP_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+            )
+        else:
+            update_interval = REST_SENSORS_UPDATE_INTERVAL
 
         super().__init__(
             hass,
             _LOGGER,
             name=get_device_name(device),
-            update_interval=timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
 

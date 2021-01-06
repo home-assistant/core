@@ -518,7 +518,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "media_content_rating",
             "media_library_title",
             "player_source",
-            "summary",
+            "media_summary",
             "username",
         ]:
             value = getattr(self, attr, None)
