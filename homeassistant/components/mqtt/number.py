@@ -178,7 +178,6 @@ class MqttNumber(
         if self._optimistic:
             last_state = await self.async_get_last_state()
             if last_state:
-                print(last_state)
                 self._current_number = last_state.state
 
     async def async_will_remove_from_hass(self):
