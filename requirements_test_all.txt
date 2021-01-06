@@ -876,7 +876,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.7
+python-ecobee-api==0.2.8
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
