@@ -11,7 +11,7 @@ from homeassistant.components.plaato.const import (
     CONF_USE_WEBHOOK,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 from tests.common import MockConfigEntry
@@ -19,7 +19,6 @@ from tests.common import MockConfigEntry
 BASE_URL = "http://example.com"
 WEBHOOK_ID = "webhook_id"
 UNIQUE_ID = "plaato_unique_id"
-CONF_UPDATE_INTERVAL = "update_interval"
 
 
 @pytest.fixture(name="webhook_id")
@@ -242,7 +241,7 @@ async def test_options(hass):
         domain=DOMAIN,
         title="NAME",
         data={},
-        options={CONF_UPDATE_INTERVAL: 5},
+        options={CONF_SCAN_INTERVAL: 5},
     )
 
     config_entry.add_to_hass(hass)
@@ -254,11 +253,11 @@ async def test_options(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_UPDATE_INTERVAL: 10},
+        user_input={CONF_SCAN_INTERVAL: 10},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_UPDATE_INTERVAL] == 10
+    assert result["data"][CONF_SCAN_INTERVAL] == 10
 
 
 async def test_options_webhook(hass, webhook_id):
@@ -267,7 +266,7 @@ async def test_options_webhook(hass, webhook_id):
         domain=DOMAIN,
         title="NAME",
         data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
-        options={CONF_UPDATE_INTERVAL: 5},
+        options={CONF_SCAN_INTERVAL: 5},
     )
 
     config_entry.add_to_hass(hass)
