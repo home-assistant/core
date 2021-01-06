@@ -10,9 +10,7 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -21,8 +19,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Z-Wave JS from a config entry."""
-    # TODO Store an API object for your platforms to access
+    """Set up Z-Wave JS from a config entry.
+
+    TODO Store an API object for your platforms to access
+    """
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
     for component in PLATFORMS:

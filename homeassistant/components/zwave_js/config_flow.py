@@ -9,8 +9,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+STEP_USER_DATA_SCHEMA = vol.Schema({"host": str, "port": int})
 
 
 class PlaceholderHub:
@@ -19,11 +18,12 @@ class PlaceholderHub:
     TODO Remove this placeholder class and replace with things from your PyPI package.
     """
 
-    def __init__(self, host):
+    def __init__(self, host, port):
         """Initialize."""
         self.host = host
+        self.port = port
 
-    async def authenticate(self, username, password) -> bool:
+    async def connect(self) -> bool:
         """Test if we can authenticate with the host."""
         return True
 
@@ -32,19 +32,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+
+    TODO validate the data can be used to set up a connection.
     """
-    # TODO validate the data can be used to set up a connection.
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
+    hub = PlaceholderHub(data["host"], data["port"])
 
-    hub = PlaceholderHub(data["host"])
-
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+    if not await hub.connect():
+        raise CannotConnect
 
     # If you cannot connect:
     # throw CannotConnect
@@ -59,8 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
