@@ -64,7 +64,6 @@ async def test_flow_required_fields(hass, transmission_setup, api):
         context={"source": "user"},
         data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
@@ -77,7 +76,6 @@ async def test_flow_all_provided(hass, transmission_setup, api):
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
@@ -199,7 +197,6 @@ async def test_name_already_configured(hass, transmission_setup, api):
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN, context={"source": "user"}, data=mock_entry
     )
-
     assert result["type"] == "form"
     assert result["errors"] == {CONF_NAME: "name_exists"}
 
