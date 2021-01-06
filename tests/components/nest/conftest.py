@@ -23,6 +23,7 @@ class FakeAuth(AbstractAuth):
         self.method = None
         self.url = None
         self.json = None
+        self.headers = None
         self.captured_requests = []
         # Set up by fixture
         self.client = None
@@ -31,12 +32,13 @@ class FakeAuth(AbstractAuth):
         """Return a valid access token."""
         return ""
 
-    async def request(self, method, url, json):
+    async def request(self, method, url, **kwargs):
         """Capure the request arguments for tests to assert on."""
         self.method = method
         self.url = url
-        self.json = json
-        self.captured_requests.append((method, url, json))
+        self.json = kwargs.get("json")
+        self.headers = kwargs.get("headers")
+        self.captured_requests.append((method, url, self.json, self.headers))
         return await self.client.get("/")
 
     async def response_handler(self, request):
