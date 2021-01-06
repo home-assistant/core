@@ -2,6 +2,9 @@
 import logging
 from typing import Sequence
 
+from pyavreceiver.receiver import AVReceiver
+from pyavreceiver.zone import Zone
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
@@ -44,8 +47,8 @@ class AVRMainZone(MediaPlayerEntity):
 
     def __init__(self, zone):
         """Initialize the device."""
-        self._zone = zone
-        self._avr = zone._avr
+        self._zone = zone  # type: Zone
+        self._avr = zone._avr  # type: AVReceiver
         self._signals = []
         self._supported_features_base = BASE_SUPPORTED_FEATURES
 
@@ -77,15 +80,15 @@ class AVRMainZone(MediaPlayerEntity):
         """Get attributes about the device."""
         return {
             "identifiers": {(AVRECEIVER_DOMAIN, "main zone")},
-            "name": self._avr.host,
-            "model": self._avr._model_name,
-            "manufacturer": "",
+            "name": self._avr.friendly_name,
+            "model": self._avr.model,
+            "manufacturer": self._avr.manufacturer,
         }
 
     @property
     def name(self):
         """Return the name of the device."""
-        return "AV Receiver"
+        return self._avr.friendly_name
 
     @property
     def state(self):
@@ -100,12 +103,11 @@ class AVRMainZone(MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "temporary unique id"
+        return self._avr.mac
 
     @property
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
-        print()
         return float(80 + self._zone.volume) / (80)
 
     @property
@@ -143,21 +145,21 @@ class AVRMainZone(MediaPlayerEntity):
         """No polling needed for this device."""
         return False
 
-    def select_source(self, source):
+    async def select_source(self, source):
         """Select input source."""
-        return self._zone.set_source(source)
+        return await self._zone.set_source(source)
 
     def select_sound_mode(self, sound_mode):
         """Select sound mode."""
         return self._zone.set_soundmode(sound_mode)
 
-    def turn_on(self):
+    async def turn_on(self):
         """Turn on media player."""
-        self._zone.set_power(True)
+        await self._zone.set_power(True)
 
-    def turn_off(self):
+    async def turn_off(self):
         """Turn off media player."""
-        self._zone.set_power(False)
+        await self._zone.set_power(False)
 
     def volume_up(self):
         """Volume up the media player."""
@@ -167,15 +169,15 @@ class AVRMainZone(MediaPlayerEntity):
         """Volume down media player."""
         self._zone.set_volume_down()
 
-    def set_volume_level(self, volume):
+    async def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
         volume_denon = float((volume * 100) - 80)
         if volume_denon > 18:
             volume_denon = float(18)
-        self._zone.set_volume(volume_denon)
+        await self._zone.set_volume(volume_denon)
 
-    def mute_volume(self, mute):
+    async def mute_volume(self, mute):
         """Send mute command."""
-        self._zone.set_mute(mute)
+        await self._zone.set_mute(mute)
