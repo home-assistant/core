@@ -40,7 +40,7 @@ from .test_common import (
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
-    number.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
+    number.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
 
 
@@ -50,7 +50,14 @@ async def test_run_number_setup(hass, mqtt_mock):
     await async_setup_component(
         hass,
         "number",
-        {"number": {"platform": "mqtt", "topic": topic, "name": "Test Number"}},
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+            }
+        },
     )
     await hass.async_block_till_done()
 
@@ -75,7 +82,14 @@ async def test_run_number_service_optimistic(hass, mqtt_mock):
     await async_setup_component(
         hass,
         "number",
-        {"number": {"platform": "mqtt", "topic": topic, "name": "Test Number"}},
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+            }
+        },
     )
     await hass.async_block_till_done()
 
@@ -189,13 +203,15 @@ async def test_unique_id(hass, mqtt_mock):
             {
                 "platform": "mqtt",
                 "name": "Test 1",
-                "topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_topic": "test-topic",
                 "unique_id": "TOTALLY_UNIQUE",
             },
             {
                 "platform": "mqtt",
                 "name": "Test 2",
-                "topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_topic": "test-topic",
                 "unique_id": "TOTALLY_UNIQUE",
             },
         ]
@@ -211,8 +227,12 @@ async def test_discovery_removal_number(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_number(hass, mqtt_mock, caplog):
     """Test update of discovered number."""
-    data1 = '{ "name": "Beer", "topic": "test_topic"}'
-    data2 = '{ "name": "Milk", "topic": "test_topic"}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic"}'
+    )
+    data2 = (
+        '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic"}'
+    )
 
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, number.DOMAIN, data1, data2
@@ -221,7 +241,9 @@ async def test_discovery_update_number(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_unchanged_number(hass, mqtt_mock, caplog):
     """Test update of discovered number."""
-    data1 = '{ "name": "Beer", "topic": "test_topic"}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic"}'
+    )
     with patch(
         "homeassistant.components.mqtt.number.MqttNumber.discovery_update"
     ) as discovery_update:
@@ -234,7 +256,9 @@ async def test_discovery_update_unchanged_number(hass, mqtt_mock, caplog):
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "topic": "test_topic"}'
+    data2 = (
+        '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic"}'
+    )
 
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, number.DOMAIN, data1, data2
@@ -272,7 +296,7 @@ async def test_entity_device_info_remove(hass, mqtt_mock):
 async def test_entity_id_update_subscriptions(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
+        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -286,5 +310,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, "test_topic", b"ON"
+        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload=b"1"
     )
