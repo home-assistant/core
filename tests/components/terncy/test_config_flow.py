@@ -1,4 +1,6 @@
 """Test the Terncy config flow."""
+from unittest.mock import Mock, patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.terncy.config_flow import _get_discovered_devices
 from homeassistant.components.terncy.const import (
@@ -10,8 +12,6 @@ from homeassistant.components.terncy.const import (
     DOMAIN,
     TERNCY_HUB_SVC_NAME,
 )
-
-from tests.async_mock import Mock, patch
 
 PATCH_MODULE = "homeassistant.components.terncy.config_flow"
 HUB_DEV_ID = "box-12-34-56-78-90-ab"
