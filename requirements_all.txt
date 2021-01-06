@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-ais-dom-frontend==20201229.0
+ais-dom-frontend==20201229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1058,7 +1058,7 @@ openhomedevice==0.7.2
 opensensemap-api==0.1.5
 
 # homeassistant.components.enigma2
-openwebifpy==3.1.6
+openwebifpy==3.2.7
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.6
@@ -1607,7 +1607,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.7
+pypck==0.7.8
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2339,7 +2339,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.7
+zeroconf==0.28.8
 
 # homeassistant.components.zha
 zha-quirks==0.0.51
