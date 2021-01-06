@@ -1,5 +1,4 @@
 """Platform for sensor integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -25,24 +24,23 @@ SENSOR_TYPES = {
     "temperature": [
         "Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
     "orp": ["Oxydo Reduction Potential", "mV", "mdi:pool", None],
     "ph": ["pH", "", "mdi:pool", None],
     "tds": ["TDS", CONCENTRATION_PARTS_PER_MILLION, "mdi:pool", None],
-    "battery": ["Battery", PERCENTAGE, "mdi:battery", DEVICE_CLASS_BATTERY],
+    "battery": ["Battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "rssi": [
         "RSSI",
         PERCENTAGE,
-        "mdi:wifi-strength-2",
+        None,
         DEVICE_CLASS_SIGNAL_STRENGTH,
     ],
     "salt": ["Salt", "mg/L", "mdi:pool", None],
 }
 
 SCAN_INTERVAL = timedelta(hours=1)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -51,13 +49,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     api = hass.data[DOMAIN][entry.entry_id]
 
-    def get_all_pool_data(pool):
-        """Add pool details and last measures to pool data."""
-        pool["ICO"] = api.get_ICO_details(pool["id"])
-        pool["sensors"] = api.get_last_pool_measures(pool["id"])
-
-        return pool
-
     async def async_update_data():
         """Fetch data from API endpoint.
 
@@ -65,14 +56,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         so entities can quickly look up their data.
         """
         try:
-            pools = await hass.async_add_executor_job(api.get_pools)
-
-            return await asyncio.gather(
-                *[
-                    hass.async_add_executor_job(get_all_pool_data, pool)
-                    for pool in pools
-                ]
-            )
+            return await hass.async_add_executor_job(api.get_all_pools_data)
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
@@ -145,11 +129,6 @@ class OndiloICO(CoordinatorEntity):
     @property
     def state(self):
         """Last value of the sensor."""
-        _LOGGER.debug(
-            "Retrieving Ondilo sensor %s state value: %s",
-            self._name,
-            self._devdata()["value"],
-        )
         return self._devdata()["value"]
 
     @property

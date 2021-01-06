@@ -6,9 +6,6 @@
   "requirements": [
     "ondilo==0.2.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [
     "http"
   ],
