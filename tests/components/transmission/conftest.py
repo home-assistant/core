@@ -1,5 +1,6 @@
 """Fixtures for the Transmission integration tests."""
 import json
+from unittest.mock import patch
 
 import pytest
 from transmissionrpc.error import TransmissionError
@@ -16,7 +17,6 @@ from homeassistant.components.transmission import (
 )
 from homeassistant.components.transmission.const import ORDER_OLDEST_FIRST
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 MOCK_TORRENTS_OLDEST_TO_NEWEST = [2, 1, 3, 4, 5]
