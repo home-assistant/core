@@ -144,7 +144,7 @@ class AVRMainZone(MediaPlayerEntity):
         """No polling needed for this device."""
         return False
 
-    async def select_source(self, source):
+    async def async_select_source(self, source):
         """Select input source."""
         return await self._zone.set_source(source)
 
@@ -152,11 +152,11 @@ class AVRMainZone(MediaPlayerEntity):
         """Select sound mode."""
         return self._zone.set_soundmode(sound_mode)
 
-    async def turn_on(self):
+    async def async_turn_on(self):
         """Turn on media player."""
         await self._zone.set_power(True)
 
-    async def turn_off(self):
+    async def async_turn_off(self):
         """Turn off media player."""
         await self._zone.set_power(False)
 
@@ -168,7 +168,7 @@ class AVRMainZone(MediaPlayerEntity):
         """Volume down media player."""
         self._zone.set_volume_down()
 
-    async def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
@@ -177,6 +177,6 @@ class AVRMainZone(MediaPlayerEntity):
             volume_denon = float(18)
         await self._zone.set_volume(volume_denon)
 
-    async def mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send mute command."""
         await self._zone.set_mute(mute)
