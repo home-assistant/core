@@ -652,7 +652,7 @@ pyatmo==4.2.1
 pyatv==0.7.3
 
 # homeassistant.components.avreceiver
-pyavreceiver==0.0.7
+pyavreceiver==0.0.8
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
