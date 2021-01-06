@@ -54,7 +54,6 @@ class AVRMainZone(MediaPlayerEntity):
 
     async def _avr_updated(self):
         """Handle avr attribute updated."""
-        print("Got to state update.")
         await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
