@@ -1,5 +1,4 @@
 """Transmission sensor platform tests."""
-
 from homeassistant.components.transmission.const import (
     ORDER_BEST_RATIO_FIRST,
     ORDER_NEWEST_FIRST,

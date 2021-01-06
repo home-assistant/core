@@ -1,5 +1,4 @@
 """Tests for Transmission init."""
-
 from unittest.mock import patch
 
 import pytest
