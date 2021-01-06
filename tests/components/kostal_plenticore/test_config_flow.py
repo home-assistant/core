@@ -11,7 +11,7 @@ from homeassistant.components.kostal_plenticore.const import DOMAIN
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_formx(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -31,6 +31,9 @@ async def test_form(hass):
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
         mock_api_ctx.login = AsyncMock()
+        mock_api_ctx.get_setting_values = AsyncMock(
+            return_value={"scb:network": {"Hostname": "scb"}}
+        )
 
         # mock of the return instance of PlenticoreApiClient
         mock_api = MagicMock()
@@ -51,9 +54,10 @@ async def test_form(hass):
         mock_api.__aenter__.assert_called_once()
         mock_api.__aexit__.assert_called_once()
         mock_api_ctx.login.assert_called_once_with("test-password")
+        mock_api_ctx.get_setting_values.assert_called_once()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "1.1.1.1"
+    assert result2["title"] == "scb"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "password": "test-password",
