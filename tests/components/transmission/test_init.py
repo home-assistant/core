@@ -100,3 +100,38 @@ async def test_unload_entry(hass, api):
         assert await transmission.async_unload_entry(hass, entry)
         assert unload_entry.call_count == 2
         assert entry.entry_id not in hass.data[transmission.DOMAIN]
+
+
+async def test_call_services(hass, torrent_info):
+    """Test that the Transmission services are called."""
+    with patch(
+        "homeassistant.components.transmission.transmissionrpc.Client.add_torrent"
+    ):
+        assert await (
+            hass.services.async_call(
+                "transmission",
+                "add_torrent",
+                service_data={"name": "Transmission", "torrent": "magnet:"},
+                blocking=True,
+            )
+        )
+        assert await (
+            hass.services.async_call(
+                "transmission",
+                "add_torrent",
+                service_data={"name": "Transmission", "torrent": "blumber"},
+                blocking=True,
+            )
+        )
+
+    with patch(
+        "homeassistant.components.transmission.transmissionrpc.Client.remove_torrent"
+    ):
+        assert await (
+            hass.services.async_call(
+                "transmission",
+                "remove_torrent",
+                service_data={"name": "Transmission", "id": 1},
+                blocking=True,
+            )
+        )
