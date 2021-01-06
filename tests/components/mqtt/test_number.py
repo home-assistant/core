@@ -10,7 +10,8 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
+import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -79,19 +80,29 @@ async def test_run_number_setup(hass, mqtt_mock):
 async def test_run_number_service_optimistic(hass, mqtt_mock):
     """Test that set_value service works in optimistic mode."""
     topic = "test/number"
-    await async_setup_component(
-        hass,
-        "number",
-        {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+
+    fake_state = ha.State("switch.test", "3")
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        assert await async_setup_component(
+            hass,
+            number.DOMAIN,
+            {
+                "number": {
+                    "platform": "mqtt",
+                    "command_topic": topic,
+                    "name": "Test Number",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "3"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Integer
     await hass.services.async_call(
