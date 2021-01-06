@@ -5,11 +5,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint: disable=unused-import
-    CONF_USERCODES,
-    DEFAULT_USERCODE,
-    DOMAIN,
-)
+from .const import CONF_USERCODES, DOMAIN  # pylint: disable=unused-import
+
+CONF_LOCATION = "location"
 
 
 class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -21,6 +19,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.username = None
         self.password = None
+        self.usercodes = {}
         self.client = None
 
     async def async_step_user(self, user_input=None):
@@ -31,13 +30,12 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Validate user input
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            usercodes = user_input.get(CONF_USERCODES)
 
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
 
             client = await self.hass.async_add_executor_job(
-                TotalConnectClient.TotalConnectClient, username, password, usercodes
+                TotalConnectClient.TotalConnectClient, username, password, None
             )
 
             if client.is_valid_credentials():
@@ -45,7 +43,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.username = username
                 self.password = password
                 self.client = client
-                return await self.async_step_locations(usercodes)
+                return await self.async_step_locations()
             # authentication failed / invalid
             errors["base"] = "invalid_auth"
 
@@ -57,32 +55,51 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_locations(self, usercodes=None):
+    async def async_step_locations(self, user_entry=None):
         """Handle the user locations and associated usercodes."""
         errors = {}
-        if usercodes is not None:
-            for location in usercodes:
-                valid = await self.hass.async_add_executor_job(
-                    self.client.locations[int(location)].set_usercode,
-                    usercodes[location],
-                )
-                if not valid:
-                    errors[location] = "usercode"
+        if user_entry is not None:
+            for location_id in self.usercodes:
+                if self.usercodes[location_id] is None:
+                    valid = await self.hass.async_add_executor_job(
+                        self.client.locations[location_id].set_usercode,
+                        user_entry[CONF_LOCATION],
+                    )
+                    if valid:
+                        self.usercodes[location_id] = user_entry[CONF_LOCATION]
+                    else:
+                        errors[CONF_LOCATION] = "usercode"
+                    break
 
-            if not errors:
+            complete = True
+            for location_id in self.usercodes:
+                if self.usercodes[location_id] is None:
+                    complete = False
+
+            if not errors and complete:
                 return self.async_create_entry(
                     title="Total Connect",
                     data={
                         CONF_USERNAME: self.username,
                         CONF_PASSWORD: self.password,
-                        CONF_USERCODES: usercodes,
+                        CONF_USERCODES: self.usercodes,
                     },
                 )
+        else:
+            for location_id in self.client.locations:
+                self.usercodes[location_id] = None
 
-        # show the locations with DEFAULT_USERCODE already entered
+        # show the next location that needs a usercode
         location_codes = {}
-        for location_id in self.client.locations:
-            location_codes[vol.Required(location_id, default=DEFAULT_USERCODE)] = str
+        for location_id in self.usercodes:
+            if self.usercodes[location_id] is None:
+                location_codes[
+                    vol.Required(
+                        CONF_LOCATION,
+                        default=location_id,
+                    )
+                ] = str
+                break
 
         data_schema = vol.Schema(location_codes)
         return self.async_show_form(
@@ -91,3 +108,16 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"base": "description"},
         )
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an authentication error or no usercode."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user()
