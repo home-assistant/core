@@ -25,6 +25,7 @@ def discover_chromecast(hass: HomeAssistant, info: ChromecastInfo):
         _LOGGER.error("Discovered chromecast without uuid %s", info)
         return
 
+    info = info.fill_out_missing_chromecast_info()
     if info.uuid in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
         _LOGGER.debug("Discovered update for known chromecast %s", info)
     else:
