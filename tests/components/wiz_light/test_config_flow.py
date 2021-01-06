@@ -1,4 +1,6 @@
 """Test the WiZ Light config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.wiz_light.config_flow import (
     WizLightConnectionError,
@@ -7,7 +9,6 @@ from homeassistant.components.wiz_light.config_flow import (
 from homeassistant.components.wiz_light.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FAKE_BULB_CONFIG = '{"method":"getSystemConfig","env":"pro","result":\

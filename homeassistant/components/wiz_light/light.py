@@ -71,9 +71,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     # Register services
     async def async_update(call=None):
         """Trigger update."""
-        _LOGGER.debug(
-            "[wizlight %s] update requested", entry.data.get(CONF_HOST),
-        )
+        _LOGGER.debug("[wizlight %s] update requested", entry.data.get(CONF_HOST))
         await wizbulb.async_update()
         await wizbulb.async_update_ha_state()
 
