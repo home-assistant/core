@@ -16,7 +16,7 @@ from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
-from ..models import Credentials, User, UserMeta
+from ..models import Credentials, RefreshToken, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
@@ -116,6 +116,12 @@ class AuthProvider:
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
+
+    @callback
+    def async_validate_refresh_token(
+        self, refresh_token: RefreshToken, remote_ip: Optional[str] = None
+    ) -> None:
+        """Verify a refresh token is still valid."""
 
 
 async def auth_provider_from_config(

@@ -348,15 +348,6 @@ class TokenView(HomeAssistantView):
         if refresh_token.client_id != client_id:
             return self.json({"error": "invalid_request"}, status_code=HTTP_BAD_REQUEST)
 
-        if (
-            refresh_token.cred
-            and refresh_token.cred.auth_provider_type == "trusted_network"
-        ):
-            if refresh_token.last_used_ip != remote_addr:
-                return self.json(
-                    {"error": "invalid_request"}, status_code=HTTP_BAD_REQUEST
-                )
-
         access_token = hass.auth.async_create_access_token(refresh_token, remote_addr)
 
         return self.json(

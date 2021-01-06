@@ -442,6 +442,8 @@ class AuthManager:
         self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
     ) -> str:
         """Create a new access token."""
+        self.async_validate_refresh_token(refresh_token, remote_ip)
+
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
 
         now = dt_util.utcnow()
@@ -454,6 +456,23 @@ class AuthManager:
             refresh_token.jwt_key,
             algorithm="HS256",
         ).decode()
+
+    @callback
+    def async_validate_refresh_token(
+        self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
+    ) -> None:
+        """Validate that a refresh token is usable."""
+        if not refresh_token.cred or refresh_token.cred.auth_provider_id is None:
+            return
+
+        provider = self.get_auth_provider(
+            refresh_token.cred.auth_provider_type, refresh_token.cred.auth_provider_id
+        )
+        if provider is None:
+            raise ValueError(
+                f"Auth provider {refresh_token.cred.auth_provider_type}, {refresh_token.cred.auth_provider_id} not available"
+            )
+        provider.async_validate_refresh_token(refresh_token, remote_ip)
 
     async def async_validate_access_token(
         self, token: str, remote: Optional[str] = None
@@ -483,12 +502,7 @@ class AuthManager:
         if refresh_token is None or not refresh_token.user.is_active:
             return None
 
-        if (
-            refresh_token.cred
-            and refresh_token.cred.auth_provider_type == "trusted_networks"
-        ):
-            if refresh_token.last_used_ip != remote:
-                return None
+        self.async_validate_refresh_token(refresh_token, remote)
 
         return refresh_token
 
