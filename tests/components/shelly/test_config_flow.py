@@ -255,7 +255,12 @@ async def test_user_setup_ignored_device(hass):
                 settings=settings,
             )
         ),
-    ):
+    ), patch(
+        "homeassistant.components.shelly.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.shelly.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -266,6 +271,8 @@ async def test_user_setup_ignored_device(hass):
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_firmware_unsupported(hass):

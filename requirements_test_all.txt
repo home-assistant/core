@@ -355,7 +355,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.5
+google-nest-sdm==0.2.6
 
 # homeassistant.components.gree
 greeclimate==0.10.3
@@ -394,7 +394,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201229.0
+home-assistant-frontend==20201229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -664,7 +664,7 @@ pybotvac==0.0.19
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.6.0
+pychromecast==7.7.2
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
@@ -873,7 +873,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.7
+python-ecobee-api==0.2.8
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
