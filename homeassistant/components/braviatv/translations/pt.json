@@ -10,6 +10,9 @@
         },
         "step": {
             "authorize": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                },
                 "description": "Digite o c\u00f3digo PIN mostrado na TV Sony Bravia. \n\nSe o c\u00f3digo PIN n\u00e3o for exibido, \u00e9 necess\u00e1rio cancelar o registro do Home Assistant na TV, v\u00e1 para: Configura\u00e7\u00f5es -> Rede -> Configura\u00e7\u00f5es do dispositivo remoto -> Cancelar registro do dispositivo remoto.",
                 "title": "Autorizar TV Sony Bravia"
             },

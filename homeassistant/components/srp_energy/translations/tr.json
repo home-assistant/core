@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_account": "Hesap kimli\u011fi 9 haneli bir say\u0131 olmal\u0131d\u0131r"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Hesap Kimli\u011fi",
+                    "is_tou": "Kullan\u0131m Zaman\u0131 Plan\u0131 m\u0131",
+                    "password": "\u015eifre",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "title": "SRP Enerji"
+}

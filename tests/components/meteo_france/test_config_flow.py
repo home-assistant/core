@@ -1,5 +1,5 @@
 """Tests for the Meteo-France config flow."""
-from meteofrance.model import Place
+from meteofrance_api.model import Place
 import pytest
 
 from homeassistant import data_entry_flow

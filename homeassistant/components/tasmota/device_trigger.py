@@ -157,7 +157,7 @@ async def async_setup_trigger(hass, tasmota_trigger, config_entry, discovery_has
     discovery_id = tasmota_trigger.cfg.trigger_id
     remove_update_signal = None
     _LOGGER.debug(
-        "Discovered trigger with id: %s '%s'", discovery_id, tasmota_trigger.cfg
+        "Discovered trigger with ID: %s '%s'", discovery_id, tasmota_trigger.cfg
     )
 
     async def discovery_update(trigger_config):

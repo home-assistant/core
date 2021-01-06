@@ -12,11 +12,19 @@ import voluptuous as vol
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     OptionsFlow,
 )
-from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_BASE,
+    CONF_HOST,
+    CONF_ID,
+    CONF_PORT,
+    CONF_SOURCE,
+    CONF_TOKEN,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,13 +43,13 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-#  +------------------+    +------------------+    +--------------------+
-#  |Step: SSDP        |    |Step: user        |    |Step: import        |
-#  |                  |    |                  |    |                    |
-#  |Input: <discovery>|    |Input: <host/port>|    |Input: <import data>|
-#  +------------------+    +------------------+    +--------------------+
-#           v                      v                       v
-#           +----------------------+-----------------------+
+#  +------------------+ +------------------+ +--------------------+ +--------------------+
+#  |Step: SSDP        | |Step: user        | |Step: import        | |Step: reauth        |
+#  |                  | |                  | |                    | |                    |
+#  |Input: <discovery>| |Input: <host/port>| |Input: <import data>| |Input: <entry_data> |
+#  +------------------+ +------------------+ +--------------------+ +--------------------+
+#           v                   v                       v                    v
+#           +-------------------+-----------------------+--------------------+
 # Auth not  |         Auth      |
 # required? |         required? |
 #           |                   v
@@ -82,7 +90,7 @@ _LOGGER.setLevel(logging.DEBUG)
 #                                           |
 #                                           v
 #                                 +----------------+
-#                                 |    Create!     |
+#                                 | Create/Update! |
 #                                 +----------------+
 
 # A note on choice of discovery mechanisms: Hyperion supports both Zeroconf and SSDP out
@@ -135,6 +143,17 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: ConfigType) -> Dict[str, Any]:
         """Handle a flow initiated by a YAML config import."""
         self._data.update(import_data)
+        async with self._create_client(raw_connection=True) as hyperion_client:
+            if not hyperion_client:
+                return self.async_abort(reason="cannot_connect")
+            return await self._advance_to_auth_step_if_necessary(hyperion_client)
+
+    async def async_step_reauth(
+        self,
+        config_data: ConfigType,
+    ) -> Dict[str, Any]:
+        """Handle a reauthentication flow."""
+        self._data = dict(config_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
@@ -401,7 +420,18 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         if not hyperion_id:
             return self.async_abort(reason="no_id")
 
-        await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
+        entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
+
+        # pylint: disable=no-member
+        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
+            assert self.hass
+            self.hass.config_entries.async_update_entry(entry, data=self._data)
+            # Need to manually reload, as the listener won't have been installed because
+            # the initial load did not succeed (the reauth flow will not be initiated if
+            # the load succeeds)
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
         self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167

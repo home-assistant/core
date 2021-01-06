@@ -3612,6 +3612,8 @@ DEVICES = [
             "sensor.digi_xbee3_77665544_analog_input_2",
             "sensor.digi_xbee3_77665544_analog_input_3",
             "sensor.digi_xbee3_77665544_analog_input_4",
+            "number.digi_xbee3_77665544_analog_output",
+            "number.digi_xbee3_77665544_analog_output_2",
         ],
         "entity_map": {
             ("switch", "00:11:22:33:44:55:66:77-208-6"): {
@@ -3713,6 +3715,16 @@ DEVICES = [
                 "channels": ["analog_input"],
                 "entity_class": "AnalogInput",
                 "entity_id": "sensor.digi_xbee3_77665544_analog_input_5",
+            },
+            ("number", "00:11:22:33:44:55:66:77-218-13"): {
+                "channels": ["analog_output"],
+                "entity_class": "ZhaNumber",
+                "entity_id": "number.digi_xbee3_77665544_analog_output",
+            },
+            ("number", "00:11:22:33:44:55:66:77-219-13"): {
+                "channels": ["analog_output"],
+                "entity_class": "ZhaNumber",
+                "entity_id": "number.digi_xbee3_77665544_analog_output_2",
             },
         },
         "event_channels": ["232:0x0008"],

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Aucun appareil n'a \u00e9t\u00e9 d\u00e9tect\u00e9 sur le r\u00e9seau"
+        }
+    }
+}

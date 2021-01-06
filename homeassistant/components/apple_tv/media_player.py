@@ -1,7 +1,7 @@
 """Support for Apple TV media player."""
 import logging
 
-from pyatv.const import DeviceState, MediaType
+from pyatv.const import DeviceState, FeatureName, FeatureState, MediaType
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -108,6 +108,22 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    def app_id(self):
+        """ID of the current running app."""
+        if self.atv:
+            if self.atv.features.in_state(FeatureState.Available, FeatureName.App):
+                return self.atv.metadata.app.identifier
+        return None
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        if self.atv:
+            if self.atv.features.in_state(FeatureState.Available, FeatureName.App):
+                return self.atv.metadata.app.name
+        return None
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self._playing:
@@ -169,9 +185,29 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         return None
 
     @property
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        if self._is_feature_available(FeatureName.Artist):
+            return self._playing.artist
+        return None
+
+    @property
+    def media_album_name(self):
+        """Album name of current playing media, music track only."""
+        if self._is_feature_available(FeatureName.Album):
+            return self._playing.album
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_APPLE_TV
+
+    def _is_feature_available(self, feature):
+        """Return if a feature is available."""
+        if self.atv and self._playing:
+            return self.atv.features.in_state(FeatureState.Available, feature)
+        return False
 
     async def async_turn_on(self):
         """Turn the media player on."""
