@@ -1,8 +1,8 @@
 """Tests for config/script."""
+from unittest.mock import patch
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
-
-from tests.async_mock import patch
 
 
 async def test_delete_script(hass, hass_client):

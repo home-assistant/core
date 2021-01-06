@@ -1,5 +1,6 @@
 """Test the Control4 config flow."""
 import datetime
+from unittest.mock import AsyncMock, patch
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 

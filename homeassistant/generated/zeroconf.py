@@ -116,7 +116,7 @@ ZEROCONF = {
     "_printer._tcp.local.": [
         {
             "domain": "brother",
-            "name": "Brother*"
+            "name": "brother*"
         }
     ],
     "_spotify-connect._tcp.local.": [
@@ -163,10 +163,14 @@ ZEROCONF = {
 }
 
 HOMEKIT = {
+    "3810X": "roku",
+    "4660X": "roku",
+    "7820X": "roku",
     "819LMB": "myq",
     "AC02": "tado",
     "Abode": "abode",
     "BSB002": "hue",
+    "C105X": "roku",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",

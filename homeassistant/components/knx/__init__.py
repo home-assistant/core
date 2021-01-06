@@ -14,6 +14,7 @@ from xknx.io import (
     ConnectionType,
 )
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -131,14 +132,23 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_KNX_SEND_SCHEMA = vol.Schema(
-    {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
-        vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
-            cv.positive_int, [cv.positive_int]
-        ),
-        vol.Optional(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
-    }
+SERVICE_KNX_SEND_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
+            vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
+        }
+    ),
+    vol.Schema(
+        # without type given payload is treated as raw bytes
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
+                cv.positive_int, [cv.positive_int]
+            ),
+        }
+    ),
 )
 
 
@@ -322,9 +332,21 @@ class KNXModule:
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
+        data = None
+
+        # Not all telegrams have serializable data.
+        if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
+            data = telegram.payload.value.value
+
         self.hass.bus.async_fire(
             "knx_event",
-            {"address": str(telegram.group_address), "data": telegram.payload.value},
+            {
+                "data": data,
+                "destination": str(telegram.destination_address),
+                "direction": telegram.direction.value,
+                "source": str(telegram.source_address),
+                "telegramtype": telegram.payload.__class__.__name__,
+            },
         )
 
     async def service_send_to_knx_bus(self, call):
@@ -344,10 +366,10 @@ class KNXModule:
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
 
-        payload = calculate_payload(attr_payload)
-        address = GroupAddress(attr_address)
-
-        telegram = Telegram(group_address=address, payload=payload)
+        telegram = Telegram(
+            destination_address=GroupAddress(attr_address),
+            payload=GroupValueWrite(calculate_payload(attr_payload)),
+        )
         await self.xknx.telegrams.put(telegram)
 
 

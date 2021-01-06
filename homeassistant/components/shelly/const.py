@@ -11,8 +11,8 @@ POLLING_TIMEOUT_MULTIPLIER = 1.2
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL = 60
 
-# Timeout used for initial entry setup in "async_setup_entry".
-SETUP_ENTRY_TIMEOUT_SEC = 10
+# Timeout used for aioshelly calls
+AIOSHELLY_DEVICE_TIMEOUT_SEC = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER = 1.2
@@ -31,4 +31,42 @@ INPUTS_EVENTS_DICT = {
     "L": "long",
     "SL": "single_long",
     "LS": "long_single",
+}
+
+# List of battery devices that maintain a permanent WiFi connection
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION = ["SHMOS-01"]
+
+EVENT_SHELLY_CLICK = "shelly.click"
+
+ATTR_CLICK_TYPE = "click_type"
+ATTR_CHANNEL = "channel"
+ATTR_DEVICE = "device"
+CONF_SUBTYPE = "subtype"
+
+BASIC_INPUTS_EVENTS_TYPES = {
+    "single",
+    "long",
+}
+
+SHBTN_1_INPUTS_EVENTS_TYPES = {
+    "single",
+    "double",
+    "triple",
+    "long",
+}
+
+SUPPORTED_INPUTS_EVENTS_TYPES = SHIX3_1_INPUTS_EVENTS_TYPES = {
+    "single",
+    "double",
+    "triple",
+    "long",
+    "single_long",
+    "long_single",
+}
+
+INPUTS_EVENTS_SUBTYPES = {
+    "button": 1,
+    "button1": 1,
+    "button2": 2,
+    "button3": 3,
 }

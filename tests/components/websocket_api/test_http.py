@@ -1,5 +1,6 @@
 """Test Websocket API http module."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from aiohttp import WSMsgType
 import pytest
@@ -7,7 +8,6 @@ import pytest
 from homeassistant.components.websocket_api import const, http
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

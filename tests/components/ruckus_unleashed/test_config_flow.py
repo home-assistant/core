@@ -1,5 +1,6 @@
 """Test the Ruckus Unleashed config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from pyruckus.exceptions import AuthenticationError
 
@@ -7,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.ruckus_unleashed.const import DOMAIN
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.ruckus_unleashed import CONFIG, DEFAULT_SYSTEM_INFO, DEFAULT_TITLE
 

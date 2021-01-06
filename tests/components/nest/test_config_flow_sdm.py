@@ -1,5 +1,7 @@
 """Test the Google Nest Device Access config flow."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, setup
@@ -9,12 +11,10 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .common import MockConfigEntry
 
-from tests.async_mock import patch
-
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 PROJECT_ID = "project-id-4321"
-SUBSCRIBER_ID = "subscriber-id-9876"
+SUBSCRIBER_ID = "projects/example/subscriptions/subscriber-id-9876"
 
 CONFIG = {
     DOMAIN: {

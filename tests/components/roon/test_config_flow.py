@@ -1,9 +1,10 @@
 """Test the roon config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.roon.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

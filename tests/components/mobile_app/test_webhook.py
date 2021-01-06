@@ -1,4 +1,6 @@
 """Webhook tests for mobile_app."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
@@ -11,7 +13,6 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

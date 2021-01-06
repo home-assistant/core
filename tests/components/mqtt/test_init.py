@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime, timedelta
 import json
 import ssl
+from unittest.mock import AsyncMock, MagicMock, call, mock_open, patch
 
 import pytest
 import voluptuous as vol
@@ -21,7 +22,6 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, MagicMock, call, mock_open, patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,

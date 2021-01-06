@@ -1,4 +1,6 @@
 """Test Media Source initialization."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import media_source
@@ -7,8 +9,6 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_is_media_source_id():

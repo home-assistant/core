@@ -1,9 +1,10 @@
 """Test the Aurora config flow."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.aurora.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DATA = {

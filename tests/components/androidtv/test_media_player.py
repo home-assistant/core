@@ -2,6 +2,7 @@
 import base64
 import copy
 import logging
+from unittest.mock import patch
 
 from androidtv.constants import APPS as ANDROIDTV_APPS
 from androidtv.exceptions import LockNotAcquiredException
@@ -58,7 +59,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.components.androidtv import patchers
 
 SHELL_RESPONSE_OFF = ""

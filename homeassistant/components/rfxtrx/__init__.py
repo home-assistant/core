@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE,
@@ -37,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -275,6 +277,10 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
 
+    device_registry: DeviceRegistry = (
+        await hass.helpers.device_registry.async_get_registry()
+    )
+
     # Declare the Handle event
     @callback
     def async_handle_receive(event):
@@ -297,9 +303,18 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_id(event.device, data_bits=data_bits)
 
-        # Register new devices
-        if config[CONF_AUTOMATIC_ADD] and device_id not in devices:
-            _add_device(event, device_id)
+        if device_id not in devices:
+            if config[CONF_AUTOMATIC_ADD]:
+                _add_device(event, device_id)
+            else:
+                return
+
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, *device_id)},
+            connections=set(),
+        )
+        if device_entry:
+            event_data[ATTR_DEVICE_ID] = device_entry.id
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)

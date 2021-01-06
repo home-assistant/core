@@ -1,4 +1,6 @@
 """Define tests for the SimpliSafe config flow."""
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
 from simplipy.errors import (
     InvalidCredentialsError,
     PendingAuthorizationError,
@@ -10,7 +12,6 @@ from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 

@@ -1,4 +1,6 @@
 """Tests for Broadlink devices."""
+from unittest.mock import patch
+
 import broadlink.exceptions as blke
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -13,7 +15,6 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
 
-from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 
