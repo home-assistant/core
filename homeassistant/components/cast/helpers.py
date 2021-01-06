@@ -70,7 +70,6 @@ class ChromecastInfo:
         if self.is_audio_group:
             is_dynamic_group = False
             http_group_status = None
-            dynamic_groups = []
             if self.uuid:
                 http_group_status = dial.get_multizone_status(
                     self.host,
@@ -78,10 +77,10 @@ class ChromecastInfo:
                     zconf=ChromeCastZeroconf.get_zeroconf(),
                 )
                 if http_group_status is not None:
-                    dynamic_groups = [
-                        str(g.uuid) for g in http_group_status.dynamic_groups
-                    ]
-                    is_dynamic_group = self.uuid in dynamic_groups
+                    is_dynamic_group = any(
+                        str(g.uuid) == self.uuid
+                        for g in http_group_status.dynamic_groups
+                    )
 
             return ChromecastInfo(
                 services=self.services,
