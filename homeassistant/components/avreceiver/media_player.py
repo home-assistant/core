@@ -172,7 +172,7 @@ class AVRMainZone(MediaPlayerEntity):
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
-        volume_denon = float((volume * 100) - 80)
+        volume_denon = float((volume * 80) - 80)
         if volume_denon > 18:
             volume_denon = float(18)
         await self._zone.set_volume(volume_denon)
