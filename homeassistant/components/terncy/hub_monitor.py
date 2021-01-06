@@ -53,6 +53,8 @@ class TerncyZCListener:
     def update_service(self, zconf, svc_type, name):
         """Get a terncy service updated event."""
         info = zconf.get_service_info(svc_type, name)
+        if info is None:
+            return
         dev_id = name.replace("." + svc_type, "")
         txt_records = _parse_svc(dev_id, info)
 
@@ -62,6 +64,8 @@ class TerncyZCListener:
     def add_service(self, zconf, svc_type, name):
         """Get a new terncy service discovered event."""
         info = zconf.get_service_info(svc_type, name)
+        if info is None:
+            return
         dev_id = name.replace("." + svc_type, "")
         txt_records = _parse_svc(dev_id, info)
 
