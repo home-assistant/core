@@ -1,4 +1,6 @@
 """Test Z-Wave Websocket API."""
+from unittest.mock import call, patch
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave.const import (
     CONF_AUTOHEAL,
@@ -7,8 +9,6 @@ from homeassistant.components.zwave.const import (
     CONF_USB_STICK_PATH,
 )
 from homeassistant.components.zwave.websocket_api import ID, TYPE
-
-from tests.async_mock import call, patch
 
 NETWORK_KEY = "0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST, 0xTE, 0xST"
 
