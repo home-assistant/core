@@ -32,10 +32,17 @@ class RoonHub:  # pragma: no cover
 
     async def discover(self):
         """Try and discover roon servers."""
+
+        def get_discovered_servers(discovery):
+            servers = discovery.all()
+            discovery.stop()
+            return servers
+
         discovery = RoonDiscovery(None)
-        servers = await self._hass.async_add_executor_job(discovery.all)
+        servers = await self._hass.async_add_executor_job(
+            get_discovered_servers, discovery
+        )
         _LOGGER.debug("Servers = %s", servers)
-        await self._hass.async_add_executor_job(discovery.stop)
         return servers
 
     async def authenticate(self, host, servers):
