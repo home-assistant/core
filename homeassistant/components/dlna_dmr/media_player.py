@@ -281,7 +281,10 @@ class DlnaDmrDevice(MediaPlayerEntity):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._device.volume_level
+        if self._device.has_volume_level:
+            return self._device.volume_level
+        else:
+            return 0
 
     @catch_request_errors()
     async def async_set_volume_level(self, volume):
