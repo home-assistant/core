@@ -1,0 +1,14 @@
+{
+  "domain": "zwave_js",
+  "name": "Z-Wave JS",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zwave_js",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@MartinHjelmare"
+  ]
+}
