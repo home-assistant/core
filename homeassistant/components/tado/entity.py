@@ -11,8 +11,8 @@ class TadoDeviceEntity(Entity):
         """Initialize a Tado device."""
         super().__init__()
         self._device_info = device_info
-        self.device_name = device_info["shortSerialNo"]
-        self.device_id = device_info["serialNo"]
+        self.device_name = device_info["serialNo"]
+        self.device_id = device_info["shortSerialNo"]
 
     @property
     def device_info(self):
@@ -40,6 +40,7 @@ class TadoZoneEntity(Entity):
         super().__init__()
         self._device_zone_id = f"{home_id}_{zone_id}"
         self.zone_name = zone_name
+        self.zone_id = zone_id
 
     @property
     def device_info(self):

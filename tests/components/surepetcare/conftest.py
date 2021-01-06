@@ -1,10 +1,10 @@
 """Define fixtures available for all tests."""
+from unittest.mock import AsyncMock, patch
+
 from pytest import fixture
 from surepy import SurePetcare
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.async_mock import AsyncMock, patch
 
 
 @fixture
@@ -18,6 +18,5 @@ async def surepetcare(hass):
             async_get_clientsession(hass),
             api_timeout=1,
         )
-        instance.get_data = AsyncMock(return_value=None)
-
+        instance._get_resource = AsyncMock(return_value=None)
         yield mock_surepetcare

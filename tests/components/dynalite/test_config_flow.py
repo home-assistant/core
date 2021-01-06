@@ -1,11 +1,12 @@
 """Test Dynalite config flow."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 

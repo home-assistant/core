@@ -1,10 +1,11 @@
 """Test Home Assistant Cast."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.cast import home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 

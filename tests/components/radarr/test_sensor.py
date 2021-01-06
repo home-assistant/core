@@ -1,10 +1,10 @@
 """The tests for the Radarr platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 def mocked_exception(*args, **kwargs):

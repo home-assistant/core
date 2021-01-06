@@ -1,4 +1,6 @@
 """Test the iRobot Roomba config flow."""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 from roombapy import RoombaConnectionError
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -10,7 +12,6 @@ from homeassistant.components.roomba.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
-from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {CONF_HOST: "1.2.3.4", CONF_BLID: "blid", CONF_PASSWORD: "password"}

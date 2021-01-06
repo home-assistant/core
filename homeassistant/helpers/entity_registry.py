@@ -18,7 +18,7 @@ from typing import (
     List,
     Optional,
     Tuple,
-    cast,
+    Union,
 )
 
 import attr
@@ -39,12 +39,10 @@ from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
 from .singleton import singleton
-from .typing import UNDEFINED, HomeAssistantType
+from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry  # noqa: F401
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
@@ -222,7 +220,7 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(  # type: ignore
+            return self._async_update_entity(
                 entity_id,
                 config_entry_id=config_entry_id or UNDEFINED,
                 device_id=device_id or UNDEFINED,
@@ -316,63 +314,56 @@ class EntityRegistry:
             for entity in entities:
                 if entity.disabled_by != DISABLED_DEVICE:
                     continue
-                self.async_update_entity(  # type: ignore
-                    entity.entity_id, disabled_by=None
-                )
+                self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
-            self.async_update_entity(  # type: ignore
-                entity.entity_id, disabled_by=DISABLED_DEVICE
-            )
+            self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
 
     @callback
     def async_update_entity(
         self,
-        entity_id,
+        entity_id: str,
         *,
-        name=UNDEFINED,
-        icon=UNDEFINED,
-        area_id=UNDEFINED,
-        new_entity_id=UNDEFINED,
-        new_unique_id=UNDEFINED,
-        disabled_by=UNDEFINED,
-    ):
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        icon: Union[str, None, UndefinedType] = UNDEFINED,
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        new_entity_id: Union[str, UndefinedType] = UNDEFINED,
+        new_unique_id: Union[str, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> RegistryEntry:
         """Update properties of an entity."""
-        return cast(  # cast until we have _async_update_entity type hinted
-            RegistryEntry,
-            self._async_update_entity(
-                entity_id,
-                name=name,
-                icon=icon,
-                area_id=area_id,
-                new_entity_id=new_entity_id,
-                new_unique_id=new_unique_id,
-                disabled_by=disabled_by,
-            ),
+        return self._async_update_entity(
+            entity_id,
+            name=name,
+            icon=icon,
+            area_id=area_id,
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id,
+            disabled_by=disabled_by,
         )
 
     @callback
     def _async_update_entity(
         self,
-        entity_id,
+        entity_id: str,
         *,
-        name=UNDEFINED,
-        icon=UNDEFINED,
-        config_entry_id=UNDEFINED,
-        new_entity_id=UNDEFINED,
-        device_id=UNDEFINED,
-        area_id=UNDEFINED,
-        new_unique_id=UNDEFINED,
-        disabled_by=UNDEFINED,
-        capabilities=UNDEFINED,
-        supported_features=UNDEFINED,
-        device_class=UNDEFINED,
-        unit_of_measurement=UNDEFINED,
-        original_name=UNDEFINED,
-        original_icon=UNDEFINED,
-    ):
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        icon: Union[str, None, UndefinedType] = UNDEFINED,
+        config_entry_id: Union[str, None, UndefinedType] = UNDEFINED,
+        new_entity_id: Union[str, UndefinedType] = UNDEFINED,
+        device_id: Union[str, None, UndefinedType] = UNDEFINED,
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        new_unique_id: Union[str, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        capabilities: Union[Dict[str, Any], None, UndefinedType] = UNDEFINED,
+        supported_features: Union[int, UndefinedType] = UNDEFINED,
+        device_class: Union[str, None, UndefinedType] = UNDEFINED,
+        unit_of_measurement: Union[str, None, UndefinedType] = UNDEFINED,
+        original_name: Union[str, None, UndefinedType] = UNDEFINED,
+        original_icon: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -526,7 +517,7 @@ class EntityRegistry:
         """Clear area id from registry entries."""
         for entity_id, entry in self.entities.items():
             if area_id == entry.area_id:
-                self._async_update_entity(entity_id, area_id=None)  # type: ignore
+                self._async_update_entity(entity_id, area_id=None)
 
     def _register_entry(self, entry: RegistryEntry) -> None:
         self.entities[entry.entity_id] = entry

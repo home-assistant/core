@@ -1,6 +1,7 @@
 """Axis light platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .test_device import API_DISCOVERY_RESPONSE, NAME, setup_axis_integration
-
-from tests.async_mock import patch
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",

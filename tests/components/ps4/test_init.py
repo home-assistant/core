@@ -1,4 +1,6 @@
 """Tests for the PS4 Integration."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -27,7 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, mock_registry
 
 MOCK_HOST = "192.168.0.1"
