@@ -148,7 +148,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def update_or_create_entity(dev, tern):
-    """Update or crate hass entity for given terncy device."""
+    """Update or create hass entity for given terncy device."""
     model = dev["model"] if "model" in dev else ""
     version = dev["version"] if "version" in dev else ""
     available = dev["online"] if "online" in dev else False
