@@ -1149,10 +1149,8 @@ yeelight==0.5.4
 # homeassistant.components.onvif
 zeep[async]==4.0.0
 
-# homeassistant.components.zeroconf
-zeroconf==0.28.7
-
 # homeassistant.components.terncy
+# homeassistant.components.zeroconf
 zeroconf==0.28.8
 
 # homeassistant.components.zha

@@ -2348,8 +2348,6 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.7
-
 # homeassistant.components.terncy
 zeroconf==0.28.8
 
