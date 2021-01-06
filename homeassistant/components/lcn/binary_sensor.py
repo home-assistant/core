@@ -50,10 +50,9 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                self.setpoint_variable
-            )
+        await self.device_connection.activate_status_request_handler(
+            self.setpoint_variable
+        )
 
     @property
     def is_on(self):
@@ -86,10 +85,9 @@ class LcnBinarySensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                self.bin_sensor_port
-            )
+        await self.device_connection.activate_status_request_handler(
+            self.bin_sensor_port
+        )
 
     @property
     def is_on(self):
@@ -118,8 +116,7 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.source)
+        await self.device_connection.activate_status_request_handler(self.source)
 
     @property
     def is_on(self):
