@@ -34,7 +34,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             async with async_timeout.timeout(10):
                 devices = await api.get_all_devices()
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         # Populate the entities
         entities = []
