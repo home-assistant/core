@@ -576,7 +576,7 @@ async def test_entity_and_device_attributes(hass, thermostat):
     assert entry
     assert entry.unique_id == thermostat.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)}, [])
+    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)})
     assert entry
     assert entry.name == thermostat.label
     assert entry.model == thermostat.device_type_name

@@ -304,9 +304,7 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     mock_state = hass.states.get(mock_entity_id).state
 
     mock_d_entries = mock_d_registry.devices
-    mock_entry = mock_d_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_HOST_ID)}, connections=set()
-    )
+    mock_entry = mock_d_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
     assert mock_state == STATE_STANDBY
 
     assert len(mock_d_entries) == 1
