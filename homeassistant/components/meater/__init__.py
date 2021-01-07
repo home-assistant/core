@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     except Exception as err:
-        _LOGGER.error(f"Unable to authenticate with the Meater API: {err}")
+        _LOGGER.error("Unable to authenticate with the Meater API: %s", err)
         return False
 
     if DOMAIN not in hass.data:
