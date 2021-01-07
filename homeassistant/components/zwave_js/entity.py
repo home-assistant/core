@@ -22,9 +22,10 @@ LOGGER = logging.getLogger(__name__)
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
-    def __init__(self, info: ZwaveDiscoveryInfo):
+    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo):
         """Initialize a generic Z-Wave device entity."""
-        self.info = ZwaveDiscoveryInfo
+        self.client = client
+        self.info = info
 
     @callback
     def on_value_update(self):
@@ -73,6 +74,6 @@ class ZWaveBaseEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed."""
         return False

@@ -3,6 +3,7 @@
 import logging
 
 from zwave_js_server.const import CommandClass
+from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -26,12 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave sensor from config entry."""
+    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id]
 
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo):
         """Add Z-Wave Sensor."""
         if info.platform_hint == "string_sensor":
-            sensor = ZWaveStringSensor(info)
+            sensor = ZWaveStringSensor(client, info)
         else:
             _LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -49,11 +51,11 @@ class ZWaveStringSensor(ZWaveBaseEntity):
     """Representation of a Z-Wave String sensor."""
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return state of the sensor."""
         return self.info.primary_value.value
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return unit of measurement the value is expressed in."""
         return self.info.primary_value.unit
