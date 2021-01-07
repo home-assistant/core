@@ -47,7 +47,7 @@ class ZWaveDiscoverySchema:
     endpoint: List[int] = field(default_factory=list)
     # [optional] the value's property must match ANY of these values
     property: List[str] = field(default_factory=list)
-    # [optional] the value's type must match ANY of these values
+    # [optional] the value's metadata_type must match ANY of these values
     type: List[str] = field(default_factory=list)
 
 
@@ -110,10 +110,10 @@ async def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo
         if not compare_value(schema.endpoint, value.endpoint):
             continue
         # check property
-        if not compare_value(schema.property, value.property):
+        if not compare_value(schema.property, value.property_):
             continue
-        # check type
-        if not compare_value(schema.type, value.type):
+        # check metadata_type
+        if not compare_value(schema.type, value.metadata.type):
             continue
         # all checks passed, this value belongs to an entity
         return ZwaveDiscoveryInfo(
