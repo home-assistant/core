@@ -554,16 +554,20 @@ class Thermostat(ClimateEntity):
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
-        return {
+        attrs = {
             "fan": self.fan,
             "climate_mode": self._preset_modes[
                 self.thermostat["program"]["currentClimateRef"]
             ],
             "equipment_running": status,
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
-            "humidifier_mode": self.humidifier_mode,
-            "humidifier_modes": self.humidifier_modes,
         }
+
+        if self.thermostat["settings"]["hasHumidifier"]:
+            attrs["humidifier_mode"] = self.humidifier_mode
+            attrs["humidifier_modes"] = self.humidifier_modes
+
+        return attrs
 
     @property
     def is_aux_heat(self):
