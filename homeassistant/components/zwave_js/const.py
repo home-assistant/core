@@ -1,5 +1,5 @@
 """Constants for the Z-Wave JS integration."""
 
 DOMAIN = "zwave_js"
-NAME = "Zwave JS"
+NAME = "Z-Wave JS"
 PLATFORMS = ["sensor"]
