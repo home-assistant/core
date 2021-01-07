@@ -9,6 +9,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_VENTILATING,
 )
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -210,6 +211,64 @@ async def test_get_triggers_set_tilt_pos(hass, device_reg, entity_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
+async def test_get_triggers_set_ventilation(hass, device_reg, entity_reg):
+    """Test we get the expected triggers from a cover."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[4]
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    expected_triggers = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "opened",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "closed",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "opening",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "closing",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "ventilating",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
+        },
+    ]
+    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    assert_lists_same(triggers, expected_triggers)
+
+
 async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -337,6 +396,33 @@ async def test_get_trigger_capabilities_set_tilt_pos(hass, device_reg, entity_re
             assert capabilities == {"extra_fields": []}
 
 
+async def test_get_trigger_capabilities_set_ventilation(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a cover trigger."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[4]
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    assert len(triggers) == 5
+    for trigger in triggers:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "trigger", trigger
+        )
+        assert capabilities == {"extra_fields": []}
+
+
 async def test_if_fires_on_state_change(hass, calls):
     """Test for state triggers firing."""
     hass.states.async_set("cover.entity", STATE_CLOSED)
@@ -422,6 +508,25 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "cover.entity",
+                        "type": "ventilating",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "ventilating - {{ trigger.platform}} - "
+                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -457,6 +562,26 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[3].data[
         "some"
     ] == "closing - device - {} - opening - closing - None".format("cover.entity")
+
+    # Fake that the entity is ventilating after closed.
+    hass.states.async_set("cover.entity", STATE_CLOSED)
+    hass.states.async_set("cover.entity", STATE_VENTILATING)
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert calls[5].data[
+        "some"
+    ] == "ventilating - device - {} - closed - ventilating - None".format(
+        "cover.entity"
+    )
+
+    # Fake that the entity is ventilating after open.
+    hass.states.async_set("cover.entity", STATE_OPEN)
+    hass.states.async_set("cover.entity", STATE_VENTILATING)
+    await hass.async_block_till_done()
+    assert len(calls) == 8
+    assert calls[7].data[
+        "some"
+    ] == "ventilating - device - {} - open - ventilating - None".format("cover.entity")
 
 
 async def test_if_fires_on_position(hass, calls):

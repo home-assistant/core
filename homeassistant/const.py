@@ -260,6 +260,7 @@ STATE_UNLOCKED = "unlocked"
 STATE_UNAVAILABLE = "unavailable"
 STATE_OK = "ok"
 STATE_PROBLEM = "problem"
+STATE_VENTILATING = "ventilating"
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -578,6 +579,7 @@ SERVICE_SET_COVER_TILT_POSITION = "set_cover_tilt_position"
 SERVICE_STOP_COVER = "stop_cover"
 SERVICE_STOP_COVER_TILT = "stop_cover_tilt"
 SERVICE_TOGGLE_COVER_TILT = "toggle_cover_tilt"
+SERVICE_SET_COVER_VENTILATION = "set_cover_ventilation"
 
 SERVICE_SELECT_OPTION = "select_option"
 

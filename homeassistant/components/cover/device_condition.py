@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_VENTILATING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -34,10 +35,17 @@ from . import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_SET_VENTILATION,
 )
 
 POSITION_CONDITION_TYPES = {"is_position", "is_tilt_position"}
-STATE_CONDITION_TYPES = {"is_open", "is_closed", "is_opening", "is_closing"}
+STATE_CONDITION_TYPES = {
+    "is_open",
+    "is_closed",
+    "is_opening",
+    "is_closing",
+    "is_ventilating",
+}
 
 POSITION_CONDITION_SCHEMA = vol.All(
     DEVICE_CONDITION_BASE_SCHEMA.extend(
@@ -141,6 +149,17 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict
                 }
             )
 
+        if supported_features & SUPPORT_SET_VENTILATION:
+            conditions.append(
+                {
+                    CONF_CONDITION: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "is_ventilating",
+                }
+            )
+
     return conditions
 
 
@@ -180,6 +199,8 @@ def async_condition_from_config(
             state = STATE_OPENING
         elif config[CONF_TYPE] == "is_closing":
             state = STATE_CLOSING
+        elif config[CONF_TYPE] == "is_ventilating":
+            state = STATE_VENTILATING
 
         def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
             """Test if an entity is a certain state."""

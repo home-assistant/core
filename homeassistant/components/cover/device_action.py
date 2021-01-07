@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_SET_COVER_VENTILATION,
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -32,10 +33,18 @@ from . import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_SET_VENTILATION,
     SUPPORT_STOP,
 )
 
-CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
+CMD_ACTION_TYPES = {
+    "open",
+    "close",
+    "stop",
+    "open_tilt",
+    "close_tilt",
+    "set_ventilation",
+}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
 
 CMD_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
@@ -140,6 +149,16 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                     }
                 )
 
+        if supported_features & SUPPORT_SET_VENTILATION:
+            actions.append(
+                {
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "set_ventilation",
+                }
+            )
+
     return actions
 
 
@@ -183,6 +202,8 @@ async def async_call_action_from_config(
     elif config[CONF_TYPE] == "set_tilt_position":
         service = SERVICE_SET_COVER_TILT_POSITION
         service_data[ATTR_TILT_POSITION] = config["position"]
+    elif config[CONF_TYPE] == "set_ventilation":
+        service = SERVICE_SET_COVER_VENTILATION
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context

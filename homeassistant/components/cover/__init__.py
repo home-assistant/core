@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_SET_COVER_VENTILATION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
     SERVICE_TOGGLE,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_VENTILATING,
 )
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -73,6 +75,7 @@ SUPPORT_OPEN_TILT = 16
 SUPPORT_CLOSE_TILT = 32
 SUPPORT_STOP_TILT = 64
 SUPPORT_SET_TILT_POSITION = 128
+SUPPORT_SET_VENTILATION = 256
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
@@ -151,6 +154,13 @@ async def async_setup(hass, config):
         [SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT],
     )
 
+    component.async_register_entity_service(
+        SERVICE_SET_COVER_VENTILATION,
+        {},
+        "async_set_ventilation",
+        [SUPPORT_SET_VENTILATION],
+    )
+
     return True
 
 
@@ -188,6 +198,9 @@ class CoverEntity(Entity):
             return STATE_OPENING
         if self.is_closing:
             return STATE_CLOSING
+
+        if self.is_ventilating:
+            return STATE_VENTILATING
 
         closed = self.is_closed
 
@@ -227,6 +240,9 @@ class CoverEntity(Entity):
                 | SUPPORT_SET_TILT_POSITION
             )
 
+        if self.is_ventilating is not None:
+            supported_features |= SUPPORT_SET_VENTILATION
+
         return supported_features
 
     @property
@@ -241,6 +257,10 @@ class CoverEntity(Entity):
     def is_closed(self):
         """Return if the cover is closed or not."""
         raise NotImplementedError()
+
+    @property
+    def is_ventilating(self):
+        """Return None is unknown, or if the cover is in ventilation position or not."""
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -337,6 +357,15 @@ class CoverEntity(Entity):
             await self.async_open_cover_tilt(**kwargs)
         else:
             await self.async_close_cover_tilt(**kwargs)
+
+    def set_ventilation(self, **kwargs: Any) -> None:
+        """Set Ventilation position for the cover."""
+
+    async def async_set_ventilation(self, **kwargs):
+        """Open the cover."""
+        await self.hass.async_add_executor_job(
+            ft.partial(self.set_ventilation, **kwargs)
+        )
 
 
 class CoverDevice(CoverEntity):

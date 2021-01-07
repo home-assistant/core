@@ -75,3 +75,10 @@ stop_cover_tilt:
     entity_id:
       description: Name(s) of cover(s) to stop.
       example: "cover.living_room_blinds"
+
+set_cover_ventilation:
+  description: Set ventilation position for all or specified cover.
+  fields:
+    entity_id:
+      description: Name(s) of cover(s) to open.
+      example: "cover.garage_door"

@@ -17,10 +17,12 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_SET_COVER_VENTILATION,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_VENTILATING,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
@@ -29,7 +31,13 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES = {STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING}
+VALID_STATES = {
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_VENTILATING,
+}
 
 
 async def _async_reproduce_state(
@@ -70,7 +78,7 @@ async def _async_reproduce_state(
         and cur_state.attributes.get(ATTR_CURRENT_POSITION)
         == state.attributes.get(ATTR_CURRENT_POSITION)
     ):
-        # Open/Close
+        # Open/Close/Ventilating
         if state.state in [STATE_CLOSED, STATE_CLOSING]:
             service = SERVICE_CLOSE_COVER
         elif state.state in [STATE_OPEN, STATE_OPENING]:
@@ -82,6 +90,8 @@ async def _async_reproduce_state(
                 service_data[ATTR_POSITION] = state.attributes[ATTR_CURRENT_POSITION]
             else:
                 service = SERVICE_OPEN_COVER
+        elif state.state in [STATE_VENTILATING]:
+            service = SERVICE_SET_COVER_VENTILATION
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True

@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_SET_VENTILATION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
     CoverEntity,
@@ -33,6 +34,7 @@ def init(empty=False):
                 is_on=True,
                 unique_id="unique_cover",
                 supports_tilt=False,
+                supports_ventilation=False,
             ),
             MockCover(
                 name="Set position cover",
@@ -40,6 +42,7 @@ def init(empty=False):
                 unique_id="unique_set_pos_cover",
                 current_cover_position=50,
                 supports_tilt=False,
+                supports_ventilation=False,
             ),
             MockCover(
                 name="Set tilt position cover",
@@ -47,12 +50,21 @@ def init(empty=False):
                 unique_id="unique_set_pos_tilt_cover",
                 current_cover_tilt_position=50,
                 supports_tilt=True,
+                supports_ventilation=False,
             ),
             MockCover(
                 name="Tilt cover",
                 is_on=True,
                 unique_id="unique_tilt_cover",
                 supports_tilt=True,
+                supports_ventilation=False,
+            ),
+            MockCover(
+                name="Ventilation cover",
+                is_on=True,
+                unique_id="unique_ventilation_cover",
+                supports_tilt=False,
+                supports_ventilation=True,
             ),
         ]
     )
@@ -92,6 +104,9 @@ class MockCover(MockEntity, CoverEntity):
             supported_features |= (
                 SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
             )
+
+        if self._handle("supports_ventilation"):
+            supported_features |= SUPPORT_SET_VENTILATION
 
         if self.current_cover_position is not None:
             supported_features |= SUPPORT_SET_POSITION

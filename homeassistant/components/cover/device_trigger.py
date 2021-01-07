@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_VENTILATING,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
@@ -34,10 +35,11 @@ from . import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_SET_VENTILATION,
 )
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
-STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
+STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing", "ventilating"}
 
 POSITION_TRIGGER_SCHEMA = vol.All(
     TRIGGER_BASE_SCHEMA.extend(
@@ -141,6 +143,17 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                 }
             )
 
+        if supported_features & SUPPORT_SET_VENTILATION:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "ventilating",
+                }
+            )
+
     return triggers
 
 
@@ -181,6 +194,8 @@ async def async_attach_trigger(
             to_state = STATE_OPENING
         elif config[CONF_TYPE] == "closing":
             to_state = STATE_CLOSING
+        elif config[CONF_TYPE] == "ventilating":
+            to_state = STATE_VENTILATING
 
         state_config = {
             CONF_PLATFORM: "state",

@@ -12,8 +12,10 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_SET_COVER_VENTILATION,
     STATE_CLOSED,
     STATE_OPEN,
+    STATE_VENTILATING,
 )
 from homeassistant.core import State
 
@@ -50,6 +52,7 @@ async def test_reproducing_states(hass, caplog):
         STATE_OPEN,
         {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
     )
+    hass.states.async_set("cover.entity_ventilating", STATE_VENTILATING, {})
 
     close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
     open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
@@ -59,6 +62,7 @@ async def test_reproducing_states(hass, caplog):
     position_tilt_calls = async_mock_service(
         hass, "cover", SERVICE_SET_COVER_TILT_POSITION
     )
+    ventilation_calls = async_mock_service(hass, "cover", SERVICE_SET_COVER_VENTILATION)
 
     # These calls should do nothing as entities already in desired state
     await hass.helpers.state.async_reproduce_state(
@@ -93,6 +97,7 @@ async def test_reproducing_states(hass, caplog):
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
             ),
+            State("cover.entity_ventilating", STATE_VENTILATING),
         ]
     )
 
@@ -102,6 +107,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(open_tilt_calls) == 0
     assert len(position_calls) == 0
     assert len(position_tilt_calls) == 0
+    assert len(ventilation_calls) == 0
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -115,6 +121,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(open_tilt_calls) == 0
     assert len(position_calls) == 0
     assert len(position_tilt_calls) == 0
+    assert len(ventilation_calls) == 0
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -141,6 +148,8 @@ async def test_reproducing_states(hass, caplog):
                 STATE_CLOSED,
                 {ATTR_CURRENT_POSITION: 0, ATTR_CURRENT_TILT_POSITION: 0},
             ),
+            State("cover.entity_ventilating", STATE_OPEN),
+            State("cover.entity_ventilating", STATE_CLOSED),
             # Should not raise
             State("cover.non_existing", "on"),
         ],
@@ -150,8 +159,9 @@ async def test_reproducing_states(hass, caplog):
         {"entity_id": "cover.entity_open"},
         {"entity_id": "cover.entity_open_attr"},
         {"entity_id": "cover.entity_entirely_open"},
+        {"entity_id": "cover.entity_ventilating"},
     ]
-    assert len(close_calls) == 3
+    assert len(close_calls) == 4
     for call in close_calls:
         assert call.domain == "cover"
         assert call.data in valid_close_calls
@@ -161,8 +171,9 @@ async def test_reproducing_states(hass, caplog):
         {"entity_id": "cover.entity_close"},
         {"entity_id": "cover.entity_slightly_open"},
         {"entity_id": "cover.entity_open_tilt"},
+        {"entity_id": "cover.entity_ventilating"},
     ]
-    assert len(open_calls) == 3
+    assert len(open_calls) == 4
     for call in open_calls:
         assert call.domain == "cover"
         assert call.data in valid_open_calls
@@ -195,3 +206,34 @@ async def test_reproducing_states(hass, caplog):
         "entity_id": "cover.entity_close_attr",
         ATTR_TILT_POSITION: 50,
     }
+
+    # Make sure set_cover_ventilation service is called
+    await hass.helpers.state.async_reproduce_state(
+        [
+            State("cover.entity_close", STATE_VENTILATING),
+            State("cover.entity_close_attr", STATE_VENTILATING),
+            State("cover.entity_close_tilt", STATE_VENTILATING),
+            State("cover.entity_open", STATE_VENTILATING),
+            State("cover.entity_slightly_open", STATE_VENTILATING),
+            State("cover.entity_open_attr", STATE_VENTILATING),
+            State("cover.entity_open_tilt", STATE_VENTILATING),
+            State("cover.entity_entirely_open", STATE_VENTILATING),
+        ],
+    )
+
+    valid_ventilation_calls = [
+        {"entity_id": "cover.entity_close"},
+        {"entity_id": "cover.entity_close_attr"},
+        {"entity_id": "cover.entity_close_tilt"},
+        {"entity_id": "cover.entity_open"},
+        {"entity_id": "cover.entity_slightly_open"},
+        {"entity_id": "cover.entity_open_attr"},
+        {"entity_id": "cover.entity_open_tilt"},
+        {"entity_id": "cover.entity_entirely_open"},
+    ]
+    assert len(ventilation_calls) == 8
+    for call in ventilation_calls:
+        assert call.domain == "cover"
+        assert call.data in valid_ventilation_calls
+        assert call.service == SERVICE_SET_COVER_VENTILATION
+        valid_ventilation_calls.remove(call.data)
