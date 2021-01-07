@@ -311,7 +311,6 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, *device_id)},
-            connections=set(),
         )
         if device_entry:
             event_data[ATTR_DEVICE_ID] = device_entry.id

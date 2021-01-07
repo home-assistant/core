@@ -40,9 +40,7 @@ async def test_device_registry_insert(hass):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    gw_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_GATEWAY_ID)}, connections=set()
-    )
+    gw_dev = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
     assert gw_dev.sw_version == VERSION_OLD
 
 
@@ -67,7 +65,5 @@ async def test_device_registry_update(hass):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-    gw_dev = dev_reg.async_get_device(
-        identifiers={(DOMAIN, MOCK_GATEWAY_ID)}, connections=set()
-    )
+    gw_dev = dev_reg.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
     assert gw_dev.sw_version == VERSION_NEW

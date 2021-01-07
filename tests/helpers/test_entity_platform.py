@@ -747,7 +747,7 @@ async def test_device_info_called(hass):
 
     assert len(hass.states.async_entity_ids()) == 2
 
-    device = registry.async_get_device({("hue", "1234")}, set())
+    device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
     assert device.connections == {("mac", "abcd")}

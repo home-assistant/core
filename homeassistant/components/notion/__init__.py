@@ -230,10 +230,10 @@ class NotionEntity(CoordinatorEntity):
         device_registry = await dr.async_get_registry(self.hass)
         bridge = self.coordinator.data["bridges"][self._bridge_id]
         bridge_device = device_registry.async_get_device(
-            {(DOMAIN, bridge["hardware_id"])}, set()
+            {(DOMAIN, bridge["hardware_id"])}
         )
         this_device = device_registry.async_get_device(
-            {(DOMAIN, sensor["hardware_id"])}, set()
+            {(DOMAIN, sensor["hardware_id"])}
         )
 
         device_registry.async_update_device(

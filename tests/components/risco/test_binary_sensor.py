@@ -60,11 +60,11 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
     registry = await hass.helpers.device_registry.async_get_registry()
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_1")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_1")})
     assert device is not None
     assert device.manufacturer == "Risco"
 

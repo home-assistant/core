@@ -40,7 +40,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
     assert entry.model == device.device_type_name

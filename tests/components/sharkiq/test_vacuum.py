@@ -200,7 +200,7 @@ async def test_device_properties(
 ):
     """Test device properties."""
     registry = await hass.helpers.device_registry.async_get_registry()
-    device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")}, [])
+    device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 
 

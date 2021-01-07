@@ -505,7 +505,7 @@ async def async_setup_entry(hass, config_entry):
     async def _remove_device(node):
         dev_reg = await async_get_device_registry(hass)
         identifier, name = node_device_id_and_name(node)
-        device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+        device = dev_reg.async_get_device(identifiers={identifier})
         if device is not None:
             _LOGGER.debug("Removing Device - %s - %s", device.id, name)
             dev_reg.async_remove_device(device.id)

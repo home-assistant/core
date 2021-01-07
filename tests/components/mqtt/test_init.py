@@ -970,7 +970,7 @@ async def test_mqtt_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -981,7 +981,7 @@ async def test_mqtt_ws_remove_discovered_device(
     assert response["success"]
 
     # Verify device entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
 
 
@@ -998,7 +998,7 @@ async def test_mqtt_ws_remove_discovered_device_twice(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -1030,7 +1030,7 @@ async def test_mqtt_ws_remove_discovered_device_same_topic(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -1086,7 +1086,7 @@ async def test_mqtt_ws_get_device_debug_info(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -1168,7 +1168,7 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock):
     for d in devices:
         domain = d["domain"]
         id = d["config"]["device"]["identifiers"][0]
-        device = registry.async_get_device({("mqtt", id)}, set())
+        device = registry.async_get_device({("mqtt", id)})
         assert device is not None
 
         debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -1246,7 +1246,7 @@ async def test_debug_info_multiple_entities_triggers(hass, mqtt_mock):
         await hass.async_block_till_done()
 
     device_id = config[0]["config"]["device"]["identifiers"][0]
-    device = registry.async_get_device({("mqtt", device_id)}, set())
+    device = registry.async_get_device({("mqtt", device_id)})
     assert device is not None
     debug_info_data = await debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 2
@@ -1316,7 +1316,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -1362,7 +1362,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -1421,7 +1421,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -1472,7 +1472,7 @@ async def test_debug_info_qos_retain(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)

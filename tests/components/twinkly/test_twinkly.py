@@ -216,7 +216,7 @@ async def _create_entries(
 
     entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
     entity = entity_registry.async_get(entity_id)
-    device = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)}, set())
+    device = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
 
     assert entity is not None
     assert device is not None

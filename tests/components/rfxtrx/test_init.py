@@ -95,12 +95,12 @@ async def test_fire_event(hass, rfxtrx):
     await rfxtrx.signal("0716000100900970")
 
     device_id_1 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}, connections=set()
+        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
     )
     assert device_id_1
 
     device_id_2 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "16", "0", "00:90")}, connections=set()
+        identifiers={("rfxtrx", "16", "0", "00:90")}
     )
     assert device_id_2
 
