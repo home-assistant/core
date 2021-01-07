@@ -47,6 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     initialized = asyncio.Event()
 
+    # pylint: disable=fixme
+
     async def async_on_initialized():
         """Handle initial full state received."""
         # TODO: signal entities to update availability state

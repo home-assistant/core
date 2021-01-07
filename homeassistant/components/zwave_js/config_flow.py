@@ -17,6 +17,7 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict) -> bool:
     """Validate if the user input allows us to connect."""
     ws_address = user_input[CONF_URL]
 
+    # pylint: disable=fixme
     # TODO: actually test server connection
     if not ws_address.startswith("ws://") and not ws_address.startswith("wss://"):
         raise CannotConnect
