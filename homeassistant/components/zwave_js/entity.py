@@ -38,7 +38,8 @@ class ZWaveBaseEntity(Entity):
         # Add value_changed callbacks.
         self.async_on_remove(
             # TODO: only subscribe to values we're interested in (requires change in library)
-            self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed))
+            self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
+        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, f"{DOMAIN}_update_{self.info.discover_id}", self._value_changed

@@ -2,27 +2,17 @@
 
 import logging
 
-from zwave_js_server.const import CommandClass
 from zwave_js_server.client import Client as ZwaveClient
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DOMAIN as SENSOR_DOMAIN,
-)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN, DATA_CLIENT, DATA_UNSUBSCRIBE
+from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -35,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if info.platform_hint == "string_sensor":
             sensor = ZWaveStringSensor(client, info)
         else:
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Sensor not implemented for %s/%s",
                 info.platform_hint,
                 info.primary_value.property_name,
@@ -44,9 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([sensor])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(
-            hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor
-        )
+        async_dispatcher_connect(hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor)
     )
 
 
