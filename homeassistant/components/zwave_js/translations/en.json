@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "address": "Websocket address"
+                    "URL": "URL"
                 }
             }
         }

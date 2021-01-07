@@ -18,7 +18,7 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict) -> bool:
     ws_address = user_input[CONF_URL]
 
     # TODO: actually test server connection
-    if not ws_address.startswith("ws://") or not ws_address.startswith("wss://"):
+    if not ws_address.startswith("ws://") and not ws_address.startswith("wss://"):
         raise CannotConnect
     if not ws_address.endswith("/zjs"):
         raise CannotConnect
