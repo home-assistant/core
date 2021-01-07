@@ -57,9 +57,7 @@ class BroadlinkDevice:
         Triggered when the device is renamed on the frontend.
         """
         device_registry = await dr.async_get_registry(hass)
-        device_entry = device_registry.async_get_device(
-            {(DOMAIN, entry.unique_id)}, set()
-        )
+        device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 

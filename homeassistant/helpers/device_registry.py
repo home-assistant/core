@@ -139,7 +139,9 @@ class DeviceRegistry:
 
     @callback
     def async_get_device(
-        self, identifiers: set, connections: set
+        self,
+        identifiers: set,
+        connections: Optional[set] = None,
     ) -> Optional[DeviceEntry]:
         """Check if device is registered."""
         device_id = self._async_get_device_id_from_index(
@@ -150,7 +152,7 @@ class DeviceRegistry:
         return self.devices[device_id]
 
     def _async_get_deleted_device(
-        self, identifiers: set, connections: set
+        self, identifiers: set, connections: Optional[set]
     ) -> Optional[DeletedDeviceEntry]:
         """Check if device is deleted."""
         device_id = self._async_get_device_id_from_index(
@@ -161,7 +163,7 @@ class DeviceRegistry:
         return self.deleted_devices[device_id]
 
     def _async_get_device_id_from_index(
-        self, index: str, identifiers: set, connections: set
+        self, index: str, identifiers: set, connections: Optional[set]
     ) -> Optional[str]:
         """Check if device has previously been registered."""
         devices_index = self._devices_index[index]
@@ -274,7 +276,7 @@ class DeviceRegistry:
             name = default_name
 
         if via_device is not None:
-            via = self.async_get_device({via_device}, set())
+            via = self.async_get_device({via_device})
             via_device_id: Union[str, UndefinedType] = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED
