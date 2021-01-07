@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
+from .discovery import async_discover_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,21 +56,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         LOGGER.info("Connection to Zwave JS Server initialized")
         initialized.set()
 
-        # This should be moved to the Node Ready command or something
-        # And then listen to new nodes too.
-        dev_reg = await device_registry.async_get_registry(hass)
+        # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
-            register_node_in_dev_reg(entry, dev_reg, client, node)
+            if not node.ready:
+                continue
+            await async_on_node_ready(node)
+        # TODO: register callback for "node_ready" event
 
     async def async_on_disconnect():
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
         # TODO: signal entities to update availability state
 
+    async def async_on_node_ready(node: ZwaveNode):
+        """Handle node ready event."""
+        # register node in device registry
+        dev_reg = await device_registry.async_get_registry(hass)
+        register_node_in_dev_reg(entry, dev_reg, client, node)
+        # run discovery on all node values and create/update entities
+        async for disc_info in async_discover_values(node):
+            LOGGER.info("Discovered value: %s", disc_info)
+            # TODO: dispatch discovery_info to platform
+
+
     for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, component))
 
     # register main event callbacks.
     unsubs = [
