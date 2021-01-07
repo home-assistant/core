@@ -1,0 +1,14 @@
+{
+  "title": "Meater Temperature Probe",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Meater Cloud account.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  }
+}
