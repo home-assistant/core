@@ -42,7 +42,7 @@ class ZWaveBaseEntity(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{DOMAIN}_update_{self.info.discover_id}", self._value_changed
+                self.hass, f"{DOMAIN}_update_{self.info.discovery_id}", self._value_changed
             )
         )
 
@@ -60,7 +60,7 @@ class ZWaveBaseEntity(Entity):
     def name(self) -> str:
         """Return default name from device name and value name combination."""
         node_name = self.info.node.name or self.info.node.device_config.description
-        return f"{node_name}: {self.info.primary_value.label}"
+        return f"{node_name}: {self.info.primary_value.property_name}"
 
     @property
     def unique_id(self) -> str:
