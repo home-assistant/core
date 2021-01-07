@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id]
+    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id]["client"]
 
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo):
