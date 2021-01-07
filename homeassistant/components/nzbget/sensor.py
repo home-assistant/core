@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class NZBGetSensor(NZBGetEntity, Entity):
+class NZBGetSensor(NZBGetEntity):
     """Representation of a NZBGet sensor."""
 
     def __init__(

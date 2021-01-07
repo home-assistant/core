@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Kan ikke koble til Firmata Board under installasjonen"
+            "cannot_connect": "Tilkobling mislyktes"
         }
     }
 }

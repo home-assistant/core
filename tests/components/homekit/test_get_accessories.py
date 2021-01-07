@@ -1,4 +1,6 @@
 """Package to test the get_accessory method."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 import homeassistant.components.climate as climate
@@ -30,8 +32,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import State
-
-from tests.async_mock import Mock, patch
 
 
 def test_not_supported(caplog):
@@ -119,6 +119,12 @@ def test_types(type_name, entity_id, state, attrs, config):
                 ATTR_DEVICE_CLASS: "garage",
                 ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
             },
+        ),
+        (
+            "Window",
+            "cover.set_position",
+            "open",
+            {ATTR_DEVICE_CLASS: "window", ATTR_SUPPORTED_FEATURES: 4},
         ),
         ("WindowCovering", "cover.set_position", "open", {ATTR_SUPPORTED_FEATURES: 4}),
         (

@@ -4,7 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "connection_error": "Impossibile connettersi al dispositivo BSB-Lan."
+            "cannot_connect": "Impossibile connettersi"
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
@@ -12,12 +12,13 @@
                 "data": {
                     "host": "Host",
                     "passkey": "Stringa passkey",
-                    "port": "Porta"
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
                 },
                 "description": "Configura il tuo dispositivo BSB-Lan per l'integrazione con Home Assistant.",
                 "title": "Collegamento al dispositivo BSB-Lan"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

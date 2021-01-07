@@ -1,6 +1,4 @@
 """Support for EnOcean sensors."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -21,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .device import EnOceanEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"

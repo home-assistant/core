@@ -1,6 +1,7 @@
 """Test the Broadlink config flow."""
 import errno
 import socket
+from unittest.mock import call, patch
 
 import broadlink.exceptions as blke
 import pytest
@@ -9,8 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components.broadlink.const import DOMAIN
 
 from . import get_device
-
-from tests.async_mock import call, patch
 
 DEVICE_DISCOVERY = "homeassistant.components.broadlink.config_flow.blk.discover"
 DEVICE_FACTORY = "homeassistant.components.broadlink.config_flow.blk.gendevice"
@@ -249,11 +248,11 @@ async def test_flow_auth_authentication_error(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_auth_device_offline(hass):
-    """Test we handle a device offline in the auth step."""
+async def test_flow_auth_network_timeout(hass):
+    """Test we handle a network timeout in the auth step."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.DeviceOfflineError()
+    mock_api.auth.side_effect = blke.NetworkTimeoutError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -334,7 +333,7 @@ async def test_flow_auth_os_error(hass):
 
 
 async def test_flow_reset_works(hass):
-    """Test we finish a config flow after a factory reset."""
+    """Test we finish a config flow after a manual unlock."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
@@ -403,12 +402,12 @@ async def test_flow_unlock_works(hass):
     assert mock_api.set_lock.call_count == 1
 
 
-async def test_flow_unlock_device_offline(hass):
-    """Test we handle a device offline in the unlock step."""
+async def test_flow_unlock_network_timeout(hass):
+    """Test we handle a network timeout in the unlock step."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
-    mock_api.set_lock.side_effect = blke.DeviceOfflineError
+    mock_api.set_lock.side_effect = blke.NetworkTimeoutError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

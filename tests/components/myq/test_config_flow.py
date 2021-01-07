@@ -1,11 +1,12 @@
 """Test the MyQ config flow."""
+from unittest.mock import patch
+
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.myq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -31,6 +32,7 @@ async def test_form_user(hass):
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
@@ -38,7 +40,6 @@ async def test_form_user(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -61,6 +62,7 @@ async def test_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-username"
@@ -68,7 +70,6 @@ async def test_import(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

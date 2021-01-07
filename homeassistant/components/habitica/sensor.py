@@ -1,12 +1,9 @@
 """Support for Habitica sensors."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components import habitica
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 

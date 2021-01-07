@@ -7,7 +7,7 @@ from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -47,14 +47,14 @@ async def async_unload_entry(hass, config_entry):
 
 async def async_migrate_entry(hass, config_entry):
     """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    #  Flatten configuration but keep old data if user rollbacks HASS
+    #  Flatten configuration but keep old data if user rollbacks HASS prior to 0.106
     if config_entry.version == 1:
         config_entry.data = {**config_entry.data, **config_entry.data[CONF_DEVICE]}
 
         config_entry.version = 2
 
-    LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True

@@ -58,7 +58,7 @@ async def test_with_invalid_credentials(hass, step):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_failure"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.parametrize("step", ["import", "user"])

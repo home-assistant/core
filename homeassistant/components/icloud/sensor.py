@@ -1,5 +1,4 @@
 """Support for iCloud sensors."""
-import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,8 +11,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

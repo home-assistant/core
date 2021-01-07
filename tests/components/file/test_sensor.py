@@ -1,85 +1,77 @@
 """The tests for local file sensor platform."""
-import unittest
+from unittest.mock import Mock, mock_open, patch
 
-# Using third party package because of a bug reading binary data in Python 3.4
-# https://bugs.python.org/issue23004
-from mock_open import MockOpen
+import pytest
 
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
-from tests.common import get_test_home_assistant, mock_registry
+from tests.common import mock_registry
 
 
-class TestFileSensor(unittest.TestCase):
+@pytest.fixture
+def entity_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
+
+
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_file_value(hass, entity_reg):
     """Test the File sensor."""
+    config = {
+        "sensor": {"platform": "file", "name": "file1", "file_path": "mock.file1"}
+    }
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        # Patch out 'is_allowed_path' as the mock files aren't allowed
-        self.hass.config.is_allowed_path = Mock(return_value=True)
-        mock_registry(self.hass)
+    m_open = mock_open(read_data="43\n45\n21")
+    with patch(
+        "homeassistant.components.file.sensor.open", m_open, create=True
+    ), patch.object(hass.config, "is_allowed_path", return_value=True):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+    state = hass.states.get("sensor.file1")
+    assert state.state == "21"
 
-    @patch("os.path.isfile", Mock(return_value=True))
-    @patch("os.access", Mock(return_value=True))
-    def test_file_value(self):
-        """Test the File sensor."""
-        config = {
-            "sensor": {"platform": "file", "name": "file1", "file_path": "mock.file1"}
+
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_file_value_template(hass, entity_reg):
+    """Test the File sensor with JSON entries."""
+    config = {
+        "sensor": {
+            "platform": "file",
+            "name": "file2",
+            "file_path": "mock.file2",
+            "value_template": "{{ value_json.temperature }}",
         }
+    }
 
-        m_open = MockOpen(read_data="43\n45\n21")
-        with patch("homeassistant.components.file.sensor.open", m_open, create=True):
-            assert setup_component(self.hass, "sensor", config)
-            self.hass.block_till_done()
+    data = '{"temperature": 29, "humidity": 31}\n' '{"temperature": 26, "humidity": 36}'
 
-        state = self.hass.states.get("sensor.file1")
-        assert state.state == "21"
+    m_open = mock_open(read_data=data)
+    with patch(
+        "homeassistant.components.file.sensor.open", m_open, create=True
+    ), patch.object(hass.config, "is_allowed_path", return_value=True):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-    @patch("os.path.isfile", Mock(return_value=True))
-    @patch("os.access", Mock(return_value=True))
-    def test_file_value_template(self):
-        """Test the File sensor with JSON entries."""
-        config = {
-            "sensor": {
-                "platform": "file",
-                "name": "file2",
-                "file_path": "mock.file2",
-                "value_template": "{{ value_json.temperature }}",
-            }
-        }
+    state = hass.states.get("sensor.file2")
+    assert state.state == "26"
 
-        data = (
-            '{"temperature": 29, "humidity": 31}\n'
-            '{"temperature": 26, "humidity": 36}'
-        )
 
-        m_open = MockOpen(read_data=data)
-        with patch("homeassistant.components.file.sensor.open", m_open, create=True):
-            assert setup_component(self.hass, "sensor", config)
-            self.hass.block_till_done()
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_file_empty(hass, entity_reg):
+    """Test the File sensor with an empty file."""
+    config = {"sensor": {"platform": "file", "name": "file3", "file_path": "mock.file"}}
 
-        state = self.hass.states.get("sensor.file2")
-        assert state.state == "26"
+    m_open = mock_open(read_data="")
+    with patch(
+        "homeassistant.components.file.sensor.open", m_open, create=True
+    ), patch.object(hass.config, "is_allowed_path", return_value=True):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-    @patch("os.path.isfile", Mock(return_value=True))
-    @patch("os.access", Mock(return_value=True))
-    def test_file_empty(self):
-        """Test the File sensor with an empty file."""
-        config = {
-            "sensor": {"platform": "file", "name": "file3", "file_path": "mock.file"}
-        }
-
-        m_open = MockOpen(read_data="")
-        with patch("homeassistant.components.file.sensor.open", m_open, create=True):
-            assert setup_component(self.hass, "sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.file3")
-        assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.file3")
+    assert state.state == STATE_UNKNOWN

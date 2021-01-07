@@ -1,5 +1,4 @@
 """Support for Z-Wave fans."""
-import logging
 import math
 
 from homeassistant.components.fan import (
@@ -15,8 +14,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ZWaveDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SPEED_LIST = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 

@@ -87,7 +87,7 @@ VALID_PROGRAM_COMMANDS = [
 def valid_isy_commands(value: Any) -> str:
     """Validate the command is valid."""
     value = str(value).upper()
-    if value in COMMAND_FRIENDLY_NAME.keys():
+    if value in COMMAND_FRIENDLY_NAME:
         return value
     raise vol.Invalid("Invalid ISY Command.")
 
@@ -162,7 +162,7 @@ def async_setup_services(hass: HomeAssistantType):
     """Create and register services for the ISY integration."""
     existing_services = hass.services.async_services().get(DOMAIN)
     if existing_services and any(
-        service in INTEGRATION_SERVICES for service in existing_services.keys()
+        service in INTEGRATION_SERVICES for service in existing_services
     ):
         # Integration-level services have already been added. Return.
         return
@@ -388,7 +388,7 @@ def async_unload_services(hass: HomeAssistantType):
 
     existing_services = hass.services.async_services().get(DOMAIN)
     if not existing_services or not any(
-        service in INTEGRATION_SERVICES for service in existing_services.keys()
+        service in INTEGRATION_SERVICES for service in existing_services
     ):
         return
 

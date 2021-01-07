@@ -315,7 +315,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported."""
-        if self._model == NA_THERM:
+        if self._model == NA_THERM and self._boilerstatus is not None:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if self._room_status and self._room_status.get("heating_power_request", 0) > 0:

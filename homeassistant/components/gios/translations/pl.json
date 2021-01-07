@@ -1,22 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integracja GIO\u015a dla tej stacji pomiarowej jest ju\u017c skonfigurowana."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z serwerem GIO\u015a.",
-            "invalid_sensors_data": "Nieprawid\u0142owe dane sensor\u00f3w dla tej stacji pomiarowej.",
-            "wrong_station_id": "Identyfikator stacji pomiarowej nie jest prawid\u0142owy."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_sensors_data": "Nieprawid\u0142owe dane sensor\u00f3w dla tej stacji pomiarowej",
+            "wrong_station_id": "Identyfikator stacji pomiarowej nie jest prawid\u0142owy"
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "Nazwa integracji",
+                    "name": "Nazwa",
                     "station_id": "Identyfikator stacji pomiarowej"
                 },
                 "description": "Konfiguracja integracji jako\u015bci powietrza GIO\u015a (G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska). Je\u015bli potrzebujesz pomocy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/gios",
                 "title": "G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska (GIO\u015a)"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera GIO\u015a"
         }
     }
 }

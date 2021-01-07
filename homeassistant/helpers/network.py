@@ -4,7 +4,7 @@ from typing import Optional, cast
 
 import yarl
 
-from homeassistant.components.http import current_request
+from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
@@ -25,6 +25,16 @@ class NoURLAvailableError(HomeAssistantError):
 
 
 @bind_hass
+def is_internal_request(hass: HomeAssistant) -> bool:
+    """Test if the current request is internal."""
+    try:
+        _get_internal_url(hass, require_current_request=True)
+        return True
+    except NoURLAvailableError:
+        return False
+
+
+@bind_hass
 def get_url(
     hass: HomeAssistant,
     *,
@@ -39,7 +49,7 @@ def get_url(
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
-    if require_current_request and current_request.get() is None:
+    if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
 
     order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
@@ -88,10 +98,12 @@ def get_url(
             scheme=scheme, host=request_host, port=hass.config.api.port
         )
 
-        known_hostname = None
+        known_hostnames = ["localhost"]
         if hass.components.hassio.is_hassio():
             host_info = hass.components.hassio.get_host_info()
-            known_hostname = f"{host_info['hostname']}.local"
+            known_hostnames.extend(
+                [host_info["hostname"], f"{host_info['hostname']}.local"]
+            )
 
         if (
             (
@@ -100,7 +112,7 @@ def get_url(
                     and is_ip_address(request_host)
                     and is_loopback(ip_address(request_host))
                 )
-                or request_host in ["localhost", known_hostname]
+                or request_host in known_hostnames
             )
             and (not require_ssl or current_url.scheme == "https")
             and (not require_standard_port or current_url.is_default_port())
@@ -113,7 +125,7 @@ def get_url(
 
 def _get_request_host() -> Optional[str]:
     """Get the host address of the current request."""
-    request = current_request.get()
+    request = http.current_request.get()
     if request is None:
         raise NoURLAvailableError
     return yarl.URL(request.url).host

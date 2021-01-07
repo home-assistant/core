@@ -1,5 +1,6 @@
 """Test config flow."""
 from collections import namedtuple
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
@@ -174,7 +174,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
-    assert result["errors"] == {"base": "invalid_password"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_discovery_initiation(hass, mock_client):

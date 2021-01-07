@@ -2,13 +2,14 @@
 from datetime import timedelta
 import logging
 
-from httpcore import ConnectError
+from httpx import ConnectError, ConnectTimeout
 from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import WolfClient
+from wolf_smartset.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_id = entry.data[DEVICE_ID]
     gateway_id = entry.data[DEVICE_GATEWAY]
     _LOGGER.debug(
-        "Setting up wolflink integration for device: %s (id: %s, gateway: %s)",
+        "Setting up wolflink integration for device: %s (ID: %s, gateway: %s)",
         device_name,
         device_id,
         gateway_id,
@@ -45,7 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     wolf_client = WolfClient(username, password)
 
-    parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+    try:
+        parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+    except InvalidAuth:
+        _LOGGER.debug("Authentication failed")
+        return False
 
     async def async_update_data():
         """Update all stored entities for Wolf SmartSet."""
@@ -55,6 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except ConnectError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
+            ) from exception
+        except FetchFailed as exception:
+            raise UpdateFailed(
+                f"Could not fetch values from server due to: {exception}"
             ) from exception
         except InvalidAuth as exception:
             raise UpdateFailed("Invalid authentication during update.") from exception
@@ -99,7 +108,7 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
     try:
         fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
         return [param for param in fetched_parameters if param.name != "Reglertyp"]
-    except ConnectError as exception:
-        raise UpdateFailed(f"Error communicating with API: {exception}") from exception
-    except InvalidAuth as exception:
-        raise UpdateFailed("Invalid authentication during update.") from exception
+    except (ConnectError, ConnectTimeout, FetchFailed) as exception:
+        raise ConfigEntryNotReady(
+            f"Error communicating with API: {exception}"
+        ) from exception

@@ -9,47 +9,22 @@ import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
-
-import pytest
+from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+)
 from homeassistant.setup import async_setup_component
 
-import tests.async_mock
-from tests.async_mock import DEFAULT, MagicMock, Mock
 from tests.common import MockConfigEntry, patch
 
 
-@pytest.fixture
-def mock_connection_factory(monkeypatch):
-    """Mock the create functions for serial and TCP Asyncio connections."""
-    from dsmr_parser.clients.protocol import DSMRProtocol
-
-    transport = tests.async_mock.Mock(spec=asyncio.Transport)
-    protocol = tests.async_mock.Mock(spec=DSMRProtocol)
-
-    async def connection_factory(*args, **kwargs):
-        """Return mocked out Asyncio classes."""
-        return (transport, protocol)
-
-    connection_factory = Mock(wraps=connection_factory)
-
-    # apply the mock to both connection factories
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.sensor.create_dsmr_reader", connection_factory
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.sensor.create_tcp_dsmr_reader",
-        connection_factory,
-    )
-
-    return connection_factory, transport, protocol
-
-
-async def test_setup_platform(hass, mock_connection_factory):
+async def test_setup_platform(hass, dsmr_connection_fixture):
     """Test setup of platform."""
     async_add_entities = MagicMock()
 
@@ -87,9 +62,9 @@ async def test_setup_platform(hass, mock_connection_factory):
     assert entry.data == {**entry_data, **serial_data}
 
 
-async def test_default_setup(hass, mock_connection_factory):
+async def test_default_setup(hass, dsmr_connection_fixture):
     """Test the default setup."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
@@ -103,6 +78,11 @@ async def test_default_setup(hass, mock_connection_factory):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
     }
 
     telegram = {
@@ -119,13 +99,23 @@ async def test_default_setup(hass, mock_connection_factory):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get("sensor.power_consumption")
+    assert entry
+    assert entry.unique_id == "1234_Power_Consumption"
+
+    entry = registry.async_get("sensor.gas_consumption")
+    assert entry
+    assert entry.unique_id == "5678_Gas_Consumption"
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -157,9 +147,34 @@ async def test_default_setup(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
+async def test_setup_only_energy(hass, dsmr_connection_fixture):
+    """Test the default setup."""
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get("sensor.power_consumption")
+    assert entry
+    assert entry.unique_id == "1234_Power_Consumption"
+
+    entry = registry.async_get("sensor.gas_consumption")
+    assert not entry
 
 
 async def test_derivative():
@@ -168,7 +183,7 @@ async def test_derivative():
 
     config = {"platform": "dsmr"}
 
-    entity = DerivativeDSMREntity("test", "1.0.0", config)
+    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"
@@ -199,12 +214,12 @@ async def test_derivative():
         abs(entity.state - 0.033) < 0.00001
     ), "state should be hourly usage calculated from first and second update"
 
-    assert entity.unit_of_measurement == f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}"
+    assert entity.unit_of_measurement == VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR
 
 
-async def test_v4_meter(hass, mock_connection_factory):
+async def test_v4_meter(hass, dsmr_connection_fixture):
     """Test if v4 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_ACTIVE_TARIFF,
@@ -217,6 +232,11 @@ async def test_v4_meter(hass, mock_connection_factory):
         "dsmr_version": "4",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
     }
 
     telegram = {
@@ -230,7 +250,7 @@ async def test_v4_meter(hass, mock_connection_factory):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -256,14 +276,10 @@ async def test_v4_meter(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
-
-
-async def test_v5_meter(hass, mock_connection_factory):
+async def test_v5_meter(hass, dsmr_connection_fixture):
     """Test if v5 meter is correctly parsed."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         ELECTRICITY_ACTIVE_TARIFF,
@@ -276,6 +292,11 @@ async def test_v5_meter(hass, mock_connection_factory):
         "dsmr_version": "5",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
     }
 
     telegram = {
@@ -289,7 +310,7 @@ async def test_v5_meter(hass, mock_connection_factory):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -315,14 +336,79 @@ async def test_v5_meter(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
+async def test_luxembourg_meter(hass, dsmr_connection_fixture):
+    """Test if v5 meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        HOURLY_GAS_METER_READING,
+        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
+    )
+    from dsmr_parser.objects import CosemObject, MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5L",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        HOURLY_GAS_METER_READING: MBusObject(
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+            ]
+        ),
+        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+            [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+            [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to update
+    await asyncio.sleep(0)
+
+    power_tariff = hass.states.get("sensor.energy_consumption_total")
+    assert power_tariff.state == "123.456"
+    assert power_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+
+    power_tariff = hass.states.get("sensor.energy_production_total")
+    assert power_tariff.state == "654.321"
+    assert power_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+
+    # check if gas consumption is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_consumption")
+    assert gas_consumption.state == "745.695"
+    assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
 
-async def test_belgian_meter(hass, mock_connection_factory):
+async def test_belgian_meter(hass, dsmr_connection_fixture):
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
         BELGIUM_HOURLY_GAS_METER_READING,
@@ -335,6 +421,11 @@ async def test_belgian_meter(hass, mock_connection_factory):
         "dsmr_version": "5B",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
     }
 
     telegram = {
@@ -348,7 +439,7 @@ async def test_belgian_meter(hass, mock_connection_factory):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -374,14 +465,10 @@ async def test_belgian_meter(hass, mock_connection_factory):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
-
-
-async def test_belgian_meter_low(hass, mock_connection_factory):
+async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     """Test if Belgian meter is correctly parsed."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
     from dsmr_parser.objects import CosemObject
@@ -391,12 +478,17 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
         "dsmr_version": "5B",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
     }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -417,14 +509,10 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
     assert power_tariff.state == "low"
     assert power_tariff.attributes.get("unit_of_measurement") == ""
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
-
-
-async def test_tcp(hass, mock_connection_factory):
+async def test_tcp(hass, dsmr_connection_fixture):
     """If proper config provided TCP connection should be made."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "host": "localhost",
@@ -432,6 +520,8 @@ async def test_tcp(hass, mock_connection_factory):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     mock_entry = MockConfigEntry(
@@ -446,31 +536,24 @@ async def test_tcp(hass, mock_connection_factory):
     assert connection_factory.call_args_list[0][0][0] == "localhost"
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
-    await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
-
-
-async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
+async def test_connection_errors_retry(hass, dsmr_connection_fixture):
     """Connection should be retried on error during setup."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 0,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     # override the mock to have it fail the first time and succeed after
-    first_fail_connection_factory = tests.async_mock.AsyncMock(
+    first_fail_connection_factory = MagicMock(
         return_value=(transport, protocol),
         side_effect=chain([TimeoutError], repeat(DEFAULT)),
-    )
-
-    monkeypatch.setattr(
-        "homeassistant.components.dsmr.sensor.create_dsmr_reader",
-        first_fail_connection_factory,
     )
 
     mock_entry = MockConfigEntry(
@@ -479,27 +562,29 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
 
     mock_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.dsmr.sensor.create_dsmr_reader",
+        first_fail_connection_factory,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # wait for sleep to resolve
-    await hass.async_block_till_done()
-    assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-
-    assert mock_entry.state == "not_loaded"
+        # wait for sleep to resolve
+        await hass.async_block_till_done()
+        assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
-async def test_reconnect(hass, monkeypatch, mock_connection_factory):
+async def test_reconnect(hass, dsmr_connection_fixture):
     """If transport disconnects, the connection should be retried."""
-    (connection_factory, transport, protocol) = mock_connection_factory
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 0,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     # mock waiting coroutine while connection lasts

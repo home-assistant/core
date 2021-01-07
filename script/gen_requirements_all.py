@@ -24,7 +24,6 @@ COMMENT_REQUIREMENTS = (
     "credstash",
     "decora",
     "decora_wifi",
-    "env_canada",
     "envirophat",
     "evdev",
     "face_recognition",
@@ -66,8 +65,15 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
 urllib3>=1.24.3
 
+# Constrain H11 to ensure we get a new enough version to support non-rfc line endings
+h11>=0.12.0
+
 # Constrain httplib2 to protect against CVE-2020-11078
 httplib2>=0.18.0
+
+# gRPC 1.32+ currently causes issues on ARMv7, see:
+# https://github.com/home-assistant/core/issues/40148
+grpcio==1.31.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

@@ -2,16 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "M\u00e1r konfigur\u00e1lva van",
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok"
+            "reauth_successful": "Az \u00fajb\u00f3li azonos\u00edt\u00e1s sikeres"
         },
         "create_entry": {
             "default": "L\u00e1sd: [Neato dokument\u00e1ci\u00f3] ( {docs_url} )."
         },
-        "error": {
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok",
-            "unexpected_error": "V\u00e1ratlan hiba"
-        },
         "step": {
+            "reauth_confirm": {
+                "title": "El akarja kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            },
             "user": {
                 "data": {
                     "password": "Jelsz\u00f3",

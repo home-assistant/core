@@ -1,5 +1,4 @@
 """Support for Insteon thermostat."""
-import logging
 from typing import List, Optional
 
 from pyinsteon.constants import ThermostatMode
@@ -31,8 +30,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 COOLING = 1
 HEATING = 2
@@ -205,12 +202,12 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        mode = list(FAN_MODES.keys())[list(FAN_MODES.values()).index(fan_mode)]
+        mode = list(FAN_MODES)[list(FAN_MODES.values()).index(fan_mode)]
         await self._insteon_device.async_set_mode(mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        mode = list(HVAC_MODES.keys())[list(HVAC_MODES.values()).index(hvac_mode)]
+        mode = list(HVAC_MODES)[list(HVAC_MODES.values()).index(hvac_mode)]
         await self._insteon_device.async_set_mode(mode)
 
     async def async_set_humidity(self, humidity):

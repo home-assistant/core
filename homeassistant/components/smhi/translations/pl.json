@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "Nazwa ju\u017c istnieje.",
+            "name_exists": "Nazwa ju\u017c istnieje",
             "wrong_location": "Lokalizacja w Szwecji"
         },
         "step": {

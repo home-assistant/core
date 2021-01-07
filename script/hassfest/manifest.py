@@ -33,19 +33,36 @@ def documentation_url(value: str) -> str:
     return value
 
 
+def verify_lowercase(value: str):
+    """Verify a value is lowercase."""
+    if value.lower() != value:
+        raise vol.Invalid("Value needs to be lowercase")
+
+    return value
+
+
+def verify_uppercase(value: str):
+    """Verify a value is uppercase."""
+    if value.upper() != value:
+        raise vol.Invalid("Value needs to be uppercase")
+
+    return value
+
+
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("config_flow"): bool,
+        vol.Optional("mqtt"): [str],
         vol.Optional("zeroconf"): [
             vol.Any(
                 str,
                 vol.Schema(
                     {
                         vol.Required("type"): str,
-                        vol.Optional("macaddress"): str,
-                        vol.Optional("name"): str,
+                        vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                        vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),
             )

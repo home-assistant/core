@@ -1,9 +1,11 @@
 """Constants for Synology DSM."""
 
 from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
+from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
 from homeassistant.const import (
@@ -16,16 +18,18 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
-PLATFORMS = ["binary_sensor", "camera", "sensor"]
+PLATFORMS = ["binary_sensor", "camera", "sensor", "switch"]
 
 # Entry keys
 SYNO_API = "syno_api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
+CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 
-DEFAULT_SSL = True
+DEFAULT_USE_SSL = True
+DEFAULT_VERIFY_SSL = False
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
@@ -39,9 +43,37 @@ ENTITY_ICON = "icon"
 ENTITY_CLASS = "device_class"
 ENTITY_ENABLE = "enable"
 
+# Services
+SERVICE_REBOOT = "reboot"
+SERVICE_SHUTDOWN = "shutdown"
+SERVICES = [
+    SERVICE_REBOOT,
+    SERVICE_SHUTDOWN,
+]
+
 # Entity keys should start with the API_KEY to fetch
 
 # Binary sensors
+UPGRADE_BINARY_SENSORS = {
+    f"{SynoCoreUpgrade.API_KEY}:update_available": {
+        ENTITY_NAME: "Update available",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:update",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+}
+
+SECURITY_BINARY_SENSORS = {
+    f"{SynoCoreSecurity.API_KEY}:status": {
+        ENTITY_NAME: "Security status",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: None,
+        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
+        ENTITY_ENABLE: True,
+    },
+}
+
 STORAGE_DISK_BINARY_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
         ENTITY_NAME: "Exceeded Max Bad Sectors",
@@ -52,16 +84,6 @@ STORAGE_DISK_BINARY_SENSORS = {
     },
     f"{SynoStorage.API_KEY}:disk_below_remain_life_thr": {
         ENTITY_NAME: "Below Min Remaining Life",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: None,
-        ENTITY_CLASS: DEVICE_CLASS_SAFETY,
-        ENTITY_ENABLE: True,
-    },
-}
-
-SECURITY_BINARY_SENSORS = {
-    f"{SynoCoreSecurity.API_KEY}:status": {
-        ENTITY_NAME: "Security status",
         ENTITY_UNIT: None,
         ENTITY_ICON: None,
         ENTITY_CLASS: DEVICE_CLASS_SAFETY,
@@ -266,6 +288,17 @@ INFORMATION_SENSORS = {
         ENTITY_ICON: None,
         ENTITY_CLASS: DEVICE_CLASS_TIMESTAMP,
         ENTITY_ENABLE: False,
+    },
+}
+
+# Switch
+SURVEILLANCE_SWITCH = {
+    f"{SynoSurveillanceStation.HOME_MODE_API_KEY}:home_mode": {
+        ENTITY_NAME: "home mode",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:home-account",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
     },
 }
 

@@ -1,11 +1,16 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "missing_configuration": "Integracja z Withings nie jest skonfigurowana. Post\u0119puj zgodnie z dokumentacj\u0105."
+            "already_configured": "Konfiguracja profilu zosta\u0142a zaktualizowana",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})"
         },
         "create_entry": {
-            "default": "Pomy\u015blnie uwierzytelniono z Withings dla wybranego profilu"
+            "default": "Pomy\u015blnie uwierzytelniono"
+        },
+        "error": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "flow_title": "Withings: {profile}",
         "step": {
@@ -14,14 +19,14 @@
             },
             "profile": {
                 "data": {
-                    "profile": "Profil"
+                    "profile": "Nazwa profilu"
                 },
-                "description": "Kt\u00f3ry profil wybra\u0142e\u015b na stronie Withings? Wa\u017cne jest, aby profile si\u0119 zgadza\u0142y, w przeciwnym razie dane zostan\u0105 b\u0142\u0119dnie oznaczone.",
+                "description": "Podaj unikaln\u0105 nazw\u0119 profilu. Zwykle jest to nazwa profilu wybranego w poprzednim kroku.",
                 "title": "Profil u\u017cytkownika"
             },
             "reauth": {
                 "description": "Profil \"{profile}\" musi zosta\u0107 ponownie uwierzytelniony, aby nadal otrzymywa\u0107 dane Withings.",
-                "title": "Ponownie uwierzytelnij {rofile}"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             }
         }
     }

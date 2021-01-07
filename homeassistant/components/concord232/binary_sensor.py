@@ -116,11 +116,6 @@ class Concord232ZoneSensor(BinarySensorEntity):
         return self._zone_type
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the binary sensor."""
         return self._zone["name"]

@@ -7,7 +7,7 @@
             "default": "Collegato con successo ad AlarmDecoder."
         },
         "error": {
-            "service_unavailable": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "protocol": {

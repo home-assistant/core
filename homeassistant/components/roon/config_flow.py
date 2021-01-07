@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from roon import RoonApi
+from roonapi import RoonApi
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions

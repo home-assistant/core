@@ -1,4 +1,6 @@
 """The tests for the Canary alarm_control_panel platform."""
+from unittest.mock import PropertyMock, patch
+
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -18,7 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_mode
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import mock_registry
 
 
@@ -137,7 +138,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_AWAY, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_AWAY)
 
     # test arm home
     await hass.services.async_call(
@@ -146,7 +147,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_HOME, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_HOME)
 
     # test arm night
     await hass.services.async_call(
@@ -155,7 +156,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_NIGHT, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_NIGHT)
 
     # test disarm
     await hass.services.async_call(

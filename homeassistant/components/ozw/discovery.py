@@ -136,6 +136,7 @@ DISCOVERY_SCHEMAS = (
         const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_THERMOSTAT,),
         const.DISC_SPECIFIC_DEVICE_CLASS: (
             const_ozw.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+            const_ozw.SPECIFIC_TYPE_NOT_USED,
         ),
         const.DISC_VALUES: {
             const.DISC_PRIMARY: {
@@ -253,11 +254,13 @@ DISCOVERY_SCHEMAS = (
             "min_kelvin": {
                 const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
                 const.DISC_INDEX: 81,  # PR for upstream to add SWITCH_COLOR_CT_WARM
+                const.DISC_TYPE: ValueType.INT,
                 const.DISC_OPTIONAL: True,
             },
             "max_kelvin": {
                 const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
                 const.DISC_INDEX: 82,  # PR for upstream to add SWITCH_COLOR_CT_COLD
+                const.DISC_TYPE: ValueType.INT,
                 const.DISC_OPTIONAL: True,
             },
         },

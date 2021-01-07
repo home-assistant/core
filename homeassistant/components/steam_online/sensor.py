@@ -31,6 +31,9 @@ STATE_LOOKING_TO_PLAY = "looking_to_play"
 STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/apps/"
 STEAM_HEADER_IMAGE_FILE = "header.jpg"
 STEAM_MAIN_IMAGE_FILE = "capsule_616x353.jpg"
+STEAM_ICON_URL = (
+    "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/%d/%s.jpg"
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,11 +81,13 @@ class SteamSensor(Entity):
         self._profile = None
         self._game = None
         self._game_id = None
+        self._extra_game_info = None
         self._state = None
         self._name = None
         self._avatar = None
         self._last_online = None
         self._level = None
+        self._owned_games = None
 
     @property
     def name(self):
@@ -108,8 +113,15 @@ class SteamSensor(Entity):
         """Update device state."""
         try:
             self._profile = self._steamod.user.profile(self._account)
+            # Only if need be, get the owned games
+            if not self._owned_games:
+                self._owned_games = self._steamod.api.interface(
+                    "IPlayerService"
+                ).GetOwnedGames(steamid=self._account, include_appinfo=1)
+
             self._game = self._get_current_game()
             self._game_id = self._profile.current_game[0]
+            self._extra_game_info = self._get_game_info()
             self._state = {
                 1: STATE_ONLINE,
                 2: STATE_BUSY,
@@ -162,6 +174,16 @@ class SteamSensor(Entity):
         _LOGGER.error("Unable to find name of app with ID=%s", game_id)
         return repr(game_id)
 
+    def _get_game_info(self):
+        game_id = self._profile.current_game[0]
+        if game_id is not None:
+
+            for game in self._owned_games["response"]["games"]:
+                if game["appid"] == game_id:
+                    return game
+
+        return None
+
     def _get_last_online(self):
         """Convert last_online from the steam module into timestamp UTC."""
         last_online = utc_from_timestamp(mktime(self._profile.last_online))
@@ -182,6 +204,11 @@ class SteamSensor(Entity):
             game_url = f"{STEAM_API_URL}{self._game_id}/"
             attr["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
             attr["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
+        if self._extra_game_info is not None and self._game_id is not None:
+            attr["game_icon"] = STEAM_ICON_URL % (
+                self._game_id,
+                self._extra_game_info["img_icon_url"],
+            )
         if self._last_online is not None:
             attr["last_online"] = self._last_online
         if self._level is not None:

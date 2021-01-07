@@ -1,7 +1,4 @@
 """Web socket API for Z-Wave."""
-
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -16,8 +13,6 @@ from .const import (
     DATA_NETWORK,
     DATA_ZWAVE_CONFIG,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 TYPE = "type"
 ID = "id"

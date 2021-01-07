@@ -38,6 +38,10 @@ class SisyphusLight(LightEntity):
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
 
+    async def async_update(self):
+        """Force update the table state."""
+        await self._table.refresh()
+
     @property
     def available(self):
         """Return true if the table is responding to heartbeats."""

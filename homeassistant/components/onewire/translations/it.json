@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_path": "Directory non trovata."
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Impostare i dettagli dell'owserver"
+            },
+            "user": {
+                "data": {
+                    "type": "Tipo di connessione"
+                },
+                "title": "Configurazione 1-Wire"
+            }
+        }
+    }
+}

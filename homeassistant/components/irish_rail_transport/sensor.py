@@ -1,6 +1,5 @@
 """Support for Irish Rail RTPI information."""
 from datetime import timedelta
-import logging
 
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
@@ -9,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_STATION = "Station"
 ATTR_ORIGIN = "Origin"

@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "{entity_name} \u00ebmschalten",
+            "turn_off": "{entity_name} ausschalten",
             "turn_on": "{entity_name} uschalten"
         },
         "condition_type": {

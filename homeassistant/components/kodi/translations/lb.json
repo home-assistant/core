@@ -4,6 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_uuid": "Kodi Instanz huet keng eenzegarteg ID. D\u00ebst ass wahrscheinlech duerch eng al Kodi versioun (17.x oder dr\u00ebnner). Du kanns d'Integratioun manuell konfigur\u00e9ieren oder op m\u00e9i eng rezent Kodi Versioun aktualis\u00e9ieren.",
             "unknown": "Onerwaarte Feeler"
         },
         "error": {
@@ -24,27 +25,26 @@
                 "description": "Soll Kodi (`{name}`) am Home Assistant dob\u00e4i gesaat ginn?",
                 "title": "Kodi entdeckt"
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Iwwer SSL verbannen"
-                },
-                "description": "Kodi Verbindungs Informatiounen. Stell s\u00e9cher dass d'Optioun \"Allow control of Kodi via HTTP\" aktiv ass an System/Settings/Network/Services."
-            },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Iwwer SSL verbannen"
+                    "ssl": "Benotzt ee SSL Zertifikat"
                 },
                 "description": "Kodi Verbindungs Informatiounen. Stell s\u00e9cher dass d'Optioun \"Allow control of Kodi via HTTP\" aktiv ass an System/Settings/Network/Services."
             },
             "ws_port": {
                 "data": {
                     "ws_port": "Port"
-                }
+                },
+                "description": "De Websocket Port (heiansdo TCP port am Kodi genannt). Fir sech k\u00ebnnen iwwer Websocket ze verbannen muss du \"Allow programs ... to control Kodi\" an de System/Settings/Network/Services aktiv\u00e9ieren. Falls Websocket net aktiv\u00e9iert ass, l\u00e4sch de Port a loss eidel."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} soll ugeschalt ginn",
+            "turn_on": "{entity_name} soll ugeschalt ginn"
         }
     }
 }

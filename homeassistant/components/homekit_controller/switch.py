@@ -1,11 +1,10 @@
 """Support for Homekit switches."""
-import logging
-
 from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
     InUseValues,
     IsConfiguredValues,
 )
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
@@ -13,8 +12,6 @@ from homeassistant.core import callback
 from . import KNOWN_DEVICES, HomeKitEntity
 
 OUTLET_IN_USE = "outlet_in_use"
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_IN_USE = "in_use"
 ATTR_IS_CONFIGURED = "is_configured"
@@ -100,9 +97,9 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
 
 
 ENTITY_TYPES = {
-    "switch": HomeKitSwitch,
-    "outlet": HomeKitSwitch,
-    "valve": HomeKitValve,
+    ServicesTypes.SWITCH: HomeKitSwitch,
+    ServicesTypes.OUTLET: HomeKitSwitch,
+    ServicesTypes.VALVE: HomeKitValve,
 }
 
 
@@ -112,11 +109,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 

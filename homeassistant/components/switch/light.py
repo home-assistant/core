@@ -1,5 +1,4 @@
 """Light support for switch entities."""
-import logging
 from typing import Any, Callable, Optional, Sequence, cast
 
 import voluptuous as vol
@@ -25,8 +24,6 @@ from homeassistant.helpers.typing import (
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_NAME = "Light Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -44,18 +41,31 @@ async def async_setup_platform(
     discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Initialize Light Switch platform."""
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    wrapped_switch = registry.async_get(config[CONF_ENTITY_ID])
+    unique_id = wrapped_switch.unique_id if wrapped_switch else None
+
     async_add_entities(
-        [LightSwitch(cast(str, config.get(CONF_NAME)), config[CONF_ENTITY_ID])], True
+        [
+            LightSwitch(
+                cast(str, config.get(CONF_NAME)),
+                config[CONF_ENTITY_ID],
+                unique_id,
+            )
+        ],
+        True,
     )
 
 
 class LightSwitch(LightEntity):
     """Represents a Switch as a Light."""
 
-    def __init__(self, name: str, switch_entity_id: str) -> None:
+    def __init__(self, name: str, switch_entity_id: str, unique_id: str) -> None:
         """Initialize Light Switch."""
         self._name = name
         self._switch_entity_id = switch_entity_id
+        self._unique_id = unique_id
         self._is_on = False
         self._available = False
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
@@ -79,6 +89,11 @@ class LightSwitch(LightEntity):
     def should_poll(self) -> bool:
         """No polling needed for a light switch."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the light switch."""
+        return self._unique_id
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to the switch in this light switch."""

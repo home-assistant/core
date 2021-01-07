@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus",
+            "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP aadress",
+                    "name": "L\u00fc\u00fcsi nimi",
+                    "token": "API string"
+                },
+                "description": "On vaja 32-kohalist API-tokenti, juhiste saamiseks vaata lehte https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. Pane t\u00e4hele, et see token erineb Xiaomi Aqara sidumisel kasutatavast v\u00f5tmest.",
+                "title": "Loo \u00fchendus Xiaomi l\u00fc\u00fcsiga"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Loo \u00fchendus Xiaomi l\u00fc\u00fcsiga"
+                },
+                "description": "Vali seade millega soovid \u00fchenduse luua.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

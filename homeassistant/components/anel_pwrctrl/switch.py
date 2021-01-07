@@ -67,11 +67,6 @@ class PwrCtrlSwitch(SwitchEntity):
         self._parent_device = parent_device
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def unique_id(self):
         """Return the unique ID of the device."""
         return f"{self._port.device.host}-{self._port.get_index()}"

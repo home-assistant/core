@@ -1,14 +1,10 @@
 """Support gathering system information of hosts which are running glances."""
-import logging
-
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -38,16 +34,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif sensor_details[0] == "sensors":
                 # sensors will provide temp for different devices
                 for sensor in client.api.data[sensor_details[0]]:
-                    dev.append(
-                        GlancesSensor(
-                            client,
-                            name,
-                            sensor["label"],
-                            SENSOR_TYPES[sensor_type][1],
-                            sensor_type,
-                            SENSOR_TYPES[sensor_type],
+                    if sensor["type"] == sensor_type:
+                        dev.append(
+                            GlancesSensor(
+                                client,
+                                name,
+                                sensor["label"],
+                                SENSOR_TYPES[sensor_type][1],
+                                sensor_type,
+                                SENSOR_TYPES[sensor_type],
+                            )
                         )
-                    )
             elif client.api.data[sensor_details[0]]:
                 dev.append(
                     GlancesSensor(
@@ -160,11 +157,21 @@ class GlancesSensor(Entity):
                             (disk["size"] - disk["used"]) / 1024 ** 3,
                             1,
                         )
-            elif self.type == "sensor_temp":
+            elif self.type == "battery":
                 for sensor in value["sensors"]:
-                    if sensor["label"] == self._sensor_name_prefix:
-                        self._state = sensor["value"]
-                        break
+                    if sensor["type"] == "battery":
+                        if sensor["label"] == self._sensor_name_prefix:
+                            self._state = sensor["value"]
+            elif self.type == "fan_speed":
+                for sensor in value["sensors"]:
+                    if sensor["type"] == "fan_speed":
+                        if sensor["label"] == self._sensor_name_prefix:
+                            self._state = sensor["value"]
+            elif self.type == "temperature_core":
+                for sensor in value["sensors"]:
+                    if sensor["type"] == "temperature_core":
+                        if sensor["label"] == self._sensor_name_prefix:
+                            self._state = sensor["value"]
             elif self.type == "memory_use_percent":
                 self._state = value["mem"]["percent"]
             elif self.type == "memory_use":

@@ -6,8 +6,10 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "E-Mail",
                     "password": "Passwort"
-                }
+                },
+                "description": "Wollen Sie mit der Einrichtung beginnen?"
             }
         }
     }

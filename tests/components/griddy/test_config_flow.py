@@ -1,10 +1,9 @@
 """Test the Griddy Power config flow."""
 import asyncio
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.griddy.const import DOMAIN
-
-from tests.async_mock import MagicMock, patch
 
 
 async def test_form(hass):
@@ -29,11 +28,11 @@ async def test_form(hass):
             result["flow_id"],
             {"loadzone": "LZ_HOUSTON"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Load Zone LZ_HOUSTON"
     assert result2["data"] == {"loadzone": "LZ_HOUSTON"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

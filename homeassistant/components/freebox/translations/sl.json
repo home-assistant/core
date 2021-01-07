@@ -4,7 +4,7 @@
             "already_configured": "Gostitelj je \u017ee konfiguriran"
         },
         "error": {
-            "connection_failed": "Povezava ni uspela, poskusite znova",
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
             "register_failed": "Registracija ni uspela, poskusite znova",
             "unknown": "Neznana napaka: poskusite pozneje"
         },

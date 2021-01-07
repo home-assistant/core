@@ -2,14 +2,13 @@
 from asyncio import AbstractEventLoop
 from dataclasses import dataclass
 from typing import Callable, Type
+from unittest.mock import patch
 
 import pytest
 
 import homeassistant.components.apache_kafka as apache_kafka
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 APACHE_KAFKA_PATH = "homeassistant.components.apache_kafka"
 PRODUCER_PATH = f"{APACHE_KAFKA_PATH}.AIOKafkaProducer"

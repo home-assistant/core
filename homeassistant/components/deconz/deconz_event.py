@@ -1,7 +1,7 @@
 """Representation of a deCONZ remote."""
 from pydeconz.sensor import Switch
 
-from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
+from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
@@ -16,14 +16,16 @@ async def async_setup_events(gateway) -> None:
     """Set up the deCONZ events."""
 
     @callback
-    def async_add_sensor(sensors, new=True):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Create DeconzEvent."""
         for sensor in sensors:
 
             if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
                 continue
 
-            if not new or sensor.type not in Switch.ZHATYPE:
+            if sensor.type not in Switch.ZHATYPE or sensor.uniqueid in {
+                event.unique_id for event in gateway.events
+            }:
                 continue
 
             new_event = DeconzEvent(sensor, gateway)
@@ -36,12 +38,11 @@ async def async_setup_events(gateway) -> None:
         )
     )
 
-    async_add_sensor(
-        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
-    )
+    async_add_sensor()
 
 
-async def async_unload_events(gateway) -> None:
+@callback
+def async_unload_events(gateway) -> None:
     """Unload all deCONZ events."""
     for event in gateway.events:
         event.async_will_remove_from_hass()
@@ -75,12 +76,14 @@ class DeconzEvent(DeconzBase):
     def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        self._device = None
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Fire the event if reason is that state is updated."""
-        if ignore_update or "state" not in self._device.changed_keys:
+        if (
+            self.gateway.ignore_state_updates
+            or "state" not in self._device.changed_keys
+        ):
             return
 
         data = {
@@ -88,6 +91,9 @@ class DeconzEvent(DeconzBase):
             CONF_UNIQUE_ID: self.serial,
             CONF_EVENT: self._device.state,
         }
+
+        if self.device_id:
+            data[CONF_DEVICE_ID] = self.device_id
 
         if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture

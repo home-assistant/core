@@ -1,5 +1,4 @@
 {
-  "title": "Rollease Acmeda Automate",
   "config": {
     "step": {
       "user": {
@@ -10,7 +9,7 @@
       }
     },
     "abort": {
-      "all_configured": "No new Pulse hubs discovered."
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

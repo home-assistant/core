@@ -13,6 +13,12 @@ remove_node:
     instance_id:
       description: (Optional) The OZW Instance/Controller to use, defaults to 1.
 
+cancel_command:
+  description: Cancel a pending add or remove node command.
+  fields:
+    instance_id:
+      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+
 set_config_parameter:
   description: Set a config parameter to a node on the Z-Wave network.
   fields:

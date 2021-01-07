@@ -1,9 +1,7 @@
 {
-  "title": "Roon",
   "config": {
     "step": {
       "user": {
-        "title": "Configure Roon Server",
         "description": "Please enter your Roon server Hostname or IP.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

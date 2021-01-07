@@ -1,4 +1,6 @@
 """Test the Smart Meter Texas module."""
+from unittest.mock import patch
+
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -14,8 +16,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
-
-from tests.async_mock import patch
 
 
 async def test_setup_with_no_config(hass):
@@ -45,6 +45,7 @@ async def test_update_failure(hass, config_entry, aioclient_mock):
     """Test that the coordinator handles a bad response."""
     await setup_integration(hass, config_entry, aioclient_mock, bad_reading=True)
     await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
     with patch("smart_meter_texas.Meter.read_meter") as updater:
         await hass.services.async_call(
             HA_DOMAIN,

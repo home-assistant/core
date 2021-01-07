@@ -1,4 +1,6 @@
 """Define tests for the Elexa Guardian config flow."""
+from unittest.mock import patch
+
 from aioguardian.errors import GuardianError
 
 from homeassistant import data_entry_flow
@@ -10,7 +12,6 @@ from homeassistant.components.guardian.config_flow import (
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -138,4 +139,4 @@ async def test_step_zeroconf_no_discovery_info(hass):
         DOMAIN, context={"source": SOURCE_ZEROCONF}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"

@@ -84,7 +84,7 @@ class StreamOutput:
         """Return the max duration of any given segment in seconds."""
         segment_length = len(self._segments)
         if not segment_length:
-            return 0
+            return 1
         durations = [s.duration for s in self._segments]
         return round(max(durations)) or 1
 

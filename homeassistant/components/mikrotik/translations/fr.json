@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de la connexion",
-            "name_exists": "Le nom existe",
-            "wrong_credentials": "Identifiants erron\u00e9s"
+            "invalid_auth": "Authentification invalide",
+            "name_exists": "Le nom existe"
         },
         "step": {
             "user": {

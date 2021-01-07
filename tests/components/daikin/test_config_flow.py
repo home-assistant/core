@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
+from unittest.mock import PropertyMock, patch
 
 from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
@@ -20,7 +21,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
@@ -109,10 +109,10 @@ async def test_import(hass, mock_daikin):
 @pytest.mark.parametrize(
     "s_effect,reason",
     [
-        (asyncio.TimeoutError, "device_timeout"),
-        (HTTPForbidden, "forbidden"),
-        (ClientError, "device_fail"),
-        (Exception, "device_fail"),
+        (asyncio.TimeoutError, "cannot_connect"),
+        (HTTPForbidden, "invalid_auth"),
+        (ClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 async def test_device_abort(hass, mock_daikin, s_effect, reason):

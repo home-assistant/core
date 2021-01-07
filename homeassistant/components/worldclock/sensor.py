@@ -1,6 +1,4 @@
 """Support for showing the time in a different time zone."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -10,8 +8,6 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 CONF_TIME_FORMAT = "time_format"
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Worldclock Sensor"
 ICON = "mdi:clock"

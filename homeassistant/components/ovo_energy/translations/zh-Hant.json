@@ -2,16 +2,24 @@
     "config": {
         "error": {
             "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "authorization_error": "\u8a8d\u8b49\u932f\u8aa4\u3002\u8acb\u78ba\u8a8d\u6191\u8b49\u3002",
-            "connection_error": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
+        "flow_title": "OVO Energy\uff1a{username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "OVO Energy \u8a8d\u8b49\u5931\u6557\u3002\u8acb\u8f38\u5165\u76ee\u524d\u7684\u6191\u8b49\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49"
+            },
             "user": {
                 "data": {
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8a2d\u5b9a OVO Energy \u8a2d\u5099\u4ee5\u76e3\u63a7\u80fd\u6e90\u4f7f\u7528\u72c0\u6cc1\u3002",
+                "description": "\u8a2d\u5b9a OVO Energy \u88dd\u7f6e\u4ee5\u76e3\u63a7\u80fd\u6e90\u4f7f\u7528\u72c0\u6cc1\u3002",
                 "title": "\u65b0\u589e OVO Energy \u5e33\u865f"
             }
         }

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Dispositivo ya configurado",
-            "connection_error": "Error al conectar",
+            "cannot_connect": "No se pudo conectar",
             "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n.",
             "ipp_error": "Error IPP encontrado.",
             "ipp_version_error": "Versi\u00f3n de IPP no compatible con la impresora.",
@@ -10,7 +10,7 @@
             "unique_id_required": "El dispositivo no tiene identificaci\u00f3n \u00fanica necesaria para el descubrimiento."
         },
         "error": {
-            "connection_error": "Error al conectar",
+            "cannot_connect": "No se pudo conectar",
             "connection_upgrade": "No se pudo conectar con la impresora. Int\u00e9ntalo de nuevo con la opci\u00f3n SSL/TLS marcada."
         },
         "flow_title": "Impresora: {name}",
@@ -18,10 +18,10 @@
             "user": {
                 "data": {
                     "base_path": "Ruta relativa a la impresora",
-                    "host": "Host o direcci\u00f3n IP",
+                    "host": "Host",
                     "port": "Puerto",
-                    "ssl": "La impresora admite la comunicaci\u00f3n a trav\u00e9s de SSL/TLS",
-                    "verify_ssl": "La impresora usa un certificado SSL adecuado"
+                    "ssl": "Utiliza un certificado SSL",
+                    "verify_ssl": "Verificar certificado SSL"
                 },
                 "description": "Configura tu impresora a trav\u00e9s del Protocolo de Impresi\u00f3n de Internet (IPP) para integrarla con Home Assistant.",
                 "title": "Vincula tu impresora"

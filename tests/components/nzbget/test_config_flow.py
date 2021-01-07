@@ -1,4 +1,6 @@
 """Test the NZBGet config flow."""
+from unittest.mock import patch
+
 from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
@@ -21,7 +23,6 @@ from . import (
     _patch_version,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -132,7 +133,7 @@ async def test_user_form_single_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, nzbget_api):
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -141,16 +142,22 @@ async def test_options_flow(hass):
     )
     entry.add_to_hass(hass)
 
+    with patch("homeassistant.components.nzbget.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
     assert entry.options[CONF_SCAN_INTERVAL] == 5
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 15},
-    )
+    with _patch_async_setup(), _patch_async_setup_entry():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_SCAN_INTERVAL: 15},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 15

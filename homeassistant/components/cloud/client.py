@@ -15,14 +15,13 @@ from homeassistant.components.google_assistant import const as gc, smart_home as
 from homeassistant.const import HTTP_OK
 from homeassistant.core import Context, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.aiohttp import MockRequest
 
 from . import alexa_config, google_config, utils
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudClient(Interface):
@@ -80,13 +79,15 @@ class CloudClient(Interface):
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
 
-    @property
-    def alexa_config(self) -> alexa_config.AlexaConfig:
+    async def get_alexa_config(self) -> alexa_config.AlexaConfig:
         """Return Alexa config."""
         if self._alexa_config is None:
             assert self.cloud is not None
+
+            cloud_user = await self._prefs.get_cloud_user()
+
             self._alexa_config = alexa_config.AlexaConfig(
-                self._hass, self.alexa_user_config, self._prefs, self.cloud
+                self._hass, self.alexa_user_config, cloud_user, self._prefs, self.cloud
             )
 
         return self._alexa_config
@@ -109,19 +110,40 @@ class CloudClient(Interface):
         """When user logs in."""
         await self.prefs.async_set_username(self.cloud.username)
 
-        if self.alexa_config.enabled and self.alexa_config.should_report_state:
+        async def enable_alexa(_):
+            """Enable Alexa."""
+            aconf = await self.get_alexa_config()
             try:
-                await self.alexa_config.async_enable_proactive_mode()
+                await aconf.async_enable_proactive_mode()
+            except aiohttp.ClientError as err:  # If no internet available yet
+                if self._hass.is_running:
+                    logging.getLogger(__package__).warning(
+                        "Unable to activate Alexa Report State: %s. Retrying in 30 seconds",
+                        err,
+                    )
+                async_call_later(self._hass, 30, enable_alexa)
             except alexa_errors.NoTokenAvailable:
                 pass
 
-        if self._prefs.google_enabled:
+        async def enable_google(_):
+            """Enable Google."""
             gconf = await self.get_google_config()
 
             gconf.async_enable_local_sdk()
 
             if gconf.should_report_state:
                 gconf.async_enable_report_state()
+
+        tasks = []
+
+        if self._prefs.alexa_enabled and self._prefs.alexa_report_state:
+            tasks.append(enable_alexa)
+
+        if self._prefs.google_enabled:
+            tasks.append(enable_google)
+
+        if tasks:
+            await asyncio.gather(*[task(None) for task in tasks])
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
@@ -145,9 +167,10 @@ class CloudClient(Interface):
     async def async_alexa_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
+        aconfig = await self.get_alexa_config()
         return await alexa_sh.async_handle_message(
             self._hass,
-            self.alexa_config,
+            aconfig,
             payload,
             context=Context(user_id=cloud_user),
             enabled=self._prefs.alexa_enabled,

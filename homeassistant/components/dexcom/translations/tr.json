@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten konfig\u00fcre edilmi\u015fi durumda"
+        }
+    }
+}

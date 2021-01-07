@@ -2,8 +2,10 @@
 from datetime import timedelta
 import time
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.zha.core.device as zha_core_device
@@ -13,7 +15,6 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
@@ -27,7 +28,11 @@ def zigpy_device(zigpy_device_mock):
             in_clusters.append(general.Basic.cluster_id)
 
         endpoints = {
-            3: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0}
+            3: {
+                "in_clusters": in_clusters,
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
         }
         return zigpy_device_mock(endpoints)
 
@@ -44,7 +49,11 @@ def zigpy_device_mains(zigpy_device_mock):
             in_clusters.append(general.Basic.cluster_id)
 
         endpoints = {
-            3: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0}
+            3: {
+                "in_clusters": in_clusters,
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
         }
         return zigpy_device_mock(
             endpoints, node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00"

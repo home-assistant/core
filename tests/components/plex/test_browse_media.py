@@ -8,15 +8,11 @@ from homeassistant.components.plex.media_browser import SPECIAL_METHODS
 from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
 
 from .const import DEFAULT_DATA
-from .helpers import trigger_plex_update
 
 
 async def test_browse_media(hass, hass_ws_client, mock_plex_server, mock_websocket):
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
-
-    trigger_plex_update(mock_websocket)
-    await hass.async_block_till_done()
 
     media_players = hass.states.async_entity_ids("media_player")
     msg_id = 1

@@ -1,6 +1,4 @@
 """Platform for the iZone AC."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,8 +8,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

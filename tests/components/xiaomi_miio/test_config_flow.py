@@ -1,12 +1,12 @@
 """Test the Xiaomi Miio config flow."""
+from unittest.mock import Mock, patch
+
 from miio import DeviceException
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import config_flow, const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-
-from tests.async_mock import Mock, patch
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
@@ -90,7 +90,7 @@ async def test_config_flow_step_gateway_connect_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "gateway"
-    assert result["errors"] == {"base": "connect_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_config_flow_gateway_success(hass):

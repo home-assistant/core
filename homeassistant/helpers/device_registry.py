@@ -11,15 +11,12 @@ import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
 from .singleton import singleton
-from .typing import HomeAssistantType
+from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
     from . import entity_registry
 
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 
 DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
@@ -37,6 +34,44 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_INTEGRATION = "integration"
+DISABLED_USER = "user"
+
+
+@attr.s(slots=True, frozen=True)
+class DeviceEntry:
+    """Device Registry Entry."""
+
+    config_entries: Set[str] = attr.ib(converter=set, factory=set)
+    connections: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
+    identifiers: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
+    manufacturer: Optional[str] = attr.ib(default=None)
+    model: Optional[str] = attr.ib(default=None)
+    name: Optional[str] = attr.ib(default=None)
+    sw_version: Optional[str] = attr.ib(default=None)
+    via_device_id: Optional[str] = attr.ib(default=None)
+    area_id: Optional[str] = attr.ib(default=None)
+    name_by_user: Optional[str] = attr.ib(default=None)
+    entry_type: Optional[str] = attr.ib(default=None)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    # This value is not stored, just used to keep track of events to fire.
+    is_new: bool = attr.ib(default=False)
+    disabled_by: Optional[str] = attr.ib(
+        default=None,
+        validator=attr.validators.in_(
+            (
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
+                None,
+            )
+        ),
+    )
+
+    @property
+    def disabled(self) -> bool:
+        """Return if entry is disabled."""
+        return self.disabled_by is not None
+
 
 @attr.s(slots=True, frozen=True)
 class DeletedDeviceEntry:
@@ -47,35 +82,21 @@ class DeletedDeviceEntry:
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
-    def to_device_entry(self):
+    def to_device_entry(
+        self,
+        config_entry_id: str,
+        connections: Set[Tuple[str, str]],
+        identifiers: Set[Tuple[str, str]],
+    ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
+            # type ignores: likely https://github.com/python/mypy/issues/8625
+            config_entries={config_entry_id},  # type: ignore[arg-type]
+            connections=self.connections & connections,  # type: ignore[arg-type]
+            identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
         )
-
-
-@attr.s(slots=True, frozen=True)
-class DeviceEntry:
-    """Device Registry Entry."""
-
-    config_entries: Set[str] = attr.ib(converter=set, factory=set)
-    connections: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
-    identifiers: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
-    manufacturer: str = attr.ib(default=None)
-    model: str = attr.ib(default=None)
-    name: str = attr.ib(default=None)
-    sw_version: str = attr.ib(default=None)
-    via_device_id: str = attr.ib(default=None)
-    area_id: str = attr.ib(default=None)
-    name_by_user: str = attr.ib(default=None)
-    entry_type: str = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
-    # This value is not stored, just used to keep track of events to fire.
-    is_new: bool = attr.ib(default=False)
 
 
 def format_mac(mac: str) -> str:
@@ -184,38 +205,40 @@ class DeviceRegistry:
         _remove_device_from_index(devices_index, old_device)
         _add_device_to_index(devices_index, new_device)
 
-    def _clear_index(self):
+    def _clear_index(self) -> None:
         """Clear the index."""
         self._devices_index = {
             REGISTERED_DEVICE: {IDX_IDENTIFIERS: {}, IDX_CONNECTIONS: {}},
             DELETED_DEVICE: {IDX_IDENTIFIERS: {}, IDX_CONNECTIONS: {}},
         }
 
-    def _rebuild_index(self):
+    def _rebuild_index(self) -> None:
         """Create the index after loading devices."""
         self._clear_index()
         for device in self.devices.values():
             _add_device_to_index(self._devices_index[REGISTERED_DEVICE], device)
-        for device in self.deleted_devices.values():
-            _add_device_to_index(self._devices_index[DELETED_DEVICE], device)
+        for deleted_device in self.deleted_devices.values():
+            _add_device_to_index(self._devices_index[DELETED_DEVICE], deleted_device)
 
     @callback
     def async_get_or_create(
         self,
         *,
-        config_entry_id,
-        connections=None,
-        identifiers=None,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        default_manufacturer=_UNDEF,
-        default_model=_UNDEF,
-        default_name=_UNDEF,
-        sw_version=_UNDEF,
-        entry_type=_UNDEF,
-        via_device=None,
-    ):
+        config_entry_id: str,
+        connections: Optional[set] = None,
+        identifiers: Optional[set] = None,
+        manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        model: Union[str, None, UndefinedType] = UNDEFINED,
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        default_manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        default_model: Union[str, None, UndefinedType] = UNDEFINED,
+        default_name: Union[str, None, UndefinedType] = UNDEFINED,
+        sw_version: Union[str, None, UndefinedType] = UNDEFINED,
+        entry_type: Union[str, None, UndefinedType] = UNDEFINED,
+        via_device: Optional[str] = None,
+        # To disable a device if it gets created
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> Optional[DeviceEntry]:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
             return None
@@ -236,52 +259,56 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
-        if default_manufacturer is not _UNDEF and device.manufacturer is None:
+        if default_manufacturer is not UNDEFINED and device.manufacturer is None:
             manufacturer = default_manufacturer
 
-        if default_model is not _UNDEF and device.model is None:
+        if default_model is not UNDEFINED and device.model is None:
             model = default_model
 
-        if default_name is not _UNDEF and device.name is None:
+        if default_name is not UNDEFINED and device.name is None:
             name = default_name
 
         if via_device is not None:
             via = self.async_get_device({via_device}, set())
-            via_device_id = via.id if via else _UNDEF
+            via_device_id: Union[str, UndefinedType] = via.id if via else UNDEFINED
         else:
-            via_device_id = _UNDEF
+            via_device_id = UNDEFINED
 
         return self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
             via_device_id=via_device_id,
-            merge_connections=connections or _UNDEF,
-            merge_identifiers=identifiers or _UNDEF,
+            merge_connections=connections or UNDEFINED,
+            merge_identifiers=identifiers or UNDEFINED,
             manufacturer=manufacturer,
             model=model,
             name=name,
             sw_version=sw_version,
             entry_type=entry_type,
+            disabled_by=disabled_by,
         )
 
     @callback
     def async_update_device(
         self,
-        device_id,
+        device_id: str,
         *,
-        area_id=_UNDEF,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        name_by_user=_UNDEF,
-        new_identifiers=_UNDEF,
-        sw_version=_UNDEF,
-        via_device_id=_UNDEF,
-        remove_config_entry_id=_UNDEF,
-    ):
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        model: Union[str, None, UndefinedType] = UNDEFINED,
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        name_by_user: Union[str, None, UndefinedType] = UNDEFINED,
+        new_identifiers: Union[set, UndefinedType] = UNDEFINED,
+        sw_version: Union[str, None, UndefinedType] = UNDEFINED,
+        via_device_id: Union[str, None, UndefinedType] = UNDEFINED,
+        remove_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> Optional[DeviceEntry]:
         """Update properties of a device."""
         return self._async_update_device(
             device_id,
@@ -294,63 +321,65 @@ class DeviceRegistry:
             sw_version=sw_version,
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
+            disabled_by=disabled_by,
         )
 
     @callback
     def _async_update_device(
         self,
-        device_id,
+        device_id: str,
         *,
-        add_config_entry_id=_UNDEF,
-        remove_config_entry_id=_UNDEF,
-        merge_connections=_UNDEF,
-        merge_identifiers=_UNDEF,
-        new_identifiers=_UNDEF,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        sw_version=_UNDEF,
-        entry_type=_UNDEF,
-        via_device_id=_UNDEF,
-        area_id=_UNDEF,
-        name_by_user=_UNDEF,
-    ):
+        add_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
+        remove_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
+        merge_connections: Union[set, UndefinedType] = UNDEFINED,
+        merge_identifiers: Union[set, UndefinedType] = UNDEFINED,
+        new_identifiers: Union[set, UndefinedType] = UNDEFINED,
+        manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        model: Union[str, None, UndefinedType] = UNDEFINED,
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        sw_version: Union[str, None, UndefinedType] = UNDEFINED,
+        entry_type: Union[str, None, UndefinedType] = UNDEFINED,
+        via_device_id: Union[str, None, UndefinedType] = UNDEFINED,
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        name_by_user: Union[str, None, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> Optional[DeviceEntry]:
         """Update device attributes."""
         old = self.devices[device_id]
 
-        changes = {}
+        changes: Dict[str, Any] = {}
 
         config_entries = old.config_entries
 
         if (
-            add_config_entry_id is not _UNDEF
+            add_config_entry_id is not UNDEFINED
             and add_config_entry_id not in old.config_entries
         ):
             config_entries = old.config_entries | {add_config_entry_id}
 
         if (
-            remove_config_entry_id is not _UNDEF
+            remove_config_entry_id is not UNDEFINED
             and remove_config_entry_id in config_entries
         ):
             if config_entries == {remove_config_entry_id}:
                 self.async_remove_device(device_id)
-                return
+                return None
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
 
-        for attr_name, value in (
+        for attr_name, setvalue in (
             ("connections", merge_connections),
             ("identifiers", merge_identifiers),
         ):
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
-            if value is not _UNDEF and not value.issubset(old_value):
-                changes[attr_name] = old_value | value
+            if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
+                changes[attr_name] = old_value | setvalue
 
-        if new_identifiers is not _UNDEF:
+        if new_identifiers is not UNDEFINED:
             changes["identifiers"] = new_identifiers
 
         for attr_name, value in (
@@ -360,14 +389,15 @@ class DeviceRegistry:
             ("sw_version", sw_version),
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
+            ("disabled_by", disabled_by),
         ):
-            if value is not _UNDEF and value != getattr(old, attr_name):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
 
-        if area_id is not _UNDEF and area_id != old.area_id:
+        if area_id is not UNDEFINED and area_id != old.area_id:
             changes["area_id"] = area_id
 
-        if name_by_user is not _UNDEF and name_by_user != old.name_by_user:
+        if name_by_user is not UNDEFINED and name_by_user != old.name_by_user:
             changes["name_by_user"] = name_by_user
 
         if old.is_new:
@@ -408,7 +438,7 @@ class DeviceRegistry:
         )
         self.async_schedule_save()
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
 
@@ -421,8 +451,9 @@ class DeviceRegistry:
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    connections={tuple(conn) for conn in device["connections"]},
-                    identifiers={tuple(iden) for iden in device["identifiers"]},
+                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
+                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name=device["name"],
@@ -438,13 +469,16 @@ class DeviceRegistry:
                     # Introduced in 0.87
                     area_id=device.get("area_id"),
                     name_by_user=device.get("name_by_user"),
+                    # Introduced in 0.119
+                    disabled_by=device.get("disabled_by"),
                 )
             # Introduced in 0.111
             for device in data.get("deleted_devices", []):
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    connections={tuple(conn) for conn in device["connections"]},
-                    identifiers={tuple(iden) for iden in device["identifiers"]},
+                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
+                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     id=device["id"],
                 )
 
@@ -476,6 +510,7 @@ class DeviceRegistry:
                 "via_device_id": entry.via_device_id,
                 "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
+                "disabled_by": entry.disabled_by,
             }
             for entry in self.devices.values()
         ]
@@ -585,7 +620,7 @@ def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> Non
     """Clean up device registry when entities removed."""
     from . import entity_registry  # pylint: disable=import-outside-toplevel
 
-    async def cleanup():
+    async def cleanup() -> None:
         """Cleanup."""
         ent_reg = await entity_registry.async_get_registry(hass)
         async_cleanup(hass, dev_reg, ent_reg)

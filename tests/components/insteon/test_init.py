@@ -1,6 +1,6 @@
 """Test the init file for the Insteon component."""
 import asyncio
-import logging
+from unittest.mock import patch
 
 from pyinsteon.address import Address
 
@@ -41,10 +41,7 @@ from .const import (
 )
 from .mock_devices import MockDevices
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def mock_successful_connection(*args, **kwargs):

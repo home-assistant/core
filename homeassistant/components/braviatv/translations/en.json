@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This TV is already configured.",
+            "already_configured": "Device is already configured",
             "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
         },
         "error": {
-            "cannot_connect": "Failed to connect, invalid host or PIN code.",
-            "invalid_host": "Invalid hostname or IP address.",
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
             "unsupported_model": "Your TV model is not supported."
         },
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN code"
+                    "pin": "PIN Code"
                 },
                 "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Unregister remote device.",
                 "title": "Authorize Sony Bravia TV"

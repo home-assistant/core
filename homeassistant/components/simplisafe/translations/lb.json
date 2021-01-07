@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "D\u00ebse SimpliSafe Kont g\u00ebtt scho benotzt.",
-            "reauth_successful": "SimpliSafe erfollegr\u00e4ich re-authentifiz\u00e9iert."
+            "reauth_successful": "Erfollegr\u00e4ich re-authentifiz\u00e9iert."
         },
         "error": {
             "identifier_exists": "Konto ass scho registr\u00e9iert",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "still_awaiting_mfa": "Waart nach den MFA E-Mail Klick.",
             "unknown": "Onerwaarte Feeler"
         },
@@ -20,7 +20,7 @@
                     "password": "Passwuert"
                 },
                 "description": "D\u00e4in Acc\u00e8s Jeton as ofgelaf oder gouf revok\u00e9iert. G\u00ebff d\u00e4i Passwuert an fir d\u00e4i Kont fr\u00ebsch ze verbannen.",
-                "title": "SimpliSafe Kont fr\u00ebsch verbannen"
+                "title": "Integratioun re-authentifiz\u00e9ieren"
             },
             "user": {
                 "data": {

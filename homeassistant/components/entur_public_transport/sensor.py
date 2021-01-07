@@ -1,6 +1,5 @@
 """Real-time information about public transport departures in Norway."""
 from datetime import datetime, timedelta
-import logging
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
@@ -19,8 +18,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 API_CLIENT_NAME = "homeassistant-homeassistant"
 

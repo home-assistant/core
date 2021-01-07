@@ -1,6 +1,7 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
 from ipaddress import ip_network
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
 from hass_nabucasa import thingtalk
@@ -19,7 +20,6 @@ from homeassistant.core import State
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.components.google_assistant import MockConfig
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"

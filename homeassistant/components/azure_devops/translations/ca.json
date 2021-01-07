@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "El compte ja ha estat configurat",
-            "reauth_successful": "Token d'acc\u00e9s actualitzat correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "authorization_error": "Error d'autoritzaci\u00f3. Comprova que tens acc\u00e9s al projecte i tens les credencials correctes.",
-            "connection_error": "No s'ha pogut connectar a Azure DevOps.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "project_error": "No s'ha pogut obtenir la informaci\u00f3 del projecte."
         },
         "flow_title": "Azure DevOps: {project_url}",
@@ -28,6 +28,5 @@
                 "title": "Afegeix un projecte Azure DevOps"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Kontot har redan konfigurerats"
         },
-        "error": {
-            "login": "Inloggningsfel: v\u00e4nligen kontrollera ditt anv\u00e4ndarnamn och l\u00f6senord"
-        },
         "step": {
             "user": {
                 "data": {

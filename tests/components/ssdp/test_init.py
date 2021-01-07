@@ -10,7 +10,7 @@ from homeassistant.components import ssdp
 from tests.common import mock_coro
 
 
-async def test_scan_match_st(hass):
+async def test_scan_match_st(hass, caplog):
     """Test matching based on ST."""
     scanner = ssdp.Scanner(hass, {"mock-domain": [{"st": "mock-st"}]})
 
@@ -38,6 +38,7 @@ async def test_scan_match_st(hass):
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
     }
+    assert "Failed to fetch ssdp data" not in caplog.text
 
 
 @pytest.mark.parametrize(

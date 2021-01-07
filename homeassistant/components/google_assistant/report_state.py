@@ -45,8 +45,14 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             old_entity = GoogleEntity(hass, google_config, old_state)
 
             # Only report to Google if data that Google cares about has changed
-            if entity_data == old_entity.query_serialize():
-                return
+            try:
+                if entity_data == old_entity.query_serialize():
+                    return
+            except SmartHomeError:
+                # Happens if old state could not be serialized.
+                # In that case the data is different and should be
+                # reported.
+                pass
 
         _LOGGER.debug("Reporting state for %s: %s", changed_entity, entity_data)
 

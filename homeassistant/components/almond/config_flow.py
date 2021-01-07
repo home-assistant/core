@@ -51,7 +51,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Handle a flow start."""
         # Only allow 1 instance.
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)
 
@@ -79,7 +79,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Import data."""
         # Only allow 1 instance.
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         if not await async_verify_local_connection(self.hass, user_input["host"]):
             self.logger.warning(
@@ -97,7 +97,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         self.hassio_discovery = discovery_info
 

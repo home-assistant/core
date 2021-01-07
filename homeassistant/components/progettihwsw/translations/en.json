@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error",
-            "wrong_info_relay_modes": "Relay mode selection must be monostable or bistable."
+            "unknown": "Unexpected error"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "Set up board"
             }
         }
-    },
-    "title": "ProgettiHWSW Automation"
+    }
 }

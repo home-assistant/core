@@ -1,6 +1,4 @@
 """Support for Nexia / Trane XL thermostats."""
-import logging
-
 from nexia.const import (
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
@@ -81,8 +79,6 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
     }
 )
 
-
-_LOGGER = logging.getLogger(__name__)
 
 #
 # Nexia has two bits to determine hvac mode

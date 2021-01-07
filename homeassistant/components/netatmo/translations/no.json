@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Tidsavbrutt ved oppretting av godkjennings url.",
-            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
-            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk {docs_url} ] ( {docs_url} )",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "create_entry": {
-            "default": "Vellykket godkjenning med Netatmo."
+            "default": "Vellykket godkjenning"
         },
         "step": {
             "pick_implementation": {
@@ -20,10 +20,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Navn p\u00e5 omr\u00e5det",
-                    "lat_ne": "Breddegrad nord-\u00f8st",
-                    "lat_sw": "Breddegrad s\u00f8r-vest",
-                    "lon_ne": "Lengdegrad nord-\u00f8st",
-                    "lon_sw": "Lengdegrad s\u00f8r-vest",
+                    "lat_ne": "Breddegrad Nord-\u00d8st hj\u00f8rne",
+                    "lat_sw": "Breddegrad S\u00f8r-Vest hj\u00f8rne",
+                    "lon_ne": "Lengdegrad Nord-\u00d8st hj\u00f8rne",
+                    "lon_sw": "Lengdegrad S\u00f8r-Vest hj\u00f8rne",
                     "mode": "Beregning",
                     "show_on_map": "Vis p\u00e5 kart"
                 },

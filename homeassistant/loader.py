@@ -25,6 +25,7 @@ from typing import (
     cast,
 )
 
+from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 
@@ -47,7 +48,9 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant."
 )
-_UNDEF = object()
+_UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+
+MAX_LOAD_CONCURRENTLY = 4
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
@@ -202,6 +205,21 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
     return ssdp
 
 
+async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
+    """Return cached list of MQTT mappings."""
+
+    mqtt: Dict[str, List] = MQTT.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.mqtt:
+            continue
+
+        mqtt[integration.domain] = integration.mqtt
+
+    return mqtt
+
+
 class Integration:
     """An integration in Home Assistant."""
 
@@ -324,6 +342,11 @@ class Integration:
         return cast(str, self.manifest.get("quality_scale"))
 
     @property
+    def mqtt(self) -> Optional[list]:
+        """Return Integration MQTT entries."""
+        return cast(List[dict], self.manifest.get("mqtt"))
+
+    @property
     def ssdp(self) -> Optional[list]:
         """Return Integration SSDP entries."""
         return cast(List[dict], self.manifest.get("ssdp"))
@@ -398,10 +421,12 @@ class Integration:
         cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
         full_name = f"{self.domain}.{platform_name}"
         if full_name not in cache:
-            cache[full_name] = importlib.import_module(
-                f"{self.pkg_path}.{platform_name}"
-            )
+            cache[full_name] = self._import_platform(platform_name)
         return cache[full_name]  # type: ignore
+
+    def _import_platform(self, platform_name: str) -> ModuleType:
+        """Import the platform."""
+        return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
     def __repr__(self) -> str:
         """Text representation of class."""

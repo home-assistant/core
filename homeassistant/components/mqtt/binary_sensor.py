@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, mqtt
+from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
@@ -21,7 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -40,8 +43,9 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +64,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OFF_DELAY): vol.All(vol.Coerce(int), vol.Range(min=0)),
+            vol.Optional(CONF_OFF_DELAY): cv.positive_int,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -91,7 +95,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
             raise
 
     async_dispatcher_connect(

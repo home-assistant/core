@@ -2,6 +2,6 @@
   "domain": "geo_rss_events",
   "name": "GeoRSS",
   "documentation": "https://www.home-assistant.io/integrations/geo_rss_events",
-  "requirements": ["georss_generic_client==0.3"],
+  "requirements": ["georss_generic_client==0.4"],
   "codeowners": ["@exxamalte"]
 }

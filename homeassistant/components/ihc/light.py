@@ -1,6 +1,4 @@
 """Support for IHC lights."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
@@ -11,8 +9,6 @@ from . import IHC_CONTROLLER, IHC_INFO
 from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID
 from .ihcdevice import IHCDevice
 from .util import async_pulse, async_set_bool, async_set_int
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

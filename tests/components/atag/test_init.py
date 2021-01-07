@@ -1,11 +1,12 @@
 """Tests for the ATAG integration."""
+from unittest.mock import patch
+
 import aiohttp
 
 from homeassistant.components.atag import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.components.atag import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -14,7 +15,7 @@ async def test_config_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test configuration entry not ready on library error."""
-    aioclient_mock.get("http://127.0.0.1:10000/retrieve", exc=aiohttp.ClientError)
+    aioclient_mock.post("http://127.0.0.1:10000/retrieve", exc=aiohttp.ClientError)
     entry = await init_integration(hass, aioclient_mock)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 

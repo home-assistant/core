@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integrace OpenWeatherMap pro tyto sou\u0159adnice je ji\u017e nakonfigurov\u00e1na."
+            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno"
         },
         "error": {
-            "auth": "Kl\u00ed\u010d API nen\u00ed spr\u00e1vn\u00fd.",
-            "connection": "Nelze se p\u0159ipojit k OpenWeatherMap API"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API kl\u00ed\u010d OpenWeatherMap",
+                    "api_key": "Kl\u00ed\u010d API",
                     "language": "Jazyk",
                     "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
                     "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",

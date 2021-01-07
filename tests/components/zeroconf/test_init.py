@@ -1,4 +1,6 @@
 """Test Zeroconf component setup process."""
+from unittest.mock import patch
+
 from zeroconf import (
     BadTypeInNameException,
     InterfaceChoice,
@@ -16,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -242,13 +242,17 @@ async def test_zeroconf_match(hass, mock_zeroconf):
         handlers[0](
             zeroconf,
             "_http._tcp.local.",
-            "shelly108._http._tcp.local.",
+            "Shelly108._http._tcp.local.",
             ServiceStateChange.Added,
         )
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_http._tcp.local.": [{"domain": "shelly", "name": "shelly*"}]},
+        {
+            "_http._tcp.local.": [
+                {"domain": "shelly", "name": "shelly*", "macaddress": "FFAADD*"}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"

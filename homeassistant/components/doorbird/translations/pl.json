@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "BoorBird jest ju\u017c skonfigurowany.",
-            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane.",
-            "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
+            "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -29,7 +29,7 @@
                 "data": {
                     "events": "Lista wydarze\u0144 oddzielona przecinkami"
                 },
-                "description": "Dodaj nazwy wydarze\u0144 oddzielonych przecinkami, kt\u00f3re chcesz \u015bledzi\u0107. Po wprowadzeniu ich tutaj u\u017cyj aplikacji DoorBird, aby przypisa\u0107 je do okre\u015blonych zdarze\u0144. Zapoznaj si\u0119 z dokumentacj\u0105 na stronie https://www.home-assistant.io/integrations/doorbird/#events.\nPrzyk\u0142ad: nacisnienie_przycisku, ruch"
+                "description": "Dodaj nazwy wydarze\u0144 oddzielonych przecinkami, kt\u00f3re chcesz \u015bledzi\u0107. Po wprowadzeniu ich tutaj u\u017cyj aplikacji DoorBird, aby przypisa\u0107 je do okre\u015blonych zdarze\u0144. Zapoznaj si\u0119 z dokumentacj\u0105 na stronie https://www.home-assistant.io/integrations/doorbird/#events.\nPrzyk\u0142ad: nacisniecie_przycisku, ruch"
             }
         }
     }

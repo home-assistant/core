@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt, switch
+from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE,
@@ -18,7 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -37,8 +40,9 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +77,7 @@ async def async_setup_platform(
 ):
     """Set up MQTT switch through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, config, async_add_entities, discovery_info)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -88,7 +92,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
             raise
 
     async_dispatcher_connect(

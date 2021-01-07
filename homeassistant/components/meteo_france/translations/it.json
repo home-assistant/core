@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Citt\u00e0 gi\u00e0 configurata",
-            "unknown": "Errore sconosciuto: riprovare pi\u00f9 tardi"
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "empty": "Nessun risultato nella ricerca della citt\u00e0: si prega di controllare il campo citt\u00e0"

@@ -1,11 +1,12 @@
 """Tests for the Atag config flow."""
+from unittest.mock import PropertyMock, patch
+
 from pyatag import errors
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import PropertyMock, patch
 from tests.components.atag import (
     PAIR_REPLY,
     RECEIVE_REPLY,
@@ -58,7 +59,7 @@ async def test_connection_error(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_unauthorized(hass):
@@ -78,13 +79,13 @@ async def test_full_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test registering an integration and finishing flow works."""
-    aioclient_mock.get(
-        "http://127.0.0.1:10000/retrieve",
-        json=RECEIVE_REPLY,
-    )
     aioclient_mock.post(
         "http://127.0.0.1:10000/pair",
         json=PAIR_REPLY,
+    )
+    aioclient_mock.post(
+        "http://127.0.0.1:10000/retrieve",
+        json=RECEIVE_REPLY,
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

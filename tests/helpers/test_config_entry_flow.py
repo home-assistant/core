@@ -1,11 +1,12 @@
 """Tests for the Config Entry Flow helper."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -81,7 +82,7 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-@pytest.mark.parametrize("source", ["discovery", "ssdp", "zeroconf"])
+@pytest.mark.parametrize("source", ["discovery", "mqtt", "ssdp", "zeroconf"])
 async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     """Test we not allow duplicates."""
     flow = config_entries.HANDLERS["test"]()
@@ -95,7 +96,7 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.parametrize("source", ["discovery", "ssdp", "zeroconf"])
+@pytest.mark.parametrize("source", ["discovery", "mqtt", "ssdp", "zeroconf"])
 async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
@@ -238,7 +239,7 @@ async def test_webhook_single_entry_allowed(hass, webhook_flow_conf):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_webhook_multiple_entries_allowed(hass, webhook_flow_conf):

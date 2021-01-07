@@ -1,8 +1,10 @@
 """Test helpers for Hue."""
 from collections import deque
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohue.groups import Groups
 from aiohue.lights import Lights
+from aiohue.scenes import Scenes
 from aiohue.sensors import Sensors
 import pytest
 
@@ -10,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 
-from tests.async_mock import Mock, patch
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture(autouse=True)
@@ -63,6 +65,39 @@ def create_mock_bridge(hass):
     bridge.api.groups = Groups({}, mock_request)
     bridge.api.sensors = Sensors({}, mock_request)
     return bridge
+
+
+@pytest.fixture
+def mock_api(hass):
+    """Mock the Hue api."""
+    api = Mock(initialize=AsyncMock())
+    api.mock_requests = []
+    api.mock_light_responses = deque()
+    api.mock_group_responses = deque()
+    api.mock_sensor_responses = deque()
+    api.mock_scene_responses = deque()
+
+    async def mock_request(method, path, **kwargs):
+        kwargs["method"] = method
+        kwargs["path"] = path
+        api.mock_requests.append(kwargs)
+
+        if path == "lights":
+            return api.mock_light_responses.popleft()
+        if path == "groups":
+            return api.mock_group_responses.popleft()
+        if path == "sensors":
+            return api.mock_sensor_responses.popleft()
+        if path == "scenes":
+            return api.mock_scene_responses.popleft()
+        return None
+
+    api.config.apiversion = "9.9.9"
+    api.lights = Lights({}, mock_request)
+    api.groups = Groups({}, mock_request)
+    api.sensors = Sensors({}, mock_request)
+    api.scenes = Scenes({}, mock_request)
+    return api
 
 
 @pytest.fixture
