@@ -1,6 +1,8 @@
 """Test the WiZ Light config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries, setup
 from homeassistant.components.wiz_light.config_flow import (
     WizLightConnectionError,
@@ -27,6 +29,8 @@ TEST_SYSTEM_INFO = {"id": "ABCABCABCABC", "name": "Test Bulb"}
 
 TEST_CONNECTION = {CONF_HOST: "1.1.1.1", CONF_NAME: "Test Bulb"}
 
+TEST_NO_IP = {CONF_HOST: "this is no IP input", CONF_NAME: "Test Bulb"}
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -36,7 +40,7 @@ async def test_form(hass):
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
-    # Patch booth functions from __init__ with true.
+    # Patch functions
     with patch(
         "homeassistant.components.wiz_light.wizlight.getBulbConfig",
         return_value=FAKE_BULB_CONFIG,
@@ -55,7 +59,7 @@ async def test_form(hass):
             TEST_CONNECTION,
         )
         await hass.async_block_till_done()
-    print(result2)
+
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test Bulb"
     assert result2["data"] == TEST_CONNECTION
@@ -63,15 +67,24 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_bulb_time_out(hass):
-    """Test we handle cannot connect error."""
+@pytest.mark.parametrize(
+    "side_effect, error_base",
+    [
+        (WizLightTimeOutError, "bulb_time_out"),
+        (WizLightConnectionError, "no_wiz_light"),
+        (Exception, "unknown"),
+        (ConnectionRefusedError, "cannot_connect"),
+    ],
+)
+async def test_user_form_exceptions(hass, side_effect, error_base):
+    """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.wiz_light.wizlight.getBulbConfig",
-        side_effect=WizLightTimeOutError,
+        side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -79,45 +92,39 @@ async def test_form_bulb_time_out(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "bulb_time_out"}
+    assert result2["errors"] == {"base": error_base}
 
 
-async def test_form_bulb_offline(hass):
-    """Test we handle not a WiZ light error."""
+async def test_form_with_no_ip(hass):
+    """Test the from with not a ip input."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    # Patch functions
     with patch(
         "homeassistant.components.wiz_light.wizlight.getBulbConfig",
-        side_effect=WizLightConnectionError,
+        return_value=FAKE_BULB_CONFIG,
+    ), patch(
+        "homeassistant.components.wiz_light.wizlight.getMac",
+        return_value="ABCABCABCABC",
+    ), patch(
+        "homeassistant.components.wiz_light.async_setup",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.wiz_light.async_setup_entry",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            TEST_CONNECTION,
+            TEST_NO_IP,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "no_wiz_light"}
-
-
-async def test_form_bulb_exception(hass):
-    """Test we handle a WiZ unknown light error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.wiz_light.wizlight.getBulbConfig",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONNECTION,
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "no_IP"}
 
 
 async def test_form_updates_unique_id(hass):
