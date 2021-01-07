@@ -36,9 +36,9 @@ def register_node_in_dev_reg(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, client.driver.controller.home_id, node.node_id)},
         sw_version=node.firmware_version,
-        name=node.name,
-        model=node.product_type,
-        manufacturer=str(node.manufacturer_id),
+        name=node.name or node.device_config.description,
+        model=node.device_config.label or str(node.product_type),
+        manufacturer=node.device_config.manufacturer or str(node.manufacturer_id),
     )
 
 
