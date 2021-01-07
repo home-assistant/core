@@ -445,7 +445,7 @@ async def test_device_info_ismartgate(ismartgateapi_mock, hass: HomeAssistant) -
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "xyz")}, set())
+    device = device_registry.async_get_device({(DOMAIN, "xyz")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
@@ -480,7 +480,7 @@ async def test_device_info_gogogate2(gogogate2api_mock, hass: HomeAssistant) -> 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "xyz")}, set())
+    device = device_registry.async_get_device({(DOMAIN, "xyz")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
