@@ -144,6 +144,38 @@ async def test_run_number_service_optimistic(hass, mqtt_mock):
     assert state.state == "42.1"
 
 
+async def test_run_number_service(hass, mqtt_mock):
+    """Test that set_value service works in non optimistic mode."""
+    cmd_topic = "test/number/set"
+    state_topic = "test/number"
+
+    assert await async_setup_component(
+        hass,
+        number.DOMAIN,
+        {
+            "number": {
+                "platform": "mqtt",
+                "command_topic": cmd_topic,
+                "state_topic": state_topic,
+                "name": "Test Number",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, state_topic, "32")
+    state = hass.states.get("number.test_number")
+    assert state.state == "32"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "30", 0, False)
+
+
 async def test_availability_when_connection_lost(hass, mqtt_mock):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(

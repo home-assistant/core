@@ -111,7 +111,6 @@ class MqttNumber(
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
         self._config = config
-        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
 
         self._current_number = None
