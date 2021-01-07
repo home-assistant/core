@@ -4,18 +4,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_URL
 
 from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({CONF_ADDRESS: str})
+STEP_USER_DATA_SCHEMA = vol.Schema({CONF_URL: str})
 
 
 async def validate_input(hass: core.HomeAssistant, user_input: dict) -> bool:
     """Validate if the user input allows us to connect."""
-    ws_address = user_input[CONF_ADDRESS]
+    ws_address = user_input[CONF_URL]
 
     # TODO: actually test server connection
     if not ws_address.startswith("ws://") or not ws_address.startswith("wss://"):

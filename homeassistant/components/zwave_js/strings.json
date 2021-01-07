@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "data": {
-          "address": "[%key:common::config_flow::data::address%]"
+          "URL": "[%key:common::config_flow::data::url%]"
         }
       }
     },

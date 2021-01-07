@@ -5,8 +5,8 @@ import logging
 from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
@@ -24,23 +24,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Z-Wave JS from a config entry."""
 
     # The ZwaveClient instance is stored in hass data for easy access from platforms.
-    client = ZwaveClient(entry.data[CONF_ADDRESS], async_get_clientsession(hass))
+    client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     hass.data[DOMAIN][entry.entry_id] = client
 
     async def async_on_initialized():
-        """Called when initial full state received."""
+        """Handle initial full state received."""
         # TODO: signal entities to update availability state
         LOGGER.info("Connection to Zwave JS Server initialized")
         # register callbacks
         client.driver.on("all nodes ready", async_on_ready)
 
     async def async_on_disconnect():
-        """Called when websocket is disconnected."""
+        """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
         # TODO: signal entities to update availability state
 
     async def async_on_ready():
-        """Called when Z-wave mesh is ready to handle commands."""
+        """Handle Z-wave mesh is ready to handle commands."""
         LOGGER.info("Z-Wave mesh is fully functional.")
         # TODO: signal entities to update availability state
 
