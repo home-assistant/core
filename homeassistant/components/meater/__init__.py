@@ -51,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await meater_api.authenticate(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
+    # pylint: disable=W0703
     except Exception as err:
         _LOGGER.error("Unable to authenticate with the Meater API: %s", err)
         return False
