@@ -10,13 +10,18 @@ from homeassistant.components.plex.const import (
 from homeassistant.const import CONF_URL
 
 from .const import DEFAULT_OPTIONS, SECONDARY_DATA
-from .payloads import EMPTY_PAYLOAD, PLEX_SERVER_BASE, PMS_ACCOUNT_PAYLOAD
 
 from tests.common import MockConfigEntry
 
 
 async def test_refresh_library(
-    hass, mock_plex_server, setup_plex_server, requests_mock
+    hass,
+    mock_plex_server,
+    setup_plex_server,
+    requests_mock,
+    empty_payload,
+    plex_server_accounts,
+    plex_server_base,
 ):
     """Test refresh_library service call."""
     url = mock_plex_server.url_in_use
@@ -55,13 +60,13 @@ async def test_refresh_library(
     secondary_id = SECONDARY_DATA[CONF_SERVER_IDENTIFIER]
     requests_mock.get(
         secondary_url,
-        text=PLEX_SERVER_BASE.format(
+        text=plex_server_base.format(
             name=secondary_name, machine_identifier=secondary_id
         ),
     )
-    requests_mock.get(f"{secondary_url}/accounts", text=PMS_ACCOUNT_PAYLOAD)
-    requests_mock.get(f"{secondary_url}/clients", text=EMPTY_PAYLOAD)
-    requests_mock.get(f"{secondary_url}/status/sessions", text=EMPTY_PAYLOAD)
+    requests_mock.get(f"{secondary_url}/accounts", text=plex_server_accounts)
+    requests_mock.get(f"{secondary_url}/clients", text=empty_payload)
+    requests_mock.get(f"{secondary_url}/status/sessions", text=empty_payload)
 
     entry_2 = MockConfigEntry(
         domain=DOMAIN,

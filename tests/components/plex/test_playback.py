@@ -20,18 +20,13 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, SECONDARY_DATA
-from .payloads import (
-    EMPTY_PAYLOAD,
-    PLAYQUEUE_CREATED,
-    PLEX_SERVER_BASE,
-    PMS_ACCOUNT_PAYLOAD,
-    SONOS_RESOURCES,
-)
 
 from tests.common import MockConfigEntry
 
 
-async def test_sonos_playback(hass, mock_plex_server, requests_mock):
+async def test_sonos_playback(
+    hass, mock_plex_server, requests_mock, playqueue_created, sonos_resources
+):
     """Test playing media on a Sonos speaker."""
     server_id = mock_plex_server.machine_identifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
@@ -52,11 +47,11 @@ async def test_sonos_playback(hass, mock_plex_server, requests_mock):
         )
 
     # Test success with plex_key
-    requests_mock.get("https://sonos.plex.tv/resources", text=SONOS_RESOURCES)
+    requests_mock.get("https://sonos.plex.tv/resources", text=sonos_resources)
     requests_mock.get(
         "https://sonos.plex.tv/player/playback/playMedia", status_code=200
     )
-    requests_mock.post("/playqueues", text=PLAYQUEUE_CREATED)
+    requests_mock.post("/playqueues", text=playqueue_created)
     with patch.object(
         hass.components.sonos,
         "get_coordinator_name",
@@ -79,7 +74,6 @@ async def test_sonos_playback(hass, mock_plex_server, requests_mock):
         "get_coordinator_name",
         return_value="Speaker 2",
     ):
-        #    ), patch("plexapi.playqueue.PlayQueue.create"):
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_ON_SONOS,
@@ -148,7 +142,15 @@ async def test_sonos_playback(hass, mock_plex_server, requests_mock):
 
 
 async def test_playback_multiple_servers(
-    hass, setup_plex_server, requests_mock, caplog
+    hass,
+    setup_plex_server,
+    requests_mock,
+    caplog,
+    empty_payload,
+    playqueue_created,
+    plex_server_accounts,
+    plex_server_base,
+    sonos_resources,
 ):
     """Test playing media when multiple servers available."""
     secondary_entry = MockConfigEntry(
@@ -163,22 +165,22 @@ async def test_playback_multiple_servers(
     secondary_id = SECONDARY_DATA[CONF_SERVER_IDENTIFIER]
     requests_mock.get(
         secondary_url,
-        text=PLEX_SERVER_BASE.format(
+        text=plex_server_base.format(
             name=secondary_name, machine_identifier=secondary_id
         ),
     )
-    requests_mock.get(f"{secondary_url}/accounts", text=PMS_ACCOUNT_PAYLOAD)
-    requests_mock.get(f"{secondary_url}/clients", text=EMPTY_PAYLOAD)
-    requests_mock.get(f"{secondary_url}/status/sessions", text=EMPTY_PAYLOAD)
+    requests_mock.get(f"{secondary_url}/accounts", text=plex_server_accounts)
+    requests_mock.get(f"{secondary_url}/clients", text=empty_payload)
+    requests_mock.get(f"{secondary_url}/status/sessions", text=empty_payload)
 
     await setup_plex_server()
     await setup_plex_server(config_entry=secondary_entry)
 
-    requests_mock.get("https://sonos.plex.tv/resources", text=SONOS_RESOURCES)
+    requests_mock.get("https://sonos.plex.tv/resources", text=sonos_resources)
     requests_mock.get(
         "https://sonos.plex.tv/player/playback/playMedia", status_code=200
     )
-    requests_mock.post("/playqueues", text=PLAYQUEUE_CREATED)
+    requests_mock.post("/playqueues", text=playqueue_created)
 
     with patch.object(
         hass.components.sonos,

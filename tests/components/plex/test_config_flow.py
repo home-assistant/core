@@ -40,7 +40,6 @@ from homeassistant.setup import async_setup_component
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
 from .mock_classes import MockGDM
-from .payloads import EMPTY_PAYLOAD, PLEXTV_ACCOUNT_PAYLOAD, PLEXTV_RESOURCES_BASE
 
 from tests.common import MockConfigEntry
 
@@ -141,9 +140,9 @@ async def test_unknown_exception(hass):
         assert result["reason"] == "unknown"
 
 
-async def test_no_servers_found(hass, mock_plex_calls, requests_mock):
+async def test_no_servers_found(hass, mock_plex_calls, requests_mock, empty_payload):
     """Test when no servers are on an account."""
-    requests_mock.get("https://plex.tv/api/resources", text=EMPTY_PAYLOAD)
+    requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
 
     await async_process_ha_core_config(
         hass,
@@ -216,7 +215,9 @@ async def test_single_available_server(hass, mock_plex_calls):
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
-async def test_multiple_servers_with_selection(hass, mock_plex_calls, requests_mock):
+async def test_multiple_servers_with_selection(
+    hass, mock_plex_calls, requests_mock, plextv_resources_base
+):
     """Test creating an entry with multiple servers available."""
 
     await async_process_ha_core_config(
@@ -232,7 +233,7 @@ async def test_multiple_servers_with_selection(hass, mock_plex_calls, requests_m
 
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=PLEXTV_RESOURCES_BASE.format(second_server_enabled=1),
+        text=plextv_resources_base.format(second_server_enabled=1),
     )
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
@@ -270,7 +271,9 @@ async def test_multiple_servers_with_selection(hass, mock_plex_calls, requests_m
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
-async def test_adding_last_unconfigured_server(hass, mock_plex_calls, requests_mock):
+async def test_adding_last_unconfigured_server(
+    hass, mock_plex_calls, requests_mock, plextv_resources_base
+):
     """Test automatically adding last unconfigured server when multiple servers on account."""
 
     await async_process_ha_core_config(
@@ -294,7 +297,7 @@ async def test_adding_last_unconfigured_server(hass, mock_plex_calls, requests_m
 
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=PLEXTV_RESOURCES_BASE.format(second_server_enabled=1),
+        text=plextv_resources_base.format(second_server_enabled=1),
     )
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
@@ -326,7 +329,9 @@ async def test_adding_last_unconfigured_server(hass, mock_plex_calls, requests_m
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
-async def test_all_available_servers_configured(hass, entry, requests_mock):
+async def test_all_available_servers_configured(
+    hass, entry, requests_mock, plextv_account, plextv_resources_base
+):
     """Test when all available servers are already configured."""
 
     await async_process_ha_core_config(
@@ -350,10 +355,10 @@ async def test_all_available_servers_configured(hass, entry, requests_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    requests_mock.get("https://plex.tv/users/account", text=PLEXTV_ACCOUNT_PAYLOAD)
+    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=PLEXTV_RESOURCES_BASE.format(second_server_enabled=1),
+        text=plextv_resources_base.format(second_server_enabled=1),
     )
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(

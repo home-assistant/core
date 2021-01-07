@@ -3,12 +3,12 @@ from unittest.mock import patch
 
 from plexapi.exceptions import NotFound
 
-from .payloads import PLAYER_PLEXWEB_RESOURCES
 
-
-async def test_plex_tv_clients(hass, entry, setup_plex_server, requests_mock):
+async def test_plex_tv_clients(
+    hass, entry, setup_plex_server, requests_mock, player_plexweb_resources
+):
     """Test getting Plex clients from plex.tv."""
-    requests_mock.get("/resources", text=PLAYER_PLEXWEB_RESOURCES)
+    requests_mock.get("/resources", text=player_plexweb_resources)
 
     with patch("plexapi.myplex.MyPlexResource.connect", side_effect=NotFound):
         await setup_plex_server()

@@ -20,13 +20,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
-from .payloads import (
-    EMPTY_PAYLOAD,
-    PLEX_SERVER_PAYLOAD,
-    PLEXTV_ACCOUNT_PAYLOAD,
-    PLEXTV_RESOURCES,
-    PMS_ACCOUNT_PAYLOAD,
-)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -115,7 +108,15 @@ async def test_setup_with_photo_session(hass, entry, setup_plex_server):
     assert sensor.state == "0"
 
 
-async def test_setup_when_certificate_changed(hass, requests_mock):
+async def test_setup_when_certificate_changed(
+    hass,
+    requests_mock,
+    empty_payload,
+    plex_server_accounts,
+    plex_server_default,
+    plextv_account,
+    plextv_resources,
+):
     """Test setup component when the Plex certificate has changed."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -140,8 +141,8 @@ async def test_setup_when_certificate_changed(hass, requests_mock):
         unique_id=DEFAULT_DATA["server_id"],
     )
 
-    requests_mock.get("https://plex.tv/users/account", text=PLEXTV_ACCOUNT_PAYLOAD)
-    requests_mock.get("https://plex.tv/api/resources", text=PLEXTV_RESOURCES)
+    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
+    requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
     requests_mock.get(old_url, exc=WrongCertHostnameException)
 
     # Test with account failure
@@ -154,8 +155,8 @@ async def test_setup_when_certificate_changed(hass, requests_mock):
     await hass.config_entries.async_unload(old_entry.entry_id)
 
     # Test with no servers found
-    requests_mock.get(f"{old_url}/accounts", text=PMS_ACCOUNT_PAYLOAD)
-    requests_mock.get("https://plex.tv/api/resources", text=EMPTY_PAYLOAD)
+    requests_mock.get(f"{old_url}/accounts", text=plex_server_accounts)
+    requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
 
     assert await hass.config_entries.async_setup(old_entry.entry_id) is False
     await hass.async_block_till_done()
@@ -165,9 +166,9 @@ async def test_setup_when_certificate_changed(hass, requests_mock):
 
     # Test with success
     new_url = PLEX_DIRECT_URL
-    requests_mock.get("https://plex.tv/api/resources", text=PLEXTV_RESOURCES)
-    requests_mock.get(new_url, text=PLEX_SERVER_PAYLOAD)
-    requests_mock.get(f"{new_url}/accounts", text=PMS_ACCOUNT_PAYLOAD)
+    requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
+    requests_mock.get(new_url, text=plex_server_default)
+    requests_mock.get(f"{new_url}/accounts", text=plex_server_accounts)
 
     assert await hass.config_entries.async_setup(old_entry.entry_id)
     await hass.async_block_till_done()

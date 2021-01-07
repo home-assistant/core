@@ -28,7 +28,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update, wait_for_debouncer
-from .payloads import EMPTY_PAYLOAD, NEW_USER_SESSION, PLAYQUEUE_CREATED
 
 
 async def test_new_users_available(hass, entry, setup_plex_server):
@@ -50,7 +49,13 @@ async def test_new_users_available(hass, entry, setup_plex_server):
 
 
 async def test_new_ignored_users_available(
-    hass, caplog, entry, mock_websocket, setup_plex_server, requests_mock
+    hass,
+    caplog,
+    entry,
+    mock_websocket,
+    setup_plex_server,
+    requests_mock,
+    session_new_user,
 ):
     """Test setting up when new users available on Plex server but are ignored."""
     MONITORED_USERS = {"User 1": {"enabled": True}}
@@ -63,7 +68,7 @@ async def test_new_ignored_users_available(
 
     requests_mock.get(
         f"{mock_plex_server.url_in_use}/status/sessions",
-        text=NEW_USER_SESSION,
+        text=session_new_user,
     )
     trigger_plex_update(mock_websocket)
     await wait_for_debouncer(hass)
@@ -133,7 +138,7 @@ async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
 
 
 async def test_mark_sessions_idle(
-    hass, mock_plex_server, mock_websocket, requests_mock
+    hass, mock_plex_server, mock_websocket, requests_mock, empty_payload
 ):
     """Test marking media_players as idle when sessions end."""
     await wait_for_debouncer(hass)
@@ -144,8 +149,8 @@ async def test_mark_sessions_idle(
     assert sensor.state == str(len(active_sessions))
 
     url = mock_plex_server.url_in_use
-    requests_mock.get(f"{url}/clients", text=EMPTY_PAYLOAD)
-    requests_mock.get(f"{url}/status/sessions", text=EMPTY_PAYLOAD)
+    requests_mock.get(f"{url}/clients", text=empty_payload)
+    requests_mock.get(f"{url}/status/sessions", text=empty_payload)
 
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
@@ -175,14 +180,14 @@ async def test_ignore_plex_web_client(hass, entry, setup_plex_server):
     assert len(media_players) == int(sensor.state) - 1
 
 
-async def test_media_lookups(hass, mock_plex_server, requests_mock):
+async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_created):
     """Test media lookups to Plex server."""
     server_id = mock_plex_server.machine_identifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
 
     # Plex Key searches
     media_player_id = hass.states.async_entity_ids("media_player")[0]
-    requests_mock.post("/playqueues", text=PLAYQUEUE_CREATED)
+    requests_mock.post("/playqueues", text=playqueue_created)
     requests_mock.get("/player/playback/playMedia", status_code=200)
     assert await hass.services.async_call(
         MP_DOMAIN,
