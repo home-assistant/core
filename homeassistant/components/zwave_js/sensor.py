@@ -18,7 +18,7 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN
+from .const import DOMAIN, DATA_CLIENT, DATA_UNSUBSCRIBE
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id]
+    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo):
@@ -44,7 +44,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities([sensor])
 
-    async_dispatcher_connect(hass, f"{DOMAIN}_new_{SENSOR_DOMAIN}", async_add_sensor)
+    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_{SENSOR_DOMAIN}", async_add_sensor
+        )
+    )
 
 
 class ZWaveStringSensor(ZWaveBaseEntity):

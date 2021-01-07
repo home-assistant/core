@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, DATA_CLIENT, DATA_UNSUBSCRIBE
 from .discovery import async_discover_values
 
 LOGGER = logging.getLogger(__name__)
@@ -106,8 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     unsubs.append(hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown))
 
     hass.data[DOMAIN][entry.entry_id] = {
-        "client": client,
-        "unsubs": unsubs,
+        DATA_CLIENT: client,
+        DATA_UNSUBSCRIBE: unsubs,
     }
 
     return True
@@ -128,9 +128,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     info = hass.data[DOMAIN].pop(entry.entry_id)
 
-    for unsub in info["unsubs"]:
+    for unsub in info[DATA_UNSUBSCRIBE]:
         unsub()
 
-    await info["client"].disconnect()
+    await info[DATA_CLIENT].disconnect()
 
     return True
