@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         for node in client.driver.controller.nodes.values():
             if not node.ready:
                 continue
-            await async_on_node_ready(node)
+            asyncio.create_task(async_on_node_ready(node))
         # TODO: register callback for "node_ready" event
 
     async def async_on_disconnect():
