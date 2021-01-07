@@ -18,6 +18,8 @@ from .discovery import ZwaveDiscoveryInfo
 
 LOGGER = logging.getLogger(__name__)
 
+EVENT_VALUE_UPDATED = "value updated"
+
 
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
@@ -26,6 +28,8 @@ class ZWaveBaseEntity(Entity):
         """Initialize a generic Z-Wave device entity."""
         self.client = client
         self.info = info
+        # entities requiring additional values, can add extra properties to this list
+        self.watched_values = [self.info.primary_value.property_]
 
     @callback
     def on_value_update(self):
@@ -36,42 +40,45 @@ class ZWaveBaseEntity(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity is added."""
-        # Add dispatcher and value_changed callbacks.
-        # Add to on_remove so they will be cleaned up on entity removal.
-        # TODO !
-        # self.async_on_remove(
-        #     self.options.listen(EVENT_VALUE_CHANGED, self._value_changed)
-        # )
+        # Add value_changed callbacks.
+        # TODO: only subscribe to values we're interested in (requires change in library)
+        self.async_on_remove(self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed))
 
     @property
     def device_info(self) -> dict:
         """Return device information for the device registry."""
-        # TODO
+        # device is precreated in main handler
+        return {
+            "identifiers": {
+                (DOMAIN, self.client.driver.controller.home_id, self.info.node.node_id)
+            },
+        }
 
     @property
     def name(self) -> str:
-        """Return the name of the entity."""
-        # TODO: Create default name from device name and value name combination
-        # return f"{create_device_name(self.info.node)}: {self.info.primary_value.label}"
+        """Return default name from device name and value name combination."""
+        node_name = self.info.node.name or self.info.node.device_config.description
+        return f"{node_name}: {self.info.primary_value.label}"
 
     @property
     def unique_id(self) -> str:
         """Return the unique_id of the entity."""
-        return self.info.value_id
+        return f"{self.client.driver.controller.home_id}.{self.info.discovery_id}"
 
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        # TODO: return availability from both client connection state and node ready
+        return self.client.connected and self.info.node.ready
 
     @callback
-    def _value_changed(self, value: ZwaveValue):
+    def _value_changed(self, event_data: dict):
         """Call when (one of) our watched values changes.
 
         Should not be overridden by subclasses.
         """
-        self.on_value_update()
-        self.async_write_ha_state()
+        if event_data["property"] in self.watched_values:
+            self.on_value_update()
+            self.async_write_ha_state()
 
     @property
     def should_poll(self) -> bool:

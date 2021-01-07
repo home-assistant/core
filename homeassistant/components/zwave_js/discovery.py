@@ -13,10 +13,15 @@ class ZwaveDiscoveryInfo:
     """Info discovered from (primary) ZWave Value to create entity."""
 
     node: ZwaveNode # node to which the value(s) belongs
-    value_id: str # the uniqueue value_id for the primary value
     primary_value: ZwaveValue # the value object itself for primary value
     platform: str # the home assistant platform for which an entity should be created
     platform_hint: str = "" # hint for the platform about this discovered entity
+
+    @property
+    def discovery_id(self):
+        """Return a unique discovery id for this info."""
+        # NOTE: we do not use the value_id here because list values get a different value id
+        return f"{self.node.node_id}.{self.primary_value.property_}"
 
 
 @dataclass
@@ -113,7 +118,6 @@ async def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo
         # all checks passed, this value belongs to an entity
         return ZwaveDiscoveryInfo(
             node=value.node,
-            value_id=value.value_id,
             primary_value=value,
             platform=schema.platform,
             platform_hint=schema.hint,
