@@ -1,0 +1,8 @@
+<MediaContainer size="6" allowSync="0" art="/:/resources/show-fanart.jpg" content="secondary" identifier="com.plexapp.plugins.library" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" nocache="1" thumb="/:/resources/show.png" title1="TV Shows" viewGroup="secondary" viewMode="65592">
+<Directory default="asc" defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/2/firstCharacter" key="titleSort" title="Title" />
+<Directory defaultDirection="desc" descKey="originallyAvailableAt:desc" key="originallyAvailableAt" title="Release Date" />
+<Directory defaultDirection="desc" descKey="rating:desc" key="rating" title="Critic Rating" />
+<Directory defaultDirection="desc" descKey="unviewedLeafCount:desc" key="unviewedLeafCount" title="Unplayed" />
+<Directory defaultDirection="desc" descKey="episode.addedAt:desc" key="episode.addedAt" title="Last Episode Date Added" />
+<Directory defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Viewed" />
+</MediaContainer>
