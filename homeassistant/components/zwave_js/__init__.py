@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, PLATFORMS, DATA_CLIENT, DATA_UNSUBSCRIBE
 from .discovery import async_discover_values
@@ -47,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     initialized = asyncio.Event()
+    discovered = set()
 
     # pylint: disable=fixme
 
@@ -70,14 +72,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_on_node_ready(node: ZwaveNode):
         """Handle node ready event."""
-        # register node in device registry
+        # register (or update) node in device registry
         dev_reg = await device_registry.async_get_registry(hass)
         register_node_in_dev_reg(entry, dev_reg, client, node)
         # run discovery on all node values and create/update entities
         async for disc_info in async_discover_values(node):
-            LOGGER.info("Discovered value: %s", disc_info)
-            # TODO: dispatch discovery_info to platform
-
+            if disc_info.discovery_id not in discovered:
+                # dispatch discovery_info to platform
+                discovered.add(disc_info.discovery_id)
+                async_dispatcher_send(hass, f"{DOMAIN}_add_{disc_info.platform}", disc_info)
+            else:
+                # already discovered, dispatch update request
+                async_dispatcher_send(
+                    hass, f"{DOMAIN}_update_{disc_info.discovery_id}", disc_info.primary_value
+                )
 
     for component in PLATFORMS:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, component))

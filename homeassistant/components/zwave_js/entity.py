@@ -2,18 +2,13 @@
 
 import logging
 
-from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import Value as ZwaveValue
 from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 
 LOGGER = logging.getLogger(__name__)
@@ -41,8 +36,14 @@ class ZWaveBaseEntity(Entity):
     async def async_added_to_hass(self):
         """Call when entity is added."""
         # Add value_changed callbacks.
-        # TODO: only subscribe to values we're interested in (requires change in library)
-        self.async_on_remove(self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed))
+        self.async_on_remove(
+            # TODO: only subscribe to values we're interested in (requires change in library)
+            self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{DOMAIN}_update_{self.info.discover_id}", self._value_changed
+            )
+        )
 
     @property
     def device_info(self) -> dict:

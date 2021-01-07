@@ -12,10 +12,10 @@ from zwave_js_server.model.value import Value as ZwaveValue
 class ZwaveDiscoveryInfo:
     """Info discovered from (primary) ZWave Value to create entity."""
 
-    node: ZwaveNode # node to which the value(s) belongs
-    primary_value: ZwaveValue # the value object itself for primary value
-    platform: str # the home assistant platform for which an entity should be created
-    platform_hint: str = "" # hint for the platform about this discovered entity
+    node: ZwaveNode  # node to which the value(s) belongs
+    primary_value: ZwaveValue  # the value object itself for primary value
+    platform: str  # the home assistant platform for which an entity should be created
+    platform_hint: str = ""  # hint for the platform about this discovered entity
 
     @property
     def discovery_id(self):

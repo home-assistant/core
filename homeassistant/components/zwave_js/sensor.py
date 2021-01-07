@@ -41,12 +41,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 info.primary_value.property_name,
             )
             return
-
         async_add_entities([sensor])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{DOMAIN}_new_{SENSOR_DOMAIN}", async_add_sensor
+            hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor
         )
     )
 
