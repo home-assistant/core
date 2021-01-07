@@ -16,7 +16,7 @@ class ZwaveDiscoveryInfo:
     value_id: str # the uniqueue value_id for the primary value
     primary_value: ZwaveValue # the value object itself for primary value
     platform: str # the home assistant platform for which an entity should be created
-    platform_hint: str # hint for the platform about this discovered entity
+    platform_hint: str = "" # hint for the platform about this discovered entity
 
 
 @dataclass
