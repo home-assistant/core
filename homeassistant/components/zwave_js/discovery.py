@@ -18,10 +18,9 @@ class ZwaveDiscoveryInfo:
     platform_hint: str = ""  # hint for the platform about this discovered entity
 
     @property
-    def discovery_id(self):
-        """Return a unique discovery id for this info."""
-        # NOTE: we do not use the value_id here because list values get a different value id
-        return f"{self.node.node_id}.{self.primary_value.property_}"
+    def value_id(self):
+        """Return the unique value_id belonging to primary value."""
+        return f"{self.node.node_id}.{self.primary_value.value_id}"
 
 
 @dataclass
@@ -110,7 +109,7 @@ async def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo
         if not compare_value(schema.endpoint, value.endpoint):
             continue
         # check property
-        if not compare_value(schema.property, value.property_):
+        if not compare_value(schema.property, value.property):
             continue
         # check metadata_type
         if not compare_value(schema.type, value.metadata.type):

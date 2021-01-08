@@ -1,8 +1,10 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
+from typing import Union
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.value import value_id as get_value_id, Value as ZwaveValue
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,8 +25,8 @@ class ZWaveBaseEntity(Entity):
         """Initialize a generic Z-Wave device entity."""
         self.client = client
         self.info = info
-        # entities requiring additional values, can add extra properties to this list
-        self.watched_values = [self.info.primary_value.property_]
+        # entities requiring additional values, can add extra ids to this list
+        self.watched_value_ids = [self.info.primary_value.property]
 
     @callback
     def on_value_update(self):
@@ -42,7 +44,7 @@ class ZWaveBaseEntity(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{DOMAIN}_update_{self.info.discovery_id}", self._value_changed
+                self.hass, f"{DOMAIN}_update_{self.info.value_id}", self._value_changed
             )
         )
 
@@ -60,12 +62,15 @@ class ZWaveBaseEntity(Entity):
     def name(self) -> str:
         """Return default name from device name and value name combination."""
         node_name = self.info.node.name or self.info.node.device_config.description
-        return f"{node_name}: {self.info.primary_value.property_name}"
+        value_name = (
+            self.info.primary_value.propertykey_name or self.info.primary_value.propertyname
+        )
+        return f"{node_name}: {value_name}"
 
     @property
     def unique_id(self) -> str:
         """Return the unique_id of the entity."""
-        return f"{self.client.driver.controller.home_id}.{self.info.discovery_id}"
+        return f"{self.client.driver.controller.home_id}.{self.info.value_id}"
 
     @property
     def available(self) -> bool:
@@ -73,12 +78,16 @@ class ZWaveBaseEntity(Entity):
         return self.client.connected and self.info.node.ready
 
     @callback
-    def _value_changed(self, event_data: dict):
+    def _value_changed(self, event_data: Union[dict, ZwaveValue]):
         """Call when (one of) our watched values changes.
 
         Should not be overridden by subclasses.
         """
-        if event_data["args"]["property"] in self.watched_values:
+        if isinstance(event_data, ZwaveValue):
+            value_id = event_data.value_id
+        else:
+            value_id = get_value_id(event_data["args"])
+        if value_id in self.watched_value_ids:
             self.on_value_update()
             self.async_write_ha_state()
 

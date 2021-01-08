@@ -3,8 +3,14 @@
 import logging
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import CommandClass
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_POWER,
+    DOMAIN as SENSOR_DOMAIN,
+)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -30,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
                 info.platform_hint,
-                info.primary_value.property_name,
+                info.primary_value.propertyname,
             )
             return
         async_add_entities([sensor])
@@ -40,7 +46,39 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ZWaveStringSensor(ZWaveBaseEntity):
+class ZwaveSensorBase(ZWaveBaseEntity):
+    """Basic Representation of a Z-Wave sensor."""
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        if self.info.primary_value.command_class == CommandClass.BATTERY:
+            return DEVICE_CLASS_BATTERY
+        if self.info.primary_value.command_class == CommandClass.METER:
+            return DEVICE_CLASS_POWER
+        if self.info.primary_value.property == "electric":
+            return DEVICE_CLASS_POWER
+        return self.info.primary_value.property
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # We hide some of the more advanced sensors by default to not overwhelm users
+        if self.info.primary_value.command_class in [
+            CommandClass.BASIC,
+            CommandClass.INDICATOR,
+            CommandClass.NOTIFICATION,
+        ]:
+            return False
+        return True
+
+    @property
+    def force_update(self) -> bool:
+        """Force updates."""
+        return True
+
+
+class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
 
     @property
@@ -54,15 +92,21 @@ class ZWaveStringSensor(ZWaveBaseEntity):
         return self.info.primary_value.metadata.unit
 
 
-class ZWaveNumericSensor(ZWaveBaseEntity):
+class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
     @property
     def state(self) -> str:
         """Return state of the sensor."""
-        return self.info.primary_value.value
+        return round(self.info.primary_value.value, 2)
 
     @property
     def unit_of_measurement(self) -> str:
         """Return unit of measurement the value is expressed in."""
+
+        if self.info.primary_value.metadata.unit == "C":
+            return TEMP_CELSIUS
+        if self.info.primary_value.metadata.unit == "F":
+            return TEMP_FAHRENHEIT
+
         return self.info.primary_value.metadata.unit

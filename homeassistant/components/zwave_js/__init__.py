@@ -83,14 +83,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # run discovery on all node values and create/update entities
         async for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
-            if disc_info.discovery_id not in discovered_values:
+            if disc_info.value_id not in discovered_values:
                 # dispatch discovery_info to platform
-                discovered_values.add(disc_info.discovery_id)
+                discovered_values.add(disc_info.value_id)
                 async_dispatcher_send(hass, f"{DOMAIN}_add_{disc_info.platform}", disc_info)
             else:
                 # already discovered, dispatch update request
                 async_dispatcher_send(
-                    hass, f"{DOMAIN}_update_{disc_info.discovery_id}", disc_info.primary_value
+                    hass, f"{DOMAIN}_update_{disc_info.value_id}", disc_info.primary_value
                 )
 
     # register main event callbacks.
