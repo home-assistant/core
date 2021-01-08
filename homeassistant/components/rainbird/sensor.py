@@ -13,14 +13,15 @@ from . import DATA_RAINBIRD
 _LOGGER = logging.getLogger(__name__)
 
 # sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {
-    'rainsensor': ['Rainsensor', None, 'mdi:water']
-}
+SENSOR_TYPES = {"rainsensor": ["Rainsensor", None, "mdi:water"]}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        )
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,8 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        sensors.append(
-            RainBirdSensor(controller, sensor_type))
+        sensors.append(RainBirdSensor(controller, sensor_type))
 
     add_entities(sensors, True)
 
@@ -55,7 +55,7 @@ class RainBirdSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
-        if self._sensor_type == 'rainsensor':
+        if self._sensor_type == "rainsensor":
             self._state = self._controller.currentRainSensorState()
 
     @property

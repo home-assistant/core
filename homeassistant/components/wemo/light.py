@@ -8,8 +8,16 @@ import async_timeout
 
 from homeassistant import util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, SUPPORT_TRANSITION)
+    Light,
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
 
@@ -20,8 +28,9 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
-                SUPPORT_TRANSITION)
+SUPPORT_WEMO = (
+    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,17 +38,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from pywemo import discovery
 
     if discovery_info is not None:
-        location = discovery_info['ssdp_description']
-        mac = discovery_info['mac_address']
+        location = discovery_info["ssdp_description"]
+        mac = discovery_info["mac_address"]
 
         try:
             device = discovery.device_from_description(location, mac)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', location, err)
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+        ) as err:
+            _LOGGER.error("Unable to access %s (%s)", location, err)
             raise PlatformNotReady
 
-        if device.model_name == 'Dimmer':
+        if device.model_name == "Dimmer":
             add_entities([WemoDimmer(device)])
         else:
             setup_bridge(device, add_entities)
@@ -141,8 +152,7 @@ class WemoLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             colortemp = kwargs[ATTR_COLOR_TEMP]
-            self.wemo.set_temperature(mireds=colortemp,
-                                      transition=transitiontime)
+            self.wemo.set_temperature(mireds=colortemp, transition=transitiontime)
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
@@ -160,12 +170,12 @@ class WemoLight(Light):
         self._update_lights(no_throttle=force_update)
         self._state = self.wemo.state
 
-        self._is_on = self._state.get('onoff') != 0
-        self._brightness = self._state.get('level', 255)
-        self._color_temp = self._state.get('temperature_mireds')
+        self._is_on = self._state.get("onoff") != 0
+        self._brightness = self._state.get("level", 255)
+        self._color_temp = self._state.get("temperature_mireds")
         self._available = True
 
-        xy_color = self._state.get('color_xy')
+        xy_color = self._state.get("color_xy")
 
         if xy_color:
             self._hs_color = color_util.color_xy_to_hs(*xy_color)
@@ -182,7 +192,7 @@ class WemoLight(Light):
             with async_timeout.timeout(5):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
-            _LOGGER.warning('Lost connection to %s', self.name)
+            _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
 
     async def _async_locked_update(self, force_update):
@@ -209,8 +219,7 @@ class WemoDimmer(Light):
         """Update the state by the Wemo device."""
         _LOGGER.debug("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(
-            self._async_locked_subscription_callback(not updated))
+        self.hass.add_job(self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
         """Handle an update from a subscription."""
@@ -246,7 +255,7 @@ class WemoDimmer(Light):
             with async_timeout.timeout(5):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
-            _LOGGER.warning('Lost connection to %s', self.name)
+            _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
             self.wemo.reconnect_with_device()
 
@@ -289,11 +298,10 @@ class WemoDimmer(Light):
             self._brightness = int((wemobrightness * 255) / 100)
 
             if not self._available:
-                _LOGGER.info('Reconnected to %s', self.name)
+                _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
         except AttributeError as err:
-            _LOGGER.warning("Could not update status for %s (%s)",
-                            self.name, err)
+            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
 
     def turn_on(self, **kwargs):

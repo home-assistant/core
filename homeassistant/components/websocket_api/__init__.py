@@ -6,7 +6,7 @@ from . import commands, connection, const, decorators, http, messages
 
 DOMAIN = const.DOMAIN
 
-DEPENDENCIES = ('http',)
+DEPENDENCIES = ("http",)
 
 # Backwards compat / Make it easier to integrate
 # pylint: disable=invalid-name
@@ -24,8 +24,7 @@ websocket_command = decorators.websocket_command
 
 @bind_hass
 @callback
-def async_register_command(hass, command_or_handler, handler=None,
-                           schema=None):
+def async_register_command(hass, command_or_handler, handler=None, schema=None):
     """Register a websocket command."""
     # pylint: disable=protected-access
     if handler is None:

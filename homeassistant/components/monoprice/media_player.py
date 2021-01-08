@@ -3,51 +3,68 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    DOMAIN,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_MONOPRICE = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
-                    SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
-                    SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+SUPPORT_MONOPRICE = (
+    SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+)
 
-ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-SOURCE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-CONF_ZONES = 'zones'
-CONF_SOURCES = 'sources'
+CONF_ZONES = "zones"
+CONF_SOURCES = "sources"
 
-DATA_MONOPRICE = 'monoprice'
+DATA_MONOPRICE = "monoprice"
 
-SERVICE_SNAPSHOT = 'snapshot'
-SERVICE_RESTORE = 'restore'
+SERVICE_SNAPSHOT = "snapshot"
+SERVICE_RESTORE = "restore"
 
 # Valid zone ids: 11-16 or 21-26 or 31-36
-ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(
-    vol.Range(min=11, max=16), vol.Range(min=21, max=26),
-    vol.Range(min=31, max=36)))
+ZONE_IDS = vol.All(
+    vol.Coerce(int),
+    vol.Any(
+        vol.Range(min=11, max=16), vol.Range(min=21, max=26), vol.Range(min=31, max=36)
+    ),
+)
 
 # Valid source ids: 1-6
 SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=6))
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT): cv.string,
-    vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
-})
+MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PORT): cv.string,
+        vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
+        vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,20 +73,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     from serial import SerialException
     from pymonoprice import get_monoprice
+
     try:
         monoprice = get_monoprice(port)
     except SerialException:
         _LOGGER.error("Error connecting to Monoprice controller")
         return
 
-    sources = {source_id: extra[CONF_NAME] for source_id, extra
-               in config[CONF_SOURCES].items()}
+    sources = {
+        source_id: extra[CONF_NAME] for source_id, extra in config[CONF_SOURCES].items()
+    }
 
     hass.data[DATA_MONOPRICE] = []
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        hass.data[DATA_MONOPRICE].append(MonopriceZone(
-            monoprice, sources, zone_id, extra[CONF_NAME]))
+        hass.data[DATA_MONOPRICE].append(
+            MonopriceZone(monoprice, sources, zone_id, extra[CONF_NAME])
+        )
 
     add_entities(hass.data[DATA_MONOPRICE], True)
 
@@ -78,8 +98,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
         if entity_ids:
-            devices = [device for device in hass.data[DATA_MONOPRICE]
-                       if device.entity_id in entity_ids]
+            devices = [
+                device
+                for device in hass.data[DATA_MONOPRICE]
+                if device.entity_id in entity_ids
+            ]
         else:
             devices = hass.data[DATA_MONOPRICE]
 
@@ -90,10 +113,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device.restore()
 
     hass.services.register(
-        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=MEDIA_PLAYER_SCHEMA)
+        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=MEDIA_PLAYER_SCHEMA
+    )
 
     hass.services.register(
-        DOMAIN, SERVICE_RESTORE, service_handle, schema=MEDIA_PLAYER_SCHEMA)
+        DOMAIN, SERVICE_RESTORE, service_handle, schema=MEDIA_PLAYER_SCHEMA
+    )
 
 
 class MonopriceZone(MediaPlayerDevice):
@@ -107,8 +132,9 @@ class MonopriceZone(MediaPlayerDevice):
         # dict source name -> source_id
         self._source_name_id = {v: k for k, v in sources.items()}
         # ordered list of all source names
-        self._source_names = sorted(self._source_name_id.keys(),
-                                    key=lambda v: self._source_name_id[v])
+        self._source_names = sorted(
+            self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
+        )
         self._zone_id = zone_id
         self._name = zone_name
 

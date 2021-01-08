@@ -26,17 +26,14 @@ class MockDevice(Device):
     @classmethod
     async def async_create_device(cls, hass, ssdp_description):
         """Return self."""
-        return cls('UDN')
+        return cls("UDN")
 
     @property
     def udn(self):
         """Get the UDN."""
         return self._udn
 
-    async def _async_add_port_mapping(self,
-                                      external_port,
-                                      local_ip,
-                                      internal_port):
+    async def _async_add_port_mapping(self, external_port, local_ip, internal_port):
         """Add a port mapping."""
         entry = [external_port, local_ip, internal_port]
         self.added_port_mappings.append(entry)
@@ -49,29 +46,27 @@ class MockDevice(Device):
 
 async def test_async_setup_entry_default(hass):
     """Test async_setup_entry."""
-    udn = 'uuid:device_1'
+    udn = "uuid:device_1"
     entry = MockConfigEntry(domain=upnp.DOMAIN)
 
     config = {
-        'http': {},
-        'discovery': {},
+        "http": {},
+        "discovery": {},
         # no upnp
     }
-    with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
-              return_value='192.168.1.10'):
-        await async_setup_component(hass, 'http', config)
-        await async_setup_component(hass, 'upnp', config)
+    with MockDependency("netdisco.discovery"), patch(
+        "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
+    ):
+        await async_setup_component(hass, "http", config)
+        await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
     # mock homeassistant.components.upnp.device.Device
     mock_device = MockDevice(udn)
-    discovery_infos = [{
-        'udn': udn,
-        'ssdp_description': 'http://192.168.1.1/desc.xml',
-    }]
-    with patch.object(Device, 'async_create_device') as create_device, \
-         patch.object(Device, 'async_discover') as async_discover:  # noqa:E125
+    discovery_infos = [{"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}]
+    with patch.object(Device, "async_create_device") as create_device, patch.object(
+        Device, "async_discover"
+    ) as async_discover:  # noqa:E125
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)
@@ -79,7 +74,7 @@ async def test_async_setup_entry_default(hass):
         assert await upnp.async_setup_entry(hass, entry) is True
 
         # ensure device is stored/used
-        assert hass.data[upnp.DOMAIN]['devices'][udn] == mock_device
+        assert hass.data[upnp.DOMAIN]["devices"][udn] == mock_device
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -92,31 +87,26 @@ async def test_async_setup_entry_default(hass):
 async def test_async_setup_entry_port_mapping(hass):
     """Test async_setup_entry."""
     # pylint: disable=invalid-name
-    udn = 'uuid:device_1'
+    udn = "uuid:device_1"
     entry = MockConfigEntry(domain=upnp.DOMAIN)
 
     config = {
-        'http': {},
-        'discovery': {},
-        'upnp': {
-            'port_mapping': True,
-            'ports': {'hass': 'hass'},
-        },
+        "http": {},
+        "discovery": {},
+        "upnp": {"port_mapping": True, "ports": {"hass": "hass"}},
     }
-    with MockDependency('netdisco.discovery'), \
-        patch('homeassistant.components.upnp.get_local_ip',
-              return_value='192.168.1.10'):
-        await async_setup_component(hass, 'http', config)
-        await async_setup_component(hass, 'upnp', config)
+    with MockDependency("netdisco.discovery"), patch(
+        "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
+    ):
+        await async_setup_component(hass, "http", config)
+        await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
     mock_device = MockDevice(udn)
-    discovery_infos = [{
-        'udn': udn,
-        'ssdp_description': 'http://192.168.1.1/desc.xml',
-    }]
-    with patch.object(Device, 'async_create_device') as create_device, \
-         patch.object(Device, 'async_discover') as async_discover:  # noqa:E125
+    discovery_infos = [{"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}]
+    with patch.object(Device, "async_create_device") as create_device, patch.object(
+        Device, "async_discover"
+    ) as async_discover:  # noqa:E125
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)
@@ -124,11 +114,11 @@ async def test_async_setup_entry_port_mapping(hass):
         assert await upnp.async_setup_entry(hass, entry) is True
 
         # ensure device is stored/used
-        assert hass.data[upnp.DOMAIN]['devices'][udn] == mock_device
+        assert hass.data[upnp.DOMAIN]["devices"][udn] == mock_device
 
         # ensure add-port-mapping-methods called
         assert mock_device.added_port_mappings == [
-            [8123, ip_address('192.168.1.10'), 8123]
+            [8123, ip_address("192.168.1.10"), 8123]
         ]
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)

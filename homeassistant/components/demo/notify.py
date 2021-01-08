@@ -23,5 +23,5 @@ class DemoNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        kwargs['message'] = message
+        kwargs["message"] = message
         self.hass.bus.fire(EVENT_NOTIFY, kwargs)

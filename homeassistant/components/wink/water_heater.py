@@ -2,29 +2,39 @@
 import logging
 
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE, STATE_ECO, STATE_ELECTRIC, STATE_GAS, STATE_HEAT_PUMP,
-    STATE_HIGH_DEMAND, STATE_PERFORMANCE, SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, WaterHeaterDevice)
+    ATTR_TEMPERATURE,
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
+    SUPPORT_AWAY_MODE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    WaterHeaterDevice,
+)
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS
 
 from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                        SUPPORT_AWAY_MODE)
+SUPPORT_FLAGS_HEATER = (
+    SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
+)
 
-ATTR_RHEEM_TYPE = 'rheem_type'
-ATTR_VACATION_MODE = 'vacation_mode'
+ATTR_RHEEM_TYPE = "rheem_type"
+ATTR_VACATION_MODE = "vacation_mode"
 
 HA_STATE_TO_WINK = {
-    STATE_ECO: 'eco',
-    STATE_ELECTRIC: 'electric_only',
-    STATE_GAS: 'gas',
-    STATE_HEAT_PUMP: 'heat_pump',
-    STATE_HIGH_DEMAND: 'high_demand',
-    STATE_OFF: 'off',
-    STATE_PERFORMANCE: 'performance',
+    STATE_ECO: "eco",
+    STATE_ELECTRIC: "electric_only",
+    STATE_GAS: "gas",
+    STATE_HEAT_PUMP: "heat_pump",
+    STATE_HIGH_DEMAND: "high_demand",
+    STATE_OFF: "off",
+    STATE_PERFORMANCE: "performance",
 }
 
 WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
@@ -33,9 +43,10 @@ WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink water heater devices."""
     import pywink
+
     for water_heater in pywink.get_water_heaters():
         _id = water_heater.object_id() + water_heater.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
+        if _id not in hass.data[DOMAIN]["unique_ids"]:
             add_entities([WinkWaterHeater(water_heater, hass)])
 
 
@@ -81,17 +92,20 @@ class WinkWaterHeater(WinkDevice, WaterHeaterDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        op_list = ['off']
+        op_list = ["off"]
         modes = self.wink.modes()
         for mode in modes:
-            if mode == 'aux':
+            if mode == "aux":
                 continue
             ha_mode = WINK_STATE_TO_HA.get(mode)
             if ha_mode is not None:
                 op_list.append(ha_mode)
             else:
-                error = "Invalid operation mode mapping. " + mode + \
-                    " doesn't map. Please report this."
+                error = (
+                    "Invalid operation mode mapping. "
+                    + mode
+                    + " doesn't map. Please report this."
+                )
                 _LOGGER.error(error)
         return op_list
 

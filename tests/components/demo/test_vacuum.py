@@ -3,29 +3,50 @@ import unittest
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_FAN_SPEED,
-    ATTR_FAN_SPEED_LIST, ATTR_PARAMS, ATTR_STATUS, DOMAIN,
+    ATTR_BATTERY_LEVEL,
+    ATTR_COMMAND,
+    ATTR_FAN_SPEED,
+    ATTR_FAN_SPEED_LIST,
+    ATTR_PARAMS,
+    ATTR_STATUS,
+    DOMAIN,
     ENTITY_ID_ALL_VACUUMS,
-    SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED,
-    STATE_DOCKED, STATE_CLEANING, STATE_PAUSED, STATE_IDLE,
-    STATE_RETURNING)
+    SERVICE_SEND_COMMAND,
+    SERVICE_SET_FAN_SPEED,
+    STATE_DOCKED,
+    STATE_CLEANING,
+    STATE_PAUSED,
+    STATE_IDLE,
+    STATE_RETURNING,
+)
 from homeassistant.components.demo.vacuum import (
-    DEMO_VACUUM_BASIC, DEMO_VACUUM_COMPLETE, DEMO_VACUUM_MINIMAL,
-    DEMO_VACUUM_MOST, DEMO_VACUUM_NONE, DEMO_VACUUM_STATE, FAN_SPEEDS)
+    DEMO_VACUUM_BASIC,
+    DEMO_VACUUM_COMPLETE,
+    DEMO_VACUUM_MINIMAL,
+    DEMO_VACUUM_MOST,
+    DEMO_VACUUM_NONE,
+    DEMO_VACUUM_STATE,
+    FAN_SPEEDS,
+)
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_PLATFORM,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.vacuum import common
 
 
-ENTITY_VACUUM_BASIC = '{}.{}'.format(DOMAIN, DEMO_VACUUM_BASIC).lower()
-ENTITY_VACUUM_COMPLETE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_COMPLETE).lower()
-ENTITY_VACUUM_MINIMAL = '{}.{}'.format(DOMAIN, DEMO_VACUUM_MINIMAL).lower()
-ENTITY_VACUUM_MOST = '{}.{}'.format(DOMAIN, DEMO_VACUUM_MOST).lower()
-ENTITY_VACUUM_NONE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_NONE).lower()
-ENTITY_VACUUM_STATE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_STATE).lower()
+ENTITY_VACUUM_BASIC = "{}.{}".format(DOMAIN, DEMO_VACUUM_BASIC).lower()
+ENTITY_VACUUM_COMPLETE = "{}.{}".format(DOMAIN, DEMO_VACUUM_COMPLETE).lower()
+ENTITY_VACUUM_MINIMAL = "{}.{}".format(DOMAIN, DEMO_VACUUM_MINIMAL).lower()
+ENTITY_VACUUM_MOST = "{}.{}".format(DOMAIN, DEMO_VACUUM_MOST).lower()
+ENTITY_VACUUM_NONE = "{}.{}".format(DOMAIN, DEMO_VACUUM_NONE).lower()
+ENTITY_VACUUM_STATE = "{}.{}".format(DOMAIN, DEMO_VACUUM_STATE).lower()
 
 
 class TestVacuumDemo(unittest.TestCase):
@@ -34,8 +55,7 @@ class TestVacuumDemo(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        assert setup_component(
-            self.hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: 'demo'}})
+        assert setup_component(self.hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "demo"}})
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
@@ -48,8 +68,7 @@ class TestVacuumDemo(unittest.TestCase):
         assert "Charging" == state.attributes.get(ATTR_STATUS)
         assert 100 == state.attributes.get(ATTR_BATTERY_LEVEL)
         assert "medium" == state.attributes.get(ATTR_FAN_SPEED)
-        assert FAN_SPEEDS == \
-            state.attributes.get(ATTR_FAN_SPEED_LIST)
+        assert FAN_SPEEDS == state.attributes.get(ATTR_FAN_SPEED_LIST)
         assert STATE_OFF == state.state
 
         state = self.hass.states.get(ENTITY_VACUUM_MOST)
@@ -89,8 +108,7 @@ class TestVacuumDemo(unittest.TestCase):
         assert STATE_DOCKED == state.state
         assert 100 == state.attributes.get(ATTR_BATTERY_LEVEL)
         assert "medium" == state.attributes.get(ATTR_FAN_SPEED)
-        assert FAN_SPEEDS == \
-            state.attributes.get(ATTR_FAN_SPEED_LIST)
+        assert FAN_SPEEDS == state.attributes.get(ATTR_FAN_SPEED_LIST)
 
     def test_methods(self):
         """Test if methods call the services as expected."""
@@ -148,8 +166,9 @@ class TestVacuumDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         assert "Returning home" in state.attributes.get(ATTR_STATUS)
 
-        common.set_fan_speed(self.hass, FAN_SPEEDS[-1],
-                             entity_id=ENTITY_VACUUM_COMPLETE)
+        common.set_fan_speed(
+            self.hass, FAN_SPEEDS[-1], entity_id=ENTITY_VACUUM_COMPLETE
+        )
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         assert FAN_SPEEDS[-1] == state.attributes.get(ATTR_FAN_SPEED)
@@ -184,8 +203,7 @@ class TestVacuumDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         assert STATE_RETURNING == state.state
 
-        common.set_fan_speed(self.hass, FAN_SPEEDS[-1],
-                             entity_id=ENTITY_VACUUM_STATE)
+        common.set_fan_speed(self.hass, FAN_SPEEDS[-1], entity_id=ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         assert FAN_SPEEDS[-1] == state.attributes.get(ATTR_FAN_SPEED)
@@ -236,12 +254,10 @@ class TestVacuumDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
         assert state.attributes.get(ATTR_STATUS) is None
 
-        common.set_fan_speed(self.hass, FAN_SPEEDS[-1],
-                             entity_id=ENTITY_VACUUM_NONE)
+        common.set_fan_speed(self.hass, FAN_SPEEDS[-1], entity_id=ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
-        assert FAN_SPEEDS[-1] != \
-            state.attributes.get(ATTR_FAN_SPEED)
+        assert FAN_SPEEDS[-1] != state.attributes.get(ATTR_FAN_SPEED)
 
         common.clean_spot(self.hass, entity_id=ENTITY_VACUUM_BASIC)
         self.hass.block_till_done()
@@ -285,13 +301,12 @@ class TestVacuumDemo(unittest.TestCase):
     def test_services(self):
         """Test vacuum services."""
         # Test send_command
-        send_command_calls = mock_service(
-            self.hass, DOMAIN, SERVICE_SEND_COMMAND)
+        send_command_calls = mock_service(self.hass, DOMAIN, SERVICE_SEND_COMMAND)
 
         params = {"rotate": 150, "speed": 20}
         common.send_command(
-            self.hass, 'test_command', entity_id=ENTITY_VACUUM_BASIC,
-            params=params)
+            self.hass, "test_command", entity_id=ENTITY_VACUUM_BASIC, params=params
+        )
 
         self.hass.block_till_done()
         assert 1 == len(send_command_calls)
@@ -300,15 +315,13 @@ class TestVacuumDemo(unittest.TestCase):
         assert DOMAIN == call.domain
         assert SERVICE_SEND_COMMAND == call.service
         assert ENTITY_VACUUM_BASIC == call.data[ATTR_ENTITY_ID]
-        assert 'test_command' == call.data[ATTR_COMMAND]
+        assert "test_command" == call.data[ATTR_COMMAND]
         assert params == call.data[ATTR_PARAMS]
 
         # Test set fan speed
-        set_fan_speed_calls = mock_service(
-            self.hass, DOMAIN, SERVICE_SET_FAN_SPEED)
+        set_fan_speed_calls = mock_service(self.hass, DOMAIN, SERVICE_SET_FAN_SPEED)
 
-        common.set_fan_speed(
-            self.hass, FAN_SPEEDS[0], entity_id=ENTITY_VACUUM_COMPLETE)
+        common.set_fan_speed(self.hass, FAN_SPEEDS[0], entity_id=ENTITY_VACUUM_COMPLETE)
 
         self.hass.block_till_done()
         assert 1 == len(set_fan_speed_calls)
@@ -321,15 +334,14 @@ class TestVacuumDemo(unittest.TestCase):
 
     def test_set_fan_speed(self):
         """Test vacuum service to set the fan speed."""
-        group_vacuums = ','.join([ENTITY_VACUUM_BASIC,
-                                  ENTITY_VACUUM_COMPLETE,
-                                  ENTITY_VACUUM_STATE])
+        group_vacuums = ",".join(
+            [ENTITY_VACUUM_BASIC, ENTITY_VACUUM_COMPLETE, ENTITY_VACUUM_STATE]
+        )
         old_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
         old_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         old_state_state = self.hass.states.get(ENTITY_VACUUM_STATE)
 
-        common.set_fan_speed(
-            self.hass, FAN_SPEEDS[0], entity_id=group_vacuums)
+        common.set_fan_speed(self.hass, FAN_SPEEDS[0], entity_id=group_vacuums)
 
         self.hass.block_till_done()
         new_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
@@ -340,27 +352,22 @@ class TestVacuumDemo(unittest.TestCase):
         assert ATTR_FAN_SPEED not in new_state_basic.attributes
 
         assert old_state_complete != new_state_complete
-        assert FAN_SPEEDS[1] == \
-            old_state_complete.attributes[ATTR_FAN_SPEED]
-        assert FAN_SPEEDS[0] == \
-            new_state_complete.attributes[ATTR_FAN_SPEED]
+        assert FAN_SPEEDS[1] == old_state_complete.attributes[ATTR_FAN_SPEED]
+        assert FAN_SPEEDS[0] == new_state_complete.attributes[ATTR_FAN_SPEED]
 
         assert old_state_state != new_state_state
-        assert FAN_SPEEDS[1] == \
-            old_state_state.attributes[ATTR_FAN_SPEED]
-        assert FAN_SPEEDS[0] == \
-            new_state_state.attributes[ATTR_FAN_SPEED]
+        assert FAN_SPEEDS[1] == old_state_state.attributes[ATTR_FAN_SPEED]
+        assert FAN_SPEEDS[0] == new_state_state.attributes[ATTR_FAN_SPEED]
 
     def test_send_command(self):
         """Test vacuum service to send a command."""
-        group_vacuums = ','.join([ENTITY_VACUUM_BASIC,
-                                  ENTITY_VACUUM_COMPLETE])
+        group_vacuums = ",".join([ENTITY_VACUUM_BASIC, ENTITY_VACUUM_COMPLETE])
         old_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
         old_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
 
         common.send_command(
-            self.hass, 'test_command', params={"p1": 3},
-            entity_id=group_vacuums)
+            self.hass, "test_command", params={"p1": 3}, entity_id=group_vacuums
+        )
 
         self.hass.block_till_done()
         new_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
@@ -369,5 +376,7 @@ class TestVacuumDemo(unittest.TestCase):
         assert old_state_basic == new_state_basic
         assert old_state_complete != new_state_complete
         assert STATE_ON == new_state_complete.state
-        assert "Executing test_command({'p1': 3})" == \
-            new_state_complete.attributes[ATTR_STATUS]
+        assert (
+            "Executing test_command({'p1': 3})"
+            == new_state_complete.attributes[ATTR_STATUS]
+        )

@@ -4,50 +4,53 @@ import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AQI = 'air_quality_index'
-ATTR_ATTRIBUTION = 'attribution'
-ATTR_CO2 = 'carbon_dioxide'
-ATTR_CO = 'carbon_monoxide'
-ATTR_N2O = 'nitrogen_oxide'
-ATTR_NO = 'nitrogen_monoxide'
-ATTR_NO2 = 'nitrogen_dioxide'
-ATTR_OZONE = 'ozone'
-ATTR_PM_0_1 = 'particulate_matter_0_1'
-ATTR_PM_10 = 'particulate_matter_10'
-ATTR_PM_2_5 = 'particulate_matter_2_5'
-ATTR_SO2 = 'sulphur_dioxide'
+ATTR_AQI = "air_quality_index"
+ATTR_ATTRIBUTION = "attribution"
+ATTR_CO2 = "carbon_dioxide"
+ATTR_CO = "carbon_monoxide"
+ATTR_N2O = "nitrogen_oxide"
+ATTR_NO = "nitrogen_monoxide"
+ATTR_NO2 = "nitrogen_dioxide"
+ATTR_OZONE = "ozone"
+ATTR_PM_0_1 = "particulate_matter_0_1"
+ATTR_PM_10 = "particulate_matter_10"
+ATTR_PM_2_5 = "particulate_matter_2_5"
+ATTR_SO2 = "sulphur_dioxide"
 
-DOMAIN = 'air_quality'
+DOMAIN = "air_quality"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 PROP_TO_ATTR = {
-    'air_quality_index': ATTR_AQI,
-    'attribution': ATTR_ATTRIBUTION,
-    'carbon_dioxide': ATTR_CO2,
-    'carbon_monoxide': ATTR_CO,
-    'nitrogen_oxide': ATTR_N2O,
-    'nitrogen_monoxide': ATTR_NO,
-    'nitrogen_dioxide': ATTR_NO2,
-    'ozone': ATTR_OZONE,
-    'particulate_matter_0_1': ATTR_PM_0_1,
-    'particulate_matter_10': ATTR_PM_10,
-    'particulate_matter_2_5': ATTR_PM_2_5,
-    'sulphur_dioxide': ATTR_SO2,
+    "air_quality_index": ATTR_AQI,
+    "attribution": ATTR_ATTRIBUTION,
+    "carbon_dioxide": ATTR_CO2,
+    "carbon_monoxide": ATTR_CO,
+    "nitrogen_oxide": ATTR_N2O,
+    "nitrogen_monoxide": ATTR_NO,
+    "nitrogen_dioxide": ATTR_NO2,
+    "ozone": ATTR_OZONE,
+    "particulate_matter_0_1": ATTR_PM_0_1,
+    "particulate_matter_10": ATTR_PM_10,
+    "particulate_matter_2_5": ATTR_PM_2_5,
+    "sulphur_dioxide": ATTR_SO2,
 }
 
 
 async def async_setup(hass, config):
     """Set up the air quality component."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
     await component.async_setup(config)
     return True
 

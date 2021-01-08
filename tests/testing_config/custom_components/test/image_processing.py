@@ -3,11 +3,11 @@
 from homeassistant.components.image_processing import ImageProcessingEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities_callback,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities_callback, discovery_info=None
+):
     """Set up the test image_processing platform."""
-    async_add_entities_callback([
-        TestImageProcessing('camera.demo_camera', "Test")])
+    async_add_entities_callback([TestImageProcessing("camera.demo_camera", "Test")])
 
 
 class TestImageProcessing(ImageProcessingEntity):
@@ -43,7 +43,7 @@ class TestImageProcessing(ImageProcessingEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {'image': self._image}
+        return {"image": self._image}
 
     def process_image(self, image):
         """Process image."""

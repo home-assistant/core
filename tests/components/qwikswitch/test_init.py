@@ -60,20 +60,15 @@ def aioclient_mock():
 async def test_binary_sensor_device(hass, aioclient_mock):  # noqa
     """Test a binary sensor device."""
     config = {
-        'qwikswitch': {
-            'sensors': {
-                'name': 's1',
-                'id': '@a00001',
-                'channel': 1,
-                'type': 'imod',
-            }
+        "qwikswitch": {
+            "sensors": {"name": "s1", "id": "@a00001", "channel": 1, "type": "imod"}
         }
     }
     await async_setup_component(hass, QWIKSWITCH, config)
     await hass.async_block_till_done()
 
-    state_obj = hass.states.get('binary_sensor.s1')
-    assert state_obj.state == 'off'
+    state_obj = hass.states.get("binary_sensor.s1")
+    assert state_obj.state == "off"
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -81,40 +76,40 @@ async def test_binary_sensor_device(hass, aioclient_mock):  # noqa
     LISTEN.append(ClientError())  # Will cause a sleep
 
     await hass.async_block_till_done()
-    state_obj = hass.states.get('binary_sensor.s1')
-    assert state_obj.state == 'on'
+    state_obj = hass.states.get("binary_sensor.s1")
+    assert state_obj.state == "on"
 
     LISTEN.append('{"id":"@a00001","cmd":"","data":"4e0e1701","rssi":"61%"}')
     hass.data[QWIKSWITCH]._sleep_task.cancel()
     await LISTEN.wait_till_empty(hass)
-    state_obj = hass.states.get('binary_sensor.s1')
-    assert state_obj.state == 'off'
+    state_obj = hass.states.get("binary_sensor.s1")
+    assert state_obj.state == "off"
 
 
 async def test_sensor_device(hass, aioclient_mock):  # noqa
     """Test a sensor device."""
     config = {
-        'qwikswitch': {
-            'sensors': {
-                'name': 'ss1',
-                'id': '@a00001',
-                'channel': 1,
-                'type': 'qwikcord',
+        "qwikswitch": {
+            "sensors": {
+                "name": "ss1",
+                "id": "@a00001",
+                "channel": 1,
+                "type": "qwikcord",
             }
         }
     }
     await async_setup_component(hass, QWIKSWITCH, config)
 
     await hass.async_block_till_done()
-    state_obj = hass.states.get('sensor.ss1')
-    assert state_obj.state == 'None'
+    state_obj = hass.states.get("sensor.ss1")
+    assert state_obj.state == "None"
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     LISTEN.append(
-        '{"id":"@a00001","name":"ss1","type":"rel",'
-        '"val":"4733800001a00000"}')
+        '{"id":"@a00001","name":"ss1","type":"rel",' '"val":"4733800001a00000"}'
+    )
 
     await hass.async_block_till_done()
-    state_obj = hass.states.get('sensor.ss1')
-    assert state_obj.state == '416'
+    state_obj = hass.states.get("sensor.ss1")
+    assert state_obj.state == "416"

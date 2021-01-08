@@ -25,24 +25,33 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 @pytest.fixture
 def alexa_client(loop, hass, hass_client):
     """Initialize a Home Assistant server for testing this module."""
+
     @callback
     def mock_service(call):
         calls.append(call)
 
     hass.services.async_register("test", "alexa", mock_service)
 
-    assert loop.run_until_complete(async_setup_component(hass, alexa.DOMAIN, {
-        # Key is here to verify we allow other keys in config too
-        "homeassistant": {},
-    }))
-    assert loop.run_until_complete(async_setup_component(
-        hass, 'intent_script', {
-            'intent_script': {
-                "WhereAreWeIntent": {
-                    "speech": {
-                        "type": "plain",
-                        "text":
-                        """
+    assert loop.run_until_complete(
+        async_setup_component(
+            hass,
+            alexa.DOMAIN,
+            {
+                # Key is here to verify we allow other keys in config too
+                "homeassistant": {}
+            },
+        )
+    )
+    assert loop.run_until_complete(
+        async_setup_component(
+            hass,
+            "intent_script",
+            {
+                "intent_script": {
+                    "WhereAreWeIntent": {
+                        "speech": {
+                            "type": "plain",
+                            "text": """
                             {%- if is_state("device_tracker.paulus", "home")
                                    and is_state("device_tracker.anne_therese",
                                                 "home") -%}
@@ -55,53 +64,55 @@ def alexa_client(loop, hass, hass_client):
                                 }}
                             {% endif %}
                         """,
-                    }
-                },
-                "GetZodiacHoroscopeIntent": {
-                    "speech": {
-                        "type": "plain",
-                        "text": "You told us your sign is {{ ZodiacSign }}.",
-                    }
-                },
-                "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
-                    "speech": {
-                        "type": "plain",
-                        "text": "Playing {{ object_byArtist_name }}.",
-                    }
-                },
-                "CallServiceIntent": {
-                    "speech": {
-                        "type": "plain",
-                        "text": "Service called for {{ ZodiacSign }}",
+                        }
                     },
-                    "card": {
-                        "type": "simple",
-                        "title": "Card title for {{ ZodiacSign }}",
-                        "content": "Card content: {{ ZodiacSign }}",
+                    "GetZodiacHoroscopeIntent": {
+                        "speech": {
+                            "type": "plain",
+                            "text": "You told us your sign is {{ ZodiacSign }}.",
+                        }
                     },
-                    "action": {
-                        "service": "test.alexa",
-                        "data_template": {
-                            "hello": "{{ ZodiacSign }}"
+                    "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
+                        "speech": {
+                            "type": "plain",
+                            "text": "Playing {{ object_byArtist_name }}.",
+                        }
+                    },
+                    "CallServiceIntent": {
+                        "speech": {
+                            "type": "plain",
+                            "text": "Service called for {{ ZodiacSign }}",
                         },
-                        "entity_id": "switch.test",
-                    }
-                },
-                APPLICATION_ID: {
-                    "speech": {
-                        "type": "plain",
-                        "text": "LaunchRequest has been received.",
-                    }
-                },
-            }
-        }))
+                        "card": {
+                            "type": "simple",
+                            "title": "Card title for {{ ZodiacSign }}",
+                            "content": "Card content: {{ ZodiacSign }}",
+                        },
+                        "action": {
+                            "service": "test.alexa",
+                            "data_template": {"hello": "{{ ZodiacSign }}"},
+                            "entity_id": "switch.test",
+                        },
+                    },
+                    APPLICATION_ID: {
+                        "speech": {
+                            "type": "plain",
+                            "text": "LaunchRequest has been received.",
+                        }
+                    },
+                }
+            },
+        )
+    )
     return loop.run_until_complete(hass_client())
 
 
 def _intent_req(client, data=None):
-    return client.post(intent.INTENTS_API_ENDPOINT,
-                       data=json.dumps(data or {}),
-                       headers={'content-type': 'application/json'})
+    return client.post(
+        intent.INTENTS_API_ENDPOINT,
+        data=json.dumps(data or {}),
+        headers={"content-type": "application/json"},
+    )
 
 
 @asyncio.coroutine
@@ -112,25 +123,20 @@ def test_intent_launch_request(alexa_client):
         "session": {
             "new": True,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {},
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "LaunchRequest",
             "requestId": REQUEST_ID,
-            "timestamp": "2015-05-13T12:34:56Z"
-        }
+            "timestamp": "2015-05-13T12:34:56Z",
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "LaunchRequest has been received."
 
 
@@ -143,25 +149,21 @@ def test_intent_launch_request_not_configured(alexa_client):
             "new": True,
             "sessionId": SESSION_ID,
             "application": {
-                "applicationId":
-                    'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000'
+                "applicationId": "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
             },
             "attributes": {},
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "LaunchRequest",
             "requestId": REQUEST_ID,
-            "timestamp": "2015-05-13T12:34:56Z"
-        }
+            "timestamp": "2015-05-13T12:34:56Z",
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "This intent is not yet configured within Home Assistant."
 
 
@@ -173,19 +175,15 @@ def test_intent_request_with_slots(alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {
                 "supportedHoroscopePeriods": {
                     "daily": True,
                     "weekly": False,
-                    "monthly": False
+                    "monthly": False,
                 }
             },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "IntentRequest",
@@ -193,20 +191,14 @@ def test_intent_request_with_slots(alexa_client):
             "timestamp": "2015-05-13T12:34:56Z",
             "intent": {
                 "name": "GetZodiacHoroscopeIntent",
-                "slots": {
-                    "ZodiacSign": {
-                        "name": "ZodiacSign",
-                        "value": "virgo"
-                    }
-                }
-            }
-        }
+                "slots": {"ZodiacSign": {"name": "ZodiacSign", "value": "virgo"}},
+            },
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is virgo."
 
 
@@ -218,19 +210,15 @@ def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {
                 "supportedHoroscopePeriods": {
                     "daily": True,
                     "weekly": False,
-                    "monthly": False
+                    "monthly": False,
                 }
             },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "IntentRequest",
@@ -246,42 +234,25 @@ def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
                             "resolutionsPerAuthority": [
                                 {
                                     "authority": AUTHORITY_ID,
-                                    "status": {
-                                        "code": "ER_SUCCESS_MATCH"
-                                    },
-                                    "values": [
-                                        {
-                                            "value": {
-                                                "name": "Virgo"
-                                            }
-                                        }
-                                    ]
+                                    "status": {"code": "ER_SUCCESS_MATCH"},
+                                    "values": [{"value": {"name": "Virgo"}}],
                                 },
                                 {
                                     "authority": BUILTIN_AUTH_ID,
-                                    "status": {
-                                        "code": "ER_SUCCESS_NO_MATCH"
-                                    },
-                                    "values": [
-                                        {
-                                            "value": {
-                                                "name": "Test"
-                                            }
-                                        }
-                                    ]
-                                }
+                                    "status": {"code": "ER_SUCCESS_NO_MATCH"},
+                                    "values": [{"value": {"name": "Test"}}],
+                                },
                             ]
-                        }
+                        },
                     }
-                }
-            }
-        }
+                },
+            },
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is Virgo."
 
 
@@ -293,19 +264,15 @@ def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {
                 "supportedHoroscopePeriods": {
                     "daily": True,
                     "weekly": False,
-                    "monthly": False
+                    "monthly": False,
                 }
             },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "IntentRequest",
@@ -321,42 +288,25 @@ def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_client):
                             "resolutionsPerAuthority": [
                                 {
                                     "authority": AUTHORITY_ID,
-                                    "status": {
-                                        "code": "ER_SUCCESS_MATCH"
-                                    },
-                                    "values": [
-                                        {
-                                            "value": {
-                                                "name": "Virgo"
-                                            }
-                                        }
-                                    ]
+                                    "status": {"code": "ER_SUCCESS_MATCH"},
+                                    "values": [{"value": {"name": "Virgo"}}],
                                 },
                                 {
                                     "authority": BUILTIN_AUTH_ID,
-                                    "status": {
-                                        "code": "ER_SUCCESS_MATCH"
-                                    },
-                                    "values": [
-                                        {
-                                            "value": {
-                                                "name": "Test"
-                                            }
-                                        }
-                                    ]
-                                }
+                                    "status": {"code": "ER_SUCCESS_MATCH"},
+                                    "values": [{"value": {"name": "Test"}}],
+                                },
                             ]
-                        }
+                        },
                     }
-                }
-            }
-        }
+                },
+            },
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is V zodiac."
 
 
@@ -368,19 +318,15 @@ def test_intent_request_with_slots_but_no_value(alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {
                 "supportedHoroscopePeriods": {
                     "daily": True,
                     "weekly": False,
-                    "monthly": False
+                    "monthly": False,
                 }
             },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "IntentRequest",
@@ -388,19 +334,14 @@ def test_intent_request_with_slots_but_no_value(alexa_client):
             "timestamp": "2015-05-13T12:34:56Z",
             "intent": {
                 "name": "GetZodiacHoroscopeIntent",
-                "slots": {
-                    "ZodiacSign": {
-                        "name": "ZodiacSign"
-                    }
-                }
-            }
-        }
+                "slots": {"ZodiacSign": {"name": "ZodiacSign"}},
+            },
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is ."
 
 
@@ -412,34 +353,27 @@ def test_intent_request_without_slots(hass, alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {
                 "supportedHoroscopePeriods": {
                     "daily": True,
                     "weekly": False,
-                    "monthly": False
+                    "monthly": False,
                 }
             },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "IntentRequest",
             "requestId": REQUEST_ID,
             "timestamp": "2015-05-13T12:34:56Z",
-            "intent": {
-                "name": "WhereAreWeIntent",
-            }
-        }
+            "intent": {"name": "WhereAreWeIntent"},
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     json = yield from req.json()
-    text = json.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = json.get("response", {}).get("outputSpeech", {}).get("text")
 
     assert text == "Anne Therese is at unknown and Paulus is at unknown"
 
@@ -449,8 +383,7 @@ def test_intent_request_without_slots(hass, alexa_client):
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     json = yield from req.json()
-    text = json.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = json.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You are both home, you silly"
 
 
@@ -462,13 +395,9 @@ def test_intent_request_calling_service(alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {},
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "IntentRequest",
@@ -476,14 +405,9 @@ def test_intent_request_calling_service(alexa_client):
             "timestamp": "2015-05-13T12:34:56Z",
             "intent": {
                 "name": "CallServiceIntent",
-                "slots": {
-                    "ZodiacSign": {
-                        "name": "ZodiacSign",
-                        "value": "virgo",
-                    }
-                }
-            }
-        }
+                "slots": {"ZodiacSign": {"name": "ZodiacSign", "value": "virgo"}},
+            },
+        },
     }
     call_count = len(calls)
     req = yield from _intent_req(alexa_client, data)
@@ -496,11 +420,10 @@ def test_intent_request_calling_service(alexa_client):
     assert call.data.get("hello") == "virgo"
 
     data = yield from req.json()
-    assert data['response']['card']['title'] == 'Card title for virgo'
-    assert data['response']['card']['content'] == 'Card content: virgo'
-    assert data['response']['outputSpeech']['type'] == 'PlainText'
-    assert data['response']['outputSpeech']['text'] == \
-        'Service called for virgo'
+    assert data["response"]["card"]["title"] == "Card title for virgo"
+    assert data["response"]["card"]["content"] == "Card content: virgo"
+    assert data["response"]["outputSpeech"]["type"] == "PlainText"
+    assert data["response"]["outputSpeech"]["text"] == "Service called for virgo"
 
 
 @asyncio.coroutine
@@ -511,91 +434,64 @@ def test_intent_session_ended_request(alexa_client):
         "session": {
             "new": False,
             "sessionId": SESSION_ID,
-            "application": {
-                "applicationId": APPLICATION_ID
-            },
+            "application": {"applicationId": APPLICATION_ID},
             "attributes": {
                 "supportedHoroscopePeriods": {
                     "daily": True,
                     "weekly": False,
-                    "monthly": False
+                    "monthly": False,
                 }
             },
-            "user": {
-                "userId": "amzn1.account.AM3B00000000000000000000000"
-            }
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
         },
         "request": {
             "type": "SessionEndedRequest",
             "requestId": REQUEST_ID,
             "timestamp": "2015-05-13T12:34:56Z",
-            "reason": "USER_INITIATED"
-        }
+            "reason": "USER_INITIATED",
+        },
     }
 
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     text = yield from req.text()
-    assert text == ''
+    assert text == ""
 
 
 @asyncio.coroutine
 def test_intent_from_built_in_intent_library(alexa_client):
     """Test intents from the Built-in Intent Library."""
     data = {
-        'request': {
-            'intent': {
-                'name': 'AMAZON.PlaybackAction<object@MusicCreativeWork>',
-                'slots': {
-                    'object.byArtist.name': {
-                        'name': 'object.byArtist.name',
-                        'value': 'the shins'
+        "request": {
+            "intent": {
+                "name": "AMAZON.PlaybackAction<object@MusicCreativeWork>",
+                "slots": {
+                    "object.byArtist.name": {
+                        "name": "object.byArtist.name",
+                        "value": "the shins",
                     },
-                    'object.composer.name': {
-                        'name': 'object.composer.name'
-                    },
-                    'object.contentSource': {
-                        'name': 'object.contentSource'
-                    },
-                    'object.era': {
-                        'name': 'object.era'
-                    },
-                    'object.genre': {
-                        'name': 'object.genre'
-                    },
-                    'object.name': {
-                        'name': 'object.name'
-                    },
-                    'object.owner.name': {
-                        'name': 'object.owner.name'
-                    },
-                    'object.select': {
-                        'name': 'object.select'
-                    },
-                    'object.sort': {
-                        'name': 'object.sort'
-                    },
-                    'object.type': {
-                        'name': 'object.type',
-                        'value': 'music'
-                    }
-                }
+                    "object.composer.name": {"name": "object.composer.name"},
+                    "object.contentSource": {"name": "object.contentSource"},
+                    "object.era": {"name": "object.era"},
+                    "object.genre": {"name": "object.genre"},
+                    "object.name": {"name": "object.name"},
+                    "object.owner.name": {"name": "object.owner.name"},
+                    "object.select": {"name": "object.select"},
+                    "object.sort": {"name": "object.sort"},
+                    "object.type": {"name": "object.type", "value": "music"},
+                },
             },
-            'timestamp': '2016-12-14T23:23:37Z',
-            'type': 'IntentRequest',
-            'requestId': REQUEST_ID,
-
+            "timestamp": "2016-12-14T23:23:37Z",
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
         },
-        'session': {
-            'sessionId': SESSION_ID,
-            'application': {
-                'applicationId': APPLICATION_ID
-            }
-        }
+        "session": {
+            "sessionId": SESSION_ID,
+            "application": {"applicationId": APPLICATION_ID},
+        },
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
     data = yield from req.json()
-    text = data.get("response", {}).get("outputSpeech",
-                                        {}).get("text")
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "Playing the shins."

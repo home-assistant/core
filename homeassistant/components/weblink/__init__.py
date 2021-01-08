@@ -3,33 +3,35 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_ICON, CONF_URL)
+from homeassistant.const import CONF_NAME, CONF_ICON, CONF_URL
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENTITIES = 'entities'
+CONF_ENTITIES = "entities"
 CONF_RELATIVE_URL_ERROR_MSG = "Invalid relative URL. Absolute path required."
-CONF_RELATIVE_URL_REGEX = r'\A/'
+CONF_RELATIVE_URL_REGEX = r"\A/"
 
-DOMAIN = 'weblink'
+DOMAIN = "weblink"
 
-ENTITIES_SCHEMA = vol.Schema({
-    # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_URL): vol.Any(
-        vol.Match(CONF_RELATIVE_URL_REGEX, msg=CONF_RELATIVE_URL_ERROR_MSG),
-        vol.Url()),
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-})
+ENTITIES_SCHEMA = vol.Schema(
+    {
+        # pylint: disable=no-value-for-parameter
+        vol.Required(CONF_URL): vol.Any(
+            vol.Match(CONF_RELATIVE_URL_REGEX, msg=CONF_RELATIVE_URL_ERROR_MSG),
+            vol.Url(),
+        ),
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ENTITIES): [ENTITIES_SCHEMA],
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_ENTITIES): [ENTITIES_SCHEMA]})},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -37,8 +39,7 @@ def setup(hass, config):
     links = config.get(DOMAIN)
 
     for link in links.get(CONF_ENTITIES):
-        Link(hass, link.get(CONF_NAME), link.get(CONF_URL),
-             link.get(CONF_ICON))
+        Link(hass, link.get(CONF_NAME), link.get(CONF_URL), link.get(CONF_ICON))
 
     return True
 
@@ -52,7 +53,7 @@ class Link(Entity):
         self._name = name
         self._url = url
         self._icon = icon
-        self.entity_id = DOMAIN + '.%s' % slugify(name)
+        self.entity_id = DOMAIN + ".%s" % slugify(name)
         self.schedule_update_ha_state()
 
     @property

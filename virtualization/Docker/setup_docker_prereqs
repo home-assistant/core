@@ -9,6 +9,7 @@ INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 INSTALL_DLIB="${INSTALL_DLIB:-yes}"
+INSTALL_LOCALES="${INSTALL_LOCALES:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -21,7 +22,7 @@ PACKAGES=(
   # homeassistant.components.device_tracker.bluetooth_tracker
   bluetooth libglib2.0-dev libbluetooth-dev
   # homeassistant.components.device_tracker.owntracks
-  libsodium18
+  libsodium23
   # homeassistant.components.zwave
   libudev-dev
   # homeassistant.components.homekit_controller
@@ -68,6 +69,10 @@ fi
 
 if [ "$INSTALL_DLIB" == "yes" ]; then
   pip3 install --no-cache-dir "dlib>=19.5"
+fi
+
+if [ "$INSTALL_LOCALES" == "yes" ]; then
+  virtualization/Docker/scripts/locales
 fi
 
 # Remove packages

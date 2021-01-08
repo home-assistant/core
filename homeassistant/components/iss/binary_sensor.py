@@ -6,26 +6,31 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE, CONF_SHOW_ON_MAP)
+    CONF_NAME,
+    ATTR_LONGITUDE,
+    ATTR_LATITUDE,
+    CONF_SHOW_ON_MAP,
+)
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ISS_NEXT_RISE = 'next_rise'
-ATTR_ISS_NUMBER_PEOPLE_SPACE = 'number_of_people_in_space'
+ATTR_ISS_NEXT_RISE = "next_rise"
+ATTR_ISS_NUMBER_PEOPLE_SPACE = "number_of_people_in_space"
 
-DEFAULT_NAME = 'ISS'
-DEFAULT_DEVICE_CLASS = 'visible'
+DEFAULT_NAME = "ISS"
+DEFAULT_DEVICE_CLASS = "visible"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -77,16 +82,15 @@ class IssBinarySensor(BinarySensorDevice):
         """Return the state attributes."""
         if self.iss_data:
             attrs = {
-                ATTR_ISS_NUMBER_PEOPLE_SPACE:
-                    self.iss_data.number_of_people_in_space,
+                ATTR_ISS_NUMBER_PEOPLE_SPACE: self.iss_data.number_of_people_in_space,
                 ATTR_ISS_NEXT_RISE: self.iss_data.next_rise,
             }
             if self._show_on_map:
-                attrs[ATTR_LONGITUDE] = self.iss_data.position.get('longitude')
-                attrs[ATTR_LATITUDE] = self.iss_data.position.get('latitude')
+                attrs[ATTR_LONGITUDE] = self.iss_data.position.get("longitude")
+                attrs[ATTR_LATITUDE] = self.iss_data.position.get("latitude")
             else:
-                attrs['long'] = self.iss_data.position.get('longitude')
-                attrs['lat'] = self.iss_data.position.get('latitude')
+                attrs["long"] = self.iss_data.position.get("longitude")
+                attrs["lat"] = self.iss_data.position.get("latitude")
             return attrs
 
     def update(self):

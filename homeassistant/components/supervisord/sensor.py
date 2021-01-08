@@ -11,14 +11,14 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DESCRIPTION = 'description'
-ATTR_GROUP = 'group'
+ATTR_DESCRIPTION = "description"
+ATTR_GROUP = "group"
 
-DEFAULT_URL = 'http://localhost:9001/RPC2'
+DEFAULT_URL = "http://localhost:9001/RPC2"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -32,8 +32,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     add_entities(
-        [SupervisorProcessSensor(info, supervisor_server)
-         for info in processes], True)
+        [SupervisorProcessSensor(info, supervisor_server) for info in processes], True
+    )
 
 
 class SupervisorProcessSensor(Entity):
@@ -48,12 +48,12 @@ class SupervisorProcessSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._info.get('name')
+        return self._info.get("name")
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._info.get('statename')
+        return self._info.get("statename")
 
     @property
     def available(self):
@@ -64,15 +64,14 @@ class SupervisorProcessSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_DESCRIPTION: self._info.get('description'),
-            ATTR_GROUP: self._info.get('group'),
+            ATTR_DESCRIPTION: self._info.get("description"),
+            ATTR_GROUP: self._info.get("group"),
         }
 
     def update(self):
         """Update device state."""
         try:
-            self._info = self._server.supervisor.getProcessInfo(
-                self._info.get('name'))
+            self._info = self._server.supervisor.getProcessInfo(self._info.get("name"))
             self._available = True
         except ConnectionRefusedError:
             _LOGGER.warning("Supervisord not available")

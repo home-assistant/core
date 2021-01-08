@@ -3,23 +3,27 @@ import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import FIBARO_DEVICES, FibaroDevice
 
 SENSOR_TYPES = {
-    'com.fibaro.temperatureSensor':
-        ['Temperature', None, None, DEVICE_CLASS_TEMPERATURE],
-    'com.fibaro.smokeSensor':
-        ['Smoke', 'ppm', 'mdi:fire', None],
-    'CO2':
-        ['CO2', 'ppm', 'mdi:cloud', None],
-    'com.fibaro.humiditySensor':
-        ['Humidity', '%', None, DEVICE_CLASS_HUMIDITY],
-    'com.fibaro.lightSensor':
-        ['Light', 'lx', None, DEVICE_CLASS_ILLUMINANCE]
+    "com.fibaro.temperatureSensor": [
+        "Temperature",
+        None,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "com.fibaro.smokeSensor": ["Smoke", "ppm", "mdi:fire", None],
+    "CO2": ["CO2", "ppm", "mdi:cloud", None],
+    "com.fibaro.humiditySensor": ["Humidity", "%", None, DEVICE_CLASS_HUMIDITY],
+    "com.fibaro.lightSensor": ["Light", "lx", None, DEVICE_CLASS_ILLUMINANCE],
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +35,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroSensor(device)
-         for device in hass.data[FIBARO_DEVICES]['sensor']], True)
+        [FibaroSensor(device) for device in hass.data[FIBARO_DEVICES]["sensor"]], True
+    )
 
 
 class FibaroSensor(FibaroDevice, Entity):
@@ -54,11 +58,11 @@ class FibaroSensor(FibaroDevice, Entity):
             self._device_class = None
         try:
             if not self._unit:
-                if self.fibaro_device.properties.unit == 'lux':
-                    self._unit = 'lx'
-                elif self.fibaro_device.properties.unit == 'C':
+                if self.fibaro_device.properties.unit == "lux":
+                    self._unit = "lx"
+                elif self.fibaro_device.properties.unit == "C":
                     self._unit = TEMP_CELSIUS
-                elif self.fibaro_device.properties.unit == 'F':
+                elif self.fibaro_device.properties.unit == "F":
                     self._unit = TEMP_FAHRENHEIT
                 else:
                     self._unit = self.fibaro_device.properties.unit

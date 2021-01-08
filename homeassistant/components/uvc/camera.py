@@ -12,21 +12,23 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NVR = 'nvr'
-CONF_KEY = 'key'
-CONF_PASSWORD = 'password'
+CONF_NVR = "nvr"
+CONF_KEY = "key"
+CONF_PASSWORD = "password"
 
-DEFAULT_PASSWORD = 'ubnt'
+DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
 DEFAULT_SSL = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NVR): cv.string,
-    vol.Required(CONF_KEY): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_NVR): cv.string,
+        vol.Required(CONF_KEY): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -38,17 +40,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ssl = config[CONF_SSL]
 
     from uvcclient import nvr
+
     try:
         # Exceptions may be raised in all method calls to the nvr library.
         nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
         cameras = nvrconn.index()
 
-        identifier = 'id' if nvrconn.server_version >= (3, 2, 0) else 'uuid'
+        identifier = "id" if nvrconn.server_version >= (3, 2, 0) else "uuid"
         # Filter out airCam models, which are not supported in the latest
         # version of UnifiVideo and which are EOL by Ubiquiti
         cameras = [
-            camera for camera in cameras
-            if 'airCam' not in nvrconn.get_camera(camera[identifier])['model']]
+            camera
+            for camera in cameras
+            if "airCam" not in nvrconn.get_camera(camera[identifier])["model"]
+        ]
     except nvr.NotAuthorized:
         _LOGGER.error("Authorization failure while connecting to NVR")
         return False
@@ -59,11 +64,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         raise PlatformNotReady
 
-    add_entities([UnifiVideoCamera(nvrconn,
-                                   camera[identifier],
-                                   camera['name'],
-                                   password)
-                  for camera in cameras])
+    add_entities(
+        [
+            UnifiVideoCamera(nvrconn, camera[identifier], camera["name"], password)
+            for camera in cameras
+        ]
+    )
     return True
 
 
@@ -91,24 +97,24 @@ class UnifiVideoCamera(Camera):
     def is_recording(self):
         """Return true if the camera is recording."""
         caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo['recordingSettings']['fullTimeRecordEnabled']
+        return caminfo["recordingSettings"]["fullTimeRecordEnabled"]
 
     @property
     def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
         caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo['recordingSettings']['motionRecordEnabled']
+        return caminfo["recordingSettings"]["motionRecordEnabled"]
 
     @property
     def brand(self):
         """Return the brand of this camera."""
-        return 'Ubiquiti'
+        return "Ubiquiti"
 
     @property
     def model(self):
         """Return the model of this camera."""
         caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo['model']
+        return caminfo["model"]
 
     def _login(self):
         """Login to the camera."""
@@ -118,24 +124,25 @@ class UnifiVideoCamera(Camera):
         if self._connect_addr:
             addrs = [self._connect_addr]
         else:
-            addrs = [caminfo['host'], caminfo['internalHost']]
+            addrs = [caminfo["host"], caminfo["internalHost"]]
 
         if self._nvr.server_version >= (3, 2, 0):
             client_cls = uvc_camera.UVCCameraClientV320
         else:
             client_cls = uvc_camera.UVCCameraClient
 
-        if caminfo['username'] is None:
-            caminfo['username'] = 'ubnt'
+        if caminfo["username"] is None:
+            caminfo["username"] = "ubnt"
 
         camera = None
         for addr in addrs:
             try:
-                camera = client_cls(
-                    addr, caminfo['username'], self._password)
+                camera = client_cls(addr, caminfo["username"], self._password)
                 camera.login()
-                _LOGGER.debug("Logged into UVC camera %(name)s via %(addr)s",
-                              dict(name=self._name, addr=addr))
+                _LOGGER.debug(
+                    "Logged into UVC camera %(name)s via %(addr)s",
+                    dict(name=self._name, addr=addr),
+                )
                 self._connect_addr = addr
                 break
             except socket.error:
@@ -154,6 +161,7 @@ class UnifiVideoCamera(Camera):
     def camera_image(self):
         """Return the image of this camera."""
         from uvcclient import camera as uvc_camera
+
         if not self._camera:
             if not self._login():
                 return
@@ -167,8 +175,7 @@ class UnifiVideoCamera(Camera):
                 if retry:
                     self._login()
                     return _get_image(retry=False)
-                _LOGGER.error(
-                    "Unable to log into camera, unable to get snapshot")
+                _LOGGER.error("Unable to log into camera, unable to get snapshot")
                 raise
 
         return _get_image()
@@ -176,10 +183,11 @@ class UnifiVideoCamera(Camera):
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
         from uvcclient.nvr import NvrError
+
         if mode is True:
-            set_mode = 'motion'
+            set_mode = "motion"
         else:
-            set_mode = 'none'
+            set_mode = "none"
 
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)

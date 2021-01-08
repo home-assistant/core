@@ -9,42 +9,54 @@ from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, CONF_VERIFY_SSL)
+    CONF_NAME,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_AUTHENTICATION,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, SUPPORT_STREAM, Camera)
+    PLATFORM_SCHEMA,
+    DEFAULT_CONTENT_TYPE,
+    SUPPORT_STREAM,
+    Camera,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONTENT_TYPE = 'content_type'
-CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
-CONF_STILL_IMAGE_URL = 'still_image_url'
-CONF_STREAM_SOURCE = 'stream_source'
-CONF_FRAMERATE = 'framerate'
+CONF_CONTENT_TYPE = "content_type"
+CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
+CONF_STILL_IMAGE_URL = "still_image_url"
+CONF_STREAM_SOURCE = "stream_source"
+CONF_FRAMERATE = "framerate"
 
-DEFAULT_NAME = 'Generic Camera'
+DEFAULT_NAME = "Generic Camera"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STILL_IMAGE_URL): cv.template,
-    vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
-    vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STILL_IMAGE_URL): cv.template,
+        vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
+        vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
+        vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a generic IP Camera."""
     async_add_entities([GenericCamera(hass, config)])
 
@@ -94,15 +106,15 @@ class GenericCamera(Camera):
     def camera_image(self):
         """Return bytes of camera image."""
         return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop).result()
+            self.async_camera_image(), self.hass.loop
+        ).result()
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         try:
             url = self._still_image_url.async_render()
         except TemplateError as err:
-            _LOGGER.error(
-                "Error parsing template %s: %s", self._still_image_url, err)
+            _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
 
         if url == self._last_url and self._limit_refetch:
@@ -110,26 +122,27 @@ class GenericCamera(Camera):
 
         # aiohttp don't support DigestAuth yet
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
+
             def fetch():
                 """Read image from a URL."""
                 try:
-                    response = requests.get(url, timeout=10, auth=self._auth,
-                                            verify=self.verify_ssl)
+                    response = requests.get(
+                        url, timeout=10, auth=self._auth, verify=self.verify_ssl
+                    )
                     return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error("Error getting camera image: %s", error)
                     return self._last_image
 
-            self._last_image = await self.hass.async_add_job(
-                fetch)
+            self._last_image = await self.hass.async_add_job(fetch)
         # async
         else:
             try:
                 websession = async_get_clientsession(
-                    self.hass, verify_ssl=self.verify_ssl)
-                with async_timeout.timeout(10, loop=self.hass.loop):
-                    response = await websession.get(
-                        url, auth=self._auth)
+                    self.hass, verify_ssl=self.verify_ssl
+                )
+                with async_timeout.timeout(10):
+                    response = await websession.get(url, auth=self._auth)
                 self._last_image = await response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout getting image from: %s", self._name)
@@ -146,7 +159,6 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the source of the stream."""
         return self._stream_source

@@ -10,18 +10,25 @@ from homeassistant.const import ATTR_SERVICE
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_MESSAGE, DOMAIN, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVICES = 'services'
+CONF_SERVICES = "services"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERVICES): vol.All(cv.ensure_list, [{
-        vol.Required(ATTR_SERVICE): cv.slug,
-        vol.Optional(ATTR_DATA): dict,
-    }])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SERVICES): vol.All(
+            cv.ensure_list,
+            [{vol.Required(ATTR_SERVICE): cv.slug, vol.Optional(ATTR_DATA): dict}],
+        )
+    }
+)
 
 
 def update(input_dict, update_source):
@@ -61,8 +68,11 @@ class GroupNotifyPlatform(BaseNotificationService):
             sending_payload = deepcopy(payload.copy())
             if entity.get(ATTR_DATA) is not None:
                 update(sending_payload, entity.get(ATTR_DATA))
-            tasks.append(self.hass.services.async_call(
-                DOMAIN, entity.get(ATTR_SERVICE), sending_payload))
+            tasks.append(
+                self.hass.services.async_call(
+                    DOMAIN, entity.get(ATTR_SERVICE), sending_payload
+                )
+            )
 
         if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks)

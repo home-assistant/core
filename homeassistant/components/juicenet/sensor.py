@@ -9,19 +9,19 @@ from . import DOMAIN, JuicenetDevice
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'status': ['Charging Status', None],
-    'temperature': ['Temperature', TEMP_CELSIUS],
-    'voltage': ['Voltage', 'V'],
-    'amps': ['Amps', 'A'],
-    'watts': ['Watts', POWER_WATT],
-    'charge_time': ['Charge time', 's'],
-    'energy_added': ['Energy added', ENERGY_WATT_HOUR]
+    "status": ["Charging Status", None],
+    "temperature": ["Temperature", TEMP_CELSIUS],
+    "voltage": ["Voltage", "V"],
+    "amps": ["Amps", "A"],
+    "watts": ["Watts", POWER_WATT],
+    "charge_time": ["Charge time", "s"],
+    "energy_added": ["Energy added", ENERGY_WATT_HOUR],
 }
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Juicenet sensor."""
-    api = hass.data[DOMAIN]['api']
+    api = hass.data[DOMAIN]["api"]
 
     dev = []
     for device in api.get_devices():
@@ -43,32 +43,32 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return '{} {}'.format(self.device.name(), self._name)
+        return "{} {}".format(self.device.name(), self._name)
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
-        if self.type == 'status':
+        if self.type == "status":
             status = self.device.getStatus()
-            if status == 'standby':
-                icon = 'mdi:power-plug-off'
-            elif status == 'plugged':
-                icon = 'mdi:power-plug'
-            elif status == 'charging':
-                icon = 'mdi:battery-positive'
-        elif self.type == 'temperature':
-            icon = 'mdi:thermometer'
-        elif self.type == 'voltage':
-            icon = 'mdi:flash'
-        elif self.type == 'amps':
-            icon = 'mdi:flash'
-        elif self.type == 'watts':
-            icon = 'mdi:flash'
-        elif self.type == 'charge_time':
-            icon = 'mdi:timer'
-        elif self.type == 'energy_added':
-            icon = 'mdi:flash'
+            if status == "standby":
+                icon = "mdi:power-plug-off"
+            elif status == "plugged":
+                icon = "mdi:power-plug"
+            elif status == "charging":
+                icon = "mdi:battery-positive"
+        elif self.type == "temperature":
+            icon = "mdi:thermometer"
+        elif self.type == "voltage":
+            icon = "mdi:flash"
+        elif self.type == "amps":
+            icon = "mdi:flash"
+        elif self.type == "watts":
+            icon = "mdi:flash"
+        elif self.type == "charge_time":
+            icon = "mdi:timer"
+        elif self.type == "energy_added":
+            icon = "mdi:flash"
         return icon
 
     @property
@@ -80,29 +80,29 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
     def state(self):
         """Return the state."""
         state = None
-        if self.type == 'status':
+        if self.type == "status":
             state = self.device.getStatus()
-        elif self.type == 'temperature':
+        elif self.type == "temperature":
             state = self.device.getTemperature()
-        elif self.type == 'voltage':
+        elif self.type == "voltage":
             state = self.device.getVoltage()
-        elif self.type == 'amps':
+        elif self.type == "amps":
             state = self.device.getAmps()
-        elif self.type == 'watts':
+        elif self.type == "watts":
             state = self.device.getWatts()
-        elif self.type == 'charge_time':
+        elif self.type == "charge_time":
             state = self.device.getChargeTime()
-        elif self.type == 'energy_added':
+        elif self.type == "energy_added":
             state = self.device.getEnergyAdded()
         else:
-            state = 'Unknown'
+            state = "Unknown"
         return state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
-        if self.type == 'status':
+        if self.type == "status":
             man_dev_id = self.device.id()
             if man_dev_id:
                 attributes["manufacturer_device_id"] = man_dev_id

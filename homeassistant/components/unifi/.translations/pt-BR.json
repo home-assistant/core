@@ -11,10 +11,16 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "password": "Senha",
-                    "port": "Porta"
-                }
+                    "port": "Porta",
+                    "site": "ID do site",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Controlador usando certificado apropriado"
+                },
+                "title": "Configurar o Controlador UniFi"
             }
-        }
+        },
+        "title": "Controlador UniFi"
     }
 }

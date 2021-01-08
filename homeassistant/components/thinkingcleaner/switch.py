@@ -4,7 +4,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant import util
-from homeassistant.const import (STATE_ON, STATE_OFF)
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,9 +16,9 @@ MIN_TIME_TO_WAIT = timedelta(seconds=5)
 MIN_TIME_TO_LOCK_UPDATE = 5
 
 SWITCH_TYPES = {
-    'clean': ['Clean', None, None],
-    'dock': ['Dock', None, None],
-    'find': ['Find', None, None],
+    "clean": ["Clean", None, None],
+    "dock": ["Dock", None, None],
+    "find": ["Find", None, None],
 }
 
 
@@ -38,8 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for device in devices:
         for type_name in SWITCH_TYPES:
-            dev.append(ThinkingCleanerSwitch(
-                device, type_name, update_devices))
+            dev.append(ThinkingCleanerSwitch(device, type_name, update_devices))
 
     add_entities(dev)
 
@@ -53,8 +52,7 @@ class ThinkingCleanerSwitch(ToggleEntity):
 
         self._update_devices = update_devices
         self._tc_object = tc_object
-        self._state = \
-            self._tc_object.is_cleaning if switch_type == 'clean' else False
+        self._state = self._tc_object.is_cleaning if switch_type == "clean" else False
         self.lock = False
         self.last_lock_time = None
         self.graceful_state = False
@@ -91,36 +89,38 @@ class ThinkingCleanerSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._tc_object.name + ' ' + SWITCH_TYPES[self.type][0]
+        return self._tc_object.name + " " + SWITCH_TYPES[self.type][0]
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        if self.type == 'clean':
-            return self.graceful_state \
-                if self.is_update_locked() else self._tc_object.is_cleaning
+        if self.type == "clean":
+            return (
+                self.graceful_state
+                if self.is_update_locked()
+                else self._tc_object.is_cleaning
+            )
 
         return False
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if self.type == 'clean':
+        if self.type == "clean":
             self.set_graceful_lock(True)
             self._tc_object.start_cleaning()
-        elif self.type == 'dock':
+        elif self.type == "dock":
             self._tc_object.dock()
-        elif self.type == 'find':
+        elif self.type == "find":
             self._tc_object.find_me()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        if self.type == 'clean':
+        if self.type == "clean":
             self.set_graceful_lock(False)
             self._tc_object.stop_cleaning()
 
     def update(self):
         """Update the switch state (Only for clean)."""
-        if self.type == 'clean' and not self.is_update_locked():
+        if self.type == "clean" and not self.is_update_locked():
             self._tc_object.update()
-            self._state = STATE_ON \
-                if self._tc_object.is_cleaning else STATE_OFF
+            self._state = STATE_ON if self._tc_object.is_cleaning else STATE_OFF

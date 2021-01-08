@@ -5,7 +5,6 @@ import unittest
 from unittest.mock import patch
 import pytest
 import pytz
-from homeassistant.helpers import template
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
@@ -32,36 +31,43 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Test the history statistics sensor setup."""
         self.init_recorder()
         config = {
-            'history': {
+            "history": {},
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "state": "on",
+                "start": "{{ now().replace(hour=0)"
+                ".replace(minute=0).replace(second=0) }}",
+                "duration": "02:00",
+                "name": "Test",
             },
-            'sensor': {
-                'platform': 'history_stats',
-                'entity_id': 'binary_sensor.test_id',
-                'state': 'on',
-                'start': '{{ now().replace(hour=0)'
-                         '.replace(minute=0).replace(second=0) }}',
-                'duration': '02:00',
-                'name': 'Test',
-            }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
-        state = self.hass.states.get('sensor.test')
+        state = self.hass.states.get("sensor.test")
         assert state.state == STATE_UNKNOWN
 
-    def test_period_parsing(self):
+    @patch(
+        "homeassistant.helpers.template.TemplateEnvironment." "is_safe_callable",
+        return_value=True,
+    )
+    def test_period_parsing(self, mock):
         """Test the conversion from templates to period."""
         now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=pytz.utc)
-        with patch.dict(template.ENV.globals, {'now': lambda: now}):
-            today = Template('{{ now().replace(hour=0).replace(minute=0)'
-                             '.replace(second=0) }}', self.hass)
+        with patch("homeassistant.util.dt.now", return_value=now):
+            today = Template(
+                "{{ now().replace(hour=0).replace(minute=0)" ".replace(second=0) }}",
+                self.hass,
+            )
             duration = timedelta(hours=2, minutes=1)
 
             sensor1 = HistoryStatsSensor(
-                self.hass, 'test', 'on', today, None, duration, 'time', 'test')
+                self.hass, "test", "on", today, None, duration, "time", "test"
+            )
             sensor2 = HistoryStatsSensor(
-                self.hass, 'test', 'on', None, today, duration, 'time', 'test')
+                self.hass, "test", "on", None, today, duration, "time", "test"
+            )
 
             sensor1.update_period()
             sensor1_start, sensor1_end = sensor1._period
@@ -99,39 +105,41 @@ class TestHistoryStatsSensor(unittest.TestCase):
         # |---off---|---on----|---off---|---on----|
 
         fake_states = {
-            'binary_sensor.test_id': [
-                ha.State('binary_sensor.test_id', 'on', last_changed=t0),
-                ha.State('binary_sensor.test_id', 'off', last_changed=t1),
-                ha.State('binary_sensor.test_id', 'on', last_changed=t2),
+            "binary_sensor.test_id": [
+                ha.State("binary_sensor.test_id", "on", last_changed=t0),
+                ha.State("binary_sensor.test_id", "off", last_changed=t1),
+                ha.State("binary_sensor.test_id", "on", last_changed=t2),
             ]
         }
 
-        start = Template('{{ as_timestamp(now()) - 3600 }}', self.hass)
-        end = Template('{{ now() }}', self.hass)
+        start = Template("{{ as_timestamp(now()) - 3600 }}", self.hass)
+        end = Template("{{ now() }}", self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'binary_sensor.test_id', 'on', start, end, None,
-            'time', 'Test')
+            self.hass, "binary_sensor.test_id", "on", start, end, None, "time", "Test"
+        )
 
         sensor2 = HistoryStatsSensor(
-            self.hass, 'unknown.id', 'on', start, end, None, 'time', 'Test')
+            self.hass, "unknown.id", "on", start, end, None, "time", "Test"
+        )
 
         sensor3 = HistoryStatsSensor(
-            self.hass, 'binary_sensor.test_id', 'on', start, end, None,
-            'count', 'test')
+            self.hass, "binary_sensor.test_id", "on", start, end, None, "count", "test"
+        )
 
         sensor4 = HistoryStatsSensor(
-            self.hass, 'binary_sensor.test_id', 'on', start, end, None,
-            'ratio', 'test')
+            self.hass, "binary_sensor.test_id", "on", start, end, None, "ratio", "test"
+        )
 
-        assert sensor1._type == 'time'
-        assert sensor3._type == 'count'
-        assert sensor4._type == 'ratio'
+        assert sensor1._type == "time"
+        assert sensor3._type == "count"
+        assert sensor4._type == "ratio"
 
-        with patch('homeassistant.components.history.'
-                   'state_changes_during_period', return_value=fake_states):
-            with patch('homeassistant.components.history.get_state',
-                       return_value=None):
+        with patch(
+            "homeassistant.components.history." "state_changes_during_period",
+            return_value=fake_states,
+        ):
+            with patch("homeassistant.components.history.get_state", return_value=None):
                 sensor1.update()
                 sensor2.update()
                 sensor3.update()
@@ -144,13 +152,15 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
     def test_wrong_date(self):
         """Test when start or end value is not a timestamp or a date."""
-        good = Template('{{ now() }}', self.hass)
-        bad = Template('{{ TEST }}', self.hass)
+        good = Template("{{ now() }}", self.hass)
+        bad = Template("{{ TEST }}", self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', good, bad, None, 'time', 'Test')
+            self.hass, "test", "on", good, bad, None, "time", "Test"
+        )
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, good, None, 'time', 'Test')
+            self.hass, "test", "on", bad, good, None, "time", "Test"
+        )
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
@@ -165,32 +175,33 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Test when duration value is not a timedelta."""
         self.init_recorder()
         config = {
-            'history': {
+            "history": {},
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "Test",
+                "state": "on",
+                "start": "{{ now() }}",
+                "duration": "TEST",
             },
-            'sensor': {
-                'platform': 'history_stats',
-                'entity_id': 'binary_sensor.test_id',
-                'name': 'Test',
-                'state': 'on',
-                'start': '{{ now() }}',
-                'duration': 'TEST',
-            }
         }
 
-        setup_component(self.hass, 'sensor', config)
-        assert self.hass.states.get('sensor.test')is None
+        setup_component(self.hass, "sensor", config)
+        assert self.hass.states.get("sensor.test") is None
         with pytest.raises(TypeError):
-            setup_component(self.hass, 'sensor', config)()
+            setup_component(self.hass, "sensor", config)()
 
     def test_bad_template(self):
         """Test Exception when the template cannot be parsed."""
-        bad = Template('{{ x - 12 }}', self.hass)  # x is undefined
-        duration = '01:00'
+        bad = Template("{{ x - 12 }}", self.hass)  # x is undefined
+        duration = "01:00"
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, None, duration, 'time', 'Test')
+            self.hass, "test", "on", bad, None, duration, "time", "Test"
+        )
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, bad, duration, 'time', 'Test')
+            self.hass, "test", "on", None, bad, duration, "time", "Test"
+        )
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
@@ -205,43 +216,41 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Test config when not enough arguments provided."""
         self.init_recorder()
         config = {
-            'history': {
+            "history": {},
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "Test",
+                "state": "on",
+                "start": "{{ now() }}",
             },
-            'sensor': {
-                'platform': 'history_stats',
-                'entity_id': 'binary_sensor.test_id',
-                'name': 'Test',
-                'state': 'on',
-                'start': '{{ now() }}',
-            }
         }
 
-        setup_component(self.hass, 'sensor', config)
-        assert self.hass.states.get('sensor.test')is None
+        setup_component(self.hass, "sensor", config)
+        assert self.hass.states.get("sensor.test") is None
         with pytest.raises(TypeError):
-            setup_component(self.hass, 'sensor', config)()
+            setup_component(self.hass, "sensor", config)()
 
     def test_too_many_arguments(self):
         """Test config when too many arguments provided."""
         self.init_recorder()
         config = {
-            'history': {
+            "history": {},
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "Test",
+                "state": "on",
+                "start": "{{ as_timestamp(now()) - 3600 }}",
+                "end": "{{ now() }}",
+                "duration": "01:00",
             },
-            'sensor': {
-                'platform': 'history_stats',
-                'entity_id': 'binary_sensor.test_id',
-                'name': 'Test',
-                'state': 'on',
-                'start': '{{ as_timestamp(now()) - 3600 }}',
-                'end': '{{ now() }}',
-                'duration': '01:00',
-            }
         }
 
-        setup_component(self.hass, 'sensor', config)
-        assert self.hass.states.get('sensor.test')is None
+        setup_component(self.hass, "sensor", config)
+        assert self.hass.states.get("sensor.test") is None
         with pytest.raises(TypeError):
-            setup_component(self.hass, 'sensor', config)()
+            setup_component(self.hass, "sensor", config)()
 
     def init_recorder(self):
         """Initialize the recorder."""

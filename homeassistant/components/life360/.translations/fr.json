@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "invalid_credentials": "Informations d'identification invalides",
+            "user_already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9"
+        },
+        "error": {
+            "invalid_credentials": "Informations d'identification invalides",
+            "invalid_username": "Nom d'utilisateur invalide",
+            "user_already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

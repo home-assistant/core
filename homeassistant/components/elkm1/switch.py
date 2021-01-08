@@ -4,13 +4,17 @@ from homeassistant.components.switch import SwitchDevice
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the Elk-M1 switch platform."""
     if discovery_info is None:
         return
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.outputs, 'output', ElkOutput, [])
+    elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
+    for elk_data in elk_datas.values():
+        elk = elk_data["elk"]
+        entities = create_elk_entities(
+            elk_data, elk.outputs, "output", ElkOutput, entities
+        )
     async_add_entities(entities, True)
 
 

@@ -11,27 +11,31 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STOP_ID = 'stop_id'
-CONF_DESTINATION = 'destination'
-CONF_OFFSET = 'offset'
+CONF_STOP_ID = "stop_id"
+CONF_DESTINATION = "destination"
+CONF_OFFSET = "offset"
 
-DEFAULT_NAME = 'Ruter'
+DEFAULT_NAME = "Ruter"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP_ID): cv.positive_int,
-    vol.Optional(CONF_DESTINATION): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_OFFSET, default=0): cv.positive_int,
-    })
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STOP_ID): cv.positive_int,
+        vol.Optional(CONF_DESTINATION): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OFFSET, default=0): cv.positive_int,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
     from pyruter.api import Departures
-    _LOGGER.warning("The API used in this sensor is shutting down soon, "
-                    "you should consider starting to use the "
-                    "'entur_public_transport' sensor instead")
+
+    _LOGGER.warning(
+        "The API used in this sensor is shutting down soon, "
+        "you should consider starting to use the "
+        "'entur_public_transport' sensor instead"
+    )
     stop_id = config[CONF_STOP_ID]
     destination = config.get(CONF_DESTINATION)
     name = config[CONF_NAME]
@@ -62,9 +66,9 @@ class RuterSensor(Entity):
             return
         try:
             data = self.ruter.departures[self._offset]
-            self._state = data['time']
-            self._attributes['line'] = data['line']
-            self._attributes['destination'] = data['destination']
+            self._state = data["time"]
+            self._attributes["line"] = data["line"]
+            self._attributes["destination"] = data["destination"]
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data from Ruter, %s", error)
 
@@ -81,7 +85,7 @@ class RuterSensor(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return 'mdi:bus'
+        return "mdi:bus"
 
     @property
     def device_state_attributes(self):

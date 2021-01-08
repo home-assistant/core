@@ -3,7 +3,7 @@
   "name": "Russound rio",
   "documentation": "https://www.home-assistant.io/components/russound_rio",
   "requirements": [
-    "russound_rio==0.1.4"
+    "russound_rio==0.1.7"
   ],
   "dependencies": [],
   "codeowners": []

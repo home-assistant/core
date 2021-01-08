@@ -1,0 +1,8 @@
+{
+  "domain": "avea",
+  "name": "Elgato Avea",
+  "documentation": "https://www.home-assistant.io/components/avea",
+  "dependencies": [],
+  "codeowners": ["@pattyland"],
+  "requirements": ["avea==1.2.8"]
+}

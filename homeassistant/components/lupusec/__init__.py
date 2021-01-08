@@ -5,29 +5,31 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_NAME, CONF_IP_ADDRESS)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_IP_ADDRESS
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'lupusec'
+DOMAIN = "lupusec"
 
-NOTIFICATION_ID = 'lupusec_notification'
-NOTIFICATION_TITLE = 'Lupusec Security Setup'
+NOTIFICATION_ID = "lupusec_notification"
+NOTIFICATION_TITLE = "Lupusec Security Setup"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_IP_ADDRESS): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-LUPUSEC_PLATFORMS = [
-    'alarm_control_panel', 'binary_sensor', 'switch'
-]
+LUPUSEC_PLATFORMS = ["alarm_control_panel", "binary_sensor", "switch"]
 
 
 def setup(hass, config):
@@ -46,11 +48,12 @@ def setup(hass, config):
         _LOGGER.error(ex)
 
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
         return False
 
     for platform in LUPUSEC_PLATFORMS:
@@ -65,6 +68,7 @@ class LupusecSystem:
     def __init__(self, username, password, ip_address, name):
         """Initialize the system."""
         import lupupy
+
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
         self.name = name
 

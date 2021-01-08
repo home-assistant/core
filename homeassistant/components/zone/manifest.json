@@ -1,6 +1,7 @@
 {
   "domain": "zone",
   "name": "Zone",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/zone",
   "requirements": [],
   "dependencies": [],

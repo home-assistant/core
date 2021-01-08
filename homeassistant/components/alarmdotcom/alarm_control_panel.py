@@ -7,25 +7,32 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+    CONF_CODE,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Alarm.com'
+DEFAULT_NAME = "Alarm.com"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_CODE): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_CODE): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
@@ -43,7 +50,8 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     def __init__(self, hass, name, code, username, password):
         """Initialize the Alarm.com status."""
         from pyalarmdotcom import Alarmdotcom
-        _LOGGER.debug('Setting up Alarm.com...')
+
+        _LOGGER.debug("Setting up Alarm.com...")
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
@@ -51,8 +59,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._password = password
         self._websession = async_get_clientsession(self._hass)
         self._state = None
-        self._alarm = Alarmdotcom(
-            username, password, self._websession, hass.loop)
+        self._alarm = Alarmdotcom(username, password, self._websession, hass.loop)
 
     async def async_login(self):
         """Login to Alarm.com."""
@@ -73,27 +80,25 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self._alarm.state.lower() == 'disarmed':
+        if self._alarm.state.lower() == "disarmed":
             return STATE_ALARM_DISARMED
-        if self._alarm.state.lower() == 'armed stay':
+        if self._alarm.state.lower() == "armed stay":
             return STATE_ALARM_ARMED_HOME
-        if self._alarm.state.lower() == 'armed away':
+        if self._alarm.state.lower() == "armed away":
             return STATE_ALARM_ARMED_AWAY
         return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'sensor_status': self._alarm.sensor_status
-        }
+        return {"sensor_status": self._alarm.sensor_status}
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

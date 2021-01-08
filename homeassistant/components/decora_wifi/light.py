@@ -5,23 +5,25 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_TRANSITION, Light,
-    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION)
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP)
+    ATTR_BRIGHTNESS,
+    ATTR_TRANSITION,
+    Light,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_TRANSITION,
+)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
 
-NOTIFICATION_ID = 'leviton_notification'
-NOTIFICATION_TITLE = 'myLeviton Decora Setup'
+NOTIFICATION_ID = "leviton_notification"
+NOTIFICATION_TITLE = "myLeviton Decora Setup"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -41,10 +43,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         # If login failed, notify user.
         if success is None:
-            msg = 'Failed to log into myLeviton Services. Check credentials.'
+            msg = "Failed to log into myLeviton Services. Check credentials."
             _LOGGER.error(msg)
             hass.components.persistent_notification.create(
-                msg, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID)
+                msg, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
+            )
             return False
 
         # Gather all the available devices...
@@ -52,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         all_switches = []
         for permission in perms:
             if permission.residentialAccountId is not None:
-                acct = ResidentialAccount(
-                    session, permission.residentialAccountId)
+                acct = ResidentialAccount(session, permission.residentialAccountId)
                 for residence in acct.get_residences():
                     for switch in residence.get_iot_switches():
                         all_switches.append(switch)
@@ -64,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities(DecoraWifiLight(sw) for sw in all_switches)
     except ValueError:
-        _LOGGER.error('Failed to communicate with myLeviton Service.')
+        _LOGGER.error("Failed to communicate with myLeviton Service.")
 
     # Listen for the stop event and log out.
     def logout(event):
@@ -73,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if session is not None:
                 Person.logout(session)
         except ValueError:
-            _LOGGER.error('Failed to log out of myLeviton Service.')
+            _LOGGER.error("Failed to log out of myLeviton Service.")
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
 
@@ -105,39 +107,39 @@ class DecoraWifiLight(Light):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._switch.power == 'ON'
+        return self._switch.power == "ON"
 
     def turn_on(self, **kwargs):
         """Instruct the switch to turn on & adjust brightness."""
-        attribs = {'power': 'ON'}
+        attribs = {"power": "ON"}
 
         if ATTR_BRIGHTNESS in kwargs:
-            min_level = self._switch.data.get('minLevel', 0)
-            max_level = self._switch.data.get('maxLevel', 100)
+            min_level = self._switch.data.get("minLevel", 0)
+            max_level = self._switch.data.get("maxLevel", 100)
             brightness = int(kwargs[ATTR_BRIGHTNESS] * max_level / 255)
             brightness = max(brightness, min_level)
-            attribs['brightness'] = brightness
+            attribs["brightness"] = brightness
 
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION])
-            attribs['fadeOnTime'] = attribs['fadeOffTime'] = transition
+            attribs["fadeOnTime"] = attribs["fadeOffTime"] = transition
 
         try:
             self._switch.update_attributes(attribs)
         except ValueError:
-            _LOGGER.error('Failed to turn on myLeviton switch.')
+            _LOGGER.error("Failed to turn on myLeviton switch.")
 
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
-        attribs = {'power': 'OFF'}
+        attribs = {"power": "OFF"}
         try:
             self._switch.update_attributes(attribs)
         except ValueError:
-            _LOGGER.error('Failed to turn off myLeviton switch.')
+            _LOGGER.error("Failed to turn off myLeviton switch.")
 
     def update(self):
         """Fetch new state data for this switch."""
         try:
             self._switch.refresh()
         except ValueError:
-            _LOGGER.error('Failed to update myLeviton switch data.')
+            _LOGGER.error("Failed to update myLeviton switch data.")

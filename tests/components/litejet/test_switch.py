@@ -12,16 +12,16 @@ from tests.components.switch import common
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_SWITCH = 'switch.mock_switch_1'
+ENTITY_SWITCH = "switch.mock_switch_1"
 ENTITY_SWITCH_NUMBER = 1
-ENTITY_OTHER_SWITCH = 'switch.mock_switch_2'
+ENTITY_OTHER_SWITCH = "switch.mock_switch_2"
 ENTITY_OTHER_SWITCH_NUMBER = 2
 
 
 class TestLiteJetSwitch(unittest.TestCase):
     """Test the litejet component."""
 
-    @mock.patch('pylitejet.LiteJet')
+    @mock.patch("pylitejet.LiteJet")
     def setup_method(self, method, mock_pylitejet):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -31,7 +31,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.switch_released_callbacks = {}
 
         def get_switch_name(number):
-            return "Mock Switch #"+str(number)
+            return "Mock Switch #" + str(number)
 
         def on_switch_pressed(number, callback):
             self.switch_pressed_callbacks[number] = callback
@@ -48,15 +48,11 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         self.mock_lj.on_switch_released.side_effect = on_switch_released
 
-        config = {
-            'litejet': {
-                'port': '/tmp/this_will_be_mocked',
-            }
-        }
-        if method == self.__class__.test_include_switches_False:
-            config['litejet']['include_switches'] = False
-        elif method != self.__class__.test_include_switches_unspecified:
-            config['litejet']['include_switches'] = True
+        config = {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        if method == self.test_include_switches_False:
+            config["litejet"]["include_switches"] = False
+        elif method != self.test_include_switches_unspecified:
+            config["litejet"]["include_switches"] = True
 
         assert setup.setup_component(self.hass, litejet.DOMAIN, config)
         self.hass.block_till_done()
@@ -85,8 +81,8 @@ class TestLiteJetSwitch(unittest.TestCase):
 
     def test_on_off(self):
         """Test turning the switch on and off."""
-        assert self.switch().state == 'off'
-        assert self.other_switch().state == 'off'
+        assert self.switch().state == "off"
+        assert self.other_switch().state == "off"
 
         assert not switch.is_on(self.hass, ENTITY_SWITCH)
 
@@ -107,8 +103,8 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert switch.is_on(self.hass, ENTITY_SWITCH)
         assert not switch.is_on(self.hass, ENTITY_OTHER_SWITCH)
-        assert self.switch().state == 'on'
-        assert self.other_switch().state == 'off'
+        assert self.switch().state == "on"
+        assert self.other_switch().state == "off"
 
         # Switch 2
         self.switch_pressed_callbacks[ENTITY_OTHER_SWITCH_NUMBER]()
@@ -116,8 +112,8 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert switch.is_on(self.hass, ENTITY_OTHER_SWITCH)
         assert switch.is_on(self.hass, ENTITY_SWITCH)
-        assert self.other_switch().state == 'on'
-        assert self.switch().state == 'on'
+        assert self.other_switch().state == "on"
+        assert self.switch().state == "on"
 
     def test_released_event(self):
         """Test handling an event from LiteJet."""
@@ -134,5 +130,5 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert not switch.is_on(self.hass, ENTITY_OTHER_SWITCH)
         assert not switch.is_on(self.hass, ENTITY_SWITCH)
-        assert self.other_switch().state == 'off'
-        assert self.switch().state == 'off'
+        assert self.other_switch().state == "off"
+        assert self.switch().state == "off"

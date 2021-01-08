@@ -6,30 +6,33 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME)
+from homeassistant.const import TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'sensehat'
-CONF_IS_HAT_ATTACHED = 'is_hat_attached'
+DEFAULT_NAME = "sensehat"
+CONF_IS_HAT_ATTACHED = "is_hat_attached"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    'temperature': ['temperature', TEMP_CELSIUS],
-    'humidity': ['humidity', '%'],
-    'pressure': ['pressure', 'mb'],
+    "temperature": ["temperature", TEMP_CELSIUS],
+    "humidity": ["humidity", "%"],
+    "pressure": ["pressure", "mb"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_TYPES)):
-        [vol.In(SENSOR_TYPES)],
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_TYPES)): [
+            vol.In(SENSOR_TYPES)
+        ],
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean,
+    }
+)
 
 
 def get_cpu_temp():
@@ -46,8 +49,7 @@ def get_average(temp_base):
     get_average.temp[2] = get_average.temp[1]
     get_average.temp[1] = get_average.temp[0]
     get_average.temp[0] = temp_base
-    temp_avg = (get_average.temp[0] + get_average.temp[1]
-                + get_average.temp[2]) / 3
+    temp_avg = (get_average.temp[0] + get_average.temp[1] + get_average.temp[2]) / 3
     return temp_avg
 
 
@@ -94,11 +96,11 @@ class SenseHatSensor(Entity):
             _LOGGER.error("Don't receive data")
             return
 
-        if self.type == 'temperature':
+        if self.type == "temperature":
             self._state = self.data.temperature
-        if self.type == 'humidity':
+        if self.type == "humidity":
             self._state = self.data.humidity
-        if self.type == 'pressure':
+        if self.type == "pressure":
             self._state = self.data.pressure
 
 
@@ -116,6 +118,7 @@ class SenseHatData:
     def update(self):
         """Get the latest data from Sense HAT."""
         from sense_hat import SenseHat
+
         sense = SenseHat()
         temp_from_h = sense.get_temperature_from_humidity()
         temp_from_p = sense.get_temperature_from_pressure()

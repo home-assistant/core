@@ -4,54 +4,72 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
-    ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
-    SUPPORT_TRANSITION, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_TRANSITION,
+    Light,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color as color_util
-from homeassistant.util.color import \
-    color_temperature_mired_to_kelvin as mired_to_kelvin
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+)
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Nanoleaf'
+DEFAULT_NAME = "Nanoleaf"
 
-DATA_NANOLEAF = 'nanoleaf'
+DATA_NANOLEAF = "nanoleaf"
 
-CONFIG_FILE = '.nanoleaf.conf'
+CONFIG_FILE = ".nanoleaf.conf"
 
-ICON = 'mdi:triangle-outline'
+ICON = "mdi:triangle-outline"
 
-SUPPORT_NANOLEAF = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                    SUPPORT_COLOR | SUPPORT_TRANSITION)
+SUPPORT_NANOLEAF = (
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | SUPPORT_EFFECT
+    | SUPPORT_COLOR
+    | SUPPORT_TRANSITION
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nanoleaf light."""
     from pynanoleaf import Nanoleaf, Unavailable
+
     if DATA_NANOLEAF not in hass.data:
         hass.data[DATA_NANOLEAF] = dict()
 
-    token = ''
+    token = ""
     if discovery_info is not None:
-        host = discovery_info['host']
-        name = discovery_info['hostname']
+        host = discovery_info["host"]
+        name = discovery_info["hostname"]
         # if device already exists via config, skip discovery setup
         if host in hass.data[DATA_NANOLEAF]:
             return
         _LOGGER.info("Discovered a new Nanoleaf: %s", discovery_info)
         conf = load_json(hass.config.path(CONFIG_FILE))
-        if conf.get(host, {}).get('token'):
-            token = conf[host]['token']
+        if conf.get(host, {}).get("token"):
+            token = conf[host]["token"]
     else:
         host = config[CONF_HOST]
         name = config[CONF_NAME]
@@ -62,12 +80,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not token:
         token = nanoleaf_light.request_token()
         if not token:
-            _LOGGER.error("Could not generate the auth token, did you press "
-                          "and hold the power button on %s"
-                          "for 5-7 seconds?", name)
+            _LOGGER.error(
+                "Could not generate the auth token, did you press "
+                "and hold the power button on %s"
+                "for 5-7 seconds?",
+                name,
+            )
             return
         conf = load_json(hass.config.path(CONFIG_FILE))
-        conf[host] = {'token': token}
+        conf[host] = {"token": token}
         save_json(hass.config.path(CONFIG_FILE), conf)
 
     nanoleaf_light.token = token
@@ -75,8 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         nanoleaf_light.available
     except Unavailable:
-        _LOGGER.error(
-            "Could not connect to Nanoleaf Light: %s on %s", name, host)
+        _LOGGER.error("Could not connect to Nanoleaf Light: %s on %s", name, host)
         return
 
     hass.data[DATA_NANOLEAF][host] = nanoleaf_light
@@ -114,8 +134,7 @@ class NanoleafLight(Light):
     def color_temp(self):
         """Return the current color temperature."""
         if self._color_temp is not None:
-            return color_util.color_temperature_kelvin_to_mired(
-                self._color_temp)
+            return color_util.color_temperature_kelvin_to_mired(self._color_temp)
         return None
 
     @property
@@ -181,7 +200,8 @@ class NanoleafLight(Light):
         if transition:
             if brightness:  # tune to the required brightness in n seconds
                 self._light.brightness_transition(
-                    int(brightness / 2.55), int(transition))
+                    int(brightness / 2.55), int(transition)
+                )
             else:  # If brightness is not specified, assume full brightness
                 self._light.brightness_transition(100, int(transition))
         else:  # If no transition is occurring, turn on the light
@@ -203,6 +223,7 @@ class NanoleafLight(Light):
     def update(self):
         """Fetch new state data for this light."""
         from pynanoleaf import Unavailable
+
         try:
             self._available = self._light.available
             self._brightness = self._light.brightness
@@ -212,6 +233,5 @@ class NanoleafLight(Light):
             self._hs_color = self._light.hue, self._light.saturation
             self._state = self._light.on
         except Unavailable as err:
-            _LOGGER.error("Could not update status for %s (%s)",
-                          self.name, err)
+            _LOGGER.error("Could not update status for %s (%s)", self.name, err)
             self._available = False

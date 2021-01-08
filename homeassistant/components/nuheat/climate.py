@@ -6,10 +6,19 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, STATE_AUTO, STATE_HEAT, STATE_IDLE, SUPPORT_HOLD_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_NONE,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -17,29 +26,24 @@ from . import DOMAIN as NUHEAT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:thermometer"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Hold modes
-MODE_AUTO = STATE_AUTO  # Run device schedule
+MODE_AUTO = HVAC_MODE_AUTO  # Run device schedule
 MODE_HOLD_TEMPERATURE = "temperature"
 MODE_TEMPORARY_HOLD = "temporary_temperature"
 
-OPERATION_LIST = [STATE_HEAT, STATE_IDLE]
+OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
 SCHEDULE_TEMPORARY_HOLD = 2
 
-SERVICE_RESUME_PROGRAM = "nuheat_resume_program"
+SERVICE_RESUME_PROGRAM = "resume_program"
 
-RESUME_PROGRAM_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
+RESUME_PROGRAM_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
-                 SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,8 +63,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         if entity_id:
-            target_thermostats = [device for device in thermostats
-                                  if device.entity_id in entity_id]
+            target_thermostats = [
+                device for device in thermostats if device.entity_id in entity_id
+            ]
         else:
             target_thermostats = thermostats
 
@@ -70,8 +75,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             thermostat.schedule_update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
-        schema=RESUME_PROGRAM_SCHEMA)
+        NUHEAT_DOMAIN,
+        SERVICE_RESUME_PROGRAM,
+        resume_program_set_service,
+        schema=RESUME_PROGRAM_SCHEMA,
+    )
 
 
 class NuHeatThermostat(ClimateDevice):
@@ -87,11 +95,6 @@ class NuHeatThermostat(ClimateDevice):
     def name(self):
         """Return the name of the thermostat."""
         return self._thermostat.room
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
 
     @property
     def supported_features(self):
@@ -115,12 +118,12 @@ class NuHeatThermostat(ClimateDevice):
         return self._thermostat.fahrenheit
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation. ie. heat, idle."""
         if self._thermostat.heating:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
 
-        return STATE_IDLE
+        return HVAC_MODE_OFF
 
     @property
     def min_temp(self):
@@ -147,8 +150,8 @@ class NuHeatThermostat(ClimateDevice):
         return self._thermostat.target_fahrenheit
 
     @property
-    def current_hold_mode(self):
-        """Return current hold mode."""
+    def preset_mode(self):
+        """Return current preset mode."""
         schedule_mode = self._thermostat.schedule_mode
         if schedule_mode == SCHEDULE_RUN:
             return MODE_AUTO
@@ -162,7 +165,12 @@ class NuHeatThermostat(ClimateDevice):
         return MODE_AUTO
 
     @property
-    def operation_list(self):
+    def preset_modes(self):
+        """Return available preset modes."""
+        return [PRESET_NONE, MODE_HOLD_TEMPERATURE, MODE_TEMPORARY_HOLD]
+
+    @property
+    def hvac_modes(self):
         """Return list of possible operation modes."""
         return OPERATION_LIST
 
@@ -171,15 +179,15 @@ class NuHeatThermostat(ClimateDevice):
         self._thermostat.resume_schedule()
         self._force_update = True
 
-    def set_hold_mode(self, hold_mode):
+    def set_preset_mode(self, preset_mode):
         """Update the hold mode of the thermostat."""
-        if hold_mode == MODE_AUTO:
+        if preset_mode == PRESET_NONE:
             schedule_mode = SCHEDULE_RUN
 
-        if hold_mode == MODE_HOLD_TEMPERATURE:
+        elif preset_mode == MODE_HOLD_TEMPERATURE:
             schedule_mode = SCHEDULE_HOLD
 
-        if hold_mode == MODE_TEMPORARY_HOLD:
+        elif preset_mode == MODE_TEMPORARY_HOLD:
             schedule_mode = SCHEDULE_TEMPORARY_HOLD
 
         self._thermostat.schedule_mode = schedule_mode
@@ -195,7 +203,9 @@ class NuHeatThermostat(ClimateDevice):
 
         _LOGGER.debug(
             "Setting NuHeat thermostat temperature to %s %s",
-            temperature, self.temperature_unit)
+            temperature,
+            self.temperature_unit,
+        )
 
         self._force_update = True
 

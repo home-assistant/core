@@ -3,29 +3,42 @@ from homeassistant.const import TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-HUMIDITY_ICON = 'mdi-water-percent'
-TEMP_C_ICON = "mdi-temperature-celsius"
-BRIGHTNESS_ICON = "mdi-brightness-6"
+HUMIDITY_ICON = "mdi:water-percent"
+TEMP_C_ICON = "mdi:thermometer"
+BRIGHTNESS_ICON = "mdi:brightness-6"
 
 UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Homekit sensor support."""
-    if discovery_info is not None:
-        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-        devtype = discovery_info['device-type']
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
 
-        if devtype == 'humidity':
-            add_entities(
-                [HomeKitHumiditySensor(accessory, discovery_info)], True)
-        elif devtype == 'temperature':
-            add_entities(
-                [HomeKitTemperatureSensor(accessory, discovery_info)], True)
-        elif devtype == 'light':
-            add_entities(
-                [HomeKitLightSensor(accessory, discovery_info)], True)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit covers."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        devtype = service["stype"]
+        info = {"aid": aid, "iid": service["iid"]}
+        if devtype == "humidity":
+            async_add_entities([HomeKitHumiditySensor(conn, info)], True)
+            return True
+
+        if devtype == "temperature":
+            async_add_entities([HomeKitTemperatureSensor(conn, info)], True)
+            return True
+
+        if devtype == "light":
+            async_add_entities([HomeKitLightSensor(conn, info)], True)
+            return True
+
+        return False
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -41,9 +54,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
         # pylint: disable=import-error
         from homekit.model.characteristics import CharacteristicsTypes
 
-        return [
-            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
-        ]
+        return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
 
     @property
     def name(self):
@@ -82,9 +93,7 @@ class HomeKitTemperatureSensor(HomeKitEntity):
         # pylint: disable=import-error
         from homekit.model.characteristics import CharacteristicsTypes
 
-        return [
-            CharacteristicsTypes.TEMPERATURE_CURRENT
-        ]
+        return [CharacteristicsTypes.TEMPERATURE_CURRENT]
 
     @property
     def name(self):
@@ -123,9 +132,7 @@ class HomeKitLightSensor(HomeKitEntity):
         # pylint: disable=import-error
         from homekit.model.characteristics import CharacteristicsTypes
 
-        return [
-            CharacteristicsTypes.LIGHT_LEVEL_CURRENT
-        ]
+        return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
 
     @property
     def name(self):

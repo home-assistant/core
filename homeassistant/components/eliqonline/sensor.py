@@ -6,32 +6,33 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CHANNEL_ID = 'channel_id'
+CONF_CHANNEL_ID = "channel_id"
 
-DEFAULT_NAME = 'ELIQ Online'
+DEFAULT_NAME = "ELIQ Online"
 
-ICON = 'mdi:gauge'
+ICON = "mdi:gauge"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 UNIT_OF_MEASUREMENT = POWER_WATT
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Required(CONF_CHANNEL_ID): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        vol.Required(CONF_CHANNEL_ID): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ELIQ Online sensor."""
     import eliqonline
 
@@ -40,8 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     channel_id = config.get(CONF_CHANNEL_ID)
     session = async_get_clientsession(hass)
 
-    api = eliqonline.API(session=session,
-                         access_token=access_token)
+    api = eliqonline.API(session=session, access_token=access_token)
 
     try:
         _LOGGER.debug("Probing for access to ELIQ Online API")
@@ -92,5 +92,4 @@ class EliqSensor(Entity):
         except KeyError:
             _LOGGER.warning("Invalid response from ELIQ Online API")
         except (OSError, asyncio.TimeoutError) as error:
-            _LOGGER.warning("Could not connect to the ELIQ Online API: %s",
-                            error)
+            _LOGGER.warning("Could not connect to the ELIQ Online API: %s", error)

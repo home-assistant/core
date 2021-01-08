@@ -1,8 +1,15 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-from typing import (Any, Union, Optional,  # noqa pylint: disable=unused-import
-                    Tuple, List, cast, Dict)
+from typing import (
+    Any,
+    Union,
+    Optional,  # noqa pylint: disable=unused-import
+    Tuple,
+    List,
+    cast,
+    Dict,
+)
 
 import pytz
 import pytz.exceptions as pytzexceptions
@@ -19,10 +26,10 @@ DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
 DATETIME_RE = re.compile(
-    r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})'
-    r'[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})'
-    r'(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?'
-    r'(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$'
+    r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
+    r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
+    r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
+    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
 )
 
 
@@ -100,14 +107,16 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
 
 
 def start_of_local_day(
-        dt_or_d: Union[dt.date, dt.datetime, None] = None) -> dt.datetime:
+    dt_or_d: Union[dt.date, dt.datetime, None] = None
+) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date = now().date()  # type: dt.date
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
-    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(  # type: ignore
-        date, dt.time()))
+    return DEFAULT_TIME_ZONE.localize(  # type: ignore
+        dt.datetime.combine(date, dt.time())
+    )
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -125,22 +134,22 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     if not match:
         return None
     kws = match.groupdict()  # type: Dict[str, Any]
-    if kws['microsecond']:
-        kws['microsecond'] = kws['microsecond'].ljust(6, '0')
-    tzinfo_str = kws.pop('tzinfo')
+    if kws["microsecond"]:
+        kws["microsecond"] = kws["microsecond"].ljust(6, "0")
+    tzinfo_str = kws.pop("tzinfo")
 
     tzinfo = None  # type: Optional[dt.tzinfo]
-    if tzinfo_str == 'Z':
+    if tzinfo_str == "Z":
         tzinfo = UTC
     elif tzinfo_str is not None:
         offset_mins = int(tzinfo_str[-2:]) if len(tzinfo_str) > 3 else 0
         offset_hours = int(tzinfo_str[1:3])
         offset = dt.timedelta(hours=offset_hours, minutes=offset_mins)
-        if tzinfo_str[0] == '-':
+        if tzinfo_str[0] == "-":
             offset = -offset
         tzinfo = dt.timezone(offset)
     kws = {k: int(v) for k, v in kws.items() if v is not None}
-    kws['tzinfo'] = tzinfo
+    kws["tzinfo"] = tzinfo
     return dt.datetime(**kws)
 
 
@@ -157,7 +166,7 @@ def parse_time(time_str: str) -> Optional[dt.time]:
 
     Return None if invalid.
     """
-    parts = str(time_str).split(':')
+    parts = str(time_str).split(":")
     if len(parts) < 2:
         return None
     try:
@@ -180,11 +189,12 @@ def get_age(date: dt.datetime) -> str:
     be returned.
     Make sure date is not in the future, or else it won't work.
     """
+
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return '1 {}'.format(unit)
-        return '{:d} {}s'.format(number, unit)
+            return "1 {}".format(unit)
+        return "{:d} {}s".format(number, unit)
 
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
@@ -196,35 +206,33 @@ def get_age(date: dt.datetime) -> str:
 
     year, day = q_n_r(day, 365)
     if year > 0:
-        return formatn(year, 'year')
+        return formatn(year, "year")
 
     month, day = q_n_r(day, 30)
     if month > 0:
-        return formatn(month, 'month')
+        return formatn(month, "month")
     if day > 0:
-        return formatn(day, 'day')
+        return formatn(day, "day")
 
     hour, second = q_n_r(second, 3600)
     if hour > 0:
-        return formatn(hour, 'hour')
+        return formatn(hour, "hour")
 
     minute, second = q_n_r(second, 60)
     if minute > 0:
-        return formatn(minute, 'minute')
+        return formatn(minute, "minute")
 
-    return formatn(second, 'second')
+    return formatn(second, "second")
 
 
-def parse_time_expression(parameter: Any, min_value: int, max_value: int) \
-        -> List[int]:
+def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> List[int]:
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == MATCH_ALL:
         res = [x for x in range(min_value, max_value + 1)]
-    elif isinstance(parameter, str) and parameter.startswith('/'):
-        parameter = float(parameter[1:])
-        res = [x for x in range(min_value, max_value + 1)
-               if x % parameter == 0]
-    elif not hasattr(parameter, '__iter__'):
+    elif isinstance(parameter, str) and parameter.startswith("/"):
+        parameter = int(parameter[1:])
+        res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+    elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
         res = list(sorted(int(x) for x in parameter))
@@ -240,9 +248,9 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) \
 
 
 # pylint: disable=redefined-outer-name
-def find_next_time_expression_time(now: dt.datetime,
-                                   seconds: List[int], minutes: List[int],
-                                   hours: List[int]) -> dt.datetime:
+def find_next_time_expression_time(
+    now: dt.datetime, seconds: List[int], minutes: List[int], hours: List[int]
+) -> dt.datetime:
     """Find the next datetime from now for which the time expression matches.
 
     The algorithm looks at each time unit separately and tries to find the
@@ -253,8 +261,7 @@ def find_next_time_expression_time(now: dt.datetime,
     including daylight saving time.
     """
     if not seconds or not minutes or not hours:
-        raise ValueError("Cannot find a next time: Time expression never "
-                         "matches!")
+        raise ValueError("Cannot find a next time: Time expression never " "matches!")
 
     def _lower_bound(arr: List[int], cmp: int) -> Optional[int]:
         """Return the first value in arr greater or equal to cmp.
@@ -302,7 +309,7 @@ def find_next_time_expression_time(now: dt.datetime,
     next_hour = _lower_bound(hours, result.hour)
     if next_hour != result.hour:
         # We're in the next hour. Seconds+minutes needs to be reset.
-        result.replace(second=seconds[0], minute=minutes[0])
+        result = result.replace(second=seconds[0], minute=minutes[0])
 
     if next_hour is None:
         # No minute to match in this day. Roll-over to next day.
@@ -360,8 +367,7 @@ def find_next_time_expression_time(now: dt.datetime,
 
     # Step 2: Check if result of (now - DST) is ambiguous.
     check = now - now_dst
-    check_result = find_next_time_expression_time(
-        check, seconds, minutes, hours)
+    check_result = find_next_time_expression_time(check, seconds, minutes, hours)
     try:
         tzinfo.localize(check_result.replace(tzinfo=None), is_dst=None)
         return result
@@ -369,6 +375,5 @@ def find_next_time_expression_time(now: dt.datetime,
         pass
 
     # OK, edge case does apply. We must override the DST to DST-off
-    check_result = tzinfo.localize(check_result.replace(tzinfo=None),
-                                   is_dst=False)
+    check_result = tzinfo.localize(check_result.replace(tzinfo=None), is_dst=False)
     return check_result

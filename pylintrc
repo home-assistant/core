@@ -1,5 +1,12 @@
+[MASTER]
+ignore=tests
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,fp
+
 [MESSAGES CONTROL]
 # Reasons disabled:
+# format - handled by black
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
@@ -14,6 +21,7 @@
 # not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
 # unnecessary-pass - readability for functions which only contain pass
 disable=
+  format,
   abstract-class-little-used,
   abstract-method,
   cyclic-import,

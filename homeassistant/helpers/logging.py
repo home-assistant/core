@@ -3,6 +3,9 @@ import inspect
 import logging
 
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
+
 class KeywordMessage:
     """
     Represents a logging message with keyword arguments.
@@ -44,6 +47,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
                 k: kwargs[k]
                 for k in inspect.getfullargspec(
                     self.logger._log  # pylint: disable=protected-access
-                ).args[1:] if k in kwargs
-            }
+                ).args[1:]
+                if k in kwargs
+            },
         )

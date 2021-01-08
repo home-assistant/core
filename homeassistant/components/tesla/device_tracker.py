@@ -12,8 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Tesla tracker."""
     TeslaDeviceTracker(
-        hass, config, see,
-        hass.data[TESLA_DOMAIN]['devices']['devices_tracker'])
+        hass, config, see, hass.data[TESLA_DOMAIN]["devices"]["devices_tracker"]
+    )
     return True
 
 
@@ -27,8 +27,7 @@ class TeslaDeviceTracker:
         self.devices = tesla_devices
         self._update_info()
 
-        track_utc_time_change(
-            self.hass, self._update_info, second=range(0, 60, 30))
+        track_utc_time_change(self.hass, self._update_info, second=range(0, 60, 30))
 
     def _update_info(self, now=None):
         """Update the device info."""
@@ -39,14 +38,9 @@ class TeslaDeviceTracker:
             dev_id = slugify(device.uniq_name)
             location = device.get_location()
             if location:
-                lat = location['latitude']
-                lon = location['longitude']
-                attrs = {
-                    'trackr_id': dev_id,
-                    'id': dev_id,
-                    'name': name
-                }
+                lat = location["latitude"]
+                lon = location["longitude"]
+                attrs = {"trackr_id": dev_id, "id": dev_id, "name": name}
                 self.see(
-                    dev_id=dev_id, host_name=name,
-                    gps=(lat, lon), attributes=attrs
+                    dev_id=dev_id, host_name=name, gps=(lat, lon), attributes=attrs
                 )

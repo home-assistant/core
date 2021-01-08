@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge ass schon konfigur\u00e9iert"
+            "already_configured": "Bridge ass schon konfigur\u00e9iert",
+            "already_in_progress": "Bridge Konfiguratioun ass schonn am gaang."
         },
         "error": {
             "cannot_connect": "Keng Verbindung mat der Gateway m\u00e9iglech.",

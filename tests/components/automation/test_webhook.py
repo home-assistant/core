@@ -8,8 +8,8 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 async def setup_http(hass):
     """Set up http."""
-    assert await async_setup_component(hass, 'http', {})
-    assert await async_setup_component(hass, 'webhook', {})
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, "webhook", {})
 
 
 async def test_webhook_json(hass, aiohttp_client):
@@ -21,31 +21,28 @@ async def test_webhook_json(hass, aiohttp_client):
         """Helepr to store events."""
         events.append(event)
 
-    hass.bus.async_listen('test_success', store_event)
+    hass.bus.async_listen("test_success", store_event)
 
-    assert await async_setup_component(hass, 'automation', {
-        'automation': {
-            'trigger': {
-                'platform': 'webhook',
-                'webhook_id': 'json_webhook'
-            },
-            'action': {
-                'event': 'test_success',
-                'event_data_template': {
-                    'hello': 'yo {{ trigger.json.hello }}',
-                }
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"platform": "webhook", "webhook_id": "json_webhook"},
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.json.hello }}"},
+                },
             }
-        }
-    })
+        },
+    )
 
     client = await aiohttp_client(hass.http.app)
 
-    await client.post('/api/webhook/json_webhook', json={
-        'hello': 'world'
-    })
+    await client.post("/api/webhook/json_webhook", json={"hello": "world"})
 
     assert len(events) == 1
-    assert events[0].data['hello'] == 'yo world'
+    assert events[0].data["hello"] == "yo world"
 
 
 async def test_webhook_post(hass, aiohttp_client):
@@ -57,31 +54,28 @@ async def test_webhook_post(hass, aiohttp_client):
         """Helepr to store events."""
         events.append(event)
 
-    hass.bus.async_listen('test_success', store_event)
+    hass.bus.async_listen("test_success", store_event)
 
-    assert await async_setup_component(hass, 'automation', {
-        'automation': {
-            'trigger': {
-                'platform': 'webhook',
-                'webhook_id': 'post_webhook'
-            },
-            'action': {
-                'event': 'test_success',
-                'event_data_template': {
-                    'hello': 'yo {{ trigger.data.hello }}',
-                }
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"platform": "webhook", "webhook_id": "post_webhook"},
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
+                },
             }
-        }
-    })
+        },
+    )
 
     client = await aiohttp_client(hass.http.app)
 
-    await client.post('/api/webhook/post_webhook', data={
-        'hello': 'world'
-    })
+    await client.post("/api/webhook/post_webhook", data={"hello": "world"})
 
     assert len(events) == 1
-    assert events[0].data['hello'] == 'yo world'
+    assert events[0].data["hello"] == "yo world"
 
 
 async def test_webhook_query(hass, aiohttp_client):
@@ -93,26 +87,25 @@ async def test_webhook_query(hass, aiohttp_client):
         """Helepr to store events."""
         events.append(event)
 
-    hass.bus.async_listen('test_success', store_event)
+    hass.bus.async_listen("test_success", store_event)
 
-    assert await async_setup_component(hass, 'automation', {
-        'automation': {
-            'trigger': {
-                'platform': 'webhook',
-                'webhook_id': 'query_webhook'
-            },
-            'action': {
-                'event': 'test_success',
-                'event_data_template': {
-                    'hello': 'yo {{ trigger.query.hello }}',
-                }
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"platform": "webhook", "webhook_id": "query_webhook"},
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.query.hello }}"},
+                },
             }
-        }
-    })
+        },
+    )
 
     client = await aiohttp_client(hass.http.app)
 
-    await client.post('/api/webhook/query_webhook?hello=world')
+    await client.post("/api/webhook/query_webhook?hello=world")
 
     assert len(events) == 1
-    assert events[0].data['hello'] == 'yo world'
+    assert events[0].data["hello"] == "yo world"

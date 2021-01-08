@@ -10,15 +10,17 @@ from .typing import HomeAssistantType
 
 
 _LOGGER = logging.getLogger(__name__)
-DATA_DISPATCHER = 'dispatcher'
+DATA_DISPATCHER = "dispatcher"
 
 
 @bind_hass
-def dispatcher_connect(hass: HomeAssistantType, signal: str,
-                       target: Callable[..., None]) -> Callable[[], None]:
+def dispatcher_connect(
+    hass: HomeAssistantType, signal: str, target: Callable[..., None]
+) -> Callable[[], None]:
     """Connect a callable function to a signal."""
     async_unsub = run_callback_threadsafe(
-        hass.loop, async_dispatcher_connect, hass, signal, target).result()
+        hass.loop, async_dispatcher_connect, hass, signal, target
+    ).result()
 
     def remove_dispatcher() -> None:
         """Remove signal listener."""
@@ -29,8 +31,9 @@ def dispatcher_connect(hass: HomeAssistantType, signal: str,
 
 @callback
 @bind_hass
-def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
-                             target: Callable[..., Any]) -> Callable[[], None]:
+def async_dispatcher_connect(
+    hass: HomeAssistantType, signal: str, target: Callable[..., Any]
+) -> Callable[[], None]:
     """Connect a callable function to a signal.
 
     This method must be run in the event loop.
@@ -42,9 +45,11 @@ def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
         hass.data[DATA_DISPATCHER][signal] = []
 
     wrapped_target = catch_log_exception(
-        target, lambda *args:
-        "Exception in {} when dispatching '{}': {}".format(
-            target.__name__, signal, args))
+        target,
+        lambda *args: "Exception in {} when dispatching '{}': {}".format(
+            target.__name__, signal, args
+        ),
+    )
 
     hass.data[DATA_DISPATCHER][signal].append(wrapped_target)
 
@@ -56,8 +61,7 @@ def async_dispatcher_connect(hass: HomeAssistantType, signal: str,
         except (KeyError, ValueError):
             # KeyError is key target listener did not exist
             # ValueError if listener did not exist within signal
-            _LOGGER.warning(
-                "Unable to remove unknown dispatcher %s", target)
+            _LOGGER.warning("Unable to remove unknown dispatcher %s", target)
 
     return async_remove_dispatcher
 
@@ -70,8 +74,7 @@ def dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> None:
 
 @callback
 @bind_hass
-def async_dispatcher_send(
-        hass: HomeAssistantType, signal: str, *args: Any) -> None:
+def async_dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> None:
     """Send signal and data.
 
     This method must be run in the event loop.

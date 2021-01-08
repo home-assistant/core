@@ -5,13 +5,12 @@ from datetime import timedelta
 import requests
 
 from homeassistant.components import nest
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera,
-                                             SUPPORT_ON_OFF)
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, SUPPORT_ON_OFF
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-NEST_BRAND = 'Nest'
+NEST_BRAND = "Nest"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
@@ -25,10 +24,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
-    camera_devices = \
-        await hass.async_add_job(hass.data[nest.DATA_NEST].cameras)
-    cameras = [NestCamera(structure, device)
-               for structure, device in camera_devices]
+    camera_devices = await hass.async_add_job(hass.data[nest.DATA_NEST].cameras)
+    cameras = [NestCamera(structure, device) for structure, device in camera_devices]
     async_add_entities(cameras, True)
 
 
@@ -64,12 +61,10 @@ class NestCamera(Camera):
     def device_info(self):
         """Return information about the device."""
         return {
-            'identifiers': {
-                (nest.DOMAIN, self.device.device_id)
-            },
-            'name': self.device.name_long,
-            'manufacturer': 'Nest Labs',
-            'model': "Camera",
+            "identifiers": {(nest.DOMAIN, self.device.device_id)},
+            "name": self.device.name_long,
+            "manufacturer": "Nest Labs",
+            "model": "Camera",
         }
 
     @property
@@ -99,7 +94,7 @@ class NestCamera(Camera):
 
     def turn_off(self):
         """Turn off camera."""
-        _LOGGER.debug('Turn off camera %s', self._name)
+        _LOGGER.debug("Turn off camera %s", self._name)
         # Calling Nest API in is_streaming setter.
         # device.is_streaming would not immediately change until the process
         # finished in Nest Cam.
@@ -108,10 +103,10 @@ class NestCamera(Camera):
     def turn_on(self):
         """Turn on camera."""
         if not self._online:
-            _LOGGER.error('Camera %s is offline.', self._name)
+            _LOGGER.error("Camera %s is offline.", self._name)
             return
 
-        _LOGGER.debug('Turn on camera %s', self._name)
+        _LOGGER.debug("Turn on camera %s", self._name)
         # Calling Nest API in is_streaming setter.
         # device.is_streaming would not immediately change until the process
         # finished in Nest Cam.
@@ -133,8 +128,7 @@ class NestCamera(Camera):
             self._time_between_snapshots = timedelta(seconds=30)
 
     def _ready_for_snapshot(self, now):
-        return (self._next_snapshot_at is None or
-                now > self._next_snapshot_at)
+        return self._next_snapshot_at is None or now > self._next_snapshot_at
 
     def camera_image(self):
         """Return a still image response from the camera."""

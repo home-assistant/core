@@ -1,0 +1,8 @@
+repos:
+-   repo: https://github.com/python/black
+    rev: 19.3b0
+    hooks:
+    -   id: black
+        args:
+          - --safe
+          - --quiet

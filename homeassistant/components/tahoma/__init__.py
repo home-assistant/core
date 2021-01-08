@@ -11,47 +11,51 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'tahoma'
+DOMAIN = "tahoma"
 
-TAHOMA_ID_FORMAT = '{}_{}'
+TAHOMA_ID_FORMAT = "{}_{}"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_EXCLUDE, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-TAHOMA_COMPONENTS = [
-    'scene', 'sensor', 'cover', 'switch', 'binary_sensor'
-]
+TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
 
 TAHOMA_TYPES = {
-    'io:ExteriorVenetianBlindIOComponent': 'cover',
-    'io:HorizontalAwningIOComponent': 'cover',
-    'io:LightIOSystemSensor': 'sensor',
-    'io:OnOffIOComponent': 'switch',
-    'io:OnOffLightIOComponent': 'switch',
-    'io:RollerShutterGenericIOComponent': 'cover',
-    'io:RollerShutterUnoIOComponent': 'cover',
-    'io:RollerShutterVeluxIOComponent': 'cover',
-    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
-    'io:SomfyContactIOSystemSensor': 'sensor',
-    'io:VerticalExteriorAwningIOComponent': 'cover',
-    'io:WindowOpenerVeluxIOComponent': 'cover',
-    'io:GarageOpenerIOComponent': 'cover',
-    'rtds:RTDSContactSensor': 'sensor',
-    'rtds:RTDSMotionSensor': 'sensor',
-    'rtds:RTDSSmokeSensor': 'smoke',
-    'rts:BlindRTSComponent': 'cover',
-    'rts:CurtainRTSComponent': 'cover',
-    'rts:DualCurtainRTSComponent': 'cover',
-    'rts:ExteriorVenetianBlindRTSComponent': 'cover',
-    'rts:GarageDoor4TRTSComponent': 'switch',
-    'rts:RollerShutterRTSComponent': 'cover',
-    'rts:VenetianBlindRTSComponent': 'cover'
+    "io:ExteriorVenetianBlindIOComponent": "cover",
+    "io:HorizontalAwningIOComponent": "cover",
+    "io:LightIOSystemSensor": "sensor",
+    "io:OnOffIOComponent": "switch",
+    "io:OnOffLightIOComponent": "switch",
+    "io:RollerShutterGenericIOComponent": "cover",
+    "io:RollerShutterUnoIOComponent": "cover",
+    "io:RollerShutterVeluxIOComponent": "cover",
+    "io:RollerShutterWithLowSpeedManagementIOComponent": "cover",
+    "io:SomfyContactIOSystemSensor": "sensor",
+    "io:VerticalExteriorAwningIOComponent": "cover",
+    "io:WindowOpenerVeluxIOComponent": "cover",
+    "io:GarageOpenerIOComponent": "cover",
+    "rtds:RTDSContactSensor": "sensor",
+    "rtds:RTDSMotionSensor": "sensor",
+    "rtds:RTDSSmokeSensor": "smoke",
+    "rts:BlindRTSComponent": "cover",
+    "rts:CurtainRTSComponent": "cover",
+    "rts:DualCurtainRTSComponent": "cover",
+    "rts:ExteriorVenetianBlindRTSComponent": "cover",
+    "rts:GarageDoor4TRTSComponent": "switch",
+    "rts:RollerShutterRTSComponent": "cover",
+    "rts:VenetianBlindRTSComponent": "cover",
 }
 
 
@@ -77,24 +81,23 @@ def setup(hass, config):
         _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
-    hass.data[DOMAIN] = {
-        'controller': api,
-        'devices': defaultdict(list),
-        'scenes': []
-    }
+    hass.data[DOMAIN] = {"controller": api, "devices": defaultdict(list), "scenes": []}
 
     for device in devices:
         _device = api.get_device(device)
         if all(ext not in _device.type for ext in exclude):
             device_type = map_tahoma_device(_device)
             if device_type is None:
-                _LOGGER.warning('Unsupported type %s for Tahoma device %s',
-                                _device.type, _device.label)
+                _LOGGER.warning(
+                    "Unsupported type %s for Tahoma device %s",
+                    _device.type,
+                    _device.label,
+                )
                 continue
-            hass.data[DOMAIN]['devices'][device_type].append(_device)
+            hass.data[DOMAIN]["devices"][device_type].append(_device)
 
     for scene in scenes:
-        hass.data[DOMAIN]['scenes'].append(scene)
+        hass.data[DOMAIN]["scenes"].append(scene)
 
     for component in TAHOMA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -124,11 +127,12 @@ class TahomaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        return {'tahoma_device_id': self.tahoma_device.url}
+        return {"tahoma_device_id": self.tahoma_device.url}
 
     def apply_action(self, cmd_name, *args):
         """Apply Action to Device."""
         from tahoma_api import Action
+
         action = Action(self.tahoma_device.url)
         action.add_command(cmd_name, *args)
-        self.controller.apply_actions('HomeAssistant', [action])
+        self.controller.apply_actions("HomeAssistant", [action])

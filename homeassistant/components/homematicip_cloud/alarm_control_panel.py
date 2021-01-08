@@ -8,25 +8,28 @@ from homematicip.base.enums import WindowState
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
 
 _LOGGER = logging.getLogger(__name__)
 
-CONST_ALARM_CONTROL_PANEL_NAME = 'HmIP Alarm Control Panel'
+CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud alarm control devices."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -34,56 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
     for group in home.groups:
         if isinstance(group, AsyncSecurityZoneGroup):
             security_zones.append(group)
-            # To be removed in a later release.
-            devices.append(HomematicipSecurityZone(home, group))
-            _LOGGER.warning("Homematic IP: alarm_control_panel.%s is "
-                            "deprecated. Please switch to "
-                            "alarm_control_panel.*hmip_alarm_control_panel.",
-                            group.label)
+
     if security_zones:
         devices.append(HomematicipAlarmControlPanel(home, security_zones))
 
     if devices:
         async_add_entities(devices)
-
-
-class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
-    """Representation of an HomematicIP Cloud security zone group."""
-
-    def __init__(self, home: AsyncHome, device) -> None:
-        """Initialize the security zone group."""
-        device.modelType = 'Group-SecurityZone'
-        device.windowState = None
-        super().__init__(home, device)
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self._device.active:
-            if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == WindowState.OPEN or
-                    self._device.windowState == WindowState.TILTED):
-                return STATE_ALARM_TRIGGERED
-
-            active = self._home.get_security_zones_activation()
-            if active == (True, True):
-                return STATE_ALARM_ARMED_AWAY
-            if active == (False, True):
-                return STATE_ALARM_ARMED_HOME
-
-        return STATE_ALARM_DISARMED
-
-    async def async_alarm_disarm(self, code=None):
-        """Send disarm command."""
-        await self._home.set_security_zones_activation(False, False)
-
-    async def async_alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        await self._home.set_security_zones_activation(False, True)
-
-    async def async_alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        await self._home.set_security_zones_activation(True, True)
 
 
 class HomematicipAlarmControlPanel(AlarmControlPanel):
@@ -95,7 +54,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         self.alarm_state = STATE_ALARM_DISARMED
 
         for security_zone in security_zones:
-            if security_zone.label == 'INTERNAL':
+            if security_zone.label == "INTERNAL":
                 self._internal_alarm_zone = security_zone
             else:
                 self._external_alarm_zone = security_zone
@@ -106,8 +65,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         activation_state = self._home.get_security_zones_activation()
         # check arm_away
         if activation_state == (True, True):
-            if self._internal_alarm_zone_state or \
-                    self._external_alarm_zone_state:
+            if self._internal_alarm_zone_state or self._external_alarm_zone_state:
                 return STATE_ALARM_TRIGGERED
             return STATE_ALARM_ARMED_AWAY
         # check arm_home
@@ -146,8 +104,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
     def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name,
-                      CONST_ALARM_CONTROL_PANEL_NAME)
+        _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
         self.async_schedule_update_ha_state()
 
     @property
@@ -166,8 +123,10 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
     @property
     def available(self) -> bool:
         """Device available."""
-        return not self._internal_alarm_zone.unreach or \
-            not self._external_alarm_zone.unreach
+        return (
+            not self._internal_alarm_zone.unreach
+            or not self._external_alarm_zone.unreach
+        )
 
     @property
     def unique_id(self) -> str:
@@ -177,11 +136,13 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
 def _get_zone_alarm_state(security_zone) -> bool:
     if security_zone.active:
-        if (security_zone.sabotage or
-                security_zone.motionDetected or
-                security_zone.presenceDetected or
-                security_zone.windowState == WindowState.OPEN or
-                security_zone.windowState == WindowState.TILTED):
+        if (
+            security_zone.sabotage
+            or security_zone.motionDetected
+            or security_zone.presenceDetected
+            or security_zone.windowState == WindowState.OPEN
+            or security_zone.windowState == WindowState.TILTED
+        ):
             return True
 
     return False

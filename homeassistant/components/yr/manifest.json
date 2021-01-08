@@ -6,5 +6,7 @@
     "xmltodict==0.12.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@danielhiversen"
+  ]
 }

@@ -1,2 +1,2 @@
 """Tests for the websocket API."""
-API_PASSWORD = 'test-password'
+API_PASSWORD = "test-password"

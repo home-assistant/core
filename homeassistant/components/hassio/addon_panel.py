@@ -61,7 +61,7 @@ class HassIOAddonPanel(HomeAssistantView):
 
     async def delete(self, request, addon):
         """Handle remove add-on panel requests."""
-        # Currently not supported by backend / frontend
+        self.hass.components.frontend.async_remove_panel(addon)
         return web.Response()
 
     async def get_panels(self):
@@ -81,13 +81,11 @@ def _register_panel(hass, addon, data):
     """
     return hass.components.panel_custom.async_register_panel(
         frontend_url_path=addon,
-        webcomponent_name='hassio-main',
+        webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],
         sidebar_icon=data[ATTR_ICON],
-        js_url='/api/hassio/app/entrypoint.js',
+        js_url="/api/hassio/app/entrypoint.js",
         embed_iframe=True,
         require_admin=data[ATTR_ADMIN],
-        config={
-            "ingress": addon
-        }
+        config={"ingress": addon},
     )

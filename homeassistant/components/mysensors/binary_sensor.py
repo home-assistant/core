@@ -1,31 +1,36 @@
 """Support for MySensors binary sensors."""
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES, DOMAIN, BinarySensorDevice)
+    DEVICE_CLASSES,
+    DOMAIN,
+    BinarySensorDevice,
+)
 from homeassistant.const import STATE_ON
 
 SENSORS = {
-    'S_DOOR': 'door',
-    'S_MOTION': 'motion',
-    'S_SMOKE': 'smoke',
-    'S_SPRINKLER': 'safety',
-    'S_WATER_LEAK': 'safety',
-    'S_SOUND': 'sound',
-    'S_VIBRATION': 'vibration',
-    'S_MOISTURE': 'moisture',
+    "S_DOOR": "door",
+    "S_MOTION": "motion",
+    "S_SMOKE": "smoke",
+    "S_SPRINKLER": "safety",
+    "S_WATER_LEAK": "safety",
+    "S_SOUND": "sound",
+    "S_VIBRATION": "vibration",
+    "S_MOISTURE": "moisture",
 }
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for binary sensors."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsBinarySensor,
-        async_add_entities=async_add_entities)
+        hass,
+        DOMAIN,
+        discovery_info,
+        MySensorsBinarySensor,
+        async_add_entities=async_add_entities,
+    )
 
 
-class MySensorsBinarySensor(
-        mysensors.device.MySensorsEntity, BinarySensorDevice):
+class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorDevice):
     """Representation of a MySensors Binary Sensor child node."""
 
     @property

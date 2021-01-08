@@ -1,11 +1,18 @@
 """Common test objects."""
 import time
-from unittest.mock import patch, Mock
-from homeassistant.components.zha.core.helpers import convert_ieee
+from unittest.mock import Mock, patch
+
+from asynctest import CoroutineMock
+
 from homeassistant.components.zha.core.const import (
-    DATA_ZHA, DATA_ZHA_CONFIG, DATA_ZHA_DISPATCHERS, DATA_ZHA_BRIDGE_ID
+    DATA_ZHA,
+    DATA_ZHA_BRIDGE_ID,
+    DATA_ZHA_CONFIG,
+    DATA_ZHA_DISPATCHERS,
 )
+from homeassistant.components.zha.core.helpers import convert_ieee
 from homeassistant.util import slugify
+
 from tests.common import mock_coro
 
 
@@ -15,7 +22,7 @@ class FakeApplication:
     def __init__(self):
         """Init fake application."""
         self.ieee = convert_ieee("00:15:8d:00:02:32:4f:32")
-        self.nwk = 0x087d
+        self.nwk = 0x087D
 
 
 APPLICATION = FakeApplication()
@@ -27,6 +34,7 @@ class FakeEndpoint:
     def __init__(self, manufacturer, model):
         """Init fake endpoint."""
         from zigpy.profiles.zha import PROFILE_ID
+
         self.device = None
         self.endpoint_id = 1
         self.in_clusters = {}
@@ -41,15 +49,17 @@ class FakeEndpoint:
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
         from zigpy.zcl import Cluster
+
         cluster = Cluster.from_id(self, cluster_id)
         patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
-        if hasattr(cluster, 'ep_attribute'):
+        if hasattr(cluster, "ep_attribute"):
             setattr(self, cluster.ep_attribute, cluster)
 
     def add_output_cluster(self, cluster_id):
         """Add an output cluster."""
         from zigpy.zcl import Cluster
+
         cluster = Cluster.from_id(self, cluster_id)
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
@@ -57,6 +67,7 @@ class FakeEndpoint:
 
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
+    cluster.bind = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.handle_cluster_general_request = Mock()
@@ -72,7 +83,7 @@ class FakeDevice:
         """Init fake device."""
         self._application = APPLICATION
         self.ieee = convert_ieee(ieee)
-        self.nwk = 0xb79c
+        self.nwk = 0xB79C
         self.zdo = Mock()
         self.endpoints = {0: self.zdo}
         self.lqi = 255
@@ -82,10 +93,14 @@ class FakeDevice:
         self.initializing = False
         self.manufacturer = manufacturer
         self.model = model
+        from zigpy.zdo.types import NodeDescriptor
+
+        self.node_desc = NodeDescriptor()
 
 
-def make_device(in_cluster_ids, out_cluster_ids, device_type, ieee,
-                manufacturer, model):
+def make_device(
+    in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
+):
     """Make a fake device using the specified cluster classes."""
     device = FakeDevice(ieee, manufacturer, model)
     endpoint = FakeEndpoint(manufacturer, model)
@@ -103,9 +118,16 @@ def make_device(in_cluster_ids, out_cluster_ids, device_type, ieee,
 
 
 async def async_init_zigpy_device(
-        hass, in_cluster_ids, out_cluster_ids, device_type, gateway,
-        ieee="00:0d:6f:00:0a:90:69:e7", manufacturer="FakeManufacturer",
-        model="FakeModel", is_new_join=False):
+    hass,
+    in_cluster_ids,
+    out_cluster_ids,
+    device_type,
+    gateway,
+    ieee="00:0d:6f:00:0a:90:69:e7",
+    manufacturer="FakeManufacturer",
+    model="FakeModel",
+    is_new_join=False,
+):
     """Create and initialize a device.
 
     This creates a fake device and adds it to the "network". It can be used to
@@ -114,8 +136,9 @@ async def async_init_zigpy_device(
     through cluster binding and zigbee cluster configure reporting. That only
     happens when the device is paired to the network for the first time.
     """
-    device = make_device(in_cluster_ids, out_cluster_ids, device_type, ieee,
-                         manufacturer, model)
+    device = make_device(
+        in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
+    )
     await gateway.async_device_initialized(device, is_new_join)
     await hass.async_block_till_done()
     return device
@@ -124,6 +147,7 @@ async def async_init_zigpy_device(
 def make_attribute(attrid, value, status=0):
     """Make an attribute."""
     from zigpy.zcl.foundation import Attribute, TypeValue
+
     attr = Attribute()
     attr.attrid = attrid
     attr.value = TypeValue()
@@ -146,7 +170,7 @@ def make_entity_id(domain, device, cluster, use_suffix=True):
     machine so that we can test state changes.
     """
     ieee = device.ieee
-    ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
+    ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
     entity_id = "{}.{}_{}_{}_{}{}".format(
         domain,
         slugify(device.manufacturer),
@@ -166,7 +190,8 @@ async def async_enable_traffic(hass, zha_gateway, zha_devices):
 
 
 async def async_test_device_join(
-        hass, zha_gateway, cluster_id, domain, device_type=None):
+    hass, zha_gateway, cluster_id, domain, device_type=None
+):
     """Test a newly joining device.
 
     This creates a new fake device and adds it to the network. It is meant to
@@ -175,21 +200,29 @@ async def async_test_device_join(
     """
     from zigpy.zcl.foundation import Status
     from zigpy.zcl.clusters.general import Basic
+
     # create zigpy device mocking out the zigbee network operations
     with patch(
-            'zigpy.zcl.Cluster.configure_reporting',
-            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
+        "zigpy.zcl.Cluster.configure_reporting",
+        return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+    ):
         with patch(
-                'zigpy.zcl.Cluster.bind',
-                return_value=mock_coro([Status.SUCCESS, Status.SUCCESS])):
+            "zigpy.zcl.Cluster.bind",
+            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+        ):
             zigpy_device = await async_init_zigpy_device(
-                hass, [cluster_id, Basic.cluster_id], [], device_type,
+                hass,
+                [cluster_id, Basic.cluster_id],
+                [],
+                device_type,
                 zha_gateway,
                 ieee="00:0d:6f:00:0a:90:69:f7",
                 manufacturer="FakeMan{}".format(cluster_id),
                 model="FakeMod{}".format(cluster_id),
-                is_new_join=True)
+                is_new_join=True,
+            )
             cluster = zigpy_device.endpoints.get(1).in_clusters[cluster_id]
             entity_id = make_entity_id(
-                domain, zigpy_device, cluster, use_suffix=device_type is None)
+                domain, zigpy_device, cluster, use_suffix=device_type is None
+            )
             assert hass.states.get(entity_id) is not None

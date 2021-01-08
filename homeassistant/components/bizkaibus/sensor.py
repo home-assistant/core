@@ -13,18 +13,20 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DUE_IN = 'Due in'
+ATTR_DUE_IN = "Due in"
 
-CONF_STOP_ID = 'stopid'
-CONF_ROUTE = 'route'
+CONF_STOP_ID = "stopid"
+CONF_ROUTE = "route"
 
-DEFAULT_NAME = 'Next bus'
+DEFAULT_NAME = "Next bus"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP_ID): cv.string,
-    vol.Required(CONF_ROUTE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STOP_ID): cv.string,
+        vol.Required(CONF_ROUTE): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -61,7 +63,7 @@ class BizkaibusSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return 'minutes'
+        return "minutes"
 
     def update(self):
         """Get the latest data from the webservice."""

@@ -32,15 +32,13 @@ async def get_available_regions(hass, service):
     # get_available_regions is not a coroutine since it does not perform
     # network I/O. But it still perform file I/O heavily, so put it into
     # an executor thread to unblock event loop
-    return await hass.async_add_executor_job(
-        session.get_available_regions, service
-    )
+    return await hass.async_add_executor_job(session.get_available_regions, service)
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the AWS notification service."""
     if discovery_info is None:
-        _LOGGER.error('Please config aws notify platform in aws component')
+        _LOGGER.error("Please config aws notify platform in aws component")
         return None
 
     import aiobotocore
@@ -56,7 +54,9 @@ async def async_get_service(hass, config, discovery_info=None):
     if region_name not in available_regions:
         _LOGGER.error(
             "Region %s is not available for %s service, must in %s",
-            region_name, service, available_regions
+            region_name,
+            service,
+            available_regions,
         )
         return None
 
@@ -76,9 +76,7 @@ async def async_get_service(hass, config, discovery_info=None):
         if hass.data[DATA_SESSIONS]:
             session = next(iter(hass.data[DATA_SESSIONS].values()))
         else:
-            _LOGGER.error(
-                "Missing aws credential for %s", config[CONF_NAME]
-            )
+            _LOGGER.error("Missing aws credential for %s", config[CONF_NAME])
             return None
 
     if session is None:
@@ -86,18 +84,16 @@ async def async_get_service(hass, config, discovery_info=None):
         if credential_name is not None:
             session = hass.data[DATA_SESSIONS].get(credential_name)
             if session is None:
-                _LOGGER.warning(
-                    "No available aws session for %s", credential_name
-                )
+                _LOGGER.warning("No available aws session for %s", credential_name)
             del aws_config[CONF_CREDENTIAL_NAME]
 
     if session is None:
         profile = aws_config.get(CONF_PROFILE_NAME)
         if profile is not None:
-            session = aiobotocore.AioSession(profile=profile, loop=hass.loop)
+            session = aiobotocore.AioSession(profile=profile)
             del aws_config[CONF_PROFILE_NAME]
         else:
-            session = aiobotocore.AioSession(loop=hass.loop)
+            session = aiobotocore.AioSession()
 
     aws_config[CONF_REGION] = region_name
 
@@ -150,7 +146,7 @@ class AWSLambda(AWSNotify):
         json_payload = json.dumps(payload)
 
         async with self.session.create_client(
-                self.service, **self.aws_config
+            self.service, **self.aws_config
         ) as client:
             tasks = []
             for target in kwargs.get(ATTR_TARGET, []):
@@ -185,7 +181,7 @@ class AWSSNS(AWSNotify):
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         async with self.session.create_client(
-                self.service, **self.aws_config
+            self.service, **self.aws_config
         ) as client:
             tasks = []
             for target in kwargs.get(ATTR_TARGET, []):
@@ -225,7 +221,7 @@ class AWSSQS(AWSNotify):
             }
 
         async with self.session.create_client(
-                self.service, **self.aws_config
+            self.service, **self.aws_config
         ) as client:
             tasks = []
             for target in kwargs.get(ATTR_TARGET, []):

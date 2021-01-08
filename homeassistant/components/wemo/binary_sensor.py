@@ -18,14 +18,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from pywemo import discovery
 
     if discovery_info is not None:
-        location = discovery_info['ssdp_description']
-        mac = discovery_info['mac_address']
+        location = discovery_info["ssdp_description"]
+        mac = discovery_info["mac_address"]
 
         try:
             device = discovery.device_from_description(location, mac)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', location, err)
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+        ) as err:
+            _LOGGER.error("Unable to access %s (%s)", location, err)
             raise PlatformNotReady
 
         if device:
@@ -49,8 +51,7 @@ class WemoBinarySensor(BinarySensorDevice):
         """Update the state by the Wemo sensor."""
         _LOGGER.debug("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(
-            self._async_locked_subscription_callback(not updated))
+        self.hass.add_job(self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
         """Handle an update from a subscription."""
@@ -86,7 +87,7 @@ class WemoBinarySensor(BinarySensorDevice):
             with async_timeout.timeout(5):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
-            _LOGGER.warning('Lost connection to %s', self.name)
+            _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
 
     async def _async_locked_update(self, force_update):
@@ -100,11 +101,10 @@ class WemoBinarySensor(BinarySensorDevice):
             self._state = self.wemo.get_state(force_update)
 
             if not self._available:
-                _LOGGER.info('Reconnected to %s', self.name)
+                _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
         except AttributeError as err:
-            _LOGGER.warning("Could not update status for %s (%s)",
-                            self.name, err)
+            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
 
     @property

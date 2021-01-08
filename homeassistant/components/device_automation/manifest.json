@@ -1,0 +1,12 @@
+{
+  "domain": "device_automation",
+  "name": "Device automation",
+  "documentation": "https://www.home-assistant.io/components/device_automation",
+  "requirements": [],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

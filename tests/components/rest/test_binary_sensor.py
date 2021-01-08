@@ -41,93 +41,104 @@ class TestRestBinarySensorSetup(unittest.TestCase):
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
         with assert_setup_component(0):
-            assert setup_component(self.hass, binary_sensor.DOMAIN, {
-                'binary_sensor': {'platform': 'rest'}})
+            assert setup_component(
+                self.hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": "rest"}}
+            )
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
         with pytest.raises(MissingSchema):
-            rest.setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'localhost',
-                'method': 'GET'
-            }, None)
+            rest.setup_platform(
+                self.hass,
+                {"platform": "rest", "resource": "localhost", "method": "GET"},
+                None,
+            )
 
-    @patch('requests.Session.send',
-           side_effect=requests.exceptions.ConnectionError())
+    @patch("requests.Session.send", side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
         with raises(PlatformNotReady):
-            rest.setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-            }, self.add_devices, None)
+            rest.setup_platform(
+                self.hass,
+                {"platform": "rest", "resource": "http://localhost"},
+                self.add_devices,
+                None,
+            )
         assert len(self.DEVICES) == 0
 
-    @patch('requests.Session.send', side_effect=Timeout())
+    @patch("requests.Session.send", side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
         with raises(PlatformNotReady):
-            rest.setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-            }, self.add_devices, None)
+            rest.setup_platform(
+                self.hass,
+                {"platform": "rest", "resource": "http://localhost"},
+                self.add_devices,
+                None,
+            )
         assert len(self.DEVICES) == 0
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
-        mock_req.get('http://localhost', status_code=200)
-        with assert_setup_component(1, 'binary_sensor'):
-            assert setup_component(self.hass, 'binary_sensor', {
-                'binary_sensor': {
-                    'platform': 'rest',
-                    'resource': 'http://localhost'
-                }
-            })
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(1, "binary_sensor"):
+            assert setup_component(
+                self.hass,
+                "binary_sensor",
+                {"binary_sensor": {"platform": "rest", "resource": "http://localhost"}},
+            )
         assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
-        mock_req.get('http://localhost', status_code=200)
-        with assert_setup_component(1, 'binary_sensor'):
-            assert setup_component(self.hass, 'binary_sensor', {
-                'binary_sensor': {
-                    'platform': 'rest',
-                    'resource': 'http://localhost',
-                    'method': 'GET',
-                    'value_template': '{{ value_json.key }}',
-                    'name': 'foo',
-                    'verify_ssl': 'true',
-                    'authentication': 'basic',
-                    'username': 'my username',
-                    'password': 'my password',
-                    'headers': {'Accept': 'application/json'}
-                }
-            })
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(1, "binary_sensor"):
+            assert setup_component(
+                self.hass,
+                "binary_sensor",
+                {
+                    "binary_sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "method": "GET",
+                        "value_template": "{{ value_json.key }}",
+                        "name": "foo",
+                        "verify_ssl": "true",
+                        "authentication": "basic",
+                        "username": "my username",
+                        "password": "my password",
+                        "headers": {"Accept": "application/json"},
+                    }
+                },
+            )
         assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
         """Test setup with valid configuration."""
-        mock_req.post('http://localhost', status_code=200)
-        with assert_setup_component(1, 'binary_sensor'):
-            assert setup_component(self.hass, 'binary_sensor', {
-                'binary_sensor': {
-                    'platform': 'rest',
-                    'resource': 'http://localhost',
-                    'method': 'POST',
-                    'value_template': '{{ value_json.key }}',
-                    'payload': '{ "device": "toaster"}',
-                    'name': 'foo',
-                    'verify_ssl': 'true',
-                    'authentication': 'basic',
-                    'username': 'my username',
-                    'password': 'my password',
-                    'headers': {'Accept': 'application/json'}
-                }
-            })
+        mock_req.post("http://localhost", status_code=200)
+        with assert_setup_component(1, "binary_sensor"):
+            assert setup_component(
+                self.hass,
+                "binary_sensor",
+                {
+                    "binary_sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "method": "POST",
+                        "value_template": "{{ value_json.key }}",
+                        "payload": '{ "device": "toaster"}',
+                        "name": "foo",
+                        "verify_ssl": "true",
+                        "authentication": "basic",
+                        "username": "my username",
+                        "password": "my password",
+                        "headers": {"Accept": "application/json"},
+                    }
+                },
+            )
         assert 1 == mock_req.call_count
 
 
@@ -137,18 +148,17 @@ class TestRestBinarySensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.rest = Mock('RestData')
-        self.rest.update = Mock('RestData.update',
-                                side_effect=self.update_side_effect(
-                                    '{ "key": false }'))
-        self.name = 'foo'
-        self.device_class = 'light'
-        self.value_template = \
-            template.Template('{{ value_json.key }}', self.hass)
+        self.rest = Mock("RestData")
+        self.rest.update = Mock(
+            "RestData.update", side_effect=self.update_side_effect('{ "key": false }')
+        )
+        self.name = "foo"
+        self.device_class = "light"
+        self.value_template = template.Template("{{ value_json.key }}", self.hass)
 
         self.binary_sensor = rest.RestBinarySensor(
-            self.hass, self.rest, self.name, self.device_class,
-            self.value_template)
+            self.hass, self.rest, self.name, self.device_class, self.value_template
+        )
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -174,33 +184,37 @@ class TestRestBinarySensor(unittest.TestCase):
     def test_update_when_value_is_none(self):
         """Test state gets updated to unknown when sensor returns no data."""
         self.rest.update = Mock(
-            'RestData.update',
-            side_effect=self.update_side_effect(None))
+            "RestData.update", side_effect=self.update_side_effect(None)
+        )
         self.binary_sensor.update()
         assert not self.binary_sensor.available
 
     def test_update_when_value_changed(self):
         """Test state gets updated when sensor returns a new status."""
-        self.rest.update = Mock('rest.RestData.update',
-                                side_effect=self.update_side_effect(
-                                    '{ "key": true }'))
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect('{ "key": true }'),
+        )
         self.binary_sensor.update()
         assert STATE_ON == self.binary_sensor.state
         assert self.binary_sensor.available
 
     def test_update_when_failed_request(self):
         """Test state gets updated when sensor returns a new status."""
-        self.rest.update = Mock('rest.RestData.update',
-                                side_effect=self.update_side_effect(None))
+        self.rest.update = Mock(
+            "rest.RestData.update", side_effect=self.update_side_effect(None)
+        )
         self.binary_sensor.update()
         assert not self.binary_sensor.available
 
     def test_update_with_no_template(self):
         """Test update when there is no value template."""
-        self.rest.update = Mock('rest.RestData.update',
-                                side_effect=self.update_side_effect('true'))
+        self.rest.update = Mock(
+            "rest.RestData.update", side_effect=self.update_side_effect("true")
+        )
         self.binary_sensor = rest.RestBinarySensor(
-            self.hass, self.rest, self.name, self.device_class, None)
+            self.hass, self.rest, self.name, self.device_class, None
+        )
         self.binary_sensor.update()
         assert STATE_ON == self.binary_sensor.state
         assert self.binary_sensor.available

@@ -1,10 +1,12 @@
 {
   "domain": "opentherm_gw",
-  "name": "Opentherm gw",
+  "name": "Opentherm Gateway",
   "documentation": "https://www.home-assistant.io/components/opentherm_gw",
   "requirements": [
-    "pyotgw==0.4b3"
+    "pyotgw==0.4b4"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@mvn23"
+  ]
 }

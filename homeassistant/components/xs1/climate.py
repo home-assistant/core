@@ -1,9 +1,13 @@
 """Support for XS1 climate devices."""
-from functools import partial
 import logging
 
+from xs1_api_client.api_constants import ActuatorType
+
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_HEAT,
+)
 from homeassistant.const import ATTR_TEMPERATURE
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
@@ -13,12 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TEMP = 8
 MAX_TEMP = 25
 
+SUPPORT_HVAC = [HVAC_MODE_HEAT]
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the XS1 thermostat platform."""
-    from xs1_api_client.api_constants import ActuatorType
-
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
     sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
 
@@ -34,10 +37,9 @@ async def async_setup_platform(
                     matching_sensor = sensor
                     break
 
-            thermostat_entities.append(
-                XS1ThermostatEntity(actuator, matching_sensor))
+            thermostat_entities.append(XS1ThermostatEntity(actuator, matching_sensor))
 
-    async_add_entities(thermostat_entities)
+    add_entities(thermostat_entities)
 
 
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
@@ -57,6 +59,22 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_TARGET_TEMPERATURE
+
+    @property
+    def hvac_mode(self):
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return SUPPORT_HVAC
 
     @property
     def current_temperature(self):
@@ -95,9 +113,12 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
         if self.sensor is not None:
             self.schedule_update_ha_state()
 
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        pass
+
     async def async_update(self):
         """Also update the sensor when available."""
         await super().async_update()
-        if self.sensor is not None:
-            await self.hass.async_add_executor_job(
-                partial(self.sensor.update))
+        if self.sensor is None:
+            await self.hass.async_add_executor_job(self.sensor.update)

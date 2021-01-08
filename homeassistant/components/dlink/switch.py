@@ -7,30 +7,37 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
-    TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_TOTAL_CONSUMPTION = "total_consumption"
 
-CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'
+CONF_USE_LEGACY_PROTOCOL = "use_legacy_protocol"
 
 DEFAULT_NAME = "D-Link Smart Plug W215"
-DEFAULT_PASSWORD = ''
-DEFAULT_USERNAME = 'admin'
+DEFAULT_PASSWORD = ""
+DEFAULT_USERNAME = "admin"
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_USE_LEGACY_PROTOCOL, default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_USE_LEGACY_PROTOCOL, default=False): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -67,8 +74,7 @@ class SmartPlugSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         try:
-            ui_temp = self.units.temperature(
-                int(self.data.temperature), TEMP_CELSIUS)
+            ui_temp = self.units.temperature(int(self.data.temperature), TEMP_CELSIUS)
             temperature = ui_temp
         except (ValueError, TypeError):
             temperature = None
@@ -96,15 +102,15 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.data.state == 'ON'
+        return self.data.state == "ON"
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.data.smartplug.state = 'ON'
+        self.data.smartplug.state = "ON"
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.data.smartplug.state = 'OFF'
+        self.data.smartplug.state = "OFF"
 
     def update(self):
         """Get the latest data from the smart plug and updates the states."""
@@ -133,20 +139,20 @@ class SmartPlugData:
     def update(self):
         """Get the latest data from the smart plug."""
         if self._last_tried is not None:
-            last_try_s = (dt_util.now() - self._last_tried).total_seconds()/60
-            retry_seconds = min(self._n_tried*2, 10) - last_try_s
+            last_try_s = (dt_util.now() - self._last_tried).total_seconds() / 60
+            retry_seconds = min(self._n_tried * 2, 10) - last_try_s
             if self._n_tried > 0 and retry_seconds > 0:
                 _LOGGER.warning("Waiting %s s to retry", retry_seconds)
                 return
 
-        _state = 'unknown'
+        _state = "unknown"
 
         try:
             self._last_tried = dt_util.now()
             _state = self.smartplug.state
         except urllib.error.HTTPError:
             _LOGGER.error("D-Link connection problem")
-        if _state == 'unknown':
+        if _state == "unknown":
             self._n_tried += 1
             self.available = False
             _LOGGER.warning("Failed to connect to D-Link switch")

@@ -16,13 +16,13 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
     import av
 
-    output = av.open(file_out, 'w', options={'movflags': 'frag_keyframe'})
+    output = av.open(file_out, "w", options={"movflags": "frag_keyframe"})
     output_v = None
 
     for segment in segments:
         # Seek to beginning and open segment
         segment.segment.seek(0)
-        source = av.open(segment.segment, 'r', format='mpegts')
+        source = av.open(segment.segment, "r", format="mpegts")
         source_v = source.streams.video[0]
 
         # Add output streams
@@ -38,7 +38,7 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
     output.close()
 
 
-@PROVIDERS.register('recorder')
+@PROVIDERS.register("recorder")
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
@@ -51,22 +51,22 @@ class RecorderOutput(StreamOutput):
     @property
     def name(self) -> str:
         """Return provider name."""
-        return 'recorder'
+        return "recorder"
 
     @property
     def format(self) -> str:
         """Return container format."""
-        return 'mpegts'
+        return "mpegts"
 
     @property
     def audio_codec(self) -> str:
         """Return desired audio codec."""
-        return 'aac'
+        return "aac"
 
     @property
     def video_codec(self) -> str:
         """Return desired video codec."""
-        return 'h264'
+        return "h264"
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
@@ -83,9 +83,10 @@ class RecorderOutput(StreamOutput):
     def cleanup(self):
         """Write recording and clean up."""
         thread = threading.Thread(
-            name='recorder_save_worker',
+            name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments))
+            args=(self.video_path, self._segments),
+        )
         thread.start()
 
         self._segments = []

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mostek jest ju\u017c skonfigurowany"
+            "already_configured": "Mostek jest ju\u017c skonfigurowany",
+            "already_in_progress": "Konfigurowanie mostka jest ju\u017c w toku."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z bram\u0105.",

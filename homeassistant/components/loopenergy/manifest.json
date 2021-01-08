@@ -3,7 +3,7 @@
   "name": "Loopenergy",
   "documentation": "https://www.home-assistant.io/components/loopenergy",
   "requirements": [
-    "pyloopenergy==0.1.2"
+    "pyloopenergy==0.1.3"
   ],
   "dependencies": [],
   "codeowners": []

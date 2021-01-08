@@ -213,5 +213,6 @@
             "stolen": false,
             "subscribed": true,
             "subscribed_motions": true,
-            "time_zone": "America/New_York"}]
+            "time_zone": "America/New_York"
+        }]
 }

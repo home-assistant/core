@@ -1,7 +1,7 @@
 """Support for Tesla charger switches."""
 import logging
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
@@ -11,9 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla switch platform."""
-    controller = hass.data[TESLA_DOMAIN]['devices']['controller']
+    controller = hass.data[TESLA_DOMAIN]["devices"]["controller"]
     devices = []
-    for device in hass.data[TESLA_DOMAIN]['devices']['switch']:
+    for device in hass.data[TESLA_DOMAIN]["devices"]["switch"]:
         if device.bin_type == 0x8:
             devices.append(ChargerSwitch(device, controller))
         elif device.bin_type == 0x9:
@@ -28,7 +28,6 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def turn_on(self, **kwargs):
         """Send the on command."""
@@ -49,8 +48,7 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         """Update the state of the switch."""
         _LOGGER.debug("Updating state for: %s", self._name)
         self.tesla_device.update()
-        self._state = STATE_ON if self.tesla_device.is_charging() \
-            else STATE_OFF
+        self._state = STATE_ON if self.tesla_device.is_charging() else STATE_OFF
 
 
 class RangeSwitch(TeslaDevice, SwitchDevice):
@@ -60,7 +58,6 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def turn_on(self, **kwargs):
         """Send the on command."""
@@ -81,5 +78,4 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         """Update the state of the switch."""
         _LOGGER.debug("Updating state for: %s", self._name)
         self.tesla_device.update()
-        self._state = STATE_ON if self.tesla_device.is_maxrange() \
-            else STATE_OFF
+        self._state = STATE_ON if self.tesla_device.is_maxrange() else STATE_OFF

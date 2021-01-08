@@ -9,8 +9,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 
 from tests.common import (
-    get_test_home_assistant, MockModule, MockPlatform, mock_coro,
-    mock_integration, mock_entity_platform)
+    get_test_home_assistant,
+    MockModule,
+    MockPlatform,
+    mock_coro,
+    mock_integration,
+    mock_entity_platform,
+)
 
 
 class TestHelpersDiscovery:
@@ -24,8 +29,7 @@ class TestHelpersDiscovery:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.setup.async_setup_component',
-           return_value=mock_coro())
+    @patch("homeassistant.setup.async_setup_component", return_value=mock_coro())
     def test_listen(self, mock_setup_component):
         """Test discovery listen/discover combo."""
         helpers = self.hass.helpers
@@ -42,31 +46,29 @@ class TestHelpersDiscovery:
             """Service discovered callback."""
             calls_multi.append((service, info))
 
-        helpers.discovery.listen('test service', callback_single)
-        helpers.discovery.listen(['test service', 'another service'],
-                                 callback_multi)
+        helpers.discovery.listen("test service", callback_single)
+        helpers.discovery.listen(["test service", "another service"], callback_multi)
 
-        helpers.discovery.discover('test service', 'discovery info',
-                                   'test_component', {})
+        helpers.discovery.discover(
+            "test service", "discovery info", "test_component", {}
+        )
         self.hass.block_till_done()
 
         assert mock_setup_component.called
-        assert mock_setup_component.call_args[0] == \
-            (self.hass, 'test_component', {})
+        assert mock_setup_component.call_args[0] == (self.hass, "test_component", {})
         assert len(calls_single) == 1
-        assert calls_single[0] == ('test service', 'discovery info')
+        assert calls_single[0] == ("test service", "discovery info")
 
-        helpers.discovery.discover('another service', 'discovery info',
-                                   'test_component', {})
+        helpers.discovery.discover(
+            "another service", "discovery info", "test_component", {}
+        )
         self.hass.block_till_done()
 
         assert len(calls_single) == 1
         assert len(calls_multi) == 2
-        assert ['test service', 'another service'] == [info[0] for info
-                                                       in calls_multi]
+        assert ["test service", "another service"] == [info[0] for info in calls_multi]
 
-    @patch('homeassistant.setup.async_setup_component',
-           return_value=mock_coro(True))
+    @patch("homeassistant.setup.async_setup_component", return_value=mock_coro(True))
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
         calls = []
@@ -76,28 +78,44 @@ class TestHelpersDiscovery:
             """Platform callback method."""
             calls.append((platform, info))
 
-        discovery.listen_platform(self.hass, 'test_component',
-                                  platform_callback)
+        discovery.listen_platform(self.hass, "test_component", platform_callback)
 
-        discovery.load_platform(self.hass, 'test_component', 'test_platform',
-                                'discovery info', {'test_component': {}})
+        discovery.load_platform(
+            self.hass,
+            "test_component",
+            "test_platform",
+            "discovery info",
+            {"test_component": {}},
+        )
         self.hass.block_till_done()
         assert mock_setup_component.called
-        assert mock_setup_component.call_args[0] == \
-            (self.hass, 'test_component', {'test_component': {}})
+        assert mock_setup_component.call_args[0] == (
+            self.hass,
+            "test_component",
+            {"test_component": {}},
+        )
         self.hass.block_till_done()
 
-        discovery.load_platform(self.hass, 'test_component_2', 'test_platform',
-                                'discovery info', {'test_component': {}})
+        discovery.load_platform(
+            self.hass,
+            "test_component_2",
+            "test_platform",
+            "discovery info",
+            {"test_component": {}},
+        )
         self.hass.block_till_done()
 
         assert len(calls) == 1
-        assert calls[0] == ('test_platform', 'discovery info')
+        assert calls[0] == ("test_platform", "discovery info")
 
-        self.hass.bus.fire(discovery.EVENT_PLATFORM_DISCOVERED, {
-            discovery.ATTR_SERVICE:
-            discovery.EVENT_LOAD_PLATFORM.format('test_component')
-        })
+        self.hass.bus.fire(
+            discovery.EVENT_PLATFORM_DISCOVERED,
+            {
+                discovery.ATTR_SERVICE: discovery.EVENT_LOAD_PLATFORM.format(
+                    "test_component"
+                )
+            },
+        )
         self.hass.block_till_done()
 
         assert len(calls) == 1
@@ -119,35 +137,30 @@ class TestHelpersDiscovery:
 
         def component_setup(hass, config):
             """Set up mock component."""
-            discovery.load_platform(hass, 'switch', 'test_circular', 'disc',
-                                    config)
+            discovery.load_platform(hass, "switch", "test_circular", "disc", config)
             component_calls.append(1)
             return True
 
-        def setup_platform(hass, config, add_entities_callback,
-                           discovery_info=None):
+        def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             """Set up mock platform."""
-            platform_calls.append('disc' if discovery_info else 'component')
+            platform_calls.append("disc" if discovery_info else "component")
 
-        mock_integration(
-            self.hass,
-            MockModule('test_component', setup=component_setup))
+        mock_integration(self.hass, MockModule("test_component", setup=component_setup))
 
         # dependencies are only set in component level
         # since we are using manifest to hold them
         mock_integration(
-            self.hass,
-            MockModule('test_circular', dependencies=['test_component']))
+            self.hass, MockModule("test_circular", dependencies=["test_component"])
+        )
         mock_entity_platform(
-            self.hass, 'switch.test_circular',
-            MockPlatform(setup_platform))
+            self.hass, "switch.test_circular", MockPlatform(setup_platform)
+        )
 
-        setup.setup_component(self.hass, 'test_component', {
-            'test_component': None,
-            'switch': [{
-                'platform': 'test_circular',
-            }],
-        })
+        setup.setup_component(
+            self.hass,
+            "test_component",
+            {"test_component": None, "switch": [{"platform": "test_circular"}]},
+        )
 
         self.hass.block_till_done()
 
@@ -156,10 +169,10 @@ class TestHelpersDiscovery:
         # The platform will be setup once via the config in `setup_component`
         # and once via the discovery inside test_component.
         assert len(platform_calls) == 2
-        assert 'test_component' in self.hass.config.components
-        assert 'switch' in self.hass.config.components
+        assert "test_component" in self.hass.config.components
+        assert "switch" in self.hass.config.components
 
-    @patch('homeassistant.helpers.signal.async_register_signal_handling')
+    @patch("homeassistant.helpers.signal.async_register_signal_handling")
     def test_1st_discovers_2nd_component(self, mock_signal):
         """Test that we don't break if one component discovers the other.
 
@@ -171,9 +184,8 @@ class TestHelpersDiscovery:
 
         def component1_setup(hass, config):
             """Set up mock component."""
-            print('component1 setup')
-            discovery.discover(hass, 'test_component2', {},
-                               'test_component2', {})
+            print("component1 setup")
+            discovery.discover(hass, "test_component2", {}, "test_component2", {})
             return True
 
         def component2_setup(hass, config):
@@ -182,20 +194,22 @@ class TestHelpersDiscovery:
             return True
 
         mock_integration(
-            self.hass,
-            MockModule('test_component1', setup=component1_setup))
+            self.hass, MockModule("test_component1", setup=component1_setup)
+        )
 
         mock_integration(
-            self.hass,
-            MockModule('test_component2', setup=component2_setup))
+            self.hass, MockModule("test_component2", setup=component2_setup)
+        )
 
         @callback
         def do_setup():
             """Set up 2 components."""
-            self.hass.async_add_job(setup.async_setup_component(
-                self.hass, 'test_component1', {}))
-            self.hass.async_add_job(setup.async_setup_component(
-                self.hass, 'test_component2', {}))
+            self.hass.async_add_job(
+                setup.async_setup_component(self.hass, "test_component1", {})
+            )
+            self.hass.async_add_job(
+                setup.async_setup_component(self.hass, "test_component2", {})
+            )
 
         self.hass.add_job(do_setup)
         self.hass.block_till_done()
@@ -207,11 +221,10 @@ class TestHelpersDiscovery:
 async def test_load_platform_forbids_config():
     """Test you cannot setup config component with load_platform."""
     with pytest.raises(HomeAssistantError):
-        await discovery.async_load_platform(None, 'config', 'zwave', {},
-                                            {'config': {}})
+        await discovery.async_load_platform(None, "config", "zwave", {}, {"config": {}})
 
 
 async def test_discover_forbids_config():
     """Test you cannot setup config component with load_platform."""
     with pytest.raises(HomeAssistantError):
-        await discovery.async_discover(None, None, None, 'config', {})
+        await discovery.async_discover(None, None, None, "config", {})

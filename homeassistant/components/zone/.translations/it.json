@@ -8,7 +8,7 @@
                 "data": {
                     "icon": "Icona",
                     "latitude": "Latitudine",
-                    "longitude": "Logitudine",
+                    "longitude": "Longitudine",
                     "name": "Nome",
                     "passive": "Passiva",
                     "radius": "Raggio"

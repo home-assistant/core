@@ -2,60 +2,80 @@
 import logging
 import time
 
+from pyHS100 import SmartBulb, SmartDeviceException
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    Light,
+)
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin)
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+)
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
+from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_POWER_W = 'current_power_w'
-ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
-ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
+ATTR_CURRENT_POWER_W = "current_power_w"
+ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
+ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform.
 
     Deprecated.
     """
-    _LOGGER.warning('Loading as a platform is no longer supported, '
-                    'convert to use the tplink component.')
+    _LOGGER.warning(
+        "Loading as a platform is no longer supported, "
+        "convert to use the tplink component."
+    )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[TPLINK_DOMAIN][CONF_LIGHT]:
-        devs.append(TPLinkSmartBulb(dev))
-
-    async_add_entities(devs, True)
+async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+    """Set up switches."""
+    await async_add_entities_retry(
+        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
+    )
 
     return True
 
 
+def add_entity(device: SmartBulb, async_add_entities):
+    """Check if device is online and add the entity."""
+    # Attempt to get the sysinfo. If it fails, it will raise an
+    # exception that is caught by async_add_entities_retry which
+    # will try again later.
+    device.get_sysinfo()
+
+    async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
+
+
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return int((byt*100.0)/255.0)
+    return int((byt * 100.0) / 255.0)
 
 
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
-    return (percent*255.0)/100.0
+    return (percent * 255.0) / 100.0
 
 
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb) -> None:
+    def __init__(self, smartbulb: SmartBulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._sysinfo = None
@@ -69,26 +89,28 @@ class TPLinkSmartBulb(Light):
         self._max_mireds = None
         self._emeter_params = {}
 
+        self._mac = None
+        self._alias = None
+        self._model = None
+
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        return self._mac
 
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._sysinfo["alias"]
+        return self._alias
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self.name,
-            "model": self._sysinfo["model"],
-            "manufacturer": 'TP-Link',
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
-            },
+            "name": self._alias,
+            "model": self._model,
+            "manufacturer": "TP-Link",
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "sw_version": self._sysinfo["sw_ver"],
         }
 
@@ -104,15 +126,14 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        from pyHS100 import SmartBulb
         self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
-            self.smartbulb.color_temp = \
-                mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            self.smartbulb.color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
 
         brightness = brightness_to_percentage(
-            kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255))
+            kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+        )
         if ATTR_HS_COLOR in kwargs:
             hue, sat = kwargs.get(ATTR_HS_COLOR)
             hsv = (int(hue), int(sat), brightness)
@@ -122,7 +143,6 @@ class TPLinkSmartBulb(Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        from pyHS100 import SmartBulb
         self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
@@ -157,40 +177,39 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartDeviceException, SmartBulb
         try:
             if self._supported_features is None:
                 self.get_features()
 
-            self._state = (
-                self.smartbulb.state == SmartBulb.BULB_STATE_ON)
+            self._state = self.smartbulb.state == SmartBulb.BULB_STATE_ON
 
             if self._supported_features & SUPPORT_BRIGHTNESS:
-                self._brightness = brightness_from_percentage(
-                    self.smartbulb.brightness)
+                self._brightness = brightness_from_percentage(self.smartbulb.brightness)
 
             if self._supported_features & SUPPORT_COLOR_TEMP:
-                if (self.smartbulb.color_temp is not None and
-                        self.smartbulb.color_temp != 0):
-                    self._color_temp = kelvin_to_mired(
-                        self.smartbulb.color_temp)
+                if (
+                    self.smartbulb.color_temp is not None
+                    and self.smartbulb.color_temp != 0
+                ):
+                    self._color_temp = kelvin_to_mired(self.smartbulb.color_temp)
 
             if self._supported_features & SUPPORT_COLOR:
                 hue, sat, _ = self.smartbulb.hsv
                 self._hs = (hue, sat)
 
             if self.smartbulb.has_emeter:
-                self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
-                    self.smartbulb.current_consumption())
+                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
+                    self.smartbulb.current_consumption()
+                )
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
-                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            daily_statistics[int(time.strftime("%d"))])
-                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            monthly_statistics[int(time.strftime("%m"))])
+                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
+                        daily_statistics[int(time.strftime("%d"))]
+                    )
+                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
+                        monthly_statistics[int(time.strftime("%m"))]
+                    )
                 except KeyError:
                     # device returned no daily/monthly history
                     pass
@@ -199,8 +218,9 @@ class TPLinkSmartBulb(Light):
 
         except (SmartDeviceException, OSError) as ex:
             if self._available:
-                _LOGGER.warning("Could not read state for %s: %s",
-                                self.smartbulb.host, ex)
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self.smartbulb.host, ex
+                )
             self._available = False
 
     @property
@@ -212,14 +232,19 @@ class TPLinkSmartBulb(Light):
         """Determine all supported features in one go."""
         self._sysinfo = self.smartbulb.sys_info
         self._supported_features = 0
+        self._mac = self.smartbulb.mac
+        self._alias = self.smartbulb.alias
+        self._model = self.smartbulb.model
 
         if self.smartbulb.is_dimmable:
             self._supported_features += SUPPORT_BRIGHTNESS
-        if getattr(self.smartbulb, 'is_variable_color_temp', False):
+        if getattr(self.smartbulb, "is_variable_color_temp", False):
             self._supported_features += SUPPORT_COLOR_TEMP
             self._min_mireds = kelvin_to_mired(
-                self.smartbulb.valid_temperature_range[1])
+                self.smartbulb.valid_temperature_range[1]
+            )
             self._max_mireds = kelvin_to_mired(
-                self.smartbulb.valid_temperature_range[0])
-        if getattr(self.smartbulb, 'is_color', False):
+                self.smartbulb.valid_temperature_range[0]
+            )
+        if getattr(self.smartbulb, "is_color", False):
             self._supported_features += SUPPORT_COLOR

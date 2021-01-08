@@ -4,17 +4,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import scsgate
-from homeassistant.components.light import (Light, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME)
+from homeassistant.components.light import Light, PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-        cv.schema_with_slug_keys(scsgate.SCSGATE_SCHEMA),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(scsgate.SCSGATE_SCHEMA)}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -74,8 +72,7 @@ class SCSGateLight(Light):
         """Turn the device on."""
         from scsgate.tasks import ToggleStatusTask
 
-        scsgate.SCSGATE.append_task(
-            ToggleStatusTask(target=self._scs_id, toggled=True))
+        scsgate.SCSGATE.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
 
         self._toggled = True
         self.schedule_update_ha_state()
@@ -85,7 +82,8 @@ class SCSGateLight(Light):
         from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
-            ToggleStatusTask(target=self._scs_id, toggled=False))
+            ToggleStatusTask(target=self._scs_id, toggled=False)
+        )
 
         self._toggled = False
         self.schedule_update_ha_state()
@@ -95,7 +93,9 @@ class SCSGateLight(Light):
         if self._toggled == message.toggled:
             self._logger.info(
                 "Light %s, ignoring message %s because state already active",
-                self._scs_id, message)
+                self._scs_id,
+                message,
+            )
             # Nothing changed, ignoring
             return
 
@@ -107,8 +107,5 @@ class SCSGateLight(Light):
             command = "on"
 
         self.hass.bus.fire(
-            'button_pressed', {
-                ATTR_ENTITY_ID: self._scs_id,
-                ATTR_STATE: command,
-            }
+            "button_pressed", {ATTR_ENTITY_ID: self._scs_id, ATTR_STATE: command}
         )

@@ -8,8 +8,7 @@ from . import DATA_FREEBOX
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
     async_add_entities([FbxRXSensor(fbx), FbxTXSensor(fbx)], True)
@@ -18,7 +17,7 @@ async def async_setup_platform(
 class FbxSensor(Entity):
     """Representation of a freebox sensor."""
 
-    _name = 'generic'
+    _name = "generic"
 
     def __init__(self, fbx):
         """Initialize the sensor."""
@@ -44,8 +43,8 @@ class FbxSensor(Entity):
 class FbxRXSensor(FbxSensor):
     """Update the Freebox RxSensor."""
 
-    _name = 'Freebox download speed'
-    _unit = 'KB/s'
+    _name = "Freebox download speed"
+    _unit = "KB/s"
 
     @property
     def unit_of_measurement(self):
@@ -56,14 +55,14 @@ class FbxRXSensor(FbxSensor):
         """Get the value from fetched datas."""
         await super().async_update()
         if self._datas is not None:
-            self._state = round(self._datas['rate_down'] / 1000, 2)
+            self._state = round(self._datas["rate_down"] / 1000, 2)
 
 
 class FbxTXSensor(FbxSensor):
     """Update the Freebox TxSensor."""
 
-    _name = 'Freebox upload speed'
-    _unit = 'KB/s'
+    _name = "Freebox upload speed"
+    _unit = "KB/s"
 
     @property
     def unit_of_measurement(self):
@@ -74,4 +73,4 @@ class FbxTXSensor(FbxSensor):
         """Get the value from fetched datas."""
         await super().async_update()
         if self._datas is not None:
-            self._state = round(self._datas['rate_up'] / 1000, 2)
+            self._state = round(self._datas["rate_up"] / 1000, 2)

@@ -4,16 +4,35 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 from homeassistant.components.media_player.const import (
-    ATTR_INPUT_SOURCE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE, ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, SERVICE_CLEAR_PLAYLIST,
-    SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE)
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
+    SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_TOGGLE, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP)
+    ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+)
 from homeassistant.loader import bind_hass
 
 
@@ -127,8 +146,7 @@ def media_seek(hass, position, entity_id=None):
 @bind_hass
 def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id}
+    data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id

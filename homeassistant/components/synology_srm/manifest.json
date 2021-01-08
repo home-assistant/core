@@ -1,9 +1,9 @@
 {
   "domain": "synology_srm",
-  "name": "Synology srm",
+  "name": "Synology SRM",
   "documentation": "https://www.home-assistant.io/components/synology_srm",
   "requirements": [
-    "synology-srm==0.0.6"
+    "synology-srm==0.0.7"
   ],
   "dependencies": [],
   "codeowners": [

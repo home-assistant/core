@@ -9,32 +9,38 @@ from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CHANNEL = 'default_channel'
+CONF_CHANNEL = "default_channel"
 CONF_TIMEOUT = 15
 
 # Top level attributes in 'data'
-ATTR_ATTACHMENTS = 'attachments'
-ATTR_FILE = 'file'
+ATTR_ATTACHMENTS = "attachments"
+ATTR_FILE = "file"
 # Attributes contained in file
-ATTR_FILE_URL = 'url'
-ATTR_FILE_PATH = 'path'
-ATTR_FILE_USERNAME = 'username'
-ATTR_FILE_PASSWORD = 'password'
-ATTR_FILE_AUTH = 'auth'
+ATTR_FILE_URL = "url"
+ATTR_FILE_PATH = "path"
+ATTR_FILE_USERNAME = "username"
+ATTR_FILE_PASSWORD = "password"
+ATTR_FILE_AUTH = "auth"
 # Any other value or absence of 'auth' lead to basic authentication being used
-ATTR_FILE_AUTH_DIGEST = 'digest'
+ATTR_FILE_AUTH_DIGEST = "digest"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_CHANNEL): cv.string,
-    vol.Optional(CONF_ICON): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_CHANNEL): cv.string,
+        vol.Optional(CONF_ICON): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -48,7 +54,8 @@ def get_service(hass, config, discovery_info=None):
 
     try:
         return SlackNotificationService(
-            channel, api_key, username, icon, hass.config.is_allowed_path)
+            channel, api_key, username, icon, hass.config.is_allowed_path
+        )
 
     except slacker.Error:
         _LOGGER.exception("Authentication failed")
@@ -58,10 +65,10 @@ def get_service(hass, config, discovery_info=None):
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 
-    def __init__(
-            self, default_channel, api_token, username, icon, is_allowed_path):
+    def __init__(self, default_channel, api_token, username, icon, is_allowed_path):
         """Initialize the service."""
         from slacker import Slacker
+
         self._default_channel = default_channel
         self._api_token = api_token
         self._username = username
@@ -98,7 +105,8 @@ class SlackNotificationService(BaseNotificationService):
                         local_path=file.get(ATTR_FILE_PATH),
                         username=file.get(ATTR_FILE_USERNAME),
                         password=file.get(ATTR_FILE_PASSWORD),
-                        auth=file.get(ATTR_FILE_AUTH))
+                        auth=file.get(ATTR_FILE_AUTH),
+                    )
                     # Choose filename
                     if file.get(ATTR_FILE_URL):
                         filename = file.get(ATTR_FILE_URL)
@@ -106,28 +114,34 @@ class SlackNotificationService(BaseNotificationService):
                         filename = file.get(ATTR_FILE_PATH)
                     # Prepare structure for Slack API
                     data = {
-                        'content': None,
-                        'filetype': None,
-                        'filename': filename,
+                        "content": None,
+                        "filetype": None,
+                        "filename": filename,
                         # If optional title is none use the filename
-                        'title': title if title else filename,
-                        'initial_comment': message,
-                        'channels': target
+                        "title": title if title else filename,
+                        "initial_comment": message,
+                        "channels": target,
                     }
                     # Post to slack
                     self.slack.files.post(
-                        'files.upload', data=data,
-                        files={'file': file_as_bytes})
+                        "files.upload", data=data, files={"file": file_as_bytes}
+                    )
                 else:
                     self.slack.chat.post_message(
-                        target, message, as_user=self._as_user,
-                        username=self._username, icon_emoji=self._icon,
-                        attachments=attachments, link_names=True)
+                        target,
+                        message,
+                        as_user=self._as_user,
+                        username=self._username,
+                        icon_emoji=self._icon,
+                        attachments=attachments,
+                        link_names=True,
+                    )
             except slacker.Error as err:
                 _LOGGER.error("Could not send notification. Error: %s", err)
 
-    def load_file(self, url=None, local_path=None, username=None,
-                  password=None, auth=None):
+    def load_file(
+        self, url=None, local_path=None, username=None, password=None, auth=None
+    ):
         """Load image/document/etc from a local path or URL."""
         try:
             if url:
@@ -148,9 +162,8 @@ class SlackNotificationService(BaseNotificationService):
             if local_path:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    return open(local_path, 'rb')
-                _LOGGER.warning(
-                    "'%s' is not secure to load data from!", local_path)
+                    return open(local_path, "rb")
+                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")
 

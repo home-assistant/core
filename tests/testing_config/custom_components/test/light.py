@@ -14,14 +14,19 @@ def init(empty=False):
     """Initialize the platform with devices."""
     global DEVICES
 
-    DEVICES = [] if empty else [
-        MockToggleDevice('Ceiling', STATE_ON),
-        MockToggleDevice('Ceiling', STATE_OFF),
-        MockToggleDevice(None, STATE_OFF)
-    ]
+    DEVICES = (
+        []
+        if empty
+        else [
+            MockToggleDevice("Ceiling", STATE_ON),
+            MockToggleDevice("Ceiling", STATE_OFF),
+            MockToggleDevice(None, STATE_OFF),
+        ]
+    )
 
 
-async def async_setup_platform(hass, config, async_add_entities_callback,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities_callback, discovery_info=None
+):
     """Return mock devices."""
     async_add_entities_callback(DEVICES)
