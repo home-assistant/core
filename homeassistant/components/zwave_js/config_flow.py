@@ -1,5 +1,6 @@
 """Config flow for Z-Wave JS integration."""
 import logging
+from typing import Any, Dict
 
 import voluptuous as vol
 
@@ -33,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> Dict[str, Any]:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)

@@ -21,7 +21,7 @@ EVENT_VALUE_UPDATED = "value updated"
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
-    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo):
+    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.client = client
         self.info = info
@@ -29,13 +29,13 @@ class ZWaveBaseEntity(Entity):
         self.watched_value_ids = [self.info.primary_value.property_]
 
     @callback
-    def on_value_update(self):
+    def on_value_update(self) -> None:
         """Call when one of the watched values change.
 
         To be overridden by platforms needing this event.
         """
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         # Add value_changed callbacks.
         self.async_on_remove(
@@ -78,7 +78,7 @@ class ZWaveBaseEntity(Entity):
         return self.client.connected and self.info.node.ready
 
     @callback
-    def _value_changed(self, event_data: Union[dict, ZwaveValue]):
+    def _value_changed(self, event_data: Union[dict, ZwaveValue]) -> None:
         """Call when (one of) our watched values changes.
 
         Should not be overridden by subclasses.

@@ -79,8 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        LOGGER.debug("Node added: %s", node.node_id)
-
+        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
+        # we only want to run discovery when the node has reached ready state,
+        # otherwise we'll have all kinds of missing info issues.
         if node.ready:
             async_on_node_ready(node)
             continue
@@ -90,6 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "ready",
                 lambda event: async_on_node_ready(event["node"]),
             )
+            # we do submit the node to device registry so user has
+            # visual feedback that something is being added
+            register_node_in_dev_reg(entry, dev_reg, client, node)
 
     async def handle_ha_shutdown(event):
         """Handle HA shutdown."""
