@@ -1,11 +1,12 @@
 """Test the smarttub config flow."""
+from unittest.mock import patch
+
 from smarttub import LoginFailed
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smarttub.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

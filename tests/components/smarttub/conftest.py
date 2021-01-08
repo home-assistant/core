@@ -1,5 +1,7 @@
 """Common fixtures for smarttub tests."""
 
+from unittest.mock import create_autospec, patch
+
 import pytest
 import smarttub
 
@@ -7,7 +9,6 @@ from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.async_mock import create_autospec, patch
 from tests.common import MockConfigEntry
 
 
