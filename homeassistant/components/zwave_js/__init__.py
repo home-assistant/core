@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with timeout(10):
             await initialized.wait()
     except asyncio.TimeoutError as err:
-        for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
+        for unsub in unsubs:
             unsub()
         await client.disconnect()
         raise ConfigEntryNotReady from err
