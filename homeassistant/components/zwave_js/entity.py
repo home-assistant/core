@@ -78,7 +78,7 @@ class ZWaveBaseEntity(Entity):
 
         Should not be overridden by subclasses.
         """
-        if event_data["property"] in self.watched_values:
+        if event_data["args"]["property"] in self.watched_values:
             self.on_value_update()
             self.async_write_ha_state()
 

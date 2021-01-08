@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, PLATFORMS, DATA_CLIENT, DATA_UNSUBSCRIBE
+from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
 from .discovery import async_discover_values
 
 LOGGER = logging.getLogger(__name__)
