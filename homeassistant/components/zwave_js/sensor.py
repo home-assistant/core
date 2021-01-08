@@ -24,6 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add Z-Wave Sensor."""
         if info.platform_hint == "string_sensor":
             sensor = ZWaveStringSensor(client, info)
+        if info.platform_hint == "numeric_sensor":
+            sensor = ZWaveNumericSensor(client, info)
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -49,4 +51,18 @@ class ZWaveStringSensor(ZWaveBaseEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return unit of measurement the value is expressed in."""
-        return self.info.primary_value.unit
+        return self.info.primary_value.metadata.unit
+
+
+class ZWaveNumericSensor(ZWaveBaseEntity):
+    """Representation of a Z-Wave Numeric sensor."""
+
+    @property
+    def state(self) -> str:
+        """Return state of the sensor."""
+        return self.info.primary_value.value
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return unit of measurement the value is expressed in."""
+        return self.info.primary_value.metadata.unit
