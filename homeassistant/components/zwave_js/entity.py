@@ -68,7 +68,9 @@ class ZWaveBaseEntity(Entity):
         """Return default name from device name and value name combination."""
         node_name = self.info.node.name or self.info.node.device_config.description
         value_name = (
-            self.info.primary_value.property_key_name or self.info.primary_value.property_name
+            self.info.primary_value.metadata.label or
+            self.info.primary_value.property_key_name or
+            self.info.primary_value.property_name
         )
         return f"{node_name}: {value_name}"
 
