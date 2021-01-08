@@ -65,13 +65,13 @@ async def test_p1_dsmr_sensor_entities(hass, mock_smile_p1):
     assert float(state.state) == -2761.0
 
     state = hass.states.get("sensor.p1_electricity_consumed_off_peak_cumulative")
-    assert float(state.state) == 551.1
+    assert float(state.state) == 551.09
 
     state = hass.states.get("sensor.p1_electricity_produced_peak_point")
     assert float(state.state) == 2761.0
 
     state = hass.states.get("sensor.p1_electricity_consumed_peak_cumulative")
-    assert float(state.state) == 442.9
+    assert float(state.state) == 442.932
 
     state = hass.states.get("sensor.p1_gas_consumed_cumulative")
     assert float(state.state) == 584.85
@@ -83,7 +83,7 @@ async def test_stretch_sensor_entities(hass, mock_stretch):
     assert entry.state == ENTRY_STATE_LOADED
 
     state = hass.states.get("sensor.koelkast_92c4a_electricity_consumed")
-    assert float(state.state) == 53.2
+    assert float(state.state) == 50.5
 
     state = hass.states.get("sensor.droger_52559_electricity_consumed_interval")
-    assert float(state.state) == 1.06
+    assert float(state.state) == 0.0
