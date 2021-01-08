@@ -6,6 +6,7 @@ import math
 
 from Adafruit_SHT31 import SHT31
 import voluptuous as vol
+from typing import Optional
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -30,6 +31,7 @@ DEFAULT_I2C_ADDRESS = 0x44
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = (SENSOR_TEMPERATURE, SENSOR_HUMIDITY)
+CONF_UNIQUE_ID = 'unique_id'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -42,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -59,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("SHT31 sensor not detected at address %s", hex(i2c_address))
         return
     sensor_client = SHTClient(sensor)
-
+    unique_id = config.get(CONF_UNIQUE_ID)
     sensor_classes = {
         SENSOR_TEMPERATURE: SHTSensorTemperature,
         SENSOR_HUMIDITY: SHTSensorHumidity,
@@ -68,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devs = []
     for sensor_type, sensor_class in sensor_classes.items():
         name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
-        devs.append(sensor_class(sensor_client, name))
+        devs.append(sensor_class(sensor_client, name, unique_id))
 
     add_entities(devs)
 
@@ -96,12 +99,13 @@ class SHTClient:
 class SHTSensor(Entity):
     """An abstract SHTSensor, can be either temperature or humidity."""
 
-    def __init__(self, sensor, name):
+    def __init__(self, sensor, name, unique_id: Optional[str]):
         """Initialize the sensor."""
         self._sensor = sensor
         self._name = name
         self._state = None
-
+        self._unique_id = unique_id
+        
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -119,6 +123,10 @@ class SHTSensor(Entity):
 
 class SHTSensorTemperature(SHTSensor):
     """Representation of a temperature sensor."""
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id + "_temperature"
 
     @property
     def unit_of_measurement(self):
@@ -137,6 +145,10 @@ class SHTSensorTemperature(SHTSensor):
 
 class SHTSensorHumidity(SHTSensor):
     """Representation of a humidity sensor."""
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id + "_humidity"
 
     @property
     def unit_of_measurement(self):
