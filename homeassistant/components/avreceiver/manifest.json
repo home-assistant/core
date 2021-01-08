@@ -3,7 +3,7 @@
   "name": "AV Receiver",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/avreceiver",
-  "requirements": ["pyavreceiver==0.0.8"],
+  "requirements": ["pyavreceiver==0.0.9"],
   "ssdp": [
     {
       "manufacturer": "Denon",
