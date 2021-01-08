@@ -9,6 +9,7 @@
       }
     },
     "error": {
+      "invalid_ws_url": "Invalid websocket URL",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
