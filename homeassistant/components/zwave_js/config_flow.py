@@ -65,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class InvalidInput(exceptions.HomeAssistantError):
-    """Error to indicate url is wrong."""
+    """Error to indicate input data is invalid."""
 
     def __init__(self, error):
         """Initialize error."""
