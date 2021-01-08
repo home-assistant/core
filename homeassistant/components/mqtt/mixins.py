@@ -94,12 +94,12 @@ MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
 
 def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
     """Validate that a device info entry has at least one identifying value."""
-    if not value.get(CONF_IDENTIFIERS) and not value.get(CONF_CONNECTIONS):
-        raise vol.Invalid(
-            "Device must have at least one identifying value in "
-            "'identifiers' and/or 'connections'"
-        )
-    return value
+    if value.get(CONF_IDENTIFIERS) or value.get(CONF_CONNECTIONS):
+        return value
+    raise vol.Invalid(
+        "Device must have at least one identifying value in "
+        "'identifiers' and/or 'connections'"
+    )
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
@@ -257,13 +257,14 @@ class MqttAvailability(Entity):
 
             self.async_write_ha_state()
 
-        topics = {}
-        for topic in self._avail_topics:
-            topics[f"availability_{topic}"] = {
+        topics = {
+            f"availability_{topic}": {
                 "topic": topic,
                 "msg_callback": availability_message_received,
                 "qos": self._avail_config[CONF_QOS],
             }
+            for topic in self._avail_topics
+        }
 
         self._availability_sub_state = await async_subscribe_topics(
             self.hass,
