@@ -124,7 +124,7 @@ async def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo
         )
 
 
-def compare_value(schema_value: Any, zwave_value: Any) -> bool:
+def compare_value(schema_value: List[Any], zwave_value: Any) -> bool:
     """Return if value matches schema."""
     if not schema_value:
         return True
