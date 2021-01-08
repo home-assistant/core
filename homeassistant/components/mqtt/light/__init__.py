@@ -11,7 +11,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .. import ATTR_DISCOVERY_HASH, DOMAIN, PLATFORMS
+from .. import DOMAIN, PLATFORMS
+from ..const import ATTR_DISCOVERY_HASH
 from ..discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
