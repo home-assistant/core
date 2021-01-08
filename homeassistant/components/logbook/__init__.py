@@ -605,7 +605,8 @@ def _augment_data_with_context(
         # a parent event?
         if event.context_parent_id:
             context_event = context_lookup.get(event.context_parent_id)
-        # Ensure the (parent) context_event is not the root cause of this log entry
+        # Ensure the (parent) context_event exists and is not the root cause of
+        # this log entry.
         if not context_event or event == context_event:
             return
 
