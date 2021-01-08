@@ -109,7 +109,7 @@ async def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo
         if not compare_value(schema.endpoint, value.endpoint):
             continue
         # check property
-        if not compare_value(schema.property, value.property):
+        if not compare_value(schema.property, value.property_):
             continue
         # check metadata_type
         if not compare_value(schema.type, value.metadata.type):

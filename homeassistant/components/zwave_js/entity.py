@@ -26,7 +26,7 @@ class ZWaveBaseEntity(Entity):
         self.client = client
         self.info = info
         # entities requiring additional values, can add extra ids to this list
-        self.watched_value_ids = [self.info.primary_value.property]
+        self.watched_value_ids = [self.info.primary_value.property_]
 
     @callback
     def on_value_update(self):

@@ -56,9 +56,9 @@ class ZwaveSensorBase(ZWaveBaseEntity):
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
             return DEVICE_CLASS_POWER
-        if self.info.primary_value.property == "electric":
+        if self.info.primary_value.property_ == "electric":
             return DEVICE_CLASS_POWER
-        return self.info.primary_value.property
+        return self.info.primary_value.property_
 
     @property
     def entity_registry_enabled_default(self) -> bool:
