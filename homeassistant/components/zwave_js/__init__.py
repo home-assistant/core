@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.info("Disconnected from Zwave JS Server")
         async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
 
-    async def async_on_initialized():
+    async def async_on_initialized() -> None:
         """Handle initial full state received."""
         LOGGER.info("Connection to Zwave JS Server initialized.")
         initialized.set()
