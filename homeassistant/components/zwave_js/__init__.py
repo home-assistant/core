@@ -20,7 +20,7 @@ from .discovery import async_discover_values
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
     return True
@@ -44,7 +44,7 @@ def register_node_in_dev_reg(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     initialized = asyncio.Event()
@@ -76,6 +76,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             LOGGER.debug("Discovered entity: %s", disc_info)
             async_dispatcher_send(hass, f"{DOMAIN}_add_{disc_info.platform}", disc_info)
 
+    @callback
+    def async_on_node_added(node: ZwaveNode) -> None:
+        """Handle node added event."""
+        LOGGER.debug("Node added: %s", node.node_id)
+
+        if node.ready:
+            async_on_node_ready(node)
+            continue
+        else:
+            # if node is not yet ready, register one-time callback for ready state
+            node.once(
+                "ready",
+                lambda event: async_on_node_ready(event["node"]),
+            )
+
     async def handle_ha_shutdown(event):
         """Handle HA shutdown."""
         await client.disconnect()
@@ -105,7 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     def mark_platform_ready():
         nonlocal platforms_loaded
         platforms_loaded += 1
-        print("YOO", len(PLATFORMS), platforms_loaded)
         if len(PLATFORMS) == platforms_loaded:
             platforms_ready.set()
 
@@ -116,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     async def when_platforms_ready():
-        """When the platforms are ready."""
+        """Call when all supported/required platforms are ready."""
         await platforms_ready.wait()
 
         # run discovery on all ready nodes
@@ -124,14 +138,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if node.ready:
                 async_on_node_ready(node)
                 continue
-
+            # if node is not yet ready, register one-time callback for ready state
             node.once(
                 "ready",
                 lambda event: async_on_node_ready(event["node"]),
             )
 
         client.driver.controller.on(
-            "node added", lambda event: async_on_node_ready(event["node"])
+            "node added", lambda event: async_on_node_added(event["node"])
         )
 
     hass.async_create_task(when_platforms_ready())
