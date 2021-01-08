@@ -1,7 +1,7 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
-from dataclasses import dataclass, field
-from typing import Any, AsyncGenerator, List, Optional
+from dataclasses import dataclass
+from typing import Any, AsyncGenerator, Set, Optional
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -37,19 +37,19 @@ class ZWaveDiscoverySchema:
     # [optional] hint for platform
     hint: Optional[str]
     # [optional] the node's basic device class must match ANY of these values
-    device_class_basic: List[str] = field(default_factory=list)
+    device_class_basic: Optional[Set[str]] = None
     # [optional] the node's generic device class must match ANY of these values
-    device_class_generic: List[str] = field(default_factory=list)
+    device_class_generic: Optional[Set[str]] = None
     # [optional] the node's specific device class must match ANY of these values
-    device_class_specific: List[str] = field(default_factory=list)
+    device_class_specific: Optional[Set[str]] = None
     # [optional] the value's command class must match ANY of these values
-    command_class: List[int] = field(default_factory=list)
+    command_class: Optional[Set[int]] = None
     # [optional] the value's endpoint must match ANY of these values
-    endpoint: List[int] = field(default_factory=list)
+    endpoint: Optional[Set[int]] = None
     # [optional] the value's property must match ANY of these values
-    property: List[str] = field(default_factory=list)
+    property: Optional[Set[int]] = None
     # [optional] the value's metadata_type must match ANY of these values
-    type: List[str] = field(default_factory=list)
+    type: Optional[Set[str]] = None
 
 
 DISCOVERY_SCHEMAS = [
@@ -57,19 +57,19 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="sensor",
         hint="string_sensor",
-        command_class=[
+        command_class={
             CommandClass.ALARM,
             CommandClass.SENSOR_ALARM,
             CommandClass.INDICATOR,
             CommandClass.NOTIFICATION,
-        ],
-        type=["string"],
+        },
+        type={"string"},
     ),
     # generic numeric sensors
     ZWaveDiscoverySchema(
         platform="sensor",
         hint="numeric_sensor",
-        command_class=[
+        command_class={
             CommandClass.SENSOR_MULTILEVEL,
             CommandClass.METER,
             CommandClass.ALARM,
@@ -78,8 +78,8 @@ DISCOVERY_SCHEMAS = [
             CommandClass.BATTERY,
             CommandClass.NOTIFICATION,
             CommandClass.BASIC,
-        ],
-        type=["number"],
+        },
+        type={"number"},
     ),
 ]
 
@@ -131,8 +131,8 @@ def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
         )
 
 
-def compare_value(schema_value: List[Any], zwave_value: Any) -> bool:
+def compare_value(schema_value: Optional[Set[Any]], zwave_value: Any) -> bool:
     """Return if value matches schema."""
-    if not schema_value:
+    if schema_value is None:
         return True
     return zwave_value in schema_value
