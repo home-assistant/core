@@ -1,7 +1,7 @@
 """Representation of Z-Wave sensors."""
 
 import logging
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -33,10 +33,12 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
+        entities: List[ZWaveBaseEntity] = []
+
         if info.platform_hint == "string_sensor":
-            sensor = ZWaveStringSensor(client, info)
-        if info.platform_hint == "numeric_sensor":
-            sensor = ZWaveNumericSensor(client, info)
+            entities.append(ZWaveStringSensor(client, info))
+        elif info.platform_hint == "numeric_sensor":
+            entities.append(ZWaveNumericSensor(client, info))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -44,7 +46,8 @@ async def async_setup_entry(
                 info.primary_value.propertyname,
             )
             return
-        async_add_entities([sensor])
+
+        async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
@@ -67,7 +70,7 @@ class ZwaveSensorBase(ZWaveBaseEntity):
             return DEVICE_CLASS_POWER
         if self.info.primary_value.property_key_name == "kWh_Consumed":
             return DEVICE_CLASS_ENERGY
-        return self.info.primary_value.property_
+        return str(self.info.primary_value.property_)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -91,14 +94,18 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> Optional[str]:
         """Return state of the sensor."""
-        return self.info.primary_value.value
+        if self.info.primary_value.value is None:
+            return None
+        return str(self.info.primary_value.value)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> Optional[str]:
         """Return unit of measurement the value is expressed in."""
-        return self.info.primary_value.metadata.unit
+        if self.info.primary_value.metadata.unit is None:
+            return None
+        return str(self.info.primary_value.metadata.unit)
 
 
 class ZWaveNumericSensor(ZwaveSensorBase):
@@ -109,30 +116,32 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return 0
-        return round(self.info.primary_value.value, 2)
+        return round(float(self.info.primary_value.value), 2)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> Optional[str]:
         """Return unit of measurement the value is expressed in."""
-
+        if self.info.primary_value.metadata.unit is None:
+            return None
         if self.info.primary_value.metadata.unit == "C":
             return TEMP_CELSIUS
         if self.info.primary_value.metadata.unit == "F":
             return TEMP_FAHRENHEIT
 
-        return self.info.primary_value.metadata.unit
+        return str(self.info.primary_value.metadata.unit)
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the device specific state attributes."""
         if (
-            self.info.primary_value.metadata.states
-            and self.info.primary_value.value is not None
+            self.info.primary_value.value is None
+            or not self.info.primary_value.metadata.states
         ):
-            # add the value's label as property for multi-value (list) items
-            label = self.info.primary_value.metadata.states.get(
-                self.info.primary_value.value
-            ) or self.info.primary_value.metadata.states.get(
-                str(self.info.primary_value.value)
-            )
-            return {"label": label}
+            return None
+        # add the value's label as property for multi-value (list) items
+        label = self.info.primary_value.metadata.states.get(
+            self.info.primary_value.value
+        ) or self.info.primary_value.metadata.states.get(
+            str(self.info.primary_value.value)
+        )
+        return {"label": label}

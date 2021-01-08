@@ -50,6 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
+        assert self.hass  # typing
+
         try:
             version_info = await validate_input(self.hass, user_input)
         except InvalidInput as err:
@@ -70,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class InvalidInput(exceptions.HomeAssistantError):
     """Error to indicate input data is invalid."""
 
-    def __init__(self, error):
+    def __init__(self, error: str) -> None:
         """Initialize error."""
         super().__init__()
         self.error = error
