@@ -617,6 +617,7 @@ class Thermostat(ClimateEntity):
             cool_temp_setpoint,
             heat_temp_setpoint,
             self.hold_preference(),
+            self.hold_hours(),
         )
         _LOGGER.debug(
             "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
@@ -717,15 +718,32 @@ class Thermostat(ClimateEntity):
 
     def hold_preference(self):
         """Return user preference setting for hold time."""
-        # Values returned from thermostat are 'useEndTime4hour',
-        # 'useEndTime2hour', 'nextTransition', 'indefinite', 'askMe'
-        default = self.thermostat["settings"]["holdAction"]
-        if default == "nextTransition":
-            return default
-        # add further conditions if other hold durations should be
-        # supported; note that this should not include 'indefinite'
-        # as an indefinite away hold is interpreted as away_mode
-        return "nextTransition"
+        # Values returned from thermostat are:
+        #   "useEndTime2hour", "useEndTime4hour"
+        #   "nextPeriod", "askMe"
+        #   "indefinite"
+        device_preference = self.thermostat["settings"]["holdAction"]
+        # Currently supported pyecobee holdTypes:
+        #   dateTime, nextTransition, indefinite, holdHours
+        hold_pref_map = {
+            "useEndTime2hour": "holdHours",
+            "useEndTime4hour": "holdHours",
+            "indefinite": "indefinite",
+        }
+        return hold_pref_map.get(device_preference, "nextTransition")
+
+    def hold_hours(self):
+        """Return user preference setting for hold duration in hours."""
+        # Values returned from thermostat are:
+        #   "useEndTime2hour", "useEndTime4hour"
+        #   "nextPeriod", "askMe"
+        #   "indefinite"
+        device_preference = self.thermostat["settings"]["holdAction"]
+        hold_hours_map = {
+            "useEndTime2hour": 2,
+            "useEndTime4hour": 4,
+        }
+        return hold_hours_map.get(device_preference, 0)
 
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
