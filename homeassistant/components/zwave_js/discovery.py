@@ -129,6 +129,7 @@ def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
             platform=schema.platform,
             platform_hint=schema.hint,
         )
+    return None
 
 
 def compare_value(schema_value: Optional[Set[Any]], zwave_value: Any) -> bool:
