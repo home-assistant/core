@@ -32,7 +32,7 @@ async def async_setup_entry(
     platform_ready = hass.data[DOMAIN][config_entry.entry_id][DATA_PLATFORM_READY]
 
     @callback
-    def async_add_sensor(info: ZwaveDiscoveryInfo):
+    def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
         if info.platform_hint == "string_sensor":
             sensor = ZWaveStringSensor(client, info)
