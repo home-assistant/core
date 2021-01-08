@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from accuweather import ApiError
+
 from homeassistant.components.accuweather.const import COORDINATOR, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -40,7 +42,7 @@ async def test_config_not_ready(hass):
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        side_effect=ConnectionError(),
+        side_effect=ApiError("API error"),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
