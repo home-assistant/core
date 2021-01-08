@@ -44,6 +44,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
 
             _LOGGER.debug("Purging states and events before %s", batch_purge_before)
 
+            # TODO: update old_state_id to NULL before deleting to accommodate MSSQL
             deleted_rows = (
                 session.query(States)
                 .filter(States.last_updated < batch_purge_before)
