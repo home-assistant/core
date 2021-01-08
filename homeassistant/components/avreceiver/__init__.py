@@ -64,9 +64,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     controller_manager = AVRManager(hass, controller)
     await controller_manager.connect_listeners()
 
+    zones = ["main", "zone2", "zone3", "zone4"]
+    zones = {
+        name: getattr(controller, name) for name in zones if getattr(controller, name)
+    }
+
     hass.data[DOMAIN][entry.entry_id] = {
         "controller": controller_manager,
-        MEDIA_PLAYER_DOMAIN: controller.main,
+        MEDIA_PLAYER_DOMAIN: zones,
     }
 
     for component in PLATFORMS:
@@ -95,7 +100,7 @@ class AVRManager:
         """Init the manager."""
         self._hass = hass
         self._device_registry = None
-        self._entity_register = None
+        self._entity_registry = None
         self.avreceiver = avreceiver
         self._signals = []
 
