@@ -128,10 +128,8 @@ class AVRManager:
 
     async def _state_update(self, event):
         """Handle controller event."""
-        print("event ", event)
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_AVR_UPDATED)
 
     async def _telnet_event(self, event):
         """Handle connection event."""
-        print("telnet event ", event)
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_AVR_UPDATED)
