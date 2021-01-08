@@ -13,7 +13,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_FORECAST, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_FORECAST,
+    CONF_LESS_FREQUENT_UPDATES,
+    DOMAIN,
+)
 
 
 class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -106,7 +110,13 @@ class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_FORECAST,
                         default=self.config_entry.options.get(CONF_FORECAST, False),
-                    ): bool
+                    ): bool,
+                    vol.Optional(
+                        CONF_LESS_FREQUENT_UPDATES,
+                        default=self.config_entry.options.get(
+                            CONF_LESS_FREQUENT_UPDATES, False
+                        ),
+                    ): bool,
                 }
             ),
         )

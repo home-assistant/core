@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ATTR_FORECAST,
     CONF_FORECAST,
+    CONF_LESS_FREQUENT_UPDATES,
     COORDINATOR,
     DOMAIN,
     UNDO_UPDATE_LISTENER,
@@ -37,13 +38,14 @@ async def async_setup_entry(hass, config_entry) -> bool:
     api_key = config_entry.data[CONF_API_KEY]
     location_key = config_entry.unique_id
     forecast = config_entry.options.get(CONF_FORECAST, False)
+    less_frequent_updates = config_entry.options.get(CONF_LESS_FREQUENT_UPDATES, False)
 
     _LOGGER.debug("Using location_key: %s, get forecast: %s", location_key, forecast)
 
     websession = async_get_clientsession(hass)
 
     coordinator = AccuWeatherDataUpdateCoordinator(
-        hass, websession, api_key, location_key, forecast
+        hass, websession, api_key, location_key, forecast, less_frequent_updates
     )
     await coordinator.async_refresh()
 
@@ -92,7 +94,15 @@ async def update_listener(hass, config_entry):
 class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching AccuWeather data API."""
 
-    def __init__(self, hass, session, api_key, location_key, forecast: bool):
+    def __init__(
+        self,
+        hass,
+        session,
+        api_key,
+        location_key,
+        forecast: bool,
+        less_frequent_updates: bool,
+    ):
         """Initialize."""
         self.location_key = location_key
         self.forecast = forecast
@@ -107,6 +117,10 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval = (
             timedelta(minutes=64) if self.forecast else timedelta(minutes=32)
         )
+        # If less frequent updates option is enabled data updates will be performed
+        # twice as rarely.
+        if less_frequent_updates:
+            update_interval *= 2
         _LOGGER.debug("Data will be update every %s", update_interval)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
