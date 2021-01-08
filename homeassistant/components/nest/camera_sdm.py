@@ -155,7 +155,10 @@ class NestCamera(Camera):
             await self._stream.stop_rtsp_stream()
         if self._stream_refresh_unsub:
             self._stream_refresh_unsub()
-        self._handle_event_image_cleanup()
+        self._event_id = None
+        self._event_image_bytes = None
+        if self._event_image_cleanup_unsub is not None:
+            self._event_image_cleanup_unsub()
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
