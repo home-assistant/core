@@ -2,16 +2,22 @@
 import datetime
 import logging
 
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    PLATFORM_SCHEMA,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASSES,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,19 +47,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
-    from concord232 import client as concord232_client
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    exclude = config.get(CONF_EXCLUDE_ZONES)
-    zone_types = config.get(CONF_ZONE_TYPES)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    exclude = config[CONF_EXCLUDE_ZONES]
+    zone_types = config[CONF_ZONE_TYPES]
     sensors = []
 
     try:
         _LOGGER.debug("Initializing client")
-        client = concord232_client.Client("http://{}:{}".format(host, port))
+        client = concord232_client.Client(f"http://{host}:{port}")
         client.zones = client.list_zones()
-        client.last_zone_update = datetime.datetime.now()
+        client.last_zone_update = dt_util.utcnow()
 
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
@@ -84,17 +89,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def get_opening_type(zone):
     """Return the result of the type guessing from name."""
     if "MOTION" in zone["name"]:
-        return "motion"
+        return DEVICE_CLASS_MOTION
     if "KEY" in zone["name"]:
-        return "safety"
+        return DEVICE_CLASS_SAFETY
     if "SMOKE" in zone["name"]:
-        return "smoke"
+        return DEVICE_CLASS_SMOKE
     if "WATER" in zone["name"]:
         return "water"
-    return "opening"
+    return DEVICE_CLASS_OPENING
 
 
-class Concord232ZoneSensor(BinarySensorDevice):
+class Concord232ZoneSensor(BinarySensorEntity):
     """Representation of a Concord232 zone as a sensor."""
 
     def __init__(self, hass, client, zone, zone_type):
@@ -111,11 +116,6 @@ class Concord232ZoneSensor(BinarySensorDevice):
         return self._zone_type
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the binary sensor."""
         return self._zone["name"]
@@ -128,11 +128,11 @@ class Concord232ZoneSensor(BinarySensorDevice):
 
     def update(self):
         """Get updated stats from API."""
-        last_update = datetime.datetime.now() - self._client.last_zone_update
+        last_update = dt_util.utcnow() - self._client.last_zone_update
         _LOGGER.debug("Zone: %s ", self._zone)
         if last_update > datetime.timedelta(seconds=1):
             self._client.zones = self._client.list_zones()
-            self._client.last_zone_update = datetime.datetime.now()
+            self._client.last_zone_update = dt_util.utcnow()
             _LOGGER.debug("Updated from zone: %s", self._zone["name"])
 
         if hasattr(self._client, "zones"):

@@ -1,10 +1,7 @@
 {
   "domain": "meteoalarm",
-  "name": "meteoalarm",
-  "documentation": "https://www.home-assistant.io/components/meteoalarm",
-  "requirements": [
-    "meteoalertapi==0.1.5"
-  ],
-  "dependencies": [],
+  "name": "MeteoAlarm",
+  "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
+  "requirements": ["meteoalertapi==0.1.6"],
   "codeowners": ["@rolfberkenbosch"]
 }

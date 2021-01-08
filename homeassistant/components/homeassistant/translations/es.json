@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Arquitectura de CPU",
+            "chassis": "Chasis",
+            "dev": "Desarrollo",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "SO Home Assistant",
+            "installation_type": "Tipo de instalaci\u00f3n",
+            "os_name": "Nombre del Sistema Operativo",
+            "os_version": "Versi\u00f3n del Sistema Operativo",
+            "python_version": "Versi\u00f3n de Python",
+            "supervisor": "Supervisor",
+            "timezone": "Zona horaria",
+            "version": "Versi\u00f3n",
+            "virtualenv": "Entorno virtual"
+        }
+    }
+}

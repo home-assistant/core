@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_host": "Palvelimen osoite ei ollut t\u00e4ydess\u00e4 URL-muodossa, esim. http://192.168.10.100:80"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Salasana",
+                    "tls": "ISY-ohjaimen TLS-versio.",
+                    "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ohita merkkijono",
+                    "restore_light_state": "Valon kirkkauden palauttaminen",
+                    "variable_sensor_string": "Muuttuva anturin merkkijono"
+                },
+                "title": "ISY994-asetukset"
+            }
+        }
+    }
+}

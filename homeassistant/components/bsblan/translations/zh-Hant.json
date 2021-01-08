@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "BSB-Lan\uff1a{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "passkey": "Passkey \u5b57\u4e32",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8a2d\u5b9a BSB-Lan \u88dd\u7f6e\u4ee5\u6574\u5408\u81f3 Home Assistant\u3002",
+                "title": "\u9023\u7dda\u81f3 BSB-Lan \u88dd\u7f6e"
+            }
+        }
+    }
+}

@@ -1,13 +1,11 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
-import logging
-
+from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-_LOGGER = logging.getLogger(__name__)
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_SYSTEM_ID = "system_id"
 CONF_REVERSE = "reverse"
@@ -48,7 +46,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the MyLink platform."""
-    from somfy_mylink_synergy import SomfyMyLinkSynergy
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]

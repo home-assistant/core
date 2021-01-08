@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dette land er allerede konfigureret."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Land"
+                },
+                "title": "V\u00e6lg et land at overv\u00e5ge"
+            }
+        }
+    }
+}

@@ -2,29 +2,32 @@
 import unittest
 from unittest import mock
 
-import asynctest
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_OFF,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TIME_HOURS,
+)
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
+
+from .common import load_mock_device
+
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
 def _get_dyson_purecool_device():
     """Return a valid device provide by Dyson web services."""
     device = mock.Mock(spec=DysonPureCool)
-    device.serial = "XX-XXXXX-XX"
-    device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.environmental_state.humidity = 42
-    device.environmental_state.temperature = 280
-    device.state.hepa_filter_state = 90
-    device.state.carbon_filter_state = 80
+    load_mock_device(device)
     return device
 
 
@@ -54,10 +57,39 @@ def _get_device_without_state():
 def _get_with_state():
     """Return a valid device with state values."""
     device = mock.Mock()
+    load_mock_device(device)
     device.name = "Device_name"
-    device.state = mock.Mock()
     device.state.filter_life = 100
-    device.environmental_state = mock.Mock()
+    device.environmental_state.dust = 5
+    device.environmental_state.humidity = 45
+    device.environmental_state.temperature = 295
+    device.environmental_state.volatil_organic_compounds = 2
+
+    return device
+
+
+def _get_purecool_device():
+    """Return a valid device with filters life state values."""
+    device = mock.Mock(spec=DysonPureCool)
+    load_mock_device(device)
+    device.name = "PureCool"
+    device.state.carbon_filter_state = "0096"
+    device.state.hepa_filter_state = "0056"
+    device.environmental_state.dust = 5
+    device.environmental_state.humidity = 45
+    device.environmental_state.temperature = 295
+    device.environmental_state.volatil_organic_compounds = 2
+
+    return device
+
+
+def _get_purecool_humidify_device():
+    """Return a valid device with filters life state values."""
+    device = mock.Mock(spec=DysonPureCool)
+    load_mock_device(device)
+    device.name = "PureCool_Humidify"
+    device.state.carbon_filter_state = "INV"
+    device.state.hepa_filter_state = "0075"
     device.environmental_state.dust = 5
     device.environmental_state.humidity = 45
     device.environmental_state.temperature = 295
@@ -69,14 +101,10 @@ def _get_with_state():
 def _get_with_standby_monitoring():
     """Return a valid device with state but with standby monitoring disable."""
     device = mock.Mock()
+    load_mock_device(device)
     device.name = "Device_name"
-    device.state = mock.Mock()
-    device.state.filter_life = 100
-    device.environmental_state = mock.Mock()
-    device.environmental_state.dust = 5
     device.environmental_state.humidity = 0
     device.environmental_state.temperature = 0
-    device.environmental_state.volatil_organic_compounds = 2
 
     return device
 
@@ -87,8 +115,9 @@ class DysonTest(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -112,7 +141,10 @@ class DysonTest(unittest.TestCase):
 
         device_fan = _get_device_without_state()
         device_non_fan = _get_with_state()
-        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
+        self.hass.data[dyson.DYSON_DEVICES] = [
+            device_fan,
+            device_non_fan,
+        ]
         dyson.setup_platform(self.hass, None, _add_device, mock.MagicMock())
 
     def test_dyson_filter_life_sensor(self):
@@ -122,7 +154,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "hours"
+        assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")
@@ -134,7 +166,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 100
-        assert sensor.unit_of_measurement == "hours"
+        assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")
@@ -168,7 +200,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "%"
+        assert sensor.unit_of_measurement == PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -179,7 +211,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 45
-        assert sensor.unit_of_measurement == "%"
+        assert sensor.unit_of_measurement == PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -190,7 +222,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == STATE_OFF
-        assert sensor.unit_of_measurement == "%"
+        assert sensor.unit_of_measurement == PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -201,7 +233,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -212,7 +244,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 21.9
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -221,7 +253,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 71.3
-        assert sensor.unit_of_measurement == "°F"
+        assert sensor.unit_of_measurement == TEMP_FAHRENHEIT
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -234,7 +266,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == STATE_OFF
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -261,8 +293,8 @@ class DysonTest(unittest.TestCase):
         assert sensor.entity_id == "sensor.dyson_1"
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -274,4 +306,46 @@ async def test_purecool_component_setup_only_once(devices, login, hass):
     discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
     await hass.async_block_till_done()
 
-    assert len(hass.data[dyson.DYSON_SENSOR_DEVICES]) == 2
+    assert len(hass.data[dyson.DYSON_SENSOR_DEVICES]) == 4
+
+
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_purecool_device()],
+)
+async def test_dyson_purecool_filter_state_sensor(devices, login, hass):
+    """Test filter sensor with values."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.purecool_hepa_filter_remaining_life")
+    assert state is not None
+    assert state.state == "56"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.name == "PureCool HEPA Filter Remaining Life"
+
+    state = hass.states.get("sensor.purecool_carbon_filter_remaining_life")
+    assert state is not None
+    assert state.state == "96"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.name == "PureCool Carbon Filter Remaining Life"
+
+
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_purecool_humidify_device()],
+)
+async def test_dyson_purecool_humidify_filter_state_sensor(devices, login, hass):
+    """Test filter sensor with values."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.purecool_humidify_combi_filter_remaining_life")
+    assert state is not None
+    assert state.state == "75"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.name == "PureCool_Humidify Combi Filter Remaining Life"

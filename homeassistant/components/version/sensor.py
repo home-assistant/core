@@ -1,17 +1,21 @@
 """Sensor that can display the current Home Assistant versions."""
-import logging
 from datetime import timedelta
 
+from pyhaversion import (
+    DockerVersion,
+    HaIoVersion,
+    HassioVersion,
+    LocalVersion,
+    PyPiVersion,
+)
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_SOURCE
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-_LOGGER = logging.getLogger(__name__)
 
 ALL_IMAGES = [
     "default",
@@ -24,11 +28,14 @@ ALL_IMAGES = [
     "raspberrypi2",
     "raspberrypi3",
     "raspberrypi3-64",
+    "raspberrypi4",
+    "raspberrypi4-64",
     "tinker",
     "odroid-c2",
+    "odroid-n2",
     "odroid-xu",
 ]
-ALL_SOURCES = ["local", "pypi", "hassio", "docker"]
+ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]
 
 CONF_BETA = "beta"
 CONF_IMAGE = "image"
@@ -54,7 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
-    from pyhaversion import LocalVersion, DockerVersion, HassioVersion, PyPiVersion
 
     beta = config.get(CONF_BETA)
     image = config.get(CONF_IMAGE)
@@ -74,6 +80,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         haversion = VersionData(HassioVersion(hass.loop, session, branch, image))
     elif source == "docker":
         haversion = VersionData(DockerVersion(hass.loop, session, branch, image))
+    elif source == "haio":
+        haversion = VersionData(HaIoVersion(hass.loop, session))
     else:
         haversion = VersionData(LocalVersion(hass.loop, session))
 

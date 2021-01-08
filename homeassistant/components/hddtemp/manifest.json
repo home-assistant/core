@@ -1,8 +1,6 @@
 {
   "domain": "hddtemp",
-  "name": "Hddtemp",
-  "documentation": "https://www.home-assistant.io/components/hddtemp",
-  "requirements": [],
-  "dependencies": [],
+  "name": "hddtemp",
+  "documentation": "https://www.home-assistant.io/integrations/hddtemp",
   "codeowners": []
 }

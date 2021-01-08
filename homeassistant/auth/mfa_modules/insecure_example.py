@@ -1,5 +1,4 @@
 """Example auth module."""
-import logging
 from typing import Any, Dict
 
 import voluptuous as vol
@@ -7,9 +6,9 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 
 from . import (
-    MultiFactorAuthModule,
-    MULTI_FACTOR_AUTH_MODULES,
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
+    MULTI_FACTOR_AUTH_MODULES,
+    MultiFactorAuthModule,
     SetupFlow,
 )
 
@@ -21,8 +20,6 @@ CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     },
     extra=vol.PREVENT_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("insecure_example")

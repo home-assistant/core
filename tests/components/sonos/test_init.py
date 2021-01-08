@@ -2,8 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.setup import async_setup_component
 from homeassistant.components import sonos
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "Denna site_id \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "site_exists": "Denna site_id \u00e4r redan konfigurerad"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckeln f\u00f6r den h\u00e4r webbplatsen",
+                    "name": "Namnet p\u00e5 den h\u00e4r installationen",
+                    "site_id": "SolarEdge webbplats-id"
+                },
+                "title": "Definiera API-parametrarna f\u00f6r den h\u00e4r installationen"
+            }
+        }
+    }
+}

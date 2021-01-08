@@ -1,13 +1,11 @@
 """Support for Verisure locks."""
-import logging
-from time import sleep, time
+from time import monotonic, sleep
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 
-from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
+from . import HUB as hub
+from .const import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, LOGGER
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -25,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(locks)
 
 
-class VerisureDoorlock(LockDevice):
+class VerisureDoorlock(LockEntity):
     """Representation of a Verisure doorlock."""
 
     def __init__(self, device_label):
@@ -71,7 +69,7 @@ class VerisureDoorlock(LockDevice):
 
     def update(self):
         """Update lock status."""
-        if time() - self._change_timestamp < 10:
+        if monotonic() - self._change_timestamp < 10:
             return
         hub.update_overview()
         status = hub.get_first(
@@ -83,7 +81,7 @@ class VerisureDoorlock(LockDevice):
         elif status == "LOCKED":
             self._state = STATE_LOCKED
         elif status != "PENDING":
-            _LOGGER.error("Unknown lock state %s", status)
+            LOGGER.error("Unknown lock state %s", status)
         self._changed_by = hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].userString",
             self._device_label,
@@ -101,7 +99,7 @@ class VerisureDoorlock(LockDevice):
 
         code = kwargs.get(ATTR_CODE, self._default_lock_code)
         if code is None:
-            _LOGGER.error("Code required but none provided")
+            LOGGER.error("Code required but none provided")
             return
 
         self.set_lock_state(code, STATE_UNLOCKED)
@@ -113,7 +111,7 @@ class VerisureDoorlock(LockDevice):
 
         code = kwargs.get(ATTR_CODE, self._default_lock_code)
         if code is None:
-            _LOGGER.error("Code required but none provided")
+            LOGGER.error("Code required but none provided")
             return
 
         self.set_lock_state(code, STATE_LOCKED)
@@ -124,11 +122,16 @@ class VerisureDoorlock(LockDevice):
         transaction_id = hub.session.set_lock_state(
             code, self._device_label, lock_state
         )["doorLockStateChangeTransactionId"]
-        _LOGGER.debug("Verisure doorlock %s", state)
+        LOGGER.debug("Verisure doorlock %s", state)
         transaction = {}
+        attempts = 0
         while "result" not in transaction:
-            sleep(0.5)
             transaction = hub.session.get_lock_state_transaction(transaction_id)
+            attempts += 1
+            if attempts == 30:
+                break
+            if attempts > 1:
+                sleep(0.5)
         if transaction["result"] == "OK":
             self._state = state
-            self._change_timestamp = time()
+            self._change_timestamp = monotonic()

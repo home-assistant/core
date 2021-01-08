@@ -1,6 +1,11 @@
 """Support for SleepIQ sensors."""
-from homeassistant.components import sleepiq
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorEntity,
+)
+
+from . import SleepIQSensor
+from .const import DOMAIN, IS_IN_BED, SENSOR_TYPES, SIDES
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -8,26 +13,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = sleepiq.DATA
+    data = hass.data[DOMAIN]
     data.update()
 
-    dev = list()
+    dev = []
     for bed_id, bed in data.beds.items():
-        for side in sleepiq.SIDES:
+        for side in SIDES:
             if getattr(bed, side) is not None:
                 dev.append(IsInBedBinarySensor(data, bed_id, side))
     add_entities(dev)
 
 
-class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
+class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
     """Implementation of a SleepIQ presence sensor."""
 
     def __init__(self, sleepiq_data, bed_id, side):
         """Initialize the sensor."""
-        sleepiq.SleepIQSensor.__init__(self, sleepiq_data, bed_id, side)
-        self.type = sleepiq.IS_IN_BED
+        super().__init__(sleepiq_data, bed_id, side)
         self._state = None
-        self._name = sleepiq.SENSOR_TYPES[self.type]
+        self._name = SENSOR_TYPES[IS_IN_BED]
         self.update()
 
     @property
@@ -38,9 +42,9 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return "occupancy"
+        return DEVICE_CLASS_OCCUPANCY
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
-        sleepiq.SleepIQSensor.update(self)
+        super().update()
         self._state = self.side.is_in_bed

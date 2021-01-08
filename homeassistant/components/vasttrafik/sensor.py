@@ -2,11 +2,12 @@
 from datetime import timedelta
 import logging
 
+import vasttrafik
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
@@ -54,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
-    import vasttrafik
 
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
@@ -62,7 +62,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
-                vasttrafik,
                 planner,
                 departure.get(CONF_NAME),
                 departure.get(CONF_FROM),
@@ -77,18 +76,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
-    def __init__(self, vasttrafik, planner, name, departure, heading, lines, delay):
+    def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
-        self._vasttrafik = vasttrafik
         self._planner = planner
         self._name = name or departure
-        self._departure = planner.location_name(departure)[0]
-        self._heading = planner.location_name(heading)[0] if heading else None
+        self._departure = self.get_station_id(departure)
+        self._heading = self.get_station_id(heading) if heading else None
         self._lines = lines if lines else None
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
         self._state = None
         self._attributes = None
+
+    def get_station_id(self, location):
+        """Get the station ID."""
+        if location.isdecimal():
+            station_info = {"station_name": location, "station_id": location}
+        else:
+            station_id = self._planner.location_name(location)[0]["id"]
+            station_info = {"station_name": location, "station_id": station_id}
+        return station_info
 
     @property
     def name(self):
@@ -115,30 +122,32 @@ class VasttrafikDepartureSensor(Entity):
         """Get the departure board."""
         try:
             self._departureboard = self._planner.departureboard(
-                self._departure["id"],
-                direction=self._heading["id"] if self._heading else None,
+                self._departure["station_id"],
+                direction=self._heading["station_id"] if self._heading else None,
                 date=now() + self._delay,
             )
-        except self._vasttrafik.Error:
+        except vasttrafik.Error:
             _LOGGER.debug("Unable to read departure board, updating token")
             self._planner.update_token()
 
         if not self._departureboard:
             _LOGGER.debug(
-                "No departures from %s heading %s",
-                self._departure["name"],
-                self._heading["name"] if self._heading else "ANY",
+                "No departures from departure station %s " "to destination station %s",
+                self._departure["station_name"],
+                self._heading["station_name"] if self._heading else "ANY",
             )
             self._state = None
             self._attributes = {}
         else:
             for departure in self._departureboard:
                 line = departure.get("sname")
+                if "cancelled" in departure:
+                    continue
                 if not self._lines or line in self._lines:
-                    if "rtTime" in self._departureboard[0]:
-                        self._state = self._departureboard[0]["rtTime"]
+                    if "rtTime" in departure:
+                        self._state = departure["rtTime"]
                     else:
-                        self._state = self._departureboard[0]["time"]
+                        self._state = departure["time"]
 
                     params = {
                         ATTR_ACCESSIBILITY: departure.get("accessibility"),

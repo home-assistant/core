@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "missing_configuration": "De Spotify integratie is niet geconfigureerd. Gelieve de documentatie te volgen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout [check the help section] ({docs_url})",
+            "reauth_account_mismatch": "Het Spotify account waarmee er is geverifieerd, komt niet overeen met het account dat opnieuw moet worden geverifieerd."
+        },
+        "create_entry": {
+            "default": "Succesvol geauthenticeerd met Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies Authenticatiemethode"
+            },
+            "reauth_confirm": {
+                "description": "De Spotify integratie moet opnieuw worden geverifieerd met Spotify voor account: {account}",
+                "title": "Verifieer opnieuw met Spotify"
+            }
+        }
+    }
+}

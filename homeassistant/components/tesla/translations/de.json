@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "E-Mail-Adresse"
+                },
+                "description": "Bitte gib deine Daten ein.",
+                "title": "Tesla - Konfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunden zwischen den Scans"
+                }
+            }
+        }
+    }
+}

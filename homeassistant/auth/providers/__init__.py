@@ -8,15 +8,15 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
-from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
-from ..models import Credentials, User, UserMeta  # noqa: F401
+from ..models import Credentials, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
@@ -48,7 +48,7 @@ class AuthProvider:
         self.config = config
 
     @property
-    def id(self) -> Optional[str]:  # pylint: disable=invalid-name
+    def id(self) -> Optional[str]:
         """Return id of the auth provider.
 
         Optional, can be None.
@@ -116,7 +116,6 @@ class AuthProvider:
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
-        pass
 
 
 async def auth_provider_from_config(
@@ -144,14 +143,12 @@ async def load_auth_provider_module(
 ) -> types.ModuleType:
     """Load an auth provider."""
     try:
-        module = importlib.import_module(
-            "homeassistant.auth.providers.{}".format(provider)
-        )
+        module = importlib.import_module(f"homeassistant.auth.providers.{provider}")
     except ImportError as err:
         _LOGGER.error("Unable to load auth provider %s: %s", provider, err)
         raise HomeAssistantError(
-            "Unable to load auth provider {}: {}".format(provider, err)
-        )
+            f"Unable to load auth provider {provider}: {err}"
+        ) from err
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
@@ -165,14 +162,9 @@ async def load_auth_provider_module(
 
     # https://github.com/python/mypy/issues/1424
     reqs = module.REQUIREMENTS  # type: ignore
-    req_success = await requirements.async_process_requirements(
-        hass, "auth provider {}".format(provider), reqs
+    await requirements.async_process_requirements(
+        hass, f"auth provider {provider}", reqs
     )
-
-    if not req_success:
-        raise HomeAssistantError(
-            "Unable to process requirements of auth provider {}".format(provider)
-        )
 
     processed.add(provider)
     return module
@@ -184,12 +176,12 @@ class LoginFlow(data_entry_flow.FlowHandler):
     def __init__(self, auth_provider: AuthProvider) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
-        self._auth_module_id = None  # type: Optional[str]
-        self._auth_manager = auth_provider.hass.auth  # type: ignore
-        self.available_mfa_modules = {}  # type: Dict[str, str]
+        self._auth_module_id: Optional[str] = None
+        self._auth_manager = auth_provider.hass.auth
+        self.available_mfa_modules: Dict[str, str] = {}
         self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
-        self.user = None  # type: Optional[User]
+        self.user: Optional[User] = None
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
@@ -215,7 +207,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             errors["base"] = "invalid_auth_module"
 
         if len(self.available_mfa_modules) == 1:
-            self._auth_module_id = list(self.available_mfa_modules.keys())[0]
+            self._auth_module_id = list(self.available_mfa_modules)[0]
             return await self.async_step_mfa()
 
         return self.async_show_form(
@@ -234,6 +226,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         errors = {}
 
+        assert self._auth_module_id is not None
         auth_module = self._auth_manager.get_auth_mfa_module(self._auth_module_id)
         if auth_module is None:
             # Given an invalid input to async_step_select_mfa_module
@@ -244,7 +237,9 @@ class LoginFlow(data_entry_flow.FlowHandler):
             auth_module, "async_initialize_login_mfa_step"
         ):
             try:
-                await auth_module.async_initialize_login_mfa_step(self.user.id)
+                await auth_module.async_initialize_login_mfa_step(  # type: ignore
+                    self.user.id
+                )
             except HomeAssistantError:
                 _LOGGER.exception("Error initializing MFA step")
                 return self.async_abort(reason="unknown_error")
@@ -264,10 +259,10 @@ class LoginFlow(data_entry_flow.FlowHandler):
             if not errors:
                 return await self.async_finish(self.user)
 
-        description_placeholders = {
+        description_placeholders: Dict[str, Optional[str]] = {
             "mfa_module_name": auth_module.name,
             "mfa_module_id": auth_module.id,
-        }  # type: Dict[str, Optional[str]]
+        }
 
         return self.async_show_form(
             step_id="mfa",

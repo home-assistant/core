@@ -1,14 +1,14 @@
 """Sensor for checking the air quality forecast around Norway."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
+import metno
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +71,6 @@ class AirSensor(AirQualityEntity):
 
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
-        import metno
-
         self._name = name
         self._api = metno.AirQualityData(coordinates, forecast, session)
 

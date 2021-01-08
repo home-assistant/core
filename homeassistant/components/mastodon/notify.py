@@ -1,18 +1,17 @@
 """Mastodon platform for notify component."""
 import logging
 
+from mastodon import Mastodon
+from mastodon.Mastodon import MastodonAPIError, MastodonUnauthorizedError
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BASE_URL = "base_url"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 DEFAULT_URL = "https://mastodon.social"
 
@@ -28,9 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the Mastodon notification service."""
-    from mastodon import Mastodon
-    from mastodon.Mastodon import MastodonUnauthorizedError
-
     client_id = config.get(CONF_CLIENT_ID)
     client_secret = config.get(CONF_CLIENT_SECRET)
     access_token = config.get(CONF_ACCESS_TOKEN)
@@ -60,8 +56,6 @@ class MastodonNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from mastodon.Mastodon import MastodonAPIError
-
         try:
             self._api.toot(message)
         except MastodonAPIError:

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
+        },
+        "create_entry": {
+            "default": "To send locations to Home Assistant, you will need to setup the webhook feature in the Locative app.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start set up?",
+                "title": "Set up the Locative Webhook"
+            }
+        }
+    }
+}

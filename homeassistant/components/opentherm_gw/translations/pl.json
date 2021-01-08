@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "id_exists": "Identyfikator bramki ju\u017c istnieje"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "\u015acie\u017cka lub adres URL",
+                    "id": "Identyfikator",
+                    "name": "Nazwa"
+                },
+                "title": "Bramka OpenTherm"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Zaokr\u0105glanie warto\u015bci w d\u00f3\u0142",
+                    "precision": "Precyzja"
+                },
+                "description": "Opcje dla bramki OpenTherm"
+            }
+        }
+    }
+}

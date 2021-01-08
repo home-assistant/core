@@ -1,10 +1,7 @@
 {
   "domain": "group",
   "name": "Group",
-  "documentation": "https://www.home-assistant.io/components/group",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/group",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

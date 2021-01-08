@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define the API parameters for this installation",
+        "data": {
+          "name": "The name of this installation",
+          "site_id": "The SolarEdge site-id",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "site_not_active": "The site is not active",
+      "could_not_connect": "Could not connect to the solaredge API"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

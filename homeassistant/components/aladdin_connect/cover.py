@@ -1,21 +1,22 @@
 """Platform for the Aladdin Connect cover component."""
 import logging
 
+from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverEntity,
 )
 from homeassistant.const import (
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
     STATE_CLOSED,
-    STATE_OPENING,
     STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -40,10 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Aladdin Connect platform."""
-    from aladdin_connect import AladdinConnectClient
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password)
 
     try:
@@ -53,15 +53,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            "Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
 
 
-class AladdinDevice(CoverDevice):
+class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
     def __init__(self, acc, device):
@@ -85,7 +83,7 @@ class AladdinDevice(CoverDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-{}".format(self._device_id, self._number)
+        return f"{self._device_id}-{self._number}"
 
     @property
     def name(self):

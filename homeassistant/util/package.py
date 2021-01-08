@@ -2,21 +2,30 @@
 import asyncio
 import logging
 import os
+from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
 from typing import Optional
 from urllib.parse import urlparse
-from pathlib import Path
 
 import pkg_resources
-from importlib_metadata import version, PackageNotFoundError
 
+if sys.version_info[:2] >= (3, 8):
+    from importlib.metadata import (  # pylint: disable=no-name-in-module,import-error
+        PackageNotFoundError,
+        version,
+    )
+else:
+    from importlib_metadata import (  # pylint: disable=import-error
+        PackageNotFoundError,
+        version,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def is_virtual_env() -> bool:
-    """Return if we run in a virtual environtment."""
+    """Return if we run in a virtual environment."""
     # Check supports venv && virtualenv
     return getattr(sys, "base_prefix", sys.prefix) != sys.prefix or hasattr(
         sys, "real_prefix"

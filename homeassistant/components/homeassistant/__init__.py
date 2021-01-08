@@ -2,27 +2,26 @@
 import asyncio
 import itertools as it
 import logging
-from typing import Awaitable
 
 import voluptuous as vol
 
-import homeassistant.core as ha
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 import homeassistant.config as conf_util
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.service import async_extract_entity_ids
-from homeassistant.helpers import intent
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-    SERVICE_HOMEASSISTANT_STOP,
-    SERVICE_HOMEASSISTANT_RESTART,
-    RESTART_EXIT_CODE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    RESTART_EXIT_CODE,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
+import homeassistant.core as ha
+from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
@@ -33,35 +32,42 @@ SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
     """Set up general services related to Home Assistant."""
 
     async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
-        entity_ids = await async_extract_entity_ids(hass, service)
+        referenced = await async_extract_referenced_entity_ids(hass, service)
+        all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
-        if not entity_ids:
+        if not all_referenced:
             _LOGGER.error(
-                "homeassistant/%s cannot be called without entity_id", service.service
+                "homeassistant.%s cannot be called without a target", service.service
             )
             return
 
         # Group entity_ids by domain. groupby requires sorted data.
         by_domain = it.groupby(
-            sorted(entity_ids), lambda item: ha.split_entity_id(item)[0]
+            sorted(all_referenced), lambda item: ha.split_entity_id(item)[0]
         )
 
         tasks = []
+        unsupported_entities = set()
 
         for domain, ent_ids in by_domain:
-            # We want to block for all calls and only return when all calls
-            # have been processed. If a service does not exist it causes a 10
-            # second delay while we're blocking waiting for a response.
-            # But services can be registered on other HA instances that are
-            # listening to the bus too. So as an in between solution, we'll
-            # block only if the service is defined in the current HA instance.
-            blocking = hass.services.has_service(domain, service.service)
+            # This leads to endless loop.
+            if domain == DOMAIN:
+                _LOGGER.warning(
+                    "Called service homeassistant.%s with invalid entities %s",
+                    service.service,
+                    ", ".join(ent_ids),
+                )
+                continue
+
+            if not hass.services.has_service(domain, service.service):
+                unsupported_entities.update(set(ent_ids) & referenced.referenced)
+                continue
 
             # Create a new dict for this call
             data = dict(service.data)
@@ -70,28 +76,35 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
             tasks.append(
-                hass.services.async_call(domain, service.service, data, blocking)
+                hass.services.async_call(
+                    domain,
+                    service.service,
+                    data,
+                    blocking=True,
+                    context=service.context,
+                )
             )
 
-        await asyncio.wait(tasks)
+        if unsupported_entities:
+            _LOGGER.warning(
+                "The service homeassistant.%s does not support entities %s",
+                service.service,
+                ", ".join(sorted(unsupported_entities)),
+            )
 
-    hass.services.async_register(ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
-    hass.services.async_register(ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
-    hass.services.async_register(ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned {} on"
-        )
+        if tasks:
+            await asyncio.gather(*tasks)
+
+    service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
+
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
     )
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF, "Turned {} off"
-        )
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service, schema=service_schema
     )
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"
-        )
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
     )
 
     async def async_handle_core_service(call):
@@ -108,9 +121,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See dev-info panel for details.",
+                "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
-                "{0}.check_config".format(ha.DOMAIN),
+                f"{ha.DOMAIN}.check_config",
             )
             return
 
@@ -119,6 +132,25 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+
+            if user is None:
+                raise UnknownUser(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                )
+
+            for entity in call.data[ATTR_ENTITY_ID]:
+                if not user.permissions.check_entity(entity, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=call.context,
+                        permission=POLICY_CONTROL,
+                        user_id=call.context.user_id,
+                        perm_category=CAT_ENTITIES,
+                    )
+
         tasks = [
             hass.helpers.entity_component.async_update_entity(entity)
             for entity in call.data[ATTR_ENTITY_ID]
@@ -127,13 +159,13 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if tasks:
             await asyncio.wait(tasks)
 
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
     )
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
     )
     hass.services.async_register(

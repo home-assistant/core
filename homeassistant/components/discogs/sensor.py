@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 import random
 
+import discogs_client
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -65,26 +66,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Discogs sensor."""
-    import discogs_client
-
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
 
     try:
-        discogs_client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
+        _discogs_client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
 
         discogs_data = {
-            "user": discogs_client.identity().name,
-            "folders": discogs_client.identity().collection_folders,
-            "collection_count": discogs_client.identity().num_collection,
-            "wantlist_count": discogs_client.identity().num_wantlist,
+            "user": _discogs_client.identity().name,
+            "folders": _discogs_client.identity().collection_folders,
+            "collection_count": _discogs_client.identity().num_collection,
+            "wantlist_count": _discogs_client.identity().num_wantlist,
         }
     except discogs_client.exceptions.HTTPError:
         _LOGGER.error("API token is not valid")
         return
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
 
     add_entities(sensors, True)
@@ -104,7 +103,7 @@ class DiscogsSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSORS[self._type]["name"])
+        return f"{self._name} {SENSORS[self._type]['name']}"
 
     @property
     def state(self):
@@ -123,25 +122,22 @@ class DiscogsSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
+        """Return the device state attributes of the sensor."""
         if self._state is None or self._attrs is None:
             return None
 
-        if self._type != SENSOR_RANDOM_RECORD_TYPE:
+        if self._type == SENSOR_RANDOM_RECORD_TYPE and self._state is not None:
             return {
+                "cat_no": self._attrs["labels"][0]["catno"],
+                "cover_image": self._attrs["cover_image"],
+                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "label": self._attrs["labels"][0]["name"],
+                "released": self._attrs["year"],
                 ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
 
         return {
-            "cat_no": self._attrs["labels"][0]["catno"],
-            "cover_image": self._attrs["cover_image"],
-            "format": "{} ({})".format(
-                self._attrs["formats"][0]["name"],
-                self._attrs["formats"][0]["descriptions"][0],
-            ),
-            "label": self._attrs["labels"][0]["name"],
-            "released": self._attrs["year"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
@@ -150,13 +146,14 @@ class DiscogsSensor(Entity):
         """Get a random record suggestion from the user's collection."""
         # Index 0 in the folders is the 'All' folder
         collection = self._discogs_data["folders"][0]
-        random_index = random.randrange(collection.count)
-        random_record = collection.releases[random_index].release
+        if collection.count > 0:
+            random_index = random.randrange(collection.count)
+            random_record = collection.releases[random_index].release
 
-        self._attrs = random_record.data
-        return "{} - {}".format(
-            random_record.data["artists"][0]["name"], random_record.data["title"]
-        )
+            self._attrs = random_record.data
+            return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+
+        return None
 
     def update(self):
         """Set state to the amount of records in user's collection."""

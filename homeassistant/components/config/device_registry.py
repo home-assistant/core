@@ -21,6 +21,8 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
         vol.Required("device_id"): str,
         vol.Optional("area_id"): vol.Any(str, None),
         vol.Optional("name_by_user"): vol.Any(str, None),
+        # We only allow setting disabled_by user via API.
+        vol.Optional("disabled_by"): vol.Any("user", None),
     }
 )
 
@@ -71,8 +73,11 @@ def _entry_dict(entry):
         "model": entry.model,
         "name": entry.name,
         "sw_version": entry.sw_version,
+        "entry_type": entry.entry_type,
         "id": entry.id,
+        "identifiers": list(entry.identifiers),
         "via_device_id": entry.via_device_id,
         "area_id": entry.area_id,
         "name_by_user": entry.name_by_user,
+        "disabled_by": entry.disabled_by,
     }

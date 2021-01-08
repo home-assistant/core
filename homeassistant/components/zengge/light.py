@@ -2,18 +2,19 @@
 import logging
 
 import voluptuous as vol
+from zengge import zengge
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-    Light,
-    PLATFORM_SCHEMA,
+    LightEntity,
 )
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -42,17 +43,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(lights, True)
 
 
-class ZenggeLight(Light):
+class ZenggeLight(LightEntity):
     """Representation of a Zengge light."""
 
     def __init__(self, device):
         """Initialize the light."""
-        import zengge
 
         self._name = device["name"]
         self._address = device["address"]
         self.is_valid = True
-        self._bulb = zengge.zengge(self._address)
+        self._bulb = zengge(self._address)
         self._white = 0
         self._brightness = 0
         self._hs_color = (0, 0)
@@ -96,11 +96,6 @@ class ZenggeLight(Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_ZENGGE_LED
-
-    @property
-    def should_poll(self):
-        """Feel free to poll."""
-        return True
 
     @property
     def assumed_state(self):

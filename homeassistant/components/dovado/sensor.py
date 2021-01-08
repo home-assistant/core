@@ -1,18 +1,15 @@
 """Support for sensors from the Dovado router."""
 from datetime import timedelta
-import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SENSORS
+from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DOVADO_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -24,10 +21,20 @@ SENSOR_SMS_UNREAD = "sms"
 
 SENSORS = {
     SENSOR_NETWORK: ("signal strength", "Network", None, "mdi:access-point-network"),
-    SENSOR_SIGNAL: ("signal strength", "Signal Strength", "%", "mdi:signal"),
+    SENSOR_SIGNAL: (
+        "signal strength",
+        "Signal Strength",
+        PERCENTAGE,
+        "mdi:signal",
+    ),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),
-    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GB", "mdi:cloud-upload"),
-    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GB", "mdi:cloud-download"),
+    SENSOR_UPLOAD: ("traffic modem tx", "Sent", DATA_GIGABYTES, "mdi:cloud-upload"),
+    SENSOR_DOWNLOAD: (
+        "traffic modem rx",
+        "Received",
+        DATA_GIGABYTES,
+        "mdi:cloud-download",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -80,7 +87,7 @@ class DovadoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data.name, SENSORS[self._sensor][1])
+        return f"{self._data.name} {SENSORS[self._sensor][1]}"
 
     @property
     def state(self):

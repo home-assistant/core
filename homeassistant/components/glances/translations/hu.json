@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kiszolg\u00e1l\u00f3 m\u00e1r konfigur\u00e1lva van."
+        },
+        "error": {
+            "cannot_connect": "Nem lehet csatlakozni a kiszolg\u00e1l\u00f3hoz",
+            "wrong_version": "Nem t\u00e1mogatott verzi\u00f3 (2 vagy 3 csak)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "N\u00e9v",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "ssl": "Az SSL / TLS haszn\u00e1lat\u00e1val csatlakozzon a Glances rendszerhez",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "verify_ssl": "A rendszer tan\u00fas\u00edt\u00e1s\u00e1nak ellen\u0151rz\u00e9se",
+                    "version": "Glances API-verzi\u00f3 (2 vagy 3)"
+                },
+                "title": "Glances Be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g"
+                },
+                "description": "A Glances be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

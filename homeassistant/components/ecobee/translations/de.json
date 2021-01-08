@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "pin_request_failed": "Fehler beim Anfordern der PIN von ecobee; Bitte \u00fcberpr\u00fcfe, ob der API-Schl\u00fcssel korrekt ist.",
+            "token_request_failed": "Fehler beim Anfordern eines Token von ecobee; Bitte versuche es erneut."
+        },
+        "step": {
+            "authorize": {
+                "description": "Bitte autorisiere diese App unter https://www.ecobee.com/consumerportal/index.html mit Pincode:\n\n{pin}\n\nDr\u00fccke dann auf Senden.",
+                "title": "App auf ecobee.com autorisieren"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00fcssel"
+                },
+                "description": "Bitte gib den von ecobee.com erhaltenen API-Schl\u00fcssel ein.",
+                "title": "ecobee API-Schl\u00fcssel"
+            }
+        }
+    }
+}

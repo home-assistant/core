@@ -1,19 +1,30 @@
 {
   "config": {
-    "title": "RainMachine",
     "step": {
       "user": {
         "title": "Fill in your information",
         "data": {
           "ip_address": "Hostname or IP Address",
-          "password": "Password",
-          "port": "Port"
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },
     "error": {
-      "identifier_exists": "Account already registered",
-      "invalid_credentials": "Invalid credentials"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure RainMachine",
+        "data": {
+          "zone_run_time": "Default zone run time (in seconds)"
+        }
+      }
     }
   }
 }

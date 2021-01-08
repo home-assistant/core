@@ -6,7 +6,7 @@ detect_location_info and elevation are mocked by default during tests.
 import asyncio
 import collections
 import math
-from typing import Any, Optional, Tuple, Dict
+from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
 
@@ -46,7 +46,7 @@ LocationInfo = collections.namedtuple(
 
 
 async def async_detect_location_info(
-    session: aiohttp.ClientSession
+    session: aiohttp.ClientSession,
 ) -> Optional[LocationInfo]:
     """Detect location information."""
     data = await _get_ipapi(session)
@@ -80,7 +80,6 @@ def distance(
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=invalid-name
 def vincenty(
     point1: Tuple[float, float], point2: Tuple[float, float], miles: bool = False
 ) -> Optional[float]:
@@ -96,6 +95,7 @@ def vincenty(
     if point1[0] == point2[0] and point1[1] == point2[1]:
         return 0.0
 
+    # pylint: disable=invalid-name
     U1 = math.atan((1 - FLATTENING) * math.tan(math.radians(point1[0])))
     U2 = math.atan((1 - FLATTENING) * math.tan(math.radians(point2[0])))
     L = math.radians(point2[1] - point1[1])
@@ -172,6 +172,10 @@ async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]
     try:
         raw_info = await resp.json()
     except (aiohttp.ClientError, ValueError):
+        return None
+
+    # ipapi allows 30k free requests/month. Some users exhaust those.
+    if raw_info.get("latitude") == "Sign up to access":
         return None
 
     return {

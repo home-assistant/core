@@ -1,6 +1,4 @@
 """Demo fan platform that has a fake fan."""
-from homeassistant.const import STATE_OFF
-
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -10,37 +8,51 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.const import STATE_OFF
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo fan platform."""
-    add_entities_callback(
+    async_add_entities(
         [
-            DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
-            DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
+            DemoFan(hass, "fan1", "Living Room Fan", FULL_SUPPORT),
+            DemoFan(hass, "fan2", "Ceiling Fan", LIMITED_SUPPORT),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoFan(FanEntity):
     """A demonstration fan component."""
 
-    def __init__(self, hass, name: str, supported_features: int) -> None:
+    def __init__(
+        self, hass, unique_id: str, name: str, supported_features: int
+    ) -> None:
         """Initialize the entity."""
         self.hass = hass
+        self._unique_id = unique_id
         self._supported_features = supported_features
         self._speed = STATE_OFF
-        self.oscillating = None
-        self.direction = None
+        self._oscillating = None
+        self._direction = None
         self._name = name
 
         if supported_features & SUPPORT_OSCILLATE:
-            self.oscillating = False
+            self._oscillating = False
         if supported_features & SUPPORT_DIRECTION:
-            self.direction = "forward"
+            self._direction = "forward"
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -80,18 +92,23 @@ class DemoFan(FanEntity):
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        self.direction = direction
+        self._direction = direction
         self.schedule_update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        self.oscillating = oscillating
+        self._oscillating = oscillating
         self.schedule_update_ha_state()
 
     @property
     def current_direction(self) -> str:
         """Fan direction."""
-        return self.direction
+        return self._direction
+
+    @property
+    def oscillating(self) -> bool:
+        """Oscillating."""
+        return self._oscillating
 
     @property
     def supported_features(self) -> int:

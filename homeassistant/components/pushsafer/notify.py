@@ -7,8 +7,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
@@ -17,6 +15,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import HTTP_OK
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://www.pushsafer.com/api"
@@ -119,7 +119,7 @@ class PushsaferNotificationService(BaseNotificationService):
         for target in targets:
             payload["d"] = target
             response = requests.post(_RESOURCE, data=payload, timeout=CONF_TIMEOUT)
-            if response.status_code != 200:
+            if response.status_code != HTTP_OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())
@@ -132,7 +132,7 @@ class PushsaferNotificationService(BaseNotificationService):
             return None
 
         base64_image = base64.b64encode(filebyte).decode("utf8")
-        return "data:{};base64,{}".format(mimetype, base64_image)
+        return f"data:{mimetype};base64,{base64_image}"
 
     def load_from_url(self, url=None, username=None, password=None, auth=None):
         """Load image/document/etc from URL."""

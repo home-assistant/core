@@ -1,8 +1,10 @@
 """Support for Ebusd sensors."""
-import logging
 import datetime
+import logging
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
@@ -12,6 +14,7 @@ TIME_FRAME2_BEGIN = "time_frame2_begin"
 TIME_FRAME2_END = "time_frame2_end"
 TIME_FRAME3_BEGIN = "time_frame3_begin"
 TIME_FRAME3_END = "time_frame3_end"
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=15)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ class EbusdSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._client_name, self._name)
+        return f"{self._client_name} {self._name}"
 
     @property
     def state(self):
@@ -68,9 +71,7 @@ class EbusdSensor(Entity):
                 if index < len(time_frame):
                     parsed = datetime.datetime.strptime(time_frame[index], "%H:%M")
                     parsed = parsed.replace(
-                        datetime.datetime.now().year,
-                        datetime.datetime.now().month,
-                        datetime.datetime.now().day,
+                        dt_util.now().year, dt_util.now().month, dt_util.now().day
                     )
                     schedule[item[0]] = parsed.isoformat()
             return schedule
@@ -86,6 +87,7 @@ class EbusdSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den h\u00e4r Elgato Key Light-enheten \u00e4r redan konfigurerad."
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd eller IP-adress",
+                    "port": "Portnummer"
+                },
+                "description": "St\u00e4ll in ditt Elgato Key Light f\u00f6r att integrera med Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Vill du l\u00e4gga till Elgato Key Light med serienummer `{serial_number}` till Home Assistant?",
+                "title": "Uppt\u00e4ckte Elgato Key Light-enhet"
+            }
+        }
+    }
+}

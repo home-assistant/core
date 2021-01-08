@@ -3,10 +3,10 @@ sign_in:
   fields:
     username:
       description: The username or email of the HEOS account. [Required]
-      example: 'example@example.com'
+      example: "example@example.com"
     password:
       description: The password of the HEOS account. [Required]
-      example: 'password'
+      example: "password"
 
 sign_out:
   description: Sign the controller out of the HEOS account.

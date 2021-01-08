@@ -1,19 +1,22 @@
 {
-    "config": {
-        "title": "Portuguese weather service (IPMA)",
-        "step": {
-            "user": {
-                "title": "Location",
-                "description": "Instituto Português do Mar e Atmosfera",
-                "data": {
-                    "name": "Name",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude"
-                }
-            }
-        },
-        "error": {
-            "name_exists": "Name already exists"
+  "config": {
+    "step": {
+      "user": {
+        "title": "[%key:common::config_flow::data::location%]",
+        "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "mode": "[%key:common::config_flow::data::mode%]"
         }
-    }
+      }
+    },
+    "error": { "name_exists": "Name already exists" }
+  },
+  "system_health": {
+     "info": {
+       "api_endpoint_reachable": "IPMA API endpoint reachable"
+     }
+  }
 }

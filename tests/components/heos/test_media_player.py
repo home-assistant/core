@@ -1,7 +1,7 @@
 """Tests for the Heos Media Player platform."""
 import asyncio
 
-from pyheos import CommandError, const
+from pyheos import CommandFailedError, const
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
@@ -63,11 +63,6 @@ async def setup_platform(hass, config_entry, config):
     await hass.async_block_till_done()
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await media_player.async_setup_platform(None, None, None)
-
-
 async def test_state_attributes(hass, config_entry, config, controller):
     """Tests the state attributes."""
     await setup_platform(hass, config_entry, config)
@@ -125,6 +120,7 @@ async def test_updates_from_signals(hass, config_entry, config, controller, favo
         const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
+
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_PLAYING
 
@@ -179,7 +175,7 @@ async def test_updates_from_connection_event(
     event.clear()
     player.reset_mock()
     controller.load_players.reset_mock()
-    controller.load_players.side_effect = CommandError(None, "Failure", 1)
+    controller.load_players.side_effect = CommandFailedError(None, "Failure", 1)
     player.available = True
     player.heos.dispatcher.send(const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
     await event.wait()
@@ -232,6 +228,7 @@ async def test_updates_from_players_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
     await event.wait()
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_PLAYING
 
 
@@ -313,7 +310,7 @@ async def test_clear_playlist(hass, config_entry, config, controller, caplog):
         )
         assert player.clear_queue.call_count == 1
         player.clear_queue.reset_mock()
-        player.clear_queue.side_effect = CommandError(None, "Failure", 1)
+        player.clear_queue.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to clear playlist: Failure (1)" in caplog.text
 
 
@@ -331,7 +328,7 @@ async def test_pause(hass, config_entry, config, controller, caplog):
         )
         assert player.pause.call_count == 1
         player.pause.reset_mock()
-        player.pause.side_effect = CommandError(None, "Failure", 1)
+        player.pause.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to pause: Failure (1)" in caplog.text
 
 
@@ -349,7 +346,7 @@ async def test_play(hass, config_entry, config, controller, caplog):
         )
         assert player.play.call_count == 1
         player.play.reset_mock()
-        player.play.side_effect = CommandError(None, "Failure", 1)
+        player.play.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to play: Failure (1)" in caplog.text
 
 
@@ -367,7 +364,7 @@ async def test_previous_track(hass, config_entry, config, controller, caplog):
         )
         assert player.play_previous.call_count == 1
         player.play_previous.reset_mock()
-        player.play_previous.side_effect = CommandError(None, "Failure", 1)
+        player.play_previous.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to move to previous track: Failure (1)" in caplog.text
 
 
@@ -385,7 +382,7 @@ async def test_next_track(hass, config_entry, config, controller, caplog):
         )
         assert player.play_next.call_count == 1
         player.play_next.reset_mock()
-        player.play_next.side_effect = CommandError(None, "Failure", 1)
+        player.play_next.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to move to next track: Failure (1)" in caplog.text
 
 
@@ -403,7 +400,7 @@ async def test_stop(hass, config_entry, config, controller, caplog):
         )
         assert player.stop.call_count == 1
         player.stop.reset_mock()
-        player.stop.side_effect = CommandError(None, "Failure", 1)
+        player.stop.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to stop: Failure (1)" in caplog.text
 
 
@@ -421,7 +418,7 @@ async def test_volume_mute(hass, config_entry, config, controller, caplog):
         )
         assert player.set_mute.call_count == 1
         player.set_mute.reset_mock()
-        player.set_mute.side_effect = CommandError(None, "Failure", 1)
+        player.set_mute.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to set mute: Failure (1)" in caplog.text
 
 
@@ -439,7 +436,7 @@ async def test_shuffle_set(hass, config_entry, config, controller, caplog):
         )
         player.set_play_mode.assert_called_once_with(player.repeat, True)
         player.set_play_mode.reset_mock()
-        player.set_play_mode.side_effect = CommandError(None, "Failure", 1)
+        player.set_play_mode.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to set shuffle: Failure (1)" in caplog.text
 
 
@@ -457,7 +454,7 @@ async def test_volume_set(hass, config_entry, config, controller, caplog):
         )
         player.set_volume.assert_called_once_with(100)
         player.set_volume.reset_mock()
-        player.set_volume.side_effect = CommandError(None, "Failure", 1)
+        player.set_volume.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to set volume level: Failure (1)" in caplog.text
 
 
@@ -511,12 +508,12 @@ async def test_select_radio_favorite(hass, config_entry, config, controller, fav
 async def test_select_radio_favorite_command_error(
     hass, config_entry, config, controller, favorites, caplog
 ):
-    """Tests command error loged when playing favorite."""
+    """Tests command error logged when playing favorite."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     # Test set radio preset
     favorite = favorites[2]
-    player.play_favorite.side_effect = CommandError(None, "Failure", 1)
+    player.play_favorite.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -575,7 +572,7 @@ async def test_select_input_command_error(
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     input_source = input_sources[0]
-    player.play_input_source.side_effect = CommandError(None, "Failure", 1)
+    player.play_input_source.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -615,7 +612,30 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
         )
         player.play_url.assert_called_once_with(url)
         player.play_url.reset_mock()
-        player.play_url.side_effect = CommandError(None, "Failure", 1)
+        player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
+    assert "Unable to play media: Failure (1)" in caplog.text
+
+
+async def test_play_media_music(hass, config_entry, config, controller, caplog):
+    """Test the play media service with type music."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    url = "http://news/podcast.mp3"
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_ID: url,
+            },
+            blocking=True,
+        )
+        player.play_url.assert_called_once_with(url)
+        player.play_url.reset_mock()
+        player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to play media: Failure (1)" in caplog.text
 
 
@@ -676,7 +696,7 @@ async def test_play_media_playlist(
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     playlist = playlists[0]
-    # Play without enqueing
+    # Play without enqueuing
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -690,7 +710,7 @@ async def test_play_media_playlist(
     player.add_to_queue.assert_called_once_with(
         playlist, const.ADD_QUEUE_REPLACE_AND_PLAY
     )
-    # Play with enqueing
+    # Play with enqueuing
     player.add_to_queue.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,

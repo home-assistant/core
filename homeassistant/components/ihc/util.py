@@ -2,6 +2,8 @@
 
 import asyncio
 
+from homeassistant.core import callback
+
 
 async def async_pulse(hass, ihc_controller, ihc_id: int):
     """Send a short on/off pulse to an IHC controller resource."""
@@ -10,6 +12,7 @@ async def async_pulse(hass, ihc_controller, ihc_id: int):
     await async_set_bool(hass, ihc_controller, ihc_id, False)
 
 
+@callback
 def async_set_bool(hass, ihc_controller, ihc_id: int, value: bool):
     """Set a bool value on an IHC controller resource."""
     return hass.async_add_executor_job(
@@ -17,6 +20,7 @@ def async_set_bool(hass, ihc_controller, ihc_id: int, value: bool):
     )
 
 
+@callback
 def async_set_int(hass, ihc_controller, ihc_id: int, value: int):
     """Set a int value on an IHC controller resource."""
     return hass.async_add_executor_job(

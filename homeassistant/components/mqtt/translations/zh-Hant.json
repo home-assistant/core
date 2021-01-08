@@ -1,0 +1,85 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "\u958b\u555f\u641c\u5c0b",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "\u958b\u555f\u641c\u5c0b"
+                },
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u6574\u5408 {addon} \u4e4b MQTT broker\uff1f",
+                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6 MQTT Broker"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "button_5": "\u7b2c\u4e94\u500b\u6309\u9215",
+            "button_6": "\u7b2c\u516d\u500b\u6309\u9215",
+            "turn_off": "\u95dc\u9589",
+            "turn_on": "\u958b\u555f"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" \u96d9\u64ca",
+            "button_long_press": "\"{subtype}\" \u6301\u7e8c\u6309\u4e0b",
+            "button_long_release": "\"{subtype}\" \u9577\u6309\u5f8c\u91cb\u653e",
+            "button_quadruple_press": "\"{subtype}\" \u56db\u9023\u64ca",
+            "button_quintuple_press": "\"{subtype}\" \u4e94\u9023\u64ca",
+            "button_short_press": "\"{subtype}\" \u6309\u4e0b",
+            "button_short_release": "\"{subtype}\" \u91cb\u653e",
+            "button_triple_press": "\"{subtype}\" \u4e09\u9023\u64ca"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Birth \u4e3b\u984c\u7121\u6548\u3002",
+            "bad_will": "Will \u4e3b\u984c\u7121\u6548\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002"
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "\u958b\u555f Birth \u8a0a\u606f",
+                    "birth_payload": "Birth \u8a0a\u606f payload",
+                    "birth_qos": "Birth \u8a0a\u606f QoS",
+                    "birth_retain": "Birth \u8a0a\u606f Retain",
+                    "birth_topic": "Birth \u8a0a\u606f\u4e3b\u984c",
+                    "discovery": "\u958b\u555f\u63a2\u7d22",
+                    "will_enable": "\u958b\u555f Will \u8a0a\u606f",
+                    "will_payload": "Will \u8a0a\u606f payload",
+                    "will_qos": "Will \u8a0a\u606f QoS",
+                    "will_retain": "Will \u8a0a\u606f Retain",
+                    "will_topic": "Will \u8a0a\u606f\u4e3b\u984c"
+                },
+                "description": "\u8acb\u9078\u64c7 MQTT \u9078\u9805\u3002"
+            }
+        }
+    }
+}

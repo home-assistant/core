@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "Smile: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "Verbindungstyp"
+                },
+                "description": "Details"
+            },
+            "user_gateway": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Bitte eingeben"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scanintervall (Sekunden)"
+                }
+            }
+        }
+    }
+}

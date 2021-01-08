@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Um Ereignisse an den Home Assistant zu senden, musst du [Webhooks mit Twilio]({twilio_url}) einrichten. \n\n F\u00fclle die folgenden Informationen aus: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n - Inhaltstyp: application / x-www-form-urlencoded \n\nLies in der [Dokumentation]({docs_url}) wie du Automationen f\u00fcr die Verarbeitung eingehender Daten konfigurierst."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du Twilio wirklich einrichten?",
+                "title": "Twilio-Webhook einrichten"
+            }
+        }
+    }
+}

@@ -1,19 +1,20 @@
 {
   "config": {
-    "title": "Ambient PWS",
     "step": {
       "user": {
         "title": "Fill in your information",
         "data": {
-          "api_key": "API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "app_key": "Application Key"
         }
       }
     },
     "error": {
-      "identifier_exists": "Application Key and/or API Key already registered",
-      "invalid_key": "Invalid API Key and/or Application Key",
+      "invalid_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "no_devices": "No devices found in account"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

@@ -1,7 +1,7 @@
 """Support for watching multiple cryptocurrencies."""
 from datetime import timedelta
-import logging
 
+from pysochain import ChainSo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -9,8 +9,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by chain.so"
 
@@ -31,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sochain sensors."""
-    from pysochain import ChainSo
 
     address = config.get(CONF_ADDRESS)
     network = config.get(CONF_NETWORK)

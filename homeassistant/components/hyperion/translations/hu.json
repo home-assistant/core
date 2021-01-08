@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Az \u00fajb\u00f3li azonos\u00edt\u00e1s sikeres"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "\u00daj token automatikus l\u00e9trehoz\u00e1sa"
+                }
+            }
+        }
+    }
+}

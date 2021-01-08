@@ -1,5 +1,6 @@
 """Support for Essent API."""
 from datetime import timedelta
+from typing import Optional
 
 from pyessent import PyEssent
 import voluptuous as vol
@@ -26,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     meters = []
     for meter in essent.retrieve_meters():
         data = essent.retrieve_meter_data(meter)
-        for tariff in data["values"]["LVR"].keys():
+        for tariff in data["values"]["LVR"]:
             meters.append(
                 EssentMeter(
                     essent,
@@ -73,7 +74,7 @@ class EssentBase:
     def update(self):
         """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
-        eans = essent.get_EANs()
+        eans = set(essent.get_EANs())
         for possible_meter in eans:
             meter_data = essent.read_meter(possible_meter, only_last_meter_reading=True)
             if meter_data:
@@ -93,9 +94,14 @@ class EssentMeter(Entity):
         self._unit = unit
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return f"{self._meter}-{self._type}-{self._tariff}"
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        return "Essent {} ({})".format(self._type, self._tariff)
+        return f"Essent {self._type} ({self._tariff})"
 
     @property
     def state(self):

@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "title": "Select connection type"
+      },
+      "setup_network": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "title": "Select connection address"
+      },
+      "setup_serial": {
+        "data": {
+          "device": "Select device"
+        },
+        "title": "Device"
+      },
+      "setup_serial_manual_path": {
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Path"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "prompt_options": {
+        "data": {
+          "debug": "Enable debugging",
+          "automatic_add": "Enable automatic add",
+          "event_code": "Enter event code to add",
+          "device": "Select device to configure",
+          "remove_device": "Select device to delete"
+        },
+        "title": "Rfxtrx Options"
+      },
+      "set_device_options": {
+        "data": {
+          "fire_event": "Enable device event",
+          "off_delay": "Off delay",
+          "off_delay_enabled": "Enable off delay",
+          "data_bit": "Number of data bits",
+          "command_on": "Data bits value for command on",
+          "command_off": "Data bits value for command off",
+          "signal_repetitions": "Number of signal repetitions",
+          "replace_device": "Select device to replace"
+        },
+        "title": "Configure device options"
+      }
+    },
+    "error": {
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_event_code": "Invalid event code",
+      "invalid_input_2262_on": "Invalid input for command on",
+      "invalid_input_2262_off": "Invalid input for command off",
+      "invalid_input_off_delay": "Invalid input for off delay",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

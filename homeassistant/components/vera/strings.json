@@ -1,0 +1,30 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "Could not connect to controller with url {base_url}"
+    },
+    "step": {
+      "user": {
+        "title": "Setup Vera controller",
+        "description": "Provide a Vera controller url below. It should look like this: http://192.168.1.161:3480.",
+        "data": {
+          "vera_controller_url": "Controller URL",
+          "lights": "Vera switch device ids to treat as lights in Home Assistant.",
+          "exclude": "Vera device ids to exclude from Home Assistant."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vera controller options",
+        "description": "See the vera documentation for details on optional parameters: https://www.home-assistant.io/integrations/vera/. Note: Any changes here will need a restart to the home assistant server. To clear values, provide a space.",
+        "data": {
+          "lights": "Vera switch device ids to treat as lights in Home Assistant.",
+          "exclude": "Vera device ids to exclude from Home Assistant."
+        }
+      }
+    }
+  }
+}

@@ -1,19 +1,19 @@
 """Support for PlayStation 4 consoles."""
-import logging
 import asyncio
+import logging
 
-import pyps4_homeassistant.ps4 as pyps4
-from pyps4_homeassistant.errors import NotReady
+from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
+from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
+import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.core import callback
-from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
     MEDIA_TYPE_APP,
-    SUPPORT_SELECT_SOURCE,
+    MEDIA_TYPE_GAME,
     SUPPORT_PAUSE,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -26,9 +26,10 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
@@ -49,7 +50,7 @@ SUPPORT_PS4 = (
     | SUPPORT_SELECT_SOURCE
 )
 
-ICON = "mdi:playstation"
+ICON = "mdi:sony-playstation"
 MEDIA_IMAGE_DEFAULT = None
 
 DEFAULT_RETRIES = 2
@@ -58,11 +59,6 @@ DEFAULT_RETRIES = 2
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
     config = config_entry
-    await async_setup_platform(hass, config, async_add_entities, discovery_info=None)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up PS4 Platform."""
     creds = config.data[CONF_TOKEN]
     device_list = []
     for device in config.data["devices"]:
@@ -74,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(device_list, update_before_add=True)
 
 
-class PS4Device(MediaPlayerDevice):
+class PS4Device(MediaPlayerEntity):
     """Representation of a PS4."""
 
     def __init__(self, config, name, host, region, ps4, creds):
@@ -102,11 +98,7 @@ class PS4Device(MediaPlayerDevice):
     def status_callback(self):
         """Handle status callback. Parse status."""
         self._parse_status()
-
-    @callback
-    def schedule_update(self):
-        """Schedules update with HA."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def subscribe_to_protocol(self):
@@ -172,7 +164,7 @@ class PS4Device(MediaPlayerDevice):
         status = self._ps4.status
 
         if status is not None:
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
             if self._games:
                 self.get_source_list()
 
@@ -189,7 +181,6 @@ class PS4Device(MediaPlayerDevice):
                         self._media_content_id = title_id
                         if self._use_saved():
                             _LOGGER.debug("Using saved data for media: %s", title_id)
-                            self.schedule_update()
                             return
 
                         self._media_title = name
@@ -201,8 +192,8 @@ class PS4Device(MediaPlayerDevice):
                     if self._state != STATE_IDLE:
                         self.idle()
             else:
-                if self._state != STATE_OFF:
-                    self.state_off()
+                if self._state != STATE_STANDBY:
+                    self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
@@ -228,13 +219,11 @@ class PS4Device(MediaPlayerDevice):
         """Set states for state idle."""
         self.reset_title()
         self._state = STATE_IDLE
-        self.schedule_update()
 
-    def state_off(self):
-        """Set states for state off."""
+    def state_standby(self):
+        """Set states for state standby."""
         self.reset_title()
-        self._state = STATE_OFF
-        self.schedule_update()
+        self._state = STATE_STANDBY
 
     def state_unknown(self):
         """Set states for state unknown."""
@@ -254,7 +243,6 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
-        from pyps4_homeassistant.errors import PSDataIncomplete
 
         app_name = None
         art = None
@@ -275,7 +263,7 @@ class PS4Device(MediaPlayerDevice):
                 app_name = title.name
                 art = title.cover_art
                 # Assume media type is game if not app.
-                if title.game_type != "App":
+                if title.game_type != PS_TYPE_APP:
                     media_type = MEDIA_TYPE_GAME
                 else:
                     media_type = MEDIA_TYPE_APP
@@ -292,8 +280,8 @@ class PS4Device(MediaPlayerDevice):
             self._media_image = art or None
             self._media_type = media_type
 
-            self.update_list()
-            self.schedule_update()
+            await self.hass.async_add_executor_job(self.update_list)
+            self.async_write_ha_state()
 
     def update_list(self):
         """Update Game List, Correct data if different."""
@@ -313,7 +301,7 @@ class PS4Device(MediaPlayerDevice):
                 self._media_image,
                 self._media_type,
             )
-            self._games = load_games(self.hass)
+            self._games = load_games(self.hass, self._unique_id)
 
         self.get_source_list()
 
@@ -337,7 +325,7 @@ class PS4Device(MediaPlayerDevice):
                 }
             }
             games.update(game)
-            save_games(self.hass, games)
+            save_games(self.hass, games, self._unique_id)
 
     async def async_get_device_info(self, status):
         """Set device info for registry."""
@@ -365,7 +353,7 @@ class PS4Device(MediaPlayerDevice):
         else:
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
-            sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
+            sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._info = {
                 "name": status["host-name"],
                 "model": "PlayStation 4",
@@ -377,7 +365,7 @@ class PS4Device(MediaPlayerDevice):
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
     async def async_will_remove_from_hass(self):
-        """Remove Entity from Hass."""
+        """Remove Entity from Home Assistant."""
         # Close TCP Transport.
         if self._ps4.connected:
             await self._ps4.close()
@@ -400,8 +388,9 @@ class PS4Device(MediaPlayerDevice):
         if self._state == STATE_PLAYING and self._media_content_id is not None:
             image_hash = self.media_image_hash
             if image_hash is not None:
-                return ENTITY_IMAGE_URL.format(
-                    self.entity_id, self.access_token, image_hash
+                return (
+                    f"/api/media_player_proxy/{self.entity_id}?"
+                    f"token={self.access_token}&cache={image_hash}"
                 )
         return MEDIA_IMAGE_DEFAULT
 
@@ -464,6 +453,10 @@ class PS4Device(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn on the media player."""
         self._ps4.wakeup()
+
+    async def async_toggle(self):
+        """Toggle media player."""
+        await self._ps4.toggle()
 
     async def async_media_pause(self):
         """Send keypress ps to return to menu."""

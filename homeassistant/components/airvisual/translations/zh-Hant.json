@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Node/Pro ID \u5df2\u8a3b\u518a\u6216\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "general_error": "\u672a\u9810\u671f\u932f\u8aa4",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548"
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6"
+                },
+                "description": "\u4f7f\u7528 AirVisual \u96f2\u7aef API \u4ee5\u76e3\u63a7\u5730\u7406\u5ea7\u6a19\u3002",
+                "title": "\u8a2d\u5b9a\u5730\u7406\u5ea7\u6a19"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u76e3\u63a7\u500b\u4eba AirVisual \u88dd\u7f6e\uff0c\u5bc6\u78bc\u53ef\u4ee5\u900f\u904e\u88dd\u7f6e UI \u7372\u5f97\u3002",
+                "title": "\u8a2d\u5b9a AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470"
+                },
+                "title": "\u91cd\u65b0\u8a8d\u8b49 AirVisual"
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "\u5730\u7406\u5ea7\u6a19",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "\u6574\u5408\u985e\u578b"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u76e3\u63a7\u7684 AirVisual \u8cc7\u6599\u985e\u578b\u3002",
+                "title": "\u8a2d\u5b9a AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "\u65bc\u5730\u5716\u4e0a\u986f\u793a\u76e3\u63a7\u4f4d\u7f6e\u3002"
+                },
+                "title": "\u8a2d\u5b9a AirVisual"
+            }
+        }
+    }
+}

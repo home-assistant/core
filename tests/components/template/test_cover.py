@@ -1,5 +1,4 @@
 """The tests the cover command line platform."""
-import logging
 import pytest
 
 from homeassistant import setup
@@ -8,27 +7,28 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
+    STATE_OFF,
+    STATE_ON,
     STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 
 from tests.common import assert_setup_component, async_mock_service
 
-_LOGGER = logging.getLogger(__name__)
-
 ENTITY_COVER = "cover.test_template_cover"
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock serivce."""
+@pytest.fixture(name="calls")
+def calls_fixture(hass):
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -58,6 +58,7 @@ async def test_template_state_text(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -100,6 +101,7 @@ async def test_template_state_boolean(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -109,6 +111,7 @@ async def test_template_state_boolean(hass, calls):
 
 async def test_template_position(hass, calls):
     """Test the position_template attribute."""
+    hass.states.async_set("cover.test", STATE_OPEN)
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
             hass,
@@ -133,6 +136,7 @@ async def test_template_position(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -140,7 +144,7 @@ async def test_template_position(hass, calls):
     await hass.async_block_till_done()
 
     entity = hass.states.get("cover.test")
-    attrs = dict()
+    attrs = {}
     attrs["position"] = 42
     hass.states.async_set(entity.entity_id, entity.state, attributes=attrs)
     await hass.async_block_till_done()
@@ -188,6 +192,7 @@ async def test_template_tilt(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -222,6 +227,7 @@ async def test_template_out_of_bounds(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -260,32 +266,29 @@ async def test_template_mutex(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
 
 
-async def test_template_open_or_position(hass, calls):
+async def test_template_open_or_position(hass, caplog):
     """Test that at least one of open_cover or set_position is used."""
-    with assert_setup_component(1, "cover"):
-        assert await setup.async_setup_component(
-            hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "template",
-                    "covers": {
-                        "test_template_cover": {"value_template": "{{ 1 == 1 }}"}
-                    },
-                }
-            },
-        )
-
-    await hass.async_start()
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {"test_template_cover": {"value_template": "{{ 1 == 1 }}"}},
+            }
+        },
+    )
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
+    assert "Invalid config for [cover.template]" in caplog.text
 
 
 async def test_template_open_and_close(hass, calls):
@@ -310,6 +313,7 @@ async def test_template_open_and_close(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -347,6 +351,7 @@ async def test_template_non_numeric(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -378,6 +383,7 @@ async def test_open_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -416,6 +422,7 @@ async def test_close_stop_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -463,6 +470,7 @@ async def test_set_position(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -537,6 +545,7 @@ async def test_set_tilt_position(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -578,6 +587,7 @@ async def test_open_tilt_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -616,6 +626,7 @@ async def test_close_tilt_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -644,6 +655,7 @@ async def test_set_position_optimistic(hass, calls):
                 }
             },
         )
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -708,6 +720,7 @@ async def test_set_tilt_position_optimistic(hass, calls):
                 }
             },
         )
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -782,6 +795,7 @@ async def test_icon_template(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -825,6 +839,7 @@ async def test_entity_picture_template(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -837,6 +852,115 @@ async def test_entity_picture_template(hass, calls):
     state = hass.states.get("cover.test_template_cover")
 
     assert state.attributes["entity_picture"] == "/local/cover.png"
+
+
+async def test_availability_template(hass, calls):
+    """Test availability template."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "value_template": "open",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "availability_template": "{{ is_state('availability_state.state','on') }}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("availability_state.state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("availability_state.state", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover").state != STATE_UNAVAILABLE
+
+
+async def test_availability_without_availability_template(hass, calls):
+    """Test that component is available if there is no."""
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover": {
+                        "value_template": "open",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover": {
+                        "availability_template": "{{ x - 12 }}",
+                        "value_template": "open",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
 async def test_device_class(hass, calls):
@@ -866,6 +990,7 @@ async def test_device_class(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -900,8 +1025,140 @@ async def test_invalid_device_class(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.test_template_cover")
     assert not state
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one cover per id."""
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                    "test_template_cover_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+
+async def test_state_gets_lowercased(hass):
+    """Test True/False is lowercased."""
+
+    hass.states.async_set("binary_sensor.garage_door_sensor", "off")
+
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "garage_door": {
+                        "friendly_name": "Garage Door",
+                        "value_template": "{{ is_state('binary_sensor.garage_door_sensor', 'off') }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    hass.states.async_set("binary_sensor.garage_door_sensor", "on")
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.garage_door").state == STATE_CLOSED
+
+
+async def test_self_referencing_icon_with_no_template_is_not_a_loop(hass, caplog):
+    """Test a self referencing icon with no value template is not a loop."""
+
+    icon_template_str = """{% if is_state('cover.office', 'open') %}
+            mdi:window-shutter-open
+          {% else %}
+            mdi:window-shutter
+          {% endif %}"""
+
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "office": {
+                        "icon_template": icon_template_str,
+                        "open_cover": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.office_blinds_up",
+                        },
+                        "close_cover": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.office_blinds_down",
+                        },
+                        "stop_cover": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.office_blinds_up",
+                        },
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert "Template loop detected" not in caplog.text

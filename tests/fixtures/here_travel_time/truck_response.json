@@ -1,0 +1,187 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-07-21T14:25:00Z",
+            "mapVersion": "8.30.98.154",
+            "moduleVersion": "7.2.201928-4478",
+            "interfaceVersion": "2.6.64",
+            "availableMapVersion": [
+                "8.30.98.154"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "+930461269",
+                        "mappedPosition": {
+                            "latitude": 41.9800687,
+                            "longitude": -87.8805614
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9798,
+                            "longitude": -87.8801
+                        },
+                        "type": "stopOver",
+                        "spot": 0.5555556,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "",
+                        "label": "",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "-1035319462",
+                        "mappedPosition": {
+                            "latitude": 41.9042909,
+                            "longitude": -87.9216528
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9043,
+                            "longitude": -87.9216001
+                        },
+                        "type": "stopOver",
+                        "spot": 0,
+                        "sideOfStreet": "left",
+                        "mappedRoadName": "Eisenhower Expy E",
+                        "label": "Eisenhower Expy E - I-290",
+                        "shapeIndex": 135,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "fastest",
+                    "transportModes": [
+                        "truck"
+                    ],
+                    "trafficMode": "disabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "+930461269",
+                            "mappedPosition": {
+                                "latitude": 41.9800687,
+                                "longitude": -87.8805614
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9798,
+                                "longitude": -87.8801
+                            },
+                            "type": "stopOver",
+                            "spot": 0.5555556,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "",
+                            "label": "",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "-1035319462",
+                            "mappedPosition": {
+                                "latitude": 41.9042909,
+                                "longitude": -87.9216528
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9043,
+                                "longitude": -87.9216001
+                            },
+                            "type": "stopOver",
+                            "spot": 0,
+                            "sideOfStreet": "left",
+                            "mappedRoadName": "Eisenhower Expy E",
+                            "label": "Eisenhower Expy E - I-290",
+                            "shapeIndex": 135,
+                            "source": "user"
+                        },
+                        "length": 13049,
+                        "travelTime": 812,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 41.9800687,
+                                    "longitude": -87.8805614
+                                },
+                                "instruction": "Take ramp onto <span class=\"number\">I-190</span>. <span class=\"distance-description\">Go for <span class=\"length\">631 m</span>.</span>",
+                                "travelTime": 53,
+                                "length": 631,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.98259,
+                                    "longitude": -87.8744352
+                                },
+                                "instruction": "Take exit <span class=\"exit\">1D</span> toward <span class=\"sign\"><span lang=\"en\">Indiana</span></span> onto <span class=\"number\">I-294 S</span> <span class=\"next-street\">(Tri-State Tollway)</span>. <span class=\"distance-description\">Go for <span class=\"length\">10.9 km</span>.</span>",
+                                "travelTime": 573,
+                                "length": 10872,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9059324,
+                                    "longitude": -87.9199362
+                                },
+                                "instruction": "Take exit <span class=\"exit\">33</span> toward <span class=\"sign\"><span lang=\"en\">Rockford</span>/<span lang=\"en\">US-20</span>/<span lang=\"en\">IL-64</span></span> onto <span class=\"number\">I-290 W</span> <span class=\"next-street\">(Eisenhower Expy W)</span>. <span class=\"distance-description\">Go for <span class=\"length\">475 m</span>.</span>",
+                                "travelTime": 54,
+                                "length": 475,
+                                "id": "M3",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9067156,
+                                    "longitude": -87.9237771
+                                },
+                                "instruction": "Take exit <span class=\"exit\">13B</span> toward <span class=\"sign\"><span lang=\"en\">North Ave</span></span> onto <span class=\"number\">IL-64 W</span> <span class=\"next-street\">(E North Ave)</span>. <span class=\"distance-description\">Go for <span class=\"length\">435 m</span>.</span>",
+                                "travelTime": 51,
+                                "length": 435,
+                                "id": "M4",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9065869,
+                                    "longitude": -87.9249573
+                                },
+                                "instruction": "Take ramp onto <span class=\"number\">I-290 E</span> <span class=\"next-street\">(Eisenhower Expy E)</span> toward <span class=\"sign\"><span lang=\"en\">Chicago</span>/<span lang=\"en\">I-294 S</span></span>. <span class=\"distance-description\">Go for <span class=\"length\">636 m</span>.</span>",
+                                "travelTime": 81,
+                                "length": 636,
+                                "id": "M5",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9042909,
+                                    "longitude": -87.9216528
+                                },
+                                "instruction": "Arrive at <span class=\"street\">Eisenhower Expy E</span> <span class=\"number\">(I-290)</span>. Your destination is on the left.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M6",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "summary": {
+                    "distance": 13049,
+                    "trafficTime": 812,
+                    "baseTime": 812,
+                    "flags": [
+                        "tollroad",
+                        "motorway",
+                        "builtUpArea"
+                    ],
+                    "text": "The trip takes <span class=\"length\">13.0 km</span> and <span class=\"time\">14 mins</span>.",
+                    "travelTime": 812,
+                    "_type": "RouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us"
+    }
+}

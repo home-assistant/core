@@ -3,15 +3,16 @@
 import datetime as dt
 import logging
 
-from homeassistant.core import callback
 from homeassistant.const import (
-    TEMP_CELSIUS,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
+
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ class SupplyAirTemperatureSensor(SmartySensor):
     def __init__(self, name, smarty):
         """Supply Air Temperature Init."""
         super().__init__(
-            name="{} Supply Air Temperature".format(name),
+            name=f"{name} Supply Air Temperature",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             smarty=smarty,
@@ -106,7 +107,7 @@ class ExtractAirTemperatureSensor(SmartySensor):
     def __init__(self, name, smarty):
         """Supply Air Temperature Init."""
         super().__init__(
-            name="{} Extract Air Temperature".format(name),
+            name=f"{name} Extract Air Temperature",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             smarty=smarty,
@@ -124,7 +125,7 @@ class OutdoorAirTemperatureSensor(SmartySensor):
     def __init__(self, name, smarty):
         """Outdoor Air Temperature Init."""
         super().__init__(
-            name="{} Outdoor Air Temperature".format(name),
+            name=f"{name} Outdoor Air Temperature",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             smarty=smarty,
@@ -142,7 +143,7 @@ class SupplyFanSpeedSensor(SmartySensor):
     def __init__(self, name, smarty):
         """Supply Fan Speed RPM Init."""
         super().__init__(
-            name="{} Supply Fan Speed".format(name),
+            name=f"{name} Supply Fan Speed",
             device_class=None,
             unit_of_measurement=None,
             smarty=smarty,
@@ -160,7 +161,7 @@ class ExtractFanSpeedSensor(SmartySensor):
     def __init__(self, name, smarty):
         """Extract Fan Speed RPM Init."""
         super().__init__(
-            name="{} Extract Fan Speed".format(name),
+            name=f"{name} Extract Fan Speed",
             device_class=None,
             unit_of_measurement=None,
             smarty=smarty,
@@ -178,7 +179,7 @@ class FilterDaysLeftSensor(SmartySensor):
     def __init__(self, name, smarty):
         """Filter Days Left Init."""
         super().__init__(
-            name="{} Filter Days Left".format(name),
+            name=f"{name} Filter Days Left",
             device_class=DEVICE_CLASS_TIMESTAMP,
             unit_of_measurement=None,
             smarty=smarty,

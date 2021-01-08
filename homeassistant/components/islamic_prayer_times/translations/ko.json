@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "\uc774\uc2ac\ub78c \uae30\ub3c4 \uc2dc\uac04\uc744 \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\uc774\uc2ac\ub78c \uae30\ub3c4 \uc2dc\uac04 \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "\uc774\uc2ac\ub78c \uae30\ub3c4 \uc2dc\uac04 \uacc4\uc0b0 \ubc29\ubc95"
+                }
+            }
+        }
+    },
+    "title": "\uc774\uc2ac\ub78c \uae30\ub3c4 \uc2dc\uac04"
+}

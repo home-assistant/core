@@ -1,12 +1,9 @@
 """Support for IOTA wallet sensors."""
 from datetime import timedelta
-import logging
 
 from homeassistant.const import CONF_NAME
 
 from . import CONF_WALLETS, IotaDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_TESTNET = "testnet"
 ATTR_URL = "url"
@@ -46,7 +43,7 @@ class IotaBalanceSensor(IotaDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} Balance".format(self._name)
+        return f"{self._name} Balance"
 
     @property
     def state(self):

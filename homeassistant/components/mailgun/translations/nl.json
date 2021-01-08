@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "create_entry": {
+            "default": "Om evenementen naar Home Assistant te verzenden, moet u [Webhooks with Mailgun]({mailgun_url}) instellen. \n\n Vul de volgende info in: \n\n - URL: `{webhook_url}` \n - Methode: POST \n - Inhoudstype: application/json \n\n Zie [de documentatie]({docs_url}) voor informatie over het configureren van automatiseringen om binnenkomende gegevens te verwerken."
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Mailgun wilt instellen?",
+                "title": "Stel de Mailgun Webhook in"
+            }
+        }
+    }
+}

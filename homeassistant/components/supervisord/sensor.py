@@ -6,8 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,9 @@ class SupervisorProcessSensor(Entity):
     def update(self):
         """Update device state."""
         try:
-            self._info = self._server.supervisor.getProcessInfo(self._info.get("name"))
+            self._info = self._server.supervisor.getProcessInfo(
+                self._info.get("group") + ":" + self._info.get("name")
+            )
             self._available = True
         except ConnectionRefusedError:
             _LOGGER.warning("Supervisord not available")

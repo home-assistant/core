@@ -1,8 +1,9 @@
 """Support for Amazon Web Services (AWS)."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
 
+import aiobotocore
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,7 +11,7 @@ from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
 from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa
+from . import config_flow  # noqa: F401
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_CONTEXT,
@@ -151,7 +152,6 @@ async def async_setup_entry(hass, entry):
 
 async def _validate_aws_credentials(hass, credential):
     """Validate AWS credential config."""
-    import aiobotocore
 
     aws_config = credential.copy()
     del aws_config[CONF_NAME]

@@ -1,4 +1,6 @@
 """Support for launching a web browser on the host machine."""
+import webbrowser
+
 import voluptuous as vol
 
 ATTR_URL = "url"
@@ -18,7 +20,6 @@ SERVICE_BROWSE_URL_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Listen for browse_url events."""
-    import webbrowser
 
     hass.services.register(
         DOMAIN,

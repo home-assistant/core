@@ -1,9 +1,7 @@
 """Support for controlling the PiFace Digital I/O module on a RPi."""
-import logging
+import pifacedigitalio as PFIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rpi_pfio"
 
@@ -12,8 +10,6 @@ DATA_PFIO_LISTENER = "pfio_listener"
 
 def setup(hass, config):
     """Set up the Raspberry PI PFIO component."""
-    import pifacedigitalio as PFIO
-
     pifacedigital = PFIO.PiFaceDigital()
     hass.data[DATA_PFIO_LISTENER] = PFIO.InputEventListener(chip=pifacedigital)
 
@@ -22,7 +18,7 @@ def setup(hass, config):
         PFIO.deinit()
 
     def prepare_pfio(event):
-        """Stuff to do when home assistant starts."""
+        """Stuff to do when Home Assistant starts."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_pfio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_pfio)
@@ -33,22 +29,16 @@ def setup(hass, config):
 
 def write_output(port, value):
     """Write a value to a PFIO."""
-    import pifacedigitalio as PFIO
-
     PFIO.digital_write(port, value)
 
 
 def read_input(port):
     """Read a value from a PFIO."""
-    import pifacedigitalio as PFIO
-
     return PFIO.digital_read(port)
 
 
 def edge_detect(hass, port, event_callback, settle):
     """Add detection for RISING and FALLING events."""
-    import pifacedigitalio as PFIO
-
     hass.data[DATA_PFIO_LISTENER].register(
         port, PFIO.IODIR_BOTH, event_callback, settle_time=settle
     )

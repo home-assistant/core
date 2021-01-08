@@ -1,12 +1,12 @@
 """Support for Dark Sky weather service."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
+import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -14,9 +14,21 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    UNIT_UV_INDEX,
     CONF_SCAN_INTERVAL,
+    DEGREE,
+    LENGTH_CENTIMETERS,
+    LENGTH_KILOMETERS,
+    PERCENTAGE,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
+    PRESSURE_MBAR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UV_INDEX,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -68,21 +80,21 @@ SENSOR_TYPES = {
     ],
     "nearest_storm_distance": [
         "Nearest Storm Distance",
-        "km",
+        LENGTH_KILOMETERS,
         "mi",
-        "km",
-        "km",
+        LENGTH_KILOMETERS,
+        LENGTH_KILOMETERS,
         "mi",
         "mdi:weather-lightning",
         ["currently"],
     ],
     "nearest_storm_bearing": [
         "Nearest Storm Bearing",
-        "°",
-        "°",
-        "°",
-        "°",
-        "°",
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
         "mdi:weather-lightning",
         ["currently"],
     ],
@@ -98,130 +110,130 @@ SENSOR_TYPES = {
     ],
     "precip_intensity": [
         "Precip Intensity",
-        "mm/h",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "in",
-        "mm/h",
-        "mm/h",
-        "mm/h",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-rainy",
         ["currently", "minutely", "hourly", "daily"],
     ],
     "precip_probability": [
         "Precip Probability",
-        "%",
-        "%",
-        "%",
-        "%",
-        "%",
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
         "mdi:water-percent",
         ["currently", "minutely", "hourly", "daily"],
     ],
     "precip_accumulation": [
         "Precip Accumulation",
-        "cm",
+        LENGTH_CENTIMETERS,
         "in",
-        "cm",
-        "cm",
-        "cm",
+        LENGTH_CENTIMETERS,
+        LENGTH_CENTIMETERS,
+        LENGTH_CENTIMETERS,
         "mdi:weather-snowy",
         ["hourly", "daily"],
     ],
     "temperature": [
         "Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["currently", "hourly"],
     ],
     "apparent_temperature": [
         "Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["currently", "hourly"],
     ],
     "dew_point": [
         "Dew Point",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["currently", "hourly", "daily"],
     ],
     "wind_speed": [
         "Wind Speed",
-        "m/s",
-        "mph",
-        "km/h",
-        "mph",
-        "mph",
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
         "mdi:weather-windy",
         ["currently", "hourly", "daily"],
     ],
     "wind_bearing": [
         "Wind Bearing",
-        "°",
-        "°",
-        "°",
-        "°",
-        "°",
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
         "mdi:compass",
         ["currently", "hourly", "daily"],
     ],
     "wind_gust": [
         "Wind Gust",
-        "m/s",
-        "mph",
-        "km/h",
-        "mph",
-        "mph",
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
         "mdi:weather-windy-variant",
         ["currently", "hourly", "daily"],
     ],
     "cloud_cover": [
         "Cloud Coverage",
-        "%",
-        "%",
-        "%",
-        "%",
-        "%",
-        "mdi:weather-partlycloudy",
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        "mdi:weather-partly-cloudy",
         ["currently", "hourly", "daily"],
     ],
     "humidity": [
         "Humidity",
-        "%",
-        "%",
-        "%",
-        "%",
-        "%",
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
+        PERCENTAGE,
         "mdi:water-percent",
         ["currently", "hourly", "daily"],
     ],
     "pressure": [
         "Pressure",
-        "mbar",
-        "mbar",
-        "mbar",
-        "mbar",
-        "mbar",
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
+        PRESSURE_MBAR,
         "mdi:gauge",
         ["currently", "hourly", "daily"],
     ],
     "visibility": [
         "Visibility",
-        "km",
+        LENGTH_KILOMETERS,
         "mi",
-        "km",
-        "km",
+        LENGTH_KILOMETERS,
+        LENGTH_KILOMETERS,
         "mi",
         "mdi:eye",
         ["currently", "hourly", "daily"],
@@ -238,101 +250,101 @@ SENSOR_TYPES = {
     ],
     "apparent_temperature_max": [
         "Daily High Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "apparent_temperature_high": [
         "Daytime High Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "apparent_temperature_min": [
         "Daily Low Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "apparent_temperature_low": [
         "Overnight Low Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_max": [
         "Daily High Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_high": [
         "Daytime High Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_min": [
         "Daily Low Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_low": [
         "Overnight Low Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "precip_intensity_max": [
         "Daily Max Precip Intensity",
-        "mm/h",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "in",
-        "mm/h",
-        "mm/h",
-        "mm/h",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:thermometer",
         ["daily"],
     ],
     "uv_index": [
         "UV Index",
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
         "mdi:weather-sunny",
         ["currently", "hourly", "daily"],
     ],
@@ -371,7 +383,7 @@ SENSOR_TYPES = {
 
 CONDITION_PICTURES = {
     "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-sunny"],
+    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-night"],
     "rain": ["/static/images/darksky/weather-pouring.svg", "mdi:weather-pouring"],
     "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
     "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
@@ -380,11 +392,11 @@ CONDITION_PICTURES = {
     "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
     "partly-cloudy-day": [
         "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-night-partly-cloudy",
     ],
 }
 
@@ -486,7 +498,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units = "us"
 
     forecast_data = DarkSkyData(
-        api_key=config.get(CONF_API_KEY, None),
+        api_key=config.get(CONF_API_KEY),
         latitude=latitude,
         longitude=longitude,
         units=units,
@@ -553,10 +565,10 @@ class DarkSkySensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.forecast_day is not None:
-            return "{} {} {}d".format(self.client_name, self._name, self.forecast_day)
+            return f"{self.client_name} {self._name} {self.forecast_day}d"
         if self.forecast_hour is not None:
-            return "{} {} {}h".format(self.client_name, self._name, self.forecast_hour)
-        return "{} {}".format(self.client_name, self._name)
+            return f"{self.client_name} {self._name} {self.forecast_hour}h"
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -598,6 +610,14 @@ class DarkSkySensor(Entity):
             return CONDITION_PICTURES[self._icon][1]
 
         return SENSOR_TYPES[self.type][6]
+
+    @property
+    def device_class(self):
+        """Device class of the entity."""
+        if SENSOR_TYPES[self.type][1] == TEMP_CELSIUS:
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
 
     @property
     def device_state_attributes(self):
@@ -704,7 +724,7 @@ class DarkSkyAlertSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -749,7 +769,7 @@ class DarkSkyAlertSensor(Entity):
         for i, alert in enumerate(data):
             for attr in ALERTS_ATTRS:
                 if multiple_alerts:
-                    dkey = attr + "_" + str(i)
+                    dkey = f"{attr}_{i!s}"
                 else:
                     dkey = attr
                 alerts[dkey] = getattr(alert, attr)
@@ -765,7 +785,8 @@ def convert_to_camel(data):
     This is not pythonic, but needed for certain situations.
     """
     components = data.split("_")
-    return components[0] + "".join(x.title() for x in components[1:])
+    capital_components = "".join(x.title() for x in components[1:])
+    return f"{components[0]}{capital_components}"
 
 
 class DarkSkyData:
@@ -778,6 +799,7 @@ class DarkSkyData:
         self.longitude = longitude
         self.units = units
         self.language = language
+        self._connect_error = False
 
         self.data = None
         self.unit_system = None
@@ -797,8 +819,6 @@ class DarkSkyData:
 
     def _update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
-
         try:
             self.data = forecastio.load_forecast(
                 self._api_key,
@@ -807,8 +827,13 @@ class DarkSkyData:
                 units=self.units,
                 lang=self.language,
             )
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Reconnected to Dark Sky")
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky: %s", error)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error("Unable to connect to Dark Sky: %s", error)
             self.data = None
         self.unit_system = self.data and self.data.json["flags"]["units"]
 

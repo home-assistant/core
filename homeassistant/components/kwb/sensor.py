@@ -1,20 +1,17 @@
 """Support for KWB Easyfire."""
-import logging
-
+from pykwb import kwb
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
     CONF_DEVICE,
+    CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.entity import Entity
 
 DEFAULT_RAW = False
 DEFAULT_NAME = "KWB"
@@ -56,8 +53,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     raw = config.get(CONF_RAW)
     client_name = config.get(CONF_NAME)
 
-    from pykwb import kwb
-
     if connection_type == "serial":
         easyfire = kwb.KWBEasyfire(MODE_SERIAL, "", 0, device)
     elif connection_type == "tcp":
@@ -92,7 +87,7 @@ class KWBSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{} {}".format(self._client_name, self._name)
+        return f"{self._client_name} {self._name}"
 
     @property
     def available(self) -> bool:

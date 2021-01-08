@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Odottamaton virhe."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "protocol": "Protokolla"
+                },
+                "title": "Yhdist\u00e4 UPB PIM:\u00e4\u00e4n"
+            }
+        }
+    }
+}

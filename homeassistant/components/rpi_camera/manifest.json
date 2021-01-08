@@ -1,8 +1,6 @@
 {
   "domain": "rpi_camera",
-  "name": "Rpi camera",
-  "documentation": "https://www.home-assistant.io/components/rpi_camera",
-  "requirements": [],
-  "dependencies": [],
+  "name": "Raspberry Pi Camera",
+  "documentation": "https://www.home-assistant.io/integrations/rpi_camera",
   "codeowners": []
 }

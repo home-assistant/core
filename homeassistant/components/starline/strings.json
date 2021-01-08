@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "auth_app": {
+        "title": "Application credentials",
+        "description": "Application ID and secret code from [StarLine developer account](https://my.starline.ru/developer)",
+        "data": {
+          "app_id": "App ID",
+          "app_secret": "Secret"
+        }
+      },
+      "auth_user": {
+        "title": "User credentials",
+        "description": "StarLine account email and password",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "auth_mfa": {
+        "title": "Two-factor authorization",
+        "description": "Enter the code sent to phone {phone_number}",
+        "data": {
+          "mfa_code": "SMS code"
+        }
+      },
+      "auth_captcha": {
+        "title": "Captcha",
+        "description": "{captcha_img}",
+        "data": {
+          "captcha_code": "Code from image"
+        }
+      }
+    },
+    "error": {
+      "error_auth_app": "Incorrect application id or secret",
+      "error_auth_user": "Incorrect username or password",
+      "error_auth_mfa": "Incorrect code"
+    }
+  }
+}

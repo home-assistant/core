@@ -1,7 +1,8 @@
 """Support for Minut Point."""
 import logging
 
-from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanel
+from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_MAP = {
     "off": STATE_ALARM_DISARMED,
-    "alarm_silenced": STATE_ALARM_ARMED_AWAY,
+    "alarm_silenced": STATE_ALARM_DISARMED,
     "alarm_grace_period_expired": STATE_ALARM_TRIGGERED,
 }
 
@@ -35,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MinutPointAlarmControl(AlarmControlPanel):
+class MinutPointAlarmControl(AlarmControlPanelEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, home_id):
@@ -63,12 +64,15 @@ class MinutPointAlarmControl(AlarmControlPanel):
         """Process new event from the webhook."""
         _type = data.get("event", {}).get("type")
         _device_id = data.get("event", {}).get("device_id")
-        if _device_id not in self._home["devices"] or _type not in EVENT_MAP:
+        _changed_by = data.get("event", {}).get("user_id")
+        if (
+            _device_id not in self._home["devices"] and _type not in EVENT_MAP
+        ) and _type != "alarm_silenced":  # alarm_silenced does not have device_id
             return
-        _LOGGER.debug("Recieved webhook: %s", _type)
-        self._home["alarm_status"] = EVENT_MAP[_type]
-        self._changed_by = _device_id
-        self.async_schedule_update_ha_state()
+        _LOGGER.debug("Received webhook: %s", _type)
+        self._home["alarm_status"] = _type
+        self._changed_by = _changed_by
+        self.async_write_ha_state()
 
     @property
     def _home(self):
@@ -86,26 +90,31 @@ class MinutPointAlarmControl(AlarmControlPanel):
         return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def changed_by(self):
         """Return the user the last change was triggered by."""
         return self._changed_by
 
-    def alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        status = self._client.alarm_disarm(self._home_id)
+        status = await self._client.async_alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
-    def alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        status = self._client.alarm_arm(self._home_id)
+        status = await self._client.async_alarm_arm(self._home_id)
         if status:
             self._home["alarm_status"] = "on"
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "point.{}".format(self._home_id)
+        return f"point.{self._home_id}"
 
     @property
     def device_info(self):

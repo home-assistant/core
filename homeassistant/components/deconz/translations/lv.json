@@ -1,0 +1,12 @@
+{
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Abas pogas",
+            "button_1": "Pirm\u0101 poga",
+            "button_2": "Otr\u0101 poga",
+            "button_3": "Tre\u0161\u0101 poga",
+            "turn_off": "Izsl\u0113gt",
+            "turn_on": "Iesl\u0113gt"
+        }
+    }
+}

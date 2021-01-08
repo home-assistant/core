@@ -1,21 +1,21 @@
 """Support for getting the disk temperature of a host."""
-import logging
 from datetime import timedelta
-from telnetlib import Telnet
+import logging
 import socket
+from telnetlib import Telnet
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
+    CONF_DISKS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    CONF_DISKS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class HddTempSensor(Entity):
         """Initialize a HDDTemp sensor."""
         self.hddtemp = hddtemp
         self.disk = disk
-        self._name = "{} {}".format(name, disk)
+        self._name = f"{name} {disk}"
         self._state = None
         self._details = None
         self._unit = None

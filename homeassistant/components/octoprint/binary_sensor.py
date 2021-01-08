@@ -3,7 +3,7 @@ import logging
 
 import requests
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import BINARY_SENSOR_TYPES, DOMAIN as COMPONENT_DOMAIN
 
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class OctoPrintBinarySensor(BinarySensorDevice):
+class OctoPrintBinarySensor(BinarySensorEntity):
     """Representation an OctoPrint binary sensor."""
 
     def __init__(
@@ -45,9 +45,9 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         """Initialize a new OctoPrint sensor."""
         self.sensor_name = sensor_name
         if tool is None:
-            self._name = "{} {}".format(sensor_name, condition)
+            self._name = f"{sensor_name} {condition}"
         else:
-            self._name = "{} {}".format(sensor_name, condition)
+            self._name = f"{sensor_name} {condition}"
         self.sensor_type = sensor_type
         self.api = api
         self._state = False

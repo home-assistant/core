@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "link_local_address": "Link-local Adressen werden nicht unterst\u00fctzt",
+            "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "flow_title": "Achsenger\u00e4t: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "Axis Ger\u00e4t einrichten"
+            }
+        }
+    }
+}

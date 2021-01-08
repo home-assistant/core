@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Diese Koordinaten oder Node/Pro ID sind bereits registriert."
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "general_error": "Es gab einen unbekannten Fehler.",
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel bereitgestellt."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "title": "Konfigurieren Sie eine Geografie"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "IP-Adresse/Hostname des Ger\u00e4ts",
+                    "password": "Passwort"
+                },
+                "description": "\u00dcberwachen Sie eine pers\u00f6nliche AirVisual-Einheit. Das Passwort kann von der Benutzeroberfl\u00e4che des Ger\u00e4ts abgerufen werden.",
+                "title": "Konfigurieren Sie einen AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Key"
+                }
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geografische Position",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Integrationstyp"
+                },
+                "description": "W\u00e4hlen Sie aus, welche Art von AirVisual-Daten Sie \u00fcberwachen m\u00f6chten.",
+                "title": "Konfigurieren Sie AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Zeigen Sie die \u00fcberwachte Geografie auf der Karte an"
+                },
+                "title": "Konfigurieren Sie AirVisual"
+            }
+        }
+    }
+}

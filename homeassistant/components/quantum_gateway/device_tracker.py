@@ -1,6 +1,7 @@
 """Support for Verizon FiOS Quantum Gateways."""
 import logging
 
+from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -37,7 +38,6 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from quantum_gateway import QuantumGatewayScanner
 
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
@@ -51,10 +51,10 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
             self.success_init = self.quantum.success_init
         except RequestException:
             self.success_init = False
-            _LOGGER.error("Unable to connect to gateway. Check host.")
+            _LOGGER.error("Unable to connect to gateway. Check host")
 
         if not self.success_init:
-            _LOGGER.error("Unable to login to gateway. Check password and " "host.")
+            _LOGGER.error("Unable to login to gateway. Check password and host")
 
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""

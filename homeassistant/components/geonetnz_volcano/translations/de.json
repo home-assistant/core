@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "F\u00fclle deine Filterangaben aus."
+            }
+        }
+    }
+}

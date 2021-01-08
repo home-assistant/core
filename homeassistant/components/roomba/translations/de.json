@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Kontinuierlich",
+                    "delay": "Verz\u00f6gerung",
+                    "host": "Host",
+                    "password": "Passwort"
+                },
+                "description": "Das Abrufen der BLID und des Kennworts erfolgt manuell. Befolgen Sie die in der Dokumentation beschriebenen Schritte unter: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Kontinuierlich",
+                    "delay": "Verz\u00f6gerung"
+                }
+            }
+        }
+    }
+}

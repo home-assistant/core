@@ -1,6 +1,5 @@
 """Support for mobile_app push notifications."""
 import asyncio
-from datetime import datetime, timezone
 import logging
 
 import async_timeout
@@ -13,7 +12,12 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-
+from homeassistant.const import (
+    HTTP_ACCEPTED,
+    HTTP_CREATED,
+    HTTP_OK,
+    HTTP_TOO_MANY_REQUESTS,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
@@ -31,8 +35,10 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
+    DATA_NOTIFY,
     DOMAIN,
 )
+from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +46,13 @@ _LOGGER = logging.getLogger(__name__)
 def push_registrations(hass):
     """Return a dictionary of push enabled registrations."""
     targets = {}
+
     for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
-        data = entry.data
-        app_data = data[ATTR_APP_DATA]
-        if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
-            device_name = data[ATTR_DEVICE_NAME]
-            if device_name in targets:
-                _LOGGER.warning("Found duplicate device name %s", device_name)
-                continue
-            targets[device_name] = webhook_id
+        if not supports_push(hass, webhook_id):
+            continue
+
+        targets[entry.data[ATTR_DEVICE_NAME]] = webhook_id
+
     return targets
 
 
@@ -60,7 +64,7 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
     resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = dt_util.parse_datetime(resetsAt) - datetime.now(timezone.utc)
+    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
     rate_limit_msg = (
         "mobile_app push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -80,7 +84,8 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 async def async_get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
     session = async_get_clientsession(hass)
-    return MobileAppNotificationService(session)
+    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(session)
+    return service
 
 
 class MobileAppNotificationService(BaseNotificationService):
@@ -136,16 +141,24 @@ class MobileAppNotificationService(BaseNotificationService):
                     response = await self._session.post(push_url, json=data)
                     result = await response.json()
 
-                if response.status == 201:
+                if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
-                    return
+                    continue
 
                 fallback_error = result.get("errorMessage", "Unknown error")
                 fallback_message = (
-                    "Internal server error, " "please try again later: " "{}"
-                ).format(fallback_error)
+                    f"Internal server error, please try again later: {fallback_error}"
+                )
                 message = result.get("message", fallback_message)
-                if response.status == 429:
+
+                if "message" in result:
+                    if message[-1] not in [".", "?", "!"]:
+                        message += "."
+                    message += (
+                        " This message is generated externally to Home Assistant."
+                    )
+
+                if response.status == HTTP_TOO_MANY_REQUESTS:
                     _LOGGER.warning(message)
                     log_rate_limits(
                         self.hass, entry_data[ATTR_DEVICE_NAME], result, logging.WARNING

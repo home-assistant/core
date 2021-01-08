@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "\u4fe1\u983c\u3067\u304d\u308b\u30c7\u30d0\u30a4\u30b9"
+                },
+                "description": "\u4fe1\u983c\u3067\u304d\u308b\u30c7\u30d0\u30a4\u30b9\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044",
+                "title": "iCloud \u306e\u4fe1\u983c\u3067\u304d\u308b\u30c7\u30d0\u30a4\u30b9"
+            },
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                },
+                "description": "\u8cc7\u683c\u60c5\u5831\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044",
+                "title": "iCloud \u306e\u8cc7\u683c\u60c5\u5831"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "\u8a8d\u8a3c\u30b3\u30fc\u30c9"
+                },
+                "title": "iCloud \u306e\u8a8d\u8a3c\u30b3\u30fc\u30c9"
+            }
+        }
+    }
+}

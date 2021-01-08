@@ -3,9 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.setup import async_setup_component
 from homeassistant.components import ios
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_coro
 
@@ -30,16 +29,7 @@ async def test_creating_entry_sets_up_sensor(hass):
         "homeassistant.components.ios.sensor.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            ios.DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
+        assert await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
@@ -61,7 +51,7 @@ async def test_not_configuring_ios_not_creates_entry(hass):
     with patch(
         "homeassistant.components.ios.async_setup_entry", return_value=mock_coro(True)
     ) as mock_setup:
-        await async_setup_component(hass, ios.DOMAIN, {})
+        await async_setup_component(hass, ios.DOMAIN, {"foo": "bar"})
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0

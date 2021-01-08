@@ -1,114 +1,164 @@
 """Support for Gogogate2 garage Doors."""
-import logging
+from typing import Callable, List, Optional
 
+from gogogate2_api.common import (
+    AbstractDoor,
+    DoorStatus,
+    get_configured_doors,
+    get_door_by_id,
+)
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE
-from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    STATE_CLOSED,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
+from homeassistant.components.cover import (
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "gogogate2"
-
-NOTIFICATION_ID = "gogogate2_notification"
-NOTIFICATION_TITLE = "Gogogate2 Cover Setup"
+from .common import (
+    DeviceDataUpdateCoordinator,
+    cover_unique_id,
+    get_data_update_coordinator,
+)
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
 
 COVER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_DEVICE, default=DEVICE_TYPE_GOGOGATE2): vol.In(
+            (DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)
+        ),
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Gogogate2 component."""
-    from pygogogate2 import Gogogate2API as pygogogate2
-
-    ip_address = config.get(CONF_IP_ADDRESS)
-    name = config.get(CONF_NAME)
-    password = config.get(CONF_PASSWORD)
-    username = config.get(CONF_USERNAME)
-
-    mygogogate2 = pygogogate2(username, password, ip_address)
-
-    try:
-        devices = mygogogate2.get_devices()
-        if devices is False:
-            raise ValueError("Username or Password is incorrect or no devices found")
-
-        add_entities(MyGogogate2Device(mygogogate2, door, name) for door in devices)
-
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
+async def async_setup_platform(
+    hass: HomeAssistant, config: dict, add_entities: Callable, discovery_info=None
+) -> None:
+    """Convert old style file configs to new style configs."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
+    )
 
 
-class MyGogogate2Device(CoverDevice):
-    """Representation of a Gogogate2 cover."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+) -> None:
+    """Set up the config entry."""
+    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
 
-    def __init__(self, mygogogate2, device, name):
-        """Initialize with API object, device id."""
-        self.mygogogate2 = mygogogate2
-        self.device_id = device["door"]
-        self._name = name or device["name"]
-        self._status = device["status"]
-        self._available = None
+    async_add_entities(
+        [
+            DeviceCover(config_entry, data_update_coordinator, door)
+            for door in get_configured_doors(data_update_coordinator.data)
+        ]
+    )
+
+
+class DeviceCover(CoordinatorEntity, CoverEntity):
+    """Cover entity for goggate2."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        data_update_coordinator: DeviceDataUpdateCoordinator,
+        door: AbstractDoor,
+    ) -> None:
+        """Initialize the object."""
+        super().__init__(data_update_coordinator)
+        self._config_entry = config_entry
+        self._door = door
+        self._api = data_update_coordinator.api
+        self._unique_id = cover_unique_id(config_entry, door)
+        self._is_available = True
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
-        """Return the name of the garage door if any."""
-        return self._name if self._name else DEFAULT_NAME
+        """Return the name of the door."""
+        return self._get_door().name
 
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self._status == STATE_CLOSED
+        door = self._get_door()
+
+        if door.status == DoorStatus.OPENED:
+            return False
+        if door.status == DoorStatus.CLOSED:
+            return True
+
+        return None
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "garage"
+        door = self._get_door()
+        if door.gate:
+            return DEVICE_CLASS_GATE
+
+        return DEVICE_CLASS_GARAGE
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
+    async def async_open_cover(self, **kwargs):
+        """Open the door."""
+        await self.hass.async_add_executor_job(
+            self._api.open_door, self._get_door().door_id
+        )
+
+    async def async_close_cover(self, **kwargs):
+        """Close the door."""
+        await self.hass.async_add_executor_job(
+            self._api.close_door, self._get_door().door_id
+        )
+
     @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self._available
+    def state_attributes(self):
+        """Return the state attributes."""
+        attrs = super().state_attributes
+        attrs["door_id"] = self._get_door().door_id
+        return attrs
 
-    def close_cover(self, **kwargs):
-        """Issue close command to cover."""
-        self.mygogogate2.close_device(self.device_id)
+    def _get_door(self) -> AbstractDoor:
+        door = get_door_by_id(self._door.door_id, self.coordinator.data)
+        self._door = door or self._door
+        return self._door
 
-    def open_cover(self, **kwargs):
-        """Issue open command to cover."""
-        self.mygogogate2.open_device(self.device_id)
-
-    def update(self):
-        """Update status of cover."""
-        try:
-            self._status = self.mygogogate2.get_status(self.device_id)
-            self._available = True
-        except (TypeError, KeyError, NameError, ValueError) as ex:
-            _LOGGER.error("%s", ex)
-            self._status = None
-            self._available = False
+    @property
+    def device_info(self):
+        """Device info for the controller."""
+        data = self.coordinator.data
+        return {
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "name": self._config_entry.title,
+            "manufacturer": MANUFACTURER,
+            "model": data.model,
+            "sw_version": data.firmwareversion,
+        }

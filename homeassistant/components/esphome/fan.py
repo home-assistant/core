@@ -1,5 +1,4 @@
 """Support for ESPHome fans."""
-import logging
 from typing import List, Optional
 
 from aioesphomeapi import FanInfo, FanSpeed, FanState
@@ -22,8 +21,6 @@ from . import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -81,7 +78,6 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             data["speed"] = _fan_speeds.from_hass(speed)
         await self._client.fan_command(**data)
 
-    # pylint: disable=arguments-differ
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
         await self._client.fan_command(key=self._static_info.key, state=False)
@@ -91,6 +87,9 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         await self._client.fan_command(
             key=self._static_info.key, oscillating=oscillating
         )
+
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
 
     @esphome_state_property
     def is_on(self) -> Optional[bool]:

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "wrong_server_id": "Server ID ist ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "description": "Einrichtung beginnen?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Automatische Updates deaktivieren"
+                }
+            }
+        }
+    }
+}

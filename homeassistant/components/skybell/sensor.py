@@ -1,6 +1,5 @@
 """Sensor support for Skybell Doorbells."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -9,8 +8,6 @@ from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -49,7 +46,7 @@ class SkybellSensor(SkybellDevice):
         super().__init__(device)
         self._sensor_type = sensor_type
         self._icon = "mdi:{}".format(SENSOR_TYPES[self._sensor_type][1])
-        self._name = "{0} {1}".format(
+        self._name = "{} {}".format(
             self._device.name, SENSOR_TYPES[self._sensor_type][0]
         )
         self._state = None

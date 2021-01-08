@@ -1,0 +1,17 @@
+{
+   "canSetTemperature" : true,
+   "DRY" : {},
+   "type" : "HOT_WATER",
+   "temperatures" : {
+      "celsius" : {
+         "min" : 16,
+         "max" : 31,
+         "step" : 1
+      },
+      "fahrenheit" : {
+         "step" : 1,
+         "max" : 88,
+         "min" : 61
+      }
+   }
+}

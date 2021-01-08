@@ -1,25 +1,12 @@
 """This platform allows several lights to be grouped into one light."""
+import asyncio
 from collections import Counter
 import itertools
-import logging
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
 
 from homeassistant.components import light
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITIES,
-    CONF_NAME,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.core import State, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -40,8 +27,24 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
 )
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITIES,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import CoreState, State
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import color as color_util
 
-_LOGGER = logging.getLogger(__name__)
+from . import GroupEntity
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 DEFAULT_NAME = "Light Group"
 
@@ -67,49 +70,51 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
-    async_add_entities([LightGroup(config.get(CONF_NAME), config[CONF_ENTITIES])])
+    async_add_entities(
+        [LightGroup(cast(str, config.get(CONF_NAME)), config[CONF_ENTITIES])]
+    )
 
 
-class LightGroup(light.Light):
+class LightGroup(GroupEntity, light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
         """Initialize a light group."""
-        self._name = name  # type: str
-        self._entity_ids = entity_ids  # type: List[str]
-        self._is_on = False  # type: bool
-        self._available = False  # type: bool
-        self._brightness = None  # type: Optional[int]
-        self._hs_color = None  # type: Optional[Tuple[float, float]]
-        self._color_temp = None  # type: Optional[int]
-        self._min_mireds = 154  # type: Optional[int]
-        self._max_mireds = 500  # type: Optional[int]
-        self._white_value = None  # type: Optional[int]
-        self._effect_list = None  # type: Optional[List[str]]
-        self._effect = None  # type: Optional[str]
-        self._supported_features = 0  # type: int
-        self._async_unsub_state_changed = None
+        self._name = name
+        self._entity_ids = entity_ids
+        self._is_on = False
+        self._available = False
+        self._icon = "mdi:lightbulb-group"
+        self._brightness: Optional[int] = None
+        self._hs_color: Optional[Tuple[float, float]] = None
+        self._color_temp: Optional[int] = None
+        self._min_mireds: Optional[int] = 154
+        self._max_mireds: Optional[int] = 500
+        self._white_value: Optional[int] = None
+        self._effect_list: Optional[List[str]] = None
+        self._effect: Optional[str] = None
+        self._supported_features: int = 0
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
+        async def async_state_changed_listener(event):
             """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
+            self.async_set_context(event.context)
+            await self.async_defer_or_update_ha_state()
 
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
+        assert self.hass
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entity_ids, async_state_changed_listener
+            )
         )
-        await self.async_update()
 
-    async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
+        if self.hass.state == CoreState.running:
+            await self.async_update()
+            return
+
+        await super().async_added_to_hass()
 
     @property
     def name(self) -> str:
@@ -125,6 +130,11 @@ class LightGroup(light.Light):
     def available(self) -> bool:
         """Return whether the light group is available."""
         return self._available
+
+    @property
+    def icon(self):
+        """Return the light group icon."""
+        return self._icon
 
     @property
     def brightness(self) -> Optional[int]:
@@ -176,9 +186,15 @@ class LightGroup(light.Light):
         """No polling needed for a light group."""
         return False
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes for the light group."""
+        return {ATTR_ENTITY_ID: self._entity_ids}
+
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
+        emulate_color_temp_entity_ids = []
 
         if ATTR_BRIGHTNESS in kwargs:
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
@@ -188,6 +204,23 @@ class LightGroup(light.Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
+
+            # Create a new entity list to mutate
+            updated_entities = list(self._entity_ids)
+
+            # Walk through initial entity ids, split entity lists by support
+            for entity_id in self._entity_ids:
+                state = self.hass.states.get(entity_id)
+                if not state:
+                    continue
+                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                # Only pass color temperature to supported entity_ids
+                if bool(support & SUPPORT_COLOR) and not bool(
+                    support & SUPPORT_COLOR_TEMP
+                ):
+                    emulate_color_temp_entity_ids.append(entity_id)
+                    updated_entities.remove(entity_id)
+                    data[ATTR_ENTITY_ID] = updated_entities
 
         if ATTR_WHITE_VALUE in kwargs:
             data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
@@ -201,8 +234,41 @@ class LightGroup(light.Light):
         if ATTR_FLASH in kwargs:
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
-        await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+        if not emulate_color_temp_entity_ids:
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
+            )
+            return
+
+        emulate_color_temp_data = data.copy()
+        temp_k = color_util.color_temperature_mired_to_kelvin(
+            emulate_color_temp_data[ATTR_COLOR_TEMP]
+        )
+        hs_color = color_util.color_temperature_to_hs(temp_k)
+        emulate_color_temp_data[ATTR_HS_COLOR] = hs_color
+        del emulate_color_temp_data[ATTR_COLOR_TEMP]
+
+        emulate_color_temp_data[ATTR_ENTITY_ID] = emulate_color_temp_entity_ids
+
+        await asyncio.gather(
+            self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
+            ),
+            self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                emulate_color_temp_data,
+                blocking=True,
+                context=self._context,
+            ),
         )
 
     async def async_turn_off(self, **kwargs):
@@ -213,13 +279,17 @@ class LightGroup(light.Light):
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
 
         await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
+            light.DOMAIN,
+            light.SERVICE_TURN_OFF,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states = list(filter(None, all_states))
+        states: List[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0
@@ -277,7 +347,7 @@ def _mean_int(*args):
 
 def _mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(l) / len(l) for l in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args))
 
 
 def _reduce_attribute(

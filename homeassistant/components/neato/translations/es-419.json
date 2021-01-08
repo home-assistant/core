@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ya est\u00e1 configurado"
+        },
+        "create_entry": {
+            "default": "Consulte [Documentaci\u00f3n de Neato] ({docs_url})."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario",
+                    "vendor": "Vendedor"
+                },
+                "description": "Consulte [Documentaci\u00f3n de Neato] ({docs_url}).",
+                "title": "Informaci\u00f3n de cuenta de Neato"
+            }
+        }
+    }
+}

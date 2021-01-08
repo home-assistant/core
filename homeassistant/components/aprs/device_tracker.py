@@ -3,6 +3,9 @@
 import logging
 import threading
 
+import aprslib
+from aprslib import ConnectionError as AprsConnectionError, LoginError
+import geopy.distance
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -54,12 +57,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def make_filter(callsigns: list) -> str:
     """Make a server-side filter from a list of callsigns."""
-    return " ".join("b/{0}".format(cs.upper()) for cs in callsigns)
+    return " ".join(f"b/{sign.upper()}" for sign in callsigns)
 
 
 def gps_accuracy(gps, posambiguity: int) -> int:
     """Calculate the GPS accuracy based on APRS posambiguity."""
-    import geopy.distance
 
     pos_a_map = {0: 0, 1: 1 / 600, 2: 1 / 60, 3: 1 / 6, 4: 1}
     if posambiguity in pos_a_map:
@@ -70,7 +72,7 @@ def gps_accuracy(gps, posambiguity: int) -> int:
 
         accuracy = round(dist_m)
     else:
-        message = "APRS position ambiguity must be 0-4, not '{0}'.".format(posambiguity)
+        message = f"APRS position ambiguity must be 0-4, not '{posambiguity}'."
         raise ValueError(message)
 
     return accuracy
@@ -95,7 +97,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, aprs_disconnect)
 
     if not aprs_listener.start_event.wait(timeout):
-        _LOGGER.error("Timeout waiting for APRS to connect.")
+        _LOGGER.error("Timeout waiting for APRS to connect")
         return
 
     if not aprs_listener.start_success:
@@ -114,8 +116,6 @@ class AprsListenerThread(threading.Thread):
     ):
         """Initialize the class."""
         super().__init__()
-
-        import aprslib
 
         self.callsign = callsign
         self.host = host
@@ -138,24 +138,21 @@ class AprsListenerThread(threading.Thread):
     def run(self):
         """Connect to APRS and listen for data."""
         self.ais.set_filter(self.server_filter)
-        from aprslib import ConnectionError as AprsConnectionError
-        from aprslib import LoginError
 
         try:
             _LOGGER.info(
-                "Opening connection to %s with callsign %s.", self.host, self.callsign
+                "Opening connection to %s with callsign %s", self.host, self.callsign
             )
             self.ais.connect()
             self.start_complete(
-                True,
-                "Connected to {0} with callsign {1}.".format(self.host, self.callsign),
+                True, f"Connected to {self.host} with callsign {self.callsign}."
             )
             self.ais.consumer(callback=self.rx_msg, immortal=True)
         except (AprsConnectionError, LoginError) as err:
             self.start_complete(False, str(err))
         except OSError:
             _LOGGER.info(
-                "Closing connection to %s with callsign %s.", self.host, self.callsign
+                "Closing connection to %s with callsign %s", self.host, self.callsign
             )
 
     def stop(self):

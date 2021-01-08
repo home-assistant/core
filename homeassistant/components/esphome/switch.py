@@ -1,16 +1,13 @@
 """Support for ESPHome switches."""
-import logging
 from typing import Optional
 
 from aioesphomeapi import SwitchInfo, SwitchState
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -28,7 +25,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeSwitch(EsphomeEntity, SwitchDevice):
+class EsphomeSwitch(EsphomeEntity, SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @property
@@ -49,6 +46,8 @@ class EsphomeSwitch(EsphomeEntity, SwitchDevice):
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
+    # https://github.com/PyCQA/pylint/issues/3150 for @esphome_state_property
+    # pylint: disable=invalid-overridden-method
     @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the switch is on."""

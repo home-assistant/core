@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from asmog import AmpioSmog
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
@@ -23,7 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Ampio Smog air quality platform."""
-    from asmog import AmpioSmog
 
     name = config.get(CONF_NAME)
     station_id = config[CONF_STATION_ID]
@@ -57,7 +57,7 @@ class AmpioSmogQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return unique_name."""
-        return "ampio_smog_{}".format(self._station_id)
+        return f"ampio_smog_{self._station_id}"
 
     @property
     def particulate_matter_2_5(self):

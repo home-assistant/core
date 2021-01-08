@@ -1,0 +1,19 @@
+{
+   "type" : "HEATING",
+   "HEAT" : {
+      "temperatures" : {
+         "celsius" : {
+            "max" : 31,
+            "step" : 1,
+            "min" : 16
+         },
+         "fahrenheit" : {
+            "step" : 1,
+            "max" : 88,
+            "min" : 61
+         }
+      }
+   },
+   "AUTO" : {},
+   "FAN" : {}
+}

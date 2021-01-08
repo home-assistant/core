@@ -6,12 +6,11 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ CONF_SANDBOX = "sandbox"
 
 DEFAULT_SANDBOX = False
 
-MESSAGE_RECEIVED = "{}_message_received".format(DOMAIN)
+MESSAGE_RECEIVED = f"{DOMAIN}_message_received"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -52,7 +51,7 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
-    if isinstance(data, dict) and "signature" in data.keys():
+    if isinstance(data, dict) and "signature" in data:
         if await verify_webhook(hass, **data["signature"]):
             data["webhook_id"] = webhook_id
             hass.bus.async_fire(MESSAGE_RECEIVED, data)
@@ -75,7 +74,7 @@ async def verify_webhook(hass, token=None, timestamp=None, signature=None):
 
     hmac_digest = hmac.new(
         key=bytes(hass.data[DOMAIN][CONF_API_KEY], "utf-8"),
-        msg=bytes("{}{}".format(timestamp, token), "utf-8"),
+        msg=bytes(f"{timestamp}{token}", "utf-8"),
         digestmod=hashlib.sha256,
     ).hexdigest()
 
@@ -96,5 +95,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

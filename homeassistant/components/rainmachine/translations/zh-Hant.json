@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "\u4e3b\u6a5f\u540d\u6216 IP \u4f4d\u5740",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u586b\u5beb\u8cc7\u8a0a"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "\u9810\u8a2d\u5340\u57df\u57f7\u884c\u6642\u9593\uff08\u79d2\uff09"
+                },
+                "title": "\u8a2d\u5b9a RainMachine"
+            }
+        }
+    }
+}

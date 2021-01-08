@@ -1,9 +1,10 @@
 """Support for AquaLogic devices."""
 from datetime import timedelta
 import logging
-import time
 import threading
+import time
 
+from aqualogic.core import AquaLogic
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "aqualogic"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 CONF_UNIT = "unit"
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
@@ -71,7 +72,6 @@ class AquaLogicProcessor(threading.Thread):
 
     def run(self):
         """Event thread."""
-        from aqualogic.core import AquaLogic
 
         while True:
             self._panel = AquaLogic()

@@ -1,5 +1,5 @@
 """Support for Tellstick covers."""
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverEntity
 
 from . import (
     ATTR_DISCOVER_CONFIG,
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class TellstickCover(TellstickDevice, CoverDevice):
+class TellstickCover(TellstickDevice, CoverEntity):
     """Representation of a Tellstick cover."""
 
     @property
@@ -55,12 +55,9 @@ class TellstickCover(TellstickDevice, CoverDevice):
 
     def _parse_tellcore_data(self, tellcore_data):
         """Turn the value received from tellcore into something useful."""
-        pass
 
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""
-        pass
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
-        pass

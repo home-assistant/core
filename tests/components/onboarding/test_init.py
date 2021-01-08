@@ -1,12 +1,12 @@
 """Tests for the init."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import onboarding
-
-from tests.common import mock_coro, MockUser
+from homeassistant.setup import async_setup_component
 
 from . import mock_storage
+
+from tests.common import MockUser, mock_coro
 
 # Temporarily: if auth not active, always set onboarded=True
 

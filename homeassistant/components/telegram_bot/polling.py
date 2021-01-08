@@ -1,8 +1,12 @@
 """Support for Telegram bot using polling."""
 import logging
 
+from telegram import Update
+from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
+from telegram.ext import CallbackContext, Dispatcher, Handler, Updater
+from telegram.utils.types import HandlerArg
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
 
 from . import CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot
 
@@ -14,12 +18,10 @@ async def async_setup_platform(hass, config):
     bot = initialize_bot(config)
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
 
-    @callback
     def _start_bot(_event):
         """Start the bot."""
         pol.start_polling()
 
-    @callback
     def _stop_bot(_event):
         """Stop the bot."""
         pol.stop_polling()
@@ -30,23 +32,19 @@ async def async_setup_platform(hass, config):
     return True
 
 
-def process_error(bot, update, error):
+def process_error(update: Update, context: CallbackContext):
     """Telegram bot error handler."""
-    from telegram.error import TelegramError, TimedOut, NetworkError, RetryAfter
-
     try:
-        raise error
+        raise context.error
     except (TimedOut, NetworkError, RetryAfter):
         # Long polling timeout or connection problem. Nothing serious.
         pass
     except TelegramError:
-        _LOGGER.error('Update "%s" caused error "%s"', update, error)
+        _LOGGER.error('Update "%s" caused error: "%s"', update, context.error)
 
 
 def message_handler(handler):
     """Create messages handler."""
-    from telegram import Update
-    from telegram.ext import Handler
 
     class MessageHandler(Handler):
         """Telegram bot message handler."""
@@ -55,14 +53,21 @@ def message_handler(handler):
             """Initialize the messages handler instance."""
             super().__init__(handler)
 
-        def check_update(self, update):  # pylint: disable=no-self-use
+        def check_update(self, update):
             """Check is update valid."""
             return isinstance(update, Update)
 
-        def handle_update(self, update, dispatcher):
+        def handle_update(
+            self,
+            update: HandlerArg,
+            dispatcher: Dispatcher,
+            check_result: object,
+            context: CallbackContext = None,
+        ):
             """Handle update."""
             optional_args = self.collect_optional_args(dispatcher, update)
-            return self.callback(dispatcher.bot, update, **optional_args)
+            context.args = optional_args
+            return self.callback(update, context)
 
     return MessageHandler()
 
@@ -72,7 +77,6 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     def __init__(self, bot, hass, allowed_chat_ids):
         """Initialize the polling instance."""
-        from telegram.ext import Updater
 
         BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
 
@@ -90,6 +94,6 @@ class TelegramPoll(BaseTelegramBotEntity):
         """Stop the polling task."""
         self.updater.stop()
 
-    def process_update(self, bot, update):
+    def process_update(self, update: HandlerArg, context: CallbackContext):
         """Process incoming message."""
         self.process_message(update.to_dict())

@@ -1,20 +1,18 @@
 """The tests for stream."""
-from unittest.mock import patch, MagicMock
-
 import pytest
 
-from homeassistant.const import CONF_FILENAME
 from homeassistant.components.stream.const import (
+    ATTR_STREAMS,
+    CONF_LOOKBACK,
+    CONF_STREAM_SOURCE,
     DOMAIN,
     SERVICE_RECORD,
-    CONF_STREAM_SOURCE,
-    CONF_LOOKBACK,
-    ATTR_STREAMS,
 )
+from homeassistant.const import CONF_FILENAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.async_mock import AsyncMock, MagicMock, patch
 
 
 async def test_record_service_invalid_file(hass):
@@ -74,9 +72,8 @@ async def test_record_service_lookback(hass):
     ):
         # Setup stubs
         hls_mock = MagicMock()
-        hls_mock.num_segments = 3
         hls_mock.target_duration = 2
-        hls_mock.recv.return_value = mock_coro()
+        hls_mock.recv = AsyncMock(return_value=None)
         stream_mock.return_value.outputs = {"hls": hls_mock}
 
         # Call Service

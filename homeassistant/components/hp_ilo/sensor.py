@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import hpilo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -89,9 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HpIloSensor(
             hass=hass,
             hp_ilo_data=hp_ilo_data,
-            sensor_name="{} {}".format(
-                config.get(CONF_NAME), monitored_variable[CONF_NAME]
-            ),
+            sensor_name=f"{config.get(CONF_NAME)} {monitored_variable[CONF_NAME]}",
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
             unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
@@ -158,7 +157,9 @@ class HpIloSensor(Entity):
         ilo_data = getattr(self.hp_ilo_data.data, self._ilo_function)()
 
         if self._sensor_value_template is not None:
-            ilo_data = self._sensor_value_template.render(ilo_data=ilo_data)
+            ilo_data = self._sensor_value_template.render(
+                ilo_data=ilo_data, parse_result=False
+            )
 
         self._state = ilo_data
 
@@ -180,8 +181,6 @@ class HpIloData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from HP iLO."""
-        import hpilo
-
         try:
             self.data = hpilo.Ilo(
                 hostname=self._host,
@@ -194,4 +193,4 @@ class HpIloData:
             hpilo.IloCommunicationError,
             hpilo.IloLoginFailed,
         ) as error:
-            raise ValueError("Unable to init HP ILO, {}".format(error))
+            raise ValueError(f"Unable to init HP ILO, {error}") from error

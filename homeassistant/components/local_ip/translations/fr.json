@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Une seule configuration d'IP locale est autoris\u00e9e"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom du capteur"
+                },
+                "title": "Adresse IP locale"
+            }
+        }
+    },
+    "title": "Adresse IP locale"
+}

@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "\u0110ang l\u00e0m s\u1ea1ch",
+            "docked": "\u0110\u00e3 v\u00e0o dock",
+            "error": "L\u1ed7i",
+            "idle": "Kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng",
+            "off": "M\u1edf",
+            "on": "T\u1eaft",
+            "paused": "T\u1ea1m d\u1eebng",
+            "returning": "\u0110ang tr\u1edf l\u1ea1i dock"
+        }
+    },
+    "title": "Vacuum"
+}

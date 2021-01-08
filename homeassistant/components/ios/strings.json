@@ -1,14 +1,12 @@
 {
   "config": {
-    "title": "Home Assistant iOS",
     "step": {
       "confirm": {
-        "title": "Home Assistant iOS",
-        "description": "Do you want to set up the Home Assistant iOS component?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of Home Assistant iOS is necessary."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }

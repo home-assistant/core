@@ -1,6 +1,7 @@
 """Support for Streamlabs Water Monitor devices."""
 import logging
 
+from streamlabswater import streamlabswater
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY
@@ -39,7 +40,6 @@ SET_AWAY_MODE_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the streamlabs water component."""
-    from streamlabswater import streamlabswater
 
     conf = config[DOMAIN]
     api_key = conf.get(CONF_API_KEY)
@@ -59,7 +59,9 @@ def setup(hass, config):
             "Streamlabs Water Monitor auto-detected location_id=%s", location_id
         )
     else:
-        location = next((l for l in locations if location_id == l["locationId"]), None)
+        location = next(
+            (loc for loc in locations if location_id == loc["locationId"]), None
+        )
         if location is None:
             _LOGGER.error("Supplied location_id is invalid")
             return False

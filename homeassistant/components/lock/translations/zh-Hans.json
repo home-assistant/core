@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "\u4e0a\u9501{entity_name}",
+            "open": "\u5f00\u542f{entity_name}",
+            "unlock": "\u89e3\u9501{entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name}\u5df2\u4e0a\u9501",
+            "is_unlocked": "{entity_name}\u5df2\u89e3\u9501"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} \u88ab\u9501\u5b9a",
+            "unlocked": "{entity_name} \u88ab\u89e3\u9501"
+        }
+    },
+    "state": {
+        "_": {
+            "locked": "\u9501\u5b9a",
+            "unlocked": "\u89e3\u9501"
+        }
+    },
+    "title": "\u9501"
+}

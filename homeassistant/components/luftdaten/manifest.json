@@ -2,12 +2,8 @@
   "domain": "luftdaten",
   "name": "Luftdaten",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/luftdaten",
-  "requirements": [
-    "luftdaten==0.6.2"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/luftdaten",
+  "requirements": ["luftdaten==0.6.4"],
+  "codeowners": ["@fabaff"],
+  "quality_scale": "gold"
 }

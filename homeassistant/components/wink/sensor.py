@@ -1,7 +1,9 @@
 """Support for Wink sensors."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
+import pywink
+
+from homeassistant.const import DEGREE, TEMP_CELSIUS
 
 from . import DOMAIN, WinkDevice
 
@@ -12,7 +14,6 @@ SENSOR_TYPES = ["temperature", "humidity", "balance", "proximity"]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for sensor in pywink.get_sensors():
         _id = sensor.object_id() + sensor.name()
@@ -47,7 +48,7 @@ class WinkSensorDevice(WinkDevice):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
         self.capability = self.wink.capability()
-        if self.wink.unit() == "°":
+        if self.wink.unit() == DEGREE:
             self._unit_of_measurement = TEMP_CELSIUS
         else:
             self._unit_of_measurement = self.wink.unit()

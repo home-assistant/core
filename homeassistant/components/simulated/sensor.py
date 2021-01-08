@@ -1,8 +1,7 @@
 """Adds a simulated sensor."""
-import logging
+from datetime import datetime
 import math
 from random import Random
-from datetime import datetime
 
 import voluptuous as vol
 
@@ -11,8 +10,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_AMP = "amplitude"
 CONF_FWHM = "spread"
@@ -142,7 +139,7 @@ class SimulatedSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return other details about the sensor state."""
-        attr = {
+        return {
             "amplitude": self._amp,
             "mean": self._mean,
             "period": self._period,
@@ -151,4 +148,3 @@ class SimulatedSensor(Entity):
             "seed": self._seed,
             "relative_to_epoch": self._relative_to_epoch,
         }
-        return attr

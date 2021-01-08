@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Todos os hubs Philips Hue j\u00e1 est\u00e3o configurados",
+            "already_configured": "Hue j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer",
+            "cannot_connect": "N\u00e3o foi poss\u00edvel conectar-se ao hub",
+            "discover_timeout": "Nenhum hub Hue descoberto",
+            "no_bridges": "Nenhum hub Philips Hue descoberto",
+            "not_hue_bridge": "N\u00e3o \u00e9 uma bridge Hue",
+            "unknown": "Ocorreu um erro desconhecido"
+        },
+        "error": {
+            "linking": "Ocorreu um erro de liga\u00e7\u00e3o desconhecido.",
+            "register_failed": "Falha ao registar, por favor, tente novamente"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Servidor"
+                },
+                "title": "Hue bridge"
+            },
+            "link": {
+                "description": "Pressione o bot\u00e3o no Philips Hue para registar com o Home Assistant. \n\n![Localiza\u00e7\u00e3o do bot\u00e3o] (/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Servidor"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Permitir grupos hue"
+                }
+            }
+        }
+    }
+}

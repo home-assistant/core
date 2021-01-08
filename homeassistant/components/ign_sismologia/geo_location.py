@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from georss_ign_sismologia_client import IgnSismologiaFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -13,13 +14,12 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ["georss_ign_sismologia_client==0.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +34,8 @@ CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-SIGNAL_DELETE_ENTITY = "ign_sismologia_delete_{}"
-SIGNAL_UPDATE_ENTITY = "ign_sismologia_update_{}"
 
 SOURCE = "ign_sismologia"
 
@@ -50,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
         vol.Optional(
             CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-        ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        ): cv.positive_float,
     }
 )
 
@@ -89,7 +85,6 @@ class IgnSismologiaFeedEntityManager:
         minimum_magnitude,
     ):
         """Initialize the Feed Entity Manager."""
-        from georss_ign_sismologia_client import IgnSismologiaFeedManager
 
         self._hass = hass
         self._feed_manager = IgnSismologiaFeedManager(
@@ -126,11 +121,11 @@ class IgnSismologiaFeedEntityManager:
 
     def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"ign_sismologia_update_{external_id}")
 
     def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"ign_sismologia_delete_{external_id}")
 
 
 class IgnSismologiaLocationEvent(GeolocationEvent):
@@ -156,12 +151,12 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            f"ign_sismologia_delete_{self._external_id}",
             self._delete_callback,
         )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            f"ign_sismologia_update_{self._external_id}",
             self._update_callback,
         )
 
@@ -202,6 +197,11 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         self._image_url = feed_entry.image_url
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:pulse"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
@@ -210,9 +210,9 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         if self._magnitude and self._region:
-            return "M {:.1f} - {}".format(self._magnitude, self._region)
+            return f"M {self._magnitude:.1f} - {self._region}"
         if self._magnitude:
-            return "M {:.1f}".format(self._magnitude)
+            return f"M {self._magnitude:.1f}"
         if self._region:
             return self._region
         return self._title
@@ -235,7 +235,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):

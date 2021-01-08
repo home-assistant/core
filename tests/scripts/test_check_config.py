@@ -1,10 +1,12 @@
 """Test check_config script."""
 import logging
-import os  # noqa: F401 pylint: disable=unused-import
-from unittest.mock import patch
 
-import homeassistant.scripts.check_config as check_config
+import pytest
+
 from homeassistant.config import YAML_CONFIG_FILE
+import homeassistant.scripts.check_config as check_config
+
+from tests.async_mock import patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +22,12 @@ BASE_CONFIG = (
     "\n\n"
 )
 
-BAD_CORE_CONFIG = "homeassistant:\n" "  unit_system: bad\n" "\n\n"
+BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+
+
+@pytest.fixture(autouse=True)
+async def apply_stop_hass(stop_hass):
+    """Make sure all hass are stopped."""
 
 
 def normalize_yaml_files(check_dict):
@@ -62,7 +69,9 @@ def test_component_platform_not_found(isfile_patch, loop):
         res = check_config.check(get_test_config_dir())
         assert res["components"].keys() == {"homeassistant"}
         assert res["except"] == {
-            check_config.ERROR_STR: ["Integration not found: beer"]
+            check_config.ERROR_STR: [
+                "Component error: beer - Integration 'beer' not found."
+            ]
         }
         assert res["secret_cache"] == {}
         assert res["secrets"] == {}
@@ -75,8 +84,7 @@ def test_component_platform_not_found(isfile_patch, loop):
         assert res["components"]["light"] == []
         assert res["except"] == {
             check_config.ERROR_STR: [
-                "Integration beer not found when trying to verify its "
-                "light platform."
+                "Platform error light.beer - Integration 'beer' not found."
             ]
         }
         assert res["secret_cache"] == {}
@@ -91,8 +99,8 @@ def test_secrets(isfile_patch, loop):
 
     files = {
         get_test_config_dir(YAML_CONFIG_FILE): BASE_CONFIG
-        + ("http:\n" "  api_password: !secret http_pw"),
-        secrets_path: ("logger: debug\n" "http_pw: abc123"),
+        + ("http:\n  cors_allowed_origins: !secret http_pw"),
+        secrets_path: ("logger: debug\nhttp_pw: http://google.com"),
     }
 
     with patch_yaml_files(files):
@@ -102,17 +110,14 @@ def test_secrets(isfile_patch, loop):
         assert res["except"] == {}
         assert res["components"].keys() == {"homeassistant", "http"}
         assert res["components"]["http"] == {
-            "api_password": "abc123",
-            "cors_allowed_origins": ["https://cast.home-assistant.io"],
+            "cors_allowed_origins": ["http://google.com"],
             "ip_ban_enabled": True,
             "login_attempts_threshold": -1,
-            "server_host": "0.0.0.0",
             "server_port": 8123,
-            "trusted_networks": [],
             "ssl_profile": "modern",
         }
-        assert res["secret_cache"] == {secrets_path: {"http_pw": "abc123"}}
-        assert res["secrets"] == {"http_pw": "abc123"}
+        assert res["secret_cache"] == {secrets_path: {"http_pw": "http://google.com"}}
+        assert res["secrets"] == {"http_pw": "http://google.com"}
         assert normalize_yaml_files(res) == [
             ".../configuration.yaml",
             ".../secrets.yaml",
@@ -121,10 +126,9 @@ def test_secrets(isfile_patch, loop):
 
 @patch("os.path.isfile", return_value=True)
 def test_package_invalid(isfile_patch, loop):
-    """Test a valid platform setup."""
+    """Test an invalid package."""
     files = {
-        YAML_CONFIG_FILE: BASE_CONFIG
-        + ("  packages:\n" "    p1:\n" '      group: ["a"]')
+        YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
     }
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())

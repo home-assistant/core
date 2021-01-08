@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "Arcam FMJ a {host}",
+        "step": {
+            "confirm": {
+                "description": "Vols afegir l'Arcam FMJ `{host}` a Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "description": "Introdueix el nom de l'amfitri\u00f3 o l'adre\u00e7a IP del dispositiu."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "S'ha sol\u00b7licitat l'activaci\u00f3 de {entity_name}"
+        }
+    }
+}

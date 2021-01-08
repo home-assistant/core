@@ -13,13 +13,12 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
 )
-
 from .entity import MobileAppEntity, sensor_id
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up mobile app sensor from a config entry."""
-    entities = list()
+    entities = []
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
@@ -53,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(
         hass,
-        "{}_{}_register".format(DOMAIN, ENTITY_TYPE),
+        f"{DOMAIN}_{ENTITY_TYPE}_register",
         partial(handle_sensor_registration, webhook_id),
     )
 

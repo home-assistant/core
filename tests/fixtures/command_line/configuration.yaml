@@ -1,0 +1,6 @@
+cover:
+  - platform: command_line
+    covers:
+      from_yaml:
+        command_state: "echo closed"
+        value_template: "{{ value }}"

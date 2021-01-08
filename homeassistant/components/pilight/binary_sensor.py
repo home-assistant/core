@@ -1,10 +1,10 @@
 """Support for Pilight binary sensors."""
 import datetime
-import logging
 
 import voluptuous as vol
+
 from homeassistant.components import pilight
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
@@ -15,9 +15,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import dt as dt_util
-
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_VARIABLE = "variable"
 CONF_RESET_DELAY_SEC = "reset_delay_sec"
@@ -72,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class PilightBinarySensor(BinarySensorDevice):
+class PilightBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
     def __init__(self, hass, name, variable, payload, on_value, off_value):
@@ -121,7 +118,7 @@ class PilightBinarySensor(BinarySensorDevice):
             self.schedule_update_ha_state()
 
 
-class PilightTriggerSensor(BinarySensorDevice):
+class PilightTriggerSensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
     def __init__(

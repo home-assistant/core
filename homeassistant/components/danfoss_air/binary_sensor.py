@@ -1,17 +1,20 @@
 """Support for the for Danfoss Air HRV binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from pydanfossair.commands import ReadCommand
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN as DANFOSS_AIR_DOMAIN
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
-    from pydanfossair.commands import ReadCommand
-
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [
-        ["Danfoss Air Bypass Active", ReadCommand.bypass, "opening"],
+        ["Danfoss Air Bypass Active", ReadCommand.bypass, DEVICE_CLASS_OPENING],
         ["Danfoss Air Away Mode Active", ReadCommand.away_mode, None],
     ]
 
@@ -23,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class DanfossAirBinarySensor(BinarySensorDevice):
+class DanfossAirBinarySensor(BinarySensorEntity):
     """Representation of a Danfoss Air binary sensor."""
 
     def __init__(self, data, name, sensor_type, device_class):

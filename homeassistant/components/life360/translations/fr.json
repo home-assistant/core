@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "create_entry": {
+            "default": "Pour d\u00e9finir les options avanc\u00e9es, voir [Documentation de Life360]( {docs_url} )."
+        },
+        "error": {
+            "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
+            "invalid_auth": "Authentification invalide",
+            "invalid_username": "Nom d'utilisateur invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Pour d\u00e9finir des options avanc\u00e9es, voir [Documentation Life360]({docs_url}).\nVous pouvez le faire avant d'ajouter des comptes.",
+                "title": "Informations sur le compte Life360"
+            }
+        }
+    }
+}

@@ -1,11 +1,10 @@
 {
   "domain": "hangouts",
-  "name": "Hangouts",
+  "name": "Google Hangouts",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/hangouts",
+  "documentation": "https://www.home-assistant.io/integrations/hangouts",
   "requirements": [
-    "hangups==0.4.9"
+    "hangups==0.4.11"
   ],
-  "dependencies": [],
   "codeowners": []
 }

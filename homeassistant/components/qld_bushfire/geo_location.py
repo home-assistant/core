@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -31,7 +32,6 @@ ATTR_UPDATED_DATE = "updated_date"
 CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -199,6 +199,11 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._status = feed_entry.status
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:fire"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
@@ -226,7 +231,7 @@ class QldBushfireLocationEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'accordo selezionato \u00e8 gi\u00e0 configurato.",
+            "authorize_url_fail": "Errore sconosciuto nel generare l'url di autorizzazione",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_agreements": "Questo account non ha display Toon.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "unknown_authorize_url_generation": "Errore sconosciuto durante la generazione di un URL di autorizzazione."
+        },
+        "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Accordo"
+                },
+                "description": "Selezionare l'indirizzo del contratto che si desidera aggiungere.",
+                "title": "Seleziona il tuo contratto"
+            },
+            "pick_implementation": {
+                "title": "Scegliere il tenant con cui eseguire l'autenticazione"
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "site_exists": "Denne site_id er allerede konfigurert"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "could_not_connect": "Kunne ikke koble til solaredge API",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "site_exists": "Denne site_id er allerede konfigurert",
+            "site_not_active": "Nettstedet er ikke aktivt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "name": "Navnet p\u00e5 denne installasjonen",
+                    "site_id": "SolarEdge nettsted ID"
+                },
+                "title": "Definer API-parametrene for denne installasjonen"
+            }
+        }
+    }
+}

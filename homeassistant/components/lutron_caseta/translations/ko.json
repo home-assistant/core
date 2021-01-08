@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cas\u00e9ta \ube0c\ub9ac\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "Cas\u00e9ta \ube0c\ub9ac\uc9c0 \uc5f0\uacb0 \uc2e4\ud328\ub85c \uc124\uc815\uc774 \ucde8\uc18c\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "Cas\u00e9ta \ube0c\ub9ac\uc9c0\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8 \ubc0f \uc778\uc99d\uc11c\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "import_failed": {
+                "description": "configuration.yaml \uc5d0\uc11c \uac00\uc838\uc628 \ube0c\ub9ac\uc9c0 (\ud638\uc2a4\ud2b8:{host}) \ub97c \uc124\uc815\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+                "title": "Cas\u00e9ta \ube0c\ub9ac\uc9c0 \uad6c\uc131\uc744 \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4."
+            }
+        }
+    }
+}

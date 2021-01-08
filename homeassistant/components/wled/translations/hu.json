@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ez a WLED eszk\u00f6z m\u00e1r konfigur\u00e1lva van.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "description": "\u00c1ll\u00edtsd be a WLED-et a Home Assistant-ba val\u00f3 integr\u00e1l\u00e1shoz."
+            },
+            "zeroconf_confirm": {
+                "description": "Szeretn\u00e9d hozz\u00e1adni a(z) `{name}` WLED-et a Home Assistant-hoz?",
+                "title": "Felfedezett WLED eszk\u00f6z"
+            }
+        }
+    }
+}

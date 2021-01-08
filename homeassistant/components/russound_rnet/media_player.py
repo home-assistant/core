@@ -1,9 +1,10 @@
 """Support for interfacing with Russound via RNET Protocol."""
 import logging
 
+from russound import russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -51,8 +52,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Invalid config. Expected %s and %s", CONF_HOST, CONF_PORT)
         return False
 
-    from russound import russound
-
     russ = russound.Russound(host, port)
     russ.connect()
 
@@ -69,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Not connected to %s:%s", host, port)
 
 
-class RussoundRNETDevice(MediaPlayerDevice):
+class RussoundRNETDevice(MediaPlayerEntity):
     """Representation of a Russound RNET device."""
 
     def __init__(self, hass, russ, sources, zone_id, extra):

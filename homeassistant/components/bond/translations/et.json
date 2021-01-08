@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "old_firmware": "Bondi seadme ei toeta vana p\u00fcsivara - uuenda enne j\u00e4tkamist",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "Bond: {bond_id} ( {host} )",
+        "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end"
+                },
+                "description": "Kas soovid seadistada teenuse {bond_id} ?"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
+                    "host": ""
+                }
+            }
+        }
+    }
+}

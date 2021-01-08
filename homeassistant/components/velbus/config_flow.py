@@ -3,7 +3,7 @@ import velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -13,13 +13,12 @@ from .const import DOMAIN
 @callback
 def velbus_entries(hass: HomeAssistant):
     """Return connections for Velbus domain."""
-    return set(
+    return {
         (entry.data[CONF_PORT]) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class VelbusConfigFlow(config_entries.ConfigFlow):
+class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -30,7 +29,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         self._errors = {}
 
     def _create_device(self, name: str, prt: str):
-        """Create an antry async."""
+        """Create an entry async."""
         return self.async_create_entry(title=name, data={CONF_PORT: prt})
 
     def _test_connection(self, prt):
@@ -38,7 +37,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         try:
             controller = velbus.Controller(prt)
         except Exception:  # pylint: disable=broad-except
-            self._errors[CONF_PORT] = "connection_failed"
+            self._errors[CONF_PORT] = "cannot_connect"
             return False
         controller.stop()
         return True
@@ -50,7 +49,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
@@ -59,7 +58,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
                 if self._test_connection(prt):
                     return self._create_device(name, prt)
             else:
-                self._errors[CONF_PORT] = "port_exists"
+                self._errors[CONF_PORT] = "already_configured"
         else:
             user_input = {}
             user_input[CONF_NAME] = ""
@@ -83,5 +82,5 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         if self._prt_in_configuration_exists(prt):
             # if the velbus import is already in the config
             # we should not proceed the import
-            return self.async_abort(reason="port_exists")
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)

@@ -57,7 +57,7 @@ class SkybellCamera(SkybellDevice, Camera):
         SkybellDevice.__init__(self, device)
         Camera.__init__(self)
         if name is not None:
-            self._name = "{} {}".format(self._device.name, name)
+            self._name = f"{self._device.name} {name}"
         else:
             self._name = self._device.name
         self._url = None

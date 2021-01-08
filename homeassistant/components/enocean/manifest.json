@@ -1,10 +1,12 @@
 {
   "domain": "enocean",
-  "name": "Enocean",
-  "documentation": "https://www.home-assistant.io/components/enocean",
+  "name": "EnOcean",
+  "documentation": "https://www.home-assistant.io/integrations/enocean",
   "requirements": [
     "enocean==0.50"
   ],
-  "dependencies": [],
-  "codeowners": ["@bdurrer"]
+  "codeowners": [
+    "@bdurrer"
+  ],
+  "config_flow": true
 }

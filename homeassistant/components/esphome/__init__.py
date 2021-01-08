@@ -17,6 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant import const
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -31,28 +32,19 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 # Import config flow so that it's added to the registry
-from .config_flow import EsphomeFlowHandler  # noqa
-from .entry_data import (
-    DATA_KEY,
-    DISPATCHER_ON_DEVICE_UPDATE,
-    DISPATCHER_ON_LIST,
-    DISPATCHER_ON_STATE,
-    DISPATCHER_REMOVE_ENTITY,
-    DISPATCHER_UPDATE_ENTITY,
-    RuntimeEntryData,
-)
+from .config_flow import EsphomeFlowHandler  # noqa: F401
+from .entry_data import DATA_KEY, RuntimeEntryData
 
 DOMAIN = "esphome"
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_KEY = "esphome.{}"
 STORAGE_VERSION = 1
 
 # No config schema - only configuration entry
@@ -74,18 +66,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
+    device_id = None
+
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
 
     cli = APIClient(
         hass.loop,
         host,
         port,
         password,
-        client_info="Home Assistant {}".format(const.__version__),
+        client_info=f"Home Assistant {const.__version__}",
+        zeroconf_instance=zeroconf_instance,
     )
 
     # Store client in per-config-entry hass.data
     store = Store(
-        hass, STORAGE_VERSION, STORAGE_KEY.format(entry.entry_id), encoder=JSONEncoder
+        hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
     )
     entry_data = hass.data[DATA_KEY][entry.entry_id] = RuntimeEntryData(
         client=cli, entry_id=entry.entry_id, store=store
@@ -95,8 +91,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         """Cleanup the socket client on HA stop."""
         await _cleanup_instance(hass, entry)
 
+    # Use async_listen instead of async_listen_once so that we don't deregister
+    # the callback twice when shutting down Home Assistant.
+    # "Unable to remove unknown listener <function EventBus.async_listen_once.<locals>.onetime_listener>"
     entry_data.cleanup_callbacks.append(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
 
     @callback
@@ -120,15 +119,26 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template: %s", ex)
+                _LOGGER.error("Error rendering data template for %s: %s", host, ex)
                 return
 
         if service.is_event:
             # ESPHome uses servicecall packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
             if domain != "esphome":
-                _LOGGER.error("Can only generate events under esphome " "domain!")
+                _LOGGER.error(
+                    "Can only generate events under esphome domain! (%s)", host
+                )
                 return
+
+            # Call native tag scan
+            if service_name == "tag_scanned":
+                tag_id = service_data["tag_id"]
+                hass.async_create_task(
+                    hass.components.tag.async_scan_tag(tag_id, device_id)
+                )
+                return
+
             hass.bus.async_fire(service.service, service_data)
         else:
             hass.async_create_task(
@@ -137,30 +147,42 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 )
             )
 
-    async def send_home_assistant_state(
-        entity_id: str, _, new_state: Optional[State]
-    ) -> None:
-        """Forward Home Assistant states to ESPHome."""
+    async def send_home_assistant_state_event(event: Event) -> None:
+        """Forward Home Assistant states updates to ESPHome."""
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
+        entity_id = event.data.get("entity_id")
+        await cli.send_home_assistant_state(entity_id, new_state.state)
+
+    async def _send_home_assistant_state(
+        entity_id: str, new_state: Optional[State]
+    ) -> None:
+        """Forward Home Assistant states to ESPHome."""
         await cli.send_home_assistant_state(entity_id, new_state.state)
 
     @callback
     def async_on_state_subscription(entity_id: str) -> None:
         """Subscribe and forward states for requested entities."""
-        unsub = async_track_state_change(hass, entity_id, send_home_assistant_state)
-        entry_data.disconnect_callbacks.append(unsub)
-        # Send initial state
-        hass.async_create_task(
-            send_home_assistant_state(entity_id, None, hass.states.get(entity_id))
+        unsub = async_track_state_change_event(
+            hass, [entity_id], send_home_assistant_state_event
         )
+        entry_data.disconnect_callbacks.append(unsub)
+        new_state = hass.states.get(entity_id)
+        if new_state is None:
+            return
+        # Send initial state
+        hass.async_create_task(_send_home_assistant_state(entity_id, new_state))
 
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
+        nonlocal device_id
         try:
             entry_data.device_info = await cli.device_info()
             entry_data.available = True
-            await _async_setup_device_registry(hass, entry, entry_data.device_info)
+            device_id = await _async_setup_device_registry(
+                hass, entry, entry_data.device_info
+            )
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
@@ -172,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
-            _LOGGER.warning("Error getting initial data: %s", err)
+            _LOGGER.warning("Error getting initial data for %s: %s", host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
 
@@ -203,7 +225,7 @@ async def _setup_auto_reconnect_logic(
             # When removing/disconnecting manually
             return
 
-        data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+        data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
         for disconnect_cb in data.disconnect_callbacks:
             disconnect_cb()
         data.disconnect_callbacks = []
@@ -229,13 +251,18 @@ async def _setup_auto_reconnect_logic(
             # really short reconnect interval.
             tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8 ** tries, 60.0)))
-            _LOGGER.info("Trying to reconnect in %s seconds", wait_time)
+            _LOGGER.info("Trying to reconnect to %s in %s seconds", host, wait_time)
             await asyncio.sleep(wait_time)
 
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to ESPHome API for %s: %s", host, error)
+            _LOGGER.info(
+                "Can't connect to ESPHome API for %s (%s): %s",
+                entry.unique_id,
+                host,
+                error,
+            )
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             data.reconnect_task = hass.loop.create_task(
@@ -254,9 +281,9 @@ async def _async_setup_device_registry(
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
-        sw_version += " ({})".format(device_info.compilation_time)
+        sw_version += f" ({device_info.compilation_time})"
     device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
+    entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
@@ -264,12 +291,13 @@ async def _async_setup_device_registry(
         model=device_info.model,
         sw_version=sw_version,
     )
+    return entry.id
 
 
 async def _register_service(
     hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = "{}_{}".format(entry_data.device_info.name, service.name)
+    service_name = f"{entry_data.device_info.name}_{service.name}"
     schema = {}
     for arg in service.args:
         schema[vol.Required(arg.name)] = {
@@ -315,7 +343,7 @@ async def _setup_services(
     entry_data.services = {serv.key: serv for serv in services}
 
     for service in to_unregister:
-        service_name = "{}_{}".format(entry_data.device_info.name, service.name)
+        service_name = f"{entry_data.device_info.name}_{service.name}"
         hass.services.async_remove(DOMAIN, service_name)
 
     for service in to_register:
@@ -326,7 +354,7 @@ async def _cleanup_instance(
     hass: HomeAssistantType, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data = hass.data[DATA_KEY].pop(entry.entry_id)  # type: RuntimeEntryData
+    data: RuntimeEntryData = hass.data[DATA_KEY].pop(entry.entry_id)
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
     for disconnect_cb in data.disconnect_callbacks:
@@ -363,8 +391,9 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+    entry_data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
     entry_data.info[component_key] = {}
+    entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
 
     @callback
@@ -390,10 +419,16 @@ async def platform_async_setup_entry(
         # Remove old entities
         for info in old_infos.values():
             entry_data.async_remove_entity(hass, component_key, info.key)
+
+        # First copy the now-old info into the backup object
+        entry_data.old_info[component_key] = entry_data.info[component_key]
+        # Then update the actual info
         entry_data.info[component_key] = new_infos
+
+        # Add entities to Home Assistant
         async_add_entities(add_entities)
 
-    signal = DISPATCHER_ON_LIST.format(entry_id=entry.entry_id)
+    signal = f"esphome_{entry.entry_id}_on_list"
     entry_data.cleanup_callbacks.append(
         async_dispatcher_connect(hass, signal, async_list_entities)
     )
@@ -406,7 +441,7 @@ async def platform_async_setup_entry(
         entry_data.state[component_key][state.key] = state
         entry_data.async_update_entity(hass, component_key, state.key)
 
-    signal = DISPATCHER_ON_STATE.format(entry_id=entry.entry_id)
+    signal = f"esphome_{entry.entry_id}_on_state"
     entry_data.cleanup_callbacks.append(
         async_dispatcher_connect(hass, signal, async_entity_state)
     )
@@ -421,7 +456,6 @@ def esphome_state_property(func):
 
     @property
     def _wrapper(self):
-        # pylint: disable=protected-access
         if self._state is None:
             return None
         val = func(self)
@@ -460,52 +494,45 @@ def esphome_map_enum(func: Callable[[], Dict[int, str]]):
     return EsphomeEnumMapper(func)
 
 
-class EsphomeEntity(Entity):
-    """Define a generic esphome entity."""
+class EsphomeBaseEntity(Entity):
+    """Define a base esphome entity."""
 
     def __init__(self, entry_id: str, component_key: str, key: int):
         """Initialize."""
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
-        self._remove_callbacks = []  # type: List[Callable[[], None]]
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        kwargs = {
-            "entry_id": self._entry_id,
-            "component_key": self._component_key,
-            "key": self._key,
-        }
-        self._remove_callbacks.append(
-            async_dispatcher_connect(
-                self.hass, DISPATCHER_UPDATE_ENTITY.format(**kwargs), self._on_update
-            )
-        )
-
-        self._remove_callbacks.append(
-            async_dispatcher_connect(
-                self.hass, DISPATCHER_REMOVE_ENTITY.format(**kwargs), self.async_remove
-            )
-        )
-
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
-                self.async_schedule_update_ha_state,
+                (
+                    f"esphome_{self._entry_id}_remove_"
+                    f"{self._component_key}_{self._key}"
+                ),
+                self.async_remove,
             )
         )
 
-    async def _on_update(self) -> None:
-        """Update the entity state when state or static info changed."""
-        self.async_schedule_update_ha_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"esphome_{self._entry_id}_on_device_update",
+                self._on_device_update,
+            )
+        )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        for remove_callback in self._remove_callbacks:
-            remove_callback()
-        self._remove_callbacks = []
+    @callback
+    def _on_device_update(self) -> None:
+        """Update the entity state when device info has changed."""
+        if self._entry_data.available:
+            # Don't update the HA state yet when the device comes online.
+            # Only update the HA state when the full state arrives
+            # through the next entity state packet.
+            return
+        self.async_write_ha_state()
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
@@ -513,7 +540,13 @@ class EsphomeEntity(Entity):
 
     @property
     def _static_info(self) -> EntityInfo:
-        return self._entry_data.info[self._component_key][self._key]
+        # Check if value is in info database. Use a single lookup.
+        info = self._entry_data.info[self._component_key].get(self._key)
+        if info is not None:
+            return info
+        # This entity is in the removal project and has been removed from .info
+        # already, look in old_info
+        return self._entry_data.old_info[self._component_key].get(self._key)
 
     @property
     def _device_info(self) -> DeviceInfo:
@@ -565,3 +598,23 @@ class EsphomeEntity(Entity):
     def should_poll(self) -> bool:
         """Disable polling."""
         return False
+
+
+class EsphomeEntity(EsphomeBaseEntity):
+    """Define a generic esphome entity."""
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"esphome_{self._entry_id}"
+                    f"_update_{self._component_key}_{self._key}"
+                ),
+                self.async_write_ha_state,
+            )
+        )

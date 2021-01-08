@@ -1,0 +1,13 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Panel",
+            "disk_total": "Disk Toplam\u0131",
+            "disk_used": "Kullan\u0131lan Disk",
+            "docker_version": "Docker S\u00fcr\u00fcm\u00fc",
+            "healthy": "Sa\u011fl\u0131kl\u0131",
+            "host_os": "Ana Bilgisayar \u0130\u015fletim Sistemi"
+        }
+    },
+    "title": "Hass.io"
+}

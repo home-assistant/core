@@ -1,35 +1,33 @@
 """Sensor for Crime Reports."""
 from collections import defaultdict
 from datetime import timedelta
-import logging
 
+import crimereports
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_INCLUDE,
-    CONF_EXCLUDE,
-    CONF_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
     CONF_RADIUS,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
-import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "crimereports"
 
-EVENT_INCIDENT = "{}_incident".format(DOMAIN)
+EVENT_INCIDENT = f"{DOMAIN}_incident"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
@@ -49,8 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Crime Reports platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-    radius = config.get(CONF_RADIUS)
+    name = config[CONF_NAME]
+    radius = config[CONF_RADIUS]
     include = config.get(CONF_INCLUDE)
     exclude = config.get(CONF_EXCLUDE)
 
@@ -65,8 +63,6 @@ class CrimeReportsSensor(Entity):
 
     def __init__(self, hass, name, latitude, longitude, radius, include, exclude):
         """Initialize the Crime Reports sensor."""
-        import crimereports
-
         self._hass = hass
         self._name = name
         self._include = include
@@ -113,8 +109,6 @@ class CrimeReportsSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import crimereports
-
         incident_counts = defaultdict(int)
         incidents = self._crimereports.get_incidents(
             now().date(), include=self._include, exclude=self._exclude

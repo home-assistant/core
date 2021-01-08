@@ -1,7 +1,7 @@
 """Support for lights under the iGlo brand."""
-import logging
 import math
 
+from iglo import Lamp
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -9,18 +9,16 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
     PLATFORM_SCHEMA,
-    Light,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "iGlo Light"
 DEFAULT_PORT = 8080
@@ -42,12 +40,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([IGloLamp(name, host, port)], True)
 
 
-class IGloLamp(Light):
+class IGloLamp(LightEntity):
     """Representation of an iGlo light."""
 
     def __init__(self, name, host, port):
         """Initialize the light."""
-        from iglo import Lamp
 
         self._name = name
         self._lamp = Lamp(0, host, port)

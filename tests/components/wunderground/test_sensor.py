@@ -1,14 +1,18 @@
 """The tests for the WUnderground platform."""
-import asyncio
 import aiohttp
-
 from pytest import raises
 
 import homeassistant.components.wunderground.sensor as wunderground
-from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_INCHES,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
-from tests.common import load_fixture, assert_setup_component
+
+from tests.common import assert_setup_component, load_fixture
 
 VALID_CONFIG_PWS = {
     "platform": "wunderground",
@@ -50,52 +54,48 @@ URL = (
     "http://api.wunderground.com/api/foo/alerts/conditions/forecast/lang"
     ":EN/q/32.87336,-117.22743.json"
 )
-PWS_URL = (
-    "http://api.wunderground.com/api/foo/alerts/conditions/" "lang:EN/q/pws:bar.json"
-)
+PWS_URL = "http://api.wunderground.com/api/foo/alerts/conditions/lang:EN/q/pws:bar.json"
 INVALID_URL = (
-    "http://api.wunderground.com/api/BOB/alerts/conditions/" "lang:foo/q/pws:bar.json"
+    "http://api.wunderground.com/api/BOB/alerts/conditions/lang:foo/q/pws:bar.json"
 )
 
 
-@asyncio.coroutine
-def test_setup(hass, aioclient_mock):
+async def test_setup(hass, aioclient_mock):
     """Test that the component is loaded."""
     aioclient_mock.get(URL, text=load_fixture("wunderground-valid.json"))
 
     with assert_setup_component(1, "sensor"):
-        yield from async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+        await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+        await hass.async_block_till_done()
 
 
-@asyncio.coroutine
-def test_setup_pws(hass, aioclient_mock):
+async def test_setup_pws(hass, aioclient_mock):
     """Test that the component is loaded with PWS id."""
     aioclient_mock.get(PWS_URL, text=load_fixture("wunderground-valid.json"))
 
     with assert_setup_component(1, "sensor"):
-        yield from async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG_PWS})
+        await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG_PWS})
 
 
-@asyncio.coroutine
-def test_setup_invalid(hass, aioclient_mock):
+async def test_setup_invalid(hass, aioclient_mock):
     """Test that the component is not loaded with invalid config."""
     aioclient_mock.get(INVALID_URL, text=load_fixture("wunderground-error.json"))
 
     with assert_setup_component(0, "sensor"):
-        yield from async_setup_component(hass, "sensor", {"sensor": INVALID_CONFIG})
+        await async_setup_component(hass, "sensor", {"sensor": INVALID_CONFIG})
 
 
-@asyncio.coroutine
-def test_sensor(hass, aioclient_mock):
+async def test_sensor(hass, aioclient_mock):
     """Test the WUnderground sensor class and methods."""
     aioclient_mock.get(URL, text=load_fixture("wunderground-valid.json"))
 
-    yield from async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+    await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.pws_weather")
     assert state.state == "Clear"
     assert state.name == "Weather Summary"
-    assert "unit_of_measurement" not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert (
         state.attributes["entity_picture"] == "https://icons.wxug.com/i/c/k/clear.gif"
     )
@@ -119,7 +119,7 @@ def test_sensor(hass, aioclient_mock):
     assert state.state == "40"
     assert state.name == "Feels Like"
     assert "entity_picture" not in state.attributes
-    assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
     state = hass.states.get("sensor.pws_weather_1d_metric")
     assert state.state == "Mostly Cloudy. Fog overnight."
@@ -128,26 +128,25 @@ def test_sensor(hass, aioclient_mock):
     state = hass.states.get("sensor.pws_precip_1d_in")
     assert state.state == "0.03"
     assert state.name == "Precipitation Intensity Today"
-    assert state.attributes["unit_of_measurement"] == LENGTH_INCHES
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_INCHES
 
 
-@asyncio.coroutine
-def test_connect_failed(hass, aioclient_mock):
+async def test_connect_failed(hass, aioclient_mock):
     """Test the WUnderground connection error."""
     aioclient_mock.get(URL, exc=aiohttp.ClientError())
     with raises(PlatformNotReady):
-        yield from wunderground.async_setup_platform(hass, VALID_CONFIG, lambda _: None)
+        await wunderground.async_setup_platform(hass, VALID_CONFIG, lambda _: None)
 
 
-@asyncio.coroutine
-def test_invalid_data(hass, aioclient_mock):
+async def test_invalid_data(hass, aioclient_mock):
     """Test the WUnderground invalid data."""
     aioclient_mock.get(URL, text=load_fixture("wunderground-invalid.json"))
 
-    yield from async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+    await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
     for condition in VALID_CONFIG["monitored_conditions"]:
-        state = hass.states.get("sensor.pws_" + condition)
+        state = hass.states.get(f"sensor.pws_{condition}")
         assert state.state == STATE_UNKNOWN
 
 

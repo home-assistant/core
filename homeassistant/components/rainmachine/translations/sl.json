@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta regulator RainMachine je \u017ee konfiguriran."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Ime gostitelja ali naslov IP",
+                    "password": "Geslo",
+                    "port": "port"
+                },
+                "title": "Izpolnite svoje podatke"
+            }
+        }
+    }
+}

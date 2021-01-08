@@ -1,7 +1,9 @@
 """Support for package tracking sensors from 17track.net."""
-import logging
 from datetime import timedelta
+import logging
 
+from py17track import Client as SeventeenTrackClient
+from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -14,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +46,7 @@ ENTITY_ID_TEMPLATE = "sensor.seventeentrack_package_{0}"
 NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
 NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
 NOTIFICATION_DELIVERED_MESSAGE = (
-    "Package Delivered: {0}<br />" + "Visit 17.track for more information: "
+    "Package Delivered: {0}<br />Visit 17.track for more information: "
     "https://t.17track.net/track#nums={1}"
 )
 
@@ -61,12 +64,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from py17track import Client
-    from py17track.errors import SeventeenTrackError
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    client = Client(websession)
+    client = SeventeenTrackClient(websession)
 
     try:
         login_result = await client.profile.login(
@@ -120,7 +121,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "Seventeentrack Packages {0}".format(self._status)
+        return f"Seventeentrack Packages {self._status}"
 
     @property
     def state(self):
@@ -129,8 +130,8 @@ class SeventeenTrackSummarySensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return "summary_{}_{}".format(self._data.account_id, slugify(self._status))
 
     @property
     def unit_of_measurement(self):
@@ -151,6 +152,7 @@ class SeventeenTrackSummarySensor(Entity):
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                     ATTR_INFO_TEXT: package.info_text,
                     ATTR_STATUS: package.status,
+                    ATTR_LOCATION: package.location,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
                 }
             )
@@ -203,7 +205,7 @@ class SeventeenTrackPackageSensor(Entity):
         name = self._friendly_name
         if not name:
             name = self._tracking_number
-        return "Seventeentrack Package: {0}".format(name)
+        return f"Seventeentrack Package: {name}"
 
     @property
     def state(self):
@@ -212,7 +214,7 @@ class SeventeenTrackPackageSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number)
 
     async def async_update(self):
@@ -220,7 +222,8 @@ class SeventeenTrackPackageSensor(Entity):
         await self._data.async_update()
 
         if not self.available:
-            self.hass.async_create_task(self._remove())
+            # Entity cannot be removed while its being added
+            async_call_later(self.hass, 1, self._remove)
             return
 
         package = self._data.packages.get(self._tracking_number, None)
@@ -229,7 +232,8 @@ class SeventeenTrackPackageSensor(Entity):
         # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             self._notify_delivered()
-            self.hass.async_create_task(self._remove())
+            # Entity cannot be removed while its being added
+            async_call_later(self.hass, 1, self._remove)
             return
 
         self._attrs.update(
@@ -238,7 +242,7 @@ class SeventeenTrackPackageSensor(Entity):
         self._state = package.status
         self._friendly_name = package.friendly_name
 
-    async def _remove(self):
+    async def _remove(self, *_):
         """Remove entity itself."""
         await self.async_remove()
 
@@ -259,7 +263,7 @@ class SeventeenTrackPackageSensor(Entity):
             self._friendly_name if self._friendly_name else self._tracking_number
         )
         message = NOTIFICATION_DELIVERED_MESSAGE.format(
-            self._tracking_number, identification
+            identification, self._tracking_number
         )
         title = NOTIFICATION_DELIVERED_TITLE.format(identification)
         notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)
@@ -290,7 +294,6 @@ class SeventeenTrackData:
 
     async def _async_update(self):
         """Get updated data from 17track.net."""
-        from py17track.errors import SeventeenTrackError
 
         try:
             packages = await self._client.profile.packages(

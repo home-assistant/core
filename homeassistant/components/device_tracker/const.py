@@ -5,7 +5,6 @@ import logging
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "device_tracker"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY = "legacy"
 PLATFORM_TYPE_ENTITY = "entity_platform"
@@ -20,9 +19,6 @@ SCAN_INTERVAL = timedelta(seconds=12)
 
 CONF_TRACK_NEW = "track_new_devices"
 DEFAULT_TRACK_NEW = True
-
-CONF_AWAY_HIDE = "hide_if_away"
-DEFAULT_AWAY_HIDE = False
 
 CONF_CONSIDER_HOME = "consider_home"
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)

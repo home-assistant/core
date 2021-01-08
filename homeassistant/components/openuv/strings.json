@@ -1,20 +1,21 @@
 {
   "config": {
-    "title": "OpenUV",
     "step": {
       "user": {
         "title": "Fill in your information",
         "data": {
-          "api_key": "OpenUV API Key",
-          "elevation": "Elevation",
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       }
     },
     "error": {
-      "identifier_exists": "Coordinates already registered",
-      "invalid_api_key": "Invalid API key"
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

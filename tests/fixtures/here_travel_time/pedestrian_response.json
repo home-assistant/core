@@ -1,0 +1,308 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-07-21T18:40:10Z",
+            "mapVersion": "8.30.98.154",
+            "moduleVersion": "7.2.201928-4478",
+            "interfaceVersion": "2.6.64",
+            "availableMapVersion": [
+                "8.30.98.154"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "-1230414527",
+                        "mappedPosition": {
+                            "latitude": 41.9797859,
+                            "longitude": -87.8790879
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9798,
+                            "longitude": -87.8801
+                        },
+                        "type": "stopOver",
+                        "spot": 0.5079365,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "Mannheim Rd",
+                        "label": "Mannheim Rd - US-12",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "+924115108",
+                        "mappedPosition": {
+                            "latitude": 41.90413,
+                            "longitude": -87.9223502
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9043,
+                            "longitude": -87.9216001
+                        },
+                        "type": "stopOver",
+                        "spot": 0.1925926,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "",
+                        "label": "",
+                        "shapeIndex": 122,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "fastest",
+                    "transportModes": [
+                        "pedestrian"
+                    ],
+                    "trafficMode": "disabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "-1230414527",
+                            "mappedPosition": {
+                                "latitude": 41.9797859,
+                                "longitude": -87.8790879
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9798,
+                                "longitude": -87.8801
+                            },
+                            "type": "stopOver",
+                            "spot": 0.5079365,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "Mannheim Rd",
+                            "label": "Mannheim Rd - US-12",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "+924115108",
+                            "mappedPosition": {
+                                "latitude": 41.90413,
+                                "longitude": -87.9223502
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9043,
+                                "longitude": -87.9216001
+                            },
+                            "type": "stopOver",
+                            "spot": 0.1925926,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "",
+                            "label": "",
+                            "shapeIndex": 122,
+                            "source": "user"
+                        },
+                        "length": 12533,
+                        "travelTime": 12631,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 41.9797859,
+                                    "longitude": -87.8790879
+                                },
+                                "instruction": "Head <span class=\"heading\">south</span> on <span class=\"street\">Mannheim Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">848 m</span>.</span>",
+                                "travelTime": 848,
+                                "length": 848,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9722581,
+                                    "longitude": -87.8776109
+                                },
+                                "instruction": "Take the street on the <span class=\"direction\">left</span>, <span class=\"next-street\">Mannheim Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">4.2 km</span>.</span>",
+                                "travelTime": 4239,
+                                "length": 4227,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9364238,
+                                    "longitude": -87.8849387
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">W Belmont Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">595 m</span>.</span>",
+                                "travelTime": 605,
+                                "length": 595,
+                                "id": "M3",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9362521,
+                                    "longitude": -87.8921163
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Cullerton St</span>. <span class=\"distance-description\">Go for <span class=\"length\">406 m</span>.</span>",
+                                "travelTime": 411,
+                                "length": 406,
+                                "id": "M4",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9326043,
+                                    "longitude": -87.8919983
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">Cullerton St</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.2 km</span>.</span>",
+                                "travelTime": 1249,
+                                "length": 1239,
+                                "id": "M5",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9217896,
+                                    "longitude": -87.8928781
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">E Fullerton Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">786 m</span>.</span>",
+                                "travelTime": 796,
+                                "length": 786,
+                                "id": "M6",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9216394,
+                                    "longitude": -87.9023838
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">La Porte Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">424 m</span>.</span>",
+                                "travelTime": 430,
+                                "length": 424,
+                                "id": "M7",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9180024,
+                                    "longitude": -87.9028559
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">E Palmer Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">864 m</span>.</span>",
+                                "travelTime": 875,
+                                "length": 864,
+                                "id": "M8",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9175196,
+                                    "longitude": -87.9132199
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">N Railroad Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.2 km</span>.</span>",
+                                "travelTime": 1180,
+                                "length": 1170,
+                                "id": "M9",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9070268,
+                                    "longitude": -87.9130161
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">W North Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">638 m</span>.</span>",
+                                "travelTime": 638,
+                                "length": 638,
+                                "id": "M10",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9068551,
+                                    "longitude": -87.9207087
+                                },
+                                "instruction": "Take the street on the <span class=\"direction\">left</span>, <span class=\"next-street\">E North Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">354 m</span>.</span>",
+                                "travelTime": 354,
+                                "length": 354,
+                                "id": "M11",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9065869,
+                                    "longitude": -87.9249573
+                                },
+                                "instruction": "Take the street on the <span class=\"direction\">left</span>, <span class=\"next-street\">E North Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">228 m</span>.</span>",
+                                "travelTime": 242,
+                                "length": 228,
+                                "id": "M12",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9065225,
+                                    "longitude": -87.9277039
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">409 m</span>.</span>",
+                                "travelTime": 419,
+                                "length": 409,
+                                "id": "M13",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9040334,
+                                    "longitude": -87.9260409
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">E Third St</span>. <span class=\"distance-description\">Go for <span class=\"length\">206 m</span>.</span>",
+                                "travelTime": 206,
+                                "length": 206,
+                                "id": "M14",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9038832,
+                                    "longitude": -87.9236054
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">113 m</span>.</span>",
+                                "travelTime": 113,
+                                "length": 113,
+                                "id": "M15",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9039047,
+                                    "longitude": -87.9222536
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">26 m</span>.</span>",
+                                "travelTime": 26,
+                                "length": 26,
+                                "id": "M16",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.90413,
+                                    "longitude": -87.9223502
+                                },
+                                "instruction": "Arrive at your destination on the right.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M17",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "summary": {
+                    "distance": 12533,
+                    "baseTime": 12631,
+                    "flags": [
+                        "noThroughRoad",
+                        "builtUpArea",
+                        "park",
+                        "privateRoad"
+                    ],
+                    "text": "The trip takes <span class=\"length\">12.5 km</span> and <span class=\"time\">3:31 h</span>.",
+                    "travelTime": 12631,
+                    "_type": "RouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us"
+    }
+}

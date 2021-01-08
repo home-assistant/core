@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "missing_data": "Manglende data: Vennligst pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon",
+            "otp_failed": "Totrinnsgodkjenning mislyktes, pr\u00f8v p\u00e5 nytt med en ny passord",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kode"
+                },
+                "title": "Synology DSM: totrinns autentisering"
+            },
+            "link": {
+                "data": {
+                    "password": "Passord",
+                    "port": "Port",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "description": "Vil du konfigurere {name} ({host})?",
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutter mellom skanninger",
+                    "timeout": "Tidsavbrudd (sekunder)"
+                }
+            }
+        }
+    }
+}

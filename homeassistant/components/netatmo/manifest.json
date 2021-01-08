@@ -1,12 +1,27 @@
 {
   "domain": "netatmo",
   "name": "Netatmo",
-  "documentation": "https://www.home-assistant.io/components/netatmo",
+  "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": [
-    "pyatmo==2.2.1"
+    "pyatmo==4.2.1"
+  ],
+  "after_dependencies": [
+    "cloud",
+    "media_source"
   ],
   "dependencies": [
     "webhook"
   ],
-  "codeowners": []
+  "codeowners": [
+    "@cgtobi"
+  ],
+  "config_flow": true,
+  "homekit": {
+    "models": [
+      "Healty Home Coach",
+      "Netatmo Relay",
+      "Presence",
+      "Welcome"
+    ]
+  }
 }

@@ -1,14 +1,13 @@
 """Support for Switchmate."""
-import logging
 from datetime import timedelta
 
+# pylint: disable=import-error, no-member
+import switchmate
 import voluptuous as vol
 
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_MAC
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_FLIP_ON_OFF = "flip_on_off"
 DEFAULT_NAME = "Switchmate"
@@ -32,13 +31,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     add_entities([SwitchmateEntity(mac_addr, name, flip_on_off)], True)
 
 
-class SwitchmateEntity(SwitchDevice):
+class SwitchmateEntity(SwitchEntity):
     """Representation of a Switchmate."""
 
     def __init__(self, mac, name, flip_on_off) -> None:
         """Initialize the Switchmate."""
-        # pylint: disable=import-error, no-member, no-value-for-parameter
-        import switchmate
 
         self._mac = mac
         self._name = name
@@ -46,7 +43,7 @@ class SwitchmateEntity(SwitchDevice):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._mac.replace(":", "")
 
     @property

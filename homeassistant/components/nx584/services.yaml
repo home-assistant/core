@@ -1,0 +1,21 @@
+# Describes the format for available nx584 services
+
+bypass_zone:
+  description: Bypass a zone.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel which state has to be updated.
+      example: "alarm_control_panel.downstairs"
+    zone:
+      description: The number of the zone to be bypassed.
+      example: "1"
+
+unbypass_zone:
+  description: Un-Bypass a zone.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel which state has to be updated.
+      example: "alarm_control_panel.downstairs"
+    zone:
+      description: The number of the zone to be un-bypassed.
+      example: "1"

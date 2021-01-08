@@ -1,16 +1,26 @@
 """Constants for Traccar integration."""
 
+DOMAIN = "traccar"
+
 CONF_MAX_ACCURACY = "max_accuracy"
 CONF_SKIP_ACCURACY_ON = "skip_accuracy_filter_on"
 
+ATTR_ACCURACY = "accuracy"
 ATTR_ADDRESS = "address"
+ATTR_ALTITUDE = "altitude"
+ATTR_BATTERY = "batt"
+ATTR_BEARING = "bearing"
 ATTR_CATEGORY = "category"
 ATTR_GEOFENCE = "geofence"
+ATTR_ID = "id"
+ATTR_LATITUDE = "lat"
+ATTR_LONGITUDE = "lon"
 ATTR_MOTION = "motion"
 ATTR_SPEED = "speed"
+ATTR_STATUS = "status"
+ATTR_TIMESTAMP = "timestamp"
 ATTR_TRACKER = "tracker"
 ATTR_TRACCAR_ID = "traccar_id"
-ATTR_STATUS = "status"
 
 EVENT_DEVICE_MOVING = "device_moving"
 EVENT_COMMAND_RESULT = "command_result"

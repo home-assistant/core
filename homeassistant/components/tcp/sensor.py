@@ -1,23 +1,23 @@
 """Support for TCP socket based sensors."""
 import logging
-import socket
 import select
+import socket
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
-    CONF_PORT,
+    CONF_NAME,
     CONF_PAYLOAD,
+    CONF_PORT,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TcpSensor(Entity):
     """Implementation of a TCP socket based sensor."""
 
-    required = tuple()
+    required = ()
 
     def __init__(self, hass, config):
         """Set all the config values if they exist and get initial state."""
@@ -81,7 +81,7 @@ class TcpSensor(Entity):
         name = self._config[CONF_NAME]
         if name is not None:
             return name
-        return super(TcpSensor, self).name
+        return super().name
 
     @property
     def state(self):
@@ -99,7 +99,7 @@ class TcpSensor(Entity):
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
-            except socket.error as err:
+            except OSError as err:
                 _LOGGER.error(
                     "Unable to connect to %s on port %s: %s",
                     self._config[CONF_HOST],
@@ -110,7 +110,7 @@ class TcpSensor(Entity):
 
             try:
                 sock.send(self._config[CONF_PAYLOAD].encode())
-            except socket.error as err:
+            except OSError as err:
                 _LOGGER.error(
                     "Unable to send payload %r to %s on port %s: %s",
                     self._config[CONF_PAYLOAD],
@@ -124,7 +124,7 @@ class TcpSensor(Entity):
             if not readable:
                 _LOGGER.warning(
                     "Timeout (%s second(s)) waiting for a response after "
-                    "sending %r to %s on port %s.",
+                    "sending %r to %s on port %s",
                     self._config[CONF_TIMEOUT],
                     self._config[CONF_PAYLOAD],
                     self._config[CONF_HOST],
@@ -136,7 +136,9 @@ class TcpSensor(Entity):
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = self._config[CONF_VALUE_TEMPLATE].render(value=value)
+                self._state = self._config[CONF_VALUE_TEMPLATE].render(
+                    parse_result=False, value=value
+                )
                 return
             except TemplateError:
                 _LOGGER.error(

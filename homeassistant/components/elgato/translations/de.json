@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses Elgato Key Light-Ger\u00e4t ist bereits konfiguriert.",
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Richten dein Elgato Key Light f\u00fcr die Integration mit Home Assistant ein."
+            },
+            "zeroconf_confirm": {
+                "description": "M\u00f6chtest du das Elgato Key Light mit der Seriennummer \"{serial_number} \" zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Elgato Key Light Ger\u00e4t entdeckt"
+            }
+        }
+    }
+}

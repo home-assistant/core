@@ -1,8 +1,6 @@
 {
   "domain": "command_line",
-  "name": "Command line",
-  "documentation": "https://www.home-assistant.io/components/command_line",
-  "requirements": [],
-  "dependencies": [],
+  "name": "Command Line",
+  "documentation": "https://www.home-assistant.io/integrations/command_line",
   "codeowners": []
 }

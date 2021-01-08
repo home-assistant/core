@@ -2,6 +2,8 @@
 import binascii
 import logging
 
+from pysnmp.entity import config as cfg
+from pysnmp.entity.rfc3413.oneliner import cmdgen
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -45,8 +47,6 @@ class SnmpScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from pysnmp.entity.rfc3413.oneliner import cmdgen
-        from pysnmp.entity import config as cfg
 
         self.snmp = cmdgen.CommandGenerator()
 

@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_fail": "Error desconocido generando la url de autorizaci\u00f3n",
+            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
+            "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado con \u00e9xito"
+        },
+        "error": {
+            "internal_error": "Error interno validando el c\u00f3digo",
+            "invalid_pin": "C\u00f3digo PIN no v\u00e1lido",
+            "timeout": "Tiempo de espera agotado validando el c\u00f3digo",
+            "unknown": "Error desconocido validando el c\u00f3digo"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Proveedor"
+                },
+                "description": "Elija a trav\u00e9s de qu\u00e9 proveedor de autenticaci\u00f3n desea autenticarse con Nest.",
+                "title": "Proveedor de autenticaci\u00f3n"
+            },
+            "link": {
+                "data": {
+                    "code": "C\u00f3digo PIN"
+                },
+                "description": "Para vincular tu cuenta de Nest, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copia y pega el c\u00f3digo pin a continuaci\u00f3n.",
+                "title": "Vincular cuenta de Nest"
+            },
+            "pick_implementation": {
+                "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Nest necesita volver a autenticar tu cuenta",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Movimiento detectado",
+            "camera_person": "Persona detectada",
+            "camera_sound": "Sonido detectado",
+            "doorbell_chime": "Timbre pulsado"
+        }
+    }
+}

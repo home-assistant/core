@@ -3,6 +3,8 @@ import copy
 from datetime import timedelta
 import logging
 
+from httplib2 import ServerNotFoundError  # pylint: disable=import-error
+
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     CalendarEventDevice,
@@ -126,9 +128,6 @@ class GoogleCalendarData:
         self.event = None
 
     def _prepare_query(self):
-        # pylint: disable=import-error
-        from httplib2 import ServerNotFoundError
-
         try:
             service = self.calendar_service.get()
         except ServerNotFoundError:
@@ -157,7 +156,7 @@ class GoogleCalendarData:
         items = result.get("items", [])
         event_list = []
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     event_list.append(item)
             else:
@@ -179,7 +178,7 @@ class GoogleCalendarData:
 
         new_event = None
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     new_event = item
                     break

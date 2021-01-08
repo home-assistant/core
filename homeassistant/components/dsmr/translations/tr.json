@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Varl\u0131k g\u00fcncellemeleri [ler] aras\u0131ndaki minimum s\u00fcre"
+                },
+                "title": "DSMR Se\u00e7enekleri"
+            }
+        }
+    }
+}

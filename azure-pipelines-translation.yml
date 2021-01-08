@@ -1,0 +1,65 @@
+# https://dev.azure.com/home-assistant
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - dev
+pr: none
+schedules:
+  - cron: "0 0 * * *"
+    displayName: "translation update"
+    branches:
+      include:
+      - dev
+    always: true
+variables:
+- group: translation
+resources:
+  repositories:
+  - repository: azure
+    type: github
+    name: 'home-assistant/ci-azure'
+    endpoint: 'home-assistant'
+
+
+jobs:
+
+- job: 'Upload'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: |
+      export LOKALISE_TOKEN="$(lokaliseToken)"
+      export AZURE_BRANCH="$(Build.SourceBranchName)"
+
+      python3 -m script.translations upload
+    displayName: 'Upload Translation'
+
+- job: 'Download'
+  dependsOn:
+  - 'Upload'
+  condition: or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual'))
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - template: templates/azp-step-git-init.yaml@azure
+  - script: |
+      export LOKALISE_TOKEN="$(lokaliseToken)"
+
+      python3 -m script.translations download
+    displayName: 'Download Translation'
+  - script: |
+      git checkout dev
+      git add homeassistant
+      git commit -am "[ci skip] Translation update"
+      git push
+    displayName: 'Update translation'

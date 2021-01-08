@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -38,6 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Open Hardware Monitor platform."""
     data = OpenHardwareMonitorData(config, hass)
+    if data.data is None:
+        raise PlatformNotReady
     add_entities(data.devices, True)
 
 
@@ -74,6 +77,11 @@ class OpenHardwareMonitorDevice(Entity):
         """Return the state attributes of the sun."""
         return self.attributes
 
+    @classmethod
+    def parse_number(cls, string):
+        """In some locales a decimal numbers uses ',' instead of '.'."""
+        return string.replace(",", ".")
+
     def update(self):
         """Update the device from a new JSON object."""
         self._data.update()
@@ -86,12 +94,16 @@ class OpenHardwareMonitorDevice(Entity):
             values = array[path_number]
 
             if path_index == len(self.path) - 1:
-                self.value = values[OHM_VALUE].split(" ")[0]
+                self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
                 _attributes.update(
                     {
                         "name": values[OHM_NAME],
-                        STATE_MIN_VALUE: values[OHM_MIN].split(" ")[0],
-                        STATE_MAX_VALUE: values[OHM_MAX].split(" ")[0],
+                        STATE_MIN_VALUE: self.parse_number(
+                            values[OHM_MIN].split(" ")[0]
+                        ),
+                        STATE_MAX_VALUE: self.parse_number(
+                            values[OHM_MAX].split(" ")[0]
+                        ),
                     }
                 )
 
@@ -122,15 +134,16 @@ class OpenHardwareMonitorData:
 
     def refresh(self):
         """Download and parse JSON from OHM."""
-        data_url = "http://{}:{}/data.json".format(
-            self._config.get(CONF_HOST), self._config.get(CONF_PORT)
+        data_url = (
+            f"http://{self._config.get(CONF_HOST)}:"
+            f"{self._config.get(CONF_PORT)}/data.json"
         )
 
         try:
             response = requests.get(data_url, timeout=30)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("ConnectionError: Is OpenHardwareMonitor running?")
+            _LOGGER.debug("ConnectionError: Is OpenHardwareMonitor running?")
 
     def initialize(self, now):
         """Parse of the sensors and adding of devices."""

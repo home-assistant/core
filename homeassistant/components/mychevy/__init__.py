@@ -4,16 +4,16 @@ import logging
 import threading
 import time
 
+import mychevy.mychevy as mc
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util import Throttle
 
 DOMAIN = "mychevy"
 UPDATE_TOPIC = DOMAIN
-ERROR_TOPIC = DOMAIN + "_error"
+ERROR_TOPIC = f"{DOMAIN}_error"
 
 MYCHEVY_SUCCESS = "success"
 MYCHEVY_ERROR = "error"
@@ -71,8 +71,6 @@ class EVBinarySensorConfig:
 
 def setup(hass, base_config):
     """Set up the mychevy component."""
-    import mychevy.mychevy as mc
-
     config = base_config.get(DOMAIN)
 
     email = config.get(CONF_USERNAME)

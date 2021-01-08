@@ -1,18 +1,18 @@
 """ruamel.yaml utility functions."""
+from collections import OrderedDict
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
-from collections import OrderedDict
-from typing import Union, List, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import ruamel.yaml
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml.compat import StringIO
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
-from ruamel.yaml.compat import StringIO
 
-from homeassistant.util.yaml import secret_yaml
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import secret_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 class ExtSafeConstructor(SafeConstructor):
     """Extended SafeConstructor."""
 
-    name = None  # type: Optional[str]
+    name: Optional[str] = None
 
 
 class UnsupportedYamlError(HomeAssistantError):
@@ -40,6 +40,7 @@ def _include_yaml(
 
     Example:
         device_tracker: !include device_tracker.yaml
+
     """
     if constructor.name is None:
         raise HomeAssistantError(
@@ -53,9 +54,8 @@ def _yaml_unsupported(
     constructor: ExtSafeConstructor, node: ruamel.yaml.nodes.Node
 ) -> None:
     raise UnsupportedYamlError(
-        "Unsupported YAML, you can not use {} in {}".format(
-            node.tag, os.path.basename(constructor.name or "(None)")
-        )
+        f"Unsupported YAML, you can not use {node.tag} in "
+        f"{os.path.basename(constructor.name or '(None)')}"
     )
 
 
@@ -66,22 +66,22 @@ def object_to_yaml(data: JSON_TYPE) -> str:
     stream = StringIO()
     try:
         yaml.dump(data, stream)
-        result = stream.getvalue()  # type: str
+        result: str = stream.getvalue()
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
     yaml = YAML(typ="rt")
     try:
-        result = yaml.load(data)  # type: Union[List, Dict, str]
+        result: Union[List, Dict, str] = yaml.load(data)
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
@@ -102,17 +102,17 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
             return yaml.load(conf_file) or OrderedDict()
     except YAMLError as exc:
         _LOGGER.error("YAML error in %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
 
 
 def save_yaml(fname: str, data: JSON_TYPE) -> None:
     """Save a YAML file."""
     yaml = YAML(typ="rt")
     yaml.indent(sequence=4, offset=2)
-    tmp_fname = fname + "__TEMP__"
+    tmp_fname = f"{fname}__TEMP__"
     try:
         try:
             file_stat = os.stat(fname)
@@ -132,10 +132,10 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
                 pass
     except YAMLError as exc:
         _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc)
+        raise HomeAssistantError(exc) from exc
     except OSError as exc:
         _LOGGER.exception("Saving YAML file %s failed: %s", fname, exc)
-        raise WriteError(exc)
+        raise WriteError(exc) from exc
     finally:
         if os.path.exists(tmp_fname):
             try:

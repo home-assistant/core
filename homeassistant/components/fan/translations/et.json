@@ -1,0 +1,23 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "L\u00fclita {entity_name} v\u00e4lja",
+            "turn_on": "L\u00fclita {entity_name} sisse"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} on v\u00e4lja l\u00fclitatud",
+            "is_on": "{entity_name} on sisse l\u00fclitatud"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
+            "turned_on": "{entity_name} l\u00fclitus sisse"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "V\u00e4ljas",
+            "on": "Sees"
+        }
+    },
+    "title": "Ventilaator"
+}

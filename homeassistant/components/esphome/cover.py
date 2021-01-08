@@ -1,8 +1,7 @@
 """Support for ESPHome covers."""
-import logging
 from typing import Optional
 
-from aioesphomeapi import CoverInfo, CoverState
+from aioesphomeapi import CoverInfo, CoverOperation, CoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,14 +13,12 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -39,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeCover(EsphomeEntity, CoverDevice):
+class EsphomeCover(EsphomeEntity, CoverEntity):
     """A cover implementation for ESPHome."""
 
     @property
@@ -70,6 +67,9 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     def _state(self) -> Optional[CoverState]:
         return super()._state
 
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
+
     @esphome_state_property
     def is_closed(self) -> Optional[bool]:
         """Return if the cover is closed or not."""
@@ -79,23 +79,19 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        from aioesphomeapi import CoverOperation
-
         return self._state.current_operation == CoverOperation.IS_OPENING
 
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        from aioesphomeapi import CoverOperation
-
         return self._state.current_operation == CoverOperation.IS_CLOSING
 
     @esphome_state_property
-    def current_cover_position(self) -> Optional[float]:
+    def current_cover_position(self) -> Optional[int]:
         """Return current position of cover. 0 is closed, 100 is open."""
         if not self._static_info.supports_position:
             return None
-        return self._state.position * 100.0
+        return round(self._state.position * 100.0)
 
     @esphome_state_property
     def current_cover_tilt_position(self) -> Optional[float]:

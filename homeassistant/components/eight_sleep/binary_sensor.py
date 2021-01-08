@@ -1,7 +1,7 @@
 """Support for Eight Sleep binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
 
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_sensors, True)
 
 
-class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
+class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
@@ -34,7 +34,7 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
 
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._name = "{} {}".format(name, self._mapped_name)
+        self._name = f"{name} {self._mapped_name}"
         self._state = None
 
         self._side = self._sensor.split("_")[0]

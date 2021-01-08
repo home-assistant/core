@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "external_error": "S'ha produ\u00eft una excepci\u00f3 d'un altre flux de dades.",
+            "external_setup": "Logi Circle s'ha configurat correctament des d'un altre flux de dades.",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
+        },
+        "error": {
+            "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "auth": {
+                "description": "V\u00e9s a l'enlla\u00e7 de sota i **Accepta** l'acc\u00e9s al teu compte de Logi Circle, despr\u00e9s torna i prem **Envia** (tamb\u00e9 a sota).\n\n[Enlla\u00e7]({authorization_url})",
+                "title": "Autenticaci\u00f3 amb Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Prove\u00efdor"
+                },
+                "description": "Tria quin prove\u00efdor d'autenticaci\u00f3 vols utilitzar per autenticar-te amb Logi Circle.",
+                "title": "Prove\u00efdor d'autenticaci\u00f3"
+            }
+        }
+    }
+}

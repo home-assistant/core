@@ -1,19 +1,18 @@
 """Support for Abode Security System binary sensors."""
-import logging
+import abodepy.helpers.constants as CONST
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_WINDOW,
+    BinarySensorEntity,
+)
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
-
-    data = hass.data[ABODE_DOMAIN]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Abode binary sensor devices."""
+    data = hass.data[DOMAIN]
 
     device_types = [
         CONST.TYPE_CONNECTIVITY,
@@ -23,29 +22,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         CONST.TYPE_OPENING,
     ]
 
-    devices = []
+    entities = []
+
     for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device):
-            continue
+        entities.append(AbodeBinarySensor(data, device))
 
-        devices.append(AbodeBinarySensor(data, device))
-
-    for automation in data.abode.get_automations(generic_type=CONST.TYPE_QUICK_ACTION):
-        if data.is_automation_excluded(automation):
-            continue
-
-        devices.append(
-            AbodeQuickActionBinarySensor(
-                data, automation, TIMELINE.AUTOMATION_EDIT_GROUP
-            )
-        )
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
-class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
+class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
     @property
@@ -56,17 +41,6 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
+        if self._device.get_value("is_window") == "1":
+            return DEVICE_CLASS_WINDOW
         return self._device.generic_type
-
-
-class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
-    """A binary sensor implementation for Abode quick action automations."""
-
-    def trigger(self):
-        """Trigger a quick automation."""
-        self._automation.trigger()
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._automation.is_active

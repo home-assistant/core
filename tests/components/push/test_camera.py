@@ -1,15 +1,21 @@
 """The tests for generic camera component."""
+from datetime import timedelta
 import io
 
-from datetime import timedelta
-
-from homeassistant import core as ha
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_bad_posting(hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "http://example.com"},
+    )
+
     await async_setup_component(
         hass,
         "camera",
@@ -36,6 +42,11 @@ async def test_bad_posting(hass, aiohttp_client):
 
 async def test_posting_url(hass, aiohttp_client):
     """Test that posting to api endpoint works."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "http://example.com"},
+    )
+
     await async_setup_component(
         hass,
         "camera",
@@ -66,7 +77,7 @@ async def test_posting_url(hass, aiohttp_client):
 
     # await timeout
     shifted_time = dt_util.utcnow() + timedelta(seconds=15)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+    async_fire_time_changed(hass, shifted_time)
     await hass.async_block_till_done()
 
     # back to initial state

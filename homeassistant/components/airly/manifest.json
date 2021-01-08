@@ -1,0 +1,9 @@
+{
+  "domain": "airly",
+  "name": "Airly",
+  "documentation": "https://www.home-assistant.io/integrations/airly",
+  "codeowners": ["@bieniu"],
+  "requirements": ["airly==1.0.0"],
+  "config_flow": true,
+  "quality_scale": "platinum"
+}

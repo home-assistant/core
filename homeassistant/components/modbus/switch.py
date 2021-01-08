@@ -1,9 +1,13 @@
 """Support for Modbus switches."""
+from abc import ABC
 import logging
+from typing import Any, Dict, Optional
 
+from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -14,23 +18,28 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from . import ModbusHub
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CONF_COILS,
+    CONF_HUB,
+    CONF_REGISTER,
+    CONF_REGISTER_TYPE,
+    CONF_REGISTERS,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
+    CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_REGISTER = "register"
-CONF_REGISTER_TYPE = "register_type"
-CONF_REGISTERS = "registers"
-CONF_STATE_OFF = "state_off"
-CONF_STATE_ON = "state_on"
-CONF_VERIFY_REGISTER = "verify_register"
-CONF_VERIFY_STATE = "verify_state"
-
-REGISTER_TYPE_HOLDING = "holding"
-REGISTER_TYPE_INPUT = "input"
 
 REGISTERS_SCHEMA = vol.Schema(
     {
@@ -39,8 +48,8 @@ REGISTERS_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING): vol.In(
-            [REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]
+        vol.Optional(CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
         vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
@@ -52,7 +61,7 @@ REGISTERS_SCHEMA = vol.Schema(
 
 COILS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_COIL): cv.positive_int,
+        vol.Required(CALL_TYPE_COIL): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
@@ -70,52 +79,33 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Read configuration and create Modbus devices."""
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
+    """Read configuration and create Modbus switches."""
     switches = []
     if CONF_COILS in config:
-        for coil in config.get(CONF_COILS):
-            hub_name = coil.get(CONF_HUB)
-            hub = hass.data[MODBUS_DOMAIN][hub_name]
-            switches.append(
-                ModbusCoilSwitch(
-                    hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(CONF_COIL)
-                )
-            )
+        for coil in config[CONF_COILS]:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][coil[CONF_HUB]]
+            switches.append(ModbusCoilSwitch(hub, coil))
     if CONF_REGISTERS in config:
-        for register in config.get(CONF_REGISTERS):
-            hub_name = register.get(CONF_HUB)
-            hub = hass.data[MODBUS_DOMAIN][hub_name]
+        for register in config[CONF_REGISTERS]:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][register[CONF_HUB]]
+            switches.append(ModbusRegisterSwitch(hub, register))
 
-            switches.append(
-                ModbusRegisterSwitch(
-                    hub,
-                    register.get(CONF_NAME),
-                    register.get(CONF_SLAVE),
-                    register.get(CONF_REGISTER),
-                    register.get(CONF_COMMAND_ON),
-                    register.get(CONF_COMMAND_OFF),
-                    register.get(CONF_VERIFY_STATE),
-                    register.get(CONF_VERIFY_REGISTER),
-                    register.get(CONF_REGISTER_TYPE),
-                    register.get(CONF_STATE_ON),
-                    register.get(CONF_STATE_OFF),
-                )
-            )
-
-    add_entities(switches)
+    async_add_entities(switches)
 
 
-class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
-    """Representation of a Modbus coil switch."""
+class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
+    """Base class representing a Modbus switch."""
 
-    def __init__(self, hub, name, slave, coil):
-        """Initialize the coil switch."""
-        self._hub = hub
-        self._name = name
-        self._slave = int(slave) if slave else None
-        self._coil = int(coil)
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+        """Initialize the switch."""
+        self._hub: ModbusHub = hub
+        self._name = config[CONF_NAME]
+        self._slave = config.get(CONF_SLAVE)
         self._is_on = None
+        self._available = True
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -134,111 +124,150 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
         """Return the name of the switch."""
         return self._name
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
+
+class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
+    """Representation of a Modbus coil switch."""
+
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+        """Initialize the coil switch."""
+        super().__init__(hub, config)
+        self._coil = config[CALL_TYPE_COIL]
+
     def turn_on(self, **kwargs):
         """Set switch on."""
-        self._hub.write_coil(self._slave, self._coil, True)
+        self._write_coil(self._coil, True)
+        self._is_on = True
 
     def turn_off(self, **kwargs):
         """Set switch off."""
-        self._hub.write_coil(self._slave, self._coil, False)
+        self._write_coil(self._coil, False)
+        self._is_on = False
 
     def update(self):
         """Update the state of the switch."""
-        result = self._hub.read_coils(self._slave, self._coil, 1)
+        self._is_on = self._read_coil(self._coil)
+
+    def _read_coil(self, coil) -> bool:
+        """Read coil using the Modbus hub slave."""
         try:
-            self._is_on = bool(result.bits[0])
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, coil %s",
-                self._hub.name,
-                self._slave,
-                self._coil,
-            )
+            result = self._hub.read_coils(self._slave, coil, 1)
+        except ConnectionException:
+            self._available = False
+            return False
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._available = False
+            return False
+
+        self._available = True
+        # bits[0] select the lowest bit in result,
+        # is_on for a binary_sensor is true if the bit is 1
+        # The other bits are not considered.
+        return bool(result.bits[0] & 1)
+
+    def _write_coil(self, coil, value):
+        """Write coil using the Modbus hub slave."""
+        try:
+            self._hub.write_coil(self._slave, coil, value)
+        except ConnectionException:
+            self._available = False
+            return
+
+        self._available = True
 
 
-class ModbusRegisterSwitch(ModbusCoilSwitch):
+class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus register switch."""
 
-    # pylint: disable=super-init-not-called
-    def __init__(
-        self,
-        hub,
-        name,
-        slave,
-        register,
-        command_on,
-        command_off,
-        verify_state,
-        verify_register,
-        register_type,
-        state_on,
-        state_off,
-    ):
+    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the register switch."""
-        self._hub = hub
-        self._name = name
-        self._slave = slave
-        self._register = register
-        self._command_on = command_on
-        self._command_off = command_off
-        self._verify_state = verify_state
-        self._verify_register = verify_register if verify_register else self._register
-        self._register_type = register_type
-
-        if state_on is not None:
-            self._state_on = state_on
-        else:
-            self._state_on = self._command_on
-
-        if state_off is not None:
-            self._state_off = state_off
-        else:
-            self._state_off = self._command_off
-
+        super().__init__(hub, config)
+        self._register = config[CONF_REGISTER]
+        self._command_on = config[CONF_COMMAND_ON]
+        self._command_off = config[CONF_COMMAND_OFF]
+        self._state_on = config.get(CONF_STATE_ON, self._command_on)
+        self._state_off = config.get(CONF_STATE_OFF, self._command_off)
+        self._verify_state = config[CONF_VERIFY_STATE]
+        self._verify_register = config.get(CONF_VERIFY_REGISTER, self._register)
+        self._register_type = config[CONF_REGISTER_TYPE]
+        self._available = True
         self._is_on = None
 
     def turn_on(self, **kwargs):
         """Set switch on."""
-        self._hub.write_register(self._slave, self._register, self._command_on)
-        if not self._verify_state:
-            self._is_on = True
+
+        # Only holding register is writable
+        if self._register_type == CALL_TYPE_REGISTER_HOLDING:
+            self._write_register(self._command_on)
+            if not self._verify_state:
+                self._is_on = True
 
     def turn_off(self, **kwargs):
         """Set switch off."""
-        self._hub.write_register(self._slave, self._register, self._command_off)
-        if not self._verify_state:
-            self._is_on = False
+
+        # Only holding register is writable
+        if self._register_type == CALL_TYPE_REGISTER_HOLDING:
+            self._write_register(self._command_off)
+            if not self._verify_state:
+                self._is_on = False
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     def update(self):
         """Update the state of the switch."""
         if not self._verify_state:
             return
 
-        value = 0
-        if self._register_type == REGISTER_TYPE_INPUT:
-            result = self._hub.read_input_registers(self._slave, self._register, 1)
-        else:
-            result = self._hub.read_holding_registers(self._slave, self._register, 1)
-
-        try:
-            value = int(result.registers[0])
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, register %s",
-                self._hub.name,
-                self._slave,
-                self._verify_register,
-            )
-
+        value = self._read_register()
         if value == self._state_on:
             self._is_on = True
         elif value == self._state_off:
             self._is_on = False
-        else:
+        elif value is not None:
             _LOGGER.error(
-                "Unexpected response from hub %s, slave %s " "register %s, got 0x%2x",
+                "Unexpected response from hub %s, slave %s register %s, got 0x%2x",
                 self._hub.name,
                 self._slave,
-                self._verify_register,
+                self._register,
                 value,
             )
+
+    def _read_register(self) -> Optional[int]:
+        try:
+            if self._register_type == CALL_TYPE_REGISTER_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, self._verify_register, 1
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, self._verify_register, 1
+                )
+        except ConnectionException:
+            self._available = False
+            return
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._available = False
+            return
+
+        self._available = True
+
+        return int(result.registers[0])
+
+    def _write_register(self, value):
+        """Write holding register using the Modbus hub slave."""
+        try:
+            self._hub.write_register(self._slave, self._register, value)
+        except ConnectionException:
+            self._available = False
+            return
+
+        self._available = True

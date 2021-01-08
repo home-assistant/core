@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_OK
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -80,7 +80,7 @@ class UbusDeviceScanner(DeviceScanner):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = "http://{}/ubus".format(host)
+        self.url = f"http://{host}/ubus"
 
         self.session_id = _get_session_id(self.url, self.username, self.password)
         self.hostapd = []
@@ -94,7 +94,7 @@ class UbusDeviceScanner(DeviceScanner):
 
     def _generate_mac2name(self):
         """Return empty MAC to name dict. Overridden if DHCP server is set."""
-        self.mac2name = dict()
+        self.mac2name = {}
 
     @_refresh_on_access_denied
     def get_device_name(self, device):
@@ -146,7 +146,7 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        super(DnsmasqUbusDeviceScanner, self).__init__(config)
+        super().__init__(config)
         self.leasefile = None
 
     def _generate_mac2name(self):
@@ -170,7 +170,7 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
             self.url, self.session_id, "call", "file", "read", path=self.leasefile
         )
         if result:
-            self.mac2name = dict()
+            self.mac2name = {}
             for line in result["data"].splitlines():
                 hosts = line.split(" ")
                 self.mac2name[hosts[1].upper()] = hosts[3]
@@ -185,7 +185,7 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
     def _generate_mac2name(self):
         result = _req_json_rpc(self.url, self.session_id, "call", "dhcp", "ipv4leases")
         if result:
-            self.mac2name = dict()
+            self.mac2name = {}
             for device in result["device"].values():
                 for lease in device["leases"]:
                     mac = lease["mac"]  # mac = aabbccddeeff
@@ -214,7 +214,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return
 
-    if res.status_code == 200:
+    if res.status_code == HTTP_OK:
         response = res.json()
         if "error" in response:
             if (

@@ -1,6 +1,11 @@
 """Demo platform that has two fake remotes."""
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    setup_platform(hass, {}, async_add_entities)
 
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
@@ -13,7 +18,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     )
 
 
-class DemoRemote(RemoteDevice):
+class DemoRemote(RemoteEntity):
     """Representation of a demo remote."""
 
     def __init__(self, name, state, icon):

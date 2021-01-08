@@ -2,15 +2,16 @@
 import logging
 import re
 
+import pexpect
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,10 +83,9 @@ class ArubaDeviceScanner(DeviceScanner):
 
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
-        import pexpect
 
-        connect = "ssh {}@{}"
-        ssh = pexpect.spawn(connect.format(self.username, self.host))
+        connect = f"ssh {self.username}@{self.host}"
+        ssh = pexpect.spawn(connect)
         query = ssh.expect(
             [
                 "password:",

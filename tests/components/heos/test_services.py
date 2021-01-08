@@ -1,5 +1,5 @@
 """Tests for the services module."""
-from pyheos import CommandError, const
+from pyheos import CommandFailedError, HeosError, const
 
 from homeassistant.components.heos.const import (
     ATTR_PASSWORD,
@@ -51,7 +51,7 @@ async def test_sign_in_not_connected(hass, config_entry, controller, caplog):
 async def test_sign_in_failed(hass, config_entry, controller, caplog):
     """Test sign-in service logs error when not connected."""
     await setup_component(hass, config_entry)
-    controller.sign_in.side_effect = CommandError("", "Invalid credentials", 6)
+    controller.sign_in.side_effect = CommandFailedError("", "Invalid credentials", 6)
 
     await hass.services.async_call(
         DOMAIN,
@@ -67,7 +67,7 @@ async def test_sign_in_failed(hass, config_entry, controller, caplog):
 async def test_sign_in_unknown_error(hass, config_entry, controller, caplog):
     """Test sign-in service logs error for failure."""
     await setup_component(hass, config_entry)
-    controller.sign_in.side_effect = ConnectionError
+    controller.sign_in.side_effect = HeosError()
 
     await hass.services.async_call(
         DOMAIN,
@@ -103,7 +103,7 @@ async def test_sign_out_not_connected(hass, config_entry, controller, caplog):
 async def test_sign_out_unknown_error(hass, config_entry, controller, caplog):
     """Test the sign-out service."""
     await setup_component(hass, config_entry)
-    controller.sign_out.side_effect = ConnectionError
+    controller.sign_out.side_effect = HeosError()
 
     await hass.services.async_call(DOMAIN, SERVICE_SIGN_OUT, {}, blocking=True)
 

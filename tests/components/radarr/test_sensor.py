@@ -1,11 +1,10 @@
 """The tests for the Radarr platform."""
-import unittest
-
 import pytest
 
-import homeassistant.components.radarr.sensor as radarr
+from homeassistant.const import DATA_GIGABYTES
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant
+from tests.async_mock import patch
 
 
 def mocked_exception(*args, **kwargs):
@@ -182,7 +181,7 @@ def mocked_requests_get(*args, **kwargs):
                 "sqliteVersion": "3.16.2",
                 "urlBase": "",
                 "runtimeVersion": (
-                    "4.6.1 " "(Stable 4.6.1.3/abb06f1 " "Mon Oct  3 07:57:59 UTC 2016)"
+                    "4.6.1 (Stable 4.6.1.3/abb06f1 Mon Oct  3 07:57:59 UTC 2016)"
                 ),
             },
             200,
@@ -190,214 +189,253 @@ def mocked_requests_get(*args, **kwargs):
     return MockResponse({"error": "Unauthorized"}, 401)
 
 
-class TestRadarrSetup(unittest.TestCase):
-    """Test the Radarr platform."""
-
-    # pylint: disable=invalid-name
-    DEVICES = []
-
-    def add_entities(self, devices, update):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
-
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.DEVICES = []
-        self.hass = get_test_home_assistant()
-        self.hass.config.time_zone = "America/Los_Angeles"
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_diskspace_no_paths(self, req_mock):
-        """Test getting all disk space."""
-        config = {
+async def test_diskspace_no_paths(hass):
+    """Test getting all disk space."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": [],
             "monitored_conditions": ["diskspace"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert "263.10" == device.state
-            assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
-            assert "Radarr Disk Space" == device.name
-            assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
+    }
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_diskspace_paths(self, req_mock):
-        """Test getting diskspace for included paths."""
-        config = {
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        entity = hass.states.get("sensor.radarr_disk_space")
+        assert entity is not None
+        assert "263.10" == entity.state
+        assert "mdi:harddisk" == entity.attributes["icon"]
+        assert DATA_GIGABYTES == entity.attributes["unit_of_measurement"]
+        assert "Radarr Disk Space" == entity.attributes["friendly_name"]
+        assert "263.10/465.42GB (56.53%)" == entity.attributes["/data"]
+
+
+async def test_diskspace_paths(hass):
+    """Test getting diskspace for included paths."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["diskspace"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert "263.10" == device.state
-            assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
-            assert "Radarr Disk Space" == device.name
-            assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
+    }
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_commands(self, req_mock):
-        """Test getting running commands."""
-        config = {
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        entity = hass.states.get("sensor.radarr_disk_space")
+        assert entity is not None
+        assert "263.10" == entity.state
+        assert "mdi:harddisk" == entity.attributes["icon"]
+        assert DATA_GIGABYTES == entity.attributes["unit_of_measurement"]
+        assert "Radarr Disk Space" == entity.attributes["friendly_name"]
+        assert "263.10/465.42GB (56.53%)" == entity.attributes["/data"]
+
+
+async def test_commands(hass):
+    """Test getting running commands."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["commands"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert 1 == device.state
-            assert "mdi:code-braces" == device.icon
-            assert "Commands" == device.unit_of_measurement
-            assert "Radarr Commands" == device.name
-            assert "pending" == device.device_state_attributes["RescanMovie"]
+    }
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_movies(self, req_mock):
-        """Test getting the number of movies."""
-        config = {
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        entity = hass.states.get("sensor.radarr_commands")
+        assert entity is not None
+        assert 1 == int(entity.state)
+        assert "mdi:code-braces" == entity.attributes["icon"]
+        assert "Commands" == entity.attributes["unit_of_measurement"]
+        assert "Radarr Commands" == entity.attributes["friendly_name"]
+        assert "pending" == entity.attributes["RescanMovie"]
+
+
+async def test_movies(hass):
+    """Test getting the number of movies."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["movies"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert 1 == device.state
-            assert "mdi:television" == device.icon
-            assert "Movies" == device.unit_of_measurement
-            assert "Radarr Movies" == device.name
-            assert "false" == device.device_state_attributes["Assassin's Creed (2016)"]
+    }
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_upcoming_multiple_days(self, req_mock):
-        """Test the upcoming movies for multiple days."""
-        config = {
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+        entity = hass.states.get("sensor.radarr_movies")
+        assert entity is not None
+        assert 1 == int(entity.state)
+        assert "mdi:television" == entity.attributes["icon"]
+        assert "Movies" == entity.attributes["unit_of_measurement"]
+        assert "Radarr Movies" == entity.attributes["friendly_name"]
+        assert "false" == entity.attributes["Assassin's Creed (2016)"]
+
+
+async def test_upcoming_multiple_days(hass):
+    """Test the upcoming movies for multiple days."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert 1 == device.state
-            assert "mdi:television" == device.icon
-            assert "Movies" == device.unit_of_measurement
-            assert "Radarr Upcoming" == device.name
-            assert (
-                "2017-01-27T00:00:00Z"
-                == device.device_state_attributes["Resident Evil (2017)"]
-            )
+    }
 
-    @pytest.mark.skip
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_upcoming_today(self, req_mock):
-        """Test filtering for a single day.
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
 
-        Radarr needs to respond with at least 2 days.
-        """
-        config = {
+        entity = hass.states.get("sensor.radarr_upcoming")
+        assert entity is not None
+        assert 1 == int(entity.state)
+        assert "mdi:television" == entity.attributes["icon"]
+        assert "Movies" == entity.attributes["unit_of_measurement"]
+        assert "Radarr Upcoming" == entity.attributes["friendly_name"]
+        assert "2017-01-27T00:00:00Z" == entity.attributes["Resident Evil (2017)"]
+
+
+@pytest.mark.skip
+async def test_upcoming_today(hass):
+    """Test filtering for a single day.
+
+    Radarr needs to respond with at least 2 days.
+    """
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert 1 == device.state
-            assert "mdi:television" == device.icon
-            assert "Movies" == device.unit_of_measurement
-            assert "Radarr Upcoming" == device.name
-            assert (
-                "2017-01-27T00:00:00Z"
-                == device.device_state_attributes["Resident Evil (2017)"]
-            )
+    }
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        entity = hass.states.get("sensor.radarr_upcoming")
+        assert 1 == int(entity.state)
+        assert "mdi:television" == entity.attributes["icon"]
+        assert "Movies" == entity.attributes["unit_of_measurement"]
+        assert "Radarr Upcoming" == entity.attributes["friendly_name"]
+        assert "2017-01-27T00:00:00Z" == entity.attributes["Resident Evil (2017)"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_system_status(self, req_mock):
-        """Test the getting of the system status."""
-        config = {
+
+async def test_system_status(hass):
+    """Test the getting of the system status."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["status"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert "0.2.0.210" == device.state
-            assert "mdi:information" == device.icon
-            assert "Radarr Status" == device.name
-            assert "4.8.13.1" == device.device_state_attributes["osVersion"]
+    }
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        entity = hass.states.get("sensor.radarr_status")
+        assert entity is not None
+        assert "0.2.0.210" == entity.state
+        assert "mdi:information" == entity.attributes["icon"]
+        assert "Radarr Status" == entity.attributes["friendly_name"]
+        assert "4.8.13.1" == entity.attributes["osVersion"]
 
-    @pytest.mark.skip
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_ssl(self, req_mock):
-        """Test SSL being enabled."""
-        config = {
+
+async def test_ssl(hass):
+    """Test SSL being enabled."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
             "ssl": "true",
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert 1 == device.state
-            assert "s" == device.ssl
-            assert "mdi:television" == device.icon
-            assert "Movies" == device.unit_of_measurement
-            assert "Radarr Upcoming" == device.name
-            assert (
-                "2017-01-27T00:00:00Z"
-                == device.device_state_attributes["Resident Evil (2017)"]
-            )
+    }
+    with patch(
+        "requests.get",
+        side_effect=mocked_requests_get,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        entity = hass.states.get("sensor.radarr_upcoming")
+        assert entity is not None
+        assert 1 == int(entity.state)
+        assert "mdi:television" == entity.attributes["icon"]
+        assert "Movies" == entity.attributes["unit_of_measurement"]
+        assert "Radarr Upcoming" == entity.attributes["friendly_name"]
+        assert "2017-01-27T00:00:00Z" == entity.attributes["Resident Evil (2017)"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_exception)
-    def test_exception_handling(self, req_mock):
-        """Test exception being handled."""
-        config = {
+
+async def test_exception_handling(hass):
+    """Test exception being handled."""
+    config = {
+        "sensor": {
             "platform": "radarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
-        radarr.setup_platform(self.hass, config, self.add_entities, None)
-        for device in self.DEVICES:
-            device.update()
-            assert device.state is None
+    }
+    with patch(
+        "requests.get",
+        side_effect=mocked_exception,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        entity = hass.states.get("sensor.radarr_upcoming")
+        assert entity is not None
+        assert "unavailable" == entity.state

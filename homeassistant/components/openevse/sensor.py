@@ -1,24 +1,26 @@
 """Support for monitoring an OpenEVSE Charger."""
 import logging
 
+import openevsewifi
 from requests import RequestException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS,
     CONF_HOST,
-    ENERGY_KILO_WATT_HOUR,
     CONF_MONITORED_VARIABLES,
+    ENERGY_KILO_WATT_HOUR,
+    TEMP_CELSIUS,
+    TIME_MINUTES,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "status": ["Charging Status", None],
-    "charge_time": ["Charge Time Elapsed", "minutes"],
+    "charge_time": ["Charge Time Elapsed", TIME_MINUTES],
     "ambient_temp": ["Ambient Temperature", TEMP_CELSIUS],
     "ir_temp": ["IR Temperature", TEMP_CELSIUS],
     "rtc_temp": ["RTC Temperature", TEMP_CELSIUS],
@@ -38,8 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenEVSE sensor."""
-    import openevsewifi
-
     host = config.get(CONF_HOST)
     monitored_variables = config.get(CONF_MONITORED_VARIABLES)
 

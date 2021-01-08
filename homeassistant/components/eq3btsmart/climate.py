@@ -1,19 +1,20 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
 import logging
 
+from bluepy.btle import BTLEException  # pylint: disable=import-error, no-name-in-module
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_NONE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -74,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class EQ3BTSmartThermostat(ClimateDevice):
+class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
     def __init__(self, _mac, _name):
@@ -91,7 +92,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
-        return self._thermostat.mode > 0
+        return self._thermostat.mode >= 0
 
     @property
     def name(self):
@@ -135,7 +136,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return list(HA_TO_EQ_HVAC.keys())
+        return list(HA_TO_EQ_HVAC)
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
@@ -180,7 +181,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         Requires SUPPORT_PRESET_MODE.
         """
-        return list(HA_TO_EQ_PRESET.keys())
+        return list(HA_TO_EQ_PRESET)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
@@ -190,8 +191,6 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        # pylint: disable=import-error,no-name-in-module
-        from bluepy.btle import BTLEException
 
         try:
             self._thermostat.update()

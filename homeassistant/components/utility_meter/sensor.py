@@ -1,38 +1,47 @@
 """Utility meter from sensors providing raw data."""
-import logging
 from datetime import date, timedelta
 from decimal import Decimal, DecimalException
+import logging
 
-import homeassistant.util.dt as dt_util
+import voluptuous as vol
+
 from homeassistant.const import (
-    CONF_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     EVENT_HOMEASSISTANT_START,
-    STATE_UNKNOWN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    async_track_state_change,
+    async_track_state_change_event,
     async_track_time_change,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.util.dt as dt_util
+
 from .const import (
-    DATA_UTILITY,
-    SIGNAL_RESET_METER,
-    HOURLY,
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    YEARLY,
-    CONF_SOURCE_SENSOR,
-    CONF_METER_TYPE,
-    CONF_METER_OFFSET,
+    ATTR_VALUE,
+    BIMONTHLY,
+    CONF_METER,
     CONF_METER_NET_CONSUMPTION,
+    CONF_METER_OFFSET,
+    CONF_METER_TYPE,
+    CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
-    CONF_METER,
+    DAILY,
+    DATA_UTILITY,
+    HOURLY,
+    MONTHLY,
+    QUARTER_HOURLY,
+    QUARTERLY,
+    SERVICE_CALIBRATE_METER,
+    SIGNAL_RESET_METER,
+    WEEKLY,
+    YEARLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,6 +93,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(meters)
 
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_CALIBRATE_METER,
+        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        "async_calibrate",
+    )
+
 
 class UtilityMeterSensor(RestoreEntity):
     """Representation of an utility meter sensor."""
@@ -107,7 +124,7 @@ class UtilityMeterSensor(RestoreEntity):
         if name:
             self._name = name
         else:
-            self._name = "{} meter".format(source_entity)
+            self._name = f"{source_entity} meter"
         self._unit_of_measurement = None
         self._period = meter_type
         self._period_offset = meter_offset
@@ -116,8 +133,10 @@ class UtilityMeterSensor(RestoreEntity):
         self._tariff_entity = tariff_entity
 
     @callback
-    def async_reading(self, entity, old_state, new_state):
+    def async_reading(self, event):
         """Handle the sensor state changes."""
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
         if (
             old_state is None
             or new_state is None
@@ -126,19 +145,13 @@ class UtilityMeterSensor(RestoreEntity):
         ):
             return
 
-        if (
-            self._unit_of_measurement is None
-            and new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
-        ):
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         try:
             diff = Decimal(new_state.state) - Decimal(old_state.state)
 
             if (not self._sensor_net_consumption) and diff < 0:
-                # Source sensor just rolled over for unknow reasons,
+                # Source sensor just rolled over for unknown reasons,
                 return
             self._state += diff
 
@@ -148,14 +161,17 @@ class UtilityMeterSensor(RestoreEntity):
             _LOGGER.warning(
                 "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
             )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
-    def async_tariff_change(self, entity, old_state, new_state):
+    def async_tariff_change(self, event):
         """Handle tariff changes."""
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            return
         if self._tariff == new_state.state:
-            self._collecting = async_track_state_change(
-                self.hass, self._sensor_source_id, self.async_reading
+            self._collecting = async_track_state_change_event(
+                self.hass, [self._sensor_source_id], self.async_reading
             )
         else:
             if self._collecting:
@@ -169,7 +185,7 @@ class UtilityMeterSensor(RestoreEntity):
             self._sensor_source_id,
         )
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger than daily cycles."""
@@ -184,6 +200,18 @@ class UtilityMeterSensor(RestoreEntity):
             and now != date(now.year, now.month, 1) + self._period_offset
         ):
             return
+        if (
+            self._period == BIMONTHLY
+            and now
+            != date(now.year, (((now.month - 1) // 2) * 2 + 1), 1) + self._period_offset
+        ):
+            return
+        if (
+            self._period == QUARTERLY
+            and now
+            != date(now.year, (((now.month - 1) // 3) * 3 + 1), 1) + self._period_offset
+        ):
+            return
         if self._period == YEARLY and now != date(now.year, 1, 1) + self._period_offset:
             return
         await self.async_reset_meter(self._tariff_entity)
@@ -196,20 +224,35 @@ class UtilityMeterSensor(RestoreEntity):
         self._last_reset = dt_util.now()
         self._last_period = str(self._state)
         self._state = 0
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
+
+    async def async_calibrate(self, value):
+        """Calibrate the Utility Meter with a given value."""
+        _LOGGER.debug("Calibrate %s = %s", self._name, value)
+        self._state = value
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._period == HOURLY:
+        if self._period == QUARTER_HOURLY:
+            for quarter in range(4):
+                async_track_time_change(
+                    self.hass,
+                    self._async_reset_meter,
+                    minute=(quarter * 15)
+                    + self._period_offset.seconds % (15 * 60) // 60,
+                    second=self._period_offset.seconds % 60,
+                )
+        elif self._period == HOURLY:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
                 minute=self._period_offset.seconds // 60,
                 second=self._period_offset.seconds % 60,
             )
-        elif self._period in [DAILY, WEEKLY, MONTHLY, YEARLY]:
+        elif self._period in [DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, YEARLY]:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
@@ -225,8 +268,10 @@ class UtilityMeterSensor(RestoreEntity):
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
-            self._last_reset = state.attributes.get(ATTR_LAST_RESET)
-            await self.async_update_ha_state()
+            self._last_reset = dt_util.parse_datetime(
+                state.attributes.get(ATTR_LAST_RESET)
+            )
+            self.async_write_ha_state()
             if state.attributes.get(ATTR_STATUS) == PAUSED:
                 # Fake cancellation function to init the meter paused
                 self._collecting = lambda: None
@@ -236,8 +281,8 @@ class UtilityMeterSensor(RestoreEntity):
             """Wait for source to be ready, then start meter."""
             if self._tariff_entity is not None:
                 _LOGGER.debug("Track %s", self._tariff_entity)
-                async_track_state_change(
-                    self.hass, self._tariff_entity, self.async_tariff_change
+                async_track_state_change_event(
+                    self.hass, [self._tariff_entity], self.async_tariff_change
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
@@ -245,8 +290,8 @@ class UtilityMeterSensor(RestoreEntity):
                     return
 
             _LOGGER.debug("tracking source: %s", self._sensor_source_id)
-            self._collecting = async_track_state_change(
-                self.hass, self._sensor_source_id, self.async_reading
+            self._collecting = async_track_state_change_event(
+                self.hass, [self._sensor_source_id], self.async_reading
             )
 
         self.hass.bus.async_listen_once(

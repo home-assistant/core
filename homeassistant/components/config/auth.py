@@ -3,7 +3,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 
-
 WS_TYPE_LIST = "config/auth/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_LIST}
@@ -12,11 +11,6 @@ SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 WS_TYPE_DELETE = "config/auth/delete"
 SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_DELETE, vol.Required("user_id"): str}
-)
-
-WS_TYPE_CREATE = "config/auth/create"
-SCHEMA_WS_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_CREATE, vol.Required("name"): str}
 )
 
 
@@ -28,9 +22,7 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CREATE, websocket_create, SCHEMA_WS_CREATE
-    )
+    hass.components.websocket_api.async_register_command(websocket_create)
     hass.components.websocket_api.async_register_command(websocket_update)
     return True
 
@@ -71,9 +63,16 @@ async def websocket_delete(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/auth/create",
+        vol.Required("name"): str,
+        vol.Optional("group_ids"): [str],
+    }
+)
 async def websocket_create(hass, connection, msg):
     """Create a user."""
-    user = await hass.auth.async_create_user(msg["name"])
+    user = await hass.auth.async_create_user(msg["name"], msg.get("group_ids"))
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"user": _user_info(user)})
@@ -87,6 +86,7 @@ async def websocket_create(hass, connection, msg):
         vol.Required("type"): "config/auth/update",
         vol.Required("user_id"): str,
         vol.Optional("name"): str,
+        vol.Optional("is_active"): bool,
         vol.Optional("group_ids"): [str],
     }
 )
@@ -112,6 +112,16 @@ async def websocket_update(hass, connection, msg):
         )
         return
 
+    if user.is_owner and msg["is_active"] is False:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "cannot_deactivate_owner",
+                "Unable to deactivate owner.",
+            )
+        )
+        return
+
     msg.pop("type")
     msg_id = msg.pop("id")
 
@@ -124,8 +134,19 @@ async def websocket_update(hass, connection, msg):
 
 def _user_info(user):
     """Format a user."""
+
+    ha_username = next(
+        (
+            cred.data.get("username")
+            for cred in user.credentials
+            if cred.auth_provider_type == "homeassistant"
+        ),
+        None,
+    )
+
     return {
         "id": user.id,
+        "username": ha_username,
         "name": user.name,
         "is_owner": user.is_owner,
         "is_active": user.is_active,

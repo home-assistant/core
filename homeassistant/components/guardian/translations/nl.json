@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dit Guardian-apparaat is al geconfigureerd.",
+            "already_in_progress": "De configuratie van het Guardian-apparaat is al bezig.",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-adres",
+                    "port": "Poort"
+                },
+                "description": "Configureer een lokaal Elexa Guardian-apparaat."
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u dit Guardian-apparaat instellen?"
+            }
+        }
+    }
+}

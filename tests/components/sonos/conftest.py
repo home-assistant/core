@@ -1,11 +1,11 @@
 """Configuration for Sonos tests."""
-from asynctest.mock import Mock, patch as patch
 import pytest
 
-from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
+from tests.async_mock import Mock, patch as patch
 from tests.common import MockConfigEntry
 
 
@@ -23,6 +23,7 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
     ):
         mock_soco = mock.return_value
         mock_soco.uid = "RINCON_test"
+        mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
         mock_soco.get_speaker_info.return_value = speaker_info
         mock_soco.avTransport = dummy_soco_service
@@ -33,7 +34,7 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
         yield mock_soco
 
 
-@pytest.fixture(name="discover")
+@pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
     """Create a mock pysonos discover fixture."""
 
@@ -69,4 +70,9 @@ def music_library_fixture():
 @pytest.fixture(name="speaker_info")
 def speaker_info_fixture():
     """Create speaker_info fixture."""
-    return {"zone_name": "Zone A", "model_name": "Model Name"}
+    return {
+        "zone_name": "Zone A",
+        "model_name": "Model Name",
+        "software_version": "49.2-64250",
+        "mac_address": "00-11-22-33-44-55",
+    }

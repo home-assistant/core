@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Selecciona l'adre\u00e7a de connexi\u00f3"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Selecciona el dispositiu"
+                },
+                "title": "Dispositiu"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Ruta del port USB del dispositiu"
+                },
+                "title": "Ruta"
+            },
+            "user": {
+                "data": {
+                    "type": "Tipus de connexi\u00f3"
+                },
+                "title": "Selecciona el tipus de connexi\u00f3"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
+            "invalid_event_code": "Codi d'esdeveniment inv\u00e0lid",
+            "invalid_input_2262_off": "Entrada no v\u00e0lida per a l'ordre OFF",
+            "invalid_input_2262_on": "Entrada no v\u00e0lida per a l'ordre ON",
+            "invalid_input_off_delay": "Entrada no v\u00e0lida per al retard OFF",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Activa l'addici\u00f3 autom\u00e0tica",
+                    "debug": "Activa la depuraci\u00f3",
+                    "device": "Selecciona el dispositiu a configurar",
+                    "event_code": "Introdueix el codi de l'esdeveniment a afegir",
+                    "remove_device": "Selecciona el dispositiu a eliminar"
+                },
+                "title": "Opcions de Rfxtrx"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Valor dels bits de dades per a l'ordre OFF",
+                    "command_on": "Valor dels bits de dades per a l'ordre ON",
+                    "data_bit": "Nombre de bits de dades",
+                    "fire_event": "Activa l'esdeveniment de dispositiu",
+                    "off_delay": "Retard OFF",
+                    "off_delay_enabled": "Activa el retard OFF",
+                    "replace_device": "Selecciona el dispositiu a substituir",
+                    "signal_repetitions": "Nombre de repeticions del senyal"
+                },
+                "title": "Configuraci\u00f3 de les opcions del dispositiu"
+            }
+        }
+    }
+}

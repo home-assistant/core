@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radio type"
+                },
+                "description": "Velg din type Zigbee-radio",
+                "title": "Radio type"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "porthastighet",
+                    "flow_control": "data flytkontroll",
+                    "path": "Seriell enhetsbane"
+                },
+                "description": "Angi portspesifikke innstillinger",
+                "title": "Innstillinger"
+            },
+            "user": {
+                "data": {
+                    "path": "Seriell enhetsbane"
+                },
+                "description": "Velg seriell port for Zigbee radio",
+                "title": ""
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Advare"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Begge knapper",
+            "button_1": "F\u00f8rste knapp",
+            "button_2": "Andre knapp",
+            "button_3": "Tredje knapp",
+            "button_4": "Fjerde knapp",
+            "button_5": "Femte knapp",
+            "button_6": "Sjette knapp",
+            "close": "Lukk",
+            "dim_down": "Dimm ned",
+            "dim_up": "Dimm opp",
+            "face_1": "med ansikt 1 aktivert",
+            "face_2": "med ansikt 2 aktivert",
+            "face_3": "med ansikt 3 aktivert",
+            "face_4": "med ansikt 4 aktivert",
+            "face_5": "med ansikt 5 aktivert",
+            "face_6": "med ansikt 6 aktivert",
+            "face_any": "Med alle/angitte ansikt(er) aktivert",
+            "left": "Venstre",
+            "open": "\u00c5pen",
+            "right": "H\u00f8yre",
+            "turn_off": "Sl\u00e5 av",
+            "turn_on": "Sl\u00e5 p\u00e5"
+        },
+        "trigger_type": {
+            "device_dropped": "Enhet droppet",
+            "device_flipped": "Enheten snudd \"{subtype}\"",
+            "device_knocked": "Enheten sl\u00e5tt \"{subtype}\"",
+            "device_offline": "Enheten er frakoblet",
+            "device_rotated": "Enheten roterte \"{subtype}\"",
+            "device_shaken": "Enhet ristet",
+            "device_slid": "Enheten skled \"{subtype}\"",
+            "device_tilted": "Enheten skr\u00e5stilt",
+            "remote_button_alt_double_press": "\"{subtype}\"-knapp trykket p\u00e5 to ganger (vekslende modus)",
+            "remote_button_alt_long_press": "\"{subtype}\"-knapp holdt inne (vekslende modus)",
+            "remote_button_alt_long_release": "\"{subtype}\"-knapp sluppet etter langt trykk (vekslende modus)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\"-knapp trykket p\u00e5 fire ganger (vekslende modus)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\"-knapp trykket p\u00e5 fem ganger (vekslende modus)",
+            "remote_button_alt_short_press": "\"{subtype}\"-knapp trykket p\u00e5 (vekslende modus)",
+            "remote_button_alt_short_release": "\"{subtype}\"-knapp sluppet (vekslende modus)",
+            "remote_button_alt_triple_press": "\"{subtype}\"-knapp trykket p\u00e5 tre ganger (vekslende modus)",
+            "remote_button_double_press": "\"{subtype}\" knapp trykket p\u00e5 to ganger",
+            "remote_button_long_press": "\"{subtype}\"-knapp holdt inne",
+            "remote_button_long_release": "\"{subtype}\"-knapp sluppet etter langt trykk",
+            "remote_button_quadruple_press": "\"{subtype}\"-knapp trykket p\u00e5 fire ganger",
+            "remote_button_quintuple_press": "\"{subtype}\"-knapp trykket p\u00e5 fem ganger",
+            "remote_button_short_press": "\"{subtype}\"-knapp trykket p\u00e5",
+            "remote_button_short_release": "\"{subtype}\"-knapp sluppet",
+            "remote_button_triple_press": "\"{subtype}\"-knapp trykket p\u00e5 tre ganger"
+        }
+    }
+}

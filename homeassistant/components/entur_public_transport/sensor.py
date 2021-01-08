@@ -1,7 +1,7 @@
 """Real-time information about public transport departures in Norway."""
 from datetime import datetime, timedelta
-import logging
 
+from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -11,14 +11,13 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    TIME_MINUTES,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 API_CLIENT_NAME = "homeassistant-homeassistant"
 
@@ -87,7 +86,6 @@ def due_in_minutes(timestamp: datetime) -> int:
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Entur public transport sensor."""
-    from enturclient import EnturPublicTransportData
 
     expand = config.get(CONF_EXPAND_PLATFORMS)
     line_whitelist = config.get(CONF_WHITELIST_LINES)
@@ -119,9 +117,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     entities = []
     for place in data.all_stop_places_quays():
         try:
-            given_name = "{} {}".format(name, data.get_stop_info(place).name)
+            given_name = f"{name} {data.get_stop_info(place).name}"
         except KeyError:
-            given_name = "{} {}".format(name, place)
+            given_name = f"{name} {place}"
 
         entities.append(
             EnturPublicTransportSensor(proxy, given_name, place, show_on_map)
@@ -183,7 +181,7 @@ class EnturPublicTransportSensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self) -> str:
@@ -230,9 +228,9 @@ class EnturPublicTransportSensor(Entity):
         self._attributes[ATTR_NEXT_UP_AT] = calls[1].expected_departure_time.strftime(
             "%H:%M"
         )
-        self._attributes[ATTR_NEXT_UP_IN] = "{} min".format(
-            due_in_minutes(calls[1].expected_departure_time)
-        )
+        self._attributes[
+            ATTR_NEXT_UP_IN
+        ] = f"{due_in_minutes(calls[1].expected_departure_time)} min"
         self._attributes[ATTR_NEXT_UP_REALTIME] = calls[1].is_realtime
         self._attributes[ATTR_NEXT_UP_DELAY] = calls[1].delay_in_min
 
@@ -240,9 +238,8 @@ class EnturPublicTransportSensor(Entity):
             return
 
         for i, call in enumerate(calls[2:]):
-            key_name = "departure_#" + str(i + 3)
-            self._attributes[key_name] = "{}{} {}".format(
-                "" if bool(call.is_realtime) else "ca. ",
-                call.expected_departure_time.strftime("%H:%M"),
-                call.front_display,
+            key_name = f"departure_#{i + 3}"
+            self._attributes[key_name] = (
+                f"{'' if bool(call.is_realtime) else 'ca. '}"
+                f"{call.expected_departure_time.strftime('%H:%M')} {call.front_display}"
             )

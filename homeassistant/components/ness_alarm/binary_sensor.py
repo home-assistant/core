@@ -1,7 +1,5 @@
 """Support for Ness D8X/D16X zone states - represented as binary sensors."""
-import logging
-
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -13,8 +11,6 @@ from . import (
     SIGNAL_ZONE_CHANGED,
     ZoneChangedData,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -38,7 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class NessZoneBinarySensor(BinarySensorDevice):
+class NessZoneBinarySensor(BinarySensorEntity):
     """Representation of an Ness alarm zone as a binary sensor."""
 
     def __init__(self, zone_id, name, zone_type):
@@ -50,8 +46,10 @@ class NessZoneBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+            )
         )
 
     @property
@@ -79,4 +77,4 @@ class NessZoneBinarySensor(BinarySensorDevice):
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
             self._state = data.state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

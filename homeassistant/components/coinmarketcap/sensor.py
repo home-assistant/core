@@ -1,13 +1,14 @@
 """Details about crypto currencies from CoinMarketCap."""
-import logging
 from datetime import timedelta
+import logging
 from urllib.error import HTTPError
 
+from coinmarketcap import Market
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_DISPLAY_CURRENCY
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,9 +42,9 @@ SCAN_INTERVAL = timedelta(minutes=15)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_CURRENCY_ID, default=DEFAULT_CURRENCY_ID): cv.positive_int,
-        vol.Optional(
-            CONF_DISPLAY_CURRENCY, default=DEFAULT_DISPLAY_CURRENCY
-        ): cv.string,
+        vol.Optional(CONF_DISPLAY_CURRENCY, default=DEFAULT_DISPLAY_CURRENCY): vol.All(
+            cv.string, vol.Upper
+        ),
         vol.Optional(
             CONF_DISPLAY_CURRENCY_DECIMALS, default=DEFAULT_DISPLAY_CURRENCY_DECIMALS
         ): vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -53,9 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CoinMarketCap sensor."""
-    currency_id = config.get(CONF_CURRENCY_ID)
-    display_currency = config.get(CONF_DISPLAY_CURRENCY).upper()
-    display_currency_decimals = config.get(CONF_DISPLAY_CURRENCY_DECIMALS)
+    currency_id = config[CONF_CURRENCY_ID]
+    display_currency = config[CONF_DISPLAY_CURRENCY]
+    display_currency_decimals = config[CONF_DISPLAY_CURRENCY_DECIMALS]
 
     try:
         CoinMarketCapData(currency_id, display_currency).update()
@@ -63,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning(
             "Currency ID %s or display currency %s "
             "is not available. Using 1 (bitcoin) "
-            "and USD.",
+            "and USD",
             currency_id,
             display_currency,
         )
@@ -159,6 +160,5 @@ class CoinMarketCapData:
 
     def update(self):
         """Get the latest data from coinmarketcap.com."""
-        from coinmarketcap import Market
 
         self.ticker = Market().ticker(self.currency_id, convert=self.display_currency)

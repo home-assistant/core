@@ -1,31 +1,34 @@
 """The tests for the Queensland Bushfire Alert Feed platform."""
 import datetime
-from unittest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.qld_bushfire.geo_location import (
-    ATTR_EXTERNAL_ID,
-    SCAN_INTERVAL,
     ATTR_CATEGORY,
-    ATTR_STATUS,
+    ATTR_EXTERNAL_ID,
     ATTR_PUBLICATION_DATE,
+    ATTR_STATUS,
     ATTR_UPDATED_DATE,
+    SCAN_INTERVAL,
 )
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    CONF_RADIUS,
+    ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_RADIUS,
+    EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.async_mock import MagicMock, call, patch
+from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "qld_bushfire", CONF_RADIUS: 200}]}
 
@@ -87,7 +90,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "georss_qld_bushfire_alert_client." "QldBushfireAlertFeed"
+        "georss_qld_bushfire_alert_client.QldBushfireAlertFeed"
     ) as mock_feed:
         mock_feed.return_value.update.return_value = (
             "OK",
@@ -95,6 +98,7 @@ async def test_setup(hass):
         )
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+            await hass.async_block_till_done()
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
@@ -120,8 +124,9 @@ async def test_setup(hass):
                     2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc
                 ),
                 ATTR_STATUS: "Status 1",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",
+                ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 15.5
 
@@ -133,8 +138,9 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.1,
                 ATTR_LONGITUDE: -3.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",
+                ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 20.5
 
@@ -146,8 +152,9 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.2,
                 ATTR_LONGITUDE: -3.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",
+                ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 25.5
 
@@ -188,13 +195,14 @@ async def test_setup_with_custom_location(hass):
         "1234", "Title 1", 20.5, (38.1, -3.1), category="Category 1"
     )
 
-    with patch("georss_qld_bushfire_alert_client." "QldBushfireAlertFeed") as mock_feed:
+    with patch("georss_qld_bushfire_alert_client.QldBushfireAlertFeed") as mock_feed:
         mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
             )
+            await hass.async_block_till_done()
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

@@ -3,7 +3,7 @@ import logging
 
 import pywink
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -23,12 +23,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    SUPPORT_PRESET_MODE,
-    PRESET_NONE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([WinkAC(climate, hass)])
 
 
-class WinkThermostat(WinkDevice, ClimateDevice):
+class WinkThermostat(WinkDevice, ClimateEntity):
     """Representation of a Wink thermostat."""
 
     @property
@@ -254,7 +254,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             except KeyError:
                 _LOGGER.error(
                     "Invalid operation mode mapping. %s doesn't map. "
-                    "Please report this.",
+                    "Please report this",
                     mode,
                 )
         return hvac_list
@@ -283,10 +283,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 target_temp_high = target_temp
             if self.hvac_mode == HVAC_MODE_HEAT:
                 target_temp_low = target_temp
-        if target_temp_low is not None:
-            target_temp_low = target_temp_low
-        if target_temp_high is not None:
-            target_temp_high = target_temp_high
         self.wink.set_temperature(target_temp_low, target_temp_high)
 
     def set_hvac_mode(self, hvac_mode):
@@ -385,7 +381,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         return return_value
 
 
-class WinkAC(WinkDevice, ClimateDevice):
+class WinkAC(WinkDevice, ClimateEntity):
     """Representation of a Wink air conditioner."""
 
     @property
@@ -461,7 +457,7 @@ class WinkAC(WinkDevice, ClimateDevice):
             except KeyError:
                 _LOGGER.error(
                     "Invalid operation mode mapping. %s doesn't map. "
-                    "Please report this.",
+                    "Please report this",
                     mode,
                 )
         return hvac_list

@@ -1,9 +1,9 @@
 """Support for Cisco Mobility Express."""
 import logging
 
+from ciscomobilityexpress.ciscome import CiscoMobilityExpress
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -11,11 +11,12 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_SSL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Cisco ME scanner."""
-    from ciscomobilityexpress.ciscome import CiscoMobilityExpress
 
     config = config[DOMAIN]
 
@@ -43,8 +43,8 @@ def get_scanner(hass, config):
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
-        config.get(CONF_SSL),
-        config.get(CONF_VERIFY_SSL),
+        config[CONF_SSL],
+        config[CONF_VERIFY_SSL],
     )
     if not controller.is_logged_in():
         return None
@@ -89,5 +89,5 @@ class CiscoMEDeviceScanner(DeviceScanner):
         """Check the Cisco ME controller for devices."""
         self.last_results = self.controller.get_associated_devices()
         _LOGGER.debug(
-            "Cisco Mobility Express controller returned:" " %s", self.last_results
+            "Cisco Mobility Express controller returned: %s", self.last_results
         )

@@ -1,9 +1,16 @@
 """Support for LimitlessLED bulbs."""
 import logging
 
+from limitlessled import Color
+from limitlessled.bridge import Bridge
+from limitlessled.group.dimmer import DimmerGroup
+from limitlessled.group.rgbw import RgbwGroup
+from limitlessled.group.rgbww import RgbwwGroup
+from limitlessled.group.white import WhiteGroup
+from limitlessled.pipeline import Pipeline
+from limitlessled.presets import COLORLOOP
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -14,18 +21,19 @@ from homeassistant.components.light import (
     EFFECT_COLORLOOP,
     EFFECT_WHITE,
     FLASH_LONG,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    SUPPORT_COLOR,
     SUPPORT_TRANSITION,
-    Light,
-    PLATFORM_SCHEMA,
+    LightEntity,
 )
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.color import color_temperature_mired_to_kelvin, color_hs_to_RGB
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.color import color_hs_to_RGB, color_temperature_mired_to_kelvin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +145,6 @@ def rewrite_legacy(config):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LimitlessLED lights."""
-    from limitlessled.bridge import Bridge
 
     # Two legacy configuration formats are supported to maintain backwards
     # compatibility.
@@ -169,10 +176,9 @@ def state(new_state):
 
     def decorator(function):
         """Set up the decorator function."""
-        # pylint: disable=protected-access
+
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
-            from limitlessled.pipeline import Pipeline
 
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
@@ -194,15 +200,11 @@ def state(new_state):
     return decorator
 
 
-class LimitlessLEDGroup(Light, RestoreEntity):
+class LimitlessLEDGroup(LightEntity, RestoreEntity):
     """Representation of a LimitessLED group."""
 
     def __init__(self, group, config):
         """Initialize a group."""
-        from limitlessled.group.rgbw import RgbwGroup
-        from limitlessled.group.white import WhiteGroup
-        from limitlessled.group.dimmer import DimmerGroup
-        from limitlessled.group.rgbww import RgbwwGroup
 
         if isinstance(group, WhiteGroup):
             self._supported = SUPPORT_LIMITLESSLED_WHITE
@@ -366,8 +368,6 @@ class LimitlessLEDGroup(Light, RestoreEntity):
         # Add effects.
         if ATTR_EFFECT in kwargs and self._effect_list:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
-                from limitlessled.presets import COLORLOOP
-
                 self._effect = EFFECT_COLORLOOP
                 pipeline.append(COLORLOOP)
             if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
@@ -389,6 +389,5 @@ class LimitlessLEDGroup(Light, RestoreEntity):
 
     def limitlessled_color(self):
         """Convert Home Assistant HS list to RGB Color tuple."""
-        from limitlessled import Color
 
         return Color(*color_hs_to_RGB(*tuple(self._color)))

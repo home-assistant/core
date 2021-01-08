@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Diese Koordinaten sind bereits registriert."
+        },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "title": "Konfigurieren Sie die Grippe in Ihrer N\u00e4he"
+            }
+        }
+    }
+}

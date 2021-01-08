@@ -1,25 +1,25 @@
 """The tests for the Monoprice Blackbird media player platform."""
+from collections import defaultdict
 import unittest
 from unittest import mock
+
+import pytest
 import voluptuous as vol
 
-from collections import defaultdict
-from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    SUPPORT_SELECT_SOURCE,
-)
-from homeassistant.const import STATE_ON, STATE_OFF
-
-import tests.common
+from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
 from homeassistant.components.blackbird.media_player import (
     DATA_BLACKBIRD,
     PLATFORM_SCHEMA,
-    SERVICE_SETALLZONES,
     setup_platform,
 )
-import pytest
+from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
+from homeassistant.const import STATE_OFF, STATE_ON
+
+import tests.common
 
 
 class AttrDict(dict):
@@ -180,7 +180,10 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         # Note, source dictionary is unsorted!
-        with mock.patch("pyblackbird.get_blackbird", new=lambda *a: self.blackbird):
+        with mock.patch(
+            "homeassistant.components.blackbird.media_player.get_blackbird",
+            new=lambda *a: self.blackbird,
+        ):
             setup_platform(
                 self.hass,
                 {
@@ -200,8 +203,9 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.media_player = self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
         self.media_player.hass = self.hass
         self.media_player.entity_id = "media_player.zone_3"
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Tear down the test case."""
         self.hass.stop()
 

@@ -1,19 +1,20 @@
 """Support for scanning a network with nmap."""
-import logging
 from collections import namedtuple
 from datetime import timedelta
+import logging
 
 from getmac import get_mac_address
+from nmap import PortScanner, PortScannerError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOSTS
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,8 +92,6 @@ class NmapDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug("Scanning...")
 
-        from nmap import PortScanner, PortScannerError
-
         scanner = PortScanner()
 
         options = self._options
@@ -110,7 +109,7 @@ class NmapDeviceScanner(DeviceScanner):
             last_results = []
             exclude_hosts = self.exclude
         if exclude_hosts:
-            options += " --exclude {}".format(",".join(exclude_hosts))
+            options += f" --exclude {','.join(exclude_hosts)}"
 
         try:
             result = scanner.scan(hosts=" ".join(self.hosts), arguments=options)

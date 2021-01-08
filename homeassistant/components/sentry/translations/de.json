@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "bad_dsn": "Ung\u00fcltiger DSN",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
+                "description": "Gib deine Sentry-DSN ein",
+                "title": "Sentry"
+            }
+        }
+    }
+}

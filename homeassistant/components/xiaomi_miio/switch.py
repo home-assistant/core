@@ -3,12 +3,34 @@ import asyncio
 from functools import partial
 import logging
 
+from miio import (  # pylint: disable=import-error
+    AirConditioningCompanionV3,
+    ChuangmiPlug,
+    Device,
+    DeviceException,
+    PowerStrip,
+)
+from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    DOMAIN,
+    SERVICE_SET_POWER_MODE,
+    SERVICE_SET_POWER_PRICE,
+    SERVICE_SET_WIFI_LED_OFF,
+    SERVICE_SET_WIFI_LED_ON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v2",
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
+                "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -44,7 +68,6 @@ ATTR_POWER = "power"
 ATTR_TEMPERATURE = "temperature"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
-ATTR_MODE = "mode"
 ATTR_POWER_MODE = "power_mode"
 ATTR_WIFI_LED = "wifi_led"
 ATTR_POWER_PRICE = "power_price"
@@ -66,11 +89,6 @@ FEATURE_FLAGS_POWER_STRIP_V2 = FEATURE_SET_WIFI_LED | FEATURE_SET_POWER_PRICE
 
 FEATURE_FLAGS_PLUG_V3 = FEATURE_SET_WIFI_LED
 
-SERVICE_SET_WIFI_LED_ON = "xiaomi_miio_set_wifi_led_on"
-SERVICE_SET_WIFI_LED_OFF = "xiaomi_miio_set_wifi_led_off"
-SERVICE_SET_POWER_MODE = "xiaomi_miio_set_power_mode"
-SERVICE_SET_POWER_PRICE = "xiaomi_miio_set_power_price"
-
 SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
@@ -78,7 +96,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))}
+    {vol.Required(ATTR_PRICE): cv.positive_float}
 )
 
 SERVICE_TO_METHOD = {
@@ -97,14 +115,12 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the switch from config."""
-    from miio import Device, DeviceException
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
+    name = config[CONF_NAME]
     model = config.get(CONF_MODEL)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -115,21 +131,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if model is None:
         try:
             miio_device = Device(host, token)
-            device_info = miio_device.info()
+            device_info = await hass.async_add_executor_job(miio_device.info)
             model = device_info.model
-            unique_id = "{}-{}".format(model, device_info.mac_address)
+            unique_id = f"{model}-{device_info.mac_address}"
             _LOGGER.info(
                 "%s %s %s detected",
                 model,
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3"]:
-        from miio import ChuangmiPlug
-
+    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
         plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
@@ -140,8 +154,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             hass.data[DATA_KEY][host] = device
 
     elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
-        from miio import PowerStrip
-
         plug = PowerStrip(host, token, model=model)
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
@@ -151,16 +163,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "chuangmi.plug.m3",
         "chuangmi.plug.v2",
         "chuangmi.plug.hmi205",
+        "chuangmi.plug.hmi206",
     ]:
-        from miio import ChuangmiPlug
-
         plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     elif model in ["lumi.acpartner.v3"]:
-        from miio import AirConditioningCompanionV3
-
         plug = AirConditioningCompanionV3(host, token)
         device = XiaomiAirConditioningCompanionSwitch(name, plug, model, unique_id)
         devices.append(device)
@@ -209,7 +218,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPlugGenericSwitch(SwitchDevice):
+class XiaomiPlugGenericSwitch(SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
     def __init__(self, name, plug, model, unique_id):
@@ -225,11 +234,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def should_poll(self):
-        """Poll the plug."""
-        return True
 
     @property
     def unique_id(self):
@@ -263,8 +267,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
-        from miio import DeviceException
-
         try:
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
@@ -278,8 +280,10 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, **kwargs):
@@ -300,8 +304,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -316,8 +318,9 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
@@ -374,8 +377,6 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -404,15 +405,14 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
         if self._device_features & FEATURE_SET_POWER_MODE == 0:
             return
-
-        from miio.powerstrip import PowerMode
 
         await self._try_command(
             "Setting the power mode of the power strip failed.",
@@ -426,10 +426,10 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
     def __init__(self, name, plug, model, unique_id, channel_usb):
         """Initialize the plug switch."""
-        name = "{} USB".format(name) if channel_usb else name
+        name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
-            unique_id = "{}-{}".format(unique_id, "usb")
+            unique_id = f"{unique_id}-usb"
 
         super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb
@@ -472,8 +472,6 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -498,8 +496,9 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
@@ -533,8 +532,6 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -549,5 +546,6 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)

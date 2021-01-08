@@ -1,26 +1,25 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
-import logging
-
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SIGNAL_PANEL_MESSAGE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import SIGNAL_PANEL_MESSAGE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up for AlarmDecoder sensor devices."""
-    _LOGGER.debug("AlarmDecoderSensor: setup_platform")
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+):
+    """Set up for AlarmDecoder sensor."""
 
-    device = AlarmDecoderSensor(hass)
-
-    add_entities([device])
+    entity = AlarmDecoderSensor()
+    async_add_entities([entity])
+    return True
 
 
 class AlarmDecoderSensor(Entity):
     """Representation of an AlarmDecoder keypad."""
 
-    def __init__(self, hass):
+    def __init__(self):
         """Initialize the alarm panel."""
         self._display = ""
         self._state = None
@@ -29,8 +28,10 @@ class AlarmDecoderSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_PANEL_MESSAGE, self._message_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_PANEL_MESSAGE, self._message_callback
+            )
         )
 
     def _message_callback(self, message):

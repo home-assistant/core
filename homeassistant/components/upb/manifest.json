@@ -1,0 +1,8 @@
+{
+  "domain": "upb",
+  "name": "Universal Powerline Bus (UPB)",
+  "documentation": "https://www.home-assistant.io/integrations/upb",
+  "requirements": ["upb_lib==0.4.11"],
+  "codeowners": ["@gwww"],
+  "config_flow": true
+}

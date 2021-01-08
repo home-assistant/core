@@ -5,13 +5,18 @@ import requests
 
 from homeassistant.components.camera import Camera
 
-from . import BLOOMSKY
+from . import DOMAIN
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to BloomSky cameras."""
-    for device in BLOOMSKY.devices.values():
-        add_entities([BloomSkyCamera(BLOOMSKY, device)])
+    if discovery_info is not None:
+        return
+
+    bloomsky = hass.data[DOMAIN]
+
+    for device in bloomsky.devices.values():
+        add_entities([BloomSkyCamera(bloomsky, device)])
 
 
 class BloomSkyCamera(Camera):
@@ -19,7 +24,7 @@ class BloomSkyCamera(Camera):
 
     def __init__(self, bs, device):
         """Initialize access to the BloomSky camera images."""
-        super(BloomSkyCamera, self).__init__()
+        super().__init__()
         self._name = device["DeviceName"]
         self._id = device["DeviceID"]
         self._bloomsky = bs

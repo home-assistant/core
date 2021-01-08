@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "IP Adresse annoncieren",
+                    "advertise_port": "Port annoncieren",
+                    "host_ip": "Host-IP",
+                    "listen_port": "Listen-Port",
+                    "name": "Name",
+                    "upnp_bind_multicast": "Multicast binden (True/False)"
+                },
+                "title": "Serverkonfiguration definieren"
+            }
+        }
+    },
+    "title": "Emulated Roku"
+}

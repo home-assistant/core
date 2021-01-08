@@ -148,11 +148,11 @@ class LogiCam(Camera):
 
     async def async_turn_off(self):
         """Disable streaming mode for this camera."""
-        await self._camera.set_streaming_mode(False)
+        await self._camera.set_config("streaming", False)
 
     async def async_turn_on(self):
         """Enable streaming mode for this camera."""
-        await self._camera.set_streaming_mode(True)
+        await self._camera.set_config("streaming", True)
 
     @property
     def should_poll(self):
@@ -172,7 +172,7 @@ class LogiCam(Camera):
         filename.hass = self.hass
         stream_file = filename.async_render(variables={ATTR_ENTITY_ID: self.entity_id})
 
-        # Respect configured path whitelist.
+        # Respect configured allowed paths.
         if not self.hass.config.is_allowed_path(stream_file):
             _LOGGER.error("Can't write %s, no access to path!", stream_file)
             return
@@ -191,7 +191,7 @@ class LogiCam(Camera):
             variables={ATTR_ENTITY_ID: self.entity_id}
         )
 
-        # Respect configured path whitelist.
+        # Respect configured allowed paths.
         if not self.hass.config.is_allowed_path(snapshot_file):
             _LOGGER.error("Can't write %s, no access to path!", snapshot_file)
             return

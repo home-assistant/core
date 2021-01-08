@@ -1,8 +1,8 @@
 """Color util methods."""
-import math
 import colorsys
+import math
+from typing import List, Optional, Tuple
 
-from typing import Tuple, List, Optional
 import attr
 
 # Official CSS3 colors from w3.org:
@@ -107,7 +107,7 @@ COLORS = {
     "mediumslateblue": (123, 104, 238),
     "mediumspringgreen": (0, 250, 154),
     "mediumturquoise": (72, 209, 204),
-    "mediumvioletredred": (199, 21, 133),
+    "mediumvioletred": (199, 21, 133),
     "midnightblue": (25, 25, 112),
     "mintcream": (245, 255, 250),
     "mistyrose": (255, 228, 225),
@@ -167,8 +167,8 @@ COLORS = {
 class XYPoint:
     """Represents a CIE 1931 XY coordinate pair."""
 
-    x = attr.ib(type=float)
-    y = attr.ib(type=float)
+    x: float = attr.ib()  # pylint: disable=invalid-name
+    y: float = attr.ib()  # pylint: disable=invalid-name
 
 
 @attr.s()
@@ -176,9 +176,9 @@ class GamutType:
     """Represents the Gamut of a light."""
 
     # ColorGamut = gamut(xypoint(xR,yR),xypoint(xG,yG),xypoint(xB,yB))
-    red = attr.ib(type=XYPoint)
-    green = attr.ib(type=XYPoint)
-    blue = attr.ib(type=XYPoint)
+    red: XYPoint = attr.ib()
+    green: XYPoint = attr.ib()
+    blue: XYPoint = attr.ib()
 
 
 def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
@@ -424,7 +424,7 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> Tuple[int, int, int]:
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
     """Return a RGB color from a hex color string."""
-    return "{0:02x}{1:02x}{2:02x}".format(round(r), round(g), round(b))
+    return "{:02x}{:02x}{:02x}".format(round(r), round(g), round(b))
 
 
 def rgb_hex_to_rgb_list(hex_string: str) -> List[int]:
@@ -441,7 +441,7 @@ def color_temperature_to_hs(color_temperature_kelvin: float) -> Tuple[float, flo
 
 
 def color_temperature_to_rgb(
-    color_temperature_kelvin: float
+    color_temperature_kelvin: float,
 ) -> Tuple[float, float, float]:
     """
     Return an RGB color from a color temperature in Kelvin.

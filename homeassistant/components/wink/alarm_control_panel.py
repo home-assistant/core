@@ -1,7 +1,11 @@
 """Support Wink alarm control panels."""
-import logging
+import pywink
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -10,14 +14,11 @@ from homeassistant.const import (
 
 from . import DOMAIN, WinkDevice
 
-_LOGGER = logging.getLogger(__name__)
-
 STATE_ALARM_PRIVACY = "Private"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for camera in pywink.get_cameras():
         # get_cameras returns multiple device types.
@@ -30,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 add_entities([WinkCameraDevice(camera, hass)])
 
 
-class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
+class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanelEntity):
     """Representation a Wink camera alarm."""
 
     async def async_added_to_hass(self):
@@ -50,6 +51,11 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
         else:
             state = None
         return state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

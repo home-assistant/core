@@ -7,7 +7,6 @@ import time
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.helpers import state
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def setup(hass, config):
         sock.connect((host, port))
         sock.shutdown(2)
         _LOGGER.debug("Connection to Graphite possible")
-    except socket.error:
+    except OSError:
         _LOGGER.error("Not able to connect to Graphite")
         return False
 
@@ -64,7 +64,7 @@ class GraphiteFeeder(threading.Thread):
 
     def __init__(self, hass, host, port, prefix):
         """Initialize the feeder."""
-        super(GraphiteFeeder, self).__init__(daemon=True)
+        super().__init__(daemon=True)
         self._hass = hass
         self._host = host
         self._port = port
@@ -104,7 +104,7 @@ class GraphiteFeeder(threading.Thread):
         sock.settimeout(10)
         sock.connect((self._host, self._port))
         sock.sendall(data.encode("ascii"))
-        sock.send("\n".encode("ascii"))
+        sock.send(b"\n")
         sock.close()
 
     def _report_attributes(self, entity_id, new_state):
@@ -128,7 +128,7 @@ class GraphiteFeeder(threading.Thread):
             self._send_to_graphite("\n".join(lines))
         except socket.gaierror:
             _LOGGER.error("Unable to connect to host %s", self._host)
-        except socket.error:
+        except OSError:
             _LOGGER.exception("Failed to send data to graphite")
 
     def run(self):
@@ -139,7 +139,16 @@ class GraphiteFeeder(threading.Thread):
                 _LOGGER.debug("Event processing thread stopped")
                 self._queue.task_done()
                 return
-            if event.event_type == EVENT_STATE_CHANGED and event.data.get("new_state"):
+            if event.event_type == EVENT_STATE_CHANGED:
+                if not event.data.get("new_state"):
+                    _LOGGER.debug(
+                        "Skipping %s without new_state for %s",
+                        event.event_type,
+                        event.data["entity_id"],
+                    )
+                    self._queue.task_done()
+                    continue
+
                 _LOGGER.debug(
                     "Processing STATE_CHANGED event for %s", event.data["entity_id"]
                 )

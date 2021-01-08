@@ -1,13 +1,12 @@
 """Support for Edimax switches."""
-import logging
-
+from pyedimax.smartplug import SmartPlug
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+DOMAIN = "edimax"
 
 DEFAULT_NAME = "Edimax Smart Plug"
 DEFAULT_PASSWORD = "1234"
@@ -25,16 +24,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Edimax Smart Plugs."""
-    from pyedimax.smartplug import SmartPlug
-
     host = config.get(CONF_HOST)
     auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     name = config.get(CONF_NAME)
 
-    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)])
+    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)], True)
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(SwitchEntity):
     """Representation an Edimax Smart Plug switch."""
 
     def __init__(self, smartplug, name):
@@ -44,6 +41,14 @@ class SmartPlugSwitch(SwitchDevice):
         self._now_power = None
         self._now_energy_day = None
         self._state = False
+        self._supports_power_monitoring = False
+        self._info = None
+        self._mac = None
+
+    @property
+    def unique_id(self):
+        """Return the device's MAC address."""
+        return self._mac
 
     @property
     def name(self):
@@ -75,14 +80,20 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update edimax switch."""
-        try:
-            self._now_power = float(self.smartplug.now_power)
-        except (TypeError, ValueError):
-            self._now_power = None
+        if not self._info:
+            self._info = self.smartplug.info
+            self._mac = self._info["mac"]
+            self._supports_power_monitoring = self._info["model"] != "SP1101W"
 
-        try:
-            self._now_energy_day = float(self.smartplug.now_energy_day)
-        except (TypeError, ValueError):
-            self._now_energy_day = None
+        if self._supports_power_monitoring:
+            try:
+                self._now_power = float(self.smartplug.now_power)
+            except (TypeError, ValueError):
+                self._now_power = None
+
+            try:
+                self._now_energy_day = float(self.smartplug.now_energy_day)
+            except (TypeError, ValueError):
+                self._now_energy_day = None
 
         self._state = self.smartplug.state == "ON"

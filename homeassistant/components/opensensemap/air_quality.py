@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from opensensemap_api import OpenSenseMap
+from opensensemap_api.exceptions import OpenSenseMapError
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
@@ -26,7 +28,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the openSenseMap air quality platform."""
-    from opensensemap_api import OpenSenseMap
 
     name = config.get(CONF_NAME)
     station_id = config[CONF_STATION_ID]
@@ -88,7 +89,6 @@ class OpenSenseMapData:
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the latest data from the Pi-hole."""
-        from opensensemap_api.exceptions import OpenSenseMapError
 
         try:
             await self.api.get_data()

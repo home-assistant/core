@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Ponovno overjanje je uspelo",
+            "single_instance_allowed": "Dovoljena je samo ena konfiguracija Abode."
+        },
+        "error": {
+            "invalid_mfa_code": "Napa\u010dna MFA koda"
+        },
+        "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "MFA koda (6 \u0161tevilk)"
+                },
+                "title": "Vnesite MFA kodo za Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "E-po\u0161tni naslov"
+                },
+                "title": "Vnesite podatke za prijavo v Abode"
+            },
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "E-po\u0161tni naslov"
+                },
+                "title": "Izpolnite svoje podatke za prijavo v Abode"
+            }
+        }
+    }
+}

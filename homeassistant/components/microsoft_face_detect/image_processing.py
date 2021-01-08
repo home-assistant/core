@@ -30,7 +30,7 @@ def validate_attributes(list_attributes):
     """Validate face attributes."""
     for attr in list_attributes:
         if attr not in SUPPORTED_ATTRIBUTES:
-            raise vol.Invalid("Invalid attribute {0}".format(attr))
+            raise vol.Invalid(f"Invalid attribute {attr}")
     return list_attributes
 
 
@@ -73,7 +73,7 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
         if name:
             self._name = name
         else:
-            self._name = "MicrosoftFace {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"MicrosoftFace {split_entity_id(camera_entity)[1]}"
 
     @property
     def camera_entity(self):

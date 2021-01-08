@@ -24,18 +24,18 @@ from .const import ATTR_SENSOR_ID
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an Luftdaten sensor based on existing config."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Luftdaten sensor based on a config entry."""
     luftdaten = hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT][entry.entry_id]
 
     sensors = []
     for sensor_type in luftdaten.sensor_conditions:
-        name, icon, unit = SENSORS[sensor_type]
+        try:
+            name, icon, unit = SENSORS[sensor_type]
+        except KeyError:
+            _LOGGER.debug("Unknown sensor value type: %s", sensor_type)
+            continue
+
         sensors.append(
             LuftdatenSensor(
                 luftdaten, sensor_type, name, icon, unit, entry.data[CONF_SHOW_ON_MAP]
@@ -69,7 +69,10 @@ class LuftdatenSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._data is not None:
-            return self._data[self.sensor_type]
+            try:
+                return self._data[self.sensor_type]
+            except KeyError:
+                return None
 
     @property
     def unit_of_measurement(self):
@@ -85,7 +88,10 @@ class LuftdatenSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
         if self._data is not None:
-            return "{0}_{1}".format(self._data["sensor_id"], self.sensor_type)
+            try:
+                return f"{self._data['sensor_id']}_{self.sensor_type}"
+            except KeyError:
+                return None
 
     @property
     def device_state_attributes(self):
@@ -93,7 +99,10 @@ class LuftdatenSensor(Entity):
         self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
         if self._data is not None:
-            self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            try:
+                self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            except KeyError:
+                return None
 
             on_map = ATTR_LATITUDE, ATTR_LONGITUDE
             no_map = "lat", "long"

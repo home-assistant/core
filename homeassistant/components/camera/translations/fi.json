@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Lepotilassa",
+            "recording": "Tallentaa",
+            "streaming": "Toistaa"
+        }
+    },
+    "title": "Kamera"
+}

@@ -2,15 +2,15 @@
 import asyncio
 import logging
 import os
-import sys
 from subprocess import PIPE
-from unittest.mock import MagicMock, call, patch
+import sys
 
 import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
 
+from tests.async_mock import MagicMock, call, patch
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "resources")
@@ -71,13 +71,11 @@ def mock_venv():
         yield mock
 
 
-@asyncio.coroutine
 def mock_async_subprocess():
     """Return an async Popen mock."""
     async_popen = MagicMock()
 
-    @asyncio.coroutine
-    def communicate(input=None):
+    async def communicate(input=None):
         """Communicate mock."""
         stdout = bytes("/deps_dir/lib_dir", "utf-8")
         return (stdout, None)
@@ -218,8 +216,7 @@ def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-@asyncio.coroutine
-def test_async_get_user_site(mock_env_copy):
+async def test_async_get_user_site(mock_env_copy):
     """Test async get user site directory."""
     deps_dir = "/deps_dir"
     env = mock_env_copy()
@@ -229,7 +226,7 @@ def test_async_get_user_site(mock_env_copy):
         "homeassistant.util.package.asyncio.create_subprocess_exec",
         return_value=mock_async_subprocess(),
     ) as popen_mock:
-        ret = yield from package.async_get_user_site(deps_dir)
+        ret = await package.async_get_user_site(deps_dir)
     assert popen_mock.call_count == 1
     assert popen_mock.call_args == call(
         *args,

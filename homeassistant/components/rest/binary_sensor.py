@@ -1,23 +1,24 @@
 """Support for RESTful binary sensors."""
-import logging
-
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
+    CONF_FORCE_UPDATE,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
+    CONF_RESOURCE_TEMPLATE,
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -27,23 +28,25 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
 
-from .sensor import RestData
-
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN, PLATFORMS
+from .data import DEFAULT_TIMEOUT, RestData
 
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"
 DEFAULT_VERIFY_SSL = True
-DEFAULT_TIMEOUT = 10
+DEFAULT_FORCE_UPDATE = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
+        vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
+        vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+        vol.Optional(CONF_PARAMS): {cv.string: cv.string},
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(["POST", "GET"]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -52,15 +55,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
+    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
@@ -68,33 +80,62 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    force_update = config.get(CONF_FORCE_UPDATE)
+
+    if resource_template is not None:
+        resource_template.hass = hass
+        resource = resource_template.async_render(parse_result=False)
+
     if value_template is not None:
         value_template.hass = hass
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
+            auth = httpx.DigestAuth(username, password)
         else:
-            auth = HTTPBasicAuth(username, password)
+            auth = (username, password)
     else:
         auth = None
 
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
-    rest.update()
+    rest = RestData(
+        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+    )
+    await rest.async_update()
+
     if rest.data is None:
         raise PlatformNotReady
 
-    # No need to update the sensor now because it will determine its state
-    # based in the rest resource that has just been retrieved.
-    add_entities([RestBinarySensor(hass, rest, name, device_class, value_template)])
+    async_add_entities(
+        [
+            RestBinarySensor(
+                hass,
+                rest,
+                name,
+                device_class,
+                value_template,
+                force_update,
+                resource_template,
+            )
+        ],
+    )
 
 
-class RestBinarySensor(BinarySensorDevice):
+class RestBinarySensor(BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
-    def __init__(self, hass, rest, name, device_class, value_template):
+    def __init__(
+        self,
+        hass,
+        rest,
+        name,
+        device_class,
+        value_template,
+        force_update,
+        resource_template,
+    ):
         """Initialize a REST binary sensor."""
         self._hass = hass
         self.rest = rest
@@ -103,6 +144,8 @@ class RestBinarySensor(BinarySensorDevice):
         self._state = False
         self._previous_data = None
         self._value_template = value_template
+        self._force_update = force_update
+        self._resource_template = resource_template
 
     @property
     def name(self):
@@ -139,6 +182,14 @@ class RestBinarySensor(BinarySensorDevice):
                 response.lower(), False
             )
 
-    def update(self):
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
+
+    async def async_update(self):
         """Get the latest data from REST API and updates the state."""
-        self.rest.update()
+        if self._resource_template is not None:
+            self.rest.set_url(self._resource_template.async_render(parse_result=False))
+
+        await self.rest.async_update()

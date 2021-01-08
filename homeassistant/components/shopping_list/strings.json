@@ -1,0 +1,14 @@
+{
+  "title": "Shopping List",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Shopping List",
+        "description": "Do you want to configure the shopping list?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

@@ -3,28 +3,31 @@ import json
 import unittest
 from unittest import mock
 
-import asynctest
-from libpurecool.const import FanSpeed, FanMode, NightMode, Oscillation
+from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 
-import homeassistant.components.dyson.fan as dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import DYSON_DEVICES
+import homeassistant.components.dyson.fan as dyson
 from homeassistant.components.fan import (
-    DOMAIN,
-    ATTR_SPEED,
     ATTR_OSCILLATING,
+    ATTR_SPEED,
+    DOMAIN,
+    SERVICE_OSCILLATE,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
-    SERVICE_OSCILLATE,
 )
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
+
+from .common import load_mock_device
+
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -35,41 +38,27 @@ class MockDysonState(DysonPureCoolState):
         """Create new Mock Dyson State."""
         pass
 
+    def __repr__(self):
+        """Mock repr because original one fails since constructor not called."""
+        return "<MockDysonState>"
+
 
 def _get_dyson_purecool_device():
     """Return a valid device as provided by the Dyson web services."""
     device = mock.Mock(spec=DysonPureCool)
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.state = mock.Mock()
-    device.state.oscillation = "OION"
-    device.state.fan_power = "ON"
-    device.state.speed = FanSpeed.FAN_SPEED_AUTO.value
-    device.state.night_mode = "OFF"
-    device.state.auto_mode = "ON"
-    device.state.oscillation_angle_low = "0090"
-    device.state.oscillation_angle_high = "0180"
-    device.state.front_direction = "ON"
-    device.state.sleep_timer = 60
-    device.state.hepa_filter_state = "0090"
-    device.state.carbon_filter_state = "0080"
     return device
 
 
 def _get_dyson_purecoollink_device():
     """Return a valid device as provided by the Dyson web services."""
     device = mock.Mock(spec=DysonPureCoolLink)
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.state = mock.Mock()
     device.state.oscillation = "ON"
     device.state.fan_mode = "FAN"
     device.state.speed = FanSpeed.FAN_SPEED_AUTO.value
-    device.state.night_mode = "OFF"
     return device
 
 
@@ -151,8 +140,9 @@ class DysonSetupTest(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -188,8 +178,9 @@ class DysonTest(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -401,8 +392,8 @@ class DysonTest(unittest.TestCase):
         dyson_device.set_night_mode.assert_called_with(True)
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecoollink_device()],
 )
@@ -419,8 +410,8 @@ async def test_purecoollink_attributes(devices, login, hass):
     assert attributes[ATTR_OSCILLATING] is True
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -441,8 +432,8 @@ async def test_purecool_turn_on(devices, login, hass):
     assert device.turn_on.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -485,8 +476,8 @@ async def test_purecool_set_speed(devices, login, hass):
     device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_10)
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -507,8 +498,8 @@ async def test_purecool_turn_off(devices, login, hass):
     assert device.turn_off.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -541,8 +532,8 @@ async def test_purecool_set_dyson_speed(devices, login, hass):
     device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_2)
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -577,8 +568,8 @@ async def test_purecool_oscillate(devices, login, hass):
     assert device.disable_oscillation.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -614,8 +605,8 @@ async def test_purecool_set_night_mode(devices, login, hass):
     assert device.disable_night_mode.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -650,8 +641,8 @@ async def test_purecool_set_auto_mode(devices, login, hass):
     assert device.disable_auto_mode.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -686,8 +677,8 @@ async def test_purecool_set_angle(devices, login, hass):
     device.enable_oscillation.assert_called_with(90, 180)
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -722,8 +713,8 @@ async def test_purecool_set_flow_direction_front(devices, login, hass):
     assert device.disable_frontal_direction.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -758,8 +749,8 @@ async def test_purecool_set_timer(devices, login, hass):
     assert device.disable_sleep_timer.call_count == 1
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
@@ -819,8 +810,69 @@ async def test_purecool_update_state(devices, login, hass):
     assert attributes[dyson.ATTR_DYSON_SPEED_LIST] == _get_supported_speeds()
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purecool_device()],
+)
+async def test_purecool_update_state_filter_inv(devices, login, hass):
+    """Test state TP06 carbon filter state."""
+    device = devices.return_value[0]
+    await async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
+    await hass.async_block_till_done()
+    event = {
+        "msg": "CURRENT-STATE",
+        "product-state": {
+            "fpwr": "OFF",
+            "fdir": "ON",
+            "auto": "ON",
+            "oscs": "ON",
+            "oson": "ON",
+            "nmod": "ON",
+            "rhtm": "ON",
+            "fnst": "FAN",
+            "ercd": "11E1",
+            "wacd": "NONE",
+            "nmdv": "0004",
+            "fnsp": "0002",
+            "bril": "0002",
+            "corf": "ON",
+            "cflr": "INV",
+            "hflr": "0075",
+            "sltm": "OFF",
+            "osal": "0055",
+            "osau": "0105",
+            "ancp": "CUST",
+        },
+    }
+    device.state = DysonPureCoolV2State(json.dumps(event))
+
+    for call in device.add_message_listener.call_args_list:
+        callback = call[0][0]
+        if type(callback.__self__) == dyson.DysonPureCoolDevice:
+            callback(device.state)
+
+    await hass.async_block_till_done()
+    fan_state = hass.states.get("fan.living_room")
+    attributes = fan_state.attributes
+
+    assert fan_state.state == "off"
+    assert attributes[dyson.ATTR_NIGHT_MODE] is True
+    assert attributes[dyson.ATTR_AUTO_MODE] is True
+    assert attributes[dyson.ATTR_ANGLE_LOW] == 55
+    assert attributes[dyson.ATTR_ANGLE_HIGH] == 105
+    assert attributes[dyson.ATTR_FLOW_DIRECTION_FRONT] is True
+    assert attributes[dyson.ATTR_TIMER] == "OFF"
+    assert attributes[dyson.ATTR_HEPA_FILTER] == 75
+    assert attributes[dyson.ATTR_CARBON_FILTER] == "INV"
+    assert attributes[dyson.ATTR_DYSON_SPEED] == int(FanSpeed.FAN_SPEED_2.value)
+    assert attributes[ATTR_SPEED] is SPEED_LOW
+    assert attributes[ATTR_OSCILLATING] is False
+    assert attributes[dyson.ATTR_DYSON_SPEED_LIST] == _get_supported_speeds()
+
+
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )

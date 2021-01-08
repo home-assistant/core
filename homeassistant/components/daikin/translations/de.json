@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort"
+                },
+                "description": "Gib die IP-Adresse deiner Daikin AC ein.",
+                "title": "Daikin AC konfigurieren"
+            }
+        }
+    }
+}

@@ -1,11 +1,16 @@
 {
   "config": {
-    "title": "Philips Hue",
     "step": {
       "init": {
         "title": "Pick Hue bridge",
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "manual": {
+        "title": "Manual configure a Hue bridge",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
         }
       },
       "link": {
@@ -15,17 +20,48 @@
     },
     "error": {
       "register_failed": "Failed to register, please try again",
-      "linking": "Unknown linking error occurred."
+      "linking": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "discover_timeout": "Unable to discover Hue bridges",
       "no_bridges": "No Philips Hue bridges discovered",
       "all_configured": "All Philips Hue bridges are already configured",
-      "unknown": "Unknown error occurred",
-      "cannot_connect": "Unable to connect to the bridge",
-      "already_configured": "Bridge is already configured",
-      "already_in_progress": "Config flow for bridge is already in progress.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_hue_bridge": "Not a Hue bridge"
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "button_1": "First button",
+      "button_2": "Second button",
+      "button_3": "Third button",
+      "button_4": "Fourth button",
+      "double_buttons_1_3": "First and Third buttons",
+      "double_buttons_2_4": "Second and Fourth buttons",
+      "dim_down": "Dim down",
+      "dim_up": "Dim up",
+      "turn_off": "Turn off",
+      "turn_on": "Turn on"
+    },
+    "trigger_type": {
+      "remote_button_long_release": "\"{subtype}\" button released after long press",
+      "remote_button_short_press": "\"{subtype}\" button pressed",
+      "remote_button_short_release": "\"{subtype}\" button released",
+      "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
+      "remote_double_button_short_press": "Both \"{subtype}\" released"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "allow_hue_groups": "Allow Hue groups",
+          "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
+        }
+      }
     }
   }
 }

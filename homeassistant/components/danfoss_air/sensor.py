@@ -1,10 +1,13 @@
 """Support for the for Danfoss Air HRV sensors."""
 import logging
 
+from pydanfossair.commands import ReadCommand
+
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
@@ -16,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
-    from pydanfossair.commands import ReadCommand
-
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [
@@ -45,14 +46,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ReadCommand.extractTemperature,
             DEVICE_CLASS_TEMPERATURE,
         ],
-        ["Danfoss Air Remaining Filter", "%", ReadCommand.filterPercent, None],
-        ["Danfoss Air Humidity", "%", ReadCommand.humidity, DEVICE_CLASS_HUMIDITY],
-        ["Danfoss Air Fan Step", "%", ReadCommand.fan_step, None],
-        ["Dandoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
-        ["Dandoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
         [
-            "Dandoss Air Dial Battery",
-            "%",
+            "Danfoss Air Remaining Filter",
+            PERCENTAGE,
+            ReadCommand.filterPercent,
+            None,
+        ],
+        [
+            "Danfoss Air Humidity",
+            PERCENTAGE,
+            ReadCommand.humidity,
+            DEVICE_CLASS_HUMIDITY,
+        ],
+        ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None],
+        ["Danfoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
+        ["Danfoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
+        [
+            "Danfoss Air Dial Battery",
+            PERCENTAGE,
             ReadCommand.battery_percent,
             DEVICE_CLASS_BATTERY,
         ],

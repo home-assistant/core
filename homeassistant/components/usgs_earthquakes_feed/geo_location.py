@@ -3,6 +3,9 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from geojson_client.usgs_earthquake_hazards_program_feed import (
+    UsgsEarthquakeHazardsProgramFeedManager,
+)
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -13,6 +16,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +39,7 @@ CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
+DEFAULT_UNIT_OF_MEASUREMENT = LENGTH_KILOMETERS
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -75,7 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
         vol.Optional(
             CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-        ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        ): cv.positive_float,
     }
 )
 
@@ -122,9 +126,6 @@ class UsgsEarthquakesFeedEntityManager:
         minimum_magnitude,
     ):
         """Initialize the Feed Entity Manager."""
-        from geojson_client.usgs_earthquake_hazards_program_feed import (
-            UsgsEarthquakeHazardsProgramFeedManager,
-        )
 
         self._hass = hass
         self._feed_manager = UsgsEarthquakeHazardsProgramFeedManager(
@@ -242,6 +243,11 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._status = feed_entry.status
         self._type = feed_entry.type
         self._alert = feed_entry.alert
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:pulse"
 
     @property
     def source(self) -> str:

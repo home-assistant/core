@@ -1,87 +1,95 @@
 """Support for SCSGate switches."""
 import logging
 
+from scsgate.messages import ScenarioTriggeredMessage, StateMessage
+from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from homeassistant.components import scsgate
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
 ATTR_SCENARIO_ID = "scenario_id"
 
 CONF_TRADITIONAL = "traditional"
 CONF_SCENARIO = "scenario"
 
-CONF_SCS_ID = "scs_id"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(scsgate.SCSGATE_SCHEMA)}
+    {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(SCSGATE_SCHEMA)}
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SCSGate switches."""
     logger = logging.getLogger(__name__)
+    scsgate = hass.data[DOMAIN]
 
     _setup_traditional_switches(
-        logger=logger, config=config, add_entities_callback=add_entities
+        logger=logger,
+        config=config,
+        scsgate=scsgate,
+        add_entities_callback=add_entities,
     )
 
-    _setup_scenario_switches(logger=logger, config=config, hass=hass)
+    _setup_scenario_switches(logger=logger, config=config, scsgate=scsgate, hass=hass)
 
 
-def _setup_traditional_switches(logger, config, add_entities_callback):
+def _setup_traditional_switches(logger, config, scsgate, add_entities_callback):
     """Add traditional SCSGate switches."""
     traditional = config.get(CONF_TRADITIONAL)
     switches = []
 
     if traditional:
-        for _, entity_info in traditional.items():
-            if entity_info[scsgate.CONF_SCS_ID] in scsgate.SCSGATE.devices:
+        for entity_info in traditional.values():
+            if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 
             name = entity_info[CONF_NAME]
-            scs_id = entity_info[scsgate.CONF_SCS_ID]
+            scs_id = entity_info[CONF_SCS_ID]
 
             logger.info("Adding %s scsgate.traditional_switch", name)
 
-            switch = SCSGateSwitch(name=name, scs_id=scs_id, logger=logger)
+            switch = SCSGateSwitch(
+                name=name, scs_id=scs_id, logger=logger, scsgate=scsgate
+            )
             switches.append(switch)
 
     add_entities_callback(switches)
-    scsgate.SCSGATE.add_devices_to_register(switches)
+    scsgate.add_devices_to_register(switches)
 
 
-def _setup_scenario_switches(logger, config, hass):
+def _setup_scenario_switches(logger, config, scsgate, hass):
     """Add only SCSGate scenario switches."""
     scenario = config.get(CONF_SCENARIO)
 
     if scenario:
-        for _, entity_info in scenario.items():
-            if entity_info[scsgate.CONF_SCS_ID] in scsgate.SCSGATE.devices:
+        for entity_info in scenario.values():
+            if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 
             name = entity_info[CONF_NAME]
-            scs_id = entity_info[scsgate.CONF_SCS_ID]
+            scs_id = entity_info[CONF_SCS_ID]
 
             logger.info("Adding %s scsgate.scenario_switch", name)
 
             switch = SCSGateScenarioSwitch(
                 name=name, scs_id=scs_id, logger=logger, hass=hass
             )
-            scsgate.SCSGATE.add_device(switch)
+            scsgate.add_device(switch)
 
 
-class SCSGateSwitch(SwitchDevice):
+class SCSGateSwitch(SwitchEntity):
     """Representation of a SCSGate switch."""
 
-    def __init__(self, scs_id, name, logger):
+    def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the switch."""
         self._name = name
         self._scs_id = scs_id
         self._toggled = False
         self._logger = logger
+        self._scsgate = scsgate
 
     @property
     def scs_id(self):
@@ -105,20 +113,16 @@ class SCSGateSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        from scsgate.tasks import ToggleStatusTask
 
-        scsgate.SCSGATE.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
+        self._scsgate.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
 
         self._toggled = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        from scsgate.tasks import ToggleStatusTask
 
-        scsgate.SCSGATE.append_task(
-            ToggleStatusTask(target=self._scs_id, toggled=False)
-        )
+        self._scsgate.append_task(ToggleStatusTask(target=self._scs_id, toggled=False))
 
         self._toggled = False
         self.schedule_update_ha_state()
@@ -172,7 +176,6 @@ class SCSGateScenarioSwitch:
 
     def process_event(self, message):
         """Handle a SCSGate message related with this switch."""
-        from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
         if isinstance(message, StateMessage):
             scenario_id = message.bytes[4]

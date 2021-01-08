@@ -3,9 +3,9 @@
 Sending HOTP through notify service
 """
 import asyncio
-import logging
 from collections import OrderedDict
-from typing import Any, Dict, Optional, List
+import logging
+from typing import Any, Dict, List, Optional
 
 import attr
 import voluptuous as vol
@@ -16,13 +16,13 @@ from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
 from . import (
-    MultiFactorAuthModule,
-    MULTI_FACTOR_AUTH_MODULES,
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
+    MULTI_FACTOR_AUTH_MODULES,
+    MultiFactorAuthModule,
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.2.7"]
+REQUIREMENTS = ["pyotp==2.3.0"]
 
 CONF_MESSAGE = "message"
 
@@ -47,28 +47,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_secret() -> str:
     """Generate a secret."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return str(pyotp.random_base32())
 
 
 def _generate_random() -> int:
     """Generate a 8 digit number."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return int(pyotp.random_base32(length=8, chars=list("1234567890")))
 
 
 def _generate_otp(secret: str, count: int) -> str:
     """Generate one time password."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return str(pyotp.HOTP(secret).at(count))
 
 
 def _verify_otp(secret: str, otp: str, count: int) -> bool:
     """Verify one time password."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return bool(pyotp.HOTP(secret).verify(otp, count))
 
@@ -77,10 +77,10 @@ def _verify_otp(secret: str, otp: str, count: int) -> bool:
 class NotifySetting:
     """Store notify setting for one user."""
 
-    secret = attr.ib(type=str, factory=_generate_secret)  # not persistent
-    counter = attr.ib(type=int, factory=_generate_random)  # not persistent
-    notify_service = attr.ib(type=Optional[str], default=None)
-    target = attr.ib(type=Optional[str], default=None)
+    secret: str = attr.ib(factory=_generate_secret)  # not persistent
+    counter: int = attr.ib(factory=_generate_random)  # not persistent
+    notify_service: Optional[str] = attr.ib(default=None)
+    target: Optional[str] = attr.ib(default=None)
 
 
 _UsersDict = Dict[str, NotifySetting]
@@ -95,7 +95,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
-        self._user_settings = None  # type: Optional[_UsersDict]
+        self._user_settings: Optional[_UsersDict] = None
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True
         )
@@ -204,7 +204,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             return False
 
@@ -222,7 +222,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             raise ValueError("Cannot find user_id")
 
@@ -246,13 +246,15 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             _LOGGER.error("Cannot find user %s", user_id)
             return
 
-        await self.async_notify(  # type: ignore
-            code, notify_setting.notify_service, notify_setting.target
+        await self.async_notify(
+            code,
+            notify_setting.notify_service,  # type: ignore
+            notify_setting.target,
         )
 
     async def async_notify(
@@ -279,18 +281,18 @@ class NotifySetupFlow(SetupFlow):
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user_id)
         # to fix typing complaint
-        self._auth_module = auth_module  # type: NotifyAuthModule
+        self._auth_module: NotifyAuthModule = auth_module
         self._available_notify_services = available_notify_services
-        self._secret = None  # type: Optional[str]
-        self._count = None  # type: Optional[int]
-        self._notify_service = None  # type: Optional[str]
-        self._target = None  # type: Optional[str]
+        self._secret: Optional[str] = None
+        self._count: Optional[int] = None
+        self._notify_service: Optional[str] = None
+        self._target: Optional[str] = None
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """Let user select available notify services."""
-        errors = {}  # type: Dict[str, str]
+        errors: Dict[str, str] = {}
 
         hass = self._auth_module.hass
         if user_input:
@@ -304,7 +306,7 @@ class NotifySetupFlow(SetupFlow):
         if not self._available_notify_services:
             return self.async_abort(reason="no_available_service")
 
-        schema = OrderedDict()  # type: Dict[str, Any]
+        schema: Dict[str, Any] = OrderedDict()
         schema["notify_service"] = vol.In(self._available_notify_services)
         schema["target"] = vol.Optional(str)
 
@@ -315,8 +317,8 @@ class NotifySetupFlow(SetupFlow):
     async def async_step_setup(
         self, user_input: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
-        """Verify user can recevie one-time password."""
-        errors = {}  # type: Dict[str, str]
+        """Verify user can receive one-time password."""
+        errors: Dict[str, str] = {}
 
         hass = self._auth_module.hass
         if user_input:

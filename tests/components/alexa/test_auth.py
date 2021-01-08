@@ -1,5 +1,7 @@
 """Test Alexa auth endpoints."""
 from homeassistant.components.alexa.auth import Auth
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+
 from . import TEST_TOKEN_URL
 
 
@@ -52,13 +54,13 @@ async def test_auth_get_access_token_expired(hass, aioclient_mock):
 
     assert auth_call_json["grant_type"] == "authorization_code"
     assert auth_call_json["code"] == accept_grant_code
-    assert auth_call_json["client_id"] == client_id
-    assert auth_call_json["client_secret"] == client_secret
+    assert auth_call_json[CONF_CLIENT_ID] == client_id
+    assert auth_call_json[CONF_CLIENT_SECRET] == client_secret
 
     assert token_call_json["grant_type"] == "refresh_token"
     assert token_call_json["refresh_token"] == refresh_token
-    assert token_call_json["client_id"] == client_id
-    assert token_call_json["client_secret"] == client_secret
+    assert token_call_json[CONF_CLIENT_ID] == client_id
+    assert token_call_json[CONF_CLIENT_SECRET] == client_secret
 
 
 async def test_auth_get_access_token_not_expired(hass, aioclient_mock):
@@ -85,5 +87,5 @@ async def test_auth_get_access_token_not_expired(hass, aioclient_mock):
 
     assert auth_call_json["grant_type"] == "authorization_code"
     assert auth_call_json["code"] == accept_grant_code
-    assert auth_call_json["client_id"] == client_id
-    assert auth_call_json["client_secret"] == client_secret
+    assert auth_call_json[CONF_CLIENT_ID] == client_id
+    assert auth_call_json[CONF_CLIENT_SECRET] == client_secret

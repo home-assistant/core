@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "M\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajb\u00f3li azonos\u00edt\u00e1s sikeres"
+        },
+        "create_entry": {
+            "default": "L\u00e1sd: [Neato dokument\u00e1ci\u00f3] ( {docs_url} )."
+        },
+        "step": {
+            "reauth_confirm": {
+                "title": "El akarja kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "vendor": "Sz\u00e1ll\u00edt\u00f3"
+                },
+                "description": "L\u00e1sd: [Neato dokument\u00e1ci\u00f3] ( {docs_url} ).",
+                "title": "Neato Fi\u00f3kinform\u00e1ci\u00f3"
+            }
+        }
+    }
+}

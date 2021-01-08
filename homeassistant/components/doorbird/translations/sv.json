@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd (IP-adress)",
+                    "name": "Enhetsnamn",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

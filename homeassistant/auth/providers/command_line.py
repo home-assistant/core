@@ -1,19 +1,17 @@
 """Auth provider that validates credentials via an external command."""
 
-from typing import Any, Dict, Optional, cast
-
 import asyncio.subprocess
 import collections
 import logging
 import os
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
 
 CONF_COMMAND = "command"
 CONF_ARGS = "args"
@@ -53,7 +51,7 @@ class CommandLineAuthProvider(AuthProvider):
         attributes provided by external programs.
         """
         super().__init__(*args, **kwargs)
-        self._user_meta = {}  # type: Dict[str, Dict[str, Any]]
+        self._user_meta: Dict[str, Dict[str, Any]] = {}
 
     async def async_login_flow(self, context: Optional[dict]) -> LoginFlow:
         """Return a flow to login."""
@@ -63,8 +61,7 @@ class CommandLineAuthProvider(AuthProvider):
         """Validate a username and password."""
         env = {"username": username, "password": password}
         try:
-            # pylint: disable=no-member
-            process = await asyncio.subprocess.create_subprocess_exec(
+            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
                 self.config[CONF_COMMAND],
                 *self.config[CONF_ARGS],
                 env=env,
@@ -74,18 +71,18 @@ class CommandLineAuthProvider(AuthProvider):
         except OSError as err:
             # happens when command doesn't exist or permission is denied
             _LOGGER.error("Error while authenticating %r: %s", username, err)
-            raise InvalidAuthError
+            raise InvalidAuthError from err
 
         if process.returncode != 0:
             _LOGGER.error(
-                "User %r failed to authenticate, command exited " "with code %d.",
+                "User %r failed to authenticate, command exited with code %d",
                 username,
                 process.returncode,
             )
             raise InvalidAuthError
 
         if self.config[CONF_META]:
-            meta = {}  # type: Dict[str, str]
+            meta: Dict[str, str] = {}
             for _line in stdout.splitlines():
                 try:
                     line = _line.decode().lstrip()
@@ -146,7 +143,7 @@ class CommandLineLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema = collections.OrderedDict()  # type: Dict[str, type]
+        schema: Dict[str, type] = collections.OrderedDict()
         schema["username"] = str
         schema["password"] = str
 

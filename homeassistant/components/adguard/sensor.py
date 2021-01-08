@@ -1,6 +1,5 @@
 """Support for AdGuard Home sensors."""
 from datetime import timedelta
-import logging
 
 from adguardhome import AdGuardHomeConnectionError
 
@@ -11,10 +10,9 @@ from homeassistant.components.adguard.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
@@ -51,14 +49,20 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity):
     """Defines a AdGuard Home sensor."""
 
     def __init__(
-        self, adguard, name: str, icon: str, measurement: str, unit_of_measurement: str
+        self,
+        adguard,
+        name: str,
+        icon: str,
+        measurement: str,
+        unit_of_measurement: str,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize AdGuard Home sensor."""
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
 
-        super().__init__(adguard, name, icon)
+        super().__init__(adguard, name, icon, enabled_default)
 
     @property
     def unique_id(self) -> str:
@@ -109,6 +113,7 @@ class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
             "mdi:magnify-close",
             "blocked_filtering",
             "queries",
+            enabled_default=False,
         )
 
     async def _adguard_update(self) -> None:
@@ -126,13 +131,13 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
             "AdGuard DNS Queries Blocked Ratio",
             "mdi:magnify-close",
             "blocked_percentage",
-            "%",
+            PERCENTAGE,
         )
 
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         percentage = await self.adguard.stats.blocked_percentage()
-        self._state = "{:.2f}".format(percentage)
+        self._state = f"{percentage:.2f}"
 
 
 class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
@@ -178,7 +183,7 @@ class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
-            "Searches Safe Search Enforced",
+            "AdGuard Safe Searches Enforced",
             "mdi:shield-search",
             "enforced_safesearch",
             "requests",
@@ -199,13 +204,13 @@ class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
             "AdGuard Average Processing Speed",
             "mdi:speedometer",
             "average_speed",
-            "ms",
+            TIME_MILLISECONDS,
         )
 
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         average = await self.adguard.stats.avg_processing_time()
-        self._state = "{:.2f}".format(average)
+        self._state = f"{average:.2f}"
 
 
 class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
@@ -214,7 +219,12 @@ class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
     def __init__(self, adguard):
         """Initialize AdGuard Home sensor."""
         super().__init__(
-            adguard, "AdGuard Rules Count", "mdi:counter", "rules_count", "rules"
+            adguard,
+            "AdGuard Rules Count",
+            "mdi:counter",
+            "rules_count",
+            "rules",
+            enabled_default=False,
         )
 
     async def _adguard_update(self) -> None:

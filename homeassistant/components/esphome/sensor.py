@@ -1,5 +1,4 @@
 """Support for esphome sensors."""
-import logging
 import math
 from typing import Optional
 
@@ -9,8 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -37,6 +34,10 @@ async def async_setup_entry(
     )
 
 
+# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+# pylint: disable=invalid-overridden-method
+
+
 class EsphomeSensor(EsphomeEntity):
     """A sensor implementation for esphome."""
 
@@ -53,14 +54,19 @@ class EsphomeSensor(EsphomeEntity):
         """Return the icon."""
         return self._static_info.icon
 
+    @property
+    def force_update(self) -> bool:
+        """Return if this sensor should force a state update."""
+        return self._static_info.force_update
+
     @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
-        return "{:.{prec}f}".format(
-            self._state.state, prec=self._static_info.accuracy_decimals
-        )
+        if self._state.missing_state:
+            return None
+        return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
     def unit_of_measurement(self) -> str:
@@ -87,4 +93,6 @@ class EsphomeTextSensor(EsphomeEntity):
     @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""
+        if self._state.missing_state:
+            return None
         return self._state.state

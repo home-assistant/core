@@ -1,15 +1,17 @@
 """Support for Sesame, by CANDY HOUSE."""
 from typing import Callable
+
+import pysesame2
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_API_KEY,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 ATTR_DEVICE_ID = "device_id"
@@ -22,8 +24,6 @@ def setup_platform(
     hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
 ):
     """Set up the Sesame platform."""
-    import pysesame2
-
     api_key = config.get(CONF_API_KEY)
 
     add_entities(
@@ -32,7 +32,7 @@ def setup_platform(
     )
 
 
-class SesameDevice(LockDevice):
+class SesameDevice(LockEntity):
     """Representation of a Sesame device."""
 
     def __init__(self, sesame: object) -> None:
@@ -88,8 +88,8 @@ class SesameDevice(LockDevice):
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-        attributes = {}
-        attributes[ATTR_DEVICE_ID] = self._device_id
-        attributes[ATTR_SERIAL_NO] = self._serial
-        attributes[ATTR_BATTERY_LEVEL] = self._battery
-        return attributes
+        return {
+            ATTR_DEVICE_ID: self._device_id,
+            ATTR_SERIAL_NO: self._serial,
+            ATTR_BATTERY_LEVEL: self._battery,
+        }

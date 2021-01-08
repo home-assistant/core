@@ -96,12 +96,12 @@ class WorldTidesInfoSensor(Entity):
                 tidetime = time.strftime(
                     "%I:%M %p", time.localtime(self.data["extremes"][0]["dt"])
                 )
-                return "High tide at {}".format(tidetime)
+                return f"High tide at {tidetime}"
             if "Low" in str(self.data["extremes"][0]["type"]):
                 tidetime = time.strftime(
                     "%I:%M %p", time.localtime(self.data["extremes"][0]["dt"])
                 )
-                return "Low tide at {}".format(tidetime)
+                return f"Low tide at {tidetime}"
             return None
         return None
 

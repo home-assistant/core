@@ -1,10 +1,13 @@
 """Helpers for mobile_app."""
-import logging
 import json
+import logging
 from typing import Callable, Dict, Tuple
 
-from aiohttp.web import json_response, Response
+from aiohttp.web import Response, json_response
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
 
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_BAD_REQUEST, HTTP_OK
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -13,8 +16,8 @@ from .const import (
     ATTR_APP_DATA,
     ATTR_APP_ID,
     ATTR_APP_NAME,
-    ATTR_DEVICE_ID,
     ATTR_APP_VERSION,
+    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -36,8 +39,6 @@ def setup_decrypt() -> Tuple[int, Callable]:
 
     Async friendly.
     """
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
 
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""
@@ -51,8 +52,6 @@ def setup_encrypt() -> Tuple[int, Callable]:
 
     Async friendly.
     """
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
 
     def encrypt(ciphertext, key):
         """Encrypt ciphertext using key."""
@@ -92,15 +91,15 @@ def registration_context(registration: Dict) -> Context:
     return Context(user_id=registration[CONF_USER_ID])
 
 
-def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
+def empty_okay_response(headers: Dict = None, status: int = HTTP_OK) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
-        text="{}", status=status, content_type="application/json", headers=headers
+        text="{}", status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 
 def error_response(
-    code: str, message: str, status: int = 400, headers: dict = None
+    code: str, message: str, status: int = HTTP_BAD_REQUEST, headers: dict = None
 ) -> Response:
     """Return an error Response."""
     return json_response(
@@ -113,7 +112,7 @@ def error_response(
 def supports_encryption() -> bool:
     """Test if we support encryption."""
     try:
-        import nacl  # noqa pylint: disable=unused-import
+        import nacl  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
 
         return True
     except OSError:
@@ -146,7 +145,7 @@ def savable_state(hass: HomeAssistantType) -> Dict:
 
 
 def webhook_response(
-    data, *, registration: Dict, status: int = 200, headers: Dict = None
+    data, *, registration: Dict, status: int = HTTP_OK, headers: Dict = None
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)
@@ -162,7 +161,7 @@ def webhook_response(
         data = json.dumps({"encrypted": True, "encrypted_data": enc_data})
 
     return Response(
-        text=data, status=status, content_type="application/json", headers=headers
+        text=data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 

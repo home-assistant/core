@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Server Port wird bereits genutzt",
+            "start_server_failed": "Server starten fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Server Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Zeit\u00fcberschreitung (Minuten)"
+                }
+            }
+        }
+    }
+}

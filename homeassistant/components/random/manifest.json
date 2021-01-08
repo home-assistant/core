@@ -1,10 +1,7 @@
 {
   "domain": "random",
   "name": "Random",
-  "documentation": "https://www.home-assistant.io/components/random",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/random",
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
 }

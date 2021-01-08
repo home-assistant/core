@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Somfy-Komponente ist nicht konfiguriert. Folge bitte der Dokumentation."
+        },
+        "create_entry": {
+            "default": "Erfolgreich mit Somfy authentifiziert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            }
+        }
+    }
+}

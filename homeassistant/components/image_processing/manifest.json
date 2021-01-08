@@ -1,10 +1,7 @@
 {
   "domain": "image_processing",
-  "name": "Image processing",
-  "documentation": "https://www.home-assistant.io/components/image_processing",
-  "requirements": [],
-  "dependencies": [
-    "camera"
-  ],
+  "name": "Image Processing",
+  "documentation": "https://www.home-assistant.io/integrations/image_processing",
+  "dependencies": ["camera"],
   "codeowners": []
 }

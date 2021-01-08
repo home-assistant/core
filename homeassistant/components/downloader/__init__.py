@@ -7,6 +7,7 @@ import threading
 import requests
 import voluptuous as vol
 
+from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import sanitize_filename
 
@@ -44,7 +45,7 @@ def setup(hass, config):
     """Listen for download events to download files."""
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
 
-    # If path is relative, we assume relative to HASS config dir
+    # If path is relative, we assume relative to Home Assistant config dir
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
 
@@ -76,12 +77,12 @@ def setup(hass, config):
 
                 req = requests.get(url, stream=True, timeout=10)
 
-                if req.status_code != 200:
+                if req.status_code != HTTP_OK:
                     _LOGGER.warning(
                         "downloading '%s' failed, status_code=%d", url, req.status_code
                     )
                     hass.bus.fire(
-                        "{}_{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT),
+                        f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                         {"url": url, "filename": filename},
                     )
 
@@ -126,7 +127,7 @@ def setup(hass, config):
                         while os.path.isfile(final_path):
                             tries += 1
 
-                            final_path = "{}_{}.{}".format(path, tries, ext)
+                            final_path = f"{path}_{tries}.{ext}"
 
                     _LOGGER.debug("%s -> %s", url, final_path)
 
@@ -136,14 +137,14 @@ def setup(hass, config):
 
                     _LOGGER.debug("Downloading of %s done", url)
                     hass.bus.fire(
-                        "{}_{}".format(DOMAIN, DOWNLOAD_COMPLETED_EVENT),
+                        f"{DOMAIN}_{DOWNLOAD_COMPLETED_EVENT}",
                         {"url": url, "filename": filename},
                     )
 
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
                 hass.bus.fire(
-                    "{}_{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT),
+                    f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                     {"url": url, "filename": filename},
                 )
 

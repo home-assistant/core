@@ -1,5 +1,5 @@
 """Support for showing random numbers."""
-import logging
+from random import randrange
 
 import voluptuous as vol
 
@@ -12,8 +12,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAXIMUM = "maximum"
 ATTR_MINIMUM = "minimum"
@@ -82,6 +80,5 @@ class RandomSensor(Entity):
 
     async def async_update(self):
         """Get a new number and updates the states."""
-        from random import randrange
 
         self._state = randrange(self._minimum, self._maximum + 1)

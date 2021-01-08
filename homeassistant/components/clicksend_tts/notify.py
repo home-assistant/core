@@ -6,15 +6,15 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_RECIPIENT,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +56,11 @@ class ClicksendNotificationService(BaseNotificationService):
 
     def __init__(self, config):
         """Initialize the service."""
-        self.username = config.get(CONF_USERNAME)
-        self.api_key = config.get(CONF_API_KEY)
-        self.recipient = config.get(CONF_RECIPIENT)
-        self.language = config.get(CONF_LANGUAGE)
-        self.voice = config.get(CONF_VOICE)
+        self.username = config[CONF_USERNAME]
+        self.api_key = config[CONF_API_KEY]
+        self.recipient = config[CONF_RECIPIENT]
+        self.language = config[CONF_LANGUAGE]
+        self.voice = config[CONF_VOICE]
         self.caller = config.get(CONF_CALLER)
         if self.caller is None:
             self.caller = self.recipient
@@ -79,7 +79,7 @@ class ClicksendNotificationService(BaseNotificationService):
                 }
             ]
         }
-        api_url = "{}/voice/send".format(BASE_API_URL)
+        api_url = f"{BASE_API_URL}/voice/send"
         resp = requests.post(
             api_url,
             data=json.dumps(data),
@@ -88,7 +88,7 @@ class ClicksendNotificationService(BaseNotificationService):
             timeout=TIMEOUT,
         )
 
-        if resp.status_code == 200:
+        if resp.status_code == HTTP_OK:
             return
         obj = json.loads(resp.text)
         response_msg = obj["response_msg"]
@@ -100,7 +100,7 @@ class ClicksendNotificationService(BaseNotificationService):
 
 def _authenticate(config):
     """Authenticate with ClickSend."""
-    api_url = "{}/account".format(BASE_API_URL)
+    api_url = f"{BASE_API_URL}/account"
     resp = requests.get(
         api_url,
         headers=HEADERS,
@@ -108,7 +108,7 @@ def _authenticate(config):
         timeout=TIMEOUT,
     )
 
-    if resp.status_code != 200:
+    if resp.status_code != HTTP_OK:
         return False
 
     return True

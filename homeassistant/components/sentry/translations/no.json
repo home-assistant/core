@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "bad_dsn": "Ugyldig datakildenavn (DSN)",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
+                "description": "Fyll inn din Sentry DNS",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Valgfritt navn p\u00e5 milj\u00f8et.",
+                    "event_custom_components": "Send hendelser fra egendefinerte komponenter",
+                    "event_handled": "Send h\u00e5ndterte hendelser",
+                    "event_third_party_packages": "Send hendelser fra tredjepartspakker",
+                    "logging_event_level": "Loggniv\u00e5et Sentry vil registrere en hendelse for",
+                    "logging_level": "Loggniv\u00e5et Sentry vil registrere logger som br\u00f8dsmuler for",
+                    "tracing": "Aktivere ytelsessporing",
+                    "tracing_sample_rate": "Sporing av samplingsfrekvens; mellom 0,0 og 1,0 (1,0 = 100 %)"
+                }
+            }
+        }
+    }
+}

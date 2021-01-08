@@ -1,0 +1,236 @@
+[
+    {
+        "aid": 1,
+        "services": [
+            {
+                "characteristics": [
+                    {
+                        "format": "string",
+                        "iid": 2,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Master Fan"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 3,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000020-0000-1000-8000-0026BB765291",
+                        "value": "ecobee Inc."
+                    },
+                    {
+                        "format": "string",
+                        "iid": 4,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000030-0000-1000-8000-0026BB765291",
+                        "value": "111111111111"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 5,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000021-0000-1000-8000-0026BB765291",
+                        "value": "ecobee Switch+"
+                    },
+                    {
+                        "format": "bool",
+                        "iid": 6,
+                        "perms": [
+                            "pw"
+                        ],
+                        "type": "00000014-0000-1000-8000-0026BB765291"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 8,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000052-0000-1000-8000-0026BB765291",
+                        "value": "4.5.130201"
+                    },
+                    {
+                        "format": "uint32",
+                        "iid": 9,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "000000A6-0000-1000-8000-0026BB765291",
+                        "value": 0
+                    }
+                ],
+                "iid": 1,
+                "stype": "accessory-information",
+                "type": "0000003E-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "string",
+                        "iid": 31,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000037-0000-1000-8000-0026BB765291",
+                        "value": "1.1.0"
+                    }
+                ],
+                "iid": 30,
+                "stype": "service",
+                "type": "000000A2-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "bool",
+                        "iid": 17,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "00000025-0000-1000-8000-0026BB765291",
+                        "value": false
+                    },
+                    {
+                        "format": "string",
+                        "iid": 18,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Master Fan"
+                    }
+                ],
+                "iid": 16,
+                "primary": true,
+                "stype": "switch",
+                "type": "00000049-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "float",
+                        "iid": 20,
+                        "maxValue": 100000,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "0000006B-0000-1000-8000-0026BB765291",
+                        "unit": "lux",
+                        "value": 0
+                    },
+                    {
+                        "format": "string",
+                        "iid": 21,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Master Fan"
+                    }
+                ],
+                "iid": 27,
+                "stype": "light",
+                "type": "00000084-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "bool",
+                        "iid": 66,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "00000022-0000-1000-8000-0026BB765291",
+                        "value": false
+                    },
+                    {
+                        "format": "string",
+                        "iid": 28,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Master Fan"
+                    }
+                ],
+                "iid": 56,
+                "stype": "motion",
+                "type": "00000085-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "uint8",
+                        "iid": 65,
+                        "maxValue": 1,
+                        "minStep": 1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "00000071-0000-1000-8000-0026BB765291",
+                        "value": 0
+                    },
+                    {
+                        "format": "string",
+                        "iid": 29,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Master Fan"
+                    }
+                ],
+                "iid": 57,
+                "stype": "occupancy",
+                "type": "00000086-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "float",
+                        "iid": 19,
+                        "maxValue": 100,
+                        "minStep": 0.1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "00000011-0000-1000-8000-0026BB765291",
+                        "unit": "celsius",
+                        "value": 25.6
+                    },
+                    {
+                        "format": "string",
+                        "iid": 22,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Master Fan"
+                    }
+                ],
+                "iid": 55,
+                "stype": "temperature",
+                "type": "0000008A-0000-1000-8000-0026BB765291"
+            }
+        ]
+    }
+]
