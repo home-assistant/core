@@ -4,7 +4,11 @@ import datetime
 import logging
 from typing import Optional
 
-from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
+from google_nest_sdm.camera_traits import (
+    CameraEventImageTrait,
+    CameraImageTrait,
+    CameraLiveStreamTrait,
+)
 from google_nest_sdm.device import Device
 from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
@@ -59,6 +63,9 @@ class NestCamera(Camera):
         self._device_info = DeviceInfo(device)
         self._stream = None
         self._stream_refresh_unsub = None
+        # Cache of most recent event image
+        self._event_id = None
+        self._event_image_bytes = None
 
     @property
     def should_poll(self) -> bool:
@@ -156,7 +163,40 @@ class NestCamera(Camera):
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
+        # Returns the snapshot of the last event for ~30 seconds after the event
+        active_event_image = await self._async_active_event_image()
+        if active_event_image:
+            return active_event_image
+        # Fetch still image from the live stream
         stream_url = await self.stream_source()
         if not stream_url:
             return None
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
+
+    async def _async_active_event_image(self):
+        """Return image from any active events happening."""
+        if CameraEventImageTrait.NAME not in self._device.traits:
+            return None
+        trait = self._device.active_event_trait
+        if not trait:
+            return None
+        # Reuse image bytes if they have already been fetched
+        event_id = trait.last_event.event_id
+        if self._event_id is not None and self._event_id == event_id:
+            return self._event_image_bytes
+        _LOGGER.info("Fetching URL for event_id %s", event_id)
+        try:
+            event_image = await trait.generate_active_event_image()
+        except GoogleNestException as err:
+            _LOGGER.debug("Unable to generate event image URL: %s", err)
+            return None
+        if not event_image:
+            return None
+        try:
+            image_bytes = await event_image.contents()
+        except GoogleNestException as err:
+            _LOGGER.debug("Unable to fetch event image: %s", err)
+            return None
+        self._event_id = event_id
+        self._event_image_bytes = image_bytes
+        return image_bytes

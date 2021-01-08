@@ -50,7 +50,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     expected_triggers = [
         {
             "platform": "device",
@@ -76,7 +76,7 @@ async def test_get_unknown_triggers(hass, device_reg, entity_reg, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data1)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -116,7 +116,7 @@ async def test_get_non_existing_triggers(hass, device_reg, entity_reg, mqtt_mock
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data1)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert_lists_same(triggers, [])
 
@@ -135,7 +135,7 @@ async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock):
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data0)
     await hass.async_block_till_done()
-    assert device_reg.async_get_device({("mqtt", "0AFFD2")}, set()) is None
+    assert device_reg.async_get_device({("mqtt", "0AFFD2")}) is None
 
     # Test sending correct data
     data1 = (
@@ -149,7 +149,7 @@ async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     expected_triggers = [
         {
             "platform": "device",
@@ -185,7 +185,7 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     expected_triggers1 = [
         {
             "platform": "device",
@@ -213,7 +213,7 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", "")
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
 
 
@@ -238,7 +238,7 @@ async def test_if_fires_on_mqtt_message(hass, device_reg, calls, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -317,7 +317,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
     )
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -393,7 +393,7 @@ async def test_if_fires_on_mqtt_message_after_update(
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -459,7 +459,7 @@ async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock):
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -503,7 +503,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -563,7 +563,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     assert await async_setup_component(
         hass,
@@ -614,7 +614,7 @@ async def test_attach_remove(hass, device_reg, mqtt_mock):
     )
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     calls = []
 
@@ -668,7 +668,7 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock):
     )
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     calls = []
 
@@ -725,7 +725,7 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock):
     )
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
     await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
 
     calls = []
 
@@ -812,7 +812,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
@@ -844,7 +844,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Beer"
 
@@ -853,7 +853,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Milk"
 
@@ -873,7 +873,7 @@ async def test_cleanup_trigger(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -884,7 +884,7 @@ async def test_cleanup_trigger(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
 
     # Verify retained discovery topic has been cleared
@@ -908,7 +908,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -918,7 +918,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
 
 
@@ -948,7 +948,7 @@ async def test_cleanup_device_several_triggers(hass, device_reg, entity_reg, mqt
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -960,7 +960,7 @@ async def test_cleanup_device_several_triggers(hass, device_reg, entity_reg, mqt
     await hass.async_block_till_done()
 
     # Verify device registry entry is not cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -971,7 +971,7 @@ async def test_cleanup_device_several_triggers(hass, device_reg, entity_reg, mqt
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
 
 
@@ -1003,7 +1003,7 @@ async def test_cleanup_device_with_entity1(hass, device_reg, entity_reg, mqtt_mo
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -1013,7 +1013,7 @@ async def test_cleanup_device_with_entity1(hass, device_reg, entity_reg, mqtt_mo
     await hass.async_block_till_done()
 
     # Verify device registry entry is not cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -1023,7 +1023,7 @@ async def test_cleanup_device_with_entity1(hass, device_reg, entity_reg, mqtt_mo
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
 
 
@@ -1055,7 +1055,7 @@ async def test_cleanup_device_with_entity2(hass, device_reg, entity_reg, mqtt_mo
     await hass.async_block_till_done()
 
     # Verify device registry entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -1065,7 +1065,7 @@ async def test_cleanup_device_with_entity2(hass, device_reg, entity_reg, mqtt_mo
     await hass.async_block_till_done()
 
     # Verify device registry entry is not cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is not None
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
@@ -1075,7 +1075,7 @@ async def test_cleanup_device_with_entity2(hass, device_reg, entity_reg, mqtt_mo
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
 
 

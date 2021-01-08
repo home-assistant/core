@@ -8,6 +8,7 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import patch
 
+from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -545,6 +546,41 @@ async def test_wait_basic(hass, action_type):
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_basic_times_out(hass, action_type):
+    """Test wait actions times out when the action does not happen."""
+    wait_alias = "wait step"
+    action = {"alias": wait_alias}
+    if action_type == "template":
+        action["wait_template"] = "{{ states.switch.test.state == 'off' }}"
+    else:
+        action["wait_for_trigger"] = {
+            "platform": "state",
+            "entity_id": "switch.test",
+            "to": "off",
+        }
+    sequence = cv.SCRIPT_SCHEMA(action)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+    timed_out = False
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "not_on")
+
+        with timeout(0.1):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        timed_out = True
+        await script_obj.async_stop()
+
+    assert timed_out
+
+
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_multiple_runs_wait(hass, action_type):
     """Test multiple runs with wait in script."""
     event = "test_event"
@@ -782,28 +818,51 @@ async def test_wait_template_variables_in(hass):
 
 async def test_wait_template_with_utcnow(hass):
     """Test the wait template with utcnow."""
-    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hours == 12 }}"})
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hour == 12 }}"})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
-    start_time = dt_util.utcnow() + timedelta(hours=24)
+    start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
 
     try:
         hass.async_create_task(script_obj.async_run(context=Context()))
-        async_fire_time_changed(hass, start_time.replace(hour=5))
-        assert not script_obj.is_running
-        async_fire_time_changed(hass, start_time.replace(hour=12))
-
         await asyncio.wait_for(wait_started_flag.wait(), 1)
-
         assert script_obj.is_running
+
+        match_time = start_time.replace(hour=12)
+        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+            async_fire_time_changed(hass, match_time)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise
     else:
-        async_fire_time_changed(hass, start_time.replace(hour=3))
         await hass.async_block_till_done()
-
         assert not script_obj.is_running
+
+
+async def test_wait_template_with_utcnow_no_match(hass):
+    """Test the wait template with utcnow that does not match."""
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hour == 12 }}"})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
+    timed_out = False
+
+    try:
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+
+        non_maching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+            async_fire_time_changed(hass, non_maching_time)
+
+        with timeout(0.1):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        timed_out = True
+        await script_obj.async_stop()
+
+    assert timed_out
 
 
 @pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])

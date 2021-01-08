@@ -933,14 +933,14 @@ async def test_thermostat_set_hvac_fan_only(hass, auth):
 
     assert len(auth.captured_requests) == 2
 
-    (method, url, json) = auth.captured_requests.pop(0)
+    (method, url, json, headers) = auth.captured_requests.pop(0)
     assert method == "post"
     assert url == "some-device-id:executeCommand"
     assert json == {
         "command": "sdm.devices.commands.Fan.SetTimer",
         "params": {"timerMode": "ON"},
     }
-    (method, url, json) = auth.captured_requests.pop(0)
+    (method, url, json, headers) = auth.captured_requests.pop(0)
     assert method == "post"
     assert url == "some-device-id:executeCommand"
     assert json == {
