@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 from async_timeout import timeout
 import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
@@ -27,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict) -> VersionI
     async with timeout(10):
         try:
             return await get_server_version(ws_address, async_get_clientsession(hass))
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             raise InvalidInput("cannot_connect")
 
 
