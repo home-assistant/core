@@ -983,7 +983,7 @@ mbddns==0.1.2
 mcstatus==6.0.0
 
 # homeassistant.components.meater
-meater-python==0.0.2
+meater-python==0.0.4
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
