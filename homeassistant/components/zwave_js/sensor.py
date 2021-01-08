@@ -7,15 +7,15 @@ from zwave_js_server.const import CommandClass
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DATA_PLATFORM_READY, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -25,6 +25,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave sensor from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    platform_ready = hass.data[DOMAIN][config_entry.entry_id][DATA_PLATFORM_READY]
 
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo):
@@ -43,8 +44,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([sensor])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor)
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor
+        )
     )
+
+    platform_ready()
 
 
 class ZwaveSensorBase(ZWaveBaseEntity):
@@ -119,9 +124,14 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        if self.info.primary_value.metadata.states and self.info.primary_value.value is not None:
+        if (
+            self.info.primary_value.metadata.states
+            and self.info.primary_value.value is not None
+        ):
             # add the value's label as property for multi-value (list) items
             label = self.info.primary_value.metadata.states.get(
                 self.info.primary_value.value
-            ) or self.info.primary_value.metadata.states.get(str(self.info.primary_value.value))
+            ) or self.info.primary_value.metadata.states.get(
+                str(self.info.primary_value.value)
+            )
             return {"label": label}

@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
+from .const import DATA_CLIENT, DATA_PLATFORM_READY, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
 from .discovery import async_discover_values
 
 LOGGER = logging.getLogger(__name__)
@@ -47,12 +47,8 @@ def register_node_in_dev_reg(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_UNSUBSCRIBE: [],
-    }
     initialized = asyncio.Event()
-    discovered_values = set()
+    dev_reg = await device_registry.async_get_registry(hass)
 
     # pylint: disable=fixme
 
@@ -62,70 +58,89 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         LOGGER.info("Connection to Zwave JS Server initialized")
         initialized.set()
 
-        # run discovery on all ready nodes
-        for node in client.driver.controller.nodes.values():
-            if not node.ready:
-                continue
-            asyncio.create_task(async_on_node_ready(node))
-        # TODO: register callback for "node_ready" event
-
     async def async_on_disconnect():
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
         # TODO: signal entities to update availability state
 
-    async def async_on_node_ready(node: ZwaveNode) -> None:
+    @callback
+    def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
+
         # register (or update) node in device registry
-        dev_reg = await device_registry.async_get_registry(hass)
         register_node_in_dev_reg(entry, dev_reg, client, node)
+
         # run discovery on all node values and create/update entities
-        async for disc_info in async_discover_values(node):
+        for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
-            if disc_info.value_id not in discovered_values:
-                # dispatch discovery_info to platform
-                discovered_values.add(disc_info.value_id)
-                async_dispatcher_send(hass, f"{DOMAIN}_add_{disc_info.platform}", disc_info)
-            else:
-                # already discovered, dispatch update request
-                async_dispatcher_send(
-                    hass, f"{DOMAIN}_update_{disc_info.value_id}", disc_info.primary_value
-                )
-
-    # register main event callbacks.
-    client.register_on_initialized(async_on_initialized)
-    client.register_on_disconnect(async_on_disconnect)
-
-    async def async_connect():
-        """Start platforms and connect."""
-        # start platforms
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-        # connect and throw error if connection failed
-        await client.connect()
-        try:
-            async with timeout(10):
-                await initialized.wait()
-        except asyncio.TimeoutError as err:
-            for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
-                unsub()
-            await client.disconnect()
-            raise ConfigEntryNotReady from err
-
-    asyncio.create_task(async_connect())
+            async_dispatcher_send(hass, f"{DOMAIN}_add_{disc_info.platform}", disc_info)
 
     async def handle_ha_shutdown(event):
         """Handle HA shutdown."""
         await client.disconnect()
 
-    hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE].append(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
-    )
+    # register main event callbacks.
+    unsubs = [
+        client.register_on_initialized(async_on_initialized),
+        client.register_on_disconnect(async_on_disconnect),
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown),
+    ]
+
+    # connect and throw error if connection failed
+    asyncio.create_task(client.connect())
+    try:
+        async with timeout(10):
+            await initialized.wait()
+    except asyncio.TimeoutError as err:
+        for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
+            unsub()
+        await client.disconnect()
+        raise ConfigEntryNotReady from err
+
+    platforms_loaded = 0
+    platforms_ready = asyncio.Event()
+
+    @callback
+    def mark_platform_ready():
+        nonlocal platforms_loaded
+        platforms_loaded += 1
+        print("YOO", len(PLATFORMS), platforms_loaded)
+        if len(PLATFORMS) == platforms_loaded:
+            platforms_ready.set()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_UNSUBSCRIBE: unsubs,
+        DATA_PLATFORM_READY: mark_platform_ready,
+    }
+
+    async def when_platforms_ready():
+        """When the platforms are ready."""
+        await platforms_ready.wait()
+
+        # run discovery on all ready nodes
+        for node in client.driver.controller.nodes.values():
+            if node.ready:
+                async_on_node_ready(node)
+                continue
+
+            node.once(
+                "ready",
+                lambda event: async_on_node_ready(event["node"]),
+            )
+
+        client.driver.controller.on(
+            "node added", lambda event: async_on_node_ready(event["node"])
+        )
+
+    hass.async_create_task(when_platforms_ready())
+
+    # start platforms
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 

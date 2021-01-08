@@ -7,6 +7,8 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
+from homeassistant.core import callback
+
 
 @dataclass
 class ZwaveDiscoveryInfo:
@@ -82,25 +84,31 @@ DISCOVERY_SCHEMAS = [
 ]
 
 
-async def async_discover_values(node: ZwaveNode) -> AsyncGenerator[ZwaveDiscoveryInfo, None]:
+@callback
+def async_discover_values(node: ZwaveNode) -> AsyncGenerator[ZwaveDiscoveryInfo, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
-        disc_val = await async_discover_value(value)
+        disc_val = async_discover_value(value)
         if disc_val:
             yield disc_val
 
 
-async def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
+@callback
+def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
     """Run discovery on Z-Wave value and return ZwaveDiscoveryInfo if match found."""
     for schema in DISCOVERY_SCHEMAS:
         # check device_class_basic
         if not compare_value(schema.device_class_basic, value.node.device_class.basic):
             continue
         # check device_class_generic
-        if not compare_value(schema.device_class_generic, value.node.device_class.generic):
+        if not compare_value(
+            schema.device_class_generic, value.node.device_class.generic
+        ):
             continue
         # check device_class_specific
-        if not compare_value(schema.device_class_specific, value.node.device_class.specific):
+        if not compare_value(
+            schema.device_class_specific, value.node.device_class.specific
+        ):
             continue
         # check command_class
         if not compare_value(schema.command_class, value.command_class):
