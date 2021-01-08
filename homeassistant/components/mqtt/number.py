@@ -25,9 +25,9 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from . import (
     CONF_COMMAND_TOPIC,
     CONF_QOS,
-    CONF_STATE_TOPIC, 
-    DOMAIN, 
-    PLATFORMS, 
+    CONF_STATE_TOPIC,
+    DOMAIN,
+    PLATFORMS,
     subscription,
 )
 from .. import mqtt
