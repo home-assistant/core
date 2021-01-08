@@ -39,7 +39,6 @@ class ZWaveBaseEntity(Entity):
         """Call when entity is added."""
         # Add value_changed callbacks.
         self.async_on_remove(
-            # TODO: only subscribe to values we're interested in (requires change in library)
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
         self.async_on_remove(
@@ -68,9 +67,9 @@ class ZWaveBaseEntity(Entity):
         """Return default name from device name and value name combination."""
         node_name = self.info.node.name or self.info.node.device_config.description
         value_name = (
-            self.info.primary_value.metadata.label or
-            self.info.primary_value.property_key_name or
-            self.info.primary_value.property_name
+            self.info.primary_value.metadata.label
+            or self.info.primary_value.property_key_name
+            or self.info.primary_value.property_name
         )
         return f"{node_name}: {value_name}"
 

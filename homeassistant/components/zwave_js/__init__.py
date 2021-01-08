@@ -8,13 +8,13 @@ from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, Event
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DATA_CLIENT, DATA_PLATFORM_READY, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
+from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
 from .discovery import async_discover_values
 
 LOGGER = logging.getLogger(__name__)
@@ -123,25 +123,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.disconnect()
         raise ConfigEntryNotReady from err
 
-    platforms_loaded = 0
-    platforms_ready = asyncio.Event()
-
-    @callback
-    def mark_platform_ready():
-        nonlocal platforms_loaded
-        platforms_loaded += 1
-        if len(PLATFORMS) == platforms_loaded:
-            platforms_ready.set()
-
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: client,
         DATA_UNSUBSCRIBE: unsubs,
-        DATA_PLATFORM_READY: mark_platform_ready,
     }
 
-    async def when_platforms_ready():
-        """Call when all supported/required platforms are ready."""
-        await platforms_ready.wait()
+    async def start_platforms():
+        """Start platforms and perform discovery."""
+        # wait untill all required platforms are ready
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
+        )
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
@@ -153,14 +148,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "ready",
                 lambda event: async_on_node_ready(event["node"]),
             )
+        # listen for new nodes being added to the mesh
+        client.driver.controller.on(
+            "node added", lambda event: async_on_node_added(event["node"])
+        )
 
-        client.driver.controller.on("node added", lambda event: async_on_node_added(event["node"]))
-
-    hass.async_create_task(when_platforms_ready())
-
-    # start platforms
-    for component in PLATFORMS:
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, component))
+    hass.async_create_task(start_platforms())
 
     return True
 
