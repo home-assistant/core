@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # some visual feedback that something is (in the process of) being added
         register_node_in_dev_reg(entry, dev_reg, client, node)
 
-    async def handle_ha_shutdown(event):
+    async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
         await client.disconnect()
 
