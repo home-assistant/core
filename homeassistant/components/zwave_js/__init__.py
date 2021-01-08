@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # update entity availability
             async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
 
-    async def async_on_disconnect():
+    async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
         async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubs,
     }
 
-    async def start_platforms():
+    async def start_platforms() -> None:
         """Start platforms and perform discovery."""
         # wait until all required platforms are ready
         await asyncio.gather(
@@ -158,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
