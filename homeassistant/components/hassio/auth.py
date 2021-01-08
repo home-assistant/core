@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
+_REASON_INVALID_USER_PASSWORD = "invalid user/password"
 
 
 @callback
@@ -82,7 +83,7 @@ class HassIOAuth(HassIOBaseAuth):
                 data[ATTR_USERNAME], data[ATTR_PASSWORD]
             )
         except auth_ha.InvalidAuth:
-            raise HTTPUnauthorized() from None
+            raise HTTPUnauthorized(reason=_REASON_INVALID_USER_PASSWORD) from None
 
         return web.Response(status=HTTP_OK)
 
