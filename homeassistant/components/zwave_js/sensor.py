@@ -77,6 +77,15 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         """Force updates."""
         return True
 
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        attributes = {}
+        if self.info.primary_value.metadata.states
+        # add the value's label as property for multi-value items
+        attributes["label"] = self.values.primary.value["Selected"]
+        return attributes
+
 
 class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
