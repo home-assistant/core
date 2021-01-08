@@ -127,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     platforms_ready = asyncio.Event()
 
     @callback
-    def mark_platform_ready():
+    def mark_platform_ready() -> None:
         nonlocal platforms_loaded
         platforms_loaded += 1
         if len(PLATFORMS) == platforms_loaded:
