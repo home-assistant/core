@@ -37,6 +37,7 @@ class ZWaveBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
+        assert self.hass  # typing
         # Add value_changed callbacks.
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
@@ -81,7 +82,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and self.info.node.ready
+        return self.client.connected and bool(self.info.node.ready)
 
     @callback
     def _value_changed(self, event_data: Union[dict, ZwaveValue]) -> None:
