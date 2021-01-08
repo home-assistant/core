@@ -1048,6 +1048,22 @@ async def test_logbook_entity_context_parent_id(hass, hass_client):
     )
     await hass.async_block_till_done()
 
+    # An event with a parent event, but the parent event isn't available
+    missing_parent_context = ha.Context(
+        id="fc40b9a0d1f246f98c34b33c76228ee6",
+        parent_id="c8ce515fe58e442f8664246c65ed964f",
+        user_id="485cacf93ef84d25a99ced3126b921d2",
+    )
+    logbook.async_log_entry(
+        hass,
+        "mock_name",
+        "mock_message",
+        "alarm_control_panel",
+        "alarm_control_panel.area_009",
+        missing_parent_context,
+    )
+    await hass.async_block_till_done()
+
     await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
@@ -1106,6 +1122,13 @@ async def test_logbook_entity_context_parent_id(hass, hass_client):
     assert json_dict[7]["context_domain"] == "light"
     assert json_dict[7]["context_service"] == "turn_off"
     assert json_dict[7]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[8]["entity_id"] == "alarm_control_panel.area_009"
+    assert json_dict[8]["domain"] == "alarm_control_panel"
+    assert "context_event_type" not in json_dict[8]
+    assert "context_entity_id" not in json_dict[8]
+    assert "context_entity_id_name" not in json_dict[8]
+    assert json_dict[8]["context_user_id"] == "485cacf93ef84d25a99ced3126b921d2"
 
 
 async def test_logbook_context_from_template(hass, hass_client):
