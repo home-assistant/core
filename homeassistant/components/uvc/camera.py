@@ -123,7 +123,15 @@ class UnifiVideoCamera(Camera):
     @property
     def is_recording(self):
         """Return true if the camera is recording."""
-        return self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+        recording_state = "DISABLED"
+        if "recordingIndicator" in self._caminfo.keys():
+            recording_state = self._caminfo["recordingIndicator"]
+
+        return (
+            self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+            or recording_state == "MOTION_INPROGRESS"
+            or recording_state == "MOTION_FINISHED"
+        )
 
     @property
     def motion_detection_enabled(self):

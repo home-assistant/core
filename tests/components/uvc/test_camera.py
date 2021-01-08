@@ -260,6 +260,15 @@ class TestUVC(unittest.TestCase):
             == self.uvc.state_attributes["last_recording_start_time"]
         )
 
+        self.nvr.get_camera.return_value["recordingIndicator"] = "DISABLED"
+        assert not self.uvc.is_recording
+
+        self.nvr.get_camera.return_value["recordingIndicator"] = "MOTION_INPROGRESS"
+        assert self.uvc.is_recording
+
+        self.nvr.get_camera.return_value["recordingIndicator"] = "MOTION_FINISHED"
+        assert self.uvc.is_recording
+
     def test_stream(self):
         """Test the RTSP stream URI."""
         stream_source = yield from self.uvc.stream_source()
