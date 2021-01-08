@@ -94,10 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 )
 
     # register main event callbacks.
-    hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE] += [
-        client.register_on_initialized(async_on_initialized),
-        client.register_on_disconnect(async_on_disconnect),
-    ]
+    client.register_on_initialized(async_on_initialized)
+    client.register_on_disconnect(async_on_disconnect)
 
     async def async_connect():
         """Start platforms and connect."""
