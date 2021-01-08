@@ -2,6 +2,7 @@
 import asyncio
 import contextlib
 from datetime import datetime
+import importlib
 import logging
 import logging.handlers
 import os
@@ -360,6 +361,10 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     lib_dir = await async_get_user_site(deps_dir)
     if lib_dir not in sys.path:
         sys.path.insert(0, lib_dir)
+        try:
+            importlib.reload(sys.modules["pkg_resources"])
+        except KeyError:
+            pass
     return deps_dir
 
 
