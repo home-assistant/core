@@ -5,7 +5,13 @@ import voluptuous as vol
 
 from homeassistant.components import number
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -13,11 +19,14 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
+    CONF_COMMAND_TOPIC,
     CONF_QOS,
+    CONF_STATE_TOPIC,
     DOMAIN,
     PLATFORMS,
     MqttAttributes,
@@ -32,15 +41,16 @@ from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Number"
+DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
@@ -94,16 +104,18 @@ class MqttNumber(
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
     NumberEntity,
+    RestoreEntity,
 ):
     """representation of an MQTT number."""
 
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
         self._config = config
-        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
 
         self._current_number = None
+        self._optimistic = config.get(CONF_OPTIMISTIC)
+        self._unique_id = config.get(CONF_UNIQUE_ID)
 
         device_config = config.get(CONF_DEVICE)
 
@@ -145,18 +157,27 @@ class MqttNumber(
             except ValueError:
                 _LOGGER.warning("We received <%s> which is not a Number", msg.payload)
 
-        self._sub_state = await subscription.async_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_TOPIC],
-                    "msg_callback": message_received,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": None,
-                }
-            },
-        )
+        if self._config.get(CONF_STATE_TOPIC) is None:
+            # Force into optimistic mode.
+            self._optimistic = True
+        else:
+            self._sub_state = await subscription.async_subscribe_topics(
+                self.hass,
+                self._sub_state,
+                {
+                    "state_topic": {
+                        "topic": self._config.get(CONF_STATE_TOPIC),
+                        "msg_callback": message_received,
+                        "qos": self._config[CONF_QOS],
+                        "encoding": None,
+                    }
+                },
+            )
+
+        if self._optimistic:
+            last_state = await self.async_get_last_state()
+            if last_state:
+                self._current_number = last_state.state
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -174,19 +195,22 @@ class MqttNumber(
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
+
+        current_number = value
+
         if value.is_integer():
-            self._current_number = int(value)
-        else:
-            self._current_number = value
+            current_number = int(value)
+
+        if self._optimistic:
+            self._current_number = current_number
+            self.async_write_ha_state()
 
         mqtt.async_publish(
             self.hass,
-            self._config[CONF_TOPIC],
-            self._current_number,
+            self._config[CONF_COMMAND_TOPIC],
+            current_number,
             self._config[CONF_QOS],
         )
-
-        self.async_write_ha_state()
 
     @property
     def name(self):
@@ -202,3 +226,13 @@ class MqttNumber(
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def assumed_state(self):
+        """Return true if we do optimistic updates."""
+        return self._optimistic
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._config.get(CONF_ICON)
