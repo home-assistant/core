@@ -62,11 +62,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv, service, template
-from homeassistant.helpers.event import (
-    TrackTemplate,
-    async_call_later,
-    async_track_template_result,
-)
+from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trigger import (
     async_initialize_triggers,
@@ -359,7 +355,7 @@ class _ScriptRun:
             return
 
         @callback
-        def _async_script_wait(event, updates):
+        def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             self._variables["wait"] = {
                 "remaining": to_context.remaining if to_context else delay,
@@ -368,12 +364,9 @@ class _ScriptRun:
             done.set()
 
         to_context = None
-        info = async_track_template_result(
-            self._hass,
-            [TrackTemplate(wait_template, self._variables)],
-            _async_script_wait,
+        unsub = async_track_template(
+            self._hass, wait_template, async_script_wait, self._variables
         )
-        unsub = info.async_remove
 
         self._changed()
         done = asyncio.Event()
