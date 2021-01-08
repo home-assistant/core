@@ -13,14 +13,14 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_client():
-    """Define a fixture for a client creation coroutine."""
+    """Define a fixture for authentication coroutine."""
     return AsyncMock(return_value=None)
 
 
 @pytest.fixture
 def mock_meater(mock_client):
     """Mock the meater library."""
-    with patch("homeassistant.components.meater.config_flow.async_get_client") as mock_:
+    with patch("homeassistant.components.meater.MeaterApi.authenticate") as mock_:
         mock_.side_effect = mock_client
         yield mock_
 
