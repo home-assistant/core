@@ -53,7 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         controller = await pyavreceiver.factory(host)
         await controller.init()
     except Exception as error:
-        print(error)
         raise ConfigEntryNotReady from error
 
     # Disconnect when shutting down
