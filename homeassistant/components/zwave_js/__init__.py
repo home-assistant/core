@@ -90,16 +90,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:
             async_on_node_ready(node)
-            continue
-        else:
-            # if node is not yet ready, register one-time callback for ready state
-            node.once(
-                "ready",
-                lambda event: async_on_node_ready(event["node"]),
-            )
-            # we do submit the node to device registry so user has
-            # some visual feedback that something is (in the process of) being added
-            register_node_in_dev_reg(entry, dev_reg, client, node)
+            return
+        # if node is not yet ready, register one-time callback for ready state
+        node.once(
+            "ready",
+            lambda event: async_on_node_ready(event["node"]),
+        )
+        # we do submit the node to device registry so user has
+        # some visual feedback that something is (in the process of) being added
+        register_node_in_dev_reg(entry, dev_reg, client, node)
 
     async def handle_ha_shutdown(event):
         """Handle HA shutdown."""
