@@ -6,6 +6,7 @@ from typing import Dict
 
 from pyamaha import AsyncDevice, Dist, NetUSB, System, Tuner, Zone
 
+from homeassistant.components.yamaha_musiccast.const import ATTR_MC_LINK_SOURCES, NULL_GROUP
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ class MusicCastData:
         self.group_role = None
         self.group_server_zone = None
         self.group_client_list = []
-        self.group_servers_updated = True
+        self.group_update_lock = asyncio.locks.Lock()
 
     @property
     def fm_freq(self):
@@ -164,7 +165,6 @@ class MusicCastDevice:
                 ).result()
 
         if "dist" in message.keys():
-            print(message)
             if message.get("dist").get("dist_info_updated"):
                 asyncio.run_coroutine_threadsafe(
                     self._fetch_distribution_data(), self.hass.loop
@@ -329,26 +329,74 @@ class MusicCastDevice:
         self._group_update_callbacks.add(callback)
 
     async def _fetch_distribution_data(self):
-        self._distribution_info = await (
-            await self.device.get(Dist.get_distribution_info())
-        ).json()
-        print("-------------")
-        print("Fetching distribution data")
-        print(self._distribution_info)
-        print("-------------")
-        self.data.group_servers_updated = False
-        self.data.last_group_role = self.data.group_role
-        self.data.last_group_id = self.data.group_id
-        self.data.group_id = self._distribution_info.get("group_id", None)
-        self.data.group_name = self._distribution_info.get("group_name", None)
-        self.data.group_role = self._distribution_info.get("role", None)
-        self.data.group_server_zone = self._distribution_info.get("server_zone", None)
-        self.data.group_client_list = [
-            client.get("ip_address", "")
-            for client in self._distribution_info.get("client_list", [])
-        ]
+        async with self.data.group_update_lock:
+            self._distribution_info = await (
+                await self.device.get(Dist.get_distribution_info())
+            ).json()
+            self.data.last_group_role = self.data.group_role
+            self.data.last_group_id = self.data.group_id
+            self.data.group_id = self._distribution_info.get("group_id", None)
+            self.data.group_name = self._distribution_info.get("group_name", None)
+            self.data.group_role = self._distribution_info.get("role", None)
+            self.data.group_server_zone = self._distribution_info.get("server_zone", None)
+            self.data.group_client_list = [
+                client.get("ip_address", "")
+                for client in self._distribution_info.get("client_list", [])
+            ]
 
-        for cb in self._group_update_callbacks:
-            await cb()
+            for cb in self._group_update_callbacks:
+                await cb()
 
-        self.data.group_servers_updated = True
+    async def mc_client_join(self, server_ip, group_id, zone):
+        self.data.group_role = "client"
+        self.data.group_id = group_id
+        await self.device.post(
+            *Dist.set_client_info(group_id, zone, server_ip)
+        )
+
+    async def mc_server_group_reduce(self, zone, client_ips_for_removal):
+        self.data.group_client_list = [ip for ip in self.data.group_client_list if ip not in client_ips_for_removal]
+        await self.device.post(
+            *Dist.set_server_info(
+                self.data.group_id,
+                zone,
+                "remove",
+                client_ips_for_removal,
+            )
+        )
+
+    async def mc_server_group_extend(self, zone, client_ips, group_id):
+        self.data.group_id = group_id
+        self.data.group_client_list += client_ips
+        self.data.group_role = "server"
+        await self.device.post(
+            *Dist.set_server_info(
+                group_id, zone, "add", client_ips
+            )
+        )
+
+        await self.device.get(Dist.start_distribution(0))
+
+    async def mc_client_unjoin(self):
+        self.data.group_id = NULL_GROUP
+        await self.device.post(
+            *Dist.set_client_info("")
+        )
+
+    async def mc_server_group_close(self):
+        self.data.group_id = NULL_GROUP
+        await self.device.get(Dist.stop_distribution())
+        await self.device.post(
+            *Dist.set_server_info("")
+        )
+
+    def get_save_inputs(self, zone_id):
+        """Return a save save source for the given zone_id.
+
+        A save input can be any input except netusb ones if the netusb module is already in use."""
+        netusb_in_use = any([zone.input == self.data.netusb_input for zone in self.data.zones.values()])
+        return [input.get('id') for input in self._features.get('system', {}).get('input_list', [])
+                if input.get('distribution_enable') and
+                (input.get('play_info_type') != 'netusb' or not netusb_in_use) and
+                input.get('id') not in ATTR_MC_LINK_SOURCES and
+                input.get('id') in self.data.zones.get(zone_id).input_list]
