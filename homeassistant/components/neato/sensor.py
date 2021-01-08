@@ -37,7 +37,7 @@ class NeatoSensor(Entity):
     def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self._available = neato is not None
+        self._available = False
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
         self._state = None
@@ -83,7 +83,7 @@ class NeatoSensor(Entity):
         """Return the state."""
         if not self._state:
             # Not yet updated
-            return
+            return None
         return self._state["details"]["charge"]
 
     @property
