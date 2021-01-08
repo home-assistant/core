@@ -28,8 +28,8 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict) -> VersionI
     async with timeout(10):
         try:
             return await get_server_version(ws_address, async_get_clientsession(hass))
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            raise InvalidInput("cannot_connect")
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            raise InvalidInput("cannot_connect") from err
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,4 +69,5 @@ class InvalidInput(exceptions.HomeAssistantError):
 
     def __init__(self, error):
         """Initialize error."""
+        super().__init__()
         self.error = error
