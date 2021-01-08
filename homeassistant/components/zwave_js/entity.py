@@ -4,7 +4,7 @@ import logging
 from typing import Union
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.value import value_id as get_value_id, Value as ZwaveValue
+from zwave_js_server.model.value import Value as ZwaveValue, value_id as get_value_id
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
