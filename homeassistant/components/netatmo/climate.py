@@ -243,7 +243,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return
 
         home = data["home"]
-        if self._home_id == home["id"] and data["event_type"] == EVENT_TYPE_THERM_MODE:
+
+        if self._home_id != home["id"]:
+            return
+
+        if data["event_type"] == EVENT_TYPE_THERM_MODE:
             self._preset = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
             if self._preset == PRESET_FROST_GUARD:
@@ -266,8 +270,13 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
                         self._hvac_mode = HVAC_MODE_HEAT
                         self._target_temperature = DEFAULT_MAX_TEMP
+                    elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
+                        self._hvac_mode = HVAC_MODE_HEAT
+                        self._target_temperature = room["therm_setpoint_temperature"]
                     else:
                         self._target_temperature = room["therm_setpoint_temperature"]
+                        if self._target_temperature == DEFAULT_MAX_TEMP:
+                            self._hvac_mode = HVAC_MODE_HEAT
                     self.async_write_ha_state()
                     break
 
@@ -341,12 +350,28 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 STATE_NETATMO_HOME,
             )
 
-        if preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE:
+        if (
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            and self._model == NA_VALVE
+            and self.hvac_mode == HVAC_MODE_HEAT
+        ):
+            self._home_status.set_room_thermpoint(
+                self._id,
+                STATE_NETATMO_HOME,
+            )
+        elif (
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE
+        ):
             self._home_status.set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MAX_TEMP,
             )
+        elif (
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            and self.hvac_mode == HVAC_MODE_HEAT
+        ):
+            self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
         elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
             self._home_status.set_room_thermpoint(
                 self._id, PRESET_MAP_NETATMO[preset_mode]
