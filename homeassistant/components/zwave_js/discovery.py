@@ -1,7 +1,7 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Optional, Set
+from typing import Any, Generator, Optional, Set
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -17,7 +17,9 @@ class ZwaveDiscoveryInfo:
     node: ZwaveNode  # node to which the value(s) belongs
     primary_value: ZwaveValue  # the value object itself for primary value
     platform: str  # the home assistant platform for which an entity should be created
-    platform_hint: str = ""  # hint for the platform about this discovered entity
+    platform_hint: Optional[
+        str
+    ] = ""  # hint for the platform about this discovered entity
 
     @property
     def value_id(self) -> str:
@@ -85,7 +87,7 @@ DISCOVERY_SCHEMAS = [
 
 
 @callback
-def async_discover_values(node: ZwaveNode) -> AsyncGenerator[ZwaveDiscoveryInfo, None]:
+def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         disc_val = async_discover_value(value)
