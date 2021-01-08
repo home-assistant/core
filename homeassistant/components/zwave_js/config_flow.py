@@ -1,6 +1,7 @@
 """Config flow for Z-Wave JS integration."""
 import asyncio
 import logging
+from typing import Any, Dict, Optional
 
 import aiohttp
 from async_timeout import timeout
@@ -38,7 +39,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
