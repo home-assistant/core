@@ -8,6 +8,7 @@ from zwave_js_server.const import CommandClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_ENERGY,
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -56,8 +57,10 @@ class ZwaveSensorBase(ZWaveBaseEntity):
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
             return DEVICE_CLASS_POWER
-        if self.info.primary_value.property_ == "electric":
+        if self.info.primary_value.property_key_name == "W_Consumed":
             return DEVICE_CLASS_POWER
+        if self.info.primary_value.property_key_name == "kWh_Consumed":
+            return DEVICE_CLASS_ENERGY
         return self.info.primary_value.property_
 
     @property
@@ -76,15 +79,6 @@ class ZwaveSensorBase(ZWaveBaseEntity):
     def force_update(self) -> bool:
         """Force updates."""
         return True
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        attributes = {}
-        if self.info.primary_value.metadata.states
-        # add the value's label as property for multi-value items
-        attributes["label"] = self.values.primary.value["Selected"]
-        return attributes
 
 
 class ZWaveStringSensor(ZwaveSensorBase):
@@ -121,3 +115,13 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             return TEMP_FAHRENHEIT
 
         return self.info.primary_value.metadata.unit
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        if self.info.primary_value.metadata.states and self.info.primary_value.value is not None:
+            # add the value's label as property for multi-value (list) items
+            label = self.info.primary_value.metadata.states.get(
+                self.info.primary_value.value
+            ) or self.info.primary_value.metadata.states.get(str(self.info.primary_value.value))
+            return {"label": label}

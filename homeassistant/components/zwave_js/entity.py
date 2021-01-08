@@ -86,7 +86,7 @@ class ZWaveBaseEntity(Entity):
         if isinstance(event_data, ZwaveValue):
             value_id = event_data.value_id
         else:
-            value_id = get_value_id(event_data["args"])
+            value_id = get_value_id(self.info.node, event_data["args"])
         if value_id in self.watched_value_ids:
             self.on_value_update()
             self.async_write_ha_state()
