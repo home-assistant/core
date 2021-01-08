@@ -35,7 +35,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await api.authenticate(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        except Exception:  # pylint: disable=W0703
+        except Exception:  # pylint: disable=broad-except
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
