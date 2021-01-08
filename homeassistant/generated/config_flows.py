@@ -24,6 +24,7 @@ FLOWS = [
     "ais_tauron",
     "ais_wear_os",
     "ais_wifi_service",
+    "ais_ai_speaker",
     "alarmdecoder",
     "almond",
     "ambiclimate",
