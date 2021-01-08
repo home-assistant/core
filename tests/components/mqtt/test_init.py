@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt import debug_info
+from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
@@ -241,12 +242,12 @@ def test_validate_publish_topic():
 def test_entity_device_info_schema():
     """Test MQTT entity device info validation."""
     # just identifier
-    mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({"identifiers": ["abcd"]})
-    mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({"identifiers": "abcd"})
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA({"identifiers": ["abcd"]})
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA({"identifiers": "abcd"})
     # just connection
-    mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({"connections": [["mac", "02:5b:26:a8:dc:12"]]})
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA({"connections": [["mac", "02:5b:26:a8:dc:12"]]})
     # full device info
-    mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA(
         {
             "identifiers": ["helloworld", "hello"],
             "connections": [["mac", "02:5b:26:a8:dc:12"], ["zigbee", "zigbee_id"]],
@@ -257,7 +258,7 @@ def test_entity_device_info_schema():
         }
     )
     # full device info with via_device
-    mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA(
         {
             "identifiers": ["helloworld", "hello"],
             "connections": [["mac", "02:5b:26:a8:dc:12"], ["zigbee", "zigbee_id"]],
@@ -270,7 +271,7 @@ def test_entity_device_info_schema():
     )
     # no identifiers
     with pytest.raises(vol.Invalid):
-        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+        MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",
                 "name": "Beer",
@@ -280,7 +281,7 @@ def test_entity_device_info_schema():
         )
     # empty identifiers
     with pytest.raises(vol.Invalid):
-        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+        MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {"identifiers": [], "connections": [], "name": "Beer"}
         )
 

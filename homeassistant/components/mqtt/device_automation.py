@@ -9,8 +9,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import ATTR_DISCOVERY_HASH, device_trigger
+from . import device_trigger
 from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)

@@ -7,7 +7,13 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -17,21 +23,18 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
-    ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
-    CONF_CONNECTIONS,
-    CONF_DEVICE,
-    CONF_IDENTIFIERS,
-    CONF_PAYLOAD,
-    CONF_QOS,
-    DOMAIN,
-    cleanup_device_registry,
-    debug_info,
-    trigger as mqtt_trigger,
-)
+from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
 from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .mixins import (
+    CONF_CONNECTIONS,
+    CONF_IDENTIFIERS,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    cleanup_device_registry,
+    device_info_from_config,
+    validate_device_has_at_least_one_identifier,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,13 +65,13 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AUTOMATION_TYPE): str,
-        vol.Required(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
     },
-    mqtt.validate_device_has_at_least_one_identifier,
+    validate_device_has_at_least_one_identifier,
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"
@@ -172,7 +175,7 @@ async def _update_device(hass, config_entry, config):
     """Update device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
-    device_info = mqtt.device_info_from_config(config[CONF_DEVICE])
+    device_info = device_info_from_config(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
         device_info["config_entry_id"] = config_entry_id
