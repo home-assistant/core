@@ -98,6 +98,8 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @property
     def state(self) -> str:
         """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return 0
         return round(self.info.primary_value.value, 2)
 
     @property
