@@ -1001,8 +1001,7 @@ async def test_logbook_entity_context_parent_id(hass, hass_client):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(
-        logbook.log_entry,
+    logbook.async_log_entry(
         hass,
         "mock_name",
         "mock_message",
@@ -1012,8 +1011,7 @@ async def test_logbook_entity_context_parent_id(hass, hass_client):
     )
     await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(
-        logbook.log_entry,
+    logbook.async_log_entry(
         hass,
         "mock_name",
         "mock_message",
