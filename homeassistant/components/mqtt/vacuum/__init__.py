@@ -10,7 +10,8 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from .. import ATTR_DISCOVERY_HASH, DOMAIN as MQTT_DOMAIN, PLATFORMS
+from .. import DOMAIN as MQTT_DOMAIN, PLATFORMS
+from ..const import ATTR_DISCOVERY_HASH
 from ..discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy

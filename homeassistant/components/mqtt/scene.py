@@ -14,18 +14,11 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
-    ATTR_DISCOVERY_HASH,
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    DOMAIN,
-    PLATFORMS,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-)
+from . import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN, PLATFORMS
 from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
+from .mixins import MQTT_AVAILABILITY_SCHEMA, MqttAvailability, MqttDiscoveryUpdate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +34,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
-).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 async def async_setup_platform(
