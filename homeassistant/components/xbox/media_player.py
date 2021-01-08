@@ -1,5 +1,4 @@
 """Xbox Media Player Support."""
-import logging
 import re
 from typing import List, Optional
 
@@ -31,11 +30,9 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import XboxData, XboxUpdateCoordinator
+from . import ConsoleData, XboxUpdateCoordinator
 from .browse_media import build_item_response
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_XBOX = (
     SUPPORT_TURN_ON
@@ -99,9 +96,9 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return self._console.id
 
     @property
-    def data(self) -> XboxData:
+    def data(self) -> ConsoleData:
         """Return coordinator data for this console."""
-        return self.coordinator.data[self._console.id]
+        return self.coordinator.data.consoles[self._console.id]
 
     @property
     def state(self):
@@ -114,10 +111,9 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        active_support = SUPPORT_XBOX
         if self.state not in [STATE_PLAYING, STATE_PAUSED]:
-            active_support &= ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
-        return active_support
+            return SUPPORT_XBOX & ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
+        return SUPPORT_XBOX
 
     @property
     def media_content_type(self):

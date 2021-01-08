@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
@@ -342,8 +343,13 @@ def get_influx_connection(conf, test_write=False, test_read=False):
 
         def write_v2(json):
             """Write data to V2 influx."""
+            data = {"bucket": bucket, "record": json}
+
+            if precision is not None:
+                data["write_precision"] = precision
+
             try:
-                write_api.write(bucket=bucket, record=json, write_precision=precision)
+                write_api.write(**data)
             except (urllib3.exceptions.HTTPError, OSError) as exc:
                 raise ConnectionError(CONNECTION_ERROR % exc) from exc
             except ApiException as exc:
@@ -495,6 +501,7 @@ class InfluxThread(threading.Thread):
         self.shutdown = False
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
+    @callback
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Influx."""
         item = (time.monotonic(), event)

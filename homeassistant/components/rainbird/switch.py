@@ -1,7 +1,4 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
-
-import logging
-
 from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
@@ -10,8 +7,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER
 from homeassistant.helpers import config_validation as cv
 
 from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
 

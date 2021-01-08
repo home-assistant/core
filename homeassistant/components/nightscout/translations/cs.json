@@ -14,7 +14,8 @@
                 "data": {
                     "api_key": "Kl\u00ed\u010d API",
                     "url": "URL"
-                }
+                },
+                "title": "Zadejte informace o serveru Nightscout."
             }
         }
     }

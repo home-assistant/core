@@ -199,11 +199,11 @@ def lifx_features(bulb):
     ) or aiolifx().products.features_map.get(1)
 
 
-def find_hsbk(**kwargs):
+def find_hsbk(hass, **kwargs):
     """Find the desired color from a number of possible inputs."""
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(kwargs)
+    preprocess_turn_on_alternatives(hass, kwargs)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
@@ -330,11 +330,11 @@ class LIFXManager:
                 period=kwargs.get(ATTR_PERIOD),
                 cycles=kwargs.get(ATTR_CYCLES),
                 mode=kwargs.get(ATTR_MODE),
-                hsbk=find_hsbk(**kwargs),
+                hsbk=find_hsbk(self.hass, **kwargs),
             )
             await self.effects_conductor.start(effect, bulbs)
         elif service == SERVICE_EFFECT_COLORLOOP:
-            preprocess_turn_on_alternatives(kwargs)
+            preprocess_turn_on_alternatives(self.hass, kwargs)
 
             brightness = None
             if ATTR_BRIGHTNESS in kwargs:
@@ -600,7 +600,7 @@ class LIFXLight(LightEntity):
             power_on = kwargs.get(ATTR_POWER, False)
             power_off = not kwargs.get(ATTR_POWER, True)
 
-            hsbk = find_hsbk(**kwargs)
+            hsbk = find_hsbk(self.hass, **kwargs)
 
             # Send messages, waiting for ACK each time
             ack = AwaitAioLIFX().wait

@@ -2,8 +2,8 @@
   "config": {
     "flow_title": "Azure DevOps: {project_url}",
     "error": {
-      "authorization_error": "Authorization error. Check you have access to the project and have the correct credentials.",
-      "connection_error": "Could not connect to Azure DevOps.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "project_error": "Could not get project info."
     },
     "step": {
@@ -28,6 +28,5 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "title": "Azure DevOps"
+  }
 }

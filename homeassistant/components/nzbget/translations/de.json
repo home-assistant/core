@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "flow_title": "NZBGet: {name}",
         "step": {
             "user": {
@@ -9,7 +12,8 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Mit NZBGet verbinden"
             }
         }
     },

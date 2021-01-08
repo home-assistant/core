@@ -6,17 +6,15 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "Configuraci\u00f3 de Advantage Air",
         "step": {
             "user": {
                 "data": {
                     "ip_address": "Adre\u00e7a IP",
                     "port": "Port"
                 },
-                "description": "Connecteu-vos a l'API de la vostra tauleta mural de l'Advantage Air.",
-                "title": "Connectar"
+                "description": "Connecta't a l'API de la tauleta d'Advantage Air.",
+                "title": "Connecta"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

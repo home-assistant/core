@@ -1,6 +1,4 @@
 """Support for Traccar."""
-import logging
-
 from aiohttp import web
 import voluptuous as vol
 
@@ -22,8 +20,6 @@ from .const import (
     ATTR_TIMESTAMP,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 

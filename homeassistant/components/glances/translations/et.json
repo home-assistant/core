@@ -4,7 +4,8 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "wrong_version": "Versiooni ei toetata (ainult 2 v\u00f5i 3)"
         },
         "step": {
             "user": {
@@ -15,8 +16,20 @@
                     "port": "Port",
                     "ssl": "Kasutab SSL serti",
                     "username": "Kasutajanimi",
-                    "verify_ssl": "Kontrolli SSL sertifikaati"
-                }
+                    "verify_ssl": "Kontrolli SSL sertifikaati",
+                    "version": "Glances API versioon (2 v\u00f5i 3)"
+                },
+                "title": "Seadista Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "V\u00e4rskendussagedus"
+                },
+                "description": "Seadista Glances valikud"
             }
         }
     }

@@ -1,6 +1,4 @@
 """Support for powerwall binary sensors."""
-import logging
-
 from tesla_powerwall import GridStatus
 
 from homeassistant.components.binary_sensor import (
@@ -22,8 +20,6 @@ from .const import (
     POWERWALL_COORDINATOR,
 )
 from .entity import PowerWallEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

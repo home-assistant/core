@@ -15,8 +15,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_NAME = "fritz_netmonitor"
-CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_NAME = "fritz_netmonitor"
+DEFAULT_HOST = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
 
 ATTR_BYTES_RECEIVED = "bytes_received"
 ATTR_BYTES_SENT = "bytes_sent"
@@ -38,16 +38,16 @@ ICON = "mdi:web"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FRITZ!Box monitor sensors."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
 
     try:
         fstatus = FritzStatus(address=host)

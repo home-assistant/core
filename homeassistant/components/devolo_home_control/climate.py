@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -22,20 +22,21 @@ async def async_setup_entry(
     """Get all cover devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_switch_devices:
-        for multi_level_switch in device.multi_level_switch_property:
-            if device.device_model_uid in [
-                "devolo.model.Thermostat:Valve",
-                "devolo.model.Room:Thermostat",
-                "devolo.model.Eurotronic:Spirit:Device",
-            ]:
-                entities.append(
-                    DevoloClimateDeviceEntity(
-                        homecontrol=hass.data[DOMAIN]["homecontrol"],
-                        device_instance=device,
-                        element_uid=multi_level_switch,
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.multi_level_switch_devices:
+            for multi_level_switch in device.multi_level_switch_property:
+                if device.device_model_uid in [
+                    "devolo.model.Thermostat:Valve",
+                    "devolo.model.Room:Thermostat",
+                    "devolo.model.Eurotronic:Spirit:Device",
+                ]:
+                    entities.append(
+                        DevoloClimateDeviceEntity(
+                            homecontrol=gateway,
+                            device_instance=device,
+                            element_uid=multi_level_switch,
+                        )
                     )
-                )
 
     async_add_entities(entities, False)
 
@@ -60,8 +61,13 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     @property
     def target_temperature(self) -> Optional[float]:
-        """Return the current temperature."""
+        """Return the target temperature."""
         return self._value
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the precision of the target temperature."""
+        return PRECISION_HALVES
 
     @property
     def hvac_mode(self) -> str:
@@ -86,7 +92,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     @property
     def precision(self) -> float:
         """Return the precision of the set temperature."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def supported_features(self):

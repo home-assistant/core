@@ -1,6 +1,7 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access
 import json
+from unittest.mock import patch
 
 from aiohttp import web
 import pytest
@@ -11,7 +12,6 @@ from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

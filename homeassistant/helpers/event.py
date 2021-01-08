@@ -1,5 +1,6 @@
 """Helpers for listening to events."""
 import asyncio
+import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
@@ -27,7 +28,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
-    MAX_TIME_TRACKING_ERROR,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
@@ -715,9 +715,9 @@ def async_track_template(
 
         hass.async_run_hass_job(
             job,
-            event.data.get("entity_id"),
-            event.data.get("old_state"),
-            event.data.get("new_state"),
+            event and event.data.get("entity_id"),
+            event and event.data.get("old_state"),
+            event and event.data.get("new_state"),
         )
 
     info = async_track_template_result(
@@ -752,6 +752,7 @@ class _TrackTemplateResultInfo:
         self._rate_limit = KeyedRateLimit(hass)
         self._info: Dict[Template, RenderInfo] = {}
         self._track_state_changes: Optional[_TrackStateChangeFiltered] = None
+        self._time_listeners: Dict[Template, Callable] = {}
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
@@ -772,6 +773,7 @@ class _TrackTemplateResultInfo:
         self._track_state_changes = async_track_state_change_filtered(
             self.hass, _render_infos_to_track_states(self._info.values()), self._refresh
         )
+        self._update_time_listeners()
         _LOGGER.debug(
             "Template group %s listens for %s",
             self._track_templates,
@@ -782,7 +784,40 @@ class _TrackTemplateResultInfo:
     def listeners(self) -> Dict:
         """State changes that will cause a re-render."""
         assert self._track_state_changes
-        return self._track_state_changes.listeners
+        return {
+            **self._track_state_changes.listeners,
+            "time": bool(self._time_listeners),
+        }
+
+    @callback
+    def _setup_time_listener(self, template: Template, has_time: bool) -> None:
+        if not has_time:
+            if template in self._time_listeners:
+                # now() or utcnow() has left the scope of the template
+                self._time_listeners.pop(template)()
+            return
+
+        if template in self._time_listeners:
+            return
+
+        track_templates = [
+            track_template_
+            for track_template_ in self._track_templates
+            if track_template_.template == template
+        ]
+
+        @callback
+        def _refresh_from_time(now: datetime) -> None:
+            self._refresh(None, track_templates=track_templates)
+
+        self._time_listeners[template] = async_track_utc_time_change(
+            self.hass, _refresh_from_time, second=0
+        )
+
+    @callback
+    def _update_time_listeners(self) -> None:
+        for template, info in self._info.items():
+            self._setup_time_listener(template, info.has_time)
 
     @callback
     def async_remove(self) -> None:
@@ -790,6 +825,8 @@ class _TrackTemplateResultInfo:
         assert self._track_state_changes
         self._track_state_changes.async_remove()
         self._rate_limit.async_remove()
+        for template in list(self._time_listeners):
+            self._time_listeners.pop(template)()
 
     @callback
     def async_refresh(self) -> None:
@@ -820,6 +857,8 @@ class _TrackTemplateResultInfo:
             if not _event_triggers_rerender(event, info):
                 return False
 
+            had_timer = self._rate_limit.async_has_timer(template)
+
             if self._rate_limit.async_schedule_action(
                 template,
                 _rate_limit_for_event(event, info, track_template_),
@@ -829,7 +868,7 @@ class _TrackTemplateResultInfo:
                 (track_template_,),
                 True,
             ):
-                return False
+                return not had_timer
 
             _LOGGER.debug(
                 "Template update %s triggered by event: %s",
@@ -886,14 +925,25 @@ class _TrackTemplateResultInfo:
             if not update:
                 continue
 
+            template = track_template_.template
+            self._setup_time_listener(template, self._info[template].has_time)
+
             info_changed = True
+
             if isinstance(update, TrackTemplateResult):
                 updates.append(update)
 
         if info_changed:
             assert self._track_state_changes
             self._track_state_changes.async_update_listeners(
-                _render_infos_to_track_states(self._info.values()),
+                _render_infos_to_track_states(
+                    [
+                        _suppress_domain_all_in_render_info(self._info[template])
+                        if self._rate_limit.async_has_timer(template)
+                        else self._info[template]
+                        for template in self._info
+                    ]
+                )
             )
             _LOGGER.debug(
                 "Template group %s listens for %s",
@@ -937,7 +987,7 @@ def async_track_template_result(
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
 ) -> _TrackTemplateResultInfo:
-    """Add a listener that fires when a the result of a template changes.
+    """Add a listener that fires when the result of a template changes.
 
     The action will fire with the initial result from the template, and
     then whenever the output from the template changes. The template will
@@ -1082,16 +1132,36 @@ def async_track_point_in_utc_time(
     # having to figure out how to call the action every time its called.
     job = action if isinstance(action, HassJob) else HassJob(action)
 
-    cancel_callback = hass.loop.call_at(
-        hass.loop.time() + point_in_time.timestamp() - time.time(),
-        hass.async_run_hass_job,
-        job,
-        utc_point_in_time,
-    )
+    cancel_callback: Optional[asyncio.TimerHandle] = None
+
+    @callback
+    def run_action() -> None:
+        """Call the action."""
+        nonlocal cancel_callback
+
+        now = time_tracker_utcnow()
+
+        # Depending on the available clock support (including timer hardware
+        # and the OS kernel) it can happen that we fire a little bit too early
+        # as measured by utcnow(). That is bad when callbacks have assumptions
+        # about the current time. Thus, we rearm the timer for the remaining
+        # time.
+        delta = (utc_point_in_time - now).total_seconds()
+        if delta > 0:
+            _LOGGER.debug("Called %f seconds too early, rearming", delta)
+
+            cancel_callback = hass.loop.call_later(delta, run_action)
+            return
+
+        hass.async_run_hass_job(job, utc_point_in_time)
+
+    delta = utc_point_in_time.timestamp() - time.time()
+    cancel_callback = hass.loop.call_later(delta, run_action)
 
     @callback
     def unsub_point_in_time_listener() -> None:
         """Cancel the call_later."""
+        assert cancel_callback is not None
         cancel_callback.cancel()
 
     return unsub_point_in_time_listener
@@ -1243,7 +1313,7 @@ def async_track_sunset(
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
-pattern_utc_now = dt_util.utcnow
+time_tracker_utcnow = dt_util.utcnow
 
 
 @callback
@@ -1274,75 +1344,38 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    next_time: datetime = dt_util.utcnow()
-
-    def calculate_next(now: datetime) -> None:
+    def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
-        nonlocal next_time
-
         localized_now = dt_util.as_local(now) if local else now
-        next_time = dt_util.find_next_time_expression_time(
+        return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
         )
 
-    # Make sure rolling back the clock doesn't prevent the timer from
-    # triggering.
-    cancel_callback: Optional[asyncio.TimerHandle] = None
-    calculate_next(next_time)
+    time_listener: Optional[CALLBACK_TYPE] = None
 
     @callback
-    def pattern_time_change_listener() -> None:
+    def pattern_time_change_listener(_: datetime) -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, cancel_callback
+        nonlocal time_listener
 
-        now = pattern_utc_now()
+        now = time_tracker_utcnow()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
-        calculate_next(now + timedelta(seconds=1))
-
-        cancel_callback = hass.loop.call_at(
-            -time.time()
-            + hass.loop.time()
-            + next_time.timestamp()
-            + MAX_TIME_TRACKING_ERROR,
+        time_listener = async_track_point_in_utc_time(
+            hass,
             pattern_time_change_listener,
+            calculate_next(now + timedelta(seconds=1)),
         )
 
-    # We always get time.time() first to avoid time.time()
-    # ticking forward after fetching hass.loop.time()
-    # and callback being scheduled a few microseconds early.
-    #
-    # Since we loose additional time calling `hass.loop.time()`
-    # we add MAX_TIME_TRACKING_ERROR to ensure
-    # we always schedule the call within the time window between
-    # second and the next second.
-    #
-    # For example:
-    # If the clock ticks forward 30 microseconds when fectching
-    # `hass.loop.time()` and we want the event to fire at exactly
-    # 03:00:00.000000, the event would actually fire around
-    # 02:59:59.999970. To ensure we always fire sometime between
-    # 03:00:00.000000 and 03:00:00.999999 we add
-    # MAX_TIME_TRACKING_ERROR to make up for the time
-    # lost fetching the time. This ensures we do not fire the
-    # event before the next time pattern match which would result
-    # in the event being fired again since we would otherwise
-    # potentially fire early.
-    #
-    cancel_callback = hass.loop.call_at(
-        -time.time()
-        + hass.loop.time()
-        + next_time.timestamp()
-        + MAX_TIME_TRACKING_ERROR,
-        pattern_time_change_listener,
+    time_listener = async_track_point_in_utc_time(
+        hass, pattern_time_change_listener, calculate_next(dt_util.utcnow())
     )
 
     @callback
     def unsub_pattern_time_change_listener() -> None:
-        """Cancel the call_later."""
-        nonlocal cancel_callback
-        assert cancel_callback is not None
-        cancel_callback.cancel()
+        """Cancel the time listener."""
+        assert time_listener is not None
+        time_listener()
 
     return unsub_pattern_time_change_listener
 
@@ -1458,3 +1491,13 @@ def _rate_limit_for_event(
 
     rate_limit: Optional[timedelta] = info.rate_limit
     return rate_limit
+
+
+def _suppress_domain_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
+    """Remove the domains and all_states from render info during a ratelimit."""
+    rate_limited_render_info = copy.copy(render_info)
+    rate_limited_render_info.all_states = False
+    rate_limited_render_info.all_states_lifecycle = False
+    rate_limited_render_info.domains = set()
+    rate_limited_render_info.domains_lifecycle = set()
+    return rate_limited_render_info

@@ -1,11 +1,12 @@
 """Test the Blink config flow."""
+from unittest.mock import Mock, patch
+
 from blinkpy.auth import LoginError
 from blinkpy.blinkpy import BlinkSetupError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.blink import DOMAIN
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -31,6 +32,7 @@ async def test_form(hass):
             result["flow_id"],
             {"username": "blink@example.com", "password": "example"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "blink"
@@ -45,7 +47,6 @@ async def test_form(hass):
         "client_id": None,
         "region_id": None,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -88,11 +89,11 @@ async def test_form_2fa(hass):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"pin": "1234"}
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == "blink"
     assert result3["result"].unique_id == "blink@example.com"
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

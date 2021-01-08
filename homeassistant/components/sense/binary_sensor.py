@@ -133,6 +133,9 @@ class SenseDevice(BinarySensorEntity):
     @callback
     def _async_update_from_data(self):
         """Get the latest data, update state. Must not do I/O."""
+        new_state = bool(self._sense_devices_data.get_device_by_id(self._id))
+        if self._available and self._state == new_state:
+            return
         self._available = True
-        self._state = bool(self._sense_devices_data.get_device_by_id(self._id))
+        self._state = new_state
         self.async_write_ha_state()

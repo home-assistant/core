@@ -6,7 +6,6 @@ from typing import Any, Dict
 
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -19,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -123,19 +121,10 @@ def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
     )
     _LOGGER.error("API Key is no longer valid. Please reauthenticate")
 
-    persistent_notification.async_create(
-        hass,
-        f"Sonarr integration for the Sonarr API hosted at {entry.entry_data[CONF_HOST]} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
-        "Sonarr re-authentication",
-        "sonarr_reauth",
-    )
-
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
-    async_dispatcher_send(
-        hass, f"sonarr.{entry.entry_id}.entry_options_update", entry.options
-    )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SonarrEntity(Entity):

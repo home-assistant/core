@@ -34,8 +34,8 @@
             "button_4": "czwarty",
             "button_5": "pi\u0105ty",
             "button_6": "sz\u00f3sty",
-            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
-            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "button_double_press": "\"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
@@ -50,8 +50,8 @@
     },
     "options": {
         "error": {
-            "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
-            "bad_will": "Nieprawid\u0142owy temat \"will\".",
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\"",
+            "bad_will": "Nieprawid\u0142owy temat \"will\"",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {

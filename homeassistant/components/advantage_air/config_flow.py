@@ -1,6 +1,4 @@
 """Config Flow for Advantage Air integration."""
-import logging
-
 from advantage_air import ApiError, advantage_air
 import voluptuous as vol
 
@@ -18,8 +16,6 @@ ADVANTAGE_AIR_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default=ADVANTAGE_AIR_DEFAULT_PORT): int,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

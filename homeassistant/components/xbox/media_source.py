@@ -1,6 +1,5 @@
-"""Netatmo Media Source Implementation."""
+"""Xbox Media Source Implementation."""
 from dataclasses import dataclass
-import logging
 from typing import List, Tuple
 
 # pylint: disable=no-name-in-module
@@ -30,8 +29,6 @@ from homeassistant.util import dt as dt_util
 
 from .browse_media import _find_media_image
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 MIME_TYPE_MAP = {
     "gameclips": "video/mp4",
@@ -78,7 +75,7 @@ class XboxSource(MediaSource):
     name: str = "Xbox Game Media"
 
     def __init__(self, hass: HomeAssistantType, client: XboxLiveClient):
-        """Initialize Netatmo source."""
+        """Initialize Xbox source."""
         super().__init__(DOMAIN)
 
         self.hass: HomeAssistantType = hass
@@ -87,7 +84,7 @@ class XboxSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         _, category, url = async_parse_identifier(item)
-        _, kind = category.split("#", 1)
+        kind = category.split("#", 1)[1]
         return PlayMedia(url, MIME_TYPE_MAP[kind])
 
     async def async_browse_media(
@@ -127,7 +124,7 @@ class XboxSource(MediaSource):
             domain=DOMAIN,
             identifier="",
             media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=None,
+            media_content_type="",
             title="Xbox Game Media",
             can_play=False,
             can_expand=True,
@@ -200,7 +197,7 @@ class XboxSource(MediaSource):
             domain=DOMAIN,
             identifier=f"{title}~~{category}",
             media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=None,
+            media_content_type="",
             title=f"{owner.title()} {kind.title()}",
             can_play=False,
             can_expand=True,
@@ -223,7 +220,7 @@ def _build_game_item(item: InstalledPackage, images: List[Image]):
         domain=DOMAIN,
         identifier=f"{item.title_id}#{item.name}#{thumbnail}",
         media_class=MEDIA_CLASS_GAME,
-        media_content_type=None,
+        media_content_type="",
         title=item.name,
         can_play=False,
         can_expand=True,
@@ -239,7 +236,7 @@ def _build_categories(title):
         domain=DOMAIN,
         identifier=f"{title}",
         media_class=MEDIA_CLASS_GAME,
-        media_content_type=None,
+        media_content_type="",
         title=name,
         can_play=False,
         can_expand=True,
@@ -257,7 +254,7 @@ def _build_categories(title):
                     domain=DOMAIN,
                     identifier=f"{title}~~{owner}#{kind}",
                     media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=None,
+                    media_content_type="",
                     title=f"{owner.title()} {kind.title()}",
                     can_play=False,
                     can_expand=True,
@@ -270,7 +267,7 @@ def _build_categories(title):
 
 def _build_media_item(title: str, category: str, item: XboxMediaItem):
     """Build individual media item."""
-    _, kind = category.split("#", 1)
+    kind = category.split("#", 1)[1]
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{title}~~{category}~~{item.uri}",

@@ -1,8 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service ist bereits konfiguriert"
+        },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API Key",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
                 }

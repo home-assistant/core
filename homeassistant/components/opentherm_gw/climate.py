@@ -33,7 +33,6 @@ from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHER
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FLOOR_TEMP = False
-DEFAULT_PRECISION = None
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -62,7 +61,7 @@ class OpenThermClimate(ClimateEntity):
         )
         self.friendly_name = gw_dev.name
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
-        self.temp_precision = options.get(CONF_PRECISION, DEFAULT_PRECISION)
+        self.temp_precision = options.get(CONF_PRECISION)
         self._available = False
         self._current_operation = None
         self._current_temperature = None
@@ -102,10 +101,10 @@ class OpenThermClimate(ClimateEntity):
     @callback
     def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
-        self._available = bool(status)
-        ch_active = status.get(gw_vars.DATA_SLAVE_CH_ACTIVE)
-        flame_on = status.get(gw_vars.DATA_SLAVE_FLAME_ON)
-        cooling_active = status.get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
+        self._available = status != gw_vars.DEFAULT_STATUS
+        ch_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
+        flame_on = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
+        cooling_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
             self._current_operation = CURRENT_HVAC_HEAT
             self._hvac_mode = HVAC_MODE_HEAT
@@ -115,8 +114,10 @@ class OpenThermClimate(ClimateEntity):
         else:
             self._current_operation = CURRENT_HVAC_IDLE
 
-        self._current_temperature = status.get(gw_vars.DATA_ROOM_TEMP)
-        temp_upd = status.get(gw_vars.DATA_ROOM_SETPOINT)
+        self._current_temperature = status[gw_vars.THERMOSTAT].get(
+            gw_vars.DATA_ROOM_TEMP
+        )
+        temp_upd = status[gw_vars.THERMOSTAT].get(gw_vars.DATA_ROOM_SETPOINT)
 
         if self._target_temperature != temp_upd:
             self._new_target_temperature = None
@@ -124,14 +125,14 @@ class OpenThermClimate(ClimateEntity):
 
         # GPIO mode 5: 0 == Away
         # GPIO mode 6: 1 == Away
-        gpio_a_state = status.get(gw_vars.OTGW_GPIO_A)
+        gpio_a_state = status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A)
         if gpio_a_state == 5:
             self._away_mode_a = 0
         elif gpio_a_state == 6:
             self._away_mode_a = 1
         else:
             self._away_mode_a = None
-        gpio_b_state = status.get(gw_vars.OTGW_GPIO_B)
+        gpio_b_state = status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B)
         if gpio_b_state == 5:
             self._away_mode_b = 0
         elif gpio_b_state == 6:
@@ -140,11 +141,11 @@ class OpenThermClimate(ClimateEntity):
             self._away_mode_b = None
         if self._away_mode_a is not None:
             self._away_state_a = (
-                status.get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a
+                status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a
             )
         if self._away_mode_b is not None:
             self._away_state_b = (
-                status.get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b
+                status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b
             )
         self.async_write_ha_state()
 
@@ -177,7 +178,7 @@ class OpenThermClimate(ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        if self.temp_precision is not None:
+        if self.temp_precision is not None and self.temp_precision != 0:
             return self.temp_precision
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES

@@ -36,6 +36,15 @@
             "button_6": "\u0160est\u00e9 tla\u010d\u00edtko",
             "turn_off": "Vypnout",
             "turn_on": "Zapnout"
+        },
+        "trigger_type": {
+            "button_double_press": "Dvakr\u00e1t stisknuto \"{subtype}\"",
+            "button_long_release": "Uvoln\u011bno \"{subtype}\" po dlouh\u00e9m stisku",
+            "button_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto \"{subtype}\"",
+            "button_quintuple_press": "P\u011btkr\u00e1t stisknuto \"{subtype}\"",
+            "button_short_press": "Stiknuto \"{subtype}\"",
+            "button_short_release": "Uvoln\u011bno \"{subtype}\"",
+            "button_triple_press": "T\u0159ikr\u00e1t stisknuto \"{subtype}\""
         }
     },
     "options": {
@@ -54,7 +63,11 @@
             "options": {
                 "data": {
                     "birth_enable": "Povolit zpr\u00e1vu p\u0159i p\u0159ipojen\u00ed",
-                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed"
+                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed",
+                    "will_payload": "Obsah zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_qos": "QoS zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_retain": "Zachov\u00e1n\u00ed zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_topic": "T\u00e9ma zpr\u00e1vy se z\u00e1v\u011bt\u00ed (will message)"
                 },
                 "description": "Zvolte mo\u017enosti MQTT."
             }

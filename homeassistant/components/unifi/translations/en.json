@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
+                    "dpi_restrictions": "Allow control of DPI restriction groups",
                     "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",

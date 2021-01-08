@@ -144,7 +144,7 @@ async def async_setup(hass, config):
             domain = DOMAIN
 
         message.hass = hass
-        message = message.async_render()
+        message = message.async_render(parse_result=False)
         async_log_entry(hass, name, message, domain, entity_id)
 
     hass.components.frontend.async_register_built_in_panel(

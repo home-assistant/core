@@ -1,7 +1,4 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
-
-import logging
-
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -14,8 +11,6 @@ from homeassistant.const import (
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

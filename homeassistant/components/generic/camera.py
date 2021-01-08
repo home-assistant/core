@@ -121,7 +121,7 @@ class GenericCamera(Camera):
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         try:
-            url = self._still_image_url.async_render()
+            url = self._still_image_url.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
@@ -178,7 +178,7 @@ class GenericCamera(Camera):
             return None
 
         try:
-            return self._stream_source.async_render()
+            return self._stream_source.async_render(parse_result=False)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
             return None

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja.",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "create_entry": {
@@ -9,8 +8,8 @@
         },
         "step": {
             "user": {
-                "description": "Na pewno chcesz skonfigurowa\u0107 OwnTracks?",
-                "title": "Konfiguracja  OwnTracks"
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
+                "title": "Konfiguracja OwnTracks"
             }
         }
     }

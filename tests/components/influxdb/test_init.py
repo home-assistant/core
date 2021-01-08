@@ -1,6 +1,7 @@
 """The tests for the InfluxDB component."""
 from dataclasses import dataclass
 import datetime
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -15,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, Mock, call, patch
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
@@ -61,10 +60,17 @@ def mock_client_fixture(request):
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
+
+    def v2_call(body, precision):
+        data = {"bucket": DEFAULT_BUCKET, "record": body}
+
+        if precision is not None:
+            data["write_precision"] = precision
+
+        return call(**data)
+
     if request.param == influxdb.API_VERSION_2:
-        return lambda body, precision=None: call(
-            bucket=DEFAULT_BUCKET, record=body, write_precision=precision
-        )
+        return lambda body, precision=None: v2_call(body, precision)
     # pylint: disable=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 

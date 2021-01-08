@@ -2,8 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 z CoolMasterNet. Sprawd\u017a adres hosta.",
-            "no_units": "Nie mo\u017cna znale\u017a\u0107 urz\u0105dze\u0144 HVAC na ho\u015bcie CoolMasterNet."
+            "no_units": "Nie mo\u017cna znale\u017a\u0107 urz\u0105dze\u0144 HVAC na ho\u015bcie CoolMasterNet"
         },
         "step": {
             "user": {
@@ -16,7 +15,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "off": "Mo\u017ce by\u0107 wy\u0142\u0105czone"
                 },
-                "title": "Skonfiguruj szczeg\u00f3\u0142y po\u0142\u0105czenia CoolMasterNet."
+                "title": "Konfiguracja po\u0142\u0105czenia CoolMasterNet."
             }
         }
     }

@@ -44,6 +44,16 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 def get_date(date):
     """Get the dateTime from date or dateTime as a local."""
     if "date" in date:

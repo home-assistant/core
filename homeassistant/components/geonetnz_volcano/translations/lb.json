@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Standuert ass scho registr\u00e9iert"
+        "abort": {
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
         },
         "step": {
             "user": {

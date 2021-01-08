@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "not_forked_daapd": "\u8a2d\u5099\u4e26\u975e forked-daapd \u4f3a\u670d\u5668\u3002"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "not_forked_daapd": "\u88dd\u7f6e\u4e26\u975e forked-daapd \u4f3a\u670d\u5668\u3002"
         },
         "error": {
+            "forbidden": "\u7121\u6cd5\u9023\u7dda\uff0c\u8acb\u78ba\u8a8d forked-daapd \u7db2\u8def\u6b0a\u9650\u3002",
             "unknown_error": "\u672a\u9810\u671f\u932f\u8aa4",
             "websocket_not_enabled": "forked-daapd \u4f3a\u670d\u5668 websocket \u672a\u958b\u555f\u3002",
             "wrong_host_or_port": "\u7121\u6cd5\u9023\u7dda\uff0c\u8acb\u78ba\u8a8d\u4e3b\u6a5f\u8207\u901a\u8a0a\u57e0\u3002",
@@ -20,7 +21,7 @@
                     "password": "API \u5bc6\u78bc\uff08\u5047\u5982\u7121\u5bc6\u78bc\uff0c\u8acb\u7559\u7a7a\uff09",
                     "port": "API \u901a\u8a0a\u57e0"
                 },
-                "title": "\u8a2d\u5b9a forked-daapd \u8a2d\u5099"
+                "title": "\u8a2d\u5b9a forked-daapd \u88dd\u7f6e"
             }
         }
     },

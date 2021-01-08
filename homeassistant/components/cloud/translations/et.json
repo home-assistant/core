@@ -1,0 +1,16 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa on lubatud",
+            "can_reach_cert_server": "\u00dchendus serdiserveriga",
+            "can_reach_cloud": "\u00dchendus Home Assistant Cloudiga",
+            "can_reach_cloud_auth": "\u00dchendus tuvastusserveriga",
+            "google_enabled": "Google on lubatud",
+            "logged_in": "Sisse logitud",
+            "relayer_connected": "Edastaja on \u00fchendatud",
+            "remote_connected": "Kaug\u00fchendus on loodud",
+            "remote_enabled": "Kaug\u00fchendus on lubatud",
+            "subscription_expiration": "Tellimuse aegumine"
+        }
+    }
+}

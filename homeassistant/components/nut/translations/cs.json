@@ -11,13 +11,15 @@
             "resources": {
                 "data": {
                     "resources": "Zdroje"
-                }
+                },
+                "title": "Vyberte zdroje, kter\u00e9 chcete sledovat"
             },
             "ups": {
                 "data": {
                     "alias": "Alias",
                     "resources": "Zdroje"
-                }
+                },
+                "title": "Vyberte UPS, kterou chcete sledovat"
             },
             "user": {
                 "data": {

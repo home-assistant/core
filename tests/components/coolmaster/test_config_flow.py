@@ -1,8 +1,8 @@
 """Test the Coolmaster config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.coolmaster.const import AVAILABLE_MODES, DOMAIN
-
-from tests.async_mock import patch
 
 
 def _flow_data():
@@ -32,6 +32,7 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "1.1.1.1"
@@ -40,7 +41,6 @@ async def test_form(hass):
         "port": 10102,
         "supported_modes": AVAILABLE_MODES,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

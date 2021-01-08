@@ -30,7 +30,6 @@ from .const import (
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
-    ATTR_DEVICE_IEEE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_ENDPOINT_NAMES,
@@ -255,8 +254,10 @@ class ZHADevice(LogMixin):
                 "device_event_type": "device_offline"
             }
         }
+
         if hasattr(self._zigpy_device, "device_automation_triggers"):
             triggers.update(self._zigpy_device.device_automation_triggers)
+
         return triggers
 
     @property
@@ -355,10 +356,8 @@ class ZHADevice(LogMixin):
             self.hass.async_create_task(self._async_became_available())
             return
         if availability_changed and not available:
-            self.hass.bus.async_fire(
-                "zha_event",
+            self._channels.zha_send_event(
                 {
-                    ATTR_DEVICE_IEEE: str(self.ieee),
                     "device_event_type": "device_offline",
                 },
             )
@@ -401,7 +400,7 @@ class ZHADevice(LogMixin):
         entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
-        if self._channels.identify_ch is not None:
+        if self._channels.identify_ch is not None and not self.skip_configuration:
             await self._channels.identify_ch.trigger_effect(
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )

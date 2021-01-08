@@ -77,7 +77,7 @@ def async_generate_entity_id(
 
     test_string = preferred_string
     tries = 1
-    while hass.states.get(test_string):
+    while not hass.states.async_available(test_string):
         tries += 1
         test_string = f"{preferred_string}_{tries}"
 

@@ -187,25 +187,36 @@ class ZigbeeChannel(LogMixin):
                     str(ex),
                 )
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
             await self.bind()
             if self.cluster.is_server:
                 await self.configure_reporting()
+            ch_specific_cfg = getattr(self, "async_configure_channel_specific", None)
+            if ch_specific_cfg:
+                await ch_specific_cfg()
             self.debug("finished channel configuration")
         else:
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
+        if not from_cache and self._ch_pool.skip_configuration:
+            self._status = ChannelStatus.INITIALIZED
+            return
+
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = []
-        for report_config in self._report_config:
-            attributes.append(report_config["attr"])
-        if len(attributes) > 0:
+        attributes = [cfg["attr"] for cfg in self._report_config]
+        if attributes:
             await self.get_attributes(attributes, from_cache=from_cache)
+
+        ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
+        if ch_specific_init:
+            await ch_specific_init(from_cache=from_cache)
+
+        self.debug("finished channel configuration")
         self._status = ChannelStatus.INITIALIZED
 
     @callback

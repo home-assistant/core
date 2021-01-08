@@ -1,5 +1,6 @@
 """The tests for Monoprice Media player platform."""
 from collections import defaultdict
+from unittest.mock import patch
 
 from serial import SerialException
 
@@ -34,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: "fake port", CONF_SOURCES: {"1": "one", "3": "three"}}

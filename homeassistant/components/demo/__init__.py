@@ -19,6 +19,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "light",
     "lock",
     "media_player",
+    "number",
     "sensor",
     "switch",
     "vacuum",
@@ -104,7 +105,7 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up input boolean
+    # Set up input number
     tasks.append(
         bootstrap.async_setup_component(
             hass,

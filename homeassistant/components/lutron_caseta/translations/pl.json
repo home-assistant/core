@@ -9,7 +9,7 @@
         },
         "step": {
             "import_failed": {
-                "description": "Nie mo\u017cna skonfigurowa\u0107 mostka (host: {host} ) zaimportowanego z pliku configuration.yaml.",
+                "description": "Nie mo\u017cna skonfigurowa\u0107 mostka (host: {host}) zaimportowanego z pliku configuration.yaml.",
                 "title": "Nie uda\u0142o si\u0119 zaimportowa\u0107 konfiguracji mostka Cas\u00e9ta."
             }
         }

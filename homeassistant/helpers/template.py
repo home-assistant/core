@@ -4,14 +4,14 @@ import asyncio
 import base64
 import collections.abc
 from datetime import datetime, timedelta
-from functools import wraps
+from functools import partial, wraps
 import json
 import logging
 import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Generator, Iterable, List, Optional, Union
+from typing import Any, Dict, Generator, Iterable, Optional, Type, Union
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -27,13 +27,11 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
-    MATCH_ALL,
     STATE_UNKNOWN,
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, location as loc_helper
-from homeassistant.helpers.frame import report
+from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -50,13 +48,9 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 
-_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
-_RE_GET_ENTITIES = re.compile(
-    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
-    re.I | re.M,
-)
-
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
+# Match "simple" ints and floats. -1.0, 1, +5, 5.0
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -73,7 +67,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-DEFAULT_RATE_LIMIT = timedelta(minutes=1)
+ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
+DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 
 @bind_hass
@@ -123,57 +118,64 @@ def is_template_string(maybe_template: str) -> bool:
     return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
 
 
-def extract_entities(
-    hass: HomeAssistantType,
-    template: Optional[str],
-    variables: TemplateVarsType = None,
-) -> Union[str, List[str]]:
-    """Extract all entities for state_changed listener from template string."""
+class ResultWrapper:
+    """Result wrapper class to store render result."""
 
-    report(
-        "called template.extract_entities. Please use event.async_track_template_result instead as it can accurately handle watching entities"
-    )
+    render_result: Optional[str]
 
-    if template is None or not is_template_string(template):
-        return []
 
-    if _RE_NONE_ENTITIES.search(template):
-        return MATCH_ALL
+def gen_result_wrapper(kls):
+    """Generate a result wrapper."""
 
-    extraction_final = []
+    class Wrapper(kls, ResultWrapper):
+        """Wrapper of a kls that can store render_result."""
 
-    for result in _RE_GET_ENTITIES.finditer(template):
-        if (
-            result.group("entity_id") == "trigger.entity_id"
-            and variables
-            and "trigger" in variables
-            and "entity_id" in variables["trigger"]
-        ):
-            extraction_final.append(variables["trigger"]["entity_id"])
-        elif result.group("entity_id"):
-            if result.group("func") == "expand":
-                for entity in expand(hass, result.group("entity_id")):
-                    extraction_final.append(entity.entity_id)
+        def __init__(self, *args: tuple, render_result: Optional[str] = None) -> None:
+            super().__init__(*args)
+            self.render_result = render_result
 
-            extraction_final.append(result.group("entity_id"))
-        elif result.group("domain_inner") or result.group("domain_outer"):
-            extraction_final.extend(
-                hass.states.async_entity_ids(
-                    result.group("domain_inner") or result.group("domain_outer")
-                )
-            )
+        def __str__(self) -> str:
+            if self.render_result is None:
+                # Can't get set repr to work
+                if kls is set:
+                    return str(set(self))
 
-        if (
-            variables
-            and result.group("variable") in variables
-            and isinstance(variables[result.group("variable")], str)
-            and valid_entity_id(variables[result.group("variable")])
-        ):
-            extraction_final.append(variables[result.group("variable")])
+                return kls.__str__(self)
 
-    if extraction_final:
-        return list(set(extraction_final))
-    return MATCH_ALL
+            return self.render_result
+
+    return Wrapper
+
+
+class TupleWrapper(tuple, ResultWrapper):
+    """Wrap a tuple."""
+
+    # This is all magic to be allowed to subclass a tuple.
+
+    def __new__(
+        cls, value: tuple, *, render_result: Optional[str] = None
+    ) -> "TupleWrapper":
+        """Create a new tuple class."""
+        return super().__new__(cls, tuple(value))
+
+    # pylint: disable=super-init-not-called
+
+    def __init__(self, value: tuple, *, render_result: Optional[str] = None):
+        """Initialize a new tuple class."""
+        self.render_result = render_result
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        if self.render_result is None:
+            return super().__str__()
+
+        return self.render_result
+
+
+RESULT_WRAPPERS: Dict[Type, Type] = {
+    kls: gen_result_wrapper(kls) for kls in (list, dict, set)
+}
+RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
 def _true(arg: Any) -> bool:
@@ -202,10 +204,11 @@ class RenderInfo:
         self.domains_lifecycle = set()
         self.entities = set()
         self.rate_limit = None
+        self.has_time = False
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}>"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> has_time={self.has_time}"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
@@ -240,12 +243,11 @@ class RenderInfo:
     def _freeze(self) -> None:
         self._freeze_sets()
 
-        if self.rate_limit is None and (
-            self.domains or self.domains_lifecycle or self.all_states or self.exception
-        ):
-            # If the template accesses all states or an entire
-            # domain, and no rate limit is set, we use the default.
-            self.rate_limit = DEFAULT_RATE_LIMIT
+        if self.rate_limit is None:
+            if self.all_states or self.exception:
+                self.rate_limit = ALL_STATES_RATE_LIMIT
+            elif self.domains or self.domains_lifecycle:
+                self.rate_limit = DOMAIN_STATES_RATE_LIMIT
 
         if self.exception:
             return
@@ -284,7 +286,7 @@ class Template:
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
-        self.template: str = template
+        self.template: str = template.strip()
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
@@ -309,35 +311,38 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
 
-    def extract_entities(
-        self, variables: TemplateVarsType = None
-    ) -> Union[str, List[str]]:
-        """Extract all entities for state_changed listener."""
-        if self.is_static:
-            return []
-
-        return extract_entities(self.hass, self.template, variables)
-
-    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
+    def render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: bool = True,
+        **kwargs: Any,
+    ) -> Any:
         """Render given template."""
         if self.is_static:
-            return self.template.strip()
-
-        if variables is not None:
-            kwargs.update(variables)
+            if self.hass.config.legacy_templates or not parse_result:
+                return self.template
+            return self._parse_result(self.template)
 
         return run_callback_threadsafe(
-            self.hass.loop, self.async_render, kwargs
+            self.hass.loop,
+            partial(self.async_render, variables, parse_result, **kwargs),
         ).result()
 
     @callback
-    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
+    def async_render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: bool = True,
+        **kwargs: Any,
+    ) -> Any:
         """Render given template.
 
         This method must be run in the event loop.
         """
         if self.is_static:
-            return self.template.strip()
+            if self.hass.config.legacy_templates or not parse_result:
+                return self.template
+            return self._parse_result(self.template)
 
         compiled = self._compiled or self._ensure_compiled()
 
@@ -351,18 +356,41 @@ class Template:
 
         render_result = render_result.strip()
 
-        if not self.hass.config.legacy_templates:
-            try:
-                result = literal_eval(render_result)
+        if self.hass.config.legacy_templates or not parse_result:
+            return render_result
 
-                # If the literal_eval result is a string, use the original
-                # render, by not returning right here. The evaluation of strings
-                # resulting in strings impacts quotes, to avoid unexpected
-                # output; use the original render instead of the evaluated one.
-                if not isinstance(result, str):
-                    return result
-            except (ValueError, SyntaxError, MemoryError):
-                pass
+        return self._parse_result(render_result)
+
+    def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
+        """Parse the result."""
+        try:
+            result = literal_eval(render_result)
+
+            if type(result) in RESULT_WRAPPERS:
+                result = RESULT_WRAPPERS[type(result)](
+                    result, render_result=render_result
+                )
+
+            # If the literal_eval result is a string, use the original
+            # render, by not returning right here. The evaluation of strings
+            # resulting in strings impacts quotes, to avoid unexpected
+            # output; use the original render instead of the evaluated one.
+            # Complex and scientific values are also unexpected. Filter them out.
+            if (
+                # Filter out string and complex numbers
+                not isinstance(result, (str, complex))
+                and (
+                    # Pass if not numeric and not a boolean
+                    not isinstance(result, (int, float))
+                    # Or it's a boolean (inherit from int)
+                    or isinstance(result, bool)
+                    # Or if it's a digit
+                    or _IS_NUMERIC.match(render_result) is not None
+                )
+            ):
+                return result
+        except (ValueError, TypeError, SyntaxError, MemoryError):
+            pass
 
         return render_result
 
@@ -777,6 +805,11 @@ def result_as_boolean(template_result: Optional[str]) -> bool:
 
     """
     try:
+        # Import here, not at top-level to avoid circular import
+        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+            config_validation as cv,
+        )
+
         return cv.boolean(template_result)
     except vol.Invalid:
         return False
@@ -959,6 +992,24 @@ def state_attr(hass, entity_id, name):
     if state_obj is not None:
         return state_obj.attributes.get(name)
     return None
+
+
+def now(hass):
+    """Record fetching now."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is not None:
+        render_info.has_time = True
+
+    return dt_util.now()
+
+
+def utcnow(hass):
+    """Record fetching utcnow."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is not None:
+        render_info.has_time = True
+
+    return dt_util.utcnow()
 
 
 def forgiving_round(value, precision=0, method="common"):
@@ -1291,9 +1342,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["now"] = dt_util.now
         self.globals["as_local"] = dt_util.as_local
-        self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
@@ -1324,6 +1373,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["utcnow"] = hassfunction(utcnow)
+        self.globals["now"] = hassfunction(now)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

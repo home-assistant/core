@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "connection_error": "Kunne ikke koble til, vennligst pr\u00f8v igjen. Koble fra str\u00f8m- og nettverkskablene og koble dem til igjen kan hjelpe",
+            "cannot_connect": "[%key:component::denonavr::config::abort::connection_error%]",
             "not_denonavr_manufacturer": "Ikke en Denon AVR Network Receiver, oppdaget manafucturer stemte ikke overens",
             "not_denonavr_missing": "Ikke en Denon AVR Network Receiver, oppdagelsesinformasjon ikke fullf\u00f8rt"
         },
@@ -18,7 +18,7 @@
             },
             "select": {
                 "data": {
-                    "select_host": "IP-mottaker"
+                    "select_host": "Receiver IP-adresse"
                 },
                 "description": "Kj\u00f8r oppsettet igjen hvis du vil koble til flere mottakere",
                 "title": "Velg mottakeren du vil koble til"

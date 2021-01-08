@@ -1,6 +1,4 @@
 """Support for Tasmota lights."""
-import logging
-
 from hatasmota.light import (
     LIGHT_TYPE_COLDWARM,
     LIGHT_TYPE_NONE,
@@ -29,11 +27,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN as TASMOTA_DOMAIN
+from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100
@@ -49,9 +45,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             [TasmotaLight(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    async_dispatcher_connect(
+    hass.data[
+        DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)
+    ] = async_dispatcher_connect(
         hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN, TASMOTA_DOMAIN),
+        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
         async_discover,
     )
 
@@ -76,16 +74,16 @@ class TasmotaLight(
         self._flash_times = None
 
         super().__init__(
-            discovery_update=self.discovery_update,
             **kwds,
         )
 
         self._setup_from_entity()
 
-    async def discovery_update(self, update):
+    async def discovery_update(self, update, write_state=True):
         """Handle updated discovery message."""
+        await super().discovery_update(update, write_state=False)
         self._setup_from_entity()
-        await super().discovery_update(update)
+        self.async_write_ha_state()
 
     def _setup_from_entity(self):
         """(Re)Setup the entity."""
@@ -94,7 +92,6 @@ class TasmotaLight(
 
         if light_type != LIGHT_TYPE_NONE:
             supported_features |= SUPPORT_BRIGHTNESS
-            supported_features |= SUPPORT_TRANSITION
 
         if light_type in [LIGHT_TYPE_COLDWARM, LIGHT_TYPE_RGBCW]:
             supported_features |= SUPPORT_COLOR_TEMP
@@ -105,6 +102,9 @@ class TasmotaLight(
 
         if light_type in [LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
             supported_features |= SUPPORT_WHITE_VALUE
+
+        if self._tasmota_entity.supports_transition:
+            supported_features |= SUPPORT_TRANSITION
 
         self._supported_features = supported_features
 
@@ -129,6 +129,11 @@ class TasmotaLight(
                 white_value = float(attributes["white_value"])
                 percent_white = white_value / TASMOTA_BRIGHTNESS_MAX
                 self._white_value = percent_white * 255
+            if self._white_value == 0:
+                self._color_temp = None
+                self._white_value = None
+            if self._white_value is not None and self._white_value > 0:
+                self._hs = None
         self.async_write_ha_state()
 
     @property

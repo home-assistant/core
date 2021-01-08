@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "Sonarr \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49 Sonarr API\uff1a{host}",
-                "title": "\u91cd\u65b0\u8a8d\u8b49 Sonarr"
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
             "user": {
                 "data": {
@@ -23,8 +23,7 @@
                     "port": "\u901a\u8a0a\u57e0",
                     "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
-                },
-                "title": "\u9023\u7dda\u81f3 Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

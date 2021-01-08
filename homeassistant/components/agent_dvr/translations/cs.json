@@ -12,7 +12,8 @@
                 "data": {
                     "host": "Hostitel",
                     "port": "Port"
-                }
+                },
+                "title": "Nastaven\u00ed Agent DVR"
             }
         }
     }

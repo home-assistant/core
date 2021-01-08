@@ -1,8 +1,6 @@
 """Support to embed Plex."""
 import asyncio
-import functools
 from functools import partial
-import json
 import logging
 
 import plexapi.exceptions
@@ -36,10 +34,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_SERVER,
@@ -58,7 +53,7 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-from .services import async_setup_services
+from .services import async_setup_services, lookup_plex_media
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -177,6 +172,7 @@ async def async_setup_entry(hass, entry):
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
+                hass.async_create_task(async_update_plex())
             elif data == STATE_DISCONNECTED:
                 _LOGGER.debug(
                     "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
@@ -191,7 +187,7 @@ async def async_setup_entry(hass, entry):
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
         elif signal == SIGNAL_DATA:
-            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+            hass.async_create_task(plex_server.async_update_session(data))
 
     session = async_get_clientsession(hass)
     verify_ssl = server_config.get(CONF_VERIFY_SSL)
@@ -220,7 +216,7 @@ async def async_setup_entry(hass, entry):
         task = hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-        task.add_done_callback(functools.partial(start_websocket_session, platform))
+        task.add_done_callback(partial(start_websocket_session, platform))
 
     async def async_play_on_sonos_service(service_call):
         await hass.async_add_executor_job(play_on_sonos, hass, service_call)
@@ -228,7 +224,7 @@ async def async_setup_entry(hass, entry):
     play_on_sonos_schema = vol.Schema(
         {
             vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+            vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
         }
     )
@@ -286,7 +282,7 @@ def play_on_sonos(hass, service_call):
     """Play Plex media on a linked Sonos device."""
     entity_id = service_call.data[ATTR_ENTITY_ID]
     content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
-    content = json.loads(content_id)
+    content_type = service_call.data.get(ATTR_MEDIA_CONTENT_TYPE)
 
     sonos = hass.components.sonos
     try:
@@ -295,27 +291,9 @@ def play_on_sonos(hass, service_call):
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
 
-    if isinstance(content, int):
-        content = {"plex_key": content}
-        content_type = PLEX_DOMAIN
-    else:
-        content_type = "music"
-
-    plex_server_name = content.get("plex_server")
-    shuffle = content.pop("shuffle", 0)
-
-    plex_servers = hass.data[PLEX_DOMAIN][SERVERS].values()
-    if plex_server_name:
-        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
-        if not plex_server:
-            _LOGGER.error(
-                "Requested Plex server '%s' not found in %s",
-                plex_server_name,
-                [x.friendly_name for x in plex_servers],
-            )
-            return
-    else:
-        plex_server = next(iter(plex_servers))
+    media, plex_server = lookup_plex_media(hass, content_type, content_id)
+    if media is None:
+        return
 
     sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
     if sonos_speaker is None:
@@ -324,11 +302,4 @@ def play_on_sonos(hass, service_call):
         )
         return
 
-    media = plex_server.lookup_media(content_type, **content)
-    if media is None:
-        _LOGGER.error("Media could not be found: %s", content)
-        return
-
-    _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
-    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
-    sonos_speaker.playMedia(playqueue)
+    sonos_speaker.playMedia(media)

@@ -1,10 +1,7 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
 from datetime import datetime
 import json
-import logging
 from typing import Any
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class JSONEncoder(json.JSONEncoder):

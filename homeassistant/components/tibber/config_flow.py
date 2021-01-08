@@ -1,6 +1,5 @@
 """Adds config flow for Tibber integration."""
 import asyncio
-import logging
 
 import aiohttp
 import tibber
@@ -11,8 +10,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 

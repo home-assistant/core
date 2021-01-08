@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "no_stations": "Nie znaleziono stacji monitorowania powodzi."
+            "no_stations": "Nie znaleziono stacji monitorowania powodzi"
         },
         "step": {
             "user": {

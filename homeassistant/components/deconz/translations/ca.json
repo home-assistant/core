@@ -6,7 +6,6 @@
             "no_bridges": "No s'han descobert enlla\u00e7os amb deCONZ",
             "no_hardware_available": "No hi ha cap maquinari r\u00e0dio connectat a deCONZ",
             "not_deconz_bridge": "No \u00e9s un enlla\u00e7 deCONZ",
-            "one_instance_only": "El component nom\u00e9s admet una inst\u00e0ncia deCONZ",
             "updated_instance": "S'ha actualitzat la inst\u00e0ncia de deCONZ amb una nova adre\u00e7a"
         },
         "error": {
@@ -67,6 +66,7 @@
             "remote_button_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades",
             "remote_button_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades",
             "remote_button_rotated": "Bot\u00f3 \"{subtype}\" girat",
+            "remote_button_rotated_fast": "Bot\u00f3 \"{subtype}\" girat r\u00e0pidament",
             "remote_button_rotation_stopped": "La rotaci\u00f3 del bot\u00f3 \"{subtype}\" s'ha aturat",
             "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",

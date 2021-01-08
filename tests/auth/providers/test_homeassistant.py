@@ -1,5 +1,6 @@
 """Test the Home Assistant local auth provider."""
 import asyncio
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,8 +11,6 @@ from homeassistant.auth.providers import (
     auth_provider_from_config,
     homeassistant as hass_auth,
 )
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture

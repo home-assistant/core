@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_SHADE,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -51,6 +52,11 @@ class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     def current_cover_position(self):
         """Return the current position of cover."""
         return self._device["current_state"]
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_SHADE
 
     async def async_stop_cover(self, **kwargs):
         """Top the cover."""

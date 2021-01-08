@@ -1,7 +1,4 @@
 """Support for Vivotek IP Cameras."""
-
-import logging
-
 from libpyvivotek import VivotekCamera
 import voluptuous as vol
 
@@ -18,8 +15,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.helpers import config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_FRAMERATE = "framerate"
 CONF_SECURITY_LEVEL = "security_level"

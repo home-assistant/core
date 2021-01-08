@@ -3,7 +3,7 @@ import logging
 
 import hdate
 
-from homeassistant.const import SUN_EVENT_SUNSET
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
@@ -150,7 +150,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return "timestamp"
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def device_state_attributes(self):
@@ -159,8 +159,6 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
 
         if self._state is None:
             return attrs
-
-        attrs["timestamp"] = self._state.timestamp()
 
         return attrs
 

@@ -84,6 +84,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._entity_ids = entity_ids
         self._is_on = False
         self._available = False
+        self._icon = "mdi:lightbulb-group"
         self._brightness: Optional[int] = None
         self._hs_color: Optional[Tuple[float, float]] = None
         self._color_temp: Optional[int] = None
@@ -129,6 +130,11 @@ class LightGroup(GroupEntity, light.LightEntity):
     def available(self) -> bool:
         """Return whether the light group is available."""
         return self._available
+
+    @property
+    def icon(self):
+        """Return the light group icon."""
+        return self._icon
 
     @property
     def brightness(self) -> Optional[int]:

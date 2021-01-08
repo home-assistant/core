@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "port_exists": "Ten port jest ju\u017c skonfigurowany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_failed": "Po\u0142\u0105czenie Velbus nie powiod\u0142o si\u0119",
-            "port_exists": "Ten port jest ju\u017c skonfigurowany."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {

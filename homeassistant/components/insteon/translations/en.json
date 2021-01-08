@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "An Insteon modem connection is already configured",
             "cannot_connect": "Failed to connect",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
@@ -10,24 +9,6 @@
             "select_single": "Select one option."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Hub IP address",
-                    "port": "IP port"
-                },
-                "description": "Configure the Insteon Hub Version 1 (pre-2014).",
-                "title": "Insteon Hub Version 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Hub IP address",
-                    "password": "Password",
-                    "port": "IP port",
-                    "username": "Username"
-                },
-                "description": "Configure the Insteon Hub Version 2.",
-                "title": "Insteon Hub Version 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "IP Address",
@@ -46,15 +27,6 @@
                 "description": "Configure the Insteon Hub Version 2.",
                 "title": "Insteon Hub Version 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub Version 1 (Pre-2014)",
-                    "hubv2": "Hub Version 2",
-                    "plm": "PowerLink Modem (PLM)"
-                },
-                "description": "Select the Insteon modem type.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "USB Device Path"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "An Insteon modem connection is already configured",
-            "cannot_connect": "Unable to connect to the Insteon modem"
-        },
         "error": {
             "cannot_connect": "Failed to connect",
             "input_error": "Invalid entries, please check your values.",

@@ -1,6 +1,4 @@
 """The Wolf SmartSet sensors."""
-import logging
-
 from wolf_smartset.models import (
     HoursParameter,
     ListItemParameter,
@@ -21,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS, STATES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

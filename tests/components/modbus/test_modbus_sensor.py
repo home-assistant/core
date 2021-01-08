@@ -1,6 +1,5 @@
 """The tests for the Modbus sensor component."""
 from datetime import timedelta
-import logging
 
 import pytest
 
@@ -25,8 +24,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
 
 from .conftest import run_base_read_test, setup_base_test
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(

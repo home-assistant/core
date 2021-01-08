@@ -1,12 +1,7 @@
 """Base class for UniFi clients."""
-
-import logging
-
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .unifi_entity_base import UniFiBase
-
-LOGGER = logging.getLogger(__name__)
 
 
 class UniFiClient(UniFiBase):

@@ -1,9 +1,13 @@
 {
     "config": {
         "error": {
-            "already_configured": "Account is al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "reauth": {
+                "title": "Opnieuw verifi\u00ebren"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

@@ -1,11 +1,12 @@
 {
     "config": {
         "error": {
-            "service_unavailable": "Verbindung konnte nicht hergestellt werden"
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
             "protocol": {
                 "data": {
+                    "device_path": "Ger\u00e4tepfad",
                     "host": "Host",
                     "port": "Port"
                 }

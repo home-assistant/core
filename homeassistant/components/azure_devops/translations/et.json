@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Konto on juba seadistatud",
-            "reauth_successful": "Taasautentimine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "authorization_error": "Tuvastusviga. Kontrolli kas sul on juurdep\u00e4\u00e4s projektile ja kas sul on \u00f5iged volitused.",
-            "connection_error": "Azure DevOpsiga ei saanud \u00fchendust luua.",
+            "cannot_connect": "\u00dchendus nurjus",
+            "invalid_auth": "Tuvastamise viga",
             "project_error": "Projekti teavet ei \u00f5nnestunud hankida."
         },
         "flow_title": "Azure DevOps: {project_url}",
@@ -28,6 +28,5 @@
                 "title": "Lisa Azure DevOps Project"
             }
         }
-    },
-    "title": ""
+    }
 }

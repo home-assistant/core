@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Pont eisoes wedi'i ffurfweddu",
-            "no_bridges": "Dim pontydd deCONZ wedi eu darganfod",
-            "one_instance_only": "Elfen dim ond yn cefnogi enghraifft deCONZ"
+            "no_bridges": "Dim pontydd deCONZ wedi eu darganfod"
         },
         "error": {
             "no_key": "Methu cael allwedd API"

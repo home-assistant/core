@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ja hi ha un controlador configurat.",
             "cannot_connect": "No s'ha pogut connectar amb el controlador amb l'URL {base_url}"
         },
         "step": {

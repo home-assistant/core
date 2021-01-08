@@ -412,17 +412,19 @@ def async_log_exception(
     """
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    _LOGGER.error(_format_config_error(ex, domain, config, link))
+    message, is_friendly = _format_config_error(ex, domain, config, link)
+    _LOGGER.error(message, exc_info=not is_friendly and ex)
 
 
 @callback
 def _format_config_error(
     ex: Exception, domain: str, config: Dict, link: Optional[str] = None
-) -> str:
+) -> Tuple[str, bool]:
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
+    is_friendly = False
     message = f"Invalid config for [{domain}]: "
     if isinstance(ex, vol.Invalid):
         if "extra keys not allowed" in ex.error_message:
@@ -433,8 +435,9 @@ def _format_config_error(
             )
         else:
             message += f"{humanize_error(config, ex)}."
+        is_friendly = True
     else:
-        message += str(ex)
+        message += str(ex) or repr(ex)
 
     try:
         domain_config = config.get(domain, config)
@@ -449,7 +452,7 @@ def _format_config_error(
     if domain != CONF_CORE and link:
         message += f"Please check the docs at {link}"
 
-    return message
+    return message, is_friendly
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> None:
@@ -750,8 +753,14 @@ async def async_process_component_config(
     config_validator = None
     try:
         config_validator = integration.get_platform("config")
-    except ImportError:
-        pass
+    except ImportError as err:
+        # Filter out import error of the config platform.
+        # If the config platform contains bad imports, make sure
+        # that still fails.
+        if err.name != f"{integration.pkg_path}.config":
+            _LOGGER.error("Error importing config platform %s: %s", domain, err)
+            return None
+
     if config_validator is not None and hasattr(
         config_validator, "async_validate_config"
     ):
@@ -896,7 +905,7 @@ def async_notify_setup_error(
         part = f"[{name}]({link})" if link else name
         message += f" - {part}\n"
 
-    message += "\nPlease check your config."
+    message += "\nPlease check your config and [logs](/config/logs)."
 
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"

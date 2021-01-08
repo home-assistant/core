@@ -5,7 +5,6 @@ Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 from datetime import timedelta
 import json
-import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -38,7 +37,6 @@ from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 
 _CONFIGURING = {}
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_VOLUMIO = (
     SUPPORT_PAUSE
@@ -206,7 +204,7 @@ class Volumio(MediaPlayerEntity):
 
     async def async_media_pause(self):
         """Send media_pause command to media player."""
-        if self._state["trackType"] == "webradio":
+        if self._state.get("trackType") == "webradio":
             await self._volumio.stop()
         else:
             await self._volumio.pause()

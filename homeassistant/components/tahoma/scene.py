@@ -1,12 +1,9 @@
 """Support for Tahoma scenes."""
-import logging
 from typing import Any
 
 from homeassistant.components.scene import Scene
 
 from . import DOMAIN as TAHOMA_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

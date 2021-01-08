@@ -1,7 +1,6 @@
 """Config flow to configure Z-Wave."""
 # pylint: disable=import-outside-toplevel
 from collections import OrderedDict
-import logging
 
 import voluptuous as vol
 
@@ -13,8 +12,6 @@ from .const import (
     DEFAULT_CONF_USB_STICK_PATH,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)

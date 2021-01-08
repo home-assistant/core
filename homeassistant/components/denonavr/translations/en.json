@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "connection_error": "Failed to connect, please try again, disconnecting mains power and ethernet cables and reconnecting them may help",
+            "cannot_connect": "Failed to connect, please try again, disconnecting mains power and ethernet cables and reconnecting them may help",
             "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manafucturer did not match",
             "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
         },
@@ -18,7 +18,7 @@
             },
             "select": {
                 "data": {
-                    "select_host": "Receiver IP"
+                    "select_host": "Receiver IP address"
                 },
                 "description": "Run the setup again if you want to connect additional receivers",
                 "title": "Select the receiver that you wish to connect"

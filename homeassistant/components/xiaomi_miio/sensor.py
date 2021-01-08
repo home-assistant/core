@@ -233,8 +233,9 @@ class XiaomiAirQualityMonitor(Entity):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiGatewaySensor(XiaomiGatewayDevice):

@@ -385,7 +385,9 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(
+                parse_result=False, from_state=self._state, to_state=state
+            )
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)

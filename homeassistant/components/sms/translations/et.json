@@ -7,6 +7,14 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Seade"
+                },
+                "title": "Modemiga \u00fchenduse loomine"
+            }
         }
     }
 }

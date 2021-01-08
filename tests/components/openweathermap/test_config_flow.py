@@ -1,6 +1,7 @@
 """Define tests for the OpenWeatherMap config flow."""
-from pyowm.exceptions.api_call_error import APICallError
-from pyowm.exceptions.api_response_error import UnauthorizedError
+from unittest.mock import MagicMock, patch
+
+from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openweathermap.const import (
@@ -9,7 +10,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 CONFIG = {
@@ -38,7 +38,7 @@ async def test_form(hass):
     mocked_owm = _create_mocked_owm(True)
 
     with patch(
-        "pyowm.weatherapi25.owm25.OWM25",
+        "pyowm.weatherapi25.weather_manager.WeatherManager",
         return_value=mocked_owm,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -70,38 +70,12 @@ async def test_form(hass):
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
-async def test_form_import(hass):
-    """Test we can import yaml config."""
-    mocked_owm = _create_mocked_owm(True)
-
-    with patch("pyowm.weatherapi25.owm25.OWM25", return_value=mocked_owm), patch(
-        "homeassistant.components.openweathermap.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.openweathermap.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=VALID_YAML_CONFIG.copy(),
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_LATITUDE] == hass.config.latitude
-        assert result["data"][CONF_LONGITUDE] == hass.config.longitude
-        assert result["data"][CONF_API_KEY] == VALID_YAML_CONFIG[CONF_API_KEY]
-
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_form_options(hass):
     """Test that the options form."""
     mocked_owm = _create_mocked_owm(True)
 
     with patch(
-        "pyowm.weatherapi25.owm25.OWM25",
+        "pyowm.weatherapi25.weather_manager.WeatherManager",
         return_value=mocked_owm,
     ):
         config_entry = MockConfigEntry(
@@ -139,12 +113,12 @@ async def test_form_options(hass):
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_MODE: "freedaily"}
+            result["flow_id"], user_input={CONF_MODE: "onecall_daily"}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {
-            CONF_MODE: "freedaily",
+            CONF_MODE: "onecall_daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
         }
 
@@ -158,7 +132,7 @@ async def test_form_invalid_api_key(hass):
     mocked_owm = _create_mocked_owm(True)
 
     with patch(
-        "pyowm.weatherapi25.owm25.OWM25",
+        "pyowm.weatherapi25.weather_manager.WeatherManager",
         return_value=mocked_owm,
         side_effect=UnauthorizedError(""),
     ):
@@ -174,9 +148,9 @@ async def test_form_api_call_error(hass):
     mocked_owm = _create_mocked_owm(True)
 
     with patch(
-        "pyowm.weatherapi25.owm25.OWM25",
+        "pyowm.weatherapi25.weather_manager.WeatherManager",
         return_value=mocked_owm,
-        side_effect=APICallError(""),
+        side_effect=APIRequestError(""),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -202,31 +176,37 @@ async def test_form_api_offline(hass):
 
 def _create_mocked_owm(is_api_online: bool):
     mocked_owm = MagicMock()
-    mocked_owm.is_API_online.return_value = is_api_online
 
     weather = MagicMock()
-    weather.get_temperature.return_value.get.return_value = 10
-    weather.get_pressure.return_value.get.return_value = 10
-    weather.get_humidity.return_value = 10
-    weather.get_wind.return_value.get.return_value = 0
-    weather.get_clouds.return_value = "clouds"
-    weather.get_rain.return_value = []
-    weather.get_snow.return_value = 3
-    weather.get_detailed_status.return_value = "status"
-    weather.get_weather_code.return_value = 803
+    weather.temperature.return_value.get.return_value = 10
+    weather.pressure.get.return_value = 10
+    weather.humidity.return_value = 10
+    weather.wind.return_value.get.return_value = 0
+    weather.clouds.return_value = "clouds"
+    weather.rain.return_value = []
+    weather.snow.return_value = []
+    weather.detailed_status.return_value = "status"
+    weather.weather_code = 803
 
-    mocked_owm.weather_at_coords.return_value.get_weather.return_value = weather
+    mocked_owm.weather_at_coords.return_value.weather = weather
 
     one_day_forecast = MagicMock()
-    one_day_forecast.get_reference_time.return_value = 10
-    one_day_forecast.get_temperature.return_value.get.return_value = 10
-    one_day_forecast.get_rain.return_value.get.return_value = 0
-    one_day_forecast.get_snow.return_value.get.return_value = 0
-    one_day_forecast.get_wind.return_value.get.return_value = 0
-    one_day_forecast.get_weather_code.return_value = 803
+    one_day_forecast.reference_time.return_value = 10
+    one_day_forecast.temperature.return_value.get.return_value = 10
+    one_day_forecast.rain.return_value.get.return_value = 0
+    one_day_forecast.snow.return_value.get.return_value = 0
+    one_day_forecast.wind.return_value.get.return_value = 0
+    one_day_forecast.weather_code = 803
 
-    mocked_owm.three_hours_forecast_at_coords.return_value.get_forecast.return_value.get_weathers.return_value = [
-        one_day_forecast
-    ]
+    mocked_owm.forecast_at_coords.return_value.forecast.weathers = [one_day_forecast]
+
+    one_call = MagicMock()
+    one_call.current = weather
+    one_call.forecast_hourly = [one_day_forecast]
+    one_call.forecast_daily = [one_day_forecast]
+
+    mocked_owm.one_call.return_value = one_call
+
+    mocked_owm.weather_manager.return_value.one_call.return_value = is_api_online
 
     return mocked_owm

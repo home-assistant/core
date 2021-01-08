@@ -1,6 +1,4 @@
 """The rpi_camera component."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
@@ -26,8 +24,6 @@ from .const import (
     DEFAULT_VERTICAL_FLIP,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

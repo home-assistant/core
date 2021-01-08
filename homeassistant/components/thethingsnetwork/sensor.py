@@ -147,7 +147,7 @@ class TtnDataStorage:
         self.data = data[-1]
 
         for value in self._values.items():
-            if value[0] not in self.data.keys():
+            if value[0] not in self.data:
                 _LOGGER.warning("Value not available: %s", value[0])
 
         return response

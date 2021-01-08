@@ -5,7 +5,7 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas"
         },
         "error": {
-            "connect_error": "\u00dchendamine nurjus",
+            "cannot_connect": "\u00dchendus nurjus",
             "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade."
         },
         "flow_title": "Xiaomi Miio: {name}",

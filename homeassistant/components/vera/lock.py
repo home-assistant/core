@@ -1,5 +1,4 @@
 """Support for Vera locks."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 import pyvera as veraApi
@@ -16,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"

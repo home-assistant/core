@@ -1,6 +1,4 @@
 """Support for Russound multizone controllers using RIO Protocol."""
-import logging
-
 from russound_rio import Russound
 import voluptuous as vol
 
@@ -23,8 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_RUSSOUND = (
     SUPPORT_VOLUME_MUTE

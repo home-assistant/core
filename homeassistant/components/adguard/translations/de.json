@@ -5,7 +5,7 @@
             "single_instance_allowed": "Es ist nur eine einzige Konfiguration von AdGuard Home zul\u00e4ssig."
         },
         "error": {
-            "connection_error": "Fehler beim Herstellen einer Verbindung."
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
             "hassio_confirm": {

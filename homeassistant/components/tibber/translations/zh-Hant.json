@@ -4,7 +4,7 @@
             "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "connection_error": "\u9023\u7dda\u5931\u6557",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_access_token": "\u5b58\u53d6\u5bc6\u9470\u7121\u6548",
             "timeout": "\u9023\u7dda\u81f3 Tibber \u903e\u6642"
         },
@@ -17,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

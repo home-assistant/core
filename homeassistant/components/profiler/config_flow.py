@@ -1,14 +1,10 @@
 """Config flow for Profiler integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 
 from .const import DEFAULT_NAME
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

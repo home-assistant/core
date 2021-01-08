@@ -9,6 +9,13 @@ import urllib.parse
 import async_timeout
 import pysonos
 from pysonos import alarms
+from pysonos.core import (
+    PLAY_MODE_BY_MEANING,
+    PLAY_MODES,
+    PLAYING_LINE_IN,
+    PLAYING_RADIO,
+    PLAYING_TV,
+)
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -196,6 +203,14 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 ]
+
+REPEAT_TO_SONOS = {
+    REPEAT_MODE_OFF: False,
+    REPEAT_MODE_ALL: True,
+    REPEAT_MODE_ONE: "ONE",
+}
+
+SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 ATTR_SONOS_GROUP = "sonos_group"
 
@@ -506,8 +521,7 @@ class SonosEntity(MediaPlayerEntity):
         self._player = player
         self._player_volume = None
         self._player_muted = None
-        self._shuffle = None
-        self._repeat = None
+        self._play_mode = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
@@ -521,7 +535,6 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
-        self._is_playing_local_queue = None
         self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
@@ -679,8 +692,7 @@ class SonosEntity(MediaPlayerEntity):
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
-            self._shuffle = self.soco.shuffle
-            self._repeat = self.soco.repeat
+            self._play_mode = self.soco.play_mode
             self.update_volume()
             self._set_favorites()
 
@@ -718,15 +730,19 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
-        transport_info = self.soco.get_current_transport_info()
-        new_status = transport_info.get("current_transport_state")
+        variables = event and event.variables
+
+        if variables:
+            new_status = variables["transport_state"]
+        else:
+            transport_info = self.soco.get_current_transport_info()
+            new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
         if new_status == "TRANSITIONING":
             return
 
-        self._shuffle = self.soco.shuffle
-        self._repeat = self.soco.repeat
+        self._play_mode = event.current_play_mode if event else self.soco.play_mode
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
@@ -734,16 +750,18 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
+        self._queue_position = None
         self._source_name = None
 
         update_position = new_status != self._status
         self._status = new_status
 
-        self._is_playing_local_queue = self.soco.is_playing_local_queue
+        track_uri = variables["current_track_uri"] if variables else None
+        whats_playing = self.soco.whats_playing(track_uri)
 
-        if self.soco.is_playing_tv:
+        if whats_playing == PLAYING_TV:
             self.update_media_linein(SOURCE_TV)
-        elif self.soco.is_playing_line_in:
+        elif whats_playing == PLAYING_LINE_IN:
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
@@ -755,8 +773,7 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_album_name = track_info.get("album")
                 self._media_title = track_info.get("title")
 
-                if self.soco.is_radio_uri(track_info["uri"]):
-                    variables = event and event.variables
+                if whats_playing == PLAYING_RADIO:
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
@@ -843,7 +860,9 @@ class SonosEntity(MediaPlayerEntity):
 
         self._media_image_url = track_info.get("album_art")
 
-        self._queue_position = int(track_info.get("playlist_position")) - 1
+        playlist_position = int(track_info.get("playlist_position"))
+        if playlist_position > 0:
+            self._queue_position = playlist_position - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -941,8 +960,9 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_content(self, event=None):
         """Update information about available content."""
-        self._set_favorites()
-        self.schedule_update_ha_state()
+        if event and "favorites_update_id" in event.variables:
+            self._set_favorites()
+            self.schedule_update_ha_state()
 
     @property
     def volume_level(self):
@@ -960,19 +980,14 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return self._shuffle
+        return PLAY_MODES[self._play_mode][0]
 
     @property
     @soco_coordinator
     def repeat(self):
         """Return current repeat mode."""
-        if self._repeat is True:
-            return REPEAT_MODE_ALL
-
-        if self._repeat == "ONE":
-            return REPEAT_MODE_ONE
-
-        return REPEAT_MODE_OFF
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
     @soco_coordinator
@@ -1037,10 +1052,7 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def queue_position(self):
         """If playing local queue return the position in the queue else None."""
-        if self._is_playing_local_queue:
-            return self._queue_position
-
-        return None
+        return self._queue_position
 
     @property
     @soco_coordinator
@@ -1073,18 +1085,17 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.shuffle = shuffle
+        sonos_shuffle = shuffle
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def set_repeat(self, repeat):
         """Set repeat mode."""
-        repeat_map = {
-            REPEAT_MODE_OFF: False,
-            REPEAT_MODE_ALL: True,
-            REPEAT_MODE_ONE: "ONE",
-        }
-        self.soco.repeat = repeat_map[repeat]
+        sonos_shuffle = PLAY_MODES[self._play_mode][0]
+        sonos_repeat = REPEAT_TO_SONOS[repeat]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error()
     def mute_volume(self, mute):

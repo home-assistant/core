@@ -5,8 +5,8 @@
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
-            "authorization_error": "\u8a8d\u8b49\u932f\u8aa4\u3002\u8acb\u78ba\u8a8d\u64c1\u6709\u5c08\u6848\u5b58\u53d6\u6b0a\u8207\u6b63\u78ba\u7684\u8b49\u66f8\u3002",
-            "connection_error": "\u7121\u6cd5\u9023\u7dda\u81f3 Azure DevOps\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "project_error": "\u7121\u6cd5\u53d6\u5f97\u5c08\u6848\u8cc7\u8a0a\u3002"
         },
         "flow_title": "Azure DevOps\uff1a{project_url}",
@@ -28,6 +28,5 @@
                 "title": "\u65b0\u589e Azure DevOps \u5c08\u6848"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

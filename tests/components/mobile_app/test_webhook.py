@@ -1,5 +1,5 @@
 """Webhook tests for mobile_app."""
-import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -13,10 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def encrypt_payload(secret_key, payload):

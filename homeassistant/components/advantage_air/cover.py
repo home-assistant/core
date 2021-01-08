@@ -8,15 +8,21 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ADVANTAGE_AIR_STATE_CLOSE, ADVANTAGE_AIR_STATE_OPEN, DOMAIN
+from .const import (
+    ADVANTAGE_AIR_STATE_CLOSE,
+    ADVANTAGE_AIR_STATE_OPEN,
+    DOMAIN as ADVANTAGE_AIR_DOMAIN,
+)
+from .entity import AdvantageAirEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir cover platform."""
 
-    instance = hass.data[DOMAIN][config_entry.entry_id]
+    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
@@ -27,19 +33,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
+class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     """Advantage Air Cover Class."""
-
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone Vent cover entity."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
-    @property
-    def _zone(self):
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def name(self):
@@ -72,17 +67,6 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return self._zone["value"]
         return 0
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
 
     async def async_open_cover(self, **kwargs):
         """Fully open zone vent."""

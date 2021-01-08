@@ -4,6 +4,7 @@
             "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "no_uuid": "Kodi instance does not have a unique id. This is most likely due to an old Kodi version (17.x or below). You can configure the integration manually or upgrade to a more recent Kodi version.",
             "unknown": "Unexpected error"
         },
         "error": {
@@ -23,14 +24,6 @@
             "discovery_confirm": {
                 "description": "Do you want to add Kodi (`{name}`) to Home Assistant?",
                 "title": "Discovered Kodi"
-            },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Connect over SSL"
-                },
-                "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services."
             },
             "user": {
                 "data": {

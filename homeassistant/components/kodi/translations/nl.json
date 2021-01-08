@@ -2,30 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "credentials": {
                 "data": {
+                    "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
-            },
-            "host": {
-                "data": {
-                    "port": "Poort"
-                }
+                },
+                "description": "Voer uw Kodi gebruikersnaam en wachtwoord in. Deze zijn te vinden in Systeem / Instellingen / Netwerk / Services."
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Poort",
                     "ssl": "Maak verbinding via SSL"
-                }
+                },
+                "description": "Kodi-verbindingsinformatie. Zorg ervoor dat u \"Controle van Kodi via HTTP toestaan\" in Systeem / Instellingen / Netwerk / Services inschakelt."
             },
             "ws_port": {
                 "data": {
                     "ws_port": "Poort"
-                }
+                },
+                "description": "De WebSocket-poort (ook wel TCP-poort genoemd in Kodi). Om verbinding te maken via WebSocket, moet u \"Programma's toestaan ... om Kodi te besturen\" inschakelen in Systeem / Instellingen / Netwerk / Services. Als WebSocket niet is ingeschakeld, verwijdert u de poort en laat u deze leeg."
             }
         }
     }

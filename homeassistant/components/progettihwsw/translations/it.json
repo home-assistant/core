@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "unknown": "Errore imprevisto",
-            "wrong_info_relay_modes": "La selezione del modo di funzionamento del rel\u00e8 deve essere monostabile o bistabile."
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "Impostare la scheda"
             }
         }
-    },
-    "title": "Automazione di ProgettiHWSW"
+    }
 }
