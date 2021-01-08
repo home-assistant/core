@@ -983,7 +983,7 @@ netdisco==2.8.2
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.4
+nexia==0.9.5
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1140,7 +1140,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.12
 
 # homeassistant.components.plugwise
-plugwise==0.8.3
+plugwise==0.8.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
