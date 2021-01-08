@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def start_platforms():
         """Start platforms and perform discovery."""
-        # wait untill all required platforms are ready
+        # wait until all required platforms are ready
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_setup(entry, component)
