@@ -8,8 +8,8 @@ from homeassistant import config_entries, setup
 from homeassistant.components.zwave_js.const import DOMAIN
 
 
-async def test_form(hass):
-    """Test we get the form."""
+async def test_user_step_full(hass):
+    """Test we create an entry with user step."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -47,8 +47,8 @@ async def test_form(hass):
     assert result2["result"].unique_id == 1234
 
 
-async def test_form_invalid_input(hass):
-    """Test we handle invalid auth."""
+async def test_user_step_invalid_input(hass):
+    """Test we handle invalid auth in the user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -76,3 +76,24 @@ async def test_form_invalid_input(hass):
 
     assert result3["type"] == "form"
     assert result3["errors"] == {"base": "invalid_ws_url"}
+
+
+async def test_user_step_unexpected_exception(hass):
+    """Test we handle unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.get_server_version",
+        side_effect=Exception("Boom"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "ws://localhost:3000",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
