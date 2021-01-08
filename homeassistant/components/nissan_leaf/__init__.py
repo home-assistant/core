@@ -343,6 +343,9 @@ class LeafDataStore:
             start_server_info = await self.hass.async_add_executor_job(
                 self.leaf.get_latest_battery_status
             )
+            if not start_server_info:
+                _LOGGER.error("Battery status check failed")
+                return None
             start_date = _extract_start_date(start_server_info)
             await asyncio.sleep(1)  # Critical sleep
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
