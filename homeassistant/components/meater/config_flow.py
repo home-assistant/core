@@ -23,6 +23,9 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        self._abort_if_unique_id_configured()
+
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
@@ -32,7 +35,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await api.authenticate(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        except Exception:
+        except Exception:  # pylint: disable=W0703
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
