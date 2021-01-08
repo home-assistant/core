@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         LOGGER.info("Disconnected from Zwave JS Server")
         # TODO: signal entities to update availability state
 
-    async def async_on_node_ready(node: ZwaveNode):
+    async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
