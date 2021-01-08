@@ -20,7 +20,7 @@ class ZwaveDiscoveryInfo:
     platform_hint: str = ""  # hint for the platform about this discovered entity
 
     @property
-    def value_id(self):
+    def value_id(self) -> str:
         """Return the unique value_id belonging to primary value."""
         return f"{self.node.node_id}.{self.primary_value.value_id}"
 
