@@ -1,7 +1,8 @@
 """Test init of AccuWeather integration."""
+from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.accuweather.const import DOMAIN
+from homeassistant.components.accuweather.const import COORDINATOR, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -58,3 +59,43 @@ async def test_unload_entry(hass):
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_update_interval(hass):
+    """Test correct update interval."""
+    entry = await init_integration(hass)
+
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
+        minutes=32
+    )
+
+
+async def test_update_interval_forecast(hass):
+    """Test correct update interval when forecast is True."""
+    entry = await init_integration(hass, forecast=True)
+
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
+        minutes=64
+    )
+
+
+async def test_update_interval_less_frequent_updates(hass):
+    """Test correct update interval when less_frequent_updates is True."""
+    entry = await init_integration(hass, less_frequent_updates=True)
+
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
+        minutes=64
+    )
+
+
+async def test_update_interval_forecast_less_frequent_updates(hass):
+    """Test correct update interval when less_frequent_updates is True and forecast is True."""
+    entry = await init_integration(hass, forecast=True, less_frequent_updates=True)
+
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
+        minutes=128
+    )

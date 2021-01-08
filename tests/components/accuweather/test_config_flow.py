@@ -5,7 +5,11 @@ from unittest.mock import patch
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.accuweather.const import CONF_FORECAST, DOMAIN
+from homeassistant.components.accuweather.const import (
+    CONF_FORECAST,
+    CONF_LESS_FREQUENT_UPDATES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
@@ -171,11 +175,15 @@ async def test_options_flow(hass):
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_FORECAST: True}
+            result["flow_id"],
+            user_input={CONF_FORECAST: True, CONF_LESS_FREQUENT_UPDATES: True},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {CONF_FORECAST: True}
+        assert config_entry.options == {
+            CONF_FORECAST: True,
+            CONF_LESS_FREQUENT_UPDATES: True,
+        }
 
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(config_entry.entry_id)

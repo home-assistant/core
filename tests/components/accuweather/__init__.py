@@ -8,12 +8,14 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 async def init_integration(
-    hass, forecast=False, unsupported_icon=False
+    hass, forecast=False, unsupported_icon=False, less_frequent_updates=False
 ) -> MockConfigEntry:
     """Set up the AccuWeather integration in Home Assistant."""
     options = {}
     if forecast:
         options["forecast"] = True
+    if less_frequent_updates:
+        options["less_frequent_updates"] = True
 
     entry = MockConfigEntry(
         domain=DOMAIN,
