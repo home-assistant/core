@@ -174,6 +174,8 @@ async def test_run_number_service(hass, mqtt_mock):
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "30", 0, False)
+    state = hass.states.get("number.test_number")
+    assert state.state == "32"
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
