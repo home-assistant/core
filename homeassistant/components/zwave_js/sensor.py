@@ -47,7 +47,9 @@ async def async_setup_entry(
         async_add_entities([sensor])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor)
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor
+        )
     )
 
 
@@ -123,9 +125,14 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the device specific state attributes."""
-        if self.info.primary_value.metadata.states and self.info.primary_value.value is not None:
+        if (
+            self.info.primary_value.metadata.states
+            and self.info.primary_value.value is not None
+        ):
             # add the value's label as property for multi-value (list) items
             label = self.info.primary_value.metadata.states.get(
                 self.info.primary_value.value
-            ) or self.info.primary_value.metadata.states.get(str(self.info.primary_value.value))
+            ) or self.info.primary_value.metadata.states.get(
+                str(self.info.primary_value.value)
+            )
             return {"label": label}
