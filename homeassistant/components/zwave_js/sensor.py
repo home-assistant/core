@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -70,7 +70,9 @@ class ZwaveSensorBase(ZWaveBaseEntity):
             return DEVICE_CLASS_POWER
         if self.info.primary_value.property_key_name == "kWh_Consumed":
             return DEVICE_CLASS_ENERGY
-        return str(self.info.primary_value.property_)
+        if self.info.primary_value.property_ == "Air temperature":
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     @property
     def entity_registry_enabled_default(self) -> bool:
