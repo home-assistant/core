@@ -52,16 +52,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # pylint: disable=fixme
 
-    async def async_on_initialized():
-        """Handle initial full state received."""
-        # TODO: signal entities to update availability state
-        LOGGER.info("Connection to Zwave JS Server initialized")
-        initialized.set()
+    async def async_on_connect():
+        """Handle websocket is (re)connected."""
+        LOGGER.info("Connected to Zwave JS Server")
+        if initialized.is_set():
+            # update entity availability
+            async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
 
     async def async_on_disconnect():
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
-        # TODO: signal entities to update availability state
+        async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
+
+    async def async_on_initialized():
+        """Handle initial full state received."""
+        LOGGER.info("Connection to Zwave JS Server initialized.")
+        initialized.set()
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -92,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 lambda event: async_on_node_ready(event["node"]),
             )
             # we do submit the node to device registry so user has
-            # visual feedback that something is being added
+            # some visual feedback that something is (in the process of) being added
             register_node_in_dev_reg(entry, dev_reg, client, node)
 
     async def handle_ha_shutdown(event):
@@ -103,6 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unsubs = [
         client.register_on_initialized(async_on_initialized),
         client.register_on_disconnect(async_on_disconnect),
+        client.register_on_connect(async_on_connect),
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown),
     ]
 
@@ -148,17 +155,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 lambda event: async_on_node_ready(event["node"]),
             )
 
-        client.driver.controller.on(
-            "node added", lambda event: async_on_node_added(event["node"])
-        )
+        client.driver.controller.on("node added", lambda event: async_on_node_added(event["node"]))
 
     hass.async_create_task(when_platforms_ready())
 
     # start platforms
     for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, component))
 
     return True
 
