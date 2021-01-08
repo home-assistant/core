@@ -109,6 +109,8 @@ class MpdDevice(MediaPlayerEntity):
         self._media_position_updated_at = None
         self._media_position = None
         self._commands = None
+        self._can_albumart = False
+        self._can_readpicture = False
 
         # set up MPD client
         self._client = MPDClient()
@@ -166,6 +168,10 @@ class MpdDevice(MediaPlayerEntity):
             if not self._is_connected:
                 await self._connect()
                 self._commands = list(await self._client.commands())
+
+                # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
+                self._can_albumart = "albumart" in self._commands
+                self._can_readpicture = "readpicture" in self._commands
 
             await self._fetch_status()
         except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
@@ -258,6 +264,9 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_image_hash(self):
         """Hash value for media image."""
+        if not self._can_albumart and not self._can_readpicture:
+            return None
+
         file = self._currentsong.get("file")
         if file:
             return hashlib.sha256(file.encode("utf-8")).hexdigest()[:16]
@@ -270,14 +279,10 @@ class MpdDevice(MediaPlayerEntity):
         if not file:
             return None, None
 
-        # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
-        can_albumart = "albumart" in self._commands
-        can_readpicture = "readpicture" in self._commands
-
         response = None
 
         # read artwork embedded into the media file
-        if can_readpicture:
+        if self._can_readpicture:
             try:
                 response = await self._client.readpicture(file)
             except mpd.CommandError as error:
@@ -287,7 +292,7 @@ class MpdDevice(MediaPlayerEntity):
                 )
 
         # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
-        if can_albumart and not response:
+        if self._can_albumart and not response:
             try:
                 response = await self._client.albumart(file)
             except mpd.CommandError as error:
