@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # pylint: disable=fixme
 
-    async def async_on_connect():
+    async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
         if initialized.is_set():
