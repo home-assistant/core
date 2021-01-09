@@ -94,7 +94,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Unable to connect to the Somfy MyLink device, please check your settings"
         )
 
-    _LOGGER.warning("Entry loading for mylink")
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
