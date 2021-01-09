@@ -146,7 +146,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if mylink_entity_ids:
             entity_dict = {None: None}
             for entity_id in mylink_entity_ids:
-                name = self.hass.state.get(entity_id).get(ATTR_FRIENDLY_NAME, entity_id)
+                name = entity_id
+                state = self.hass.states.get(entity_id)
+                if state:
+                    name = state.attributes.get(ATTR_FRIENDLY_NAME, entity_id)
                 entity_dict[entity_id] = f"{name} (f{entity_id})"
             data_schema = data_schema.extend(
                 {vol.Optional(CONF_ENTITY_ID): vol.In(entity_dict)}
