@@ -20,7 +20,6 @@ ATTR_EMBED = "embed"
 ATTR_EMBED_AUTHOR = "author"
 ATTR_EMBED_FIELDS = "fields"
 ATTR_EMBED_FOOTER = "footer"
-# ATTR_EMBED_IMAGE = "image"
 ATTR_EMBED_THUMBNAIL = "thumbnail"
 ATTR_IMAGES = "images"
 
@@ -61,9 +60,8 @@ class DiscordNotificationService(BaseNotificationService):
 
         if ATTR_EMBED in data:
             embedding = data.get(ATTR_EMBED)
-
-        if ATTR_EMBED_FIELDS in data:
-            fields = data[ATTR_EMBED_FIELDS]
+            if ATTR_EMBED_FIELDS in embedding:
+                fields = embedding[ATTR_EMBED_FIELDS]
 
         if ATTR_IMAGES in data:
             images = []
@@ -90,7 +88,7 @@ class DiscordNotificationService(BaseNotificationService):
                     ) or discord_bot.get_user(channelid)
 
                     if channel is None:
-                        _LOGGER.warning("Channel not found for id: %s", channelid)
+                        _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue
                     # Must create new instances of File for each channel.
                     files = None
@@ -100,7 +98,7 @@ class DiscordNotificationService(BaseNotificationService):
                             files.append(discord.File(image))
                     if ATTR_EMBED in data:
                         embed = discord.Embed(**embedding)
-                        if ATTR_EMBED_FIELDS in data:
+                        if ATTR_EMBED_FIELDS in embedding:
                             for field in range(len(fields)):
                                 embed.add_field(**fields[field])
                         if ATTR_EMBED_FOOTER in embedding:
