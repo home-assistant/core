@@ -15,6 +15,9 @@ async def test_form(hass):
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
+    import pprint
+
+    pprint.pprint(result)
 
     with patch(
         "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
@@ -36,7 +39,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "MyLink 1.1.1.1"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 1234,

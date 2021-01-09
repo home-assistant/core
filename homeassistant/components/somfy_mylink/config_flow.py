@@ -25,8 +25,8 @@ ENTITY_CONFIG_VERSION = "entity_config_version"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
         vol.Required(CONF_SYSTEM_ID): int,
+        vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
@@ -37,11 +37,9 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    host = data[CONF_HOST]
-    port = data[CONF_PORT]
-    system_id = data[CONF_SYSTEM_ID]
-
-    somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
+    somfy_mylink = SomfyMyLinkSynergy(
+        data[CONF_SYSTEM_ID], data[CONF_HOST], data[CONF_PORT]
+    )
 
     try:
         status_info = await somfy_mylink.status_info()
@@ -51,7 +49,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     if not status_info:
         raise InvalidAuth
 
-    return {"title": f"MyLink {system_id}"}
+    return {"title": f"MyLink {data[CONF_HOST]}"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,12 +60,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        errors = {}
+
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
-
-        errors = {}
 
         if self._host_already_configured(user_input[CONF_HOST]):
             return self.async_abort(reason="already_configured")
