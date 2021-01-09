@@ -1,18 +1,14 @@
 """Support for MQTT vacuums."""
+import functools
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.vacuum import DOMAIN
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from .. import DOMAIN as MQTT_DOMAIN, PLATFORMS
-from ..const import ATTR_DISCOVERY_HASH
-from ..discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
+from ..mixins import async_setup_entry_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy
 from .schema_state import PLATFORM_SCHEMA_STATE, async_setup_entity_state
@@ -34,35 +30,20 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up MQTT vacuum through configuration.yaml."""
     await async_setup_reload_service(hass, MQTT_DOMAIN, PLATFORMS)
-    await _async_setup_entity(config, async_add_entities)
+    await _async_setup_entity(async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT vacuum dynamically through MQTT discovery."""
 
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT vacuum."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
-            )
-        except Exception:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(DOMAIN, "mqtt"), async_discover
+    setup = functools.partial(
+        _async_setup_entity, async_add_entities, config_entry=config_entry
     )
+    await async_setup_entry_helper(hass, DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_data=None
+    async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT vacuum."""
     setup_entity = {LEGACY: async_setup_entity_legacy, STATE: async_setup_entity_state}
