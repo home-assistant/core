@@ -65,10 +65,7 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    MqttEntity,
     async_setup_entry_helper,
 )
 
@@ -267,22 +264,11 @@ async def _async_setup_entity(
     async_add_entities([MqttClimate(hass, config, config_entry, discovery_data)])
 
 
-class MqttClimate(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    ClimateEntity,
-):
+class MqttClimate(MqttEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the climate device."""
-        self._config = config
-        self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._sub_state = None
-
-        self.hass = hass
         self._action = None
         self._aux = False
         self._away = False
@@ -297,33 +283,21 @@ class MqttClimate(
         self._topic = None
         self._value_templates = None
 
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
     async def async_added_to_hass(self):
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         await self._subscribe_topics()
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._config = config
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
-
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+        self._config = config
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
         # set to None in non-optimistic mode
@@ -556,29 +530,10 @@ class MqttClimate(
             self.hass, self._sub_state, topics
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
     @property
     def name(self):
         """Return the name of the climate device."""
         return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def temperature_unit(self):
