@@ -6,7 +6,7 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
@@ -144,8 +144,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         mylink_entity_ids = data[MYLINK_ENTITY_IDS]
 
         if mylink_entity_ids:
+            entity_dict = {None: None}
+            for entity_id in mylink_entity_ids:
+                name = self.hass.state.get(entity_id).get(ATTR_FRIENDLY_NAME, entity_id)
+                entity_dict[entity_id] = f"{name} (f{entity_id})"
             data_schema = data_schema.extend(
-                {vol.Optional(CONF_ENTITY_ID): vol.In([None, *mylink_entity_ids])}
+                {vol.Optional(CONF_ENTITY_ID): vol.In(entity_dict)}
             )
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
