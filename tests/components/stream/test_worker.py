@@ -172,7 +172,7 @@ class MockPyAv:
 
 
 async def async_decode_stream(hass, packets, py_av=None):
-    """Start a stream worker that decoes incoming stream packets into output segments."""
+    """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(hass, STREAM_SOURCE)
     stream.add_provider(STREAM_OUTPUT_FORMAT)
 
