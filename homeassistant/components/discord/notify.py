@@ -99,8 +99,8 @@ class DiscordNotificationService(BaseNotificationService):
                     if ATTR_EMBED in data:
                         embed = discord.Embed(**embedding)
                         if ATTR_EMBED_FIELDS in embedding:
-                            for field in range(len(fields)):
-                                embed.add_field(**fields[field])
+                            for field_num, field_name in enumerate(fields):
+                                embed.add_field(**fields[field_num])
                         if ATTR_EMBED_FOOTER in embedding:
                             embed.set_footer(**embedding[ATTR_EMBED_FOOTER])
                         if ATTR_EMBED_AUTHOR in embedding:
