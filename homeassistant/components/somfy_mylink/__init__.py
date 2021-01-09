@@ -81,11 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _async_import_options_from_data_if_missing(hass, entry)
 
     config = entry.data
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    system_id = config[CONF_SYSTEM_ID]
-
-    somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
+    somfy_mylink = SomfyMyLinkSynergy(
+        config[CONF_SYSTEM_ID], config[CONF_HOST], config[CONF_PORT]
+    )
 
     try:
         mylink_status = await somfy_mylink.status_info()
