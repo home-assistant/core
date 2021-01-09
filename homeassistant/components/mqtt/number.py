@@ -1,4 +1,5 @@
 """Configure number in a device through MQTT topic."""
+import functools
 import logging
 
 import voluptuous as vol
@@ -14,10 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -31,17 +28,13 @@ from . import (
     subscription,
 )
 from .. import mqtt
-from .const import ATTR_DISCOVERY_HASH
 from .debug_info import log_messages
-from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    MqttEntity,
+    async_setup_entry_helper,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,81 +62,46 @@ async def async_setup_platform(
 ):
     """Set up MQTT number through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(config, async_add_entities)
+    await _async_setup_entity(async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT number dynamically through MQTT discovery."""
 
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT number."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
-            )
-        except Exception:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(number.DOMAIN, "mqtt"), async_discover
+    setup = functools.partial(
+        _async_setup_entity, async_add_entities, config_entry=config_entry
     )
+    await async_setup_entry_helper(hass, number.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_data=None
+    async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT number."""
     async_add_entities([MqttNumber(config, config_entry, discovery_data)])
 
 
-class MqttNumber(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    NumberEntity,
-    RestoreEntity,
-):
+class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     """representation of an MQTT number."""
 
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
-        self._config = config
         self._sub_state = None
 
         self._current_number = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        device_config = config.get(CONF_DEVICE)
-
         NumberEntity.__init__(self)
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
+        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
 
-    async def async_added_to_hass(self):
-        """Subscribe MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
+    def _setup_from_config(self, config):
         self._config = config
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -184,15 +142,6 @@ class MqttNumber(
             if last_state:
                 self._current_number = last_state.state
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
     @property
     def value(self):
         """Return the current value."""
@@ -221,16 +170,6 @@ class MqttNumber(
     def name(self):
         """Return the name of this number."""
         return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def assumed_state(self):

@@ -38,10 +38,7 @@ from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    MqttEntity,
 )
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
@@ -163,21 +160,12 @@ async def async_setup_entity_basic(
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
 
-class MqttLight(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    LightEntity,
-    RestoreEntity,
-):
+class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT light."""
-        self.hass = hass
         self._state = False
-        self._sub_state = None
         self._brightness = None
         self._hs = None
         self._color_temp = None
@@ -196,32 +184,13 @@ class MqttLight(
         self._optimistic_hs = False
         self._optimistic_white_value = False
         self._optimistic_xy = False
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA_BASIC(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA_BASIC
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -525,15 +494,6 @@ class MqttLight(
             self.hass, self._sub_state, topics
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -581,19 +541,9 @@ class MqttLight(
         return None
 
     @property
-    def should_poll(self):
-        """No polling needed for a MQTT light."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the device if any."""
         return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def is_on(self):

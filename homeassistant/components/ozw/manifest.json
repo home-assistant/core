@@ -7,7 +7,8 @@
     "python-openzwave-mqtt[mqtt-client]==1.4.0"
   ],
   "after_dependencies": [
-    "mqtt"
+    "mqtt",
+    "zwave"
   ],
   "codeowners": [
     "@cgarwood",
