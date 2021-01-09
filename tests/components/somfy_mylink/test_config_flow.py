@@ -226,6 +226,25 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
+async def test_options_not_loaded(hass):
+    """Test options will not display until loaded."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.somfy_mylink.SomfyMyLinkSynergy.status_info",
+        return_value={"result": []},
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
 async def test_options_no_entities(hass):
     """Test we can configure default reverse."""
     await setup.async_setup_component(hass, "persistent_notification", {})
