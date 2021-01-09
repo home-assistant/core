@@ -1,0 +1,9 @@
+send_key:
+  description: Send key to a TV
+  fields:
+    entity_id:
+      description: Media player entity to send the key to
+      example: media_player.samsung_tv
+    key:
+      description: Key to send
+      example: KEY_VOLUP

@@ -14,6 +14,9 @@ CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
 
+SERVICE_SEND_KEY = "send_key"
+ATTR_KEY = "key"
+
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
 RESULT_CANNOT_CONNECT = "cannot_connect"

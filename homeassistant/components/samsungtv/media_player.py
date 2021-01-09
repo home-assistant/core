@@ -33,14 +33,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
+from ...helpers import entity_platform
 from .bridge import SamsungTVBridge
 from .const import (
+    ATTR_KEY,
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
+    SERVICE_SEND_KEY,
 )
 
 KEY_PRESS_TIMEOUT = 1.2
@@ -94,6 +97,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SEND_KEY,
+        {vol.Required(ATTR_KEY): cv.string},
+        "send_key",
+    )
 
 
 class SamsungTVDevice(MediaPlayerEntity):
