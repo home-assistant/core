@@ -116,13 +116,15 @@ async def async_set_lights_temp(hass, lights, mired, brightness, transition):
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-async def async_set_lights_rgb(hass, lights, rgb, transition):
+async def async_set_lights_rgb(hass, lights, rgb, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
             service_data = {ATTR_ENTITY_ID: light}
             if rgb is not None:
                 service_data[ATTR_RGB_COLOR] = rgb
+            if brightness is not None:
+                service_data[ATTR_BRIGHTNESS] = brightness
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
@@ -317,10 +319,13 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 now,
             )
         elif self._mode == MODE_RGB:
-            await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
+            await async_set_lights_rgb(
+                self.hass, self._lights, rgb, brightness, self._transition
+            )
             _LOGGER.debug(
-                "Lights updated to rgb:%s, %s%% of %s cycle complete at %s",
+                "Lights updated to rgb:%s brightness:%s, %s%% of %s cycle complete at %s",
                 rgb,
+                brightness,
                 round(percentage_complete * 100),
                 time_state,
                 now,
